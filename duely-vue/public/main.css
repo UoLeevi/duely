@@ -1,0 +1,15 @@
+html {
+  overflow-y: scroll !important;
+}
+
+.v-form input:-webkit-autofill,
+.v-form input:-webkit-autofill:hover,
+.v-form input:-webkit-autofill:focus,
+.v-form input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset;
+  box-shadow: 0 0 0 30px white inset;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  user-select: none;
+}
