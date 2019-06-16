@@ -1,12 +1,21 @@
 ### Following comments describe how to use nginx ingress-controller
 
-## If you're using GKE you need to initialize your user as a cluster-admin with the following command:
+## 1. If you're using GKE you need to initialize your user as a cluster-admin with the following command:
 # kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-admin --user $(gcloud config get-value account)
 
-## The following Mandatory Command is required for all deployments.
+## 2. The following Mandatory Command is required for all deployments.
+## For original use:
 # kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
+## For custom use:
+# kubectl apply -f ingress-nginx-mandatory.yaml
 
-## To check if the ingress controller pods have started, run the following command:
+## 3. Provider Specific Steps: GCE-GKE
+## For dynamic ephemeral ip address use:
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
+## For static ip address use:
+# kubectl apply -f ingress-nginx-cloud-static-ip.yaml
+
+## 4. To check if the ingress controller pods have started, run the following command:
 # kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx --watch
 
 apiVersion: extensions/v1beta1
@@ -14,7 +23,7 @@ kind: Ingress
 metadata:
   name: duely-ingress
   annotations:
-    kubernetes.io/ingress.global-static-ip-name: duely-address
+    # kubernetes.io/ingress.global-static-ip-name: duely-address
     kubernetes.io/ingress.allow-http: "false"
     kubernetes.io/ingress.class: "nginx"
 spec:
@@ -26,6 +35,7 @@ spec:
   rules:
   - http:
       paths:
-      - backend:
+      - path: /
+        backend:
           serviceName: duely-ui-service
           servicePort: 8080
