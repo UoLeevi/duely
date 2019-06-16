@@ -1,4 +1,4 @@
-# duely-vue
+# duely-ui
 
 ## Project setup
 ```
