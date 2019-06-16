@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: duely-vue-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: duely-vue
+  template:
+    metadata:
+      labels:
+        app: duely-vue
+    spec:
+      containers:
+      - name: duely-vue
+        image: uoleevi/duely-vue
+        ports:
+        - containerPort: 8080
