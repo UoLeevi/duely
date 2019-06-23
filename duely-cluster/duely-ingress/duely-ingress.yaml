@@ -33,3 +33,10 @@ spec:
   backend:
     serviceName: duely-ui-service
     servicePort: 8080
+  rules:
+  - host: api.duely.app
+    http:
+      paths:
+      - backend:
+          serviceName: duely-graphql-service
+          servicePort: 8080

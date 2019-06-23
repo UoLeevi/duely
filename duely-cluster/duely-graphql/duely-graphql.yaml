@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: duely-graphql-service
+spec:
+  type: NodePort
+  selector:
+    app: duely-graphql
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: duely-graphql-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: duely-graphql
+  template:
+    metadata:
+      labels:
+        app: duely-graphql
+    spec:
+      containers:
+      - name: duely-graphql
+        image: uoleevi/duely-graphql
+        ports:
+        - containerPort: 80
+        env:
+        - name: PORT
+          value: "80"
+        - name: PGUSER
+          value: postgres
+        - name: PGDATABASE
+          value: duelydb
+        - name: PGHOST
+          value: duely-postgres-master-service
+        - name: PGPORT
+          value: "5432"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: duely-graphql-secret
+              key: postgres-password
+        livenessProbe:
+          httpGet:
+            path: /.well-known/apollo/server-health
+            port: 80
+          failureThreshold: 6
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /.well-known/apollo/server-health
+            port: 80
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
