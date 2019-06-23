@@ -5,9 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-
 ---
-
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -16,7 +14,6 @@ metadata:
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -26,7 +23,6 @@ metadata:
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -36,7 +32,6 @@ metadata:
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -46,7 +41,6 @@ metadata:
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -102,7 +96,6 @@ rules:
       - ingresses/status
     verbs:
       - update
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: Role
@@ -147,7 +140,6 @@ rules:
       - endpoints
     verbs:
       - get
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
@@ -165,7 +157,6 @@ subjects:
   - kind: ServiceAccount
     name: nginx-ingress-serviceaccount
     namespace: ingress-nginx
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -182,9 +173,7 @@ subjects:
   - kind: ServiceAccount
     name: nginx-ingress-serviceaccount
     namespace: ingress-nginx
-
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -219,7 +208,7 @@ spec:
             - --udp-services-configmap=$(POD_NAMESPACE)/udp-services
             - --publish-service=$(POD_NAMESPACE)/ingress-nginx
             - --annotations-prefix=nginx.ingress.kubernetes.io
-            - --default-ssl-certificate=default/duely-secret-tls
+            - --default-ssl-certificate=default/duely-tls-secret
           securityContext:
             allowPrivilegeEscalation: true
             capabilities:
@@ -262,5 +251,3 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 10
-
----
