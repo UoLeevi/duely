@@ -50,6 +50,11 @@ spec:
             secretKeyRef:
               name: duely-graphql-secret
               key: postgres-password
+        - name: JWTSECRET
+          valueFrom:
+            secretKeyRef:
+              name: duely-graphql-secret
+              key: jwt-secret
         - name: GSERVICEACCOUNTFILE
           value: /usr/src/app/gserviceaccount.json
         livenessProbe:
