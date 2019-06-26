@@ -50,13 +50,11 @@
 <script>
 import HomeSection from "@/components/HomeSection";
 import HomeHeroOptIn from "@/components/HomeHeroOptIn";
-import ThemeEditor from "@/components/ThemeEditor";
 
 export default {
   components: {
     HomeSection,
-    HomeHeroOptIn,
-    ThemeEditor
+    HomeHeroOptIn
   }
 };
 </script>
