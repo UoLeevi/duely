@@ -30,70 +30,44 @@ export default {
     }
   },
   Mutation: {
-    async signUp(obj, { email, name, password }, context, info) {
-      
+    /*
+    signUp(email: String!, verificationCode: String!, name: String!, password: String!): Account
+     */
+    async startEmailAddressVerification(obj, { email }, context, info) {
       if (!validator.isEmail(email))
         throw new Error(`Email format '${email}' is invalid.`);
 
-      const res = await db.query(`
-        SELECT * 
-          FROM sign_up_account($1::text, $2::text, $3::text);
-        `, 
-        [email, name, password]);
+      const verificationCode = ('000000' + Math.floor(Math.random() * Math.floor(1000000)).toString()).substr(-6);
 
-      if (res.rows) {
-        const verificationCode = ('000000' + Math.floor(Math.random() * Math.floor(1000000)).toString()).substr(-6);
-        
-        const body = [
-          `Hello ${name},`,
-          '',
-          `Your duely.app email verification code is ${verificationCode}.`,
-        ].join('\r\n');
-        
-        const messages = await gmail.sendEmailAsAdminDuely({ 
-          to: email, 
-          subject: 'Email verification - Sign up for duely.app',
-          body
-        });
-
-        if (!messages.id)
-          throw new Error(`Error while sending verification code email.`);
-
-        const res = await db.query(`
-          INSERT INTO emails (email, verification_code)
-            VALUES (lower($1::text), ($2::text))
-            RETURNING *;
-          `, 
-          [email, verificationCode]);
-
-        if (!res.rows)
-          throw new Error(`Error while creating the verification code.`);
-      }
-
-      return res.rows[0];
-    },
-    async verifyEmailAddress(obj, { email, verificationCode }, context, info) {
-      verificationCode = ('000000' + verificationCode).substr(-6);
-      const res = await db.query(`
-        UPDATE emails
-          SET verified = CURRENT_TIMESTAMP
-          WHERE email = lower($1::text)
-            AND verification_code = $2::text
-            AND verified IS NULL
-          RETURNING *;
-        `, 
+      const res = await db.query(
+        'SELECT * FROM start_email_verification($1::text, $2::text);', 
         [email, verificationCode]);
 
-      if (res.rows) {
-        const res = await db.query(`
-          SELECT a.*
-            FROM accounts a
-            WHERE a.email = lower($1::text);
-          `, 
-          [email]);
+      if (res.rows[0].uuid === null)
+        throw new Error(`Account with email '${email}' already exists.`);
 
-          return res.rows[0];
-      }
+      const messages = await gmail.sendEmailAsAdminDuely({ 
+        to: email, 
+        subject: 'Email verification - Sign up for duely.app',
+        body: [
+          `Your email verification code is ${verificationCode}.`,
+        ].join('\r\n')
+      });
+
+      if (!messages.id)
+          throw new Error(`Error while sending verification code email to '${email}'.`);
+
+      return `Verification code sent to '${email}'.`;
+    },
+    async signUp(obj, { email, verificationCode, name, password }, context, info) {
+      const res = await db.query(
+        'SELECT * FROM sign_up_account($1::text, $2::text, $3::text, $4::text);',
+        [email, verificationCode, name, password]);
+
+      if (res.rows[0].uuid === null)
+        throw new Error(`Unable to complete sign up an account for '${email}'. It might be that the verification code was incorrect.`);
+
+      return res.rows[0];
     },
     async logIn(obj, { email, password }, context, info) {
       const res = await db.query(`
@@ -111,18 +85,6 @@ export default {
     }
   },
   Account: {
-    async verified(account, args, context, info) {
-      const res = await db.query(`
-        SELECT e.*
-          FROM emails e
-          WHERE e.email = lower($1::text);
-        `, 
-        [account.email]);
-
-      return res.rows 
-        ? res.rows[0].verified
-        : null;
-    }
   },
   Session: {
     name(session, args, context, info) {

@@ -22,7 +22,6 @@ const typeDefs = `
     uuid: ID!
     name: String!
     email: String!
-    verified: Date 
     created: Date!
   }
 
@@ -68,8 +67,8 @@ const typeDefs = `
   }
 
   type Mutation {
-    signUp(email: String!, name: String!, password: String!): Account
-    verifyEmailAddress(email: String!, verificationCode: String!): Account
+    signUp(email: String!, verificationCode: String!, name: String!, password: String!): Account
+    startEmailAddressVerification(email: String!): String
     logIn(email: String!, password: String!): Session
   }
 `;

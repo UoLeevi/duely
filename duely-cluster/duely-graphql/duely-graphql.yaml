@@ -9,7 +9,7 @@ spec:
   ports:
   - protocol: TCP
     port: 8080
-    targetPort: 80
+    targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -25,18 +25,19 @@ spec:
       labels:
         app: duely-graphql
     spec:
+      terminationGracePeriodSeconds: 30
       volumes:
       - name: duely-graphql-secret
         secret:
           secretName: duely-graphql-secret
       containers:
       - name: duely-graphql
-        image: uoleevi/duely-graphql
+        image: uoleevi/duely-graphql:0.2
         ports:
-        - containerPort: 80
+        - containerPort: 8080
         env:
         - name: PORT
-          value: "80"
+          value: "8080"
         - name: PGUSER
           value: postgres
         - name: PGDATABASE
@@ -60,7 +61,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /.well-known/apollo/server-health
-            port: 80
+            port: 8080
           failureThreshold: 6
           initialDelaySeconds: 60
           periodSeconds: 10
@@ -69,7 +70,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /.well-known/apollo/server-health
-            port: 80
+            port: 8080
           failureThreshold: 3
           initialDelaySeconds: 5
           periodSeconds: 5
