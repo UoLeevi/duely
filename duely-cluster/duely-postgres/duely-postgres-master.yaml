@@ -38,6 +38,10 @@ spec:
       containers:
         - name: postgres-master
           image: postgres:11
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 40m
           args: ['-c', 'config_file=/etc/postgres.conf', '-c', 'hba_file=/etc/pg_hba.conf']
           ports:
             - protocol: TCP

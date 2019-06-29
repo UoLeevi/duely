@@ -62,6 +62,10 @@ spec:
       containers:
         - name: postgres-replica
           image: postgres:11
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 40m
           args: ['-c', 'config_file=/etc/postgres.conf']
           ports:
             - protocol: TCP

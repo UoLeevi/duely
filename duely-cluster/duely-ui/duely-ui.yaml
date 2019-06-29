@@ -25,8 +25,13 @@ spec:
       labels:
         app: duely-ui
     spec:
+      terminationGracePeriodSeconds: 30
       containers:
       - name: duely-ui
-        image: uoleevi/duely-ui
+        image: uoleevi/duely-ui:0.1
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 20m
         ports:
         - containerPort: 80

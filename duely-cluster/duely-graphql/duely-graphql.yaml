@@ -33,6 +33,10 @@ spec:
       containers:
       - name: duely-graphql
         image: uoleevi/duely-graphql:0.2
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 20m
         ports:
         - containerPort: 8080
         env:
