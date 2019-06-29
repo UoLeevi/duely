@@ -1,58 +1,49 @@
 <template>
   <v-app-bar absolute dark shrink-on-scroll prominent flat color="transparent">
-    <v-spacer v-show="$vuetify.breakpoint.smAndUp"/>
-    <v-toolbar-title class="headline my-auto">
-      <h3 class="logo-text">duely</h3>
-    </v-toolbar-title>
-    <v-spacer/>
-    <template v-if="$vuetify.breakpoint.smAndUp">
-      <v-tabs optional align-with-title>
-        <v-tab class="text-none subtitle-1">Features</v-tab>
-        <v-tab class="text-none subtitle-1">Pricing</v-tab>
-        <v-tab class="text-none subtitle-1">Examples</v-tab>
-      </v-tabs>
-      <v-spacer/>
-      <v-spacer/>
-      <div class="my-auto">
-        <v-fade-transition mode="out-in">
-          <v-progress-circular v-if="loading" indeterminate />
-          <div v-else-if="graph.me" key="log-out">
-            <v-btn @click="logOut" rounded text class="text-none mx-1">Log out</v-btn>
-            <v-btn rounded outlined class="text-none mx-1">Go to dashboard</v-btn>
-          </div>
-          <div v-else key="log-in">
-            <LoginDialog>
-              <template #activator="{ on }">
-                <v-btn v-on="on" rounded text class="text-none mx-1">Log in</v-btn>
-              </template>
-            </LoginDialog>
-            <v-btn to="/create-account"
-              rounded outlined class="text-none mx-1">Sign up</v-btn>
-          </div>
-        </v-fade-transition>
-      </div>
-      <v-spacer/>
-    </template>
-    <template v-else>
-      <div class="my-auto">
-        <v-menu
-          v-model="menu"
-          full-width>
-          <template v-slot:activator="{ on }">
-            <v-btn text icon large color="white" v-on="on">
-              <v-icon>menu</v-icon>
-            </v-btn>
-          </template>
-          <v-card>
-            <v-list>
-              <v-list-item class="text-none subtitle-1">Features</v-list-item>
-              <v-list-item class="text-none subtitle-1">Pricing</v-list-item>
-              <v-list-item class="text-none subtitle-1">Examples</v-list-item>
-            </v-list>
-          </v-card>
-        </v-menu>
-      </div>
-    </template>
+    <v-layout fill-height align-center justify-center>
+      <v-flex xs12 sm11 md10 lg9 xl7>
+        <v-layout fill-height align-center justify-center>
+          <v-flex xs4 sm3 lg4>
+            <v-layout justify-start class="pl-4">
+              <v-toolbar-title class="headline my-auto">
+                <h3 class="logo-text">duely</h3>
+              </v-toolbar-title>
+            </v-layout>
+          </v-flex>
+          <v-flex v-if="$vuetify.breakpoint.mdAndUp">
+            <v-layout justify-center>
+              <v-tabs optional>
+                <v-tab class="text-none subtitle-1">Features</v-tab>
+                <v-tab class="text-none subtitle-1">Pricing</v-tab>
+                <v-tab class="text-none subtitle-1">Examples</v-tab>
+              </v-tabs>
+            </v-layout>
+          </v-flex>
+          <v-flex md5>
+            <v-layout justify-end class="pr-4">
+              <div class="my-auto">
+                <v-fade-transition mode="out-in">
+                  <v-progress-circular v-if="loading" indeterminate />
+                  <div v-else-if="graph.me" key="log-out">
+                    <v-btn @click="logOut" rounded text class="text-none mx-1">Log out</v-btn>
+                    <v-btn to="/dashboard" rounded outlined class="text-none mx-1">Go to dashboard</v-btn>
+                  </div>
+                  <div v-else key="log-in">
+                    <LoginDialog>
+                      <template #activator="{ on }">
+                        <v-btn v-on="on" rounded text class="text-none mx-1">Log in</v-btn>
+                      </template>
+                    </LoginDialog>
+                    <v-btn to="/create-account"
+                      rounded outlined class="text-none mx-1">Sign up</v-btn>
+                  </div>
+                </v-fade-transition>
+              </div>
+            </v-layout>
+          </v-flex>
+        </v-layout>
+      </v-flex>
+    </v-layout>
   </v-app-bar>
 </template>
 
@@ -69,8 +60,10 @@ export default {
   mixins: [ApolloMixin],
   methods: {
     async logOut() {
+      this.loading = true;
       localStorage.removeItem('jwt');
       await client.clearStore();
+      this.loading = false;
     }
   },
   data() {

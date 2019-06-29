@@ -61,11 +61,15 @@ export default {
           mutation: gql`
             mutation($email: String!, $password: String!) {
               logIn(email: $email, password: $password) {
-                uuid
-                jwt
-                account {
+                success
+                message
+                session {
                   uuid
-                  email
+                  jwt
+                  account {
+                    uuid
+                    email
+                  }
                 }
               }
             }
@@ -75,7 +79,13 @@ export default {
             password: this.password
           }
         });
-        const jwt = res.data.logIn.jwt;
+
+        if (!res.data.logIn.success) {
+          this.processing = false;
+          return;
+        }
+
+        const jwt = res.data.logIn.session.jwt;
         if (jwt) {
           localStorage.setItem('jwt', jwt);
           await client.clearStore();

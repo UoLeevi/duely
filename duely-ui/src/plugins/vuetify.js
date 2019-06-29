@@ -20,9 +20,9 @@ export default new Vuetify({
       dark: {
 
       }
+    },
+    options: {
+      customProperties: true
     }
-  },
-  options: {
-    customProperties: true
   }
 });
