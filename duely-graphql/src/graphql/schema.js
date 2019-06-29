@@ -4,6 +4,11 @@ import resolvers from './resolvers';
 const typeDefs = `
   scalar Date
 
+  interface MutationResult {
+    success: Boolean!
+    message: String
+  }
+
   interface Node {
     uuid: ID!
     name: String!
@@ -67,10 +72,28 @@ const typeDefs = `
   }
 
   type Mutation {
-    signUp(email: String!, verificationCode: String!, name: String!, password: String!): Account
-    startEmailAddressVerification(email: String!): String
-    logIn(email: String!, password: String!): Session
+    signUp(email: String!, verificationCode: String!, name: String!, password: String!): SignUpResult
+    startEmailAddressVerification(email: String!): StartEmailAddressVerificationResult
+    logIn(email: String!, password: String!): LogInResult
   }
+
+  type SignUpResult implements MutationResult {
+    success: Boolean!
+    message: String
+    account: Account
+  }
+
+  type StartEmailAddressVerificationResult implements MutationResult {
+    success: Boolean!
+    message: String
+  }
+
+  type LogInResult implements MutationResult {
+    success: Boolean!
+    message: String
+    session: Session
+  }
+
 `;
 
 export default makeExecutableSchema({

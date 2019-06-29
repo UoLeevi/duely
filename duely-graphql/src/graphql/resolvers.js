@@ -30,12 +30,13 @@ export default {
     }
   },
   Mutation: {
-    /*
-    signUp(email: String!, verificationCode: String!, name: String!, password: String!): Account
-     */
     async startEmailAddressVerification(obj, { email }, context, info) {
       if (!validator.isEmail(email))
-        throw new Error(`Email format '${email}' is invalid.`);
+        return {
+          success: false,
+          message: `Email format '${email}' is invalid.`,
+          type: 'StartEmailAddressVerificationResult'
+        };
 
       const verificationCode = ('000000' + Math.floor(Math.random() * Math.floor(1000000)).toString()).substr(-6);
 
@@ -44,7 +45,11 @@ export default {
         [email, verificationCode]);
 
       if (res.rows[0].uuid === null)
-        throw new Error(`Account with email '${email}' already exists.`);
+        return {
+          success: false,
+          message: `Account with email '${email}' already exists.`,
+          type: 'StartEmailAddressVerificationResult'
+        };
 
       const messages = await gmail.sendEmailAsAdminDuely({ 
         to: email, 
@@ -55,9 +60,17 @@ export default {
       });
 
       if (!messages.id)
-          throw new Error(`Error while sending verification code email to '${email}'.`);
+        return {
+          success: false,
+          message: `Error while sending verification code email to '${email}'.`,
+          type: 'StartEmailAddressVerificationResult'
+        };
 
-      return `Verification code sent to '${email}'.`;
+      return {
+        success: true,
+        message: `Verification code sent to '${email}'.`,
+        type: 'StartEmailAddressVerificationResult'
+      };
     },
     async signUp(obj, { email, verificationCode, name, password }, context, info) {
       const res = await db.query(
@@ -65,9 +78,17 @@ export default {
         [email, verificationCode, name, password]);
 
       if (res.rows[0].uuid === null)
-        throw new Error(`Unable to complete sign up an account for '${email}'. It might be that the verification code was incorrect.`);
+        return {
+          success: false,
+          message: `Unable to complete sign up an account for '${email}'. It might be that the verification code was incorrect.`,
+          type: 'SignUpResult'
+        };
 
-      return res.rows[0];
+      return {
+        success: true,
+        account: res.rows[0],
+        type: 'SignUpResult'
+      };
     },
     async logIn(obj, { email, password }, context, info) {
       const res = await db.query(`
@@ -76,11 +97,20 @@ export default {
         `, 
         [email, password]);
 
+      if (res.rows[0].uuid === null)
+        return {
+          success: false,
+          message: `Your email or password was invalid. Please try again.`,
+          type: 'LogInResult'
+        };
+
       const session = res.rows[0];
+      session.jwt = await auth.issue(session.account_uuid);
 
       return {
-        ...session,
-        jwt: await auth.issue(session.account_uuid)
+        success: true,
+        session,
+        type: 'LogInResult'
       };
     }
   },
@@ -161,6 +191,11 @@ export default {
   Edge: {
     __resolveType(edge, context, info) {
       return edge.type;
+    }
+  },
+  MutationResult: {
+    __resolveType(mutationResult, context, info) {
+      return mutationResult.type;
     }
   },
   Date: new GraphQLScalarType({
