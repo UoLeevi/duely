@@ -119,6 +119,13 @@ export default {
           type: 'CreateSellerResult'
         };
 
+      if (!validator.isFQDN(`${subdomain}.duely.app`))
+        return {
+          success: false,
+          message: `Subdomain format '${subdomain}' is invalid.`,
+          type: 'CreateSellerResult'
+        };
+
       try {
         const res = await db.query(
           'SELECT * FROM create_seller($1::uuid, $2::text, $3::text);', 
