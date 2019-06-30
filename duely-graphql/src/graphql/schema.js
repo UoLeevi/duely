@@ -96,6 +96,7 @@ const typeDefs = `
     startEmailAddressVerification(email: String!): StartEmailAddressVerificationResult
     logIn(email: String!, password: String!): LogInResult
     createSeller(name: String!, subdomain: String!): CreateSellerResult
+    deleteSeller(seller_uuid: ID): DeleteSellerResult
   }
 
   type SignUpResult implements MutationResult {
@@ -119,6 +120,11 @@ const typeDefs = `
     success: Boolean!
     message: String
     seller: Seller
+  }
+
+  type DeleteSellerResult implements MutationResult {
+    success: Boolean!
+    message: String
   }
 
 `;

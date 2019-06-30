@@ -143,6 +143,30 @@ export default {
           type: 'CreateSellerResult'
         };
       }
+    },
+    async deleteSeller(obj, { seller_uuid }, context, info) {
+      if (!context.claims || !context.claims.sub)
+        return {
+          success: false,
+          message: `Unauthorized.`,
+          type: 'DeleteSellerResult'
+        };
+
+      const res = await db.query(
+        'SELECT * FROM delete_seller($1::uuid, $2::uuid);', 
+        [context.claims.sub, seller_uuid]);
+
+      if (res.rows.uuid === null)
+        return {
+          success: false,
+          message: `Invalid seller uuid.`,
+          type: 'DeleteSellerResult'
+        };
+
+      return {
+        success: true,
+        type: 'DeleteSellerResult'
+      };
     }
   },
   Account: {
