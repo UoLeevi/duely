@@ -28,12 +28,32 @@ const typeDefs = `
     name: String!
     email: String!
     created: Date!
+    sellersConnection: AccountSellersConnection
+  }
+
+  type AccountSellersConnection implements Connection {
+    edges: [AccountSellersEdge!]!
+  }
+
+  type AccountSellersEdge implements Edge {
+    cursor: String!
+    node: Seller!
   }
 
   type Seller implements Node {
     uuid: ID!
     name: String!
     created: Date!
+    subdomainsConnection: SellerSubdomainsConnection
+  }
+
+  type SellerSubdomainsConnection implements Connection {
+    edges: [SellerSubdomainsEdge!]!
+  }
+
+  type SellerSubdomainsEdge implements Edge {
+    cursor: String!
+    node: Subdomain!
   }
 
   type Subdomain implements Node {
@@ -75,6 +95,7 @@ const typeDefs = `
     signUp(email: String!, verificationCode: String!, name: String!, password: String!): SignUpResult
     startEmailAddressVerification(email: String!): StartEmailAddressVerificationResult
     logIn(email: String!, password: String!): LogInResult
+    createSeller(name: String!, subdomain: String!): CreateSellerResult
   }
 
   type SignUpResult implements MutationResult {
@@ -92,6 +113,12 @@ const typeDefs = `
     success: Boolean!
     message: String
     session: Session
+  }
+
+  type CreateSellerResult implements MutationResult {
+    success: Boolean!
+    message: String
+    seller: Seller
   }
 
 `;

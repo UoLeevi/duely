@@ -91,10 +91,8 @@ export default {
       };
     },
     async logIn(obj, { email, password }, context, info) {
-      const res = await db.query(`
-        SELECT *
-          FROM log_in_account($1::text, $2::text);
-        `, 
+      const res = await db.query(
+        'SELECT * FROM log_in_account($1::text, $2::text);', 
         [email, password]);
 
       if (res.rows[0].uuid === null)
@@ -112,9 +110,65 @@ export default {
         session,
         type: 'LogInResult'
       };
+    },
+    async createSeller(obj, { name, subdomain }, context, info) {
+      if (!context.claims || !context.claims.sub)
+        return {
+          success: false,
+          message: `Unauthorized.`,
+          type: 'CreateSellerResult'
+        };
+
+      try {
+        const res = await db.query(
+          'SELECT * FROM create_seller($1::uuid, $2::text, $3::text);', 
+          [context.claims.sub, name, subdomain]);
+
+        return {
+          success: true,
+          seller: res.rows[0],
+          type: 'CreateSellerResult'
+        };
+      } catch (error) {
+        return {
+          success: false,
+          message: `Try different subdomain.`,
+          type: 'CreateSellerResult'
+        };
+      }
     }
   },
   Account: {
+    sellersConnection(account, args, context, info) {
+      return { account_uuid: account.uuid, type: 'AccountSellersConnection' };
+    },
+  },
+  AccountSellersConnection: {
+    async edges(connection, args, context, info) {
+      const res = await db.query(`
+        SELECT a_x_s.*
+          FROM accounts_x_sellers a_x_s
+          WHERE a_x_s.account_uuid = $1::uuid;
+        `,
+        [connection.account_uuid]);
+
+      return res.rows.map(row => ({ ...row, type: 'AccountSellersEdge' }));
+    }
+  },
+  AccountSellersEdge: {
+    cursor(edge, args, context, info) {
+      return Buffer.from(`${edge.account_uuid},${edge.seller_uuid}`).toString('base64');
+    },
+    async node(edge, args, context, info) {
+      const res = await db.query(`
+        SELECT s.*
+          FROM sellers s
+          WHERE s.uuid = $1::uuid;
+        `,
+        [edge.seller_uuid]);
+
+      return { ...res.rows[0], type: "Seller" };
+    }
   },
   Session: {
     name(session, args, context, info) {
@@ -131,6 +185,36 @@ export default {
     }
   },
   Seller: {
+    subdomainsConnection(seller, args, context, info) {
+      return { seller_uuid: seller.uuid, type: 'SellerSubdomainsConnection' };
+    },
+  },
+  SellerSubdomainsConnection: {
+    async edges(connection, args, context, info) {
+      const res = await db.query(`
+        SELECT d.uuid subdomain_uuid, d.seller_uuid
+          FROM subdomains d
+          WHERE d.seller_uuid = $1::uuid;
+        `,
+        [connection.seller_uuid]);
+
+      return res.rows.map(row => ({ ...row, type: 'SellerSubdomainsEdge' }));
+    }
+  },
+  SellerSubdomainsEdge: {
+    cursor(edge, args, context, info) {
+      return Buffer.from(`${edge.seller_uuid},${edge.subdomain_uuid}`).toString('base64');
+    },
+    async node(edge, args, context, info) {
+      const res = await db.query(`
+        SELECT d.*
+          FROM subdomains d
+          WHERE d.uuid = $1::uuid;
+        `,
+        [edge.subdomain_uuid]);
+
+      return { ...res.rows[0], type: "Subdomain" };
+    }
   },
   Subdomain: {
     name(subdomain, args, context, info) {
