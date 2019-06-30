@@ -119,6 +119,15 @@ export default {
           type: 'CreateSellerResult'
         };
 
+      const reservedSubdomains = ['api', 'test', 'example', 'admin'];
+
+      if (reservedSubdomains.includes(subdomain.toLowerCase()))
+        return {
+          success: false,
+          message: `Subdomain '${subdomain}' is not allowed.`,
+          type: 'CreateSellerResult'
+        };
+
       if (!validator.isFQDN(`${subdomain}.duely.app`))
         return {
           success: false,
@@ -156,7 +165,7 @@ export default {
         'SELECT * FROM delete_seller($1::uuid, $2::uuid);', 
         [context.claims.sub, seller_uuid]);
 
-      if (res.rows.uuid === null)
+      if (res.rows[0].uuid === null)
         return {
           success: false,
           message: `Invalid seller uuid.`,
