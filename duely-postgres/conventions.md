@@ -37,10 +37,10 @@
 - triggers names as 'tr_[after_|before_|instead_of_][insert_|[or_]update_|[or_]delete_]{function}'
 
 ## auditing
-- enabled for a table by calling procedure 'setup_auditing_(_table_schema, _table_name)' which
-  - adds columns
+- enabled for a table by calling procedure 'internal_.setup_auditing_(_table_schema, _table_name)' which creates
+  - columns
     - audit_at_ timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
-    - audit_by_ uuid NOT NULL DEFAULT COALESCE(current_setting('security_.session__user_uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid;
+    - audit_by_ uuid NOT NULL DEFAULT COALESCE(current_setting('security_.login_.user_uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid;
   - separate table {schema}_audit_.{table} that has
     - same columns but without constraints
     - additional column
@@ -48,32 +48,54 @@
   - trigger before update that updates values for audit_at_ and audit_by_ columns
   - trigger after insert or update that copies changed rows to {schema}_audit_.{table}
   - trigger after delete that copies deleted rows to {schema}_audit_.{table} and set audit_at_ and audit_by_ columns
-- auditing feature can removed by calling procedure 'drop_auditing_(_table_schema, _table_name)'
+- auditing feature can removed by calling procedure 'internal_.drop_auditing_(_table_schema, _table_name)'
+
+## notifications
+- enabled for a table by calling procedure 'internal_.setup_notifications_(_table_schema, _table_name)' which creates
+  - trigger after insert or update or delete that will send notifications on affected rows in json format to channel '"{_table_schema}.{_table_name}"'
 
 ## application security
 - application security is designed loosely based on concepts of role-based access control
 - https://en.wikipedia.org/wiki/Role-based_access_control#Design
 - schema for application security related tables is called 'security_'
-- the application user's uuid_ is stored into a session variable security_.session__user_uuid_
+- separate schema 'operation_' contains functions and procedures that any database user is allowed to execute
+  - GRANT USAGE ON SCHEMA operation_ TO PUBLIC;
+  - GRANT EXECUTE ON ALL ROUTINES IN SCHEMA operation_ TO PUBLIC;
+  - default database user is called 'duely' and has password 'duely'
+- the uuid_ for the current application user is stored into a session variable 'security_.login_.user_uuid_'
   - e.g. 
-    SET security_.session__user_uuid_ = _user_uuid;
+    PERFORM set_config('security_.login_.user_uuid_', _user_uuid::text, 'f');
     ...
-    SELECT current_setting('security_.session__user_uuid_') _user_uuid;
-- users log in using function 'security_.log_in_(_user_uuid uuid, password_ text)
-  - the function returns json web token that can be used to 
-- every user session is started by calling security_.begin_session_(_user_uuid uuid) and ended by calling security_.end_session_()
+    SELECT current_setting('security_.login_.user_uuid_', 't') _user_uuid;
+- users log in using function 'operation_.log_in_user_(_user_uuid uuid, password_ text)
+  - the function returns a record with column 'jwt_' that has a json web token that can be used to start authenticated session for the user
+- every user session is started by calling 'operation_.begin_session_(_jwt text)' and ended by calling 'operation_.end_session_()'
+- users log out using function 'operation_.log_out_user_(_jwt text)'
 
 ### tables
-- session_ (se)
+- secret_ (x)
+  - uuid_
+  - name_
+  - value_
+- login_ (l)
   - uuid_
   - user_uuid_
   - jwt_
+- session_ (se)
+  - uuid_
+  - login_uuid_
+  - started_
 - subdomain_ (d)
   - uuid_
   - name_
+- email_address_verification_ (e)
+  - uuid_
+  - email_address_
+  - verification_code_
 - user_ (u)
   - uuid_
   - email_address_
+  - password_hash_
 - group_ (g)
   - uuid_
 - subject_ (s)
@@ -89,22 +111,31 @@
   - uuid_
   - name_
 - group_assignment_ (ga)
+  - uuid_
   - group_uuid_
   - subject_uuid_
 - subject_assignment_ (sa)
+  - uuid_
   - role_uuid_
   - subdomain_uuid_
   - subject_uuid_
 - permission_assignment_ (pa)
+  - uuid_
   - permission_uuid_
   - role_uuid_
-- role_hierarchy_ (ra)
+- role_hierarchy_ (rh)
+  - uuid_
   - role_uuid_
   - subrole_uuid_
 - operation_assignment_ (oa)
+  - uuid_
   - operation_uuid_
   - permission_uuid_
 
 ### columns
 - for tables 'subdomain_', 'role_', 'permission_', 'operation_' column 'name_' is not null and has unique constraint
   - this column is used to make it more simple to reason about access control logic
+
+## application data
+- all application data, except data related to application security and auditing, resides in schema 'application_'
+
