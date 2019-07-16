@@ -468,10 +468,56 @@ $$;
 ALTER FUNCTION operation_.create_agency_(_name text, _subdomain_name text) OWNER TO postgres;
 
 --
--- Name: delete_agency_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: service_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.delete_agency_(_name text) RETURNS application_.agency_
+CREATE TABLE application_.service_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    agency_uuid_ uuid NOT NULL,
+    name_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.service_ OWNER TO postgres;
+
+--
+-- Name: create_service_(text, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.create_service_(_name text, _agency_uuid uuid) RETURNS application_.service_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _subdomain_name text;
+  _service application_.service_;
+BEGIN
+  CALL security_.raise_if_no_active_session_();
+
+  SELECT d.name_ INTO _subdomain_name
+  FROM security_.subdomain_ d
+  JOIN application_.agency_ a ON d.uuid_ = a.subdomain_uuid_
+  WHERE a.uuid_ = _agency_uuid;
+
+  CALL security_.raise_if_no_active_permission_(_subdomain_name, 'create_service_');
+
+  INSERT INTO application_.service_ (agency_uuid_, name_)
+  VALUES (_agency_uuid, _name)
+  RETURNING * INTO _service;
+
+  RETURN _service;
+END
+$$;
+
+
+ALTER FUNCTION operation_.create_service_(_name text, _agency_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: delete_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.delete_agency_(_agency_uuid uuid) RETURNS application_.agency_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -483,7 +529,7 @@ BEGIN
   SELECT d.name_ INTO _subdomain_name
   FROM security_.subdomain_ d
   JOIN application_.agency_ a ON d.uuid_ = a.subdomain_uuid_
-  WHERE a.name_ = _name;
+  WHERE a.uuid_ = _agency_uuid;
 
   CALL security_.raise_if_no_active_permission_(_subdomain_name, 'delete_agency_');
 
@@ -499,7 +545,38 @@ END
 $$;
 
 
-ALTER FUNCTION operation_.delete_agency_(_name text) OWNER TO postgres;
+ALTER FUNCTION operation_.delete_agency_(_agency_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: delete_service_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.delete_service_(_service_uuid uuid) RETURNS application_.service_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _subdomain_name text;
+  _service application_.service_;
+BEGIN
+  CALL security_.raise_if_no_active_session_();
+
+  SELECT d.name_ INTO _subdomain_name
+  FROM security_.subdomain_ d
+  JOIN application_.agency_ a ON d.uuid_ = a.subdomain_uuid_
+  JOIN application_.service_ s ON a.uuid_ = s.agency_uuid_;
+
+  CALL security_.raise_if_no_active_permission_(_subdomain_name, 'delete_service_');
+
+  DELETE FROM application_.service_
+  WHERE name_ = _name
+  RETURNING * INTO _service;
+
+  RETURN _service;
+END
+$$;
+
+
+ALTER FUNCTION operation_.delete_service_(_service_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: end_session_(); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -728,6 +805,100 @@ $$;
 ALTER FUNCTION operation_.start_email_address_verification_(_email_address text) OWNER TO postgres;
 
 --
+-- Name: operation_assignment_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.operation_assignment_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    operation_uuid_ uuid NOT NULL,
+    permission_uuid_ uuid NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE security_.operation_assignment_ OWNER TO postgres;
+
+--
+-- Name: assign_operation_(text, text); Type: FUNCTION; Schema: security_; Owner: postgres
+--
+
+CREATE FUNCTION security_.assign_operation_(_operation_name text, _permission_name text) RETURNS security_.operation_assignment_
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _operation_assignment security_.operation_assignment_;
+BEGIN
+  INSERT INTO security_.operation_ (name_)
+  VALUES (_operation_name)
+  ON CONFLICT DO NOTHING;
+
+  INSERT INTO security_.permission_ (name_)
+  VALUES (_permission_name)
+  ON CONFLICT DO NOTHING;
+
+  INSERT INTO security_.operation_assignment_ (operation_uuid_, permission_uuid_)
+  SELECT o.uuid_, p.uuid_
+  FROM security_.operation_ o, security_.permission_ p
+  WHERE o.name_ = _operation_name
+    AND p.name_ = _permission_name
+  RETURNING * INTO _operation_assignment;
+
+  RETURN _operation_assignment;
+END
+$$;
+
+
+ALTER FUNCTION security_.assign_operation_(_operation_name text, _permission_name text) OWNER TO postgres;
+
+--
+-- Name: permission_assignment_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.permission_assignment_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    permission_uuid_ uuid NOT NULL,
+    role_uuid_ uuid NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE security_.permission_assignment_ OWNER TO postgres;
+
+--
+-- Name: assign_permission_(text, text); Type: FUNCTION; Schema: security_; Owner: postgres
+--
+
+CREATE FUNCTION security_.assign_permission_(_permission_name text, _role_name text) RETURNS security_.permission_assignment_
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _permission_assignment security_.permission_assignment_;
+BEGIN
+  INSERT INTO security_.permission_ (name_)
+  VALUES (_permission_name)
+  ON CONFLICT DO NOTHING;
+
+  INSERT INTO security_.role_ (name_)
+  VALUES (_role_name)
+  ON CONFLICT DO NOTHING;
+
+  INSERT INTO security_.permission_assignment_ (permission_uuid_, role_uuid_)
+  SELECT p.uuid_, r.uuid_
+  FROM security_.permission_ p, security_.role_ r
+  WHERE p.name_ = _permission_name
+    AND r.name_ = _role_name
+  RETURNING * INTO _permission_assignment;
+
+  RETURN _permission_assignment;
+END
+$$;
+
+
+ALTER FUNCTION security_.assign_permission_(_permission_name text, _role_name text) OWNER TO postgres;
+
+--
 -- Name: raise_if_no_active_permission_(text, text); Type: PROCEDURE; Schema: security_; Owner: postgres
 --
 
@@ -735,7 +906,7 @@ CREATE PROCEDURE security_.raise_if_no_active_permission_(_subdomain_name text, 
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  IF (
+  IF NOT (
     WITH 
       _operation_assignment AS (
         SELECT oa.permission_uuid_
@@ -747,10 +918,10 @@ BEGIN
       SELECT count(oa.permission_uuid_)
       FROM _operation_assignment oa
     ) = (
-     SELECT count(ap.permission_uuid_)
+     SELECT count(ap.uuid_)
      FROM security_.active_permission_ ap
      JOIN security_.subdomain_ d ON d.uuid_ = ap.subdomain_uuid_
-     JOIN _operation_assignment oa ON oa.permission_uuid_ = ap.permission_uuid_
+     JOIN _operation_assignment oa ON ap.uuid_ = oa.permission_uuid_
      WHERE d.name_ = _subdomain_name
     )
   ) THEN
@@ -783,21 +954,6 @@ $$;
 
 
 ALTER PROCEDURE security_.raise_if_no_active_session_() OWNER TO postgres;
-
---
--- Name: service_; Type: TABLE; Schema: application_; Owner: postgres
---
-
-CREATE TABLE application_.service_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    agency_uuid_ uuid NOT NULL,
-    name_ text NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE application_.service_ OWNER TO postgres;
 
 --
 -- Name: agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -1013,21 +1169,6 @@ CREATE TABLE security_.permission_ (
 ALTER TABLE security_.permission_ OWNER TO postgres;
 
 --
--- Name: permission_assignment_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.permission_assignment_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    permission_uuid_ uuid NOT NULL,
-    role_uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE security_.permission_assignment_ OWNER TO postgres;
-
---
 -- Name: active_permission_; Type: VIEW; Schema: security_; Owner: postgres
 --
 
@@ -1068,21 +1209,6 @@ CREATE TABLE security_.operation_ (
 
 
 ALTER TABLE security_.operation_ OWNER TO postgres;
-
---
--- Name: operation_assignment_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.operation_assignment_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    operation_uuid_ uuid NOT NULL,
-    permission_uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE security_.operation_assignment_ OWNER TO postgres;
 
 --
 -- Name: secret_; Type: TABLE; Schema: security_; Owner: postgres
@@ -1369,7 +1495,9 @@ COPY application__audit_.service_ (uuid_, agency_uuid_, name_, audit_at_, audit_
 --
 
 COPY security_.operation_ (uuid_, name_, audit_at_, audit_by_) FROM stdin;
-c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	2019-07-16 05:36:29.597649+03	00000000-0000-0000-0000-000000000000
+c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1378,7 +1506,9 @@ c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	2019-07-16 05:36:29.597649+0
 --
 
 COPY security_.operation_assignment_ (uuid_, operation_uuid_, permission_uuid_, audit_at_, audit_by_) FROM stdin;
-98328d08-8bff-4946-a736-99c1ced69c6f	c865b482-975b-49b3-845f-dfa39f46a7f1	5a612763-ebb3-41be-9d5e-625fd7702dbd	2019-07-16 05:42:15.516451+03	00000000-0000-0000-0000-000000000000
+98328d08-8bff-4946-a736-99c1ced69c6f	c865b482-975b-49b3-845f-dfa39f46a7f1	5a612763-ebb3-41be-9d5e-625fd7702dbd	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+1eb99f92-bfa6-45d1-be4d-9a878d749c63	fa4b4c5f-160f-413b-b77a-beee70108f0a	0927d2d7-cec2-42b2-b4bc-26f52ded6877	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+df9caca7-f0b4-450e-8b07-80fa7d581756	45cf7669-6e10-4c99-bf14-af25985a7f0f	0927d2d7-cec2-42b2-b4bc-26f52ded6877	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1387,7 +1517,8 @@ COPY security_.operation_assignment_ (uuid_, operation_uuid_, permission_uuid_, 
 --
 
 COPY security_.permission_ (uuid_, name_, audit_at_, audit_by_) FROM stdin;
-5a612763-ebb3-41be-9d5e-625fd7702dbd	delete agency	2019-07-16 05:39:24.834295+03	00000000-0000-0000-0000-000000000000
+5a612763-ebb3-41be-9d5e-625fd7702dbd	delete agency	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+0927d2d7-cec2-42b2-b4bc-26f52ded6877	manage services	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1396,7 +1527,8 @@ COPY security_.permission_ (uuid_, name_, audit_at_, audit_by_) FROM stdin;
 --
 
 COPY security_.permission_assignment_ (uuid_, permission_uuid_, role_uuid_, audit_at_, audit_by_) FROM stdin;
-059f6e90-00f0-4536-bac2-53b85c1e6306	5a612763-ebb3-41be-9d5e-625fd7702dbd	be9432a6-2c74-4030-b59e-d657662a4f92	2019-07-16 05:45:10.921758+03	00000000-0000-0000-0000-000000000000
+059f6e90-00f0-4536-bac2-53b85c1e6306	5a612763-ebb3-41be-9d5e-625fd7702dbd	be9432a6-2c74-4030-b59e-d657662a4f92	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+9053fc8c-7178-4b52-890e-10161a63cbfb	0927d2d7-cec2-42b2-b4bc-26f52ded6877	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1405,8 +1537,9 @@ COPY security_.permission_assignment_ (uuid_, permission_uuid_, role_uuid_, audi
 --
 
 COPY security_.role_ (uuid_, name_, audit_at_, audit_by_) FROM stdin;
-be9432a6-2c74-4030-b59e-d657662a4f92	owner	2019-07-16 04:41:54.479641+03	00000000-0000-0000-0000-000000000000
-566af82a-e5cf-4aad-aada-4341edb3e088	agent	2019-07-16 08:33:21.845779+03	00000000-0000-0000-0000-000000000000
+be9432a6-2c74-4030-b59e-d657662a4f92	owner	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+566af82a-e5cf-4aad-aada-4341edb3e088	agent	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1415,7 +1548,8 @@ be9432a6-2c74-4030-b59e-d657662a4f92	owner	2019-07-16 04:41:54.479641+03	0000000
 --
 
 COPY security_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_by_) FROM stdin;
-66eb47ab-1dee-49ab-9b2d-e6fdcb2c26f5	be9432a6-2c74-4030-b59e-d657662a4f92	566af82a-e5cf-4aad-aada-4341edb3e088	2019-07-16 08:54:18.10028+03	00000000-0000-0000-0000-000000000000
+64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1432,7 +1566,9 @@ COPY security_.subdomain_ (uuid_, name_, audit_at_, audit_by_) FROM stdin;
 --
 
 COPY security__audit_.operation_ (uuid_, name_, audit_at_, audit_by_, audit_op_) FROM stdin;
-c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	2019-07-16 05:36:29.597649+03	00000000-0000-0000-0000-000000000000	I
+c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -1441,7 +1577,9 @@ c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	2019-07-16 05:36:29.597649+0
 --
 
 COPY security__audit_.operation_assignment_ (uuid_, operation_uuid_, permission_uuid_, audit_at_, audit_by_, audit_op_) FROM stdin;
-98328d08-8bff-4946-a736-99c1ced69c6f	c865b482-975b-49b3-845f-dfa39f46a7f1	5a612763-ebb3-41be-9d5e-625fd7702dbd	2019-07-16 05:42:15.516451+03	00000000-0000-0000-0000-000000000000	I
+98328d08-8bff-4946-a736-99c1ced69c6f	c865b482-975b-49b3-845f-dfa39f46a7f1	5a612763-ebb3-41be-9d5e-625fd7702dbd	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+1eb99f92-bfa6-45d1-be4d-9a878d749c63	fa4b4c5f-160f-413b-b77a-beee70108f0a	0927d2d7-cec2-42b2-b4bc-26f52ded6877	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+df9caca7-f0b4-450e-8b07-80fa7d581756	45cf7669-6e10-4c99-bf14-af25985a7f0f	0927d2d7-cec2-42b2-b4bc-26f52ded6877	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -1450,7 +1588,8 @@ COPY security__audit_.operation_assignment_ (uuid_, operation_uuid_, permission_
 --
 
 COPY security__audit_.permission_ (uuid_, name_, audit_at_, audit_by_, audit_op_) FROM stdin;
-5a612763-ebb3-41be-9d5e-625fd7702dbd	delete agency	2019-07-16 05:39:24.834295+03	00000000-0000-0000-0000-000000000000	I
+5a612763-ebb3-41be-9d5e-625fd7702dbd	delete agency	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+0927d2d7-cec2-42b2-b4bc-26f52ded6877	manage services	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -1459,7 +1598,8 @@ COPY security__audit_.permission_ (uuid_, name_, audit_at_, audit_by_, audit_op_
 --
 
 COPY security__audit_.permission_assignment_ (uuid_, permission_uuid_, role_uuid_, audit_at_, audit_by_, audit_op_) FROM stdin;
-059f6e90-00f0-4536-bac2-53b85c1e6306	5a612763-ebb3-41be-9d5e-625fd7702dbd	be9432a6-2c74-4030-b59e-d657662a4f92	2019-07-16 05:45:10.921758+03	00000000-0000-0000-0000-000000000000	I
+059f6e90-00f0-4536-bac2-53b85c1e6306	5a612763-ebb3-41be-9d5e-625fd7702dbd	be9432a6-2c74-4030-b59e-d657662a4f92	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+9053fc8c-7178-4b52-890e-10161a63cbfb	0927d2d7-cec2-42b2-b4bc-26f52ded6877	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -1468,8 +1608,9 @@ COPY security__audit_.permission_assignment_ (uuid_, permission_uuid_, role_uuid
 --
 
 COPY security__audit_.role_ (uuid_, name_, audit_at_, audit_by_, audit_op_) FROM stdin;
-be9432a6-2c74-4030-b59e-d657662a4f92	owner	2019-07-16 04:41:54.479641+03	00000000-0000-0000-0000-000000000000	I
-566af82a-e5cf-4aad-aada-4341edb3e088	agent	2019-07-16 08:33:21.845779+03	00000000-0000-0000-0000-000000000000	I
+be9432a6-2c74-4030-b59e-d657662a4f92	owner	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+566af82a-e5cf-4aad-aada-4341edb3e088	agent	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -1478,7 +1619,8 @@ be9432a6-2c74-4030-b59e-d657662a4f92	owner	2019-07-16 04:41:54.479641+03	0000000
 --
 
 COPY security__audit_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_by_, audit_op_) FROM stdin;
-66eb47ab-1dee-49ab-9b2d-e6fdcb2c26f5	be9432a6-2c74-4030-b59e-d657662a4f92	566af82a-e5cf-4aad-aada-4341edb3e088	2019-07-16 08:54:18.10028+03	00000000-0000-0000-0000-000000000000	I
+64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2301,7 +2443,7 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_hie
 --
 
 ALTER TABLE ONLY application_.agency_
-    ADD CONSTRAINT agency__subdomain_uuid__fkey FOREIGN KEY (subdomain_uuid_) REFERENCES security_.subdomain_(uuid_);
+    ADD CONSTRAINT agency__subdomain_uuid__fkey FOREIGN KEY (subdomain_uuid_) REFERENCES security_.subdomain_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2309,7 +2451,7 @@ ALTER TABLE ONLY application_.agency_
 --
 
 ALTER TABLE ONLY application_.service_
-    ADD CONSTRAINT service__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+    ADD CONSTRAINT service__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2317,7 +2459,7 @@ ALTER TABLE ONLY application_.service_
 --
 
 ALTER TABLE ONLY security_.group_
-    ADD CONSTRAINT group__uuid__fkey FOREIGN KEY (uuid_) REFERENCES security_.subject_(uuid_);
+    ADD CONSTRAINT group__uuid__fkey FOREIGN KEY (uuid_) REFERENCES security_.subject_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2325,7 +2467,7 @@ ALTER TABLE ONLY security_.group_
 --
 
 ALTER TABLE ONLY security_.group_assignment_
-    ADD CONSTRAINT group_assignment__group_uuid__fkey FOREIGN KEY (group_uuid_) REFERENCES security_.group_(uuid_);
+    ADD CONSTRAINT group_assignment__group_uuid__fkey FOREIGN KEY (group_uuid_) REFERENCES security_.group_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2333,7 +2475,7 @@ ALTER TABLE ONLY security_.group_assignment_
 --
 
 ALTER TABLE ONLY security_.group_assignment_
-    ADD CONSTRAINT group_assignment__subject_uuid__fkey FOREIGN KEY (subject_uuid_) REFERENCES security_.subject_(uuid_);
+    ADD CONSTRAINT group_assignment__subject_uuid__fkey FOREIGN KEY (subject_uuid_) REFERENCES security_.subject_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2341,7 +2483,7 @@ ALTER TABLE ONLY security_.group_assignment_
 --
 
 ALTER TABLE ONLY security_.login_
-    ADD CONSTRAINT login__user_uuid__fkey FOREIGN KEY (user_uuid_) REFERENCES security_.user_(uuid_);
+    ADD CONSTRAINT login__user_uuid__fkey FOREIGN KEY (user_uuid_) REFERENCES security_.user_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2349,7 +2491,7 @@ ALTER TABLE ONLY security_.login_
 --
 
 ALTER TABLE ONLY security_.operation_assignment_
-    ADD CONSTRAINT operation_assignment__operation_uuid__fkey FOREIGN KEY (operation_uuid_) REFERENCES security_.operation_(uuid_);
+    ADD CONSTRAINT operation_assignment__operation_uuid__fkey FOREIGN KEY (operation_uuid_) REFERENCES security_.operation_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2357,7 +2499,7 @@ ALTER TABLE ONLY security_.operation_assignment_
 --
 
 ALTER TABLE ONLY security_.operation_assignment_
-    ADD CONSTRAINT operation_assignment__permission_uuid__fkey FOREIGN KEY (permission_uuid_) REFERENCES security_.permission_(uuid_);
+    ADD CONSTRAINT operation_assignment__permission_uuid__fkey FOREIGN KEY (permission_uuid_) REFERENCES security_.permission_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2365,7 +2507,7 @@ ALTER TABLE ONLY security_.operation_assignment_
 --
 
 ALTER TABLE ONLY security_.permission_assignment_
-    ADD CONSTRAINT permission_assignment__permission_uuid__fkey FOREIGN KEY (permission_uuid_) REFERENCES security_.permission_(uuid_);
+    ADD CONSTRAINT permission_assignment__permission_uuid__fkey FOREIGN KEY (permission_uuid_) REFERENCES security_.permission_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2373,7 +2515,7 @@ ALTER TABLE ONLY security_.permission_assignment_
 --
 
 ALTER TABLE ONLY security_.permission_assignment_
-    ADD CONSTRAINT permission_assignment__role_uuid__fkey FOREIGN KEY (role_uuid_) REFERENCES security_.role_(uuid_);
+    ADD CONSTRAINT permission_assignment__role_uuid__fkey FOREIGN KEY (role_uuid_) REFERENCES security_.role_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2381,7 +2523,7 @@ ALTER TABLE ONLY security_.permission_assignment_
 --
 
 ALTER TABLE ONLY security_.role_hierarchy_
-    ADD CONSTRAINT role_hierarchy__role_uuid__fkey FOREIGN KEY (role_uuid_) REFERENCES security_.role_(uuid_);
+    ADD CONSTRAINT role_hierarchy__role_uuid__fkey FOREIGN KEY (role_uuid_) REFERENCES security_.role_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2389,7 +2531,7 @@ ALTER TABLE ONLY security_.role_hierarchy_
 --
 
 ALTER TABLE ONLY security_.role_hierarchy_
-    ADD CONSTRAINT role_hierarchy__subrole_uuid__fkey FOREIGN KEY (subrole_uuid_) REFERENCES security_.role_(uuid_);
+    ADD CONSTRAINT role_hierarchy__subrole_uuid__fkey FOREIGN KEY (subrole_uuid_) REFERENCES security_.role_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2397,7 +2539,7 @@ ALTER TABLE ONLY security_.role_hierarchy_
 --
 
 ALTER TABLE ONLY security_.session_
-    ADD CONSTRAINT session__login_uuid__fkey FOREIGN KEY (login_uuid_) REFERENCES security_.login_(uuid_);
+    ADD CONSTRAINT session__login_uuid__fkey FOREIGN KEY (login_uuid_) REFERENCES security_.login_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2405,7 +2547,7 @@ ALTER TABLE ONLY security_.session_
 --
 
 ALTER TABLE ONLY security_.subject_assignment_
-    ADD CONSTRAINT subject_assignment__role_uuid__fkey FOREIGN KEY (role_uuid_) REFERENCES security_.role_(uuid_);
+    ADD CONSTRAINT subject_assignment__role_uuid__fkey FOREIGN KEY (role_uuid_) REFERENCES security_.role_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2421,7 +2563,7 @@ ALTER TABLE ONLY security_.subject_assignment_
 --
 
 ALTER TABLE ONLY security_.subject_assignment_
-    ADD CONSTRAINT subject_assignment__subject_uuid__fkey FOREIGN KEY (subject_uuid_) REFERENCES security_.subject_(uuid_);
+    ADD CONSTRAINT subject_assignment__subject_uuid__fkey FOREIGN KEY (subject_uuid_) REFERENCES security_.subject_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2429,7 +2571,7 @@ ALTER TABLE ONLY security_.subject_assignment_
 --
 
 ALTER TABLE ONLY security_.user_
-    ADD CONSTRAINT user__uuid__fkey FOREIGN KEY (uuid_) REFERENCES security_.subject_(uuid_);
+    ADD CONSTRAINT user__uuid__fkey FOREIGN KEY (uuid_) REFERENCES security_.subject_(uuid_) ON DELETE CASCADE;
 
 
 --

@@ -8,7 +8,7 @@
     - https://www.postgresql.org/docs/current/sql-keywords-appendix.html#KEYWORDS-TABLE
   - it also makes it easier to distinguish user created identifiers from built-in identifiers and key words
 - an exception to the general naming rule is that function parameters and local variables should be named using _leading_underscore without trailing underscore
-- identifiers should prefer fully spelled out names instead of appreviations and possibly longer name if to prevent ambiguity (e.g. prefer 'email_address_' over 'email_')
+- identifiers should prefer fully spelled out names instead of appreviations and possibly longer name to prevent ambiguity (e.g. prefer 'email_address_' over 'email_')
 
 ### schemas
 - audit tables belong to special schema '{schema}_audit_'
@@ -61,7 +61,8 @@
 - separate schema 'operation_' contains functions and procedures that any database user is allowed to execute
   - GRANT USAGE ON SCHEMA operation_ TO PUBLIC;
   - GRANT EXECUTE ON ALL ROUTINES IN SCHEMA operation_ TO PUBLIC;
-  - default database user is called 'duely' and has password 'duely'
+- default database user is called 'duely' and has password 'duely'
+  - CREATE ROLE duely LOGIN PASSWORD 'duely';
 - the uuid_ for the current application user is stored into a session variable 'security_.login_.user_uuid_'
   - e.g. 
     PERFORM set_config('security_.login_.user_uuid_', _user_uuid::text, 'f');
@@ -164,6 +165,8 @@
 - operation_.end_session_() RETURNS security_.session_
 - security_.raise_if_no_active_session_()
 - security_.raise_if_no_active_permission_(_subdomain_name text, _operation_name text)
+- security_.assign_operation_(_operation_name text, _permission_name text)
+- security_.assign_permission_(_permission_name text, _role_name text)
 
 ## application data
 - all application data, except data related to application security and auditing, resides in schema 'application_'
@@ -185,4 +188,6 @@
 
 ### routines
 - operation_.create_agency_(_name text, _subdomain_name text) RETURNS application_.agency_
-- operation_.delete_agency_(_name text) RETURNS application_.agency_
+- operation_.delete_agency_(_agency_uuid uuid) RETURNS application_.agency_
+- operation_.create_service_(_name text, _agency_uuid uuid) RETURNS application_.service_
+- operation_.delete_service_(_service_uuid uuid) RETURNS application_.service_
