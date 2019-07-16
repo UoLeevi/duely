@@ -67,7 +67,7 @@
     PERFORM set_config('security_.login_.user_uuid_', _user_uuid::text, 'f');
     ...
     SELECT current_setting('security_.login_.user_uuid_', 't') _user_uuid;
-- users log in using function 'operation_.log_in_user_(_user_uuid uuid, password_ text)
+- users log in using function 'operation_.log_in_user_(_user_uuid uuid, _password text)
   - the function returns a record with column 'jwt_' that has a json web token that can be used to start authenticated session for the user
 - every user session is started by calling 'operation_.begin_session_(_jwt text)' and ended by calling 'operation_.end_session_()'
 - users log out using function 'operation_.log_out_user_(_jwt text)'
@@ -136,6 +136,53 @@
 - for tables 'subdomain_', 'role_', 'permission_', 'operation_' column 'name_' is not null and has unique constraint
   - this column is used to make it more simple to reason about access control logic
 
+### views
+- security_.active_user_
+  - uuid_
+  - name_
+- security_.active_group_
+  - uuid_
+  - name_
+- security_.active_subject_
+  - uuid_
+  - name_
+- security_.active_role_
+  - uuid_
+  - name_
+  - subdomain_uuid_
+- security_.active_permission_
+  - uuid_
+  - name_
+  - subdomain_uuid_
+
+### routines
+- operation_.start_email_address_verification_(_email_address text) RETURNS security_.email_address_verification_
+- operation_.sign_up_user_(_email_address text, _verification_code text, _name text, _password text) RETURNS security_.user_
+- operation_.log_in_user_(_email_address text, _password text) RETURNS security_.login_
+- operation_.log_out_user_(_user_uuid uuid, _password text) RETURNS security_.login_
+- operation_.begin_session_(_jwt text) RETURNS security_.session_
+- operation_.end_session_() RETURNS security_.session_
+- security_.raise_if_no_active_session_()
+- security_.raise_if_no_active_permission_(_subdomain_name text, _operation_name text)
+
 ## application data
 - all application data, except data related to application security and auditing, resides in schema 'application_'
 
+### tables
+- agency_
+  - uuid_
+  - subdomain_uuid_
+  - name_
+
+- service_
+  - uuid_
+  - agency_uuid_
+  - name_
+
+### columns
+- for tables 'agency_' column 'name_' is not null and has unique constraint
+- for tables 'service_' column 'name_' is not null and has unique constraint with column 'agency_uuid_'
+
+### routines
+- operation_.create_agency_(_name text, _subdomain_name text) RETURNS application_.agency_
+- operation_.delete_agency_(_name text) RETURNS application_.agency_
