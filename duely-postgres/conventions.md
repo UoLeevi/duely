@@ -40,7 +40,7 @@
 - enabled for a table by calling procedure 'internal_.setup_auditing_(_table_schema, _table_name)' which creates
   - columns
     - audit_at_ timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
-    - audit_by_ uuid NOT NULL DEFAULT COALESCE(current_setting('security_.login_.user_uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid;
+    - audit_by_ uuid NOT NULL DEFAULT COALESCE(current_setting('security_.token_.subject_uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid;
   - separate table {schema}_audit_.{table} that has
     - same columns but without constraints
     - additional column
@@ -58,34 +58,41 @@
 - application security is designed loosely based on concepts of role-based access control
 - https://en.wikipedia.org/wiki/Role-based_access_control#Design
 - schema for application security related tables is called 'security_'
-- separate schema 'operation_' contains functions and procedures that any database user is allowed to execute
-  - GRANT USAGE ON SCHEMA operation_ TO PUBLIC;
+- separate schema 'operation_' contains views, functions and procedures that any database user is allowed to select and execute
+  - GRANT SELECT ON ALL TABLES IN SCHEMA operation_ TO PUBLIC;
   - GRANT EXECUTE ON ALL ROUTINES IN SCHEMA operation_ TO PUBLIC;
 - default database user is called 'duely' and has password 'duely'
   - CREATE ROLE duely LOGIN PASSWORD 'duely';
-- the uuid_ for the current application user is stored into a session variable 'security_.login_.user_uuid_'
-  - e.g. 
-    PERFORM set_config('security_.login_.user_uuid_', _user_uuid::text, 'f');
-    ...
-    SELECT current_setting('security_.login_.user_uuid_', 't') _user_uuid;
+- database user connected to database acts either as a visitor or a user
+  - visitor is unauthenticated 'subject_' who has limited access to view resources
+  - user is authenticated 'subject_' who has greater access to resources
 - users log in using function 'operation_.log_in_user_(_user_uuid uuid, _password text)
   - the function returns a record with column 'jwt_' that has a json web token that can be used to start authenticated session for the user
-- every user session is started by calling 'operation_.begin_session_(_jwt text)' and ended by calling 'operation_.end_session_()'
+- every user session is started by calling 'operation_.begin_session_(_jwt text, _tag text)' and ended by calling 'operation_.end_session_()'
 - users log out using function 'operation_.log_out_user_(_jwt text)'
+- the uuid_ for the current application user is stored into a session variable 'security_.token_.subject_uuid_'
+  - e.g. 
+    PERFORM set_config('security_.token_.subject_uuid_', _user_uuid::text, 'f');
+    ...
+    SELECT current_setting('security_.token_.subject_uuid_', 't') _user_uuid;
 
 ### tables
 - secret_ (x)
   - uuid_
   - name_
   - value_
-- login_ (l)
+- token_ (t)
   - uuid_
-  - user_uuid_
+  - subject_uuid_
   - jwt_
+  - issued_at_
+  - revoked_at_
 - session_ (se)
   - uuid_
   - login_uuid_
-  - started_
+  - begin_at_
+  - end_at_
+  - tag_
 - subdomain_ (d)
   - uuid_
   - name_
@@ -97,11 +104,10 @@
   - uuid_
   - email_address_
   - password_hash_
-- group_ (g)
-  - uuid_
 - subject_ (s)
   - uuid_
   - name_
+  - type_
 - role_ (r)
   - uuid_
   - name_
@@ -111,10 +117,7 @@
 - operation_ (o)
   - uuid_
   - name_
-- group_assignment_ (ga)
-  - uuid_
-  - group_uuid_
-  - subject_uuid_
+  - require_subject_type_
 - subject_assignment_ (sa)
   - uuid_
   - role_uuid_
@@ -138,15 +141,14 @@
   - this column is used to make it more simple to reason about access control logic
 
 ### views
-- security_.active_user_
-  - uuid_
-  - name_
-- security_.active_group_
-  - uuid_
-  - name_
 - security_.active_subject_
   - uuid_
   - name_
+  - type_
+- security_.active_user_
+  - uuid_
+  - name_
+  - email_
 - security_.active_role_
   - uuid_
   - name_
@@ -155,18 +157,25 @@
   - uuid_
   - name_
   - subdomain_uuid_
+- security_.authorized_operation_
+  - uuid_
+  - name_
+  - subdomain_uuid_
 
 ### routines
+- operation_.begin_visit_() RETURNS security_.token_
+- operation_.end_visit() RETURNS security_.token_
 - operation_.start_email_address_verification_(_email_address text) RETURNS security_.email_address_verification_
 - operation_.sign_up_user_(_email_address text, _verification_code text, _name text, _password text) RETURNS security_.user_
-- operation_.log_in_user_(_email_address text, _password text) RETURNS security_.login_
-- operation_.log_out_user_(_user_uuid uuid, _password text) RETURNS security_.login_
-- operation_.begin_session_(_jwt text) RETURNS security_.session_
+- operation_.log_in_user_(_email_address text, _password text) RETURNS security_.token_
+- operation_.log_out_user_(_user_uuid uuid, _password text) RETURNS security_.token_
+- operation_.begin_session_(_jwt text, _tag text) RETURNS security_.session_
 - operation_.end_session_() RETURNS security_.session_
 - security_.raise_if_no_active_session_()
 - security_.raise_if_no_active_permission_(_subdomain_name text, _operation_name text)
 - security_.assign_operation_(_operation_name text, _permission_name text)
 - security_.assign_permission_(_permission_name text, _role_name text)
+- security_.session_state_() RETURNS text
 
 ## application data
 - all application data, except data related to application security and auditing, resides in schema 'application_'
@@ -176,7 +185,6 @@
   - uuid_
   - subdomain_uuid_
   - name_
-
 - service_
   - uuid_
   - agency_uuid_
@@ -185,6 +193,15 @@
 ### columns
 - for tables 'agency_' column 'name_' is not null and has unique constraint
 - for tables 'service_' column 'name_' is not null and has unique constraint with column 'agency_uuid_'
+
+### views
+- operation_.view_session_
+- operation_.view_user_
+- operation_.view_role_
+- operation_.view_permission_
+- operation_.view_subdomain_
+- operation_.view_agency_
+- operation_.view_service_
 
 ### routines
 - operation_.create_agency_(_name text, _subdomain_name text) RETURNS application_.agency_

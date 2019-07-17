@@ -120,7 +120,7 @@ BEGIN
     TG_TABLE_NAME, 
     _columns, 
     CURRENT_TIMESTAMP, 
-    COALESCE(current_setting('security_.login_.user_uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid, 
+    COALESCE(current_setting('security_.token_.subject_uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid, 
     LEFT(TG_OP, 1));
   RETURN NULL;
 END
@@ -172,7 +172,7 @@ CREATE FUNCTION internal_.audit_stamp_() RETURNS trigger
     AS $$
 BEGIN
   NEW.audit_at_ := CURRENT_TIMESTAMP;
-  NEW.audit_by_ := COALESCE(current_setting('security_.login_.user_uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid;
+  NEW.audit_by_ := COALESCE(current_setting('security_.token_.subject_uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid;
   RETURN NEW;
 END;
 $$;
@@ -280,14 +280,19 @@ ALTER FUNCTION internal_.jwt_sign_hs256_(_payload json, _secret bytea) OWNER TO 
 -- Name: jwt_verify_hs256_(text, bytea); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
-CREATE FUNCTION internal_.jwt_verify_hs256_(_jwt text, _secret bytea) RETURNS boolean
+CREATE FUNCTION internal_.jwt_verify_hs256_(_jwt text, _secret bytea) RETURNS json
     LANGUAGE sql IMMUTABLE
     AS $$
   WITH
-    cte1 AS (
-      SELECT split_part(_jwt, '.', 3) signature_
+    _base64 AS (
+      SELECT split_part(_jwt, '.', 1) header_, split_part(_jwt, '.', 2) payload_, split_part(_jwt, '.', 3) signature_
     )
-    SELECT cte1.signature_ = base64url_encode_(hmac(substring(_jwt for octet_length(_jwt) - octet_length(cte1.signature_) - 1)::bytea, _secret, 'sha256')) FROM cte1;
+    SELECT 
+      CASE WHEN _base64.signature_ = internal_.base64url_encode_(pgcrypto_.hmac((_base64.header_ || '.' || _base64.payload_)::bytea, _secret, 'sha256')) 
+        THEN convert_from(internal_.base64url_decode_(_base64.payload_), 'UTF-8')::json
+        ELSE NULL 
+      END payload_
+    FROM _base64;
 $$;
 
 
@@ -322,7 +327,7 @@ DECLARE
 BEGIN
   EXECUTE format(
     'ALTER TABLE %1$I.%2$I ADD COLUMN audit_at_ timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;'
-    'ALTER TABLE %1$I.%2$I ADD COLUMN audit_by_ uuid NOT NULL NOT NULL DEFAULT COALESCE(current_setting(''security_.login_.user_uuid_'', ''t''), ''00000000-0000-0000-0000-000000000000'')::uuid;'
+    'ALTER TABLE %1$I.%2$I ADD COLUMN audit_by_ uuid NOT NULL NOT NULL DEFAULT COALESCE(current_setting(''security_.token_.subject_uuid_'', ''t''), ''00000000-0000-0000-0000-000000000000'')::uuid;'
     'CREATE TABLE %3$I.%2$I AS TABLE %1$I.%2$I;'
     'ALTER TABLE %3$I.%2$I ADD COLUMN audit_op_ char(1) NOT NULL DEFAULT ''I'';'
     'CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON %1$I.%2$I FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();'
@@ -376,40 +381,50 @@ SET default_with_oids = false;
 
 CREATE TABLE security_.session_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    login_uuid_ uuid NOT NULL,
     begin_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    end_at_ timestamp with time zone
+    end_at_ timestamp with time zone,
+    token_uuid_ uuid NOT NULL,
+    tag_ text
 );
 
 
 ALTER TABLE security_.session_ OWNER TO postgres;
 
 --
--- Name: begin_session_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: begin_session_(text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.begin_session_(_jwt text) RETURNS security_.session_
+CREATE FUNCTION operation_.begin_session_(_jwt text, _tag text) RETURNS security_.session_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _login_uuid uuid;
-  _user_uuid uuid;
+  _claims json;
+  _token_uuid uuid;
+  _subject_uuid uuid;
   _session security_.session_;
 BEGIN
-  SELECT l.uuid_, l.user_uuid_ INTO _login_uuid, _user_uuid
-  FROM security_.login_ l
-  WHERE l.jwt_ = _jwt
-    AND l.log_out_at_ IS NULL;
+  SELECT internal_.jwt_verify_hs256_(_jwt, x.value_) INTO _claims
+  FROM security_.secret_ x
+  WHERE x.name_ = 'jwt_hs256';
 
-  IF _login_uuid IS NULL THEN
+  IF _claims IS NULL THEN
     RAISE 'Invalid JWT.' USING ERRCODE = '20000';
   END IF;
 
-  INSERT INTO security_.session_ (login_uuid_)
-  VALUES (_login_uuid)
+  SELECT t.uuid_, t.subject_uuid_ INTO _token_uuid, _subject_uuid
+  FROM security_.token_ t
+  WHERE t.uuid_ = (_claims->>'jti')::uuid
+    AND t.revoked_at_ IS NULL;
+
+  IF _token_uuid IS NULL THEN
+    RAISE 'Invalid JWT.' USING ERRCODE = '20000';
+  END IF;
+
+  INSERT INTO security_.session_ (token_uuid_, tag_)
+  VALUES (_token_uuid, _tag)
   RETURNING * INTO _session;
 
-  PERFORM set_config('security_.login_.user_uuid_', _user_uuid::text, 'f');
+  PERFORM set_config('security_.token_.subject_uuid_', _subject_uuid::text, 'f');
   PERFORM set_config('security_.session_.uuid_', _session.uuid_::text, 'f');
 
   RETURN _session;
@@ -417,7 +432,67 @@ END
 $$;
 
 
-ALTER FUNCTION operation_.begin_session_(_jwt text) OWNER TO postgres;
+ALTER FUNCTION operation_.begin_session_(_jwt text, _tag text) OWNER TO postgres;
+
+--
+-- Name: token_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.token_ (
+    uuid_ uuid NOT NULL,
+    subject_uuid_ uuid NOT NULL,
+    issued_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    revoked_at_ timestamp with time zone,
+    jwt_ text NOT NULL
+);
+
+
+ALTER TABLE security_.token_ OWNER TO postgres;
+
+--
+-- Name: begin_visit_(); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.begin_visit_() RETURNS security_.token_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _uuid uuid := pgcrypto_.gen_random_uuid();
+  _iat bigint := FLOOR(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP));
+  _subject_uuid uuid;
+  _secret bytea;
+  _token security_.token_;
+BEGIN
+  INSERT INTO security_.subject_ (name_, type_)
+  VALUES ('', 'visitor')
+  RETURNING uuid_ INTO _subject_uuid;
+
+  SELECT x.value_ INTO _secret
+  FROM security_.secret_ x
+  WHERE x.name_ = 'jwt_hs256';
+
+  IF _secret IS NULL THEN
+    RAISE 'Invalid secret configuration.' USING ERRCODE = '55000';
+  END IF;
+
+  INSERT INTO security_.token_ (uuid_, subject_uuid_, jwt_)
+  VALUES (_uuid, _user_uuid, internal_.jwt_sign_hs256_(
+    json_build_object(
+      'iss', 'duely.app',
+      'sub', _subject_uuid,
+      'jwi', _uuid,
+      'iat', _iat
+    ),
+    _secret
+  ))
+  RETURNING * INTO _token;
+
+  RETURN _token;
+END
+$$;
+
+
+ALTER FUNCTION operation_.begin_visit_() OWNER TO postgres;
 
 --
 -- Name: agency_; Type: TABLE; Schema: application_; Owner: postgres
@@ -428,7 +503,7 @@ CREATE TABLE application_.agency_ (
     subdomain_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -456,7 +531,7 @@ BEGIN
   RETURNING * INTO _agency;
 
   INSERT INTO security_.subject_assignment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
-  SELECT r.uuid_, _subdomain_uuid, current_setting('security_.login_.user_uuid_'::text, false)::uuid
+  SELECT r.uuid_, _subdomain_uuid, current_setting('security_.token_.subject_uuid_'::text, false)::uuid
   FROM security_.role_ r
   WHERE r.name_ = 'owner';
 
@@ -476,7 +551,7 @@ CREATE TABLE application_.service_ (
     agency_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -594,7 +669,7 @@ BEGIN
   WHERE uuid_ = current_setting('security_.session_.uuid_', 'f')::uuid
   RETURNING * INTO _session;
 
-  PERFORM set_config('security_.login_.user_uuid_', '00000000-0000-0000-0000-000000000000', 'f');
+  PERFORM set_config('security_.token_.subject_uuid_', '00000000-0000-0000-0000-000000000000', 'f');
   PERFORM set_config('security_.session_.uuid_', '00000000-0000-0000-0000-000000000000', 'f');
 
   RETURN _session;
@@ -605,32 +680,45 @@ $$;
 ALTER FUNCTION operation_.end_session_() OWNER TO postgres;
 
 --
--- Name: login_; Type: TABLE; Schema: security_; Owner: postgres
+-- Name: end_visit_(); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE TABLE security_.login_ (
-    uuid_ uuid NOT NULL,
-    user_uuid_ uuid NOT NULL,
-    log_in_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    log_out_at_ timestamp with time zone,
-    jwt_ text NOT NULL
-);
+CREATE FUNCTION operation_.end_visit_() RETURNS security_.token_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _token security_.token_;
+BEGIN
+  UPDATE security_.token_ t
+  SET
+    revoked_at_ = CURRENT_TIMESTAMP
+  FROM security_.session_ se
+  JOIN security_.subject_ s ON s.uuid_ = se.subdomain_uuid_
+  WHERE t.uuid_ = se.token_uuid_
+  AND t.revoked_at_ IS NULL
+  AND s.type_ = 'visitor'
+  AND se.uuid_ = current_setting('security_.session_.uuid_'::text, false)::uuid
+  RETURNING * INTO _token;
+
+  RETURN _token;
+END
+$$;
 
 
-ALTER TABLE security_.login_ OWNER TO postgres;
+ALTER FUNCTION operation_.end_visit_() OWNER TO postgres;
 
 --
 -- Name: log_in_user_(text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.log_in_user_(_email_address text, _password text) RETURNS security_.login_
+CREATE FUNCTION operation_.log_in_user_(_email_address text, _password text) RETURNS security_.token_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
   _uuid uuid := pgcrypto_.gen_random_uuid();
   _iat bigint := FLOOR(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP));
   _user_uuid uuid;
-  _login security_.login_;
+  _token security_.token_;
   _secret bytea;
 BEGIN
   SELECT u.uuid_ INTO _user_uuid
@@ -650,7 +738,7 @@ BEGIN
     RAISE 'Invalid secret configuration.' USING ERRCODE = '55000';
   END IF;
 
-  INSERT INTO security_.login_ (uuid_, user_uuid_, jwt_)
+  INSERT INTO security_.token_ (uuid_, subject_uuid_, jwt_)
   VALUES (_uuid, _user_uuid, internal_.jwt_sign_hs256_(
     json_build_object(
       'iss', 'duely.app',
@@ -660,9 +748,9 @@ BEGIN
     ),
     _secret
   ))
-  RETURNING * INTO _login;
+  RETURNING * INTO _token;
 
-  RETURN _login;
+  RETURN _token;
 END
 $$;
 
@@ -670,32 +758,60 @@ $$;
 ALTER FUNCTION operation_.log_in_user_(_email_address text, _password text) OWNER TO postgres;
 
 --
--- Name: log_out_user_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: log_out_at_(); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.log_out_user_(_jwt text) RETURNS security_.login_
+CREATE FUNCTION operation_.log_out_at_() RETURNS security_.token_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _login security_.login_;
+  _token security_.token_;
 BEGIN
-  UPDATE security_.login_
+  UPDATE security_.token_ t
   SET
-    log_out_at_ = CURRENT_TIMESTAMP
-  WHERE jwt_ = _jwt
-  AND log_out_at_ IS NULL
-  RETURNING * INTO _login;
+    revoke_at_ = CURRENT_TIMESTAMP
+  FROM security_.session_ se
+  JOIN security_.subject_ s ON s.uuid_ = se.subdomain_uuid_
+  WHERE t.uuid_ = se.token_uuid_
+  AND t.revoke_at_ IS NULL
+  AND s.type_ = 'user'
+  AND se.uuid_ = current_setting('security_.session_.uuid_'::text, false)::uuid
+  RETURNING * INTO _token;
 
-  IF _login IS NULL THEN
-    RAISE 'Invalid JWT.' USING ERRCODE = '20000';
-  END IF;
-
-  RETURN _login;
+  RETURN _token;
 END
 $$;
 
 
-ALTER FUNCTION operation_.log_out_user_(_jwt text) OWNER TO postgres;
+ALTER FUNCTION operation_.log_out_at_() OWNER TO postgres;
+
+--
+-- Name: log_out_user_(); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.log_out_user_() RETURNS security_.token_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _token security_.token_;
+BEGIN
+  UPDATE security_.token_ t
+  SET
+    revoked_at_ = CURRENT_TIMESTAMP
+  FROM security_.session_ se
+  JOIN security_.subject_ s ON s.uuid_ = se.subdomain_uuid_
+  WHERE t.uuid_ = se.token_uuid_
+  AND t.revoked_at_ IS NULL
+  AND s.type_ = 'user'
+  AND se.uuid_ = current_setting('security_.session_.uuid_'::text, false)::uuid
+  RETURNING * INTO _token;
+
+  RETURN _token;
+END
+$$;
+
+
+ALTER FUNCTION operation_.log_out_user_() OWNER TO postgres;
 
 --
 -- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
@@ -706,7 +822,7 @@ CREATE TABLE security_.user_ (
     email_address_ text,
     password_hash_ text,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -737,8 +853,8 @@ BEGIN
   END IF;
 
   WITH _subject AS (
-    INSERT INTO security_.subject_ (name_)
-    VALUES (_name)
+    INSERT INTO security_.subject_ (name_, type_)
+    VALUES (_name, 'user')
     RETURNING uuid_
   )
   INSERT INTO security_.user_ (uuid_, email_address_, password_hash_)
@@ -763,7 +879,7 @@ CREATE TABLE security_.email_address_verification_ (
     verification_code_ text NOT NULL,
     started_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -813,7 +929,7 @@ CREATE TABLE security_.operation_assignment_ (
     operation_uuid_ uuid NOT NULL,
     permission_uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -860,7 +976,7 @@ CREATE TABLE security_.permission_assignment_ (
     permission_uuid_ uuid NOT NULL,
     role_uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -994,77 +1110,24 @@ ALTER TABLE application__audit_.service_ OWNER TO postgres;
 CREATE TABLE security_.subject_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
+    type_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
 ALTER TABLE security_.subject_ OWNER TO postgres;
 
 --
--- Name: active_user_; Type: VIEW; Schema: security_; Owner: postgres
---
-
-CREATE VIEW security_.active_user_ AS
- SELECT s.uuid_,
-    s.name_
-   FROM security_.subject_ s
-  WHERE (s.uuid_ = (current_setting('security_.login_.user_uuid_'::text, true))::uuid);
-
-
-ALTER TABLE security_.active_user_ OWNER TO postgres;
-
---
--- Name: group_assignment_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.group_assignment_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    group_uuid_ uuid NOT NULL,
-    subject_uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE security_.group_assignment_ OWNER TO postgres;
-
---
--- Name: active_group_; Type: VIEW; Schema: security_; Owner: postgres
---
-
-CREATE VIEW security_.active_group_ AS
- WITH RECURSIVE _group_assignment(group_uuid_, subject_uuid_) AS (
-         SELECT ga_1.group_uuid_,
-            ga_1.subject_uuid_
-           FROM (security_.group_assignment_ ga_1
-             JOIN security_.active_user_ au ON ((au.uuid_ = ga_1.subject_uuid_)))
-        UNION
-         SELECT ga_1.group_uuid_,
-            ga_1.subject_uuid_
-           FROM (security_.group_assignment_ ga_1
-             JOIN _group_assignment ON ((ga_1.subject_uuid_ = _group_assignment.group_uuid_)))
-        )
- SELECT s.uuid_,
-    s.name_
-   FROM (security_.subject_ s
-     JOIN _group_assignment ga ON ((s.uuid_ = ga.group_uuid_)));
-
-
-ALTER TABLE security_.active_group_ OWNER TO postgres;
-
---
 -- Name: active_subject_; Type: VIEW; Schema: security_; Owner: postgres
 --
 
 CREATE VIEW security_.active_subject_ AS
- SELECT u.uuid_,
-    u.name_
-   FROM security_.active_user_ u
-UNION
- SELECT g.uuid_,
-    g.name_
-   FROM security_.active_group_ g;
+ SELECT s.uuid_,
+    s.name_,
+    s.type_
+   FROM security_.subject_ s
+  WHERE (s.uuid_ = (current_setting('security_.token_.subject_uuid_'::text, true))::uuid);
 
 
 ALTER TABLE security_.active_subject_ OWNER TO postgres;
@@ -1077,7 +1140,7 @@ CREATE TABLE security_.role_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1092,7 +1155,7 @@ CREATE TABLE security_.role_hierarchy_ (
     role_uuid_ uuid NOT NULL,
     subrole_uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1108,7 +1171,7 @@ CREATE TABLE security_.subject_assignment_ (
     subdomain_uuid_ uuid NOT NULL,
     subject_uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1162,7 +1225,7 @@ CREATE TABLE security_.permission_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1184,17 +1247,67 @@ CREATE VIEW security_.active_permission_ AS
 ALTER TABLE security_.active_permission_ OWNER TO postgres;
 
 --
--- Name: group_; Type: TABLE; Schema: security_; Owner: postgres
+-- Name: view_permission_; Type: VIEW; Schema: operation_; Owner: postgres
 --
 
-CREATE TABLE security_.group_ (
-    uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
+CREATE VIEW operation_.view_permission_ AS
+ SELECT active_permission_.uuid_,
+    active_permission_.name_,
+    active_permission_.subdomain_uuid_
+   FROM security_.active_permission_;
 
 
-ALTER TABLE security_.group_ OWNER TO postgres;
+ALTER TABLE operation_.view_permission_ OWNER TO postgres;
+
+--
+-- Name: view_role_; Type: VIEW; Schema: operation_; Owner: postgres
+--
+
+CREATE VIEW operation_.view_role_ AS
+ SELECT active_role_.uuid_,
+    active_role_.name_,
+    active_role_.subdomain_uuid_
+   FROM security_.active_role_;
+
+
+ALTER TABLE operation_.view_role_ OWNER TO postgres;
+
+--
+-- Name: active_user_; Type: VIEW; Schema: security_; Owner: postgres
+--
+
+CREATE VIEW security_.active_user_ AS
+ SELECT s.uuid_,
+    s.name_
+   FROM (security_.active_subject_ s
+     JOIN security_.user_ u ON ((s.uuid_ = u.uuid_)));
+
+
+ALTER TABLE security_.active_user_ OWNER TO postgres;
+
+--
+-- Name: view_user_; Type: VIEW; Schema: operation_; Owner: postgres
+--
+
+CREATE VIEW operation_.view_user_ AS
+ SELECT active_user_.uuid_,
+    active_user_.name_
+   FROM security_.active_user_;
+
+
+ALTER TABLE operation_.view_user_ OWNER TO postgres;
+
+--
+-- Name: authorized_operation_; Type: VIEW; Schema: security_; Owner: postgres
+--
+
+CREATE VIEW security_.authorized_operation_ AS
+ SELECT NULL::uuid AS uuid_,
+    NULL::text AS name_,
+    NULL::uuid AS subdomain_uuid_;
+
+
+ALTER TABLE security_.authorized_operation_ OWNER TO postgres;
 
 --
 -- Name: operation_; Type: TABLE; Schema: security_; Owner: postgres
@@ -1203,8 +1316,9 @@ ALTER TABLE security_.group_ OWNER TO postgres;
 CREATE TABLE security_.operation_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
+    require_subject_type_ text,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1219,7 +1333,7 @@ CREATE TABLE security_.secret_ (
     name_ text NOT NULL,
     value_ bytea NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1233,7 +1347,7 @@ CREATE TABLE security_.subdomain_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.login_.user_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1257,42 +1371,13 @@ CREATE TABLE security__audit_.email_address_verification_ (
 ALTER TABLE security__audit_.email_address_verification_ OWNER TO postgres;
 
 --
--- Name: group_; Type: TABLE; Schema: security__audit_; Owner: postgres
---
-
-CREATE TABLE security__audit_.group_ (
-    uuid_ uuid,
-    audit_at_ timestamp with time zone,
-    audit_by_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE security__audit_.group_ OWNER TO postgres;
-
---
--- Name: group_assignment_; Type: TABLE; Schema: security__audit_; Owner: postgres
---
-
-CREATE TABLE security__audit_.group_assignment_ (
-    uuid_ uuid,
-    group_uuid_ uuid,
-    subject_uuid_ uuid,
-    audit_at_ timestamp with time zone,
-    audit_by_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE security__audit_.group_assignment_ OWNER TO postgres;
-
---
 -- Name: operation_; Type: TABLE; Schema: security__audit_; Owner: postgres
 --
 
 CREATE TABLE security__audit_.operation_ (
     uuid_ uuid,
     name_ text,
+    require_subject_type_ text,
     audit_at_ timestamp with time zone,
     audit_by_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -1417,6 +1502,7 @@ ALTER TABLE security__audit_.subdomain_ OWNER TO postgres;
 CREATE TABLE security__audit_.subject_ (
     uuid_ uuid,
     name_ text,
+    type_ text,
     audit_at_ timestamp with time zone,
     audit_by_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -1459,34 +1545,10 @@ CREATE TABLE security__audit_.user_ (
 ALTER TABLE security__audit_.user_ OWNER TO postgres;
 
 --
--- Data for Name: agency_; Type: TABLE DATA; Schema: application_; Owner: postgres
+-- Data for Name: email_address_verification_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY application_.agency_ (uuid_, subdomain_uuid_, name_, audit_at_, audit_by_) FROM stdin;
-\.
-
-
---
--- Data for Name: service_; Type: TABLE DATA; Schema: application_; Owner: postgres
---
-
-COPY application_.service_ (uuid_, agency_uuid_, name_, audit_at_, audit_by_) FROM stdin;
-\.
-
-
---
--- Data for Name: agency_; Type: TABLE DATA; Schema: application__audit_; Owner: postgres
---
-
-COPY application__audit_.agency_ (uuid_, subdomain_uuid_, name_, audit_at_, audit_by_, audit_op_) FROM stdin;
-\.
-
-
---
--- Data for Name: service_; Type: TABLE DATA; Schema: application__audit_; Owner: postgres
---
-
-COPY application__audit_.service_ (uuid_, agency_uuid_, name_, audit_at_, audit_by_, audit_op_) FROM stdin;
+COPY security_.email_address_verification_ (uuid_, email_address_, verification_code_, started_at_, audit_at_, audit_by_) FROM stdin;
 \.
 
 
@@ -1494,10 +1556,22 @@ COPY application__audit_.service_ (uuid_, agency_uuid_, name_, audit_at_, audit_
 -- Data for Name: operation_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.operation_ (uuid_, name_, audit_at_, audit_by_) FROM stdin;
-c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+COPY security_.operation_ (uuid_, name_, require_subject_type_, audit_at_, audit_by_) FROM stdin;
+8614cf3d-3076-499f-bff9-77b0157fcf67	view_subdomain_	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+a3fb73d8-9812-4860-8dc9-4b4117a90b26	view_agency_	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+2810c88f-564b-43fd-9bb6-6a522860bdb5	view_service_	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	user	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	visitor	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	visitor	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	visitor	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+1ddaf7a8-4cf5-4518-9bc4-78e18b27fc0d	begin_session_	none	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+a9dab653-7a23-4f10-b166-49f1e33fcb8b	end_session_	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	user	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	user	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	user	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	user	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+e427f688-9873-45bf-b255-0fc8aefb6b8c	begin_visit_	none	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+d950afbf-6d26-4aef-a1d2-26d07ef8623f	end_visit_	visitor	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1554,10 +1628,18 @@ COPY security_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, aud
 
 
 --
--- Data for Name: subdomain_; Type: TABLE DATA; Schema: security_; Owner: postgres
+-- Data for Name: token_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.subdomain_ (uuid_, name_, audit_at_, audit_by_) FROM stdin;
+COPY security_.token_ (uuid_, subject_uuid_, issued_at_, revoked_at_, jwt_) FROM stdin;
+\.
+
+
+--
+-- Data for Name: email_address_verification_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
+--
+
+COPY security__audit_.email_address_verification_ (uuid_, email_address_, verification_code_, started_at_, audit_at_, audit_by_, audit_op_) FROM stdin;
 \.
 
 
@@ -1565,10 +1647,22 @@ COPY security_.subdomain_ (uuid_, name_, audit_at_, audit_by_) FROM stdin;
 -- Data for Name: operation_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
-COPY security__audit_.operation_ (uuid_, name_, audit_at_, audit_by_, audit_op_) FROM stdin;
-c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+COPY security__audit_.operation_ (uuid_, name_, require_subject_type_, audit_at_, audit_by_, audit_op_) FROM stdin;
+c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	user	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	user	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	user	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+8614cf3d-3076-499f-bff9-77b0157fcf67	view_subdomain_	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+a3fb73d8-9812-4860-8dc9-4b4117a90b26	view_agency_	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+2810c88f-564b-43fd-9bb6-6a522860bdb5	view_service_	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	visitor	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	visitor	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	visitor	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	user	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+1ddaf7a8-4cf5-4518-9bc4-78e18b27fc0d	begin_session_	none	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+a9dab653-7a23-4f10-b166-49f1e33fcb8b	end_session_	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	user	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+e427f688-9873-45bf-b255-0fc8aefb6b8c	begin_visit_	none	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+d950afbf-6d26-4aef-a1d2-26d07ef8623f	end_visit_	visitor	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -1621,14 +1715,6 @@ e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-000
 COPY security__audit_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_by_, audit_op_) FROM stdin;
 64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-\.
-
-
---
--- Data for Name: subdomain_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
---
-
-COPY security__audit_.subdomain_ (uuid_, name_, audit_at_, audit_by_, audit_op_) FROM stdin;
 \.
 
 
@@ -1686,38 +1772,6 @@ ALTER TABLE ONLY security_.email_address_verification_
 
 ALTER TABLE ONLY security_.email_address_verification_
     ADD CONSTRAINT email_address_verification__pkey PRIMARY KEY (uuid_);
-
-
---
--- Name: group_ group__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.group_
-    ADD CONSTRAINT group__pkey PRIMARY KEY (uuid_);
-
-
---
--- Name: group_assignment_ group_assignment__group_uuid__subject_uuid__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.group_assignment_
-    ADD CONSTRAINT group_assignment__group_uuid__subject_uuid__key UNIQUE (group_uuid_, subject_uuid_);
-
-
---
--- Name: group_assignment_ group_assignment__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.group_assignment_
-    ADD CONSTRAINT group_assignment__pkey PRIMARY KEY (uuid_);
-
-
---
--- Name: login_ login__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.login_
-    ADD CONSTRAINT login__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -1849,6 +1903,22 @@ ALTER TABLE ONLY security_.subject_assignment_
 
 
 --
+-- Name: token_ token__jwt__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.token_
+    ADD CONSTRAINT token__jwt__key UNIQUE (jwt_);
+
+
+--
+-- Name: token_ token__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.token_
+    ADD CONSTRAINT token__pkey PRIMARY KEY (uuid_);
+
+
+--
 -- Name: user_ user__email_address__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
 --
 
@@ -1963,24 +2033,10 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.servi
 
 
 --
--- Name: subject_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subject_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: subdomain_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: group_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.group_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -2005,13 +2061,6 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.secret_ R
 
 
 --
--- Name: group_assignment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.group_assignment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: role_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2023,13 +2072,6 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_ REF
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.permission_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: operation_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.operation_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -2061,6 +2103,20 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_hier
 
 
 --
+-- Name: operation_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.operation_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: subject_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subject_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
 -- Name: subject_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2075,13 +2131,6 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON security_.subdomain_
 
 
 --
--- Name: group_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON security_.group_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
 -- Name: user_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2089,24 +2138,10 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON security_.user_ REFE
 
 
 --
--- Name: subject_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: subdomain_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: group_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.group_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2131,13 +2166,6 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 
 
 --
--- Name: group_assignment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.group_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: role_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2149,13 +2177,6 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.permission_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: operation_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2187,6 +2208,20 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 
 
 --
+-- Name: operation_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: subject_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: subject_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2201,13 +2236,6 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON security_.subdomain_
 
 
 --
--- Name: group_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON security_.group_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
 -- Name: user_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2215,24 +2243,10 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON security_.user_ REFE
 
 
 --
--- Name: subject_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: subdomain_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: group_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.group_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2257,13 +2271,6 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 
 
 --
--- Name: group_assignment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.group_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: role_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2275,13 +2282,6 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.permission_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: operation_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2313,6 +2313,20 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 
 
 --
+-- Name: operation_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: subject_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: subject_ tr_after_update_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2327,13 +2341,6 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON security_.subdomain_
 
 
 --
--- Name: group_ tr_after_update_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON security_.group_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
 -- Name: user_ tr_after_update_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2341,24 +2348,10 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON security_.user_ REFE
 
 
 --
--- Name: subject_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subject_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
 -- Name: subdomain_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subdomain_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: group_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.group_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -2383,13 +2376,6 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.secret_ 
 
 
 --
--- Name: group_assignment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.group_assignment_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
 -- Name: role_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2401,13 +2387,6 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_ FO
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.permission_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: operation_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.operation_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -2439,6 +2418,20 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_hie
 
 
 --
+-- Name: operation_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.operation_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: subject_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subject_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
 -- Name: agency_ agency__subdomain_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -2452,38 +2445,6 @@ ALTER TABLE ONLY application_.agency_
 
 ALTER TABLE ONLY application_.service_
     ADD CONSTRAINT service__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
-
-
---
--- Name: group_ group__uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.group_
-    ADD CONSTRAINT group__uuid__fkey FOREIGN KEY (uuid_) REFERENCES security_.subject_(uuid_) ON DELETE CASCADE;
-
-
---
--- Name: group_assignment_ group_assignment__group_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.group_assignment_
-    ADD CONSTRAINT group_assignment__group_uuid__fkey FOREIGN KEY (group_uuid_) REFERENCES security_.group_(uuid_) ON DELETE CASCADE;
-
-
---
--- Name: group_assignment_ group_assignment__subject_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.group_assignment_
-    ADD CONSTRAINT group_assignment__subject_uuid__fkey FOREIGN KEY (subject_uuid_) REFERENCES security_.subject_(uuid_) ON DELETE CASCADE;
-
-
---
--- Name: login_ login__user_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.login_
-    ADD CONSTRAINT login__user_uuid__fkey FOREIGN KEY (user_uuid_) REFERENCES security_.user_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -2535,11 +2496,11 @@ ALTER TABLE ONLY security_.role_hierarchy_
 
 
 --
--- Name: session_ session__login_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
+-- Name: session_ session__token_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
 --
 
 ALTER TABLE ONLY security_.session_
-    ADD CONSTRAINT session__login_uuid__fkey FOREIGN KEY (login_uuid_) REFERENCES security_.login_(uuid_) ON DELETE CASCADE;
+    ADD CONSTRAINT session__token_uuid__fkey FOREIGN KEY (token_uuid_) REFERENCES security_.token_(uuid_);
 
 
 --
@@ -2567,6 +2528,14 @@ ALTER TABLE ONLY security_.subject_assignment_
 
 
 --
+-- Name: token_ token__subject_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.token_
+    ADD CONSTRAINT token__subject_uuid__fkey FOREIGN KEY (subject_uuid_) REFERENCES security_.subject_(uuid_);
+
+
+--
 -- Name: user_ user__uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
 --
 
@@ -2579,6 +2548,14 @@ ALTER TABLE ONLY security_.user_
 --
 
 GRANT USAGE ON SCHEMA operation_ TO PUBLIC;
+
+
+--
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+GRANT USAGE ON SCHEMA public TO PUBLIC;
 
 
 --
