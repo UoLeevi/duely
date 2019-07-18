@@ -163,11 +163,11 @@
   - subdomain_uuid_
 
 ### routines
-- operation_.begin_visit_() RETURNS security_.token_
+- operation_.begin_visit_() RETURNS text
 - operation_.end_visit() RETURNS security_.token_
 - operation_.start_email_address_verification_(_email_address text) RETURNS security_.email_address_verification_
 - operation_.sign_up_user_(_email_address text, _verification_code text, _name text, _password text) RETURNS security_.user_
-- operation_.log_in_user_(_email_address text, _password text) RETURNS security_.token_
+- operation_.log_in_user_(_email_address text, _password text) RETURNS text
 - operation_.log_out_user_(_user_uuid uuid, _password text) RETURNS security_.token_
 - operation_.begin_session_(_jwt text, _tag text) RETURNS security_.session_
 - operation_.end_session_() RETURNS security_.session_
