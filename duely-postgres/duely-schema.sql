@@ -156,8 +156,7 @@ DROP VIEW security_.active_subject_;
 DROP TABLE security_.subject_;
 DROP TABLE application__audit_.service_;
 DROP TABLE application__audit_.agency_;
-DROP PROCEDURE security_.raise_if_no_active_session_();
-DROP PROCEDURE security_.raise_if_no_active_permission_(_subdomain_name text, _operation_name text);
+DROP PROCEDURE security_.raise_if_unauthorized_(_operation_name text, _subdomain_uuid uuid);
 DROP FUNCTION security_.assign_permission_(_permission_name text, _role_name text);
 DROP TABLE security_.permission_assignment_;
 DROP FUNCTION security_.assign_operation_(_operation_name text, _permission_name text);
@@ -588,6 +587,8 @@ DECLARE
   _subject_uuid uuid;
   _session security_.session_;
 BEGIN
+  CALL security_.raise_if_unauthorized_('begin_session_');
+
   SELECT internal_.jwt_verify_hs256_(_jwt, x.value_) INTO _claims
   FROM security_.secret_ x
   WHERE x.name_ = 'jwt_hs256';
@@ -632,6 +633,8 @@ DECLARE
   _subject_uuid uuid;
   _secret bytea;
 BEGIN
+  CALL security_.raise_if_unauthorized_('begin_visit_');
+
   INSERT INTO security_.subject_ (name_, type_)
   VALUES ('', 'visitor')
   RETURNING uuid_ INTO _subject_uuid;
@@ -689,7 +692,7 @@ DECLARE
   _subdomain_uuid uuid;
   _agency application_.agency_;
 BEGIN
-  CALL security_.raise_if_no_active_session_();
+  CALL security_.raise_if_unauthorized_('create_agency_');
 
   INSERT INTO security_.subdomain_ (name_)
   VALUES (_subdomain_name)
@@ -734,17 +737,14 @@ CREATE FUNCTION operation_.create_service_(_name text, _agency_uuid uuid) RETURN
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _subdomain_name text;
+  _subdomain_uuid uuid;
   _service application_.service_;
 BEGIN
-  CALL security_.raise_if_no_active_session_();
-
-  SELECT d.name_ INTO _subdomain_name
-  FROM security_.subdomain_ d
-  JOIN application_.agency_ a ON d.uuid_ = a.subdomain_uuid_
+  SELECT a.subdomain_uuid_ INTO _subdomain_uuid
+  FROM application_.agency_ a
   WHERE a.uuid_ = _agency_uuid;
 
-  CALL security_.raise_if_no_active_permission_(_subdomain_name, 'create_service_');
+  CALL security_.raise_if_unauthorized_('create_service_', _subdomain_uuid);
 
   INSERT INTO application_.service_ (agency_uuid_, name_)
   VALUES (_agency_uuid, _name)
@@ -765,17 +765,14 @@ CREATE FUNCTION operation_.delete_agency_(_agency_uuid uuid) RETURNS application
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _subdomain_name text;
+  _subdomain_uuid uuid;
   _agency application_.agency_;
 BEGIN
-  CALL security_.raise_if_no_active_session_();
-
-  SELECT d.name_ INTO _subdomain_name
-  FROM security_.subdomain_ d
-  JOIN application_.agency_ a ON d.uuid_ = a.subdomain_uuid_
+  SELECT a.subdomain_uuid_ INTO _subdomain_uuid
+  FROM application_.agency_ a
   WHERE a.uuid_ = _agency_uuid;
 
-  CALL security_.raise_if_no_active_permission_(_subdomain_name, 'delete_agency_');
+  CALL security_.raise_if_unauthorized_('delete_agency_', _subdomain_uuid);
 
   DELETE FROM application_.agency_
   WHERE name_ = _name
@@ -799,17 +796,15 @@ CREATE FUNCTION operation_.delete_service_(_service_uuid uuid) RETURNS applicati
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _subdomain_name text;
+  _subdomain_uuid uuid;
   _service application_.service_;
 BEGIN
-  CALL security_.raise_if_no_active_session_();
-
-  SELECT d.name_ INTO _subdomain_name
-  FROM security_.subdomain_ d
-  JOIN application_.agency_ a ON d.uuid_ = a.subdomain_uuid_
+  SELECT a.subdomain_uuid_ INTO _subdomain_uuid
+  FROM application_.agency_ a
   JOIN application_.service_ s ON a.uuid_ = s.agency_uuid_;
+  WHERE s.uuid_ = _service_uuid;
 
-  CALL security_.raise_if_no_active_permission_(_subdomain_name, 'delete_service_');
+  CALL security_.raise_if_unauthorized_('delete_service_', _subdomain_uuid);
 
   DELETE FROM application_.service_
   WHERE name_ = _name
@@ -832,6 +827,8 @@ CREATE FUNCTION operation_.end_session_() RETURNS security_.session_
 DECLARE
   _session security_.session_;
 BEGIN
+  CALL security_.raise_if_unauthorized_('end_session_');
+
   UPDATE security_.session_
   SET
     end_at_ = CURRENT_TIMESTAMP
@@ -872,6 +869,8 @@ CREATE FUNCTION operation_.end_visit_() RETURNS security_.token_
 DECLARE
   _token security_.token_;
 BEGIN
+  CALL security_.raise_if_unauthorized_('end_visit_');
+
   UPDATE security_.token_ t
   SET
     revoked_at_ = CURRENT_TIMESTAMP
@@ -904,6 +903,8 @@ DECLARE
   _user_uuid uuid;
   _secret bytea;
 BEGIN
+  CALL security_.raise_if_unauthorized_('log_in_user_');
+
   SELECT u.uuid_ INTO _user_uuid
   FROM security_.user_ u
   WHERE u.email_address_ = _email_address
@@ -950,6 +951,8 @@ CREATE FUNCTION operation_.log_out_user_() RETURNS security_.token_
 DECLARE
   _token security_.token_;
 BEGIN
+  CALL security_.raise_if_unauthorized_('log_out_user_');
+
   UPDATE security_.token_ t
   SET
     revoked_at_ = CURRENT_TIMESTAMP
@@ -995,6 +998,8 @@ DECLARE
   _email_address_verification_matches integer;
   _user security_.user_;
 BEGIN
+  CALL security_.raise_if_unauthorized_('sign_up_user_');
+
   DELETE FROM security_.email_address_verification_
   WHERE started_at_ < (CURRENT_TIMESTAMP - '1 day'::interval);
 
@@ -1052,6 +1057,8 @@ DECLARE
   _email_address_verification security_.email_address_verification_;
   _verification_code text := lpad(floor(random() * 1000000)::text, 6, '0');
 BEGIN
+  CALL security_.raise_if_unauthorized_('start_email_address_verification_');
+
   IF EXISTS (
     SELECT 1
     FROM security_.user_ u
@@ -1171,31 +1178,18 @@ $$;
 ALTER FUNCTION security_.assign_permission_(_permission_name text, _role_name text) OWNER TO postgres;
 
 --
--- Name: raise_if_no_active_permission_(text, text); Type: PROCEDURE; Schema: security_; Owner: postgres
+-- Name: raise_if_unauthorized_(text, uuid); Type: PROCEDURE; Schema: security_; Owner: postgres
 --
 
-CREATE PROCEDURE security_.raise_if_no_active_permission_(_subdomain_name text, _operation_name text)
+CREATE PROCEDURE security_.raise_if_unauthorized_(_operation_name text, _subdomain_uuid uuid DEFAULT NULL::uuid)
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  IF NOT (
-    WITH 
-      _operation_assignment AS (
-        SELECT oa.permission_uuid_
-        FROM security_.operation_ o
-        JOIN security_.operation_assignment_ oa ON o.uuid_ = oa.operation_uuid_
-        WHERE o.name_ = _operation_name
-      )
-    SELECT (
-      SELECT count(oa.permission_uuid_)
-      FROM _operation_assignment oa
-    ) = (
-     SELECT count(ap.uuid_)
-     FROM security_.active_permission_ ap
-     JOIN security_.subdomain_ d ON d.uuid_ = ap.subdomain_uuid_
-     JOIN _operation_assignment oa ON ap.uuid_ = oa.permission_uuid_
-     WHERE d.name_ = _subdomain_name
-    )
+  IF NOT EXISTS (
+    SELECT 1
+    FROM security_.authorized_operation_ ao
+    WHERE ao.name_ = _operation_name
+      AND ((ao.subdomain_uuid_ IS NULL AND _subdomain_uuid IS NULL) OR (ao.subdomain_uuid_ = _subdomain_uuid))
   ) THEN
     RAISE 'Unauthorized.' USING ERRCODE = '42501';
   END IF;
@@ -1203,29 +1197,7 @@ END
 $$;
 
 
-ALTER PROCEDURE security_.raise_if_no_active_permission_(_subdomain_name text, _operation_name text) OWNER TO postgres;
-
---
--- Name: raise_if_no_active_session_(); Type: PROCEDURE; Schema: security_; Owner: postgres
---
-
-CREATE PROCEDURE security_.raise_if_no_active_session_()
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 
-    FROM security_.session_ se
-    WHERE se.uuid_ = COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid
-      AND se.end_at_ IS NULL
-  ) THEN
-    RAISE 'No active session. Application user is requred to log in and begin a session.' USING ERRCODE = '42501';
-  END IF;
-END
-$$;
-
-
-ALTER PROCEDURE security_.raise_if_no_active_session_() OWNER TO postgres;
+ALTER PROCEDURE security_.raise_if_unauthorized_(_operation_name text, _subdomain_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -2724,6 +2696,27 @@ GRANT USAGE ON SCHEMA operation_ TO PUBLIC;
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
 GRANT USAGE ON SCHEMA public TO PUBLIC;
+
+
+--
+-- Name: TABLE view_permission_; Type: ACL; Schema: operation_; Owner: postgres
+--
+
+GRANT SELECT ON TABLE operation_.view_permission_ TO PUBLIC;
+
+
+--
+-- Name: TABLE view_role_; Type: ACL; Schema: operation_; Owner: postgres
+--
+
+GRANT SELECT ON TABLE operation_.view_role_ TO PUBLIC;
+
+
+--
+-- Name: TABLE view_user_; Type: ACL; Schema: operation_; Owner: postgres
+--
+
+GRANT SELECT ON TABLE operation_.view_user_ TO PUBLIC;
 
 
 --

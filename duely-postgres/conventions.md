@@ -171,8 +171,7 @@
 - operation_.log_out_user_(_user_uuid uuid, _password text) RETURNS security_.token_
 - operation_.begin_session_(_jwt text, _tag text) RETURNS security_.session_
 - operation_.end_session_() RETURNS security_.session_
-- security_.raise_if_no_active_session_()
-- security_.raise_if_no_active_permission_(_subdomain_name text, _operation_name text)
+- security_.raise_if_unauthorized_(_operation_name text, _subdomain_uuid uuid)
 - security_.assign_operation_(_operation_name text, _permission_name text)
 - security_.assign_permission_(_permission_name text, _role_name text)
 - security_.session_state_() RETURNS text

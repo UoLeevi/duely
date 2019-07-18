@@ -1,4 +1,4 @@
-pg_dump -U postgres -d duely -f duely-schema.sql -c `
+pg_dump -U postgres -d duely -f duely-schema.sql `
   --exclude-table-data=security_*.email_address_verification_ `
   --exclude-table-data=security_*.subdomain_ `
   --exclude-table-data=security_*.subject_ `
