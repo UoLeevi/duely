@@ -7,4 +7,5 @@ pg_dump -U postgres -d duely -f duely-schema.sql `
   --exclude-table-data=security_*.token_ `
   --exclude-table-data=security_*.session_ `
   --exclude-table-data=security_*.secret_ `
+  --exclude-table-data=security_*.event_ `
   --exclude-table-data=application_*.*

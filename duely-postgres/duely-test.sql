@@ -2,6 +2,7 @@
 
 \echo ''
 \echo 'Resetting the database before executing tests...'
+\o /dev/null
 \set QUIET true
 \set ON_ERROR_STOP true
 DROP DATABASE duely;
@@ -10,8 +11,8 @@ CREATE DATABASE duely;
 \i duely-schema.sql
 \i duely-prepare.sql
 \c duely duely
+\o
 \conninfo
-
 \echo 'Running tests...'
 
 DO 
@@ -68,8 +69,8 @@ BEGIN
   PERFORM operation_.begin_session_(_user_jwt);
 
   SELECT * INTO _record
-  FROM operation_.view_user_;
-  --RAISE NOTICE E'view_user_:\n%', _record;
+  FROM operation_.query_user_();
+  --RAISE NOTICE E'query_user_:\n%', _record;
 
   PERFORM operation_.end_session_();
 
@@ -96,8 +97,8 @@ BEGIN
 
   --TODO
   --SELECT * INTO _record
-  --FROM operation_.view_agency_;
-  --RAISE NOTICE E'view_agency_:\n%', _record;
+  --FROM operation_.query_agency_();
+  --RAISE NOTICE E'query_agency_:\n%', _record;
 
   PERFORM operation_.end_session_();
 

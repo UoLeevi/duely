@@ -93,6 +93,12 @@
   - begin_at_
   - end_at_
   - tag_
+- event_ (e)
+  - uuid_
+  - operation_uuid_
+  - session_uuid_
+  - args_
+  - event_at_
 - subdomain_ (d)
   - uuid_
   - name_
@@ -163,6 +169,11 @@
   - subdomain_uuid_
 
 ### routines
+- operation_.query_subject_()
+- operation_.query_user_()
+- operation_.query_role_()
+- operation_.query_permission_()
+- operation_.query_subdomain_()
 - operation_.begin_visit_() RETURNS text
 - operation_.end_visit() RETURNS security_.token_
 - operation_.start_email_address_verification_(_email_address text) RETURNS security_.email_address_verification_
@@ -172,6 +183,8 @@
 - operation_.begin_session_(_jwt text, _tag text) RETURNS security_.session_
 - operation_.end_session_() RETURNS security_.session_
 - security_.raise_if_unauthorized_(_operation_name text, _subdomain_uuid uuid)
+- security_.control_operation_(_subdomain_uuid uuid, _operation_name text, VARIADIC _args text[]) RETURNS security_.event_
+- security_.log_event(_operation_name text, VARIADIC args text[]) RETURNS security_.event_
 - security_.assign_operation_(_operation_name text, _permission_name text)
 - security_.assign_permission_(_permission_name text, _role_name text)
 - security_.session_state_() RETURNS text
@@ -193,16 +206,9 @@
 - for tables 'agency_' column 'name_' is not null and has unique constraint
 - for tables 'service_' column 'name_' is not null and has unique constraint with column 'agency_uuid_'
 
-### views
-- operation_.view_session_
-- operation_.view_user_
-- operation_.view_role_
-- operation_.view_permission_
-- operation_.view_subdomain_
-- operation_.view_agency_
-- operation_.view_service_
-
-### routines
+### functions
+- operation_.query_agency_()
+- operation_.query_service_()
 - operation_.create_agency_(_name text, _subdomain_name text) RETURNS application_.agency_
 - operation_.delete_agency_(_agency_uuid uuid) RETURNS application_.agency_
 - operation_.create_service_(_name text, _agency_uuid uuid) RETURNS application_.service_
