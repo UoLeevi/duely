@@ -151,10 +151,11 @@
   - uuid_
   - name_
   - type_
+  - email_address_
 - security_.active_user_
   - uuid_
   - name_
-  - email_
+  - email_address_
 - security_.active_role_
   - uuid_
   - name_

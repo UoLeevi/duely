@@ -804,14 +804,31 @@ CREATE TABLE security_.subject_ (
 ALTER TABLE security_.subject_ OWNER TO postgres;
 
 --
+-- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.user_ (
+    uuid_ uuid NOT NULL,
+    email_address_ text,
+    password_hash_ text,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE security_.user_ OWNER TO postgres;
+
+--
 -- Name: active_subject_; Type: VIEW; Schema: security_; Owner: postgres
 --
 
 CREATE VIEW security_.active_subject_ AS
  SELECT s.uuid_,
     s.name_,
-    s.type_
-   FROM security_.subject_ s
+    s.type_,
+    u.email_address_
+   FROM (security_.subject_ s
+     LEFT JOIN security_.user_ u ON ((s.uuid_ = u.uuid_)))
   WHERE (s.uuid_ = (current_setting('security_.token_.subject_uuid_'::text, true))::uuid);
 
 
@@ -1002,21 +1019,6 @@ $$;
 
 
 ALTER FUNCTION operation_.query_subject_() OWNER TO postgres;
-
---
--- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.user_ (
-    uuid_ uuid NOT NULL,
-    email_address_ text,
-    password_hash_ text,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE security_.user_ OWNER TO postgres;
 
 --
 -- Name: active_user_; Type: VIEW; Schema: security_; Owner: postgres
