@@ -32,7 +32,7 @@ spec:
           secretName: duely-graphql-secret
       containers:
       - name: duely-graphql
-        image: uoleevi/duely-graphql:0.8
+        image: uoleevi/duely-graphql:0.9
         resources:
           requests:
             memory: 64Mi
@@ -43,23 +43,15 @@ spec:
         - name: PORT
           value: "8080"
         - name: PGUSER
-          value: postgres
+          value: duely
         - name: PGDATABASE
-          value: duelydb
+          value: duely
+        - name: PGPASSWORD
+          value: duely
         - name: PGHOST
           value: duely-postgres-master-service
         - name: PGPORT
           value: "5432"
-        - name: PGPASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: duely-graphql-secret
-              key: postgres-password
-        - name: JWTSECRET
-          valueFrom:
-            secretKeyRef:
-              name: duely-graphql-secret
-              key: jwt-secret
         - name: GSERVICEACCOUNTFILE
           value: /usr/src/app/gserviceaccount.json
         livenessProbe:
