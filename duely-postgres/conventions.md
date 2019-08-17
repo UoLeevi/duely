@@ -16,11 +16,6 @@
 ### tables
 - use singular naming reflecting the type of the entities it holds
 
-### joining tables
-- named as 'table1__x__table2_'
-  - the two tables are ordered alphapetically
-- alternatively joining table can have more descriptive name (e.g. membership)
-
 ### columns
 - single column primary key column should be named 'uuid_'
 - foreign key columns shoud prefer naming '{table}_uuid_'
@@ -56,6 +51,7 @@
 
 ## application security
 - application security is designed loosely based on concepts of role-based access control
+  - however, instead of permissions, policies defined as predicate functions are used to allow or deny access to operations
 - https://en.wikipedia.org/wiki/Role-based_access_control#Design
 - schema for application security related tables is called 'security_'
 - separate schema 'operation_' contains views, functions and procedures that any database user is allowed to select and execute
@@ -75,6 +71,9 @@
     PERFORM set_config('security_.token_.subject_uuid_', _user_uuid::text, 'f');
     ...
     SELECT current_setting('security_.token_.subject_uuid_', 't') _user_uuid;
+- subjects can perform operations which they are
+  - not denied to perform by any policy
+  - and allowed to perform by at least one policy
 
 ### tables
 - secret_ (x)
@@ -117,9 +116,6 @@
 - role_ (r)
   - uuid_
   - name_
-- permission_ (p)
-  - uuid_
-  - name_
 - operation_ (o)
   - uuid_
   - name_
@@ -129,21 +125,18 @@
   - role_uuid_
   - subdomain_uuid_
   - subject_uuid_
-- permission_assignment_ (pa)
-  - uuid_
-  - permission_uuid_
-  - role_uuid_
 - role_hierarchy_ (rh)
   - uuid_
   - role_uuid_
   - subrole_uuid_
-- operation_assignment_ (oa)
+- policy_assignment_ (pa)
   - uuid_
+  - policy_name_
   - operation_uuid_
-  - permission_uuid_
+  - type_
 
 ### columns
-- for tables 'subdomain_', 'role_', 'permission_', 'operation_' column 'name_' is not null and has unique constraint
+- for tables 'subdomain_', 'role_', 'operation_' column 'name_' is not null and has unique constraint
   - this column is used to make it more simple to reason about access control logic
 
 ### views
@@ -160,21 +153,8 @@
   - uuid_
   - name_
   - subdomain_uuid_
-- security_.active_permission_
-  - uuid_
-  - name_
-  - subdomain_uuid_
-- security_.authorized_operation_
-  - uuid_
-  - name_
-  - subdomain_uuid_
 
 ### routines
-- operation_.query_subject_()
-- operation_.query_user_()
-- operation_.query_role_()
-- operation_.query_permission_()
-- operation_.query_subdomain_()
 - operation_.begin_visit_() RETURNS text
 - operation_.end_visit() RETURNS security_.token_
 - operation_.start_email_address_verification_(_email_address text) RETURNS security_.email_address_verification_
@@ -184,11 +164,17 @@
 - operation_.begin_session_(_jwt text, _tag text) RETURNS security_.session_
 - operation_.end_session_() RETURNS security_.session_
 - security_.raise_if_unauthorized_(_operation_name text, _subdomain_uuid uuid)
-- security_.control_operation_(_subdomain_uuid uuid, _operation_name text, VARIADIC _args text[]) RETURNS security_.event_
-- security_.log_event(_operation_name text, VARIADIC args text[]) RETURNS security_.event_
-- security_.assign_operation_(_operation_name text, _permission_name text)
-- security_.assign_permission_(_permission_name text, _role_name text)
-- security_.session_state_() RETURNS text
+
+TODO:
+- security_.control_operation_(_operation_name text, VARIADIC _args text[]) RETURNS security_.event_                          <- instead use this
+  - control_operation_ is responsible for:
+    - performing the authorization checks
+      - check each policy that has been set for that action
+      - policies are implemeted as functions in schema 'policy_' with signature {policy}(_args text[]) RETURNS boolean
+    - logging events
+
+
+- security_.log_event(_operation_name text, VARIADIC _args text[]) RETURNS security_.event_
 
 ## application data
 - all application data, except data related to application security and auditing, resides in schema 'application_'
@@ -208,8 +194,6 @@
 - for tables 'service_' column 'name_' is not null and has unique constraint with column 'agency_uuid_'
 
 ### functions
-- operation_.query_agency_()
-- operation_.query_service_()
 - operation_.create_agency_(_name text, _subdomain_name text) RETURNS application_.agency_
 - operation_.delete_agency_(_agency_uuid uuid) RETURNS application_.agency_
 - operation_.create_service_(_name text, _agency_uuid uuid) RETURNS application_.service_

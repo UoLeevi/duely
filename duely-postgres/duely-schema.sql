@@ -61,6 +61,15 @@ CREATE SCHEMA pgcrypto_;
 ALTER SCHEMA pgcrypto_ OWNER TO postgres;
 
 --
+-- Name: policy_; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA policy_;
+
+
+ALTER SCHEMA policy_ OWNER TO postgres;
+
+--
 -- Name: security_; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
@@ -403,7 +412,9 @@ DECLARE
   _subject_uuid uuid;
   _session security_.session_;
 BEGIN
-  PERFORM security_.control_operation_('begin_session_');
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid <> '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'Active session already exists.' USING ERRCODE = '20000';
+  END IF;
 
   SELECT internal_.jwt_verify_hs256_(_jwt, x.value_) INTO _claims
   FROM security_.secret_ x
@@ -449,7 +460,9 @@ DECLARE
   _subject_uuid uuid;
   _secret bytea;
 BEGIN
-  PERFORM security_.control_operation_('begin_visit_');
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid <> '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'Active session already exists.' USING ERRCODE = '20000';
+  END IF;
 
   INSERT INTO security_.subject_ (name_, type_)
   VALUES ('', 'visitor')
@@ -508,7 +521,7 @@ DECLARE
   _subdomain_uuid uuid;
   _agency application_.agency_;
 BEGIN
-  PERFORM security_.control_operation_('create_agency_');
+  PERFORM security_.control_operation_('create_agency_', ARRAY[_name, _subdomain_name]);
 
   INSERT INTO security_.subdomain_ (name_)
   VALUES (_subdomain_name)
@@ -553,14 +566,9 @@ CREATE FUNCTION operation_.create_service_(_name text, _agency_uuid uuid) RETURN
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _subdomain_uuid uuid;
   _service application_.service_;
 BEGIN
-  SELECT a.subdomain_uuid_ INTO _subdomain_uuid
-  FROM application_.agency_ a
-  WHERE a.uuid_ = _agency_uuid;
-
-  PERFORM security_.control_operation_(_subdomain_uuid, 'create_service_');
+  PERFORM security_.control_operation_('create_service_', _agency_uuid);
 
   INSERT INTO application_.service_ (agency_uuid_, name_)
   VALUES (_agency_uuid, _name)
@@ -581,14 +589,9 @@ CREATE FUNCTION operation_.delete_agency_(_agency_uuid uuid) RETURNS application
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _subdomain_uuid uuid;
   _agency application_.agency_;
 BEGIN
-  SELECT a.subdomain_uuid_ INTO _subdomain_uuid
-  FROM application_.agency_ a
-  WHERE a.uuid_ = _agency_uuid;
-
-  PERFORM security_.control_operation_(_subdomain_uuid, 'delete_agency_');
+  PERFORM security_.control_operation_('delete_agency_' _agency_uuid);
 
   DELETE FROM application_.agency_
   WHERE name_ = _name
@@ -612,15 +615,9 @@ CREATE FUNCTION operation_.delete_service_(_service_uuid uuid) RETURNS applicati
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _subdomain_uuid uuid;
   _service application_.service_;
 BEGIN
-  SELECT a.subdomain_uuid_ INTO _subdomain_uuid
-  FROM application_.agency_ a
-  JOIN application_.service_ s ON a.uuid_ = s.agency_uuid_;
-  WHERE s.uuid_ = _service_uuid;
-
-  PERFORM security_.control_operation_(_subdomain_uuid, 'delete_service_');
+  PERFORM security_.control_operation_('delete_service_', _service_uuid);
 
   DELETE FROM application_.service_
   WHERE name_ = _name
@@ -643,7 +640,9 @@ CREATE FUNCTION operation_.end_session_() RETURNS security_.session_
 DECLARE
   _session security_.session_;
 BEGIN
-  PERFORM security_.control_operation_('end_session_');
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'No active session.' USING ERRCODE = '20000';
+  END IF;
 
   UPDATE security_.session_
   SET
@@ -685,7 +684,9 @@ CREATE FUNCTION operation_.end_visit_() RETURNS security_.token_
 DECLARE
   _token security_.token_;
 BEGIN
-  PERFORM security_.control_operation_('end_visit_');
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'No active session.' USING ERRCODE = '20000';
+  END IF;
 
   UPDATE security_.token_ t
   SET
@@ -789,19 +790,128 @@ $$;
 ALTER FUNCTION operation_.log_out_user_() OWNER TO postgres;
 
 --
--- Name: subject_; Type: TABLE; Schema: security_; Owner: postgres
+-- Name: query_active_subject_(); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE TABLE security_.subject_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    name_ text NOT NULL,
-    type_ text NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
+CREATE FUNCTION operation_.query_active_subject_() RETURNS TABLE(uuid_ uuid, name_ text, type_ text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  PERFORM security_.control_operation_('query_active_subject_');
+
+  RETURN QUERY
+  SELECT s.uuid_, s.name_, s.type_, u.email_address_
+  FROM security_.active_subject_ s
+  LEFT JOIN security_.user u ON s.uuid_ = u.uuid_;
+
+END
+$$;
 
 
-ALTER TABLE security_.subject_ OWNER TO postgres;
+ALTER FUNCTION operation_.query_active_subject_() OWNER TO postgres;
+
+--
+-- Name: query_active_user_(); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_active_user_() RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  PERFORM security_.control_operation_('query_active_user_');
+
+  RETURN QUERY
+  SELECT u.uuid_, u.name_, u.email_address_
+  FROM security_.active_user_ u;
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_active_user_() OWNER TO postgres;
+
+--
+-- Name: query_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_agency_(_agency_uuid uuid) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, name_ text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  PERFORM security_.control_operation_('query_agency_', _agency_uuid);
+
+  RETURN QUERY
+  SELECT a.uuid_, a.subdomain_uuid_, a.name_
+  FROM application_.agency_ a
+  WHERE a.uuid_ = _agency_uuid;
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_agency_(_agency_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: query_service_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_service_(_agency_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  PERFORM security_.control_operation_('query_service_', _agency_uuid);
+
+  RETURN QUERY
+  SELECT s.uuid_, s.name_
+  FROM application_.service_ s
+  WHERE s.agency_uuid_ = _agency_uuid;
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_service_(_agency_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: query_subdomain_(); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_subdomain_() RETURNS TABLE(uuid_ uuid, name_ text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  PERFORM security_.control_operation_('query_subdomain_');
+
+  RETURN QUERY
+  SELECT d.uuid_, d.name_
+  FROM security_.subdomain_ d;
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_subdomain_() OWNER TO postgres;
+
+--
+-- Name: query_user_(); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_user_() RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  PERFORM security_.control_operation_('query_user_');
+
+  RETURN QUERY
+  SELECT s.uuid_, s.name_, u.email_address_
+  FROM security_.subject_ s
+  JOIN security_.user_ ON s.uuid_ = u.uuid_;
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_user_() OWNER TO postgres;
 
 --
 -- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
@@ -817,6 +927,448 @@ CREATE TABLE security_.user_ (
 
 
 ALTER TABLE security_.user_ OWNER TO postgres;
+
+--
+-- Name: sign_up_user_(text, text, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.sign_up_user_(_email_address text, _verification_code text, _name text, _password text) RETURNS security_.user_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _email_address_verification_matches integer;
+  _user security_.user_;
+BEGIN
+  PERFORM security_.control_operation_('sign_up_user_');
+
+  DELETE FROM security_.email_address_verification_
+  WHERE started_at_ < (CURRENT_TIMESTAMP - '1 day'::interval);
+
+  DELETE FROM security_.email_address_verification_
+    WHERE email_address_ = lower(_email_address)
+      AND verification_code_ = _verification_code;
+
+  GET DIAGNOSTICS _email_address_verification_matches = ROW_COUNT;
+
+  IF _email_address_verification_matches = 0 THEN
+    RAISE 'No matching email address verification code found: %', lower(_email_address) USING ERRCODE = '20000';
+  END IF;
+
+  WITH _subject AS (
+    INSERT INTO security_.subject_ (name_, type_)
+    VALUES (_name, 'user')
+    RETURNING uuid_
+  )
+  INSERT INTO security_.user_ (uuid_, email_address_, password_hash_)
+  SELECT s.uuid_, lower(_email_address), pgcrypto_.crypt(_password, pgcrypto_.gen_salt('md5'))
+  FROM _subject s
+  RETURNING * INTO _user;
+
+  RETURN _user;
+END
+$$;
+
+
+ALTER FUNCTION operation_.sign_up_user_(_email_address text, _verification_code text, _name text, _password text) OWNER TO postgres;
+
+--
+-- Name: email_address_verification_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.email_address_verification_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    email_address_ text NOT NULL,
+    verification_code_ text NOT NULL,
+    started_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE security_.email_address_verification_ OWNER TO postgres;
+
+--
+-- Name: start_email_address_verification_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.start_email_address_verification_(_email_address text) RETURNS security_.email_address_verification_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _email_address_verification security_.email_address_verification_;
+  _verification_code text := lpad(floor(random() * 1000000)::text, 6, '0');
+BEGIN
+  PERFORM security_.control_operation_('start_email_address_verification_');
+
+  IF EXISTS (
+    SELECT 1
+    FROM security_.user_ u
+    WHERE u.email_address_ = lower(_email_address)
+  ) THEN
+    RAISE 'Email address already verified: %', lower(_email_address) USING ERRCODE = '23505';
+  END IF;
+
+  INSERT INTO security_.email_address_verification_ (email_address_, verification_code_)
+  VALUES (lower(_email_address), _verification_code)
+  ON CONFLICT (email_address_) DO UPDATE
+  SET
+    verification_code_ = _verification_code,
+    started_at_ = DEFAULT
+  WHERE security_.email_address_verification_.email_address_ = lower(_email_address)
+  RETURNING * INTO _email_address_verification;
+
+  RETURN _email_address_verification;
+END
+$$;
+
+
+ALTER FUNCTION operation_.start_email_address_verification_(_email_address text) OWNER TO postgres;
+
+--
+-- Name: agent_in_agency_(uuid); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.agent_in_agency_(_agency_uuid uuid) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN 
+  RETURN
+    EXISTS (
+      SELECT 1
+      FROM security_.active_role_ r
+      JOIN application_.agency_ a ON a.subdomain_uuid_ = r.subdomain_uuid_
+      WHERE r.name_ = 'agent'
+        AND a.uuid_ = _agency_uuid
+    );
+END
+$$;
+
+
+ALTER FUNCTION policy_.agent_in_agency_(_agency_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: logged_in_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.logged_in_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$ 
+BEGIN
+  RETURN EXISTS(
+    SELECT 1
+    FROM security_.active_subject_
+    WHERE type_ = 'user'
+  );
+END;
+ $$;
+
+
+ALTER FUNCTION policy_.logged_in_(_arg anyelement) OWNER TO postgres;
+
+--
+-- Name: manager_in_agency_(uuid); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.manager_in_agency_(_agency_uuid uuid) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN 
+  RETURN
+    EXISTS (
+      SELECT 1
+      FROM security_.active_role_ r
+      JOIN application_.agency_ a ON a.subdomain_uuid_ = r.subdomain_uuid_
+      WHERE r.name_ = 'manager'
+        AND a.uuid_ = _agency_uuid
+    );
+END
+ $$;
+
+
+ALTER FUNCTION policy_.manager_in_agency_(_agency_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: owner_in_agency_(uuid); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_in_agency_(_agency_uuid uuid) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _agency_uuid uuid := _arg[0]::uuid;
+BEGIN 
+  RETURN
+    EXISTS (
+      SELECT 1
+      FROM security_.active_role_ r
+      JOIN application_.agency_ a ON a.subdomain_uuid_ = r.subdomain_uuid_
+      WHERE r.name_ = 'owner'
+        AND a.uuid_ = _agency_uuid
+    );
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_in_agency_(_agency_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: visitor_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.visitor_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$ 
+BEGIN
+  RETURN EXISTS(
+    SELECT 1
+    FROM security_.active_subject_
+    WHERE type_ = 'visitor'
+  );
+END;
+ $$;
+
+
+ALTER FUNCTION policy_.visitor_(_arg anyelement) OWNER TO postgres;
+
+--
+-- Name: event_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.event_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    operation_uuid_ uuid NOT NULL,
+    session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL,
+    arg_ text,
+    event_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE security_.event_ OWNER TO postgres;
+
+--
+-- Name: control_operation_(text, anyelement); Type: FUNCTION; Schema: security_; Owner: postgres
+--
+
+CREATE FUNCTION security_.control_operation_(_operation_name text, _arg anyelement DEFAULT NULL::text) RETURNS security_.event_
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  _event security_.event_;
+  _policy text;
+  _deny boolean := 'f';
+  _allow boolean := 'f';
+BEGIN
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'No active session.' USING ERRCODE = '20000';
+  END IF;
+
+  FOR _policy IN
+    SELECT p.policy_name_
+    FROM security_.policy_assignment_ p
+    JOIN security_.operation_ o ON p.operation_uuid_ = o.uuid_
+    WHERE o.name_ = _operation_name
+      AND p.type_ = 'deny'
+  LOOP
+    EXECUTE format('SELECT policy_.%1$I($1)', _policy) INTO _deny USING _arg;
+    IF _deny THEN
+      RAISE 'Unauthorized.' USING ERRCODE = '42501';
+    END IF;
+  END LOOP;
+
+  FOR _policy IN
+    SELECT p.policy_name_
+    FROM security_.policy_assignment_ p
+    JOIN security_.operation_ o ON p.operation_uuid_ = o.uuid_
+    WHERE o.name_ = _operation_name
+      AND p.type_ = 'allow'
+  LOOP
+    EXECUTE format('SELECT policy_.%1$I($1)', _policy) INTO _allow USING _arg;
+    IF _allow THEN
+      EXIT;
+    END IF;
+  END LOOP;
+
+  IF NOT _allow THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+
+  IF (
+    SELECT o.log_events_
+    FROM security_.operation_ o
+    WHERE o.name_ = _operation_name
+  ) THEN
+    INSERT INTO security_.event_ (operation_uuid_, arg_)
+    SELECT o.uuid_, _arg::text
+    FROM security_.operation_ o
+    WHERE o.name_ = _operation_name
+    RETURNING * INTO _event;
+  END IF;
+
+  RETURN _event;
+END
+$_$;
+
+
+ALTER FUNCTION security_.control_operation_(_operation_name text, _arg anyelement) OWNER TO postgres;
+
+--
+-- Name: policy_assignment_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.policy_assignment_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    policy_name_ text NOT NULL,
+    operation_uuid_ uuid NOT NULL,
+    type_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE security_.policy_assignment_ OWNER TO postgres;
+
+--
+-- Name: implement_policy_allow_(text, text, text, text, regtype, anyelement); Type: FUNCTION; Schema: security_; Owner: postgres
+--
+
+CREATE FUNCTION security_.implement_policy_allow_(_operation_name text, _policy_name text, _policy_function_body text DEFAULT NULL::text, _policy_function_arg_name text DEFAULT '_arg'::text, _policy_function_arg_type regtype DEFAULT 'anyelement'::regtype, _policy_function_arg_default anyelement DEFAULT NULL::text) RETURNS security_.policy_assignment_
+    LANGUAGE plpgsql
+    AS $_X$
+DECLARE
+  _policy_assignment security_.policy_assignment_;
+BEGIN
+  PERFORM format('operation_.%1$I', _operation_name)::regproc;
+
+  IF _policy_function_body IS NOT NULL THEN
+    EXECUTE format($__$
+
+      CREATE FUNCTION policy_.%1$I(%3$I %4$I DEFAULT %5$L) RETURNS boolean
+        LANGUAGE plpgsql SECURITY DEFINER
+        AS $$ %2$s $$;
+
+      ALTER FUNCTION policy_.%1$I(_arg anyelement) OWNER TO postgres;
+
+      $__$,
+      _policy_name, _policy_function_body, _policy_function_arg_name, _policy_function_arg_type, _policy_function_arg_default);
+  END IF;
+
+  PERFORM format('policy_.%1$I', _policy_name)::regproc;
+
+  INSERT INTO security_.policy_assignment_ (policy_name_, operation_uuid_, type_)
+  SELECT _policy_name, o.uuid_, 'allow'
+  FROM security_.operation_ o
+  WHERE o.name_ = _operation_name
+  ON CONFLICT (policy_name_, operation_uuid_) DO UPDATE
+  SET
+    type_ = 'allow';
+
+  SELECT p.* INTO _policy_assignment
+    FROM security_.policy_assignment_ p
+    JOIN security_.operation_ o ON o.uuid_ = p.operation_uuid_
+    WHERE p.policy_name_ = _policy_name
+      AND o.name_ = _operation_name;
+
+  RETURN _policy_assignment;
+END
+$_X$;
+
+
+ALTER FUNCTION security_.implement_policy_allow_(_operation_name text, _policy_name text, _policy_function_body text, _policy_function_arg_name text, _policy_function_arg_type regtype, _policy_function_arg_default anyelement) OWNER TO postgres;
+
+--
+-- Name: implement_policy_deny_(text, text, text, text, regtype, anyelement); Type: FUNCTION; Schema: security_; Owner: postgres
+--
+
+CREATE FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_name text, _policy_function_body text DEFAULT NULL::text, _policy_function_arg_name text DEFAULT '_arg'::text, _policy_function_arg_type regtype DEFAULT 'anyelement'::regtype, _policy_function_arg_default anyelement DEFAULT NULL::text) RETURNS security_.policy_assignment_
+    LANGUAGE plpgsql
+    AS $_X$
+DECLARE
+  _policy_assignment security_.policy_assignment_;
+BEGIN
+  PERFORM format('operation_.%1$I', _operation_name)::regproc;
+
+  IF _policy_function_body IS NOT NULL THEN
+    EXECUTE format($__$
+
+      CREATE FUNCTION policy_.%1$I(%3$I %4$I DEFAULT %5$L) RETURNS boolean
+        LANGUAGE plpgsql SECURITY DEFINER
+        AS $$ %2$s $$;
+
+      ALTER FUNCTION policy_.%1$I(_arg anyelement) OWNER TO postgres;
+
+      $__$,
+      _policy_name, _policy_function_body, _policy_function_arg_name, _policy_function_arg_type, _policy_function_arg_default);
+  END IF;
+
+  PERFORM format('policy_.%1$I', _policy_name)::regproc;
+
+  INSERT INTO security_.policy_assignment_ (policy_name_, operation_uuid_, type_)
+  SELECT _policy_name, o.uuid_, 'deny'
+  FROM security_.operation_ o
+  WHERE o.name_ = _operation_name
+  ON CONFLICT (policy_name_, operation_uuid_) DO UPDATE
+  SET
+    type_ = 'deny';
+
+  SELECT p.* INTO _policy_assignment
+    FROM security_.policy_assignment_ p
+    JOIN security_.operation_ o ON o.uuid_ = p.operation_uuid_
+    WHERE p.policy_name_ = _policy_name
+      AND o.name_ = _operation_name;
+
+  RETURN _policy_assignment;
+END
+$_X$;
+
+
+ALTER FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_name text, _policy_function_body text, _policy_function_arg_name text, _policy_function_arg_type regtype, _policy_function_arg_default anyelement) OWNER TO postgres;
+
+--
+-- Name: agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.agency_ (
+    uuid_ uuid,
+    subdomain_uuid_ uuid,
+    name_ text,
+    audit_at_ timestamp with time zone,
+    audit_by_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.agency_ OWNER TO postgres;
+
+--
+-- Name: service_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.service_ (
+    uuid_ uuid,
+    agency_uuid_ uuid,
+    name_ text,
+    audit_at_ timestamp with time zone,
+    audit_by_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.service_ OWNER TO postgres;
+
+--
+-- Name: subject_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.subject_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    name_ text NOT NULL,
+    type_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE security_.subject_ OWNER TO postgres;
 
 --
 -- Name: active_subject_; Type: VIEW; Schema: security_; Owner: postgres
@@ -920,505 +1472,18 @@ CREATE VIEW security_.active_role_ AS
 ALTER TABLE security_.active_role_ OWNER TO postgres;
 
 --
--- Name: permission_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.permission_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    name_ text NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE security_.permission_ OWNER TO postgres;
-
---
--- Name: permission_assignment_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.permission_assignment_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    permission_uuid_ uuid NOT NULL,
-    role_uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE security_.permission_assignment_ OWNER TO postgres;
-
---
--- Name: active_permission_; Type: VIEW; Schema: security_; Owner: postgres
---
-
-CREATE VIEW security_.active_permission_ AS
- SELECT p.uuid_,
-    p.name_,
-    ar.subdomain_uuid_
-   FROM ((security_.permission_ p
-     JOIN security_.permission_assignment_ pa ON ((p.uuid_ = pa.permission_uuid_)))
-     JOIN security_.active_role_ ar ON ((ar.uuid_ = pa.role_uuid_)));
-
-
-ALTER TABLE security_.active_permission_ OWNER TO postgres;
-
---
--- Name: query_permission_(); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.query_permission_() RETURNS SETOF security_.active_permission_
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  PERFORM security_.control_operation_('query_permission_');
-
-  RETURN QUERY
-  SELECT *
-  FROM security_.active_permission_;
-END
-$$;
-
-
-ALTER FUNCTION operation_.query_permission_() OWNER TO postgres;
-
---
--- Name: query_role_(); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.query_role_() RETURNS SETOF security_.active_role_
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  PERFORM security_.control_operation_('query_role_');
-
-  RETURN QUERY
-  SELECT *
-  FROM security_.active_role_;
-END
-$$;
-
-
-ALTER FUNCTION operation_.query_role_() OWNER TO postgres;
-
---
--- Name: query_subject_(); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.query_subject_() RETURNS SETOF security_.active_subject_
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  PERFORM security_.control_operation_('query_subject_');
-
-  RETURN QUERY
-  SELECT *
-  FROM security_.active_subject_;
-END
-$$;
-
-
-ALTER FUNCTION operation_.query_subject_() OWNER TO postgres;
-
---
 -- Name: active_user_; Type: VIEW; Schema: security_; Owner: postgres
 --
 
 CREATE VIEW security_.active_user_ AS
  SELECT s.uuid_,
-    s.name_
+    s.name_,
+    u.email_address_
    FROM (security_.active_subject_ s
      JOIN security_.user_ u ON ((s.uuid_ = u.uuid_)));
 
 
 ALTER TABLE security_.active_user_ OWNER TO postgres;
-
---
--- Name: query_user_(); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.query_user_() RETURNS SETOF security_.active_user_
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  PERFORM security_.control_operation_('query_user_');
-
-  RETURN QUERY
-  SELECT *
-  FROM security_.active_user_;
-END
-$$;
-
-
-ALTER FUNCTION operation_.query_user_() OWNER TO postgres;
-
---
--- Name: sign_up_user_(text, text, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.sign_up_user_(_email_address text, _verification_code text, _name text, _password text) RETURNS security_.user_
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-DECLARE
-  _email_address_verification_matches integer;
-  _user security_.user_;
-BEGIN
-  PERFORM security_.control_operation_('sign_up_user_');
-
-  DELETE FROM security_.email_address_verification_
-  WHERE started_at_ < (CURRENT_TIMESTAMP - '1 day'::interval);
-
-  DELETE FROM security_.email_address_verification_
-    WHERE email_address_ = lower(_email_address)
-      AND verification_code_ = _verification_code;
-
-  GET DIAGNOSTICS _email_address_verification_matches = ROW_COUNT;
-
-  IF _email_address_verification_matches = 0 THEN
-    RAISE 'No matching email address verification code found: %', lower(_email_address) USING ERRCODE = '20000';
-  END IF;
-
-  WITH _subject AS (
-    INSERT INTO security_.subject_ (name_, type_)
-    VALUES (_name, 'user')
-    RETURNING uuid_
-  )
-  INSERT INTO security_.user_ (uuid_, email_address_, password_hash_)
-  SELECT s.uuid_, lower(_email_address), pgcrypto_.crypt(_password, pgcrypto_.gen_salt('md5'))
-  FROM _subject s
-  RETURNING * INTO _user;
-
-  RETURN _user;
-END
-$$;
-
-
-ALTER FUNCTION operation_.sign_up_user_(_email_address text, _verification_code text, _name text, _password text) OWNER TO postgres;
-
---
--- Name: email_address_verification_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.email_address_verification_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    email_address_ text NOT NULL,
-    verification_code_ text NOT NULL,
-    started_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE security_.email_address_verification_ OWNER TO postgres;
-
---
--- Name: start_email_address_verification_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.start_email_address_verification_(_email_address text) RETURNS security_.email_address_verification_
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-DECLARE
-  _email_address_verification security_.email_address_verification_;
-  _verification_code text := lpad(floor(random() * 1000000)::text, 6, '0');
-BEGIN
-  PERFORM security_.control_operation_('start_email_address_verification_');
-
-  IF EXISTS (
-    SELECT 1
-    FROM security_.user_ u
-    WHERE u.email_address_ = lower(_email_address)
-  ) THEN
-    RAISE 'Email address already verified: %', lower(_email_address) USING ERRCODE = '23505';
-  END IF;
-
-  INSERT INTO security_.email_address_verification_ (email_address_, verification_code_)
-  VALUES (lower(_email_address), _verification_code)
-  ON CONFLICT (email_address_) DO UPDATE
-  SET
-    verification_code_ = _verification_code,
-    started_at_ = DEFAULT
-  WHERE security_.email_address_verification_.email_address_ = lower(_email_address)
-  RETURNING * INTO _email_address_verification;
-
-  RETURN _email_address_verification;
-END
-$$;
-
-
-ALTER FUNCTION operation_.start_email_address_verification_(_email_address text) OWNER TO postgres;
-
---
--- Name: operation_assignment_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.operation_assignment_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    operation_uuid_ uuid NOT NULL,
-    permission_uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE security_.operation_assignment_ OWNER TO postgres;
-
---
--- Name: assign_operation_(text, text); Type: FUNCTION; Schema: security_; Owner: postgres
---
-
-CREATE FUNCTION security_.assign_operation_(_operation_name text, _permission_name text) RETURNS security_.operation_assignment_
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  _operation_assignment security_.operation_assignment_;
-BEGIN
-  INSERT INTO security_.operation_ (name_)
-  VALUES (_operation_name)
-  ON CONFLICT DO NOTHING;
-
-  INSERT INTO security_.permission_ (name_)
-  VALUES (_permission_name)
-  ON CONFLICT DO NOTHING;
-
-  INSERT INTO security_.operation_assignment_ (operation_uuid_, permission_uuid_)
-  SELECT o.uuid_, p.uuid_
-  FROM security_.operation_ o, security_.permission_ p
-  WHERE o.name_ = _operation_name
-    AND p.name_ = _permission_name
-  RETURNING * INTO _operation_assignment;
-
-  RETURN _operation_assignment;
-END
-$$;
-
-
-ALTER FUNCTION security_.assign_operation_(_operation_name text, _permission_name text) OWNER TO postgres;
-
---
--- Name: assign_permission_(text, text); Type: FUNCTION; Schema: security_; Owner: postgres
---
-
-CREATE FUNCTION security_.assign_permission_(_permission_name text, _role_name text) RETURNS security_.permission_assignment_
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  _permission_assignment security_.permission_assignment_;
-BEGIN
-  INSERT INTO security_.permission_ (name_)
-  VALUES (_permission_name)
-  ON CONFLICT DO NOTHING;
-
-  INSERT INTO security_.role_ (name_)
-  VALUES (_role_name)
-  ON CONFLICT DO NOTHING;
-
-  INSERT INTO security_.permission_assignment_ (permission_uuid_, role_uuid_)
-  SELECT p.uuid_, r.uuid_
-  FROM security_.permission_ p, security_.role_ r
-  WHERE p.name_ = _permission_name
-    AND r.name_ = _role_name
-  RETURNING * INTO _permission_assignment;
-
-  RETURN _permission_assignment;
-END
-$$;
-
-
-ALTER FUNCTION security_.assign_permission_(_permission_name text, _role_name text) OWNER TO postgres;
-
---
--- Name: event_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.event_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    operation_uuid_ uuid NOT NULL,
-    session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL,
-    args_ text[],
-    event_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-
-ALTER TABLE security_.event_ OWNER TO postgres;
-
---
--- Name: control_operation_(text); Type: FUNCTION; Schema: security_; Owner: postgres
---
-
-CREATE FUNCTION security_.control_operation_(_operation_name text) RETURNS security_.event_
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  _event security_.event_;
-BEGIN
-  CALL security_.raise_if_unauthorized_(_operation_name);
-
-  IF (
-    SELECT o.log_events_
-    FROM security_.operation_ o
-    WHERE o.name_ = _operation_name
-  ) THEN
-    INSERT INTO security_.event_ (operation_uuid_, args_)
-    SELECT o.uuid_, NULL
-    FROM security_.operation_ o
-    WHERE o.name_ = _operation_name
-    RETURNING * INTO _event;
-  END IF;
-
-  RETURN _event;
-END
-$$;
-
-
-ALTER FUNCTION security_.control_operation_(_operation_name text) OWNER TO postgres;
-
---
--- Name: control_operation_(text, text[]); Type: FUNCTION; Schema: security_; Owner: postgres
---
-
-CREATE FUNCTION security_.control_operation_(_operation_name text, VARIADIC _args text[]) RETURNS security_.event_
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  _event security_.event_;
-BEGIN
-  CALL security_.raise_if_unauthorized_(_operation_name);
-
-  IF (
-    SELECT o.log_events_
-    FROM security_.operation_ o
-    WHERE o.name_ = _operation_name
-  ) THEN
-    INSERT INTO security_.event_ (operation_uuid_, args_)
-    SELECT o.uuid_, args
-    FROM security_.operation_ o
-    WHERE o.name_ = _operation_name
-    RETURNING * INTO _event;
-  END IF;
-
-  RETURN _event;
-END
-$$;
-
-
-ALTER FUNCTION security_.control_operation_(_operation_name text, VARIADIC _args text[]) OWNER TO postgres;
-
---
--- Name: control_operation_(uuid, text); Type: FUNCTION; Schema: security_; Owner: postgres
---
-
-CREATE FUNCTION security_.control_operation_(_subdomain_uuid uuid, _operation_name text) RETURNS security_.event_
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  _event security_.event_;
-BEGIN
-  CALL security_.raise_if_unauthorized_(_operation_name, _subdomain_uuid);
-
-  IF (
-    SELECT o.log_events_
-    FROM security_.operation_ o
-    WHERE o.name_ = _operation_name
-  ) THEN
-    INSERT INTO security_.event_ (operation_uuid_, args_)
-    SELECT o.uuid_, NULL
-    FROM security_.operation_ o
-    WHERE o.name_ = _operation_name
-    RETURNING * INTO _event;
-  END IF;
-
-  RETURN _event;
-END
-$$;
-
-
-ALTER FUNCTION security_.control_operation_(_subdomain_uuid uuid, _operation_name text) OWNER TO postgres;
-
---
--- Name: control_operation_(uuid, text, text[]); Type: FUNCTION; Schema: security_; Owner: postgres
---
-
-CREATE FUNCTION security_.control_operation_(_subdomain_uuid uuid, _operation_name text, VARIADIC _args text[]) RETURNS security_.event_
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  _event security_.event_;
-BEGIN
-  CALL security_.raise_if_unauthorized_(_operation_name, _subdomain_uuid);
-
-  IF (
-    SELECT o.log_events_
-    FROM security_.operation_ o
-    WHERE o.name_ = _operation_name
-  ) THEN
-    INSERT INTO security_.event_ (operation_uuid_, args_)
-    SELECT o.uuid_, args
-    FROM security_.operation_ o
-    WHERE o.name_ = _operation_name
-    RETURNING * INTO _event;
-  END IF;
-
-  RETURN _event;
-END
-$$;
-
-
-ALTER FUNCTION security_.control_operation_(_subdomain_uuid uuid, _operation_name text, VARIADIC _args text[]) OWNER TO postgres;
-
---
--- Name: raise_if_unauthorized_(text, uuid); Type: PROCEDURE; Schema: security_; Owner: postgres
---
-
-CREATE PROCEDURE security_.raise_if_unauthorized_(_operation_name text, _subdomain_uuid uuid DEFAULT NULL::uuid)
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-    FROM security_.authorized_operation_ ao
-    WHERE ao.name_ = _operation_name
-      AND ((ao.subdomain_uuid_ IS NULL AND _subdomain_uuid IS NULL) OR (ao.subdomain_uuid_ = _subdomain_uuid))
-  ) THEN
-    RAISE 'Unauthorized.' USING ERRCODE = '42501';
-  END IF;
-END
-$$;
-
-
-ALTER PROCEDURE security_.raise_if_unauthorized_(_operation_name text, _subdomain_uuid uuid) OWNER TO postgres;
-
---
--- Name: agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
---
-
-CREATE TABLE application__audit_.agency_ (
-    uuid_ uuid,
-    subdomain_uuid_ uuid,
-    name_ text,
-    audit_at_ timestamp with time zone,
-    audit_by_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE application__audit_.agency_ OWNER TO postgres;
-
---
--- Name: service_; Type: TABLE; Schema: application__audit_; Owner: postgres
---
-
-CREATE TABLE application__audit_.service_ (
-    uuid_ uuid,
-    agency_uuid_ uuid,
-    name_ text,
-    audit_at_ timestamp with time zone,
-    audit_by_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE application__audit_.service_ OWNER TO postgres;
 
 --
 -- Name: operation_; Type: TABLE; Schema: security_; Owner: postgres
@@ -1427,68 +1492,13 @@ ALTER TABLE application__audit_.service_ OWNER TO postgres;
 CREATE TABLE security_.operation_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
-    session_state_ text NOT NULL,
-    subject_type_ text[],
     log_events_ boolean DEFAULT true NOT NULL,
-    control_args_ text[],
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
 ALTER TABLE security_.operation_ OWNER TO postgres;
-
---
--- Name: authorized_operation_; Type: VIEW; Schema: security_; Owner: postgres
---
-
-CREATE VIEW security_.authorized_operation_ AS
- SELECT o.uuid_,
-    o.name_,
-    o.subdomain_uuid_
-   FROM ( SELECT o_1.uuid_,
-            o_1.name_,
-            NULL::uuid AS subdomain_uuid_,
-            'inactive'::text AS session_state_
-           FROM security_.operation_ o_1
-          WHERE (o_1.session_state_ = 'inactive'::text)
-        UNION
-        ( WITH _operation AS (
-                 SELECT o_2.uuid_,
-                    o_2.name_
-                   FROM (security_.operation_ o_2
-                     JOIN security_.active_subject_ s ON ((s.type_ = ANY (o_2.subject_type_))))
-                  WHERE (o_2.session_state_ = 'active'::text)
-                ), _required_permission AS (
-                 SELECT o_2.uuid_ AS operation_uuid_,
-                    count(oa.permission_uuid_) AS count_
-                   FROM (_operation o_2
-                     LEFT JOIN security_.operation_assignment_ oa ON ((o_2.uuid_ = oa.operation_uuid_)))
-                  GROUP BY o_2.uuid_
-                ), _active_permission AS (
-                 SELECT o_2.uuid_ AS operation_uuid_,
-                    count(ap_1.uuid_) AS count_,
-                    ap_1.subdomain_uuid_
-                   FROM ((_operation o_2
-                     LEFT JOIN security_.operation_assignment_ oa ON ((o_2.uuid_ = oa.operation_uuid_)))
-                     LEFT JOIN security_.active_permission_ ap_1 ON ((ap_1.uuid_ = oa.permission_uuid_)))
-                  GROUP BY o_2.uuid_, ap_1.subdomain_uuid_
-                )
-         SELECT o_1.uuid_,
-            o_1.name_,
-            ap.subdomain_uuid_,
-            'active'::text AS session_state_
-           FROM ((_operation o_1
-             LEFT JOIN _required_permission rp ON ((o_1.uuid_ = rp.operation_uuid_)))
-             JOIN _active_permission ap ON (((o_1.uuid_ = ap.operation_uuid_) AND (rp.count_ = ap.count_)))))) o
-  WHERE (o.session_state_ =
-        CASE
-            WHEN ((COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN 'inactive'::text
-            ELSE 'active'::text
-        END);
-
-
-ALTER TABLE security_.authorized_operation_ OWNER TO postgres;
 
 --
 -- Name: secret_; Type: TABLE; Schema: security_; Owner: postgres
@@ -1543,10 +1553,7 @@ ALTER TABLE security__audit_.email_address_verification_ OWNER TO postgres;
 CREATE TABLE security__audit_.operation_ (
     uuid_ uuid,
     name_ text,
-    session_state_ text,
-    subject_type_ text[],
     log_events_ boolean,
-    control_args_ text[],
     audit_at_ timestamp with time zone,
     audit_by_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -1556,51 +1563,21 @@ CREATE TABLE security__audit_.operation_ (
 ALTER TABLE security__audit_.operation_ OWNER TO postgres;
 
 --
--- Name: operation_assignment_; Type: TABLE; Schema: security__audit_; Owner: postgres
+-- Name: policy_assignment_; Type: TABLE; Schema: security__audit_; Owner: postgres
 --
 
-CREATE TABLE security__audit_.operation_assignment_ (
+CREATE TABLE security__audit_.policy_assignment_ (
     uuid_ uuid,
+    policy_name_ text,
     operation_uuid_ uuid,
-    permission_uuid_ uuid,
+    type_ text,
     audit_at_ timestamp with time zone,
     audit_by_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
 
-ALTER TABLE security__audit_.operation_assignment_ OWNER TO postgres;
-
---
--- Name: permission_; Type: TABLE; Schema: security__audit_; Owner: postgres
---
-
-CREATE TABLE security__audit_.permission_ (
-    uuid_ uuid,
-    name_ text,
-    audit_at_ timestamp with time zone,
-    audit_by_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE security__audit_.permission_ OWNER TO postgres;
-
---
--- Name: permission_assignment_; Type: TABLE; Schema: security__audit_; Owner: postgres
---
-
-CREATE TABLE security__audit_.permission_assignment_ (
-    uuid_ uuid,
-    permission_uuid_ uuid,
-    role_uuid_ uuid,
-    audit_at_ timestamp with time zone,
-    audit_by_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE security__audit_.permission_assignment_ OWNER TO postgres;
+ALTER TABLE security__audit_.policy_assignment_ OWNER TO postgres;
 
 --
 -- Name: role_; Type: TABLE; Schema: security__audit_; Owner: postgres
@@ -1717,57 +1694,40 @@ ALTER TABLE security__audit_.user_ OWNER TO postgres;
 -- Data for Name: operation_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.operation_ (uuid_, name_, session_state_, subject_type_, log_events_, control_args_, audit_at_, audit_by_) FROM stdin;
-1ddaf7a8-4cf5-4518-9bc4-78e18b27fc0d	begin_session_	inactive	\N	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-a9dab653-7a23-4f10-b166-49f1e33fcb8b	end_session_	active	{user,visitor}	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-8614cf3d-3076-499f-bff9-77b0157fcf67	query_subdomain_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-a3fb73d8-9812-4860-8dc9-4b4117a90b26	query_agency_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-2810c88f-564b-43fd-9bb6-6a522860bdb5	query_service_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	active	{user}	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	active	{user}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	active	{user}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	active	{user}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	active	{user}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	active	{visitor}	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	active	{visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	active	{visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-d950afbf-6d26-4aef-a1d2-26d07ef8623f	end_visit_	active	{visitor}	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-e427f688-9873-45bf-b255-0fc8aefb6b8c	begin_visit_	inactive	\N	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-b1f3c8eb-33fb-4f79-b204-3d1a54d7b902	query_permission_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-2a936fba-5c8c-492d-b57e-25e67001c28b	query_role_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-42dba016-2031-4463-9cb1-82f08ba2b7ce	query_user_	active	{user}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-2ee8c8cb-7e4c-4d8e-8abf-031d4185674c	query_subject_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+COPY security_.operation_ (uuid_, name_, log_events_, audit_at_, audit_by_) FROM stdin;
+12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+bc17d339-b05b-4078-8b6c-a3763972d9f1	query_active_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+44836e4b-ecd5-4184-a177-498b412ff251	query_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
 --
--- Data for Name: operation_assignment_; Type: TABLE DATA; Schema: security_; Owner: postgres
+-- Data for Name: policy_assignment_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.operation_assignment_ (uuid_, operation_uuid_, permission_uuid_, audit_at_, audit_by_) FROM stdin;
-98328d08-8bff-4946-a736-99c1ced69c6f	c865b482-975b-49b3-845f-dfa39f46a7f1	5a612763-ebb3-41be-9d5e-625fd7702dbd	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-1eb99f92-bfa6-45d1-be4d-9a878d749c63	fa4b4c5f-160f-413b-b77a-beee70108f0a	0927d2d7-cec2-42b2-b4bc-26f52ded6877	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-df9caca7-f0b4-450e-8b07-80fa7d581756	45cf7669-6e10-4c99-bf14-af25985a7f0f	0927d2d7-cec2-42b2-b4bc-26f52ded6877	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-\.
-
-
---
--- Data for Name: permission_; Type: TABLE DATA; Schema: security_; Owner: postgres
---
-
-COPY security_.permission_ (uuid_, name_, audit_at_, audit_by_) FROM stdin;
-5a612763-ebb3-41be-9d5e-625fd7702dbd	delete agency	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-0927d2d7-cec2-42b2-b4bc-26f52ded6877	manage services	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-\.
-
-
---
--- Data for Name: permission_assignment_; Type: TABLE DATA; Schema: security_; Owner: postgres
---
-
-COPY security_.permission_assignment_ (uuid_, permission_uuid_, role_uuid_, audit_at_, audit_by_) FROM stdin;
-059f6e90-00f0-4536-bac2-53b85c1e6306	5a612763-ebb3-41be-9d5e-625fd7702dbd	be9432a6-2c74-4030-b59e-d657662a4f92	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-9053fc8c-7178-4b52-890e-10161a63cbfb	0927d2d7-cec2-42b2-b4bc-26f52ded6877	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+COPY security_.policy_assignment_ (uuid_, policy_name_, operation_uuid_, type_, audit_at_, audit_by_) FROM stdin;
+8d52be36-b346-458e-9cd5-1ec2521c40c7	agent_in_agency_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+fb6da025-643a-4806-a64b-4a0e5042ba98	owner_in_agency_	c865b482-975b-49b3-845f-dfa39f46a7f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+685c3913-3fff-4345-865c-d3e4026321ed	visitor_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+3aef50bd-85e6-4beb-8bd4-9a252052200d	visitor_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c291d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+2b6aa4d9-d734-4e2d-acdf-9ecd21342ae2	logged_in_	bc17d339-b05b-4078-8b6c-a3763972d9f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+914f28e8-076c-45cb-8042-f827bc6e59e2	logged_in_	a5acd829-bced-4d98-8c5c-8f29e14c8116	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+7488a3fd-0f68-4369-95c2-9293e3a4f80e	manager_in_agency_	fa4b4c5f-160f-413b-b77a-beee70108f0a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+f8e01162-7a10-4771-a540-d773a10b0498	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1796,57 +1756,40 @@ COPY security_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, aud
 -- Data for Name: operation_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
-COPY security__audit_.operation_ (uuid_, name_, session_state_, subject_type_, log_events_, control_args_, audit_at_, audit_by_, audit_op_) FROM stdin;
-1ddaf7a8-4cf5-4518-9bc4-78e18b27fc0d	begin_session_	inactive	\N	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-a9dab653-7a23-4f10-b166-49f1e33fcb8b	end_session_	active	{user,visitor}	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-8614cf3d-3076-499f-bff9-77b0157fcf67	query_subdomain_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-a3fb73d8-9812-4860-8dc9-4b4117a90b26	query_agency_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-2810c88f-564b-43fd-9bb6-6a522860bdb5	query_service_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	active	{user}	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	active	{user}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	active	{user}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	active	{user}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	active	{user}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	active	{visitor}	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	active	{visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	active	{visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-d950afbf-6d26-4aef-a1d2-26d07ef8623f	end_visit_	active	{visitor}	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-e427f688-9873-45bf-b255-0fc8aefb6b8c	begin_visit_	inactive	\N	f	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-b1f3c8eb-33fb-4f79-b204-3d1a54d7b902	query_permission_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-2a936fba-5c8c-492d-b57e-25e67001c28b	query_role_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-42dba016-2031-4463-9cb1-82f08ba2b7ce	query_user_	active	{user}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-2ee8c8cb-7e4c-4d8e-8abf-031d4185674c	query_subject_	active	{user,visitor}	t	\N	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+COPY security__audit_.operation_ (uuid_, name_, log_events_, audit_at_, audit_by_, audit_op_) FROM stdin;
+12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+bc17d339-b05b-4078-8b6c-a3763972d9f1	query_active_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+44836e4b-ecd5-4184-a177-498b412ff251	query_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
 --
--- Data for Name: operation_assignment_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
+-- Data for Name: policy_assignment_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
-COPY security__audit_.operation_assignment_ (uuid_, operation_uuid_, permission_uuid_, audit_at_, audit_by_, audit_op_) FROM stdin;
-98328d08-8bff-4946-a736-99c1ced69c6f	c865b482-975b-49b3-845f-dfa39f46a7f1	5a612763-ebb3-41be-9d5e-625fd7702dbd	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-1eb99f92-bfa6-45d1-be4d-9a878d749c63	fa4b4c5f-160f-413b-b77a-beee70108f0a	0927d2d7-cec2-42b2-b4bc-26f52ded6877	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-df9caca7-f0b4-450e-8b07-80fa7d581756	45cf7669-6e10-4c99-bf14-af25985a7f0f	0927d2d7-cec2-42b2-b4bc-26f52ded6877	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-\.
-
-
---
--- Data for Name: permission_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
---
-
-COPY security__audit_.permission_ (uuid_, name_, audit_at_, audit_by_, audit_op_) FROM stdin;
-5a612763-ebb3-41be-9d5e-625fd7702dbd	delete agency	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-0927d2d7-cec2-42b2-b4bc-26f52ded6877	manage services	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-\.
-
-
---
--- Data for Name: permission_assignment_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
---
-
-COPY security__audit_.permission_assignment_ (uuid_, permission_uuid_, role_uuid_, audit_at_, audit_by_, audit_op_) FROM stdin;
-059f6e90-00f0-4536-bac2-53b85c1e6306	5a612763-ebb3-41be-9d5e-625fd7702dbd	be9432a6-2c74-4030-b59e-d657662a4f92	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-9053fc8c-7178-4b52-890e-10161a63cbfb	0927d2d7-cec2-42b2-b4bc-26f52ded6877	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+COPY security__audit_.policy_assignment_ (uuid_, policy_name_, operation_uuid_, type_, audit_at_, audit_by_, audit_op_) FROM stdin;
+8d52be36-b346-458e-9cd5-1ec2521c40c7	agent_in_agency_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+fb6da025-643a-4806-a64b-4a0e5042ba98	owner_in_agency_	c865b482-975b-49b3-845f-dfa39f46a7f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+685c3913-3fff-4345-865c-d3e4026321ed	visitor_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+3aef50bd-85e6-4beb-8bd4-9a252052200d	visitor_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c291d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+2b6aa4d9-d734-4e2d-acdf-9ecd21342ae2	logged_in_	bc17d339-b05b-4078-8b6c-a3763972d9f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+914f28e8-076c-45cb-8042-f827bc6e59e2	logged_in_	a5acd829-bced-4d98-8c5c-8f29e14c8116	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+7488a3fd-0f68-4369-95c2-9293e3a4f80e	manager_in_agency_	fa4b4c5f-160f-413b-b77a-beee70108f0a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+f8e01162-7a10-4771-a540-d773a10b0498	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -1952,35 +1895,19 @@ ALTER TABLE ONLY security_.operation_
 
 
 --
--- Name: operation_assignment_ operation_assignment__operation_uuid__permission_uuid__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
+-- Name: policy_assignment_ policy_assignment__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
 --
 
-ALTER TABLE ONLY security_.operation_assignment_
-    ADD CONSTRAINT operation_assignment__operation_uuid__permission_uuid__key UNIQUE (operation_uuid_, permission_uuid_);
-
-
---
--- Name: permission_ permission__name__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.permission_
-    ADD CONSTRAINT permission__name__key UNIQUE (name_);
+ALTER TABLE ONLY security_.policy_assignment_
+    ADD CONSTRAINT policy_assignment__pkey PRIMARY KEY (uuid_);
 
 
 --
--- Name: permission_ permission__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
+-- Name: policy_assignment_ policy_assignment__policy_name__operation_uuid__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
 --
 
-ALTER TABLE ONLY security_.permission_
-    ADD CONSTRAINT permission__pkey PRIMARY KEY (uuid_);
-
-
---
--- Name: permission_assignment_ permission_assignment__permission_uuid__role_uuid__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.permission_assignment_
-    ADD CONSTRAINT permission_assignment__permission_uuid__role_uuid__key UNIQUE (permission_uuid_, role_uuid_);
+ALTER TABLE ONLY security_.policy_assignment_
+    ADD CONSTRAINT policy_assignment__policy_name__operation_uuid__key UNIQUE (policy_name_, operation_uuid_);
 
 
 --
@@ -2221,31 +2148,10 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_ REF
 
 
 --
--- Name: permission_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.permission_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: subject_assignment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subject_assignment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: permission_assignment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.permission_assignment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: operation_assignment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.operation_assignment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -2260,6 +2166,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_hier
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subject_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: policy_assignment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.policy_assignment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -2326,31 +2239,10 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 
 
 --
--- Name: permission_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.permission_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: subject_assignment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subject_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: permission_assignment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.permission_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: operation_assignment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.operation_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2365,6 +2257,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: policy_assignment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.policy_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2431,31 +2330,10 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 
 
 --
--- Name: permission_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.permission_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: subject_assignment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subject_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: permission_assignment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.permission_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: operation_assignment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.operation_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2470,6 +2348,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: policy_assignment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.policy_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2536,31 +2421,10 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_ FO
 
 
 --
--- Name: permission_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.permission_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
 -- Name: subject_assignment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subject_assignment_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: permission_assignment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.permission_assignment_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: operation_assignment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.operation_assignment_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -2575,6 +2439,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_hie
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subject_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: policy_assignment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.policy_assignment_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -2617,35 +2488,11 @@ ALTER TABLE ONLY security_.event_
 
 
 --
--- Name: operation_assignment_ operation_assignment__operation_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
+-- Name: policy_assignment_ policy_assignment__operation_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
 --
 
-ALTER TABLE ONLY security_.operation_assignment_
-    ADD CONSTRAINT operation_assignment__operation_uuid__fkey FOREIGN KEY (operation_uuid_) REFERENCES security_.operation_(uuid_) ON DELETE CASCADE;
-
-
---
--- Name: operation_assignment_ operation_assignment__permission_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.operation_assignment_
-    ADD CONSTRAINT operation_assignment__permission_uuid__fkey FOREIGN KEY (permission_uuid_) REFERENCES security_.permission_(uuid_) ON DELETE CASCADE;
-
-
---
--- Name: permission_assignment_ permission_assignment__permission_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.permission_assignment_
-    ADD CONSTRAINT permission_assignment__permission_uuid__fkey FOREIGN KEY (permission_uuid_) REFERENCES security_.permission_(uuid_) ON DELETE CASCADE;
-
-
---
--- Name: permission_assignment_ permission_assignment__role_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.permission_assignment_
-    ADD CONSTRAINT permission_assignment__role_uuid__fkey FOREIGN KEY (role_uuid_) REFERENCES security_.role_(uuid_) ON DELETE CASCADE;
+ALTER TABLE ONLY security_.policy_assignment_
+    ADD CONSTRAINT policy_assignment__operation_uuid__fkey FOREIGN KEY (operation_uuid_) REFERENCES security_.operation_(uuid_);
 
 
 --

@@ -22,6 +22,7 @@ DECLARE
   _visitor_jwt text;
   _user_jwt text;
   _record RECORD;
+  _cursor refcursor;
 BEGIN
 
   SELECT operation_.begin_visit_() INTO _visitor_jwt;
@@ -69,8 +70,8 @@ BEGIN
   PERFORM operation_.begin_session_(_user_jwt);
 
   SELECT * INTO _record
-  FROM operation_.query_user_();
-  --RAISE NOTICE E'query_user_:\n%', _record;
+  FROM operation_.query_active_user_();
+  --RAISE NOTICE E'query_active_user_:\n%', _record;
 
   PERFORM operation_.end_session_();
 
@@ -86,19 +87,29 @@ BEGIN
 
   PERFORM operation_.begin_session_(_user_jwt);
 
-  SELECT * INTO _record
-  FROM operation_.create_service_('test service', _record.uuid_);
-  --RAISE NOTICE E'create_service_:\n%', _record;
+  PERFORM operation_.create_service_('test service 1', _record.uuid_);
+  PERFORM operation_.create_service_('test service 2', _record.uuid_);
 
   PERFORM operation_.end_session_();
 
 
   PERFORM operation_.begin_session_(_user_jwt);
 
-  --TODO
-  --SELECT * INTO _record
-  --FROM operation_.query_agency_();
+  SELECT * FROM operation_.query_agency_(_record.uuid_) INTO _record;
   --RAISE NOTICE E'query_agency_:\n%', _record;
+
+  PERFORM operation_.end_session_();
+
+
+  PERFORM operation_.begin_session_(_user_jwt);
+
+  OPEN _cursor FOR SELECT * FROM operation_.query_service_(_record.uuid_);
+  LOOP
+    FETCH FROM _cursor INTO _record;
+    --RAISE NOTICE E'query_service_:\n%', _record;
+    EXIT WHEN NOT FOUND;
+  END LOOP;
+  CLOSE _cursor;
 
   PERFORM operation_.end_session_();
 
