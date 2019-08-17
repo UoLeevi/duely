@@ -793,7 +793,7 @@ ALTER FUNCTION operation_.log_out_user_() OWNER TO postgres;
 -- Name: query_active_subject_(); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_active_subject_() RETURNS TABLE(uuid_ uuid, name_ text, type_ text)
+CREATE FUNCTION operation_.query_active_subject_() RETURNS TABLE(uuid_ uuid, name_ text, type_ text, email_address_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -802,33 +802,13 @@ BEGIN
   RETURN QUERY
   SELECT s.uuid_, s.name_, s.type_, u.email_address_
   FROM security_.active_subject_ s
-  LEFT JOIN security_.user u ON s.uuid_ = u.uuid_;
+  LEFT JOIN security_.user_ u ON s.uuid_ = u.uuid_;
 
 END
 $$;
 
 
 ALTER FUNCTION operation_.query_active_subject_() OWNER TO postgres;
-
---
--- Name: query_active_user_(); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.query_active_user_() RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text)
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  PERFORM security_.control_operation_('query_active_user_');
-
-  RETURN QUERY
-  SELECT u.uuid_, u.name_, u.email_address_
-  FROM security_.active_user_ u;
-
-END
-$$;
-
-
-ALTER FUNCTION operation_.query_active_user_() OWNER TO postgres;
 
 --
 -- Name: query_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1704,7 +1684,6 @@ a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 02:00:00+02	00000
 93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-bc17d339-b05b-4078-8b6c-a3763972d9f1	query_active_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 44836e4b-ecd5-4184-a177-498b412ff251	query_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
@@ -1724,10 +1703,11 @@ e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984
 685c3913-3fff-4345-865c-d3e4026321ed	visitor_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 3aef50bd-85e6-4beb-8bd4-9a252052200d	visitor_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c291d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-2b6aa4d9-d734-4e2d-acdf-9ecd21342ae2	logged_in_	bc17d339-b05b-4078-8b6c-a3763972d9f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 914f28e8-076c-45cb-8042-f827bc6e59e2	logged_in_	a5acd829-bced-4d98-8c5c-8f29e14c8116	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 7488a3fd-0f68-4369-95c2-9293e3a4f80e	manager_in_agency_	fa4b4c5f-160f-413b-b77a-beee70108f0a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 f8e01162-7a10-4771-a540-d773a10b0498	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1766,7 +1746,6 @@ a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 02:00:00+02	00000
 93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-bc17d339-b05b-4078-8b6c-a3763972d9f1	query_active_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 44836e4b-ecd5-4184-a177-498b412ff251	query_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
@@ -1786,10 +1765,11 @@ e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984
 685c3913-3fff-4345-865c-d3e4026321ed	visitor_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 3aef50bd-85e6-4beb-8bd4-9a252052200d	visitor_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c291d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-2b6aa4d9-d734-4e2d-acdf-9ecd21342ae2	logged_in_	bc17d339-b05b-4078-8b6c-a3763972d9f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 914f28e8-076c-45cb-8042-f827bc6e59e2	logged_in_	a5acd829-bced-4d98-8c5c-8f29e14c8116	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 7488a3fd-0f68-4369-95c2-9293e3a4f80e	manager_in_agency_	fa4b4c5f-160f-413b-b77a-beee70108f0a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 f8e01162-7a10-4771-a540-d773a10b0498	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 

@@ -32,6 +32,15 @@ BEGIN
   PERFORM operation_.begin_session_(_visitor_jwt);
 
   SELECT * INTO _record
+  FROM operation_.query_active_subject_();
+  --RAISE NOTICE E'query_active_subject_:\n%', _record;
+
+  PERFORM operation_.end_session_();
+
+
+  PERFORM operation_.begin_session_(_visitor_jwt);
+
+  SELECT * INTO _record
   FROM operation_.start_email_address_verification_('test@test');
   --RAISE NOTICE E'start_email_address_verification_:\n%', _record;
 
@@ -70,8 +79,8 @@ BEGIN
   PERFORM operation_.begin_session_(_user_jwt);
 
   SELECT * INTO _record
-  FROM operation_.query_active_user_();
-  --RAISE NOTICE E'query_active_user_:\n%', _record;
+  FROM operation_.query_active_subject_();
+  --RAISE NOTICE E'query_active_subject_:\n%', _record;
 
   PERFORM operation_.end_session_();
 
