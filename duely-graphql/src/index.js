@@ -13,6 +13,7 @@ const apollo = new ApolloServer({
 });
 
 const app = express();
+app.set('trust proxy', true);
 app.use(cors());
 apollo.applyMiddleware({ app });
 

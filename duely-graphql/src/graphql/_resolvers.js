@@ -7,7 +7,7 @@ import validator from 'validator';
 
 export default {
   Query: {
-    async subdomain(obj, { host }, context, info) {
+    async subdomain(obj, { name }, context, info) {
       const res = await db.query(`
         SELECT d.* 
           FROM subdomains d
@@ -111,12 +111,12 @@ export default {
         type: 'LogInResult'
       };
     },
-    async createSeller(obj, { name, subdomain }, context, info) {
+    async createAgency(obj, { name, subdomain }, context, info) {
       if (!context.claims || !context.claims.sub)
         return {
           success: false,
           message: `Unauthorized.`,
-          type: 'CreateSellerResult'
+          type: 'CreateAgencyResult'
         };
 
       const reservedSubdomains = ['api', 'test', 'example', 'admin'];
@@ -125,14 +125,14 @@ export default {
         return {
           success: false,
           message: `Subdomain '${subdomain}' is not allowed.`,
-          type: 'CreateSellerResult'
+          type: 'CreateAgencyResult'
         };
 
       if (!validator.isFQDN(`${subdomain}.duely.app`))
         return {
           success: false,
           message: `Subdomain format '${subdomain}' is invalid.`,
-          type: 'CreateSellerResult'
+          type: 'CreateAgencyResult'
         };
 
       try {
@@ -143,22 +143,22 @@ export default {
         return {
           success: true,
           seller: res.rows[0],
-          type: 'CreateSellerResult'
+          type: 'CreateAgencyResult'
         };
       } catch (error) {
         return {
           success: false,
           message: `Try different subdomain.`,
-          type: 'CreateSellerResult'
+          type: 'CreateAgencyResult'
         };
       }
     },
-    async deleteSeller(obj, { seller_uuid }, context, info) {
+    async deleteAgency(obj, { seller_uuid }, context, info) {
       if (!context.claims || !context.claims.sub)
         return {
           success: false,
           message: `Unauthorized.`,
-          type: 'DeleteSellerResult'
+          type: 'DeleteAgencyResult'
         };
 
       const res = await db.query(
@@ -169,21 +169,21 @@ export default {
         return {
           success: false,
           message: `Invalid seller uuid.`,
-          type: 'DeleteSellerResult'
+          type: 'DeleteAgencyResult'
         };
 
       return {
         success: true,
-        type: 'DeleteSellerResult'
+        type: 'DeleteAgencyResult'
       };
     }
   },
   Account: {
-    sellersConnection(account, args, context, info) {
-      return { account_uuid: account.uuid, type: 'AccountSellersConnection' };
+    agenciesConnection(account, args, context, info) {
+      return { account_uuid: account.uuid, type: 'AccountAgenciesConnection' };
     },
   },
-  AccountSellersConnection: {
+  AccountAgenciesConnection: {
     async edges(connection, args, context, info) {
       const res = await db.query(`
         SELECT a_x_s.*
@@ -192,10 +192,10 @@ export default {
         `,
         [connection.account_uuid]);
 
-      return res.rows.map(row => ({ ...row, type: 'AccountSellersEdge' }));
+      return res.rows.map(row => ({ ...row, type: 'AccountAgenciesEdge' }));
     }
   },
-  AccountSellersEdge: {
+  AccountAgenciesEdge: {
     cursor(edge, args, context, info) {
       return Buffer.from(`${edge.account_uuid},${edge.seller_uuid}`).toString('base64');
     },
@@ -207,7 +207,7 @@ export default {
         `,
         [edge.seller_uuid]);
 
-      return { ...res.rows[0], type: "Seller" };
+      return { ...res.rows[0], type: "Agency" };
     }
   },
   Session: {
@@ -224,12 +224,12 @@ export default {
       return res.rows[0];
     }
   },
-  Seller: {
+  Agency: {
     subdomainsConnection(seller, args, context, info) {
-      return { seller_uuid: seller.uuid, type: 'SellerSubdomainsConnection' };
+      return { seller_uuid: seller.uuid, type: 'AgencySubdomainsConnection' };
     },
   },
-  SellerSubdomainsConnection: {
+  AgencySubdomainsConnection: {
     async edges(connection, args, context, info) {
       const res = await db.query(`
         SELECT d.uuid subdomain_uuid, d.seller_uuid
@@ -238,10 +238,10 @@ export default {
         `,
         [connection.seller_uuid]);
 
-      return res.rows.map(row => ({ ...row, type: 'SellerSubdomainsEdge' }));
+      return res.rows.map(row => ({ ...row, type: 'AgencySubdomainsEdge' }));
     }
   },
-  SellerSubdomainsEdge: {
+  AgencySubdomainsEdge: {
     cursor(edge, args, context, info) {
       return Buffer.from(`${edge.seller_uuid},${edge.subdomain_uuid}`).toString('base64');
     },
@@ -302,40 +302,8 @@ export default {
       return theme.color_warning;
     }
   },
-  Node: {
-    __resolveType(node, context, info) {
-      return node.type;
-    }
-  },
-  Connection: {
-    __resolveType(connection, context, info) {
-      return connection.type;
-    }
-  },
-  Edge: {
-    __resolveType(edge, context, info) {
-      return edge.type;
-    }
-  },
-  MutationResult: {
-    __resolveType(mutationResult, context, info) {
-      return mutationResult.type;
-    }
-  },
-  Date: new GraphQLScalarType({
-    name: 'Date',
-    description: 'Date custom scalar type',
-    parseValue(value) {
-      return new Date(value);
-    },
-    serialize(value) {
-      return value.getTime();
-    },
-    parseLiteral(ast) {
-      if (ast.kind === Kind.INT)
-        return new Date(ast.value);
-
-      return null;
-    }
-  })
+  
+  
+  
+  
 };
