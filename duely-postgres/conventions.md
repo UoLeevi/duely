@@ -32,7 +32,7 @@
 - triggers names as 'tr_[after_|before_|instead_of_][insert_|[or_]update_|[or_]delete_]{function}'
 
 ## auditing
-- enabled for a table by calling procedure 'internal_.setup_auditing_(_table_schema, _table_name)' which creates
+- enabled for a table by calling procedure 'internal_.setup_auditing_(_table)' which creates
   - columns
     - audit_at_ timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
     - audit_by_ uuid NOT NULL DEFAULT COALESCE(current_setting('security_.token_.subject_uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid;
@@ -43,10 +43,10 @@
   - trigger before update that updates values for audit_at_ and audit_by_ columns
   - trigger after insert or update that copies changed rows to {schema}_audit_.{table}
   - trigger after delete that copies deleted rows to {schema}_audit_.{table} and set audit_at_ and audit_by_ columns
-- auditing feature can removed by calling procedure 'internal_.drop_auditing_(_table_schema, _table_name)'
+- auditing feature can removed by calling procedure 'internal_.drop_auditing_(_table)'
 
 ## notifications
-- enabled for a table by calling procedure 'internal_.setup_notifications_(_table_schema, _table_name)' which creates
+- enabled for a table by calling procedure 'internal_.setup_notifications_(_table)' which creates
   - trigger after insert or update or delete that will send notifications on affected rows in json format to channel '"{_table_schema}.{_table_name}"'
 
 ## application security

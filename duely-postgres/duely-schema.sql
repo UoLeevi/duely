@@ -118,18 +118,18 @@ BEGIN
       WHERE attrelid = TG_RELID
         AND NOT attisdropped
         AND attnum > 0
-        AND attname NOT IN ('audit_at_', 'audit_by_')
+        AND attname NOT IN ('audit_at_', 'audit_session_uuid_')
     )
   SELECT INTO _columns
     string_agg(quote_ident(cte1.attname), ', ')
   FROM cte1;
   EXECUTE format(
-    'INSERT INTO %1$I.%2$I(%3$s, audit_at_, audit_by_, audit_op_) SELECT %3$s, %4$L, %5$L, %6$L FROM _old_table o', 
+    'INSERT INTO %1$I.%2$I(%3$s, audit_at_, audit_session_uuid_, audit_op_) SELECT %3$s, %4$L, %5$L, %6$L FROM _old_table o', 
     TG_TABLE_SCHEMA || '_audit_', 
     TG_TABLE_NAME, 
     _columns, 
     CURRENT_TIMESTAMP, 
-    COALESCE(current_setting('security_.token_.subject_uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid, 
+    COALESCE(current_setting('security_.session_.uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid, 
     LEFT(TG_OP, 1));
   RETURN NULL;
 END
@@ -181,7 +181,7 @@ CREATE FUNCTION internal_.audit_stamp_() RETURNS trigger
     AS $$
 BEGIN
   NEW.audit_at_ := CURRENT_TIMESTAMP;
-  NEW.audit_by_ := COALESCE(current_setting('security_.token_.subject_uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid;
+  NEW.audit_session_uuid_ := COALESCE(current_setting('security_.session_.uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid;
   RETURN NEW;
 END;
 $$;
@@ -223,50 +223,67 @@ $$;
 ALTER FUNCTION internal_.base64url_encode_(_data bytea) OWNER TO postgres;
 
 --
--- Name: drop_auditing_(name, name); Type: PROCEDURE; Schema: internal_; Owner: postgres
+-- Name: drop_auditing_(regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
 --
 
-CREATE PROCEDURE internal_.drop_auditing_(_table_schema name, _table_name name)
+CREATE PROCEDURE internal_.drop_auditing_(_table regclass)
     LANGUAGE plpgsql
     AS $_$
 DECLARE
-  _audit_schema name := _table_schema || '_audit_';
+  _table_name name;
+  _table_schema name;
+  _audit_schema name;
 BEGIN
+  SELECT c.relname, ns.nspname, ns.nspname || '_audit_' INTO _table_name, _table_schema, _audit_schema
+  FROM pg_catalog.pg_class AS c
+  JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
+  WHERE c.oid = _table;
+
   EXECUTE format(
-    'DROP TRIGGER tr_after_delete_audit_delete_ ON %1$I.%2$I;'
-    'DROP TRIGGER tr_after_update_audit_insert_or_update_ ON %1$I.%2$I;'
-    'DROP TRIGGER tr_after_insert_audit_insert_or_update_ ON %1$I.%2$I;'
-    'DROP TRIGGER tr_before_update_audit_stamp_ ON %1$I.%2$I;'
-    'DROP TABLE %3$I.%2$I;'
-    'ALTER TABLE %1$I.%2$I DROP COLUMN audit_by_;'
-    'ALTER TABLE %1$I.%2$I DROP COLUMN audit_at_;',
+    $$
+    DROP TRIGGER tr_after_delete_audit_delete_ ON %1$I.%2$I;
+    DROP TRIGGER tr_after_update_audit_insert_or_update_ ON %1$I.%2$I;
+    DROP TRIGGER tr_after_insert_audit_insert_or_update_ ON %1$I.%2$I;
+    DROP TRIGGER tr_before_update_audit_stamp_ ON %1$I.%2$I;
+    DROP TABLE %3$I.%2$I;
+    ALTER TABLE %1$I.%2$I DROP COLUMN audit_session_uuid_;
+    ALTER TABLE %1$I.%2$I DROP COLUMN audit_at_;
+    $$,
     _table_schema, _table_name, _audit_schema);
 END
 $_$;
 
 
-ALTER PROCEDURE internal_.drop_auditing_(_table_schema name, _table_name name) OWNER TO postgres;
+ALTER PROCEDURE internal_.drop_auditing_(_table regclass) OWNER TO postgres;
 
 --
--- Name: drop_notifications_(name, name); Type: PROCEDURE; Schema: internal_; Owner: postgres
+-- Name: drop_notifications_(regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
 --
 
-CREATE PROCEDURE internal_.drop_notifications_(_table_schema name, _table_name name)
+CREATE PROCEDURE internal_.drop_notifications_(_table regclass)
     LANGUAGE plpgsql
     AS $_$
 DECLARE
-  _audit_schema name := _table_schema || '_audit_';
+  _table_name name;
+  _table_schema name;
 BEGIN
+  SELECT c.relname, ns.nspname INTO _table_name, _table_schema
+  FROM pg_catalog.pg_class AS c
+  JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
+  WHERE c.oid = _table;
+
   EXECUTE format(
-    'DROP TRIGGER tr_after_insert_notify_json_ ON %1$I.%2$I;'
-    'DROP TRIGGER tr_after_update_notify_json_ ON %1$I.%2$I;'
-    'DROP TRIGGER tr_after_delete_notify_json_ ON %1$I.%2$I;',
+    $$
+    DROP TRIGGER tr_after_insert_notify_json_ ON %1$I.%2$I;
+    DROP TRIGGER tr_after_update_notify_json_ ON %1$I.%2$I;
+    DROP TRIGGER tr_after_delete_notify_json_ ON %1$I.%2$I;
+    $$,
     _table_schema, _table_name);
 END
 $_$;
 
 
-ALTER PROCEDURE internal_.drop_notifications_(_table_schema name, _table_name name) OWNER TO postgres;
+ALTER PROCEDURE internal_.drop_notifications_(_table regclass) OWNER TO postgres;
 
 --
 -- Name: jwt_sign_hs256_(json, bytea); Type: FUNCTION; Schema: internal_; Owner: postgres
@@ -325,60 +342,78 @@ $$;
 ALTER FUNCTION internal_.notify_json_() OWNER TO postgres;
 
 --
--- Name: setup_auditing_(name, name); Type: PROCEDURE; Schema: internal_; Owner: postgres
+-- Name: setup_auditing_(regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
 --
 
-CREATE PROCEDURE internal_.setup_auditing_(_table_schema name, _table_name name)
+CREATE PROCEDURE internal_.setup_auditing_(_table regclass)
     LANGUAGE plpgsql
     AS $_$
 DECLARE
-  _audit_schema name := _table_schema || '_audit_';
+  _table_name name;
+  _table_schema name;
+  _audit_schema name;
 BEGIN
-  EXECUTE format(
-    'ALTER TABLE %1$I.%2$I ADD COLUMN audit_at_ timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;'
-    'ALTER TABLE %1$I.%2$I ADD COLUMN audit_by_ uuid NOT NULL NOT NULL DEFAULT COALESCE(current_setting(''security_.token_.subject_uuid_'', ''t''), ''00000000-0000-0000-0000-000000000000'')::uuid;'
-    'CREATE TABLE %3$I.%2$I AS TABLE %1$I.%2$I;'
-    'ALTER TABLE %3$I.%2$I ADD COLUMN audit_op_ char(1) NOT NULL DEFAULT ''I'';'
-    'CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON %1$I.%2$I FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();'
-    'CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON %1$I.%2$I REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();'
-    'CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON %1$I.%2$I REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();'
-    'CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON %1$I.%2$I REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();',
+  SELECT c.relname, ns.nspname, ns.nspname || '_audit_' INTO _table_name, _table_schema, _audit_schema
+  FROM pg_catalog.pg_class AS c
+  JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
+  WHERE c.oid = _table;
+
+  EXECUTE format($$
+    ALTER TABLE %1$I.%2$I ADD COLUMN audit_at_ timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;
+    ALTER TABLE %1$I.%2$I ADD COLUMN audit_session_uuid_ uuid NOT NULL NOT NULL DEFAULT COALESCE(current_setting('security_.session_.uuid_', 't'), '00000000-0000-0000-0000-000000000000')::uuid;
+    CREATE TABLE %3$I.%2$I AS TABLE %1$I.%2$I;
+    ALTER TABLE %3$I.%2$I ADD COLUMN audit_op_ char(1) NOT NULL DEFAULT 'I';
+    CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON %1$I.%2$I FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+    CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON %1$I.%2$I REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+    CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON %1$I.%2$I REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+    CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON %1$I.%2$I REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+    $$,
     _table_schema, _table_name, _audit_schema);
 END
 $_$;
 
 
-ALTER PROCEDURE internal_.setup_auditing_(_table_schema name, _table_name name) OWNER TO postgres;
+ALTER PROCEDURE internal_.setup_auditing_(_table regclass) OWNER TO postgres;
 
 --
--- Name: setup_notifications_(name, name); Type: PROCEDURE; Schema: internal_; Owner: postgres
+-- Name: setup_notifications_(regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
 --
 
-CREATE PROCEDURE internal_.setup_notifications_(_table_schema name, _table_name name)
+CREATE PROCEDURE internal_.setup_notifications_(_table regclass)
     LANGUAGE plpgsql
     AS $_$
+DECLARE
+  _table_name name;
+  _table_schema name;
 BEGIN
+  SELECT c.relname, ns.nspname INTO _table_name, _table_schema
+  FROM pg_catalog.pg_class AS c
+  JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
+  WHERE c.oid = _table;
+
   EXECUTE format(
-    'CREATE TRIGGER tr_after_insert_notify_json_ '
-    'AFTER INSERT ON %1$I.%2$I '
-    'REFERENCING NEW TABLE AS _transition_table '
-    'FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_json_();'
+    $$
+    CREATE TRIGGER tr_after_insert_notify_json_
+    AFTER INSERT ON %1$I.%2$I
+    REFERENCING NEW TABLE AS _transition_table
+    FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_json_();
 
-    'CREATE TRIGGER tr_after_update_notify_json_ '
-    'AFTER UPDATE ON %1$I.%2$I '
-    'REFERENCING NEW TABLE AS _transition_table '
-    'FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_json_();'
+    CREATE TRIGGER tr_after_update_notify_json_
+    AFTER UPDATE ON %1$I.%2$I
+    REFERENCING NEW TABLE AS _transition_table
+    FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_json_();
 
-    'CREATE TRIGGER tr_after_delete_notify_json_ '
-    'AFTER DELETE ON %1$I.%2$I '
-    'REFERENCING OLD TABLE AS _transition_table '
-    'FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_json_();',
+    CREATE TRIGGER tr_after_delete_notify_json_
+    AFTER DELETE ON %1$I.%2$I
+    REFERENCING OLD TABLE AS _transition_table
+    FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_json_();
+    $$,
     _table_schema, _table_name);
 END
 $_$;
 
 
-ALTER PROCEDURE internal_.setup_notifications_(_table_schema name, _table_name name) OWNER TO postgres;
+ALTER PROCEDURE internal_.setup_notifications_(_table regclass) OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -504,7 +539,7 @@ CREATE TABLE application_.agency_ (
     subdomain_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -552,7 +587,7 @@ CREATE TABLE application_.service_ (
     agency_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -900,9 +935,7 @@ ALTER FUNCTION operation_.query_user_() OWNER TO postgres;
 CREATE TABLE security_.user_ (
     uuid_ uuid NOT NULL,
     email_address_ text,
-    password_hash_ text,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    password_hash_ text
 );
 
 
@@ -961,7 +994,7 @@ CREATE TABLE security_.email_address_verification_ (
     verification_code_ text NOT NULL,
     started_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1201,7 +1234,7 @@ CREATE TABLE security_.policy_assignment_ (
     operation_uuid_ uuid NOT NULL,
     type_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1312,7 +1345,7 @@ CREATE TABLE application__audit_.agency_ (
     subdomain_uuid_ uuid,
     name_ text,
     audit_at_ timestamp with time zone,
-    audit_by_ uuid,
+    audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
@@ -1328,7 +1361,7 @@ CREATE TABLE application__audit_.service_ (
     agency_uuid_ uuid,
     name_ text,
     audit_at_ timestamp with time zone,
-    audit_by_ uuid,
+    audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
@@ -1344,7 +1377,7 @@ CREATE TABLE security_.subject_ (
     name_ text NOT NULL,
     type_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1374,7 +1407,7 @@ CREATE TABLE security_.role_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1389,7 +1422,7 @@ CREATE TABLE security_.role_hierarchy_ (
     role_uuid_ uuid NOT NULL,
     subrole_uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1403,9 +1436,7 @@ CREATE TABLE security_.subject_assignment_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     role_uuid_ uuid NOT NULL,
     subdomain_uuid_ uuid NOT NULL,
-    subject_uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    subject_uuid_ uuid NOT NULL
 );
 
 
@@ -1474,7 +1505,7 @@ CREATE TABLE security_.operation_ (
     name_ text NOT NULL,
     log_events_ boolean DEFAULT true NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1489,7 +1520,7 @@ CREATE TABLE security_.secret_ (
     name_ text NOT NULL,
     value_ bytea NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1503,7 +1534,7 @@ CREATE TABLE security_.subdomain_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_by_ uuid DEFAULT (COALESCE(current_setting('security_.token_.subject_uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1519,7 +1550,7 @@ CREATE TABLE security__audit_.email_address_verification_ (
     verification_code_ text,
     started_at_ timestamp with time zone,
     audit_at_ timestamp with time zone,
-    audit_by_ uuid,
+    audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
@@ -1535,7 +1566,7 @@ CREATE TABLE security__audit_.operation_ (
     name_ text,
     log_events_ boolean,
     audit_at_ timestamp with time zone,
-    audit_by_ uuid,
+    audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
@@ -1552,7 +1583,7 @@ CREATE TABLE security__audit_.policy_assignment_ (
     operation_uuid_ uuid,
     type_ text,
     audit_at_ timestamp with time zone,
-    audit_by_ uuid,
+    audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
@@ -1567,7 +1598,7 @@ CREATE TABLE security__audit_.role_ (
     uuid_ uuid,
     name_ text,
     audit_at_ timestamp with time zone,
-    audit_by_ uuid,
+    audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
@@ -1583,7 +1614,7 @@ CREATE TABLE security__audit_.role_hierarchy_ (
     role_uuid_ uuid,
     subrole_uuid_ uuid,
     audit_at_ timestamp with time zone,
-    audit_by_ uuid,
+    audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
@@ -1599,7 +1630,7 @@ CREATE TABLE security__audit_.secret_ (
     name_ text,
     value_ bytea,
     audit_at_ timestamp with time zone,
-    audit_by_ uuid,
+    audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
@@ -1614,7 +1645,7 @@ CREATE TABLE security__audit_.subdomain_ (
     uuid_ uuid,
     name_ text,
     audit_at_ timestamp with time zone,
-    audit_by_ uuid,
+    audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
@@ -1630,7 +1661,7 @@ CREATE TABLE security__audit_.subject_ (
     name_ text,
     type_ text,
     audit_at_ timestamp with time zone,
-    audit_by_ uuid,
+    audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
@@ -1638,43 +1669,10 @@ CREATE TABLE security__audit_.subject_ (
 ALTER TABLE security__audit_.subject_ OWNER TO postgres;
 
 --
--- Name: subject_assignment_; Type: TABLE; Schema: security__audit_; Owner: postgres
---
-
-CREATE TABLE security__audit_.subject_assignment_ (
-    uuid_ uuid,
-    role_uuid_ uuid,
-    subdomain_uuid_ uuid,
-    subject_uuid_ uuid,
-    audit_at_ timestamp with time zone,
-    audit_by_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE security__audit_.subject_assignment_ OWNER TO postgres;
-
---
--- Name: user_; Type: TABLE; Schema: security__audit_; Owner: postgres
---
-
-CREATE TABLE security__audit_.user_ (
-    uuid_ uuid,
-    email_address_ text,
-    password_hash_ text,
-    audit_at_ timestamp with time zone,
-    audit_by_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE security__audit_.user_ OWNER TO postgres;
-
---
 -- Data for Name: operation_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.operation_ (uuid_, name_, log_events_, audit_at_, audit_by_) FROM stdin;
+COPY security_.operation_ (uuid_, name_, log_events_, audit_at_, audit_session_uuid_) FROM stdin;
 12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
@@ -1696,7 +1694,7 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 -- Data for Name: policy_assignment_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.policy_assignment_ (uuid_, policy_name_, operation_uuid_, type_, audit_at_, audit_by_) FROM stdin;
+COPY security_.policy_assignment_ (uuid_, policy_name_, operation_uuid_, type_, audit_at_, audit_session_uuid_) FROM stdin;
 8d52be36-b346-458e-9cd5-1ec2521c40c7	agent_in_agency_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 fb6da025-643a-4806-a64b-4a0e5042ba98	owner_in_agency_	c865b482-975b-49b3-845f-dfa39f46a7f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
@@ -1715,7 +1713,7 @@ b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba
 -- Data for Name: role_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.role_ (uuid_, name_, audit_at_, audit_by_) FROM stdin;
+COPY security_.role_ (uuid_, name_, audit_at_, audit_session_uuid_) FROM stdin;
 be9432a6-2c74-4030-b59e-d657662a4f92	owner	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 566af82a-e5cf-4aad-aada-4341edb3e088	agent	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
@@ -1726,7 +1724,7 @@ e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-000
 -- Data for Name: role_hierarchy_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_by_) FROM stdin;
+COPY security_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_session_uuid_) FROM stdin;
 64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
@@ -1736,7 +1734,7 @@ COPY security_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, aud
 -- Data for Name: operation_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
-COPY security__audit_.operation_ (uuid_, name_, log_events_, audit_at_, audit_by_, audit_op_) FROM stdin;
+COPY security__audit_.operation_ (uuid_, name_, log_events_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
@@ -1758,7 +1756,7 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 -- Data for Name: policy_assignment_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
-COPY security__audit_.policy_assignment_ (uuid_, policy_name_, operation_uuid_, type_, audit_at_, audit_by_, audit_op_) FROM stdin;
+COPY security__audit_.policy_assignment_ (uuid_, policy_name_, operation_uuid_, type_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 8d52be36-b346-458e-9cd5-1ec2521c40c7	agent_in_agency_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 fb6da025-643a-4806-a64b-4a0e5042ba98	owner_in_agency_	c865b482-975b-49b3-845f-dfa39f46a7f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
@@ -1777,7 +1775,7 @@ b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba
 -- Data for Name: role_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
-COPY security__audit_.role_ (uuid_, name_, audit_at_, audit_by_, audit_op_) FROM stdin;
+COPY security__audit_.role_ (uuid_, name_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 be9432a6-2c74-4030-b59e-d657662a4f92	owner	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 566af82a-e5cf-4aad-aada-4341edb3e088	agent	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
@@ -1788,7 +1786,7 @@ e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-000
 -- Data for Name: role_hierarchy_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
-COPY security__audit_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_by_, audit_op_) FROM stdin;
+COPY security__audit_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
@@ -2093,20 +2091,6 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.servi
 
 
 --
--- Name: subdomain_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: user_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: email_address_verification_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2114,38 +2098,10 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.email_add
 
 
 --
--- Name: secret_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: operation_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.secret_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: role_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: subject_assignment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subject_assignment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: role_hierarchy_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_hierarchy_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: subject_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subject_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.operation_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -2156,10 +2112,38 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.policy_as
 
 
 --
--- Name: operation_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: role_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.operation_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: role_hierarchy_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_hierarchy_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: secret_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.secret_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: subdomain_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: subject_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subject_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -2184,20 +2168,6 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON security_.user_ REFE
 
 
 --
--- Name: subdomain_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: user_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: email_address_verification_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2205,38 +2175,10 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 
 
 --
--- Name: secret_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: operation_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.secret_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: role_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.role_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: subject_assignment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subject_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: role_hierarchy_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.role_hierarchy_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: subject_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2247,10 +2189,38 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 
 
 --
--- Name: operation_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: role_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.role_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: role_hierarchy_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.role_hierarchy_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: secret_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.secret_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: subdomain_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: subject_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2275,20 +2245,6 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON security_.user_ REFE
 
 
 --
--- Name: subdomain_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: user_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: email_address_verification_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2296,38 +2252,10 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 
 
 --
--- Name: secret_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: operation_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.secret_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: role_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.role_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: subject_assignment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subject_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: role_hierarchy_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.role_hierarchy_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: subject_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2338,10 +2266,38 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 
 
 --
--- Name: operation_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: role_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.role_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: role_hierarchy_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.role_hierarchy_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: secret_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.secret_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: subdomain_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: subject_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2366,20 +2322,6 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON security_.user_ REFE
 
 
 --
--- Name: subdomain_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subdomain_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: user_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.user_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
 -- Name: email_address_verification_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -2387,38 +2329,10 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.email_ad
 
 
 --
--- Name: secret_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: operation_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.secret_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: role_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: subject_assignment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subject_assignment_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: role_hierarchy_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_hierarchy_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: subject_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subject_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.operation_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -2429,10 +2343,38 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.policy_a
 
 
 --
--- Name: operation_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: role_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.operation_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: role_hierarchy_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_hierarchy_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: secret_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.secret_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: subdomain_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subdomain_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: subject_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subject_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
