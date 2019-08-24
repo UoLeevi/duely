@@ -5,9 +5,10 @@ export default {
   data() {
     return {
       watchQuery: null,
-      loading: true,
-      error: null,
-      graph: {},
+      graph: {
+        loading: true,
+        error: null
+      }
     };
   },
   async created() {
@@ -20,8 +21,8 @@ export default {
         : this.watchQuery);
 
     const subscription = observable.subscribe(({ data, loading, error }) => {
-      this.error = error;
-      this.loading = loading;
+      this.graph.error = error;
+      this.graph.loading = loading;
       for (const key in data)
         if (data.hasOwnProperty(key))
           Vue.set(this.graph, key, data[key]);
@@ -35,8 +36,8 @@ export default {
     try {
       await observable.result;
     } catch (e) {
-      this.error = e;
-      this.loading = false;
+      this.graph.error = e;
+      this.graph.loading = false;
     }
   }
 };

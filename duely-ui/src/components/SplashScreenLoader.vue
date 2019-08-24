@@ -18,6 +18,6 @@ export default {
 
 <style>
 .initializing-dialog {
-  background-color: var(--v-accent-lighten5);
+  background-color: var(--v-background-base);
 }
 </style>

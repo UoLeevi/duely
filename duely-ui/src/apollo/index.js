@@ -2,7 +2,7 @@ import { ApolloClient } from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { withClientState } from 'apollo-link-state';
 import { setContext } from 'apollo-link-context';
-import { ApolloLink } from 'apollo-link';
+import { ApolloLink, execute, toPromise } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
 import gql from 'graphql-tag';
 import defaults from './defaults';
@@ -18,8 +18,41 @@ const stateLink = withClientState({
   resolvers
 });
 
-const authLink = setContext((_, { headers }) => {
-  const token = localStorage.getItem('jwt');
+const httpLink = createHttpLink({ uri: 'https://api.duely.app/graphql' });
+
+let beginVisitPromise = null;
+
+const authLink = setContext(async (req, { headers }) => {
+  let token = localStorage.getItem('user-jwt') || localStorage.getItem('visitor-jwt');
+
+  if (!token) {
+    if (!beginVisitPromise) {
+      beginVisitPromise = toPromise(
+        execute(httpLink, {
+          query: gql`
+            mutation {
+              beginVisit {
+                success
+                message
+                jwt
+              }
+            }
+          `
+        }))
+        .then(({ data }) => {
+          if (data.beginVisit.success)
+            localStorage.setItem('visitor-jwt', data.beginVisit.jwt);
+          else {
+            // eslint-disable-next-line
+            console.log(data.beginVisit.message);
+          }
+        });
+    }
+
+    await beginVisitPromise;
+    token = localStorage.getItem('visitor-jwt');
+  }
+
   // return the headers to the context so httpLink can read them
   return (token
     ? {
@@ -30,8 +63,6 @@ const authLink = setContext((_, { headers }) => {
     }
     : {});
 });
-
-const httpLink = createHttpLink({ uri: 'https://api.duely.app/graphql' });
 
 const client = new ApolloClient({
   link: ApolloLink.from([
