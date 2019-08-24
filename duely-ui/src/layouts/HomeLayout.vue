@@ -78,7 +78,6 @@ export default {
   },
   mounted() {
     this.sections = this.$slots.default.map(vNode => vNode.componentInstance);
-    this.$watch('this.$slots.default', v => this.sections = v.map(vNode => vNode.componentInstance));
     initializeSteppedScrolling(this);
   }
 };
@@ -97,9 +96,9 @@ function initializeSteppedScrolling(vm) {
         vm.scrolling.timeoutHandle = window.setTimeout(() => (vm.scrolling.counter = 0), vm.scrolling.timeoutDuration);
         vm.scrolling.counter += vm.scrolling.change;
 
-        if (vm.scrolling.counter > vm.scrolling.threshold)
+        if (vm.scrolling.counter > vm.scrolling.threshold && vm.sectionIndex + 1 < vm.sections.length)
           await vm.scrollToSection(++vm.sectionIndex);
-        else if (vm.scrolling.counter < -vm.scrolling.threshold)
+        else if (vm.scrolling.counter < -vm.scrolling.threshold && vm.sectionIndex > 0)
           await vm.scrollToSection(--vm.sectionIndex);
         else vm.scrolling.ticking = false;
       }
@@ -107,7 +106,7 @@ function initializeSteppedScrolling(vm) {
   }
 
   vm.$el.addEventListener('scroll', controlCurrentSection);
-  //vm.$el.addEventListener('touchmove', controlCurrentSection);
+  vm.$el.addEventListener('touchmove', controlCurrentSection);
   //window.addEventListener('resize', something);
 }
 </script>
@@ -118,6 +117,7 @@ html {
 }
 
 #home-layout {
+  max-width: 100vw;
   height: 100vh;
   overflow-y: scroll;
   scrollbar-width: none; /* Firefox */

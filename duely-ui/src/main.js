@@ -7,11 +7,11 @@ import '@/layouts';
 import './registerServiceWorker';
 import gql from 'graphql-tag';
 import ApolloMixin from '@/mixins/ApolloMixin';
-import ColorCalculatorMixin from '@/mixins/ColorCalculatorMixin';
+import StyleHelperMixin from '@/mixins/StyleHelperMixin';
 
 Vue.config.productionTip = false;
 
-Vue.mixin(ColorCalculatorMixin);
+Vue.mixin(StyleHelperMixin);
 
 new Vue({
   vuetify,

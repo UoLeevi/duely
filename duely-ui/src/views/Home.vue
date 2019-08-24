@@ -2,9 +2,9 @@
   <HomeLayout>
     <HomeSection section-name="Hero" background-color="blue darken-1" background-color-to="blue" :background-tilt="120" text-color="blue lighten-5">
       <div style="max-width: 800px;">
-        <h2 class="display-3 pb-5 text-no-wrap"><span class="font-weight-bold">Simplified</span> <br>business transactions <br>for agencies.</h2>
-        <p class="headline py-5">Platform for modern day agencies. <br>Create a service catalogue, seamlessly manage client deliverables, accept payments and grow your business.</p>
-        <v-form @submit.prevent="submit" class="hero-opt-in my-3" style="max-width: 500px;">
+        <h2 :class="`${fontH2} text-no-wrap`"><span class="font-weight-bold">Simplified</span> <br>business transactions <br>for agencies.</h2>
+        <p :class="`${fontBodyLarge}`">Platform for modern day agencies. Create a service catalogue, seamlessly manage client deliverables, accept payments and grow your business.</p>
+        <v-form @submit.prevent="submit" class="hero-opt-in mt-4" style="max-width: 500px;">
           <v-text-field label="email" type="email" spellcheck="false" class="font-weight-bold" v-model="email" light background-color="primary lighten-5" solo flat single-line hide-details rounded>
             <template #append>
               <v-btn type="submit" class="text-none" large depressed rounded color="success" :to="`/create-account?email=${email}`">Get started</v-btn>
@@ -13,7 +13,7 @@
         </v-form>
       </div>
       <template #right>
-        <svg xmlns="http://www.w3.org/2000/svg" id="a6afbdd4-4f8a-4a84-bbe8-d87b6169081e" data-name="Layer 1" width="530" viewBox="0 0 747.75751 668.84054">
+        <svg xmlns="http://www.w3.org/2000/svg" id="a6afbdd4-4f8a-4a84-bbe8-d87b6169081e" data-name="Layer 1" :width="`${adjustSize(530)}`" viewBox="0 0 747.75751 668.84054">
           <title>noted</title>
           <path d="M927.17065,245.86427c26.72006,38.98517,20.80717,89.48769,20.80717,89.48769s-49.23467-12.7049-75.95473-51.69006-20.80718-89.48769-20.80718-89.48769S900.45058,206.87911,927.17065,245.86427Z" transform="translate(-227.12124 -115.57973)" fill="#2f2e41" />
           <path d="M907.945,253.30828c3.12667,47.15961,39.01681,83.17856,39.01681,83.17856S977.78266,296.045,974.656,248.88536s-39.01682-83.17856-39.01682-83.17856S904.81836,206.14867,907.945,253.30828Z" transform="translate(-227.12124 -115.57973)" fill="#00bea0" />
@@ -55,14 +55,14 @@
       </template>
     </HomeSection>
     <HomeSection section-name="qwer" background-color="white" text-color="green">
-      <div class="text-center" style="max-width: 730px;">
-        <h2 class="display-3 pb-5 font-weight-medium">Create your service</h2>
-        <p class="title py-5 black--text font-weight-regular">Duely makes it easy to offer your services and accept your first client project. Perfect for any industry - whether you are a mid-sized agency or startup, we make it dead simple to create your service offerings with our powerful and intuitive platform.</p>
+      <div class="text-center" style="margin: auto; max-width: 730px;">
+        <h2 :class="`${fontH2} text-no-wrap`">Create your service</h2>
+        <p :class="`${fontBodyLarge} black--text`">Duely makes it easy to offer your services and accept your first client project. Perfect for any industry - whether you are a mid-sized agency or startup, we make it dead simple to create your service offerings with our powerful and intuitive platform.</p>
       </div>
     </HomeSection>
     <HomeSection section-name="Features" background-color="background" text-color="blue darken-3">
       <template #left>
-        <svg xmlns="http://www.w3.org/2000/svg" id="ade8c9af-7e2e-4eda-b5c8-b06129257226" data-name="Layer 1" width="500" viewBox="0 0 1076.06371 755.2279">
+        <svg xmlns="http://www.w3.org/2000/svg" id="ade8c9af-7e2e-4eda-b5c8-b06129257226" data-name="Layer 1" :width="`${adjustSize(530)}`" viewBox="0 0 1076.06371 755.2279">
           <title>web_developer</title>
           <path d="M926.11393,774.80937c-6.98452,26.59789-31.459,43.21966-31.459,43.21966s-13.15033-26.50193-6.16581-53.09982,31.459-43.21966,31.459-43.21966S933.09845,748.21148,926.11393,774.80937Z" transform="translate(-61.96814 -72.38605)" fill="#3f3d56" />
           <path d="M915.52,769.18266c-19.56251,19.32716-21.75117,48.83128-21.75117,48.83128s29.52845-1.83141,49.091-21.15858,21.75116-48.83129,21.75116-48.83129S935.08248,749.85549,915.52,769.18266Z" transform="translate(-61.96814 -72.38605)" fill="#5a5aff" />
@@ -110,19 +110,19 @@
           <rect x="748.06371" y="744.45791" width="283" height="2" fill="#3f3d56" />
         </svg>
       </template>
-      <h3 class="display-2 pb-2">Effortless set up</h3>
-      <p class="title font-weight-regular grey--text pb-2">With just a few clicks, you’ll get a fully functioning services platform with client management system, payment gateways, invoicing and marketing tools.</p>
-      <h3 class="display-2 pb-2">Intuitive service request system</h3>
-      <p class="title font-weight-regular grey--text pb-2">Easily accept and manage client requests with our services platform. No email threads, no contracts, no drama.</p>
-      <h3 class="display-2 pb-2">Personalized solutions</h3>
-      <p class="title font-weight-regular grey--text">Get a professional services website in just a few clicks. Personalize it according to your brand and business.</p>
+      <h3 :class="`${fontH3}`">Effortless set up</h3>
+      <p :class="`${fontBodyLarge} black--text`">With just a few clicks, you’ll get a fully functioning services platform with client management system, payment gateways, invoicing and marketing tools.</p>
+      <h3 :class="`${fontH3}`">Intuitive service request system</h3>
+      <p :class="`${fontBodyLarge} black--text`">Easily accept and manage client requests with our services platform. No email threads, no contracts, no drama.</p>
+      <h3 :class="`${fontH3}`">Personalized solutions</h3>
+      <p :class="`${fontBodyLarge} black--text`">Get a professional services website in just a few clicks. Personalize it according to your brand and business.</p>
     </HomeSection>
     <HomeSection section-name="qwer" background-color="white" text-color="blue darken-3">
-      <h2 class="display-3 pb-5">Agency-client relationship simplified.</h2>
-      <p class="title font-weight-regular pt-2">Selling your your services shouldn’t be so hard. Duely makes it easy for you to accept client requests and manage your deliverables and scale up as you grow.</p>
-      <p class="title font-weight-regular pt-2">Get our fully functioning client management system, equipped with payment gateways and invoicing tools so you can focus on what really matters - delivering value to your clients.</p>
+      <h2 :class="`${fontH2}`">Agency-client relationship simplified.</h2>
+      <p :class="`${fontBodyLarge} black--text`">Selling your your services shouldn’t be so hard. Duely makes it easy for you to accept client requests and manage your deliverables and scale up as you grow.</p>
+      <p :class="`${fontBodyLarge} black--text`">Get our fully functioning client management system, equipped with payment gateways and invoicing tools so you can focus on what really matters - delivering value to your clients.</p>
       <template #right>
-        <svg xmlns="http://www.w3.org/2000/svg" id="fbf61bc7-949a-4ad5-bdf9-42522344582c" data-name="Layer 1" width="500" viewBox="0 0 1035.47998 627.63641">
+        <svg xmlns="http://www.w3.org/2000/svg" id="fbf61bc7-949a-4ad5-bdf9-42522344582c" data-name="Layer 1" :width="`${adjustSize(530)}`" viewBox="0 0 1035.47998 627.63641">
           <title>spread_love</title>
           <path d="M769.26,350.83035,418.42291,136.18179l-53.38806,87.26136a65.99058,65.99058,0,0,1-68.85449,112.54071l-17.32489,28.31707H426.74V543.37424l360.30951,220.444,75.411-123.25727H769.26Z" transform="translate(-82.26001 -136.18179)" fill="#f2f2f2" />
           <ellipse cx="514.42442" cy="470.26294" rx="63.53704" ry="9.82156" fill="#6c63ff" />
