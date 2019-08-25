@@ -13,6 +13,8 @@
 <script>
 import HomeAppBar from '@/components/HomeAppBar';
 
+var customScrollHandler = null;
+
 export default {
   components: {
     HomeAppBar
@@ -90,16 +92,22 @@ export default {
   mounted() {
     document.documentElement.classList.add('no-scroll');
     this.sections = this.$slots.default.map(vNode => vNode.componentInstance);
-    initializeSteppedScrolling(this);
+    initializeCustomScrollHandler(this);
+    document.addEventListener('wheel', customScrollHandler);
+    document.addEventListener('touchstart', customScrollHandler);
+    document.addEventListener('touchmove', customScrollHandler, { passive: false });
   },
   destroyed() {
+    document.removeEventListener('wheel', customScrollHandler);
+    document.removeEventListener('touchstart', customScrollHandler);
+    document.removeEventListener('touchmove', customScrollHandler);
     document.documentElement.classList.remove('no-scroll');
     document.documentElement.style.top = '';
   }
 };
 
-function initializeSteppedScrolling(vm) {
-  const controlCurrentSection = function(e) {
+function initializeCustomScrollHandler(vm) {
+  customScrollHandler = function(e) {
     switch (e.type) {
       case 'wheel':
         vm.scrolling.change = e.deltaY;
@@ -145,13 +153,6 @@ function initializeSteppedScrolling(vm) {
       else vm.scrolling.ticking = false;
     });
   };
-
-  vm.$el.addEventListener('wheel', controlCurrentSection);
-  vm.$el.addEventListener('touchstart', controlCurrentSection);
-  vm.$el.addEventListener('touchmove', controlCurrentSection, {
-    passive: false
-  });
-  vm.$el.addEventListener('touchend', controlCurrentSection);
 }
 </script>
 
