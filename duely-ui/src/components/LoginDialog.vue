@@ -1,5 +1,5 @@
 <template>
-  <v-dialog content-class="login-dialog" max-width="600px" v-model="dialog" @click:outside="$refs.form.reset()">
+  <v-dialog content-class="rounded-corners" max-width="600px" v-model="dialog" @click:outside="$refs.form.reset()">
     <template #activator="activator">
       <slot name="activator" v-bind="activator">
         <v-btn v-on="activator.on">
@@ -7,7 +7,7 @@
         </v-btn>
       </slot>
     </template>
-    <v-card flat class="pa-5" style="border-radius: 2rem;">
+    <v-card flat class="pa-5 rounded-corners">
       <v-card-title>
         <h2 class="display-1">Log in</h2>
       </v-card-title>
@@ -20,8 +20,9 @@
           </v-expand-transition>
           <v-row no-gutters align="center" justify="center">
             <v-btn depressed rounded color="primary" x-large class="body-1 text-none" type="submit" :loading="loading">Log in</v-btn>
-            <v-spacer/>
-            <span>Don't have an account?</span><v-btn text depressed rounded small color="primary" class="body-2 ml-1 text-none" to="/create-account">Sign up</v-btn>
+            <v-spacer />
+            <span>Don't have an account?</span>
+            <v-btn text depressed rounded small color="primary" class="body-2 ml-1 text-none" to="/create-account">Sign up</v-btn>
           </v-row>
         </v-form>
       </v-card-text>
@@ -30,20 +31,20 @@
 </template>
 
 <script>
-import { client, gql } from "@/apollo";
+import { client, gql } from '@/apollo';
 
 export default {
   data() {
     return {
       dialog: false,
-      emailAddress: "",
-      password: "",
+      emailAddress: '',
+      password: '',
       isPasswordVisible: false,
       rules: {
-        required: v => !!v || "Required",
-        minLength: v => (v || '').length >= 6 || "Min 6 characters",
+        required: v => !!v || 'Required',
+        minLength: v => (v || '').length >= 6 || 'Min 6 characters',
         emailAddressFormat: v =>
-          /^\S+@\S+$/.test(v) || "Email address does not have correct format"
+          /^\S+@\S+$/.test(v) || 'Email address does not have correct format'
       },
       errorMessage: null,
       loading: false
@@ -77,7 +78,7 @@ export default {
 
         const jwt = res.data.logIn.jwt;
         if (jwt) {
-          localStorage.setItem("user-jwt", jwt);
+          localStorage.setItem('user-jwt', jwt);
           await client.clearStore();
           await client.query({
             query: gql`
@@ -100,9 +101,3 @@ export default {
   }
 };
 </script>
-
-<style>
-.login-dialog {
-  border-radius: 2rem;
-}
-</style>

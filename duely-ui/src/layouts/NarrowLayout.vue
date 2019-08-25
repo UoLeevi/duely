@@ -1,5 +1,5 @@
 <template>
-  <v-container class="narrow-layout" fluid :style="{'background-color': colorHex(backgroundColor)}">
+  <v-container class="narrow-layout d-flex" fluid :style="{'background-color': colorHex(backgroundColor)}">
     <v-row no-gutters class="flex-d align-center fill-height" align="center" justify="center" style="height: 100%;">
       <v-col :cols="1" :xl="4" :lg="3" :md="2" align="left" />
       <v-col>
@@ -24,14 +24,18 @@ export default {
 </script>
 
 <style>
-html {
-  overflow-y: hidden !important;
-}
-
 .narrow-layout {
-  height: 100vh;
-  overflow-y: scroll;
+  position: relative;
+  min-height: 100vh;
+  align-items: center;
+
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
+}
+
+.narrow-layout::-webkit-scrollbar {
+  /* WebKit */
+  width: 0;
+  height: 0;
 }
 </style>

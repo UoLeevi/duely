@@ -1,7 +1,7 @@
 <template>
   <HomeLayout>
     <HomeSection section-name="Hero" background-color="blue darken-1" background-color-to="blue" :background-tilt="120" text-color="blue lighten-5">
-      <div style="max-width: 800px;">
+      <div style="max-width: 95%;">
         <h2 :class="`${fontH2} text-no-wrap`"><span class="font-weight-bold">Simplified</span> <br>business transactions <br>for agencies.</h2>
         <p :class="`${fontBodyLarge}`">Platform for modern day agencies. Create a service catalogue, seamlessly manage client deliverables, accept payments and grow your business.</p>
         <v-form @submit.prevent="submit" class="hero-opt-in mt-4" style="max-width: 500px;">
@@ -169,7 +169,7 @@
 </template>
 
 <script>
-import HomeSection from "@/components/HomeSection";
+import HomeSection from '@/components/HomeSection';
 
 export default {
   components: {
@@ -177,7 +177,7 @@ export default {
   },
   data() {
     return {
-      email: ""
+      email: ''
     };
   }
 };

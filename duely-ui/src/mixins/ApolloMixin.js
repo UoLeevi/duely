@@ -16,8 +16,8 @@ export default {
       return;
 
     const observable = client.watchQuery(
-      typeof this.watchQuery === 'function' 
-        ? this.watchQuery() 
+      typeof this.watchQuery === 'function'
+        ? this.watchQuery()
         : this.watchQuery);
 
     const subscription = observable.subscribe(({ data, loading, error }) => {

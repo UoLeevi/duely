@@ -1,6 +1,6 @@
 <template>
-  <NarrowLayout background-color="white">
-    <v-stepper v-model="step" vertical class="pa-5 elevation-14" style="border-radius: 2rem;">
+  <NarrowLayout background-color="primary">
+    <v-stepper v-model="step" vertical class="pa-5 elevation-24 rounded-corners">
       <v-stepper-step :complete="step > 1" step="1">
         Sign up for an account
       </v-stepper-step>
@@ -29,7 +29,7 @@
             <v-btn depressed rounded :loading="forms.signUpStep1.loading" :disabled="!(forms.signUpStep1.valid && data.acceptTermsAndConditions)" type="submit" color="primary" class="text-none mr-1">Continue</v-btn>
             <v-btn text depressed rounded class="text-none" to="/">Cancel</v-btn>
           </v-row>
-          <v-dialog v-model="terms" width="70%" style="border-radius: 2rem;">
+          <v-dialog v-model="terms" width="70%" content-class="rounded-corners">
             <v-card style="border-radius: 2rem;">
               <v-card-title class="title">Terms</v-card-title>
               <v-card-text>
@@ -37,11 +37,11 @@
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn text depressed rounded color="purple" @click="terms = false">Ok</v-btn>
+                <v-btn text depressed rounded @click="terms = false">Ok</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
-          <v-dialog v-model="terms" width="70%" style="border-radius: 2rem;">
+          <v-dialog v-model="conditions" width="70%" content-class="rounded-corners">
             <v-card style="border-radius: 2rem;">
               <v-card-title class="title">Conditions</v-card-title>
               <v-card-text>
@@ -49,7 +49,7 @@
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn text depressed rounded color="purple" @click="conditions = false">Ok</v-btn>
+                <v-btn text depressed rounded @click="conditions = false">Ok</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -99,34 +99,34 @@
 </template>
 
 <script>
-import { client, gql } from "@/apollo";
+import { client, gql } from '@/apollo';
 
 export default {
   data() {
     return {
       step: 1,
       data: {
-        emailAddress: decodeURIComponent(this.$route.query.emailAddress || ""),
-        name: "",
-        password: "",
-        verificationCode: "",
+        emailAddress: decodeURIComponent(this.$route.query.emailAddress || ''),
+        name: '',
+        password: '',
+        verificationCode: '',
         acceptTermsAndConditions: false
       },
       rules: {
         emailAddress: [
-          v => !!v || "Email address is required",
-          v => /.+@.+\..+/.test(v) || "Email address must be valid"
+          v => !!v || 'Email address is required',
+          v => /.+@.+\..+/.test(v) || 'Email address must be valid'
         ],
         name: [
-          v => !!v || "Name is required",
-          v => (v && v.length <= 70) || "Name must be at most 70 characters"
+          v => !!v || 'Name is required',
+          v => (v && v.length <= 70) || 'Name must be at most 70 characters'
         ],
         password: [
-          v => !!v || "Password is required",
-          v => v.length >= 6 || "Min 6 characters"
+          v => !!v || 'Password is required',
+          v => v.length >= 6 || 'Min 6 characters'
         ],
         verificationCode: [
-          v => /^\d{6}?$/.test(v) || "Verification code has six digits"
+          v => /^\d{6}?$/.test(v) || 'Verification code has six digits'
         ]
       },
       forms: {
@@ -149,7 +149,7 @@ export default {
     };
   },
   watch: {
-    ["data.emailAddress"](val) {
+    ['data.emailAddress'](val) {
       this.$router.push({
         query: { ...this.$route.query, email: encodeURIComponent(val) }
       });
@@ -251,7 +251,7 @@ export default {
 
       const jwt = res.data.logIn.jwt;
       if (jwt) {
-        localStorage.setItem("user-jwt", jwt);
+        localStorage.setItem('user-jwt', jwt);
         await client.clearStore();
         await client.query({
           query: gql`
@@ -267,7 +267,7 @@ export default {
         });
       }
 
-      this.$router.push({ path: "/dashboard" });
+      this.$router.push({ path: '/dashboard' });
 
       this.forms.logIn.loading = false;
     }

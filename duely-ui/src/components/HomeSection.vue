@@ -4,15 +4,15 @@
       <v-row no-gutters class="flex-d align-center" align="center" justify="center" style="height: 100%; flex-wrap: nowrap;">
         <v-col :cols="1" md="2" lg="1" xl="2" align="left" />
         <v-col v-if="$vuetify.breakpoint.lgAndUp && !!$slots.left">
-          <slot name="left"/>
+          <slot name="left" />
         </v-col>
         <v-col v-if="$vuetify.breakpoint.lgAndUp && !!$slots.left" :cols="1" align="left" />
         <v-col>
-          <slot/>
+          <slot />
         </v-col>
         <v-col v-if="$vuetify.breakpoint.lgAndUp && !!$slots.right" :cols="1" align="right" />
         <v-col v-if="$vuetify.breakpoint.lgAndUp && !!$slots.right">
-          <slot name="right"/>
+          <slot name="right" />
         </v-col>
         <v-col :cols="1" md="2" lg="1" xl="2" align="right" />
       </v-row>
@@ -40,5 +40,6 @@ section {
   min-height: 100vh;
   padding-top: 112px;
   padding-bottom: 112px;
+  padding-right: 4px;
 }
 </style>
