@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar fixed dark prominent short flat color="transparent" :style="{ 'color': colorHex(textColor) }">
+  <v-app-bar fixed dark prominent short flat color="transparent" :style="{ 'color': textColor }">
     <v-row no-gutters align="center" justify="space-between" style="height: 100%;" >
       <v-col :cols="1" align="left"/>
       <v-col cols="auto" align="left"><h1 class="display-1">duely.app</h1></v-col>
@@ -8,13 +8,13 @@
         <v-fade-transition mode="out-in">
           <v-progress-circular v-if="loading || $root.graph.loading || !$root.graph.me" indeterminate />
           <div v-else-if="$root.graph.me.type === 'user'" key="log-out">
-            <v-btn @click="logOut" rounded text class="text-none mr-1" :color="colorHex(textColor)">Log out</v-btn>
-            <v-btn to="/dashboard" rounded outlined class="text-none ml-1" :color="colorHex(textColor)">Go to dashboard</v-btn>
+            <v-btn @click="logOut" rounded text class="text-none mr-1" :color="textColor">Log out</v-btn>
+            <v-btn to="/dashboard" rounded outlined class="text-none ml-1" :color="textColor">Go to dashboard</v-btn>
           </div>
           <div v-else key="log-in">
             <LoginDialog>
               <template #activator="{ on }">
-                <v-btn v-on="on" large depressed rounded outlined class="text-none" :color="colorHex(textColor)">Log in</v-btn>
+                <v-btn v-on="on" large depressed rounded outlined class="text-none" :color="textColor">Log in</v-btn>
               </template>
             </LoginDialog>
           </div>
@@ -34,8 +34,15 @@ export default {
   components: {
     LoginDialog
   },
-  props: {
-    textColor: String
+  computed: {
+    current() {
+      return this.$vutil.scroll.current;
+    },
+    textColor() {
+      return this.current && this.current.binding.value
+        ? this.colorHex(this.current.binding.value.color) 
+        : 'white';
+    }
   },
   mixins: [ApolloMixin],
   methods: {

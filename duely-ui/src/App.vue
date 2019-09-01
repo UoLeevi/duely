@@ -1,5 +1,6 @@
 <template>
   <v-app :style="{'background-color': colorHex('background')}">
+    <ScrollNav />
     <SplashScreenLoader :show="$root.graph.loading" />
     <v-content>
       <v-fade-transition mode="out-in">
@@ -10,12 +11,14 @@
 </template>
 
 <script>
+import ScrollNav from '@/vutil/components/ScrollNav';
 import SplashScreenLoader from '@/components/SplashScreenLoader';
 
 export default {
   name: 'App',
   components: {
-    SplashScreenLoader
+    SplashScreenLoader,
+    ScrollNav
   }
 }
 </script>
