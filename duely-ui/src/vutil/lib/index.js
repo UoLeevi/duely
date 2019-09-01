@@ -16,7 +16,6 @@ Vutil.install = function(Vue) {
     timeoutHandle: null,
     change: 0,
     touchstart: 0,
-    busy: false,
 
     rule: null
   };
@@ -79,18 +78,21 @@ Vutil.install = function(Vue) {
   })
 
   function scrollTo(el) {
-    if (scroll.busy)
+    const top = `${-getTotalOffsetTop(el)}px`;
+
+    if (scroll.rule.style.top === top)
       return;
 
-    scroll.busy = true;
     scroll.ticking = true;
-    vutil.scroll.current = vutil.scroll.targets
-      .find(target => target.el.dataset.uuid === el.dataset.uuid) || null;
+
+    scroll.rule.style.top = top;
+    vutil.scroll.current = vutil.scroll.targets.find(target => target.el.dataset.uuid === el.dataset.uuid) || null;
+
+    // TODO: move these elsewhere
     scroll.minimumScroll = Math.abs(scroll.change);
     scroll.threshold = Math.abs(scroll.counter) * scroll.thresholdMultiplier;
     window.clearInterval(scroll.thresholdIntervalHandle);
     scroll.counter = 0;
-    scroll.rule.style.top = `${-getTotalOffsetTop(el)}px`;
   }
 
   function customScrollHandler(e) {
@@ -153,7 +155,6 @@ Vutil.install = function(Vue) {
           }
         }, scroll.thresholdBackoffInterval);
       }, scroll.cooldownDuration);
-      scroll.busy = false;
     });
   }
 
