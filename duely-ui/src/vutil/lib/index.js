@@ -1,39 +1,33 @@
 
 const Vutil = function (){};
 Vutil.install = function(Vue) {
-  const scroll = {
-    timeoutDuration: 500,
-    thresholdMultiplier: 1.2,
-    thresholdDecay: 0.9,
-    thresholdBackoffInterval: 60,
-    cooldownDuration: 100,
-
-    minimumScroll: 0,
-    threshold: 0,
-    thresholdIntervalHandle: null,
-    counter: 0,
-    ticking: false,
-    timeoutHandle: null,
-    change: 0,
-    touchstart: 0,
-
-    rule: null
-  };
-
   const stylesheet = (function () {
     const el = document.createElement('style');
     document.head.appendChild(el);
     return el.sheet;
   })();
 
-  scroll.rule = stylesheet.cssRules[stylesheet.insertRule(`
+  stylesheet.insertRule(`
     html.custom-scroll {
-      top: 0px;
-      transition: top 1000ms cubic-bezier(0.455, 0.030, 0.515, 0.955); /* easeInOutQuad */
-      position: fixed;
-      overflow: hidden !important;
+      scroll-behavior: smooth;
+      scroll-snap-type: y proximity;
+      overflow-y: scroll;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none;  /* IE 10+ */
     }
-  `)];
+  `);
+
+  stylesheet.insertRule(`
+    html.custom-scroll::-webkit-scrollbar { /* WebKit */
+      display: none;
+    }
+  `);
+
+  stylesheet.insertRule(`
+    html.custom-scroll .scroll-target {
+      scroll-snap-align: start;
+    }
+  `);
 
   const vutil = Vue.observable({
     scroll: {
@@ -45,16 +39,13 @@ Vutil.install = function(Vue) {
 
   Vue.prototype.$vutil = vutil;
 
-  document.addEventListener('wheel', customScrollHandler);
-  document.addEventListener('touchstart', customScrollHandler);
-  document.addEventListener('touchmove', customScrollHandler, { passive: false });
-  document.documentElement.addEventListener('transitionend', customScrollFinishHandler);
-
   Vue.directive('scroll-target', {
     bind(el) {
       el.dataset.uuid = el.dataset.uuid || uuidv4();
+      el.classList.add('scroll-target');
     },
     unbind(el) {
+      el.classList.remove('scroll-target');
       vutil.scroll.targets = vutil.scroll.targets.filter(target => target.el.dataset.uuid !== el.dataset.uuid);
 
       if (vutil.scroll.targets.length === 0)
@@ -77,85 +68,36 @@ Vutil.install = function(Vue) {
     }
   })
 
-  function scrollTo(el) {
-    const top = `${-getTotalOffsetTop(el)}px`;
+  let ticking = false;
 
-    if (scroll.rule.style.top === top)
-      return;
+  window.addEventListener('scroll', function() {
+    if (!ticking && vutil.scroll.targets) {
+      ticking = true;
+      window.requestAnimationFrame(function() {
+        const closest = {
+          target: null,
+          distance: Infinity
+        };
 
-    scroll.ticking = true;
+        for (const target of vutil.scroll.targets) {
+          const distance = Math.abs(target.el.getBoundingClientRect().top);
 
-    scroll.rule.style.top = top;
-    vutil.scroll.current = vutil.scroll.targets.find(target => target.el.dataset.uuid === el.dataset.uuid) || null;
+          if (distance > closest.distance)
+            break;
 
-    // TODO: move these elsewhere
-    scroll.minimumScroll = Math.abs(scroll.change);
-    scroll.threshold = Math.abs(scroll.counter) * scroll.thresholdMultiplier;
-    window.clearInterval(scroll.thresholdIntervalHandle);
-    scroll.counter = 0;
-  }
+          closest.distance = distance;
+          closest.target = target;
+        }
 
-  function customScrollHandler(e) {
-    if (vutil.scroll.targets.length === 0 || scroll.ticking || scroll.busy)
-      return;
+        vutil.scroll.current = closest.target;
 
-    switch (e.type) {
-      case 'wheel':
-        scroll.change = e.deltaY;
-        break;
-      case 'touchstart':
-        scroll.touchstart = e.touches[0].clientY;
-        return;
-      case 'touchmove':
-        e.preventDefault();
-        var y = e.changedTouches[0].clientY;
-        scroll.change = scroll.touchstart - y;
-        scroll.touchstart = y;
-        break;
+        ticking = false;
+      });
     }
+  });
 
-    if (Math.abs(scroll.change) < scroll.minimumScroll)
-      return;
-
-    scroll.ticking = true;
-    window.requestAnimationFrame(function () {
-      window.clearTimeout(scroll.timeoutHandle);
-      scroll.timeoutHandle = window.setTimeout(() => (scroll.counter = 0), scroll.timeoutDuration);
-      scroll.counter += scroll.change;
-
-      const index = vutil.scroll.targets
-          .map(target => target.el.dataset.uuid)
-          .indexOf(vutil.scroll.current && vutil.scroll.current.el.dataset.uuid);
-
-      if (index === -1)
-        scrollTo(vutil.scroll.targets[0].el);
-      else if (scroll.counter > scroll.threshold && index + 1 < vutil.scroll.targets.length)
-        scrollTo(vutil.scroll.targets[index + 1].el);
-      else if (scroll.counter < -scroll.threshold && index > 0)
-        scrollTo(vutil.scroll.targets[index - 1].el);
-      else
-        scroll.ticking = false;
-    });
-  }
-
-  function customScrollFinishHandler(e) {
-    if (!vutil.scroll.targets || e.type !== 'transitionend' || e.propertyName !== 'top' || e.target.localName !== 'html')
-      return;
-
-    window.requestAnimationFrame(() => {
-      scroll.ticking = false;
-      scroll.thresholdIntervalHandle = window.setTimeout(() => {
-        scroll.thresholdIntervalHandle = window.setInterval(() => {
-          scroll.minimumScroll *= scroll.thresholdDecay;
-          scroll.threshold =
-            scroll.threshold * scroll.thresholdDecay;
-          if (scroll.threshold < 1) {
-            window.clearInterval(scroll.thresholdIntervalHandle);
-            scroll.minimumScroll = 0;
-          }
-        }, scroll.thresholdBackoffInterval);
-      }, scroll.cooldownDuration);
-    });
+  function scrollTo(target) {
+    window.scrollTo(0, getTotalOffsetTop(target.el));
   }
 
   function getTotalOffsetTop(el) {
