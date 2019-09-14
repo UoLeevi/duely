@@ -131,7 +131,6 @@ BEGIN
 
   PERFORM operation_.end_session_();
 
-
 EXCEPTION WHEN OTHERS THEN
 
   RAISE NOTICE 'TESTS FAILED';

@@ -448,7 +448,7 @@ DECLARE
   _session security_.session_;
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid <> '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'Active session already exists.' USING ERRCODE = '20000';
+    PERFORM operation_.end_session_();
   END IF;
 
   SELECT internal_.jwt_verify_hs256_(_jwt, x.value_) INTO _claims
@@ -626,14 +626,14 @@ CREATE FUNCTION operation_.delete_agency_(_agency_uuid uuid) RETURNS application
 DECLARE
   _agency application_.agency_;
 BEGIN
-  PERFORM security_.control_operation_('delete_agency_' _agency_uuid);
+  PERFORM security_.control_operation_('delete_agency_', _agency_uuid);
 
   DELETE FROM application_.agency_
-  WHERE name_ = _name
+  WHERE uuid_ = _agency_uuid
   RETURNING * INTO _agency;
 
   DELETE FROM security_.subdomain_
-  WHERE name_ = _subdomain_name;
+  WHERE uuid_ = _agency.subdomain_uuid_;
 
   RETURN _agency;
 END
@@ -1107,8 +1107,6 @@ ALTER FUNCTION policy_.manager_in_agency_(_agency_uuid uuid) OWNER TO postgres;
 CREATE FUNCTION policy_.owner_in_agency_(_agency_uuid uuid) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
-DECLARE
-  _agency_uuid uuid := _arg[0]::uuid;
 BEGIN 
   RETURN
     EXISTS (
@@ -1681,7 +1679,7 @@ fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	t	1970-01-01 02:00:00+02	00
 a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 44836e4b-ecd5-4184-a177-498b412ff251	query_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
@@ -1743,7 +1741,7 @@ fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	t	1970-01-01 02:00:00+02	00
 a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 44836e4b-ecd5-4184-a177-498b412ff251	query_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
