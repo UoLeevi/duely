@@ -2,10 +2,10 @@ import pool from '../../db';
 
 export default {
   typeDef: `
-    type SignUpResult implements MutationResult {
+    type CreateAgencyResult implements MutationResult {
       success: Boolean!
       message: String
-      userUuid: ID
+      agencyUuid: ID
     }
   `,
   resolvers: {
