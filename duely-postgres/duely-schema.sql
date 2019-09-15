@@ -1063,7 +1063,7 @@ $$;
 ALTER FUNCTION policy_.agent_in_agency_(_agency_uuid uuid) OWNER TO postgres;
 
 --
--- Name: argument_is_not_null_(text); Type: FUNCTION; Schema: policy_; Owner: postgres
+-- Name: argument_is_not_null_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
 CREATE FUNCTION policy_.argument_is_not_null_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
@@ -1725,6 +1725,7 @@ b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba
 04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+2d1cde8a-54e7-4aa5-87ef-3f733cf3dde0	logged_in_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1788,6 +1789,7 @@ b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba
 04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+2d1cde8a-54e7-4aa5-87ef-3f733cf3dde0	logged_in_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
