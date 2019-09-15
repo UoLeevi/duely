@@ -849,16 +849,19 @@ ALTER FUNCTION operation_.query_active_subject_() OWNER TO postgres;
 -- Name: query_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_agency_(_agency_uuid uuid) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, name_ text)
+CREATE FUNCTION operation_.query_agency_(_agency_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, name_ text, role_names_ text[])
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
   PERFORM security_.control_operation_('query_agency_', _agency_uuid);
 
   RETURN QUERY
-  SELECT a.uuid_, a.subdomain_uuid_, a.name_
+  SELECT a.uuid_, a.subdomain_uuid_, a.name_, array_agg(r.name_) role_names_
   FROM application_.agency_ a
-  WHERE a.uuid_ = _agency_uuid;
+  LEFT JOIN security_.active_role_ r ON a.subdomain_uuid_ = r.subdomain_uuid_
+  WHERE _agency_uuid IS NULL 
+     OR _agency_uuid IS NOT DISTINCT FROM a.uuid_
+  GROUP BY a.uuid_, a.subdomain_uuid_, a.name_;
 
 END
 $$;
@@ -1704,6 +1707,7 @@ f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c
 f8e01162-7a10-4771-a540-d773a10b0498	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1766,6 +1770,7 @@ f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c
 f8e01162-7a10-4771-a540-d773a10b0498	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
