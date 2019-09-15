@@ -856,7 +856,7 @@ BEGIN
   PERFORM security_.control_operation_('query_agency_', _agency_uuid);
 
   RETURN QUERY
-  SELECT a.uuid_, a.subdomain_uuid_, a.name_, array_agg(r.name_) role_names_
+  SELECT a.uuid_, a.subdomain_uuid_, a.name_, array_remove(array_agg(r.name_), NULL) role_names_
   FROM application_.agency_ a
   LEFT JOIN security_.active_role_ r ON a.subdomain_uuid_ = r.subdomain_uuid_
   WHERE _agency_uuid IS NULL 
