@@ -1066,7 +1066,7 @@ ALTER FUNCTION policy_.agent_in_agency_(_agency_uuid uuid) OWNER TO postgres;
 -- Name: argument_is_not_null_(text); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
-CREATE FUNCTION policy_.argument_is_not_null_(_arg text DEFAULT NULL::text) RETURNS boolean
+CREATE FUNCTION policy_.argument_is_not_null_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$ 
 BEGIN
@@ -1077,7 +1077,7 @@ END
  $$;
 
 
-ALTER FUNCTION policy_.argument_is_not_null_(_arg text) OWNER TO postgres;
+ALTER FUNCTION policy_.argument_is_not_null_(_arg anyelement) OWNER TO postgres;
 
 --
 -- Name: logged_in_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
