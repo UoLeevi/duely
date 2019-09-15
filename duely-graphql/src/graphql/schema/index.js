@@ -13,11 +13,12 @@ import Mutation from './Mutation';
 import MutationResult from './MutationResult';
 import Node from './Node';
 import Query from './Query';
-import Role from './Role';
 import SignUpResult from './SignUpResult';
 import StartEmailAddressVerificationResult from './StartEmailAddressVerificationResult';
 import Subdomain from './Subdomain';
 import Subject from './Subject';
+import SubjectAgenciesConnection from './SubjectAgenciesConnection';
+import SubjectAgenciesEdge from './SubjectAgenciesEdge';
 
 export default makeExecutableSchema([
   Agency,
@@ -34,11 +35,12 @@ export default makeExecutableSchema([
   MutationResult,
   Node,
   Query,
-  Role,
   SignUpResult,
   StartEmailAddressVerificationResult,
   Subdomain,
-  Subject
+  Subject,
+  SubjectAgenciesConnection,
+  SubjectAgenciesEdge
 ].reduce((schema, type) => ({
   typeDefs: schema.typeDefs.concat(type.typeDef),
   resolvers: {

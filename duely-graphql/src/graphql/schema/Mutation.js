@@ -181,7 +181,7 @@ export default {
         } catch (error) {
           return {
             success: false,
-            message: error.message, // `Your email or password was invalid. Please try again.`
+            message: error.message,
             type: 'LogOutResult'
           };
         }

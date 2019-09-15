@@ -117,33 +117,6 @@ export default {
       return { account_uuid: account.uuid, type: 'AccountAgenciesConnection' };
     },
   },
-  AccountAgenciesConnection: {
-    async edges(connection, args, context, info) {
-      const res = await db.query(`
-        SELECT a_x_s.*
-          FROM accounts_x_sellers a_x_s
-          WHERE a_x_s.account_uuid = $1::uuid;
-        `,
-        [connection.account_uuid]);
-
-      return res.rows.map(row => ({ ...row, type: 'AccountAgenciesEdge' }));
-    }
-  },
-  AccountAgenciesEdge: {
-    cursor(edge, args, context, info) {
-      return Buffer.from(`${edge.account_uuid},${edge.seller_uuid}`).toString('base64');
-    },
-    async node(edge, args, context, info) {
-      const res = await db.query(`
-        SELECT s.*
-          FROM sellers s
-          WHERE s.uuid = $1::uuid;
-        `,
-        [edge.seller_uuid]);
-
-      return { ...res.rows[0], type: "Agency" };
-    }
-  },
   Session: {
     name(session, args, context, info) {
       return session.jwt;
