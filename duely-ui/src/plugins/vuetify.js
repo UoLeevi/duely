@@ -74,7 +74,6 @@ export default new Vuetify({
           lighten5: '#FFFFFF',
           darken4: '#8C8C96'
         },
-
         blue: {
           base: '#5A5AFF',
           lighten5: '#F0F0FF',
@@ -136,8 +135,16 @@ export default new Vuetify({
           darken4: '#00342C'
         },
         grey: {
-          base: '#8C8C96',
-          lighten5: '#F9F9FC'
+          base: '#828694',
+          lighten1: '#9A9DA8',
+          lighten2: '#B2B4BD',
+          lighten3: '#C9CBD2',
+          lighten4: '#E1E2E7',
+          lighten5: '#F9F9FC',
+          darken1: '#6B6F7F',
+          darken2: '#53586A',
+          darken3: '#3B4155',
+          darken4: '#242A41'
         }
       },
       dark: {

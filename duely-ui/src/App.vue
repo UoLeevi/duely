@@ -1,5 +1,5 @@
 <template>
-  <v-app :style="{'background-color': colorHex('background')}">
+  <v-app v-custom-scroll :class="`${this.$vuetify.breakpoint.name}`">
     <ScrollNav />
     <SplashScreenLoader :show="$root.graph.loading" />
     <v-content>
@@ -22,3 +22,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+#app {
+  background-color: var(--v-grey-darken4);
+}
+</style>

@@ -35,20 +35,61 @@ Vutil.install = function(Vue) {
       current: null,
     },
     scrollTo
-  })
+  });
+
+  let customScrollCounter = 0;
 
   Vue.prototype.$vutil = vutil;
+
+  Vue.mixin({
+    methods: {
+      colorHex(color) {
+        if (typeof color !== 'string')
+          return color;
+  
+        if (/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(color))
+          return color;
+  
+        const [name, variant] = color.split(' ');
+        const themeItem = this.$vuetify.theme.currentTheme[name];
+        return themeItem ? themeItem[variant ? variant.replace('-', '') : 'base'] : color;
+      },
+      adjustSize(xl, factor = 1.0) {
+        if (this.$vuetify.breakpoint.name === 'xl')
+          return xl;
+  
+        if (this.$vuetify.breakpoint.name === 'lg')
+          return (xl + xl * this.$vuetify.breakpoint.thresholds.md / this.$vuetify.breakpoint.thresholds.lg) / 2;
+  
+        return xl * (1 - ((1 - this.$vuetify.breakpoint.thresholds[this.$vuetify.breakpoint.name] / this.$vuetify.breakpoint.thresholds.lg) * factor));
+      }
+    }
+  });
+
+  Vue.directive('custom-scroll', {
+    bind() {
+      if (!customScrollCounter++)
+        document.documentElement.classList.add('custom-scroll');
+    },
+    unbind() {
+      if (!--customScrollCounter)
+        document.documentElement.classList.remove('custom-scroll');
+    }
+  });
 
   Vue.directive('scroll-target', {
     bind(el) {
       el.dataset.uuid = el.dataset.uuid || uuidv4();
       el.classList.add('scroll-target');
+
+      if (!customScrollCounter++)
+        document.documentElement.classList.add('custom-scroll');
     },
     unbind(el) {
       el.classList.remove('scroll-target');
       vutil.scroll.targets = vutil.scroll.targets.filter(target => target.el.dataset.uuid !== el.dataset.uuid);
 
-      if (vutil.scroll.targets.length === 0)
+      if (!--customScrollCounter)
         document.documentElement.classList.remove('custom-scroll');
 
       if (vutil.scroll.current && vutil.scroll.current.el.dataset.uuid === el.dataset.uuid)
@@ -62,11 +103,8 @@ Vutil.install = function(Vue) {
 
       if (!vutil.scroll.current)
         vutil.scroll.current = target;
-
-      if (vutil.scroll.targets.length === 1)
-        document.documentElement.classList.add('custom-scroll');
     }
-  })
+  });
 
   let ticking = false;
 

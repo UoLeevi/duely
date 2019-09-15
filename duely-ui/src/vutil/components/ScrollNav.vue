@@ -1,5 +1,5 @@
 <template>
-  <nav class="vutil-scroll-nav">
+  <nav class="vutil-scroll-nav" v-if="$vutil.scroll.targets.length > 1">
     <span v-for="target in $vutil.scroll.targets" :key="target.el.dataset.uuid" :class="{'active': current && current.el.dataset.uuid === target.el.dataset.uuid }" @click="$vutil.scrollTo(target)">
       <span :style="{ 'background-color': color }"></span>
     </span>

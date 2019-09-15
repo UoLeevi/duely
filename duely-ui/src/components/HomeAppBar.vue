@@ -2,14 +2,14 @@
   <v-app-bar fixed dark prominent short flat color="transparent" :style="{ 'color': textColor }">
     <v-row no-gutters align="center" justify="space-between" style="height: 100%;" >
       <v-col :cols="1" align="left"/>
-      <v-col cols="auto" align="left"><h1 class="display-1">duely.app</h1></v-col>
+      <v-col cols="auto" align="left"><h1 class="f-6 font-weight-regular pa-2">duely.app</h1></v-col>
       <v-col align="center"></v-col>
       <v-col cols="auto" align="right">
         <v-fade-transition mode="out-in">
           <v-progress-circular v-if="loading || $root.graph.loading || !$root.graph.me" indeterminate />
           <div v-else-if="$root.graph.me.type === 'user'" key="log-out">
             <v-btn @click="logOut" rounded text class="text-none mr-1" :color="textColor">Log out</v-btn>
-            <v-btn to="/dashboard" rounded outlined class="text-none ml-1" :color="textColor">Go to dashboard</v-btn>
+            <v-btn to="/profile" rounded outlined class="text-none ml-1" :color="textColor">Go to profile</v-btn>
           </div>
           <div v-else key="log-in">
             <LoginDialog>

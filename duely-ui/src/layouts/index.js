@@ -1,9 +1,9 @@
 import NarrowLayout from './NarrowLayout'
-import DashboardLayout from './DashboardLayout';
+import ProfileLayout from './ProfileLayout';
 import HomeLayout from './HomeLayout';
 
 import Vue from 'vue';
 
 Vue.component('NarrowLayout', NarrowLayout);
-Vue.component('DashboardLayout', DashboardLayout);
+Vue.component('ProfileLayout', ProfileLayout);
 Vue.component('HomeLayout', HomeLayout);

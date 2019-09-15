@@ -13,8 +13,8 @@
       </v-card-title>
       <v-card-text>
         <v-form class="pb-1 px-4" @submit.prevent="submit" ref="form">
-          <v-text-field background-color="primary" solo outlined flat single-line rounded class="mt-5 mb-1" label="Email address" :rules="[rules.required, rules.emailAddressFormat]" type="email" v-model="emailAddress" validate-on-blur spellcheck="false" />
-          <v-text-field background-color="primary" solo outlined flat single-line rounded class="mt-1 mb-1" label="Password" :append-icon="isPasswordVisible ? 'visibility' : 'visibility_off'" :type="isPasswordVisible ? 'text' : 'password'" :rules="[rules.required, rules.minLength]" v-model="password" validate-on-blur spellcheck="false" @click:append="isPasswordVisible = !isPasswordVisible" />
+          <v-text-field color="primary" solo outlined flat single-line rounded class="mt-5 mb-1" label="Email address" :rules="[rules.required, rules.emailAddressFormat]" type="email" v-model="emailAddress" validate-on-blur spellcheck="false" />
+          <v-text-field color="primary" solo outlined flat single-line rounded class="mt-1 mb-1" label="Password" :append-icon="isPasswordVisible ? 'visibility' : 'visibility_off'" :type="isPasswordVisible ? 'text' : 'password'" :rules="[rules.required, rules.minLength]" v-model="password" validate-on-blur spellcheck="false" @click:append="isPasswordVisible = !isPasswordVisible" />
           <v-expand-transition>
             <p class="error--text" v-if="errorMessage">{{ errorMessage }}</p>
           </v-expand-transition>
@@ -88,10 +88,26 @@ export default {
                   name
                   emailAddress
                   type
+                  agenciesConnection {
+                    edges {
+                      cursor
+                      roles
+                      node {
+                        uuid
+                        name
+                        subdomain {
+                          uuid
+                          name
+                        }
+                      }
+                    }
+                  }
                 }
               }
             `
           });
+
+          this.$router.push({ path: '/profile' });
         }
 
         this.dialog = false;

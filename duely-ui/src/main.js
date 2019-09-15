@@ -3,23 +3,20 @@ import vuetify from '@/plugins/vuetify';
 import vutil from '@/plugins/vutil';
 import App from '@/App.vue';
 import subdomainRouter from '@/router/subdomainRouter';
-import rootDomainRouter from '@/router/rootDomainRouter';
+import defaultRouter from '@/router/defaultRouter';
 import '@/layouts';
 import '@/registerServiceWorker';
 import gql from 'graphql-tag';
 import ApolloMixin from '@/mixins/ApolloMixin';
-import StyleHelperMixin from '@/mixins/StyleHelperMixin';
 
 Vue.config.productionTip = false;
-
-Vue.mixin(StyleHelperMixin);
 
 new Vue({
   vuetify,
   vutil,
   router: window.location.hostname.slice(-10).toLowerCase() === '.duely.app'
     ? subdomainRouter
-    : rootDomainRouter,
+    : defaultRouter,
   render: h => h(App),
   mixins: [ApolloMixin],
   data: {
@@ -31,9 +28,24 @@ new Vue({
             name
             emailAddress
             type
+            agenciesConnection {
+              edges {
+                cursor
+                roles
+                node {
+                  uuid
+                  name
+                  subdomain {
+                    uuid
+                    name
+                  }
+                }
+              }
+            }
           }
         }
       `
+      //notifyOnNetworkStatusChange: true
     }
   }
 }).$mount('#app');

@@ -1,5 +1,5 @@
 <template>
-  <NarrowLayout background-color="primary">
+  <NarrowLayout>
     <v-stepper v-model="step" vertical class="pa-5 elevation-24 rounded-corners">
       <v-stepper-step :complete="step > 1" step="1">
         Sign up for an account
@@ -26,7 +26,7 @@
             <p class="error--text" v-if="forms.signUpStep1.errorMessage">{{ forms.signUpStep1.errorMessage }}</p>
           </v-expand-transition>
           <v-row class="ml-3 mt-1 mb-1" no-gutters>
-            <v-btn depressed rounded :loading="forms.signUpStep1.loading" :disabled="!(forms.signUpStep1.valid && data.acceptTermsAndConditions)" type="submit" color="primary" class="text-none mr-1">Continue</v-btn>
+            <v-btn depressed rounded :loading="forms.signUpStep1.loading" :disabled="!(forms.signUpStep1.valid && data.acceptTermsAndConditions)" type="submit" color="primary" class="text-none mr-4">Continue</v-btn>
             <v-btn text depressed rounded class="text-none" to="/">Cancel</v-btn>
           </v-row>
           <v-dialog v-model="terms" width="70%" content-class="rounded-corners">
@@ -72,7 +72,7 @@
             <p class="error--text" v-if="forms.signUpStep2.errorMessage">{{ forms.signUpStep2.errorMessage }}</p>
           </v-expand-transition>
           <v-row class="ml-3 mt-1 mb-1" no-gutters>
-            <v-btn depressed rounded :loading="forms.signUpStep2.loading" :disabled="!forms.signUpStep2.valid" type="submit" color="primary" class="text-none mr-1">Continue</v-btn>
+            <v-btn depressed rounded :loading="forms.signUpStep2.loading" :disabled="!forms.signUpStep2.valid" type="submit" color="primary" class="text-none mr-4">Continue</v-btn>
             <v-btn text depressed rounded class="text-none" @click="step = 1">Back</v-btn>
           </v-row>
         </v-form>
@@ -89,7 +89,7 @@
           </p>
         </v-col>
         <v-row class="ml-3 mt-1 mb-4" no-gutters>
-          <v-btn depressed rounded :loading="forms.logIn.loading" class="text-none mr-1" color="primary" @click="logIn">Log in and go to dashboard</v-btn>
+          <v-btn depressed rounded :loading="forms.logIn.loading" class="text-none mr-4" color="primary" @click="logIn">Log in and go to dashboard</v-btn>
           <v-btn depressed rounded text class="text-none" to="/">Cancel</v-btn>
         </v-row>
       </v-stepper-content>
@@ -261,13 +261,29 @@ export default {
                 name
                 emailAddress
                 type
+                agenciesConnection {
+                  edges {
+                    cursor
+                    roles
+                    node {
+                      uuid
+                      name
+                      subdomain {
+                        uuid
+                        name
+                      }
+                    }
+                  }
+                }
               }
             }
           `
         });
-      }
 
-      this.$router.push({ path: '/dashboard' });
+        this.$router.push({ path: '/profile' });
+      }
+      else
+        this.$router.push({ path: '/' });
 
       this.forms.logIn.loading = false;
     }
