@@ -1063,6 +1063,23 @@ $$;
 ALTER FUNCTION policy_.agent_in_agency_(_agency_uuid uuid) OWNER TO postgres;
 
 --
+-- Name: argument_is_not_null_(text); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.argument_is_not_null_(_arg text DEFAULT NULL::text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$ 
+BEGIN
+  RETURN (
+    SELECT _arg IS NOT NULL
+  );
+END
+ $$;
+
+
+ALTER FUNCTION policy_.argument_is_not_null_(_arg text) OWNER TO postgres;
+
+--
 -- Name: logged_in_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -1260,7 +1277,7 @@ BEGIN
         LANGUAGE plpgsql SECURITY DEFINER
         AS $$ %2$s $$;
 
-      ALTER FUNCTION policy_.%1$I(_arg anyelement) OWNER TO postgres;
+      ALTER FUNCTION policy_.%1$I(_arg %4$I) OWNER TO postgres;
 
       $__$,
       _policy_name, _policy_function_body, _policy_function_arg_name, _policy_function_arg_type, _policy_function_arg_default);
@@ -1308,7 +1325,7 @@ BEGIN
         LANGUAGE plpgsql SECURITY DEFINER
         AS $$ %2$s $$;
 
-      ALTER FUNCTION policy_.%1$I(_arg anyelement) OWNER TO postgres;
+      ALTER FUNCTION policy_.%1$I(_arg %4$I) OWNER TO postgres;
 
       $__$,
       _policy_name, _policy_function_body, _policy_function_arg_name, _policy_function_arg_type, _policy_function_arg_default);
@@ -1696,7 +1713,6 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 --
 
 COPY security_.policy_assignment_ (uuid_, policy_name_, operation_uuid_, type_, audit_at_, audit_session_uuid_) FROM stdin;
-8d52be36-b346-458e-9cd5-1ec2521c40c7	agent_in_agency_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 fb6da025-643a-4806-a64b-4a0e5042ba98	owner_in_agency_	c865b482-975b-49b3-845f-dfa39f46a7f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 685c3913-3fff-4345-865c-d3e4026321ed	visitor_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
@@ -1708,6 +1724,7 @@ f8e01162-7a10-4771-a540-d773a10b0498	agent_in_agency_	616938d8-f0b0-4ce5-82f6-eb
 b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1759,7 +1776,6 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 --
 
 COPY security__audit_.policy_assignment_ (uuid_, policy_name_, operation_uuid_, type_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
-8d52be36-b346-458e-9cd5-1ec2521c40c7	agent_in_agency_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 fb6da025-643a-4806-a64b-4a0e5042ba98	owner_in_agency_	c865b482-975b-49b3-845f-dfa39f46a7f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 685c3913-3fff-4345-865c-d3e4026321ed	visitor_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
@@ -1771,6 +1787,7 @@ f8e01162-7a10-4771-a540-d773a10b0498	agent_in_agency_	616938d8-f0b0-4ce5-82f6-eb
 b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
