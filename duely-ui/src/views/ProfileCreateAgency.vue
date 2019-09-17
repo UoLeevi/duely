@@ -70,7 +70,7 @@ export default {
       if (this.data.subdomain.includes('.'))
         return false;
 
-      return /(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)/.test(`${this.data.subdomain}.duely.app`);
+      return /(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)/.test(`${this.data.subdomain}.duely.app`);
     }
   },
   methods: {
