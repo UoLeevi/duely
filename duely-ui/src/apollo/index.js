@@ -4,6 +4,8 @@ import { withClientState } from 'apollo-link-state';
 import { setContext } from 'apollo-link-context';
 import { ApolloLink, execute, toPromise } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
+//import { WebSocketLink } from 'apollo-link-ws';
+//import { SubscriptionClient } from 'subscriptions-transport-ws';
 import gql from 'graphql-tag';
 import defaults from './defaults';
 import resolvers from './resolvers';
