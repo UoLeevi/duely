@@ -420,6 +420,51 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
+-- Name: agency_invite_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.agency_invite_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    agency_uuid_ uuid NOT NULL,
+    inviter_uuid_ uuid NOT NULL,
+    invitee_uuid_ uuid NOT NULL,
+    role_uuid_ uuid NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.agency_invite_ OWNER TO postgres;
+
+--
+-- Name: accept_agency_invite_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.accept_agency_invite_(_invite_uuid uuid) RETURNS application_.agency_invite_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _agency_invite application_.agency_invite_;
+BEGIN
+  PERFORM security_.control_operation_('accept_agency_invite_', _invite_uuid);
+
+  DELETE FROM application_.agency_invite_
+  WHERE uuid_ = _invite_uuid
+  RETURNING * INTO _agency_invite;
+
+  INSERT INTO security_.subject_assingment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
+  SELECT ai.uuid_, a.subdomain_uuid_, ai.invitee_uuid_
+  FROM _agency_invite ai
+  JOIN application_.agency_ a ON a.uuid_ = ai.agency_uuid_;
+
+  RETURN _agency_invite;
+END
+$$;
+
+
+ALTER FUNCTION operation_.accept_agency_invite_(_invite_uuid uuid) OWNER TO postgres;
+
+--
 -- Name: session_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
@@ -741,23 +786,6 @@ $$;
 
 
 ALTER FUNCTION operation_.end_visit_() OWNER TO postgres;
-
---
--- Name: agency_invite_; Type: TABLE; Schema: application_; Owner: postgres
---
-
-CREATE TABLE application_.agency_invite_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    agency_uuid_ uuid NOT NULL,
-    inviter_uuid_ uuid NOT NULL,
-    invitee_uuid_ uuid NOT NULL,
-    role_uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE application_.agency_invite_ OWNER TO postgres;
 
 --
 -- Name: invite_user_to_agency_(uuid, uuid, text); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1168,6 +1196,27 @@ END
 ALTER FUNCTION policy_.argument_is_not_null_(_arg anyelement) OWNER TO postgres;
 
 --
+-- Name: invitee_can_accept_(uuid); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.invitee_can_accept_(_invite_uuid uuid DEFAULT NULL::uuid) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$ 
+BEGIN 
+  RETURN
+    EXISTS (
+      SELECT 1
+      FROM security_.active_subject_ s
+      JOIN application_.agency_invite_ ai ON s.uuid_ = ai.subject_uuid_
+      WHERE ai.uuid_ = _invite_uuid
+    );
+END
+ $$;
+
+
+ALTER FUNCTION policy_.invitee_can_accept_(_invite_uuid uuid) OWNER TO postgres;
+
+--
 -- Name: logged_in_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -1280,6 +1329,32 @@ $$;
 
 
 ALTER FUNCTION policy_.owner_in_agency_(_agency_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: users_can_remove_themselves_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.users_can_remove_themselves_(_arg anyelement DEFAULT NULL::unknown) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$ 
+DECLARE
+  _agency_uuid uuid := _args[0];
+  _user_uuid uuid := _args[1];
+BEGIN 
+  RETURN
+    EXISTS (
+      SELECT 1
+      FROM security_.subject_assgnment_flat sa
+      JOIN security_.active_subject_ s ON s.uuid_ = sa.subject_uuid_
+      JOIN application_.agency_ a ON a.subdomain_uuid_ = sa.subdomain_uuid_
+        AND a.uuid_ = _agency_uuid
+        AND s.uuid_ = _user_uuid
+    );
+END
+ $$;
+
+
+ALTER FUNCTION policy_.users_can_remove_themselves_(_arg anyelement) OWNER TO postgres;
 
 --
 -- Name: visitor_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -1618,41 +1693,50 @@ CREATE TABLE security_.subject_assignment_ (
 ALTER TABLE security_.subject_assignment_ OWNER TO postgres;
 
 --
+-- Name: subject_assignment_flat_; Type: VIEW; Schema: security_; Owner: postgres
+--
+
+CREATE VIEW security_.subject_assignment_flat_ AS
+ WITH RECURSIVE _role_hierarchy(subject_uuid_, role_uuid_, subrole_uuid_, subdomain_uuid_) AS (
+         SELECT sa.subject_uuid_,
+            sa.role_uuid_,
+            rh.subrole_uuid_,
+            sa.subdomain_uuid_
+           FROM (security_.subject_assignment_ sa
+             LEFT JOIN security_.role_hierarchy_ rh ON ((rh.role_uuid_ = sa.role_uuid_)))
+        UNION
+         SELECT rrh.subject_uuid_,
+            rh.role_uuid_,
+            rh.subrole_uuid_,
+            rrh.subdomain_uuid_
+           FROM (security_.role_hierarchy_ rh
+             JOIN _role_hierarchy rrh ON ((rh.role_uuid_ = rrh.subrole_uuid_)))
+          WHERE (rrh.subrole_uuid_ IS NOT NULL)
+        )
+ SELECT rh.role_uuid_,
+    rh.subdomain_uuid_,
+    rh.subject_uuid_
+   FROM _role_hierarchy rh
+UNION
+ SELECT rh.subrole_uuid_ AS role_uuid_,
+    rh.subdomain_uuid_,
+    rh.subject_uuid_
+   FROM _role_hierarchy rh;
+
+
+ALTER TABLE security_.subject_assignment_flat_ OWNER TO postgres;
+
+--
 -- Name: active_role_; Type: VIEW; Schema: security_; Owner: postgres
 --
 
 CREATE VIEW security_.active_role_ AS
- WITH RECURSIVE _subject_assignment(role_uuid_, subdomain_uuid_) AS (
-         SELECT DISTINCT sa.role_uuid_,
-            sa.subdomain_uuid_
-           FROM (security_.subject_assignment_ sa
-             JOIN security_.active_subject_ s ON ((s.uuid_ = sa.subject_uuid_)))
-        ), _role_hierarchy(role_uuid_, subrole_uuid_, subdomain_uuid_) AS (
-         SELECT rh.role_uuid_,
-            rh.subrole_uuid_,
-            sa.subdomain_uuid_
-           FROM (security_.role_hierarchy_ rh
-             JOIN _subject_assignment sa ON ((rh.role_uuid_ = sa.role_uuid_)))
-        UNION
-         SELECT rh.role_uuid_,
-            rh.subrole_uuid_,
-            _role_hierarchy.subdomain_uuid_
-           FROM (security_.role_hierarchy_ rh
-             JOIN _role_hierarchy ON ((rh.role_uuid_ = _role_hierarchy.subrole_uuid_)))
-        ), _role(uuid_, subdomain_uuid_) AS (
-         SELECT rh.role_uuid_ AS uuid_,
-            rh.subdomain_uuid_
-           FROM _role_hierarchy rh
-        UNION
-         SELECT rh.subrole_uuid_ AS uuid_,
-            rh.subdomain_uuid_
-           FROM _role_hierarchy rh
-        )
  SELECT r.uuid_,
     r.name_,
-    _role.subdomain_uuid_
-   FROM (security_.role_ r
-     JOIN _role ON ((r.uuid_ = _role.uuid_)));
+    sa.subdomain_uuid_
+   FROM ((security_.subject_assignment_flat_ sa
+     JOIN security_.active_subject_ s ON ((s.uuid_ = sa.subject_uuid_)))
+     JOIN security_.role_ r ON ((r.uuid_ = sa.role_uuid_)));
 
 
 ALTER TABLE security_.active_role_ OWNER TO postgres;
@@ -1864,6 +1948,7 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_to_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+04fc5530-96ee-469b-9e6d-f228392b81e9	accept_agency_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1887,6 +1972,8 @@ d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2
 2d1cde8a-54e7-4aa5-87ef-3f733cf3dde0	logged_in_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 12543ad5-113a-4b09-8174-774119fd999e	owner_can_invite_	89071731-bd21-4505-aab9-fd699c5fd12f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 991b0ec1-11b6-492e-a872-5b8aede7e5c3	owner_can_remove_users_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_can_accept_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1932,6 +2019,7 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_to_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+04fc5530-96ee-469b-9e6d-f228392b81e9	accept_agency_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -1955,6 +2043,8 @@ d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2
 2d1cde8a-54e7-4aa5-87ef-3f733cf3dde0	logged_in_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 12543ad5-113a-4b09-8174-774119fd999e	owner_can_invite_	89071731-bd21-4505-aab9-fd699c5fd12f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 991b0ec1-11b6-492e-a872-5b8aede7e5c3	owner_can_remove_users_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_can_accept_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
