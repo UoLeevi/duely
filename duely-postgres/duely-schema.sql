@@ -940,16 +940,15 @@ ALTER FUNCTION operation_.query_active_subject_() OWNER TO postgres;
 -- Name: query_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_agency_(_agency_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, name_ text, role_names_ text[])
+CREATE FUNCTION operation_.query_agency_(_agency_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, name_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
   PERFORM security_.control_operation_('query_agency_', _agency_uuid);
 
   RETURN QUERY
-  SELECT a.uuid_, a.subdomain_uuid_, a.name_, array_remove(array_agg(r.name_), NULL) role_names_
+  SELECT a.uuid_, a.subdomain_uuid_, a.name_
   FROM application_.agency_ a
-  LEFT JOIN security_.active_role_ r ON a.subdomain_uuid_ = r.subdomain_uuid_
   WHERE _agency_uuid IS NULL 
      OR _agency_uuid IS NOT DISTINCT FROM a.uuid_
   GROUP BY a.uuid_, a.subdomain_uuid_, a.name_;
@@ -975,7 +974,7 @@ BEGIN
   FROM application_.agency_ a
   LEFT JOIN security_.subject_assignment_flat_ sa ON a.subdomain_uuid_ = sa.subdomain_uuid_
   LEFT JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
-  LEFT JOIN security_.subject_ s ON s.uuid_ = sa.subdomain_uuid_
+  LEFT JOIN security_.subject_ s ON s.uuid_ = sa.subject_uuid_
   LEFT JOIN security_.user_ ON s.uuid_ = u.uuid_
   WHERE a.uuid_ = _agency_uuid
   GROUP BY s.uuid_, s.name_, u.email_address_, s.type_;
@@ -1006,6 +1005,32 @@ $$;
 
 
 ALTER FUNCTION operation_.query_service_(_agency_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: query_shared_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_shared_agency_(_user_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, subdomain_uuid_ uuid, role_names_ text[])
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  PERFORM security_.control_operation_('query_shared_agency_', _user_uuid);
+
+  RETURN QUERY
+  SELECT a.uuid_, a.name_, a.subdomain_uuid_, array_remove(array_agg(r.name_), NULL) role_names_
+  FROM security_.user_ u
+  LEFT JOIN security_.subject_assignment_flat_ sa ON u.uuid_ = sa.subject_uuid_
+  LEFT JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
+  LEFT JOIN application_.agency_ a ON a.subdomain_uuid_ = sa.subdomain_uuid_
+  WHERE u.uuid_ = _user_uuid
+    AND policy_.agent_in_agency_(a.uuid_)
+  GROUP BY a.uuid_, a.name_, a.subdomain_uuid_;
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_shared_agency_(_user_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: query_subdomain_(); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1989,6 +2014,7 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2015,6 +2041,7 @@ d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2
 fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_can_accept_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 1b902618-8a68-4c0d-b05e-6bda782c5f30	agent_in_agency_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+75294233-ed0a-4b6a-8903-f206daf0af67	logged_in_	3f020478-e3a3-4674-932d-8b922c17b91b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2063,6 +2090,7 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2089,6 +2117,7 @@ d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2
 fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_can_accept_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 1b902618-8a68-4c0d-b05e-6bda782c5f30	agent_in_agency_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+75294233-ed0a-4b6a-8903-f206daf0af67	logged_in_	3f020478-e3a3-4674-932d-8b922c17b91b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
