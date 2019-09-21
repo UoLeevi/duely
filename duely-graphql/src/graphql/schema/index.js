@@ -1,5 +1,7 @@
 import { makeExecutableSchema } from 'graphql-tools';
 import Agency from './Agency';
+import AgencySubjectsConnection from './AgencySubjectsConnection';
+import AgencySubjectsEdge from './AgencySubjectsEdge';
 import BeginVisitResult from './BeginVisitResult';
 import Connection from './Connection';
 import CreateAgencyResult from './CreateAgencyResult';
@@ -19,9 +21,12 @@ import Subdomain from './Subdomain';
 import Subject from './Subject';
 import SubjectAgenciesConnection from './SubjectAgenciesConnection';
 import SubjectAgenciesEdge from './SubjectAgenciesEdge';
+//import Subscription from './Subscription';
 
 export default makeExecutableSchema([
   Agency,
+  AgencySubjectsConnection,
+  AgencySubjectsEdge,
   BeginVisitResult,
   Connection,
   CreateAgencyResult,
@@ -41,6 +46,7 @@ export default makeExecutableSchema([
   Subject,
   SubjectAgenciesConnection,
   SubjectAgenciesEdge
+  //Subscription
 ].reduce((schema, type) => ({
   typeDefs: schema.typeDefs.concat(type.typeDef),
   resolvers: {

@@ -1,4 +1,5 @@
 import pool from '../../db';
+import { AuthenticationError } from 'apollo-server-core';
 
 export default {
   typeDef: `
@@ -19,7 +20,7 @@ export default {
           await client.query('SELECT operation_.end_session_()');
           return res.rows ? res.rows[0] : null;
         } catch (error) {
-          return null;
+          throw new AuthenticationError(error.message);
         }
         finally {
           client.release();

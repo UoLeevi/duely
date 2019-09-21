@@ -2,19 +2,19 @@ import pool from '../../db';
 
 export default {
   typeDef: `
-    type SubjectAgenciesEdge implements Edge {
+    type AgencySubjectsEdge implements Edge {
       cursor: String
-      node: Agency!
+      node: Subject!
       roles: [String!]!
     }
   `,
   resolvers: {
-    SubjectAgenciesEdge: {
+    AgencySubjectsEdge: {
       cursor(edge, args, context, info) {
-        return Buffer.from(`${edge.subjectUuid},${edge.uuid_}`).toString('base64');
+        return Buffer.from(`${edge.agencyUuid},${edge.uuid_}`).toString('base64');
       },
       node(edge, args, context, info) {
-        return { ...edge, type: 'Agency' };
+        return { ...edge, type: 'Subject' };
       },
       roles(edge, args, context, info) {
         return edge.role_names_ || [];
