@@ -420,49 +420,59 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: agency_invite_; Type: TABLE; Schema: application_; Owner: postgres
+-- Name: user_invite_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
-CREATE TABLE application_.agency_invite_ (
+CREATE TABLE application_.user_invite_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     agency_uuid_ uuid NOT NULL,
     inviter_uuid_ uuid NOT NULL,
-    invitee_uuid_ uuid NOT NULL,
+    invitee_email_address_ text NOT NULL,
     role_uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
-ALTER TABLE application_.agency_invite_ OWNER TO postgres;
+ALTER TABLE application_.user_invite_ OWNER TO postgres;
 
 --
--- Name: accept_agency_invite_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: accept_user_invite_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.accept_agency_invite_(_invite_uuid uuid) RETURNS application_.agency_invite_
+CREATE FUNCTION operation_.accept_user_invite_(_invite_uuid uuid) RETURNS application_.user_invite_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _agency_invite application_.agency_invite_;
+  _invitee_uuid uuid;
+  _user_invite application_.user_invite_;
 BEGIN
-  PERFORM security_.control_operation_('accept_agency_invite_', _invite_uuid);
+  PERFORM security_.control_operation_('accept_user_invite_', _invite_uuid);
 
-  DELETE FROM application_.agency_invite_
+  IF NOT EXISTS (
+    SELECT s.uuid_ INTO _invitee_uuid
+    FROM security_.subject_ s
+    JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
+    WHERE ui.uuid_ = _invite_uuid
+  ) THEN
+    RAISE 'User does not exist.' USING ERRCODE = '20000';
+  END IF;
+
+  DELETE FROM application_.user_invite_
   WHERE uuid_ = _invite_uuid
-  RETURNING * INTO _agency_invite;
+  RETURNING * INTO _user_invite;
 
   INSERT INTO security_.subject_assingment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
-  SELECT ai.uuid_, a.subdomain_uuid_, ai.invitee_uuid_
-  FROM _agency_invite ai
-  JOIN application_.agency_ a ON a.uuid_ = ai.agency_uuid_;
+  SELECT ui.uuid_, a.subdomain_uuid_, _invitee_uuid
+  FROM _user_invite ui
+  JOIN application_.agency_ a ON a.uuid_ = ui.agency_uuid_;
 
-  RETURN _agency_invite;
+  RETURN _user_invite;
 END
 $$;
 
 
-ALTER FUNCTION operation_.accept_agency_invite_(_invite_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION operation_.accept_user_invite_(_invite_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: session_; Type: TABLE; Schema: security_; Owner: postgres
@@ -788,39 +798,40 @@ $$;
 ALTER FUNCTION operation_.end_visit_() OWNER TO postgres;
 
 --
--- Name: invite_user_to_agency_(uuid, uuid, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: invite_user_(uuid, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.invite_user_to_agency_(_agency_uuid uuid, _user_uuid uuid, _role_name text DEFAULT 'agent'::text) RETURNS application_.agency_invite_
+CREATE FUNCTION operation_.invite_user_(_agency_uuid uuid, _email_address text, _role_name text DEFAULT 'agent'::text) RETURNS application_.user_invite_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _agency_invite application_.agency_invite_;
+  _user_invite application_.user_invite_;
 BEGIN
-  PERFORM security_.control_operation_('invite_user_to_agency_', ARRAY[_agency_uuid, _user_uuid, _role_name]);
+  PERFORM security_.control_operation_('invite_user_', ARRAY[_agency_uuid, _email_address, _role_name]);
 
   IF EXISTS (
       SELECT 1
       FROM security_.subject_assignment_ sa
+      JOIN security_.subject_ s ON s.uuid_ = sa.subject_uuid_
       JOIN application_.agency_ a ON a.subdomain_uuid_ = sa.subdomain_uuid_
-      WHERE sa.subject_assignment_ = _user_uuid
+      WHERE s.email_address_ = _email_address
         AND a.uuid_ = _agency_uuid
     ) THEN
     RAISE 'User is already part of the agency.' USING ERRCODE = '20000';
   END IF;
 
-  INSERT INTO application_.agency_invite_ (agency_uuid_, inviter_uuid_, invitee_uuid_, role_uuid_)
-  SELECT _agency_uuid, current_setting('security_.token_.subject_uuid_'::text, false)::uuid, _user_uuid, r.uuid_
+  INSERT INTO application_.user_invite_ (agency_uuid_, inviter_uuid_, invitee_email_address_, role_uuid_)
+  SELECT _agency_uuid, current_setting('security_.token_.subject_uuid_'::text, false)::uuid, _email_address, r.uuid_
   FROM security_.role_ r
   WHERE r.name_ = _role_name
-  RETURNING * INTO _agency_invite;
+  RETURNING * INTO _user_invite;
 
-  RETURN _agency_invite;
+  RETURN _user_invite;
 END
 $$;
 
 
-ALTER FUNCTION operation_.invite_user_to_agency_(_agency_uuid uuid, _user_uuid uuid, _role_name text) OWNER TO postgres;
+ALTER FUNCTION operation_.invite_user_(_agency_uuid uuid, _email_address text, _role_name text) OWNER TO postgres;
 
 --
 -- Name: log_in_user_(text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1032,13 +1043,15 @@ BEGIN
         AND sa.subject_uuid_ = _user_uuid
       RETURNING *
     ),
-    _deleted_ai AS (
-      DELETE FROM application_.agency_invitation ai
-      WHERE ai.agency_uuid_ = _agency_uuid
-        AND sa.subject_uuid_ = _user_uuid
+    _deleted_ui AS (
+      DELETE FROM application_.user_invite_ ui
+      USING security_.subject_ s
+      WHERE ui.agency_uuid_ = _agency_uuid
+        AND s.subject_uuid_ = _user_uuid
+        AND s.email_address_ = ui.invitee_email_address_
       RETURNING *
     )
-  SELECT (SELECT count(1) FROM _deleted_sa) + (SELECT count(1) FROM _deleted_ai) INTO _count;
+  SELECT (SELECT count(1) FROM _deleted_sa) + (SELECT count(1) FROM _deleted_ui) INTO _count;
 
   RETURN _count;
 END
@@ -1207,8 +1220,8 @@ BEGIN
     EXISTS (
       SELECT 1
       FROM security_.active_subject_ s
-      JOIN application_.agency_invite_ ai ON s.uuid_ = ai.subject_uuid_
-      WHERE ai.uuid_ = _invite_uuid
+      JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
+      WHERE ui.uuid_ = _invite_uuid
     );
 END
  $$;
@@ -1266,7 +1279,7 @@ CREATE FUNCTION policy_.owner_can_invite_(_arg anyelement DEFAULT NULL::unknown)
     AS $$ 
 DECLARE
   _agency_uuid uuid := _args[0];
-  _invitee_uuid uuid := _args[1];
+  _invitee_email_address uuid := _args[1];
   _role_name text := _args[2];
 BEGIN 
   RETURN
@@ -1585,24 +1598,6 @@ CREATE TABLE application__audit_.agency_ (
 ALTER TABLE application__audit_.agency_ OWNER TO postgres;
 
 --
--- Name: agency_invite_; Type: TABLE; Schema: application__audit_; Owner: postgres
---
-
-CREATE TABLE application__audit_.agency_invite_ (
-    uuid_ uuid,
-    agency_uuid_ uuid,
-    inviter_uuid_ uuid,
-    invitee_uuid_ uuid,
-    role_uuid_ uuid,
-    audit_at_ timestamp with time zone,
-    audit_session_uuid_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE application__audit_.agency_invite_ OWNER TO postgres;
-
---
 -- Name: service_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -1617,6 +1612,24 @@ CREATE TABLE application__audit_.service_ (
 
 
 ALTER TABLE application__audit_.service_ OWNER TO postgres;
+
+--
+-- Name: user_invite_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.user_invite_ (
+    uuid_ uuid,
+    agency_uuid_ uuid,
+    inviter_uuid_ uuid,
+    invitee_email_address_ text,
+    role_uuid_ uuid,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.user_invite_ OWNER TO postgres;
 
 --
 -- Name: subject_; Type: TABLE; Schema: security_; Owner: postgres
@@ -1946,9 +1959,9 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 44836e4b-ecd5-4184-a177-498b412ff251	query_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_to_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-04fc5530-96ee-469b-9e6d-f228392b81e9	accept_agency_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -1985,6 +1998,7 @@ COPY security_.role_ (uuid_, name_, audit_at_, audit_session_uuid_) FROM stdin;
 be9432a6-2c74-4030-b59e-d657662a4f92	owner	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 566af82a-e5cf-4aad-aada-4341edb3e088	agent	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+9a9b149f-f57f-482d-bb5e-2692e3fee48c	client	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2017,9 +2031,9 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 44836e4b-ecd5-4184-a177-498b412ff251	query_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_to_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-04fc5530-96ee-469b-9e6d-f228392b81e9	accept_agency_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2056,6 +2070,7 @@ COPY security__audit_.role_ (uuid_, name_, audit_at_, audit_session_uuid_, audit
 be9432a6-2c74-4030-b59e-d657662a4f92	owner	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 566af82a-e5cf-4aad-aada-4341edb3e088	agent	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+9a9b149f-f57f-482d-bb5e-2692e3fee48c	client	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2094,22 +2109,6 @@ ALTER TABLE ONLY application_.agency_
 
 
 --
--- Name: agency_invite_ agency_invite__agency_uuid__invitee_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.agency_invite_
-    ADD CONSTRAINT agency_invite__agency_uuid__invitee_uuid__key UNIQUE (agency_uuid_, invitee_uuid_);
-
-
---
--- Name: agency_invite_ agency_invite__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.agency_invite_
-    ADD CONSTRAINT agency_invite__pkey PRIMARY KEY (uuid_);
-
-
---
 -- Name: service_ service__agency_uuid__name__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -2123,6 +2122,22 @@ ALTER TABLE ONLY application_.service_
 
 ALTER TABLE ONLY application_.service_
     ADD CONSTRAINT service__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: user_invite_ user_invite__agency_uuid__invitee_email_address__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.user_invite_
+    ADD CONSTRAINT user_invite__agency_uuid__invitee_email_address__key UNIQUE (agency_uuid_, invitee_email_address_);
+
+
+--
+-- Name: user_invite_ user_invite__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.user_invite_
+    ADD CONSTRAINT user_invite__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -2300,10 +2315,10 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.servic
 
 
 --
--- Name: agency_invite_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: user_invite_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency_invite_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -2321,10 +2336,10 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service
 
 
 --
--- Name: agency_invite_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: user_invite_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.agency_invite_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -2342,10 +2357,10 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 
 
 --
--- Name: agency_invite_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: user_invite_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.agency_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2363,10 +2378,10 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service
 
 
 --
--- Name: agency_invite_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: user_invite_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.agency_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -2384,10 +2399,10 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
--- Name: agency_invite_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: user_invite_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.agency_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2405,10 +2420,10 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service
 
 
 --
--- Name: agency_invite_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: user_invite_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.agency_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -2426,10 +2441,10 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.servi
 
 
 --
--- Name: agency_invite_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: user_invite_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agency_invite_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_invite_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -2728,43 +2743,35 @@ ALTER TABLE ONLY application_.agency_
 
 
 --
--- Name: agency_invite_ agency_invite__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.agency_invite_
-    ADD CONSTRAINT agency_invite__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
-
-
---
--- Name: agency_invite_ agency_invite__invitee_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.agency_invite_
-    ADD CONSTRAINT agency_invite__invitee_uuid__fkey FOREIGN KEY (invitee_uuid_) REFERENCES security_.subject_(uuid_);
-
-
---
--- Name: agency_invite_ agency_invite__inviter_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.agency_invite_
-    ADD CONSTRAINT agency_invite__inviter_uuid__fkey FOREIGN KEY (inviter_uuid_) REFERENCES security_.subject_(uuid_);
-
-
---
--- Name: agency_invite_ agency_invite__role_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.agency_invite_
-    ADD CONSTRAINT agency_invite__role_uuid__fkey FOREIGN KEY (role_uuid_) REFERENCES security_.role_(uuid_);
-
-
---
 -- Name: service_ service__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
 ALTER TABLE ONLY application_.service_
     ADD CONSTRAINT service__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
+
+
+--
+-- Name: user_invite_ user_invite__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.user_invite_
+    ADD CONSTRAINT user_invite__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+
+
+--
+-- Name: user_invite_ user_invite__inviter_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.user_invite_
+    ADD CONSTRAINT user_invite__inviter_uuid__fkey FOREIGN KEY (inviter_uuid_) REFERENCES security_.subject_(uuid_);
+
+
+--
+-- Name: user_invite_ user_invite__role_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.user_invite_
+    ADD CONSTRAINT user_invite__role_uuid__fkey FOREIGN KEY (role_uuid_) REFERENCES security_.role_(uuid_);
 
 
 --
