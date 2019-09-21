@@ -975,7 +975,7 @@ BEGIN
   LEFT JOIN security_.subject_assignment_flat_ sa ON a.subdomain_uuid_ = sa.subdomain_uuid_
   LEFT JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
   LEFT JOIN security_.subject_ s ON s.uuid_ = sa.subject_uuid_
-  LEFT JOIN security_.user_ ON s.uuid_ = u.uuid_
+  LEFT JOIN security_.user_ u ON s.uuid_ = u.uuid_
   WHERE a.uuid_ = _agency_uuid
   GROUP BY s.uuid_, s.name_, u.email_address_, s.type_;
 
