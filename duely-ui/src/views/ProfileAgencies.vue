@@ -1,6 +1,6 @@
 <template>
   <section>
-    <v-progress-circular v-if="$root.graph.loading" indeterminate />
+    <v-progress-circular v-if="$vgraph.loading" indeterminate />
     <template v-else>
       <h2 class="f-5b">Agencies</h2>
       <div class="d-flex flex-column mt-2" v-if="agencies.filter(agency => agency.roles.includes('agent')).length > 0">
@@ -28,9 +28,9 @@
 export default {
   computed: {
     agencies() {
-      return this.$root.graph.loading
+      return this.$vgraph.loading
         ? []
-        : this.$root.graph.me.agenciesConnection.edges.map(edge => ({
+        : this.$vgraph.me.agenciesConnection.edges.map(edge => ({
             ...edge.node,
             roles: edge.roles
           }));

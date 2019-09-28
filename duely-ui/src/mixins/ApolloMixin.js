@@ -6,6 +6,7 @@ export default {
     return {
       watchQuery: null,
       graph: {
+        ready: Promise.resolve(),
         loading: true,
         error: null
       }
@@ -34,7 +35,7 @@ export default {
     ];
 
     try {
-      await observable.result;
+      await (this.graph.ready = observable.result);
     } catch (e) {
       this.graph.error = e;
       this.graph.loading = false;

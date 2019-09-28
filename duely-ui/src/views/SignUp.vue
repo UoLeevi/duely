@@ -106,8 +106,8 @@ export default {
     return {
       step: 1,
       data: {
-        emailAddress: decodeURIComponent(this.$route.query.emailAddress || ''),
-        name: '',
+        emailAddress: decodeURIComponent(this.$route.query.email || ''),
+        name: decodeURIComponent(this.$route.query.name || ''),
         password: '',
         verificationCode: '',
         acceptTermsAndConditions: false
@@ -147,13 +147,6 @@ export default {
       terms: false,
       conditions: false
     };
-  },
-  watch: {
-    ['data.emailAddress'](val) {
-      this.$router.push({
-        query: { ...this.$route.query, email: encodeURIComponent(val) }
-      });
-    }
   },
   methods: {
     async submitSignUpStep1() {
@@ -272,6 +265,18 @@ export default {
                         uuid
                         name
                       }
+                      subjectsConnection {
+                        edges {
+                          cursor
+                          roles
+                          node {
+                            uuid
+                            name
+                            type
+                            emailAddress
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -287,7 +292,10 @@ export default {
 
       this.forms.logIn.loading = false;
     }
-  }
+  },
+  created() {
+    this.removeQueryParameters('email', 'name');
+  },
 };
 </script>
 

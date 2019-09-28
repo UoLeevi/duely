@@ -22,7 +22,7 @@
             <v-btn depressed rounded color="primary" x-large class="body-1 text-none" type="submit" :loading="loading">Log in</v-btn>
             <v-spacer />
             <span>Don't have an account?</span>
-            <v-btn text depressed rounded small color="primary" class="body-2 ml-1 text-none" to="/create-account">Sign up</v-btn>
+            <v-btn text depressed rounded small color="primary" class="body-2 ml-1 text-none" :to="emailAddress ? `/create-account?email=${emailAddress}` : '/create-account'">Sign up</v-btn>
           </v-row>
         </v-form>
       </v-card-text>
@@ -37,7 +37,7 @@ export default {
   data() {
     return {
       dialog: false,
-      emailAddress: '',
+      emailAddress: decodeURIComponent(this.$route.query.login || ''),
       password: '',
       isPasswordVisible: false,
       rules: {
@@ -49,6 +49,11 @@ export default {
       errorMessage: null,
       loading: false
     };
+  },
+  async created() {
+    await this.$nextTick();
+    this.dialog = this.$route.query.login !== undefined
+    this.removeQueryParameters('login');
   },
   methods: {
     async submit() {
@@ -80,33 +85,6 @@ export default {
         if (jwt) {
           localStorage.setItem('user-jwt', jwt);
           await client.clearStore();
-          await client.query({
-            query: gql`
-              query {
-                me {
-                  uuid
-                  name
-                  emailAddress
-                  type
-                  agenciesConnection {
-                    edges {
-                      cursor
-                      roles
-                      node {
-                        uuid
-                        name
-                        subdomain {
-                          uuid
-                          name
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            `
-          });
-
           this.$router.push({ path: '/profile' });
         }
 

@@ -10,7 +10,7 @@ import ProfileCreateAgency from '@/views/ProfileCreateAgency.vue';
 
 Vue.use(Router)
 
-export default new Router({
+const router = new Router({
   mode: 'history',
   base: process.env.BASE_URL,
   routes: [
@@ -42,7 +42,17 @@ export default new Router({
           path: 'create-agency',
           component: ProfileCreateAgency
         }
-      ]
+      ],
+      async beforeEnter(to, from, next) {
+        await router.app.$vgraph.ready;
+
+        if (router.app.$vgraph.me.type === 'user')
+          next();
+        else
+          next('?login');
+      }
     }
   ]
 })
+
+export default router;

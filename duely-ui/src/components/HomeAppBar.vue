@@ -6,8 +6,8 @@
       <v-col align="center"></v-col>
       <v-col cols="auto" align="right">
         <v-fade-transition mode="out-in">
-          <v-progress-circular v-if="loading || $root.graph.loading || !$root.graph.me" indeterminate />
-          <div v-else-if="$root.graph.me.type === 'user'" key="log-out">
+          <v-progress-circular v-if="loading || $vgraph.loading || !$vgraph.me" indeterminate />
+          <div v-else-if="$root.isLoggedIn" key="log-out">
             <v-btn @click="logOut" rounded text class="text-none mr-1" :color="textColor">Log out</v-btn>
             <v-btn to="/profile" rounded outlined class="text-none ml-1" :color="textColor">Go to profile</v-btn>
           </div>

@@ -57,11 +57,23 @@ Vutil.install = function(Vue) {
       adjustSize(xl, factor = 1.0) {
         if (this.$vuetify.breakpoint.name === 'xl')
           return xl;
-  
+
         if (this.$vuetify.breakpoint.name === 'lg')
           return (xl + xl * this.$vuetify.breakpoint.thresholds.md / this.$vuetify.breakpoint.thresholds.lg) / 2;
-  
+
         return xl * (1 - ((1 - this.$vuetify.breakpoint.thresholds[this.$vuetify.breakpoint.name] / this.$vuetify.breakpoint.thresholds.lg) * factor));
+      },
+      removeQueryParameters(...keys) {
+        if (Object.keys(this.$route.query).length === 0)
+          return;
+
+        const query = Object.assign({}, this.$route.query);
+
+        for (const key of keys)
+          delete query[key];
+
+        if (Object.keys(query).length !== Object.keys(this.$route.query).length)
+          this.$router.replace({ query });
       }
     }
   });
