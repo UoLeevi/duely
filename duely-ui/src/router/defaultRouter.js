@@ -23,6 +23,14 @@ const router = new Router({
       component: SignUp
     },
     {
+      path: '/dashboard',
+      beforeEnter(to) {
+        location.href = process.env.NODE_ENV === 'production'
+          ? `https://${to.query.subdomain}.duely.app/dashboard`
+          : `${window.location.origin}/dashboard?subdomain=${to.query.subdomain}`;
+      }
+    },
+    {
       path: '/profile',
       component: Profile,
       children: [

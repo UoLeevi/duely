@@ -9,14 +9,29 @@ import '@/layouts';
 import '@/registerServiceWorker';
 
 Vue.config.productionTip = false;
+let router;
+
+if (process.env.NODE_ENV === 'production') {
+  router = window.location.hostname.slice(-10).toLowerCase() === '.duely.app'
+    ? subdomainRouter
+    : defaultRouter;
+} else {
+  const queryParams = new URLSearchParams(window.location.search);
+  router = queryParams.has('subdomain')
+    ? subdomainRouter
+    : defaultRouter;
+
+  // router.afterEach((to, from) => {
+  //   if (to.query.subdomain !== from.query.subdomain)
+  //     window.location.reload(true);
+  // });
+}
 
 new Vue({
   vgraph,
   vuetify,
   vutil,
-  router: window.location.hostname.slice(-10).toLowerCase() === '.duely.app'
-    ? subdomainRouter
-    : defaultRouter,
+  router,
   render: h => h(App),
   computed: {
     isLoggedIn() {

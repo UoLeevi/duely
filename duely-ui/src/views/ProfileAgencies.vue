@@ -9,7 +9,7 @@
           <v-card v-for="agency in agencies.filter(agency => agency.roles.includes('agent'))" :key="agency.uuid" color="red" dark flat class="rounded-corners-small pa-1 ma-1">
             <v-card-text class="white--text">
               <h3 class="f-3b pb-1">{{ agency.name }}</h3>
-              <span class="f-2b red--text text--lighten-3">{{ agency.subdomain.name }}.duely.app</span>
+              <router-link :to="`/dashboard?subdomain=${agency.subdomain.name}`" ><span class="f-2b red--text text--lighten-3">{{ agency.subdomain.name }}.duely.app</span></router-link>
             </v-card-text>
 
             <v-card-actions>

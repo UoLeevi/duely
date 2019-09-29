@@ -1,10 +1,10 @@
 <template>
-  <router-link :to="to" class="btn-square d-flex flex-column align-center my-4" :class="{ selected, notification }" :style="{ 'width': `${adjustSize(128, 0.5)}px` }">
-    <v-avatar class="rounded-corners-small" :color="color" :style="{ 'color': colorHex(color) }" :size="adjustSize(64, 0.7)">
+  <router-link :to="to" class="btn-square d-flex flex-column align-center my-4" :class="{ selected, notification }" :style="{ 'width': `${adjustSize(small ? 64 : 128, small ? 0.2 : 0.5)}px` }">
+    <v-avatar class="rounded-corners-small" :color="color" :style="{ 'color': colorHex(color) }" :size="adjustSize(small ? 48 : 64, small ? 0.5 : 0.7)">
       <v-icon v-if="icon" color="white">{{ icon }}</v-icon>
-      <span v-else class="white--text headline">{{ text[0] }}</span>
+      <span v-else class="white--text f-5">{{ text[0] }}</span>
     </v-avatar>
-    <span class="f-2 pt-4">{{ text }}</span>
+    <span :class="small ? 'f-1 pt-3' : 'f-2 pt-4'">{{ text }}</span>
   </router-link>
 </template>
 <script>
@@ -14,6 +14,7 @@ export default {
       type: String,
       default: '/'
     },
+    small: Boolean,
     color: String,
     icon: String,
     text: String,

@@ -1,7 +1,7 @@
 <template>
-  <HomeLayout>
-    
-  </HomeLayout>
+  <div>
+
+  </div>
 </template>
 
 <script>
