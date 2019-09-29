@@ -18,9 +18,14 @@ const router = new Router({
     {
       path: '/profile',
       beforeEnter() {
-        location.href = process.env.NODE_ENV === 'production'
-          ? 'https://duely.app/profile'
-          : `${window.location.origin}/profile`;
+        const access_token = localStorage.getItem('user-jwt');
+
+        if (access_token)
+          location.href = process.env.NODE_ENV === 'production'
+            ? `https://duely.app/profile?access_token=${access_token}`
+            : `${window.location.origin}/profile`;
+        else
+          next('/');
       }
     },
     {

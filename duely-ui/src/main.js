@@ -20,11 +20,6 @@ if (process.env.NODE_ENV === 'production') {
   router = queryParams.has('subdomain')
     ? subdomainRouter
     : defaultRouter;
-
-  // router.afterEach((to, from) => {
-  //   if (to.query.subdomain !== from.query.subdomain)
-  //     window.location.reload(true);
-  // });
 }
 
 new Vue({

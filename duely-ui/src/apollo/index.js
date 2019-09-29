@@ -10,6 +10,18 @@ import gql from 'graphql-tag';
 import defaults from './defaults';
 import resolvers from './resolvers';
 
+
+// Get access token from url query string and replace history entry
+const url = new URL(window.location.href)
+const access_token = url.searchParams.get('access_token');
+
+if (access_token) {
+  localStorage.setItem('user-jwt', access_token);
+  url.searchParams.delete('access_token');
+  window.history.replaceState(window.history.state, document.title, url.toString());
+}
+
+
 const cache = new InMemoryCache({
   dataIdFromObject: object => object.uuid || null
 });

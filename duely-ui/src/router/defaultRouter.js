@@ -25,9 +25,14 @@ const router = new Router({
     {
       path: '/dashboard',
       beforeEnter(to) {
-        location.href = process.env.NODE_ENV === 'production'
-          ? `https://${to.query.subdomain}.duely.app/dashboard`
-          : `${window.location.origin}/dashboard?subdomain=${to.query.subdomain}`;
+        const access_token = localStorage.getItem('user-jwt');
+
+        if (access_token)
+          location.href = process.env.NODE_ENV === 'production'
+            ? `https://${to.query.subdomain}.duely.app/dashboard?access_token=${access_token}`
+            : `${window.location.origin}/dashboard?subdomain=${to.query.subdomain}`;
+        else
+          next('/');
       }
     },
     {
