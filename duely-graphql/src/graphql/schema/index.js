@@ -1,5 +1,7 @@
 import { makeExecutableSchema } from 'graphql-tools';
 import Agency from './Agency';
+import AgencyServicesConnection from './AgencyServicesConnection';
+import AgencyServicesEdge from './AgencyServicesEdge';
 import AgencySubjectsConnection from './AgencySubjectsConnection';
 import AgencySubjectsEdge from './AgencySubjectsEdge';
 import BeginVisitResult from './BeginVisitResult';
@@ -15,6 +17,7 @@ import Mutation from './Mutation';
 import MutationResult from './MutationResult';
 import Node from './Node';
 import Query from './Query';
+import Service from './Service';
 import SignUpResult from './SignUpResult';
 import StartEmailAddressVerificationResult from './StartEmailAddressVerificationResult';
 import Subdomain from './Subdomain';
@@ -25,6 +28,8 @@ import SubjectAgenciesEdge from './SubjectAgenciesEdge';
 
 export default makeExecutableSchema([
   Agency,
+  AgencyServicesConnection,
+  AgencyServicesEdge,
   AgencySubjectsConnection,
   AgencySubjectsEdge,
   BeginVisitResult,
@@ -40,6 +45,7 @@ export default makeExecutableSchema([
   MutationResult,
   Node,
   Query,
+  Service,
   SignUpResult,
   StartEmailAddressVerificationResult,
   Subdomain,

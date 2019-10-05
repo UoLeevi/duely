@@ -7,7 +7,8 @@ export default {
       uuid: ID!
       name: String!
       subdomain: Subdomain!
-      subjectsConnection: AgencySubjectsConnection
+      subjectsConnection: AgencySubjectsConnection!
+      servicesConnection: AgencyServicesConnection!
     }
   `,
   resolvers: {
@@ -34,7 +35,13 @@ export default {
       subjectsConnection(agency, args, context, info) {
         return { 
           agencyUuid: agency.uuid_,
-          type: 'AgencySubjectsConnection' 
+          type: 'AgencySubjectsConnection'
+        };
+      },
+      servicesConnection(agency, args, context, info) {
+        return { 
+          agencyUuid: agency.uuid_,
+          type: 'AgencyServicesConnection'
         };
       }
     }

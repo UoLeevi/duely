@@ -34,6 +34,19 @@ Vue.use(Vgraph, {
                     }
                   }
                 }
+                servicesConnection {
+                  edges {
+                    cursor
+                    node {
+                      uuid
+                      name
+                      agency {
+                        uuid
+                        name
+                      }
+                    }
+                  }
+                }
               }
             }
           }

@@ -989,14 +989,14 @@ ALTER FUNCTION operation_.query_agency_user_(_agency_uuid uuid) OWNER TO postgre
 -- Name: query_service_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_service_(_agency_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text)
+CREATE FUNCTION operation_.query_service_(_agency_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
   PERFORM security_.control_operation_('query_service_', _agency_uuid);
 
   RETURN QUERY
-  SELECT s.uuid_, s.name_
+  SELECT s.uuid_, s.name_, s.agency_uuid_
   FROM application_.service_ s
   WHERE s.agency_uuid_ = _agency_uuid;
 

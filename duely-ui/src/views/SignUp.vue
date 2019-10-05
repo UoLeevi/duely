@@ -246,45 +246,6 @@ export default {
       if (jwt) {
         localStorage.setItem('user-jwt', jwt);
         await client.clearStore();
-        await client.query({
-          query: gql`
-            query {
-              me {
-                uuid
-                name
-                emailAddress
-                type
-                agenciesConnection {
-                  edges {
-                    cursor
-                    roles
-                    node {
-                      uuid
-                      name
-                      subdomain {
-                        uuid
-                        name
-                      }
-                      subjectsConnection {
-                        edges {
-                          cursor
-                          roles
-                          node {
-                            uuid
-                            name
-                            type
-                            emailAddress
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          `
-        });
-
         this.$router.push({ path: '/profile' });
       }
       else
