@@ -3,7 +3,10 @@ import Router from 'vue-router'
 import AgencyHome from '@/views/AgencyHome.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import DashboardHome from '@/views/DashboardHome.vue'
-import DashboardUsers from '@/views/DashboardUsers.vue'
+import DashboardPayments from '@/views/DashboardPayments.vue'
+import DashboardServices from '@/views/DashboardServices.vue'
+import DashboardServicesPanel from '@/views/DashboardServicesPanel.vue'
+import DashboardCompany from '@/views/DashboardCompany.vue'
 
 Vue.use(Router)
 
@@ -17,7 +20,7 @@ const router = new Router({
     },
     {
       path: '/profile',
-      beforeEnter() {
+      beforeEnter(to, from, next) {
         const access_token = localStorage.getItem('user-jwt');
 
         if (access_token)
@@ -37,8 +40,19 @@ const router = new Router({
           component: DashboardHome
         },
         {
-          path: 'users',
-          component: DashboardUsers
+          path: 'payments',
+          component: DashboardPayments
+        },
+        {
+          path: 'services',
+          components: {
+            default: DashboardServices,
+            panel: DashboardServicesPanel
+          }
+        },
+        {
+          path: 'company',
+          component: DashboardCompany
         }
       ],
       async beforeEnter(to, from, next) {

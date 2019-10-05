@@ -59,7 +59,7 @@ Vutil.install = function(Vue) {
           return xl;
 
         if (this.$vuetify.breakpoint.name === 'lg')
-          return (xl + xl * this.$vuetify.breakpoint.thresholds.md / this.$vuetify.breakpoint.thresholds.lg) / 2;
+          return (xl + xl * (1 - ((1 - this.$vuetify.breakpoint.thresholds.md / this.$vuetify.breakpoint.thresholds.lg) * factor))) / 2;
 
         return xl * (1 - ((1 - this.$vuetify.breakpoint.thresholds[this.$vuetify.breakpoint.name] / this.$vuetify.breakpoint.thresholds.lg) * factor));
       },

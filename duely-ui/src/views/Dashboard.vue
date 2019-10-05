@@ -8,6 +8,11 @@
     <v-fade-transition mode="out-in">
       <router-view />
     </v-fade-transition>
+    <v-navigation-drawer :value="true" app floating stateless right :width="adjustSize(600, 0.3)" class="justify-center d-flex flex-column pa-5" color="grey lighten-5">
+      <v-fade-transition mode="out-in">
+      <router-view name="panel" />
+    </v-fade-transition>
+    </v-navigation-drawer>
   </DashboardLayout>
 </template>
 
@@ -23,19 +28,31 @@ export default {
       items: [
         {
           to: '/dashboard',
-          color: 'blue',
+          color: 'grey darken-3',
           text: 'Dashboard',
           icon: 'home'
         },
         {
-          to: '/dashboard/users',
-          color: 'green',
-          text: 'Users',
+          to: '/dashboard/services',
+          color: 'grey darken-3',
+          text: 'Services',
+          icon: 'business_center'
+        },
+        {
+          to: '/dashboard/payments',
+          color: 'grey darken-3',
+          text: 'Payments',
+          icon: 'attach_money'
+        },
+        {
+          to: '/dashboard/company',
+          color: 'grey darken-3',
+          text: 'Company',
           icon: 'group'
         },
         {
           to: '/profile',
-          color: 'lily-blue',
+          color: 'grey darken-3',
           text: 'Profile',
           icon: 'person'
         }

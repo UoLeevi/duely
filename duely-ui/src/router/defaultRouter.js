@@ -24,7 +24,7 @@ const router = new Router({
     },
     {
       path: '/dashboard',
-      beforeEnter(to) {
+      beforeEnter(to, from, next) {
         const access_token = localStorage.getItem('user-jwt');
 
         if (access_token)

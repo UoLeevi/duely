@@ -1,7 +1,7 @@
 <template>
   <router-link :to="to" class="btn-square d-flex flex-column align-center my-4" :class="{ selected, notification }" :style="{ 'width': `${adjustSize(small ? 64 : 128, small ? 0.2 : 0.5)}px` }">
     <v-avatar class="rounded-corners-small" :color="color" :style="{ 'color': colorHex(color) }" :size="adjustSize(small ? 48 : 64, small ? 0.5 : 0.7)">
-      <v-icon v-if="icon" color="white">{{ icon }}</v-icon>
+      <v-icon v-if="icon" :color="iconColor">{{ icon }}</v-icon>
       <span v-else class="white--text f-5">{{ text[0] }}</span>
     </v-avatar>
     <span :class="small ? 'f-1 pt-3' : 'f-2 pt-4'">{{ text }}</span>
@@ -15,7 +15,14 @@ export default {
       default: '/'
     },
     small: Boolean,
-    color: String,
+    color: {
+      type: String,
+      default: 'white'
+    },
+    iconColor: {
+      type: String,
+      default: 'white'
+    },
     icon: String,
     text: String,
     selected: Boolean,
