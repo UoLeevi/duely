@@ -960,6 +960,29 @@ $$;
 ALTER FUNCTION operation_.query_agency_(_agency_uuid uuid) OWNER TO postgres;
 
 --
+-- Name: query_agency_by_subdomain_name_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_agency_by_subdomain_name_(_subdomain_name text) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, name_ text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  PERFORM security_.control_operation_('query_agency_by_subdomain_name_', _subdomain_name);
+
+  RETURN QUERY
+  SELECT a.uuid_, a.subdomain_uuid_, a.name_
+  FROM application_.agency_ a
+  JOIN security_.subdomain_ d ON d.uuid_ = a.subdomain_uuid_
+  WHERE d.subdomain_.name_ = _subdomain_name
+  GROUP BY a.uuid_, a.subdomain_uuid_, a.name_;
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_agency_by_subdomain_name_(_subdomain_name text) OWNER TO postgres;
+
+--
 -- Name: query_agency_user_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -2015,6 +2038,7 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+3ae8d981-be1f-4843-bc41-df24bc904e5d	query_agency_by_subdomain_name_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2042,6 +2066,7 @@ fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-
 630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_can_accept_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 1b902618-8a68-4c0d-b05e-6bda782c5f30	agent_in_agency_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 75294233-ed0a-4b6a-8903-f206daf0af67	logged_in_	3f020478-e3a3-4674-932d-8b922c17b91b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc41-df24bc904e5d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2091,6 +2116,7 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+3ae8d981-be1f-4843-bc41-df24bc904e5d	query_agency_by_subdomain_name_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2118,6 +2144,7 @@ fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-
 630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_can_accept_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 1b902618-8a68-4c0d-b05e-6bda782c5f30	agent_in_agency_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 75294233-ed0a-4b6a-8903-f206daf0af67	logged_in_	3f020478-e3a3-4674-932d-8b922c17b91b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc41-df24bc904e5d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
