@@ -973,7 +973,7 @@ BEGIN
   SELECT a.uuid_, a.subdomain_uuid_, a.name_
   FROM application_.agency_ a
   JOIN security_.subdomain_ d ON d.uuid_ = a.subdomain_uuid_
-  WHERE d.subdomain_.name_ = _subdomain_name
+  WHERE d.name_ = _subdomain_name
   GROUP BY a.uuid_, a.subdomain_uuid_, a.name_;
 
 END
