@@ -6,6 +6,7 @@ export default {
     type Service implements Node {
       uuid: ID!
       name: String!
+      status: String!
       agency: Agency!
     }
   `,
@@ -13,6 +14,7 @@ export default {
     Service: {
       uuid: service => service.uuid_,
       name: service => service.name_,
+      status: service => service.status_,
       async agency(service, args, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');

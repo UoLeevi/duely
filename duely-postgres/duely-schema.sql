@@ -446,8 +446,10 @@ CREATE FUNCTION operation_.accept_user_invite_(_invite_uuid uuid) RETURNS applic
 DECLARE
   _invitee_uuid uuid;
   _user_invite application_.user_invite_;
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('accept_user_invite_', _invite_uuid);
+  SELECT _invite_uuid invite_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('accept_user_invite_', _arg);
 
   IF NOT EXISTS (
     SELECT s.uuid_ INTO _invitee_uuid
@@ -610,8 +612,10 @@ CREATE FUNCTION operation_.create_agency_(_name text, _subdomain_name text) RETU
 DECLARE
   _subdomain_uuid uuid;
   _agency application_.agency_;
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('create_agency_', ARRAY[_name, _subdomain_name]);
+  SELECT _name agency_name_, _subdomain_name subdomain_name_ INTO _arg; 
+  PERFORM security_.control_operation_('create_agency_', _arg);
 
   INSERT INTO security_.subdomain_ (name_)
   VALUES (_subdomain_name)
@@ -641,6 +645,7 @@ CREATE TABLE application_.service_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     agency_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
+    status_ text DEFAULT 'draft'::text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -657,8 +662,10 @@ CREATE FUNCTION operation_.create_service_(_name text, _agency_uuid uuid) RETURN
     AS $$
 DECLARE
   _service application_.service_;
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('create_service_', _agency_uuid);
+  SELECT _agency_uuid agency_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('create_service_', _arg);
 
   INSERT INTO application_.service_ (agency_uuid_, name_)
   VALUES (_agency_uuid, _name)
@@ -680,8 +687,10 @@ CREATE FUNCTION operation_.delete_agency_(_agency_uuid uuid) RETURNS application
     AS $$
 DECLARE
   _agency application_.agency_;
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('delete_agency_', _agency_uuid);
+  SELECT _agency_uuid agency_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('delete_agency_', _arg);
 
   DELETE FROM application_.agency_
   WHERE uuid_ = _agency_uuid
@@ -706,8 +715,10 @@ CREATE FUNCTION operation_.delete_service_(_service_uuid uuid) RETURNS applicati
     AS $$
 DECLARE
   _service application_.service_;
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('delete_service_', _service_uuid);
+  SELECT _service_uuid service_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('delete_service_', _arg);
 
   DELETE FROM application_.service_
   WHERE name_ = _name
@@ -806,8 +817,10 @@ CREATE FUNCTION operation_.invite_user_(_agency_uuid uuid, _email_address text, 
     AS $$
 DECLARE
   _user_invite application_.user_invite_;
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('invite_user_', ARRAY[_agency_uuid, _email_address, _role_name]);
+  SELECT _agency_uuid agency_uuid_, _email_address email_address_, _role_name role_name_ INTO _arg; 
+  PERFORM security_.control_operation_('invite_user_', _arg);
 
   IF EXISTS (
       SELECT 1
@@ -843,17 +856,19 @@ CREATE FUNCTION operation_.log_in_user_(_email_address text, _password text) RET
 DECLARE
   _uuid uuid := pgcrypto_.gen_random_uuid();
   _iat bigint := FLOOR(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP));
-  _user_uuid uuid;
+  _subject_uuid uuid;
   _secret bytea;
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('log_in_user_');
+  SELECT _email_address email_address_ INTO _arg; 
+  PERFORM security_.control_operation_('log_in_user_', _arg);
 
-  SELECT u.uuid_ INTO _user_uuid
+  SELECT u.uuid_ INTO _subject_uuid
   FROM security_.user_ u
   WHERE u.email_address_ = _email_address
     AND u.password_hash_ = pgcrypto_.crypt(_password, u.password_hash_);
 
-  IF _user_uuid IS NULL THEN
+  IF _subject_uuid IS NULL THEN
     RAISE 'Email address and password do not match.' USING ERRCODE = '20000';
   END IF;
 
@@ -866,13 +881,13 @@ BEGIN
   END IF;
 
   INSERT INTO security_.token_ (uuid_, subject_uuid_)
-  VALUES (_uuid, _user_uuid);
+  VALUES (_uuid, _subject_uuid);
 
   RETURN 
     internal_.jwt_sign_hs256_(
       json_build_object(
         'iss', 'duely.app',
-        'sub', _user_uuid,
+        'sub', _subject_uuid,
         'jti', _uuid,
         'iat', _iat
       ),
@@ -943,15 +958,17 @@ ALTER FUNCTION operation_.query_active_subject_() OWNER TO postgres;
 CREATE FUNCTION operation_.query_agency_(_agency_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, name_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
+DECLARE
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('query_agency_', _agency_uuid);
+  SELECT _agency_uuid agency_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('query_agency_', _arg);
 
   RETURN QUERY
   SELECT a.uuid_, a.subdomain_uuid_, a.name_
   FROM application_.agency_ a
   WHERE _agency_uuid IS NULL 
-     OR _agency_uuid IS NOT DISTINCT FROM a.uuid_
-  GROUP BY a.uuid_, a.subdomain_uuid_, a.name_;
+     OR _agency_uuid IS NOT DISTINCT FROM a.uuid_;
 
 END
 $$;
@@ -966,8 +983,11 @@ ALTER FUNCTION operation_.query_agency_(_agency_uuid uuid) OWNER TO postgres;
 CREATE FUNCTION operation_.query_agency_by_subdomain_name_(_subdomain_name text) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, name_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
+DECLARE
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('query_agency_by_subdomain_name_', _subdomain_name);
+  SELECT _subdomain_name subdomain_name_ INTO _arg; 
+  PERFORM security_.control_operation_('query_agency_by_subdomain_name_', _arg);
 
   RETURN QUERY
   SELECT a.uuid_, a.subdomain_uuid_, a.name_
@@ -989,8 +1009,11 @@ ALTER FUNCTION operation_.query_agency_by_subdomain_name_(_subdomain_name text) 
 CREATE FUNCTION operation_.query_agency_user_(_agency_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text, type_ text, role_names_ text[])
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
+DECLARE
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('query_agency_user_', _agency_uuid);
+  SELECT _agency_uuid agency_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('query_agency_user_', _arg);
 
   RETURN QUERY
   SELECT s.uuid_, s.name_, u.email_address_, s.type_, array_remove(array_agg(r.name_), NULL) role_names_
@@ -1009,35 +1032,44 @@ $$;
 ALTER FUNCTION operation_.query_agency_user_(_agency_uuid uuid) OWNER TO postgres;
 
 --
--- Name: query_service_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: query_service_(uuid, text[]); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_service_(_agency_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid)
+CREATE FUNCTION operation_.query_service_(_agency_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
+DECLARE
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('query_service_', _agency_uuid);
+  SELECT _agency_uuid agency_uuid_, _status service_status_ INTO _arg; 
+  PERFORM security_.control_operation_('query_service_', _arg);
 
   RETURN QUERY
-  SELECT s.uuid_, s.name_, s.agency_uuid_
+  SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_
   FROM application_.service_ s
-  WHERE s.agency_uuid_ = _agency_uuid;
+  WHERE s.agency_uuid_ = _agency_uuid
+    AND (_status IS NULL 
+     OR s.status_ = ANY (COALESCE(_status, '{}'::text[])));
 
 END
 $$;
 
 
-ALTER FUNCTION operation_.query_service_(_agency_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION operation_.query_service_(_agency_uuid uuid, _status text[]) OWNER TO postgres;
 
 --
 -- Name: query_shared_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_shared_agency_(_user_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, subdomain_uuid_ uuid, role_names_ text[])
+CREATE FUNCTION operation_.query_shared_agency_(_subject_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, subdomain_uuid_ uuid, role_names_ text[])
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
+DECLARE
+  _arg RECORD;
+  _info RECORD;
 BEGIN
-  PERFORM security_.control_operation_('query_shared_agency_', _user_uuid);
+  SELECT _subject_uuid subject_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('query_shared_agency_', _arg);
 
   RETURN QUERY
   SELECT a.uuid_, a.name_, a.subdomain_uuid_, array_remove(array_agg(r.name_), NULL) role_names_
@@ -1045,35 +1077,41 @@ BEGIN
   LEFT JOIN security_.subject_assignment_flat_ sa ON u.uuid_ = sa.subject_uuid_
   LEFT JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
   LEFT JOIN application_.agency_ a ON a.subdomain_uuid_ = sa.subdomain_uuid_
-  WHERE u.uuid_ = _user_uuid
-    AND policy_.agent_in_agency_(a.uuid_)
+  LEFT JOIN security_.active_role_ ar ON a.subdomain_uuid_ = ar.subdomain_uuid_
+  WHERE u.uuid_ = _subject_uuid
+    AND ar.name_ = 'agent'
   GROUP BY a.uuid_, a.name_, a.subdomain_uuid_;
 
 END
 $$;
 
 
-ALTER FUNCTION operation_.query_shared_agency_(_user_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION operation_.query_shared_agency_(_subject_uuid uuid) OWNER TO postgres;
 
 --
--- Name: query_subdomain_(); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: query_subdomain_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_subdomain_() RETURNS TABLE(uuid_ uuid, name_ text)
+CREATE FUNCTION operation_.query_subdomain_(_subdomain_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
+DECLARE
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('query_subdomain_');
+  SELECT _subdomain_uuid subdomain_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('query_subdomain_', _arg);
 
   RETURN QUERY
   SELECT d.uuid_, d.name_
-  FROM security_.subdomain_ d;
+  FROM security_.subdomain_ d
+  WHERE _subdomain_uuid IS NULL 
+     OR _subdomain_uuid IS NOT DISTINCT FROM d.uuid_;
 
 END
 $$;
 
 
-ALTER FUNCTION operation_.query_subdomain_() OWNER TO postgres;
+ALTER FUNCTION operation_.query_subdomain_(_subdomain_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: query_user_(); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1082,6 +1120,8 @@ ALTER FUNCTION operation_.query_subdomain_() OWNER TO postgres;
 CREATE FUNCTION operation_.query_user_() RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
+DECLARE
+  _arg RECORD;
 BEGIN
   PERFORM security_.control_operation_('query_user_');
 
@@ -1100,13 +1140,15 @@ ALTER FUNCTION operation_.query_user_() OWNER TO postgres;
 -- Name: remove_user_from_agency_(uuid, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.remove_user_from_agency_(_agency_uuid uuid, _user_uuid uuid) RETURNS bigint
+CREATE FUNCTION operation_.remove_user_from_agency_(_agency_uuid uuid, _subject_uuid uuid) RETURNS bigint
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
   _count bigint;
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('remove_user_from_agency_', ARRAY[_agency_uuid, _user_uuid]);
+  SELECT _agency_uuid agency_uuid_, _subdomain_uuid subdomain_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('remove_user_from_agency_', _arg);
 
   WITH
     _deleted_sa AS (
@@ -1114,14 +1156,14 @@ BEGIN
       USING application_.agency_ a
       WHERE a.subdomain_uuid_ = sa.subdomain_uuid_
         AND a.uuid_ = _agency_uuid
-        AND sa.subject_uuid_ = _user_uuid
+        AND sa.subject_uuid_ = _subject_uuid
       RETURNING *
     ),
     _deleted_ui AS (
       DELETE FROM application_.user_invite_ ui
       USING security_.subject_ s
       WHERE ui.agency_uuid_ = _agency_uuid
-        AND s.subject_uuid_ = _user_uuid
+        AND s.subject_uuid_ = _subject_uuid
         AND s.email_address_ = ui.invitee_email_address_
       RETURNING *
     )
@@ -1132,7 +1174,7 @@ END
 $$;
 
 
-ALTER FUNCTION operation_.remove_user_from_agency_(_agency_uuid uuid, _user_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION operation_.remove_user_from_agency_(_agency_uuid uuid, _subject_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
@@ -1244,12 +1286,12 @@ $$;
 ALTER FUNCTION operation_.start_email_address_verification_(_email_address text) OWNER TO postgres;
 
 --
--- Name: agent_in_agency_(uuid); Type: FUNCTION; Schema: policy_; Owner: postgres
+-- Name: agent_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
-CREATE FUNCTION policy_.agent_in_agency_(_agency_uuid uuid) RETURNS boolean
+CREATE FUNCTION policy_.agent_in_agency_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
+    AS $$ 
 BEGIN 
   RETURN
     EXISTS (
@@ -1257,13 +1299,13 @@ BEGIN
       FROM security_.active_role_ r
       JOIN application_.agency_ a ON a.subdomain_uuid_ = r.subdomain_uuid_
       WHERE r.name_ = 'agent'
-        AND a.uuid_ = _agency_uuid
+        AND a.uuid_ = _arg.agency_uuid_
     );
 END
-$$;
+ $$;
 
 
-ALTER FUNCTION policy_.agent_in_agency_(_agency_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION policy_.agent_in_agency_(_arg anyelement) OWNER TO postgres;
 
 --
 -- Name: argument_is_not_null_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -1283,10 +1325,10 @@ END
 ALTER FUNCTION policy_.argument_is_not_null_(_arg anyelement) OWNER TO postgres;
 
 --
--- Name: invitee_can_accept_(uuid); Type: FUNCTION; Schema: policy_; Owner: postgres
+-- Name: invitee_can_accept_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
-CREATE FUNCTION policy_.invitee_can_accept_(_invite_uuid uuid DEFAULT NULL::uuid) RETURNS boolean
+CREATE FUNCTION policy_.invitee_can_accept_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$ 
 BEGIN 
@@ -1295,13 +1337,30 @@ BEGIN
       SELECT 1
       FROM security_.active_subject_ s
       JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
-      WHERE ui.uuid_ = _invite_uuid
+      WHERE ui.uuid_ = _arg.invite_uuid_
     );
 END
  $$;
 
 
-ALTER FUNCTION policy_.invitee_can_accept_(_invite_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION policy_.invitee_can_accept_(_arg anyelement) OWNER TO postgres;
+
+--
+-- Name: live_services_are_public(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.live_services_are_public(_arg anyelement DEFAULT NULL::unknown) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$ 
+BEGIN
+  RETURN (
+    SELECT _arg.service_status_ IS NOT NULL AND 'live' = ALL (_arg.service_status_) AND 'live' = ANY (_arg.service_status_)
+  );
+END
+ $$;
+
+
+ALTER FUNCTION policy_.live_services_are_public(_arg anyelement) OWNER TO postgres;
 
 --
 -- Name: logged_in_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -1323,10 +1382,10 @@ END;
 ALTER FUNCTION policy_.logged_in_(_arg anyelement) OWNER TO postgres;
 
 --
--- Name: manager_in_agency_(uuid); Type: FUNCTION; Schema: policy_; Owner: postgres
+-- Name: manager_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
-CREATE FUNCTION policy_.manager_in_agency_(_agency_uuid uuid) RETURNS boolean
+CREATE FUNCTION policy_.manager_in_agency_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN 
@@ -1336,13 +1395,13 @@ BEGIN
       FROM security_.active_role_ r
       JOIN application_.agency_ a ON a.subdomain_uuid_ = r.subdomain_uuid_
       WHERE r.name_ = 'manager'
-        AND a.uuid_ = _agency_uuid
+        AND a.uuid_ = _arg.agency_uuid_
     );
 END
  $$;
 
 
-ALTER FUNCTION policy_.manager_in_agency_(_agency_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION policy_.manager_in_agency_(_arg anyelement) OWNER TO postgres;
 
 --
 -- Name: owner_can_invite_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -1351,10 +1410,6 @@ ALTER FUNCTION policy_.manager_in_agency_(_agency_uuid uuid) OWNER TO postgres;
 CREATE FUNCTION policy_.owner_can_invite_(_arg anyelement DEFAULT NULL::unknown) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$ 
-DECLARE
-  _agency_uuid uuid := _args[0];
-  _invitee_email_address uuid := _args[1];
-  _role_name text := _args[2];
 BEGIN 
   RETURN
     EXISTS (
@@ -1362,7 +1417,7 @@ BEGIN
       FROM security_.active_role_ r
       JOIN application_.agency_ a ON a.subdomain_uuid_ = r.subdomain_uuid_
       WHERE r.name_ = 'owner'
-        AND a.uuid_ = _agency_uuid
+        AND a.uuid_ = _arg.agency_uuid_
     );
 END
  $$;
@@ -1371,35 +1426,10 @@ END
 ALTER FUNCTION policy_.owner_can_invite_(_arg anyelement) OWNER TO postgres;
 
 --
--- Name: owner_can_remove_users_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
+-- Name: owner_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
-CREATE FUNCTION policy_.owner_can_remove_users_(_arg anyelement DEFAULT NULL::unknown) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$ 
-DECLARE
-  _agency_uuid uuid := _args[0];
-  _user_uuid uuid := _args[1];
-BEGIN 
-  RETURN
-    EXISTS (
-      SELECT 1
-      FROM security_.active_role_ r
-      JOIN application_.agency_ a ON a.subdomain_uuid_ = r.subdomain_uuid_
-      WHERE r.name_ = 'owner'
-        AND a.uuid_ = _agency_uuid
-    );
-END
- $$;
-
-
-ALTER FUNCTION policy_.owner_can_remove_users_(_arg anyelement) OWNER TO postgres;
-
---
--- Name: owner_in_agency_(uuid); Type: FUNCTION; Schema: policy_; Owner: postgres
---
-
-CREATE FUNCTION policy_.owner_in_agency_(_agency_uuid uuid) RETURNS boolean
+CREATE FUNCTION policy_.owner_in_agency_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN 
@@ -1409,24 +1439,21 @@ BEGIN
       FROM security_.active_role_ r
       JOIN application_.agency_ a ON a.subdomain_uuid_ = r.subdomain_uuid_
       WHERE r.name_ = 'owner'
-        AND a.uuid_ = _agency_uuid
+        AND a.uuid_ = _arg.agency_uuid_
     );
 END
 $$;
 
 
-ALTER FUNCTION policy_.owner_in_agency_(_agency_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION policy_.owner_in_agency_(_arg anyelement) OWNER TO postgres;
 
 --
 -- Name: users_can_remove_themselves_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
-CREATE FUNCTION policy_.users_can_remove_themselves_(_arg anyelement DEFAULT NULL::unknown) RETURNS boolean
+CREATE FUNCTION policy_.users_can_remove_themselves_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$ 
-DECLARE
-  _agency_uuid uuid := _args[0];
-  _user_uuid uuid := _args[1];
 BEGIN 
   RETURN
     EXISTS (
@@ -1434,8 +1461,8 @@ BEGIN
       FROM security_.subject_assgnment_flat sa
       JOIN security_.active_subject_ s ON s.uuid_ = sa.subject_uuid_
       JOIN application_.agency_ a ON a.subdomain_uuid_ = sa.subdomain_uuid_
-        AND a.uuid_ = _agency_uuid
-        AND s.uuid_ = _user_uuid
+        AND a.uuid_ = _arg.agency_uuid_
+        AND s.uuid_ = _arg.subject_uuid_
     );
 END
  $$;
@@ -1560,10 +1587,10 @@ CREATE TABLE security_.policy_assignment_ (
 ALTER TABLE security_.policy_assignment_ OWNER TO postgres;
 
 --
--- Name: implement_policy_allow_(text, text, text, text, regtype, anyelement); Type: FUNCTION; Schema: security_; Owner: postgres
+-- Name: implement_policy_allow_(text, text, text); Type: FUNCTION; Schema: security_; Owner: postgres
 --
 
-CREATE FUNCTION security_.implement_policy_allow_(_operation_name text, _policy_name text, _policy_function_body text DEFAULT NULL::text, _policy_function_arg_name text DEFAULT '_arg'::text, _policy_function_arg_type regtype DEFAULT 'anyelement'::regtype, _policy_function_arg_default anyelement DEFAULT NULL::text) RETURNS security_.policy_assignment_
+CREATE FUNCTION security_.implement_policy_allow_(_operation_name text, _policy_name text, _policy_function_body text DEFAULT NULL::text) RETURNS security_.policy_assignment_
     LANGUAGE plpgsql
     AS $_X$
 DECLARE
@@ -1574,14 +1601,14 @@ BEGIN
   IF _policy_function_body IS NOT NULL THEN
     EXECUTE format($__$
 
-      CREATE FUNCTION policy_.%1$I(%3$I %4$I DEFAULT %5$L) RETURNS boolean
+      CREATE FUNCTION policy_.%1$I(_arg anyelement DEFAULT NULL::text) RETURNS boolean
         LANGUAGE plpgsql SECURITY DEFINER
         AS $$ %2$s $$;
 
-      ALTER FUNCTION policy_.%1$I(_arg %4$I) OWNER TO postgres;
+      ALTER FUNCTION policy_.%1$I(_arg anyelement) OWNER TO postgres;
 
       $__$,
-      _policy_name, _policy_function_body, _policy_function_arg_name, _policy_function_arg_type, _policy_function_arg_default);
+      _policy_name, _policy_function_body);
   END IF;
 
   PERFORM format('policy_.%1$I', _policy_name)::regproc;
@@ -1605,13 +1632,13 @@ END
 $_X$;
 
 
-ALTER FUNCTION security_.implement_policy_allow_(_operation_name text, _policy_name text, _policy_function_body text, _policy_function_arg_name text, _policy_function_arg_type regtype, _policy_function_arg_default anyelement) OWNER TO postgres;
+ALTER FUNCTION security_.implement_policy_allow_(_operation_name text, _policy_name text, _policy_function_body text) OWNER TO postgres;
 
 --
--- Name: implement_policy_deny_(text, text, text, text, regtype, anyelement); Type: FUNCTION; Schema: security_; Owner: postgres
+-- Name: implement_policy_deny_(text, text, text); Type: FUNCTION; Schema: security_; Owner: postgres
 --
 
-CREATE FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_name text, _policy_function_body text DEFAULT NULL::text, _policy_function_arg_name text DEFAULT '_arg'::text, _policy_function_arg_type regtype DEFAULT 'anyelement'::regtype, _policy_function_arg_default anyelement DEFAULT NULL::text) RETURNS security_.policy_assignment_
+CREATE FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_name text, _policy_function_body text DEFAULT NULL::text) RETURNS security_.policy_assignment_
     LANGUAGE plpgsql
     AS $_X$
 DECLARE
@@ -1622,11 +1649,11 @@ BEGIN
   IF _policy_function_body IS NOT NULL THEN
     EXECUTE format($__$
 
-      CREATE FUNCTION policy_.%1$I(%3$I %4$I DEFAULT %5$L) RETURNS boolean
+      CREATE FUNCTION policy_.%1$I(_arg anyelement DEFAULT NULL::text) RETURNS boolean
         LANGUAGE plpgsql SECURITY DEFINER
         AS $$ %2$s $$;
 
-      ALTER FUNCTION policy_.%1$I(_arg %4$I) OWNER TO postgres;
+      ALTER FUNCTION policy_.%1$I(_arg anyelement) OWNER TO postgres;
 
       $__$,
       _policy_name, _policy_function_body, _policy_function_arg_name, _policy_function_arg_type, _policy_function_arg_default);
@@ -1653,7 +1680,7 @@ END
 $_X$;
 
 
-ALTER FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_name text, _policy_function_body text, _policy_function_arg_name text, _policy_function_arg_type regtype, _policy_function_arg_default anyelement) OWNER TO postgres;
+ALTER FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_name text, _policy_function_body text) OWNER TO postgres;
 
 --
 -- Name: agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -1679,6 +1706,7 @@ CREATE TABLE application__audit_.service_ (
     uuid_ uuid,
     agency_uuid_ uuid,
     name_ text,
+    status_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -2054,19 +2082,20 @@ e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984
 f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c291d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 914f28e8-076c-45cb-8042-f827bc6e59e2	logged_in_	a5acd829-bced-4d98-8c5c-8f29e14c8116	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 7488a3fd-0f68-4369-95c2-9293e3a4f80e	manager_in_agency_	fa4b4c5f-160f-413b-b77a-beee70108f0a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-f8e01162-7a10-4771-a540-d773a10b0498	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 2d1cde8a-54e7-4aa5-87ef-3f733cf3dde0	logged_in_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-12543ad5-113a-4b09-8174-774119fd999e	owner_can_invite_	89071731-bd21-4505-aab9-fd699c5fd12f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-991b0ec1-11b6-492e-a872-5b8aede7e5c3	owner_can_remove_users_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+12543ad5-113a-4b09-8174-774119fd999e	owner_in_agency_	89071731-bd21-4505-aab9-fd699c5fd12f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+991b0ec1-11b6-492e-a872-5b8aede7e5c3	owner_in_agency_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_can_accept_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 1b902618-8a68-4c0d-b05e-6bda782c5f30	agent_in_agency_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 75294233-ed0a-4b6a-8903-f206daf0af67	logged_in_	3f020478-e3a3-4674-932d-8b922c17b91b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc41-df24bc904e5d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+571601fd-1c3c-4d04-b37d-da9a66447025	argument_is_not_null_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2132,19 +2161,20 @@ e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984
 f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c291d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 914f28e8-076c-45cb-8042-f827bc6e59e2	logged_in_	a5acd829-bced-4d98-8c5c-8f29e14c8116	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 7488a3fd-0f68-4369-95c2-9293e3a4f80e	manager_in_agency_	fa4b4c5f-160f-413b-b77a-beee70108f0a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-f8e01162-7a10-4771-a540-d773a10b0498	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 2d1cde8a-54e7-4aa5-87ef-3f733cf3dde0	logged_in_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-12543ad5-113a-4b09-8174-774119fd999e	owner_can_invite_	89071731-bd21-4505-aab9-fd699c5fd12f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-991b0ec1-11b6-492e-a872-5b8aede7e5c3	owner_can_remove_users_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+12543ad5-113a-4b09-8174-774119fd999e	owner_in_agency_	89071731-bd21-4505-aab9-fd699c5fd12f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+991b0ec1-11b6-492e-a872-5b8aede7e5c3	owner_in_agency_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_can_accept_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 1b902618-8a68-4c0d-b05e-6bda782c5f30	agent_in_agency_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 75294233-ed0a-4b6a-8903-f206daf0af67	logged_in_	3f020478-e3a3-4674-932d-8b922c17b91b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc41-df24bc904e5d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+571601fd-1c3c-4d04-b37d-da9a66447025	argument_is_not_null_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2394,17 +2424,17 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency
 
 
 --
--- Name: service_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: user_invite_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: service_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -2436,17 +2466,17 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 
 
 --
--- Name: service_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: user_invite_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2478,17 +2508,17 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
--- Name: service_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: user_invite_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2520,17 +2550,17 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agenc
 
 
 --
--- Name: service_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
 -- Name: user_invite_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_invite_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: service_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --

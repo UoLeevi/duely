@@ -22,7 +22,7 @@ export default {
         const client = await pool.connect();
         try {
           await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-          const res = await client.query('SELECT * FROM operation_.query_subdomain_() WHERE uuid_ = $1::uuid', [agency.subdomain_uuid_]);
+          const res = await client.query('SELECT * FROM operation_.query_subdomain_($1::uuid)', [agency.subdomain_uuid_]);
           await client.query('SELECT operation_.end_session_()');
           return res.rows[0];
         } catch (error) {
