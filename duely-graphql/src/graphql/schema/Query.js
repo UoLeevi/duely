@@ -35,7 +35,7 @@ export default {
         try {
           await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
 
-          const res = !uuid && !subdomainName
+          const res = !uuid && typeof subdomainName !== 'string'
             ? await client.query('SELECT * FROM operation_.query_agency_()')
             : uuid
               ? await client.query('SELECT * FROM operation_.query_agency_($1::uuid)', [uuid])
