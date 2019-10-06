@@ -6,6 +6,26 @@ Vue.use(Vgraph, {
   watchQuery: {
     query: gql`
       query {
+        session @client {
+          agency {
+            uuid
+            name
+            servicesConnection {
+              edges {
+                cursor
+                node {
+                  uuid
+                  name
+                  status
+                  agency {
+                    uuid
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
         me {
           uuid
           name
@@ -40,6 +60,7 @@ Vue.use(Vgraph, {
                     node {
                       uuid
                       name
+                      status
                       agency {
                         uuid
                         name

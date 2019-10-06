@@ -1,6 +1,5 @@
 import { ApolloClient } from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
-import { withClientState } from 'apollo-link-state';
 import { setContext } from 'apollo-link-context';
 import { ApolloLink, execute, toPromise } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
@@ -21,16 +20,11 @@ if (access_token) {
   window.history.replaceState(window.history.state, document.title, url.toString());
 }
 
-
 const cache = new InMemoryCache({
   dataIdFromObject: object => object.uuid || null
 });
 
-const stateLink = withClientState({
-  cache,
-  defaults,
-  resolvers
-});
+cache.writeData({ data: defaults });
 
 const httpLink = createHttpLink({ uri: 'https://api.duely.app/graphql' });
 
@@ -81,13 +75,13 @@ const authLink = setContext(async (req, { headers }) => {
 const client = new ApolloClient({
   link: ApolloLink.from([
     authLink,
-    stateLink,
     httpLink
   ]),
-  cache
+  cache,
+  resolvers
 });
 
-client.onResetStore(stateLink.writeDefaults);
+client.onResetStore(() => cache.writeData(defaults));
 
 export {
   client,

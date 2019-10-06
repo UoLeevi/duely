@@ -10,6 +10,9 @@ Vgraph.install = function (Vue, { watchQuery } = {}) {
     error: null
   });
 
+  if (process.env.NODE_ENV !== 'production')
+    window.$vgraph = vgraph; // to ease debugging
+
   vgraph.ready = !watchQuery
     ? Promise.resolve()
     : new Promise(async resolve => {

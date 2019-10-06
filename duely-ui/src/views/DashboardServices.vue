@@ -16,11 +16,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in items" :key="item.name" style="height: 70px;">
+              <tr v-for="item in services" :key="item.name" style="height: 70px;">
                 <td>
                   <div class="d-flex flex-column">
                     <span class="f-2b">{{ item.name }}</span>
-                    <span class="f-1 grey--text text--lighten-2">{{ truncateString(item.description, 30) }}</span>
+                    <span class="f-1 grey--text text--lighten-2">{{ truncateString(item.name, 30) }}</span>
                   </div>
                 </td>
                 <td></td>
@@ -63,6 +63,16 @@ export default {
       ]
     };
   },
+  computed: {
+    agency() {
+      return this.$vgraph.loading ? null : this.$vgraph.session.agency;
+    },
+    services() {
+      return this.agency
+        ? this.agency.servicesConnection.edges.map(edge => edge.node)
+        : [];
+    }
+  },
   methods: {
     truncateString(text, length) {
       if (text.length <= length) 
@@ -73,12 +83,12 @@ export default {
     },
     statusColor(status) {
       switch (status) {
-        case 'Live':
+        case 'live':
           return 'green';
-        case 'Invite only':
+        case 'invite only':
           return 'blue';
-        case 'Draft':
-          return 'red'
+        case 'draft':
+          return 'red';
       }
     }
   }

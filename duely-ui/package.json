@@ -1,6 +1,6 @@
 {
   "name": "duely-ui",
-  "version": "0.18.0",
+  "version": "0.22.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -13,7 +13,6 @@
     "apollo-link": "^1.2.13",
     "apollo-link-context": "^1.0.19",
     "apollo-link-http": "^1.5.16",
-    "apollo-link-state": "^0.4.2",
     "apollo-link-ws": "^1.0.19",
     "core-js": "^2.6.5",
     "graphql": "^14.5.8",
