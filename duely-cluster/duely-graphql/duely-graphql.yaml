@@ -32,7 +32,7 @@ spec:
           secretName: duely-graphql-secret
       containers:
       - name: duely-graphql
-        image: uoleevi/duely-graphql:0.22
+        image: uoleevi/duely-graphql:0.23
         resources:
           requests:
             memory: 64Mi
@@ -54,6 +54,26 @@ spec:
           value: "5432"
         - name: GSERVICEACCOUNTFILE
           value: /usr/src/app/gserviceaccount.json
+        - name: STRIPE_PK_TEST
+          valueFrom:
+            secretKeyRef:
+              name: duely-graphql-secret
+              key: stripe-pk_test
+        - name: STRIPE_SK_TEST
+          valueFrom:
+            secretKeyRef:
+              name: duely-graphql-secret
+              key: stripe-sk_test
+        - name: STRIPE_PK_LIVE
+          valueFrom:
+            secretKeyRef:
+              name: duely-graphql-secret
+              key: stripe-pk_live
+        - name: STRIPE_SK_LIVE
+          valueFrom:
+            secretKeyRef:
+              name: duely-graphql-secret
+              key: stripe-sk_live
         livenessProbe:
           httpGet:
             path: /.well-known/apollo/server-health
