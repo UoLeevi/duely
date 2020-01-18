@@ -6,6 +6,7 @@ export default {
       success: Boolean!
       message: String
       agencyUuid: ID
+      stripeVerificationUrl: String
     }
   `,
   resolvers: {

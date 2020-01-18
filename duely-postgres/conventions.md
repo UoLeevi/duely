@@ -28,6 +28,9 @@
 - should be of type uuid
 - or in case of a joining table with composite primary key, two type uuid columns
 
+### indexes
+- unique indexes are named as 'uq_{schema}_{table}_{column[s]}'
+
 ### triggers
 - triggers names as 'tr_[after_|before_|instead_of_][insert_|[or_]update_|[or_]delete_]{function}'
 
@@ -184,6 +187,7 @@ TODO:
   - uuid_
   - subdomain_uuid_
   - name_
+  - stripe_acct_id_
 - service_
   - uuid_
   - agency_uuid_

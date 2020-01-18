@@ -1,5 +1,6 @@
 import pool from '../../db';
 import gmail from '../../gmail';
+import stripe from '../../stripe';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
@@ -12,7 +13,7 @@ export default {
       startEmailAddressVerification(emailAddress: String!): StartEmailAddressVerificationResult!
       logIn(emailAddress: String!, password: String!): LogInResult!
       logOut: LogOutResult!
-      createAgency(name: String!, subdomain: String!): CreateAgencyResult!
+      createAgency(name: String!, subdomain: String!, countryCode: String!, successUrl: String!, failureUrl: String!): CreateAgencyResult!
       deleteAgency(agencyUuid: ID!): DeleteAgencyResult!
     }
   `,
@@ -189,7 +190,7 @@ export default {
           client.release();
         }
       },
-      async createAgency(obj, { name, subdomain }, context, info) {
+      async createAgency(obj, { name, subdomain, countryCode, successUrl, failureUrl }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
@@ -219,11 +220,36 @@ export default {
         const client = await pool.connect();
         try {
           await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
+
           const res = await client.query('SELECT uuid_ FROM operation_.create_agency_($1::text, $2::text)', [name, subdomain]);
-          await client.query('SELECT operation_.end_session_()');
+          const agencyUuid = res.rows[0].uuid_;
+
+          let res_stripe = await stripe.createAccount(countryCode, agencyUuid);
+
+          if (res_stripe.error)
+            return {
+              success: false,
+              message: res_stripe.error.message,
+              type: 'CreateAgencyResult'
+            };
+
+          await client.query('SELECT uuid_ FROM operation_.create_stripe_account_($1::text, $2::uuid)', [res_stripe.id, agencyUuid]);
+
+          res_stripe = await stripe.createAccountLink(res_stripe.id, successUrl, failureUrl);
+
+          if (res_stripe.error)
+            return {
+              success: false,
+              message: res_stripe.error.message,
+              type: 'CreateAgencyResult'
+            };
+
+          const stripeVerificationUrl = res_stripe.url;
+
           return {
             success: true,
-            agencyUuid: res.rows[0].uuid_,
+            agencyUuid,
+            stripeVerificationUrl,
             type: 'CreateAgencyResult'
           };
         } catch (error) {
@@ -234,6 +260,7 @@ export default {
           };
         }
         finally {
+          await client.query('SELECT operation_.end_session_()');
           client.release();
         }
       },

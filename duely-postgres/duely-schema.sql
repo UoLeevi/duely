@@ -679,6 +679,46 @@ $$;
 ALTER FUNCTION operation_.create_service_(_name text, _agency_uuid uuid) OWNER TO postgres;
 
 --
+-- Name: stripe_account_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.stripe_account_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    stripe_id_ text NOT NULL,
+    agency_uuid_ uuid NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.stripe_account_ OWNER TO postgres;
+
+--
+-- Name: create_stripe_account_(text, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.create_stripe_account_(_stripe_acct_id text, _agency_uuid uuid) RETURNS application_.stripe_account_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _stripe_account application_.stripe_account_;
+  _arg RECORD;
+BEGIN
+  SELECT _agency_uuid agency_uuid_, _stripe_acct_id stripe_acct_id_ INTO _arg; 
+  PERFORM security_.control_operation_('create_stripe_account_', _arg);
+
+  INSERT INTO application_.stripe_account_(agency_uuid_, stripe_id_)
+  VALUES (_agency_uuid, _stripe_acct_id)
+  RETURNING * INTO _stripe_account;
+
+  RETURN _stripe_account;
+END
+$$;
+
+
+ALTER FUNCTION operation_.create_stripe_account_(_stripe_acct_id text, _agency_uuid uuid) OWNER TO postgres;
+
+--
 -- Name: delete_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -1716,6 +1756,22 @@ CREATE TABLE application__audit_.service_ (
 ALTER TABLE application__audit_.service_ OWNER TO postgres;
 
 --
+-- Name: stripe_account_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.stripe_account_ (
+    uuid_ uuid,
+    stripe_id_ text,
+    agency_uuid_ uuid,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.stripe_account_ OWNER TO postgres;
+
+--
 -- Name: user_invite_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -2067,6 +2123,7 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 3ae8d981-be1f-4843-bc41-df24bc904e5d	query_agency_by_subdomain_name_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+384605a6-0fb2-4d9c-aacc-3e5a33be8c36	create_stripe_account_	t	2020-01-18 17:41:14.931274+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2097,6 +2154,7 @@ b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc
 571601fd-1c3c-4d04-b37d-da9a66447025	argument_is_not_null_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 17b0f2a4-d301-41ab-9bf4-2ad2d8ba9784	service_status_contains_only_live_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+4ec948d5-45ea-4cdb-8cf9-aab00b10dfdd	owner_in_agency_	384605a6-0fb2-4d9c-aacc-3e5a33be8c36	allow	2020-01-18 17:41:19.41725+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2147,6 +2205,7 @@ fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	0
 a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 3ae8d981-be1f-4843-bc41-df24bc904e5d	query_agency_by_subdomain_name_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+384605a6-0fb2-4d9c-aacc-3e5a33be8c36	create_stripe_account_	t	2020-01-18 17:41:14.931274+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2177,6 +2236,7 @@ b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc
 571601fd-1c3c-4d04-b37d-da9a66447025	argument_is_not_null_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 17b0f2a4-d301-41ab-9bf4-2ad2d8ba9784	service_status_contains_only_live_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+4ec948d5-45ea-4cdb-8cf9-aab00b10dfdd	owner_in_agency_	384605a6-0fb2-4d9c-aacc-3e5a33be8c36	allow	2020-01-18 17:41:19.41725+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2240,6 +2300,30 @@ ALTER TABLE ONLY application_.service_
 
 ALTER TABLE ONLY application_.service_
     ADD CONSTRAINT service__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: stripe_account_ stripe_account__agency_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.stripe_account_
+    ADD CONSTRAINT stripe_account__agency_uuid__key UNIQUE (agency_uuid_);
+
+
+--
+-- Name: stripe_account_ stripe_account__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.stripe_account_
+    ADD CONSTRAINT stripe_account__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: stripe_account_ stripe_account__stripe_id__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.stripe_account_
+    ADD CONSTRAINT stripe_account__stripe_id__key UNIQUE (stripe_id_);
 
 
 --
@@ -2419,13 +2503,6 @@ ALTER TABLE ONLY security_.user_
 
 
 --
--- Name: agency_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: user_invite_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2437,6 +2514,20 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.user_i
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: agency_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: stripe_account_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.stripe_account_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -2461,13 +2552,6 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.user_in
 
 
 --
--- Name: agency_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: user_invite_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2479,6 +2563,20 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: agency_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: stripe_account_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2503,13 +2601,6 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.user_in
 
 
 --
--- Name: agency_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: user_invite_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2521,6 +2612,20 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: agency_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: stripe_account_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2545,13 +2650,6 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.user_in
 
 
 --
--- Name: agency_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agency_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
 -- Name: user_invite_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2563,6 +2661,20 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: agency_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agency_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: stripe_account_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.stripe_account_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -2866,6 +2978,14 @@ ALTER TABLE ONLY application_.agency_
 
 ALTER TABLE ONLY application_.service_
     ADD CONSTRAINT service__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
+
+
+--
+-- Name: stripe_account_ stripe_account__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.stripe_account_
+    ADD CONSTRAINT stripe_account__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
 
 
 --
