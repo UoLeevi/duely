@@ -93,7 +93,8 @@ async function createAccountLink(acct_id, failure_url, success_url) {
       account: acct_id,
       failure_url,
       success_url,
-      type: 'custom_account_verification'
+      type: 'custom_account_verification',
+      collect: 'eventually_due'
     });
 
     const options = {
