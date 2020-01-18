@@ -8,7 +8,7 @@ export default {};
 
 <style scoped>
 .panel {
-  background-color: var(--v-background-lighten5);
+  background-color: white;
 }
 
 </style>

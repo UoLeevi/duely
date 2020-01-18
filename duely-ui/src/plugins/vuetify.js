@@ -70,9 +70,7 @@ export default new Vuetify({
           darken4: '#00342C'
         },
         background: {
-          base: '#F6F6F9',
-          lighten5: '#FFFFFF',
-          darken4: '#818492'
+          base: '#242A41'
         },
         blue: {
           base: '#5A5AFF',

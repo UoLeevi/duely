@@ -11,45 +11,26 @@
             <v-text-field class="mt-0 mb-1" solo outlined flat single-line rounded v-model="data.emailAddress" :rules="rules.emailAddress" label="Email address" type="email" spellcheck="false" validate-on-blur></v-text-field>
             <v-text-field class="mt-1 mb-1" solo outlined flat single-line rounded v-model="data.name" :rules="rules.name" label="Full name" spellcheck="false" validate-on-blur></v-text-field>
             <v-text-field class="mt-1 mb-0" solo outlined flat single-line rounded v-model="data.password" :rules="rules.password" label="Password" type="password" spellcheck="false" autocomplete="new-password" validate-on-blur></v-text-field>
-            <v-checkbox class="ml-3 mt-0 mb-3" hide-details v-model="data.acceptTermsAndConditions" off-icon="check_box_outline_blank" on-icon="check_box" color="success">
-              <template #label>
-                <div @click.stop="">
-                  Do you accept the
-                  <a href="javascript:;" @click.stop="terms = true">terms</a>
-                  and
-                  <a href="javascript:;" @click.stop="conditions = true">conditions</a><span>?</span>
-                </div>
-              </template>
-            </v-checkbox>
+            <div class="f-2 ml-2 mt-0 mb-3">
+              By signing up, you agree to our <a href="javascript:;" @click.stop="tos = true">Services Agreement</a> and the <a target="_blank" href="https://stripe.com/connect-account/legal">Stripe Connected Account Agreement</a>.
+            </div>
           </v-col>
           <v-expand-transition>
             <p class="error--text" v-if="forms.signUpStep1.errorMessage">{{ forms.signUpStep1.errorMessage }}</p>
           </v-expand-transition>
           <v-row class="ml-3 mt-1 mb-1" no-gutters>
-            <v-btn depressed rounded :loading="forms.signUpStep1.loading" :disabled="!(forms.signUpStep1.valid && data.acceptTermsAndConditions)" type="submit" color="primary" class="text-none mr-4">Continue</v-btn>
+            <v-btn depressed rounded :loading="forms.signUpStep1.loading" :disabled="!(forms.signUpStep1.valid)" type="submit" color="primary" class="text-none mr-4">Continue</v-btn>
             <v-btn text depressed rounded class="text-none" to="/">Cancel</v-btn>
           </v-row>
-          <v-dialog v-model="terms" width="70%" content-class="rounded-corners">
+          <v-dialog v-model="tos" width="70%" content-class="rounded-corners">
             <v-card style="border-radius: 2rem;">
-              <v-card-title class="title">Terms</v-card-title>
-              <v-card-text>
-                Terms... Lorem ipsum dolor sit amet consectetur adipisicing elit. Sed commodi voluptates tempore voluptatum voluptatibus dicta qui delectus natus quo repellat numquam asperiores esse necessitatibus, molestiae a modi unde exercitationem nemo!
+              <v-card-title class="title">Service Agreement</v-card-title>
+              <v-card-text class="py-0">
+                Payment processing services for agencies on duely are provided by Stripe and are subject to the <a target="_blank" href="https://stripe.com/connect-account/legal">Stripe Connected Account Agreement</a>, which includes the <a target="_blank" href="https://stripe.com/legal">Stripe Terms of Service</a> (collectively, the “Stripe Services Agreement”). By agreeing to this agreement or continuing to operate as a agency on duely, you agree to be bound by the Stripe Services Agreement, as the same may be modified by Stripe from time to time. As a condition of duely enabling payment processing services through Stripe, you agree to provide duely accurate and complete information about you and your business, and you authorize duely to share it and transaction information related to your use of the payment processing services provided by Stripe.
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn text depressed rounded @click="terms = false">Ok</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-          <v-dialog v-model="conditions" width="70%" content-class="rounded-corners">
-            <v-card style="border-radius: 2rem;">
-              <v-card-title class="title">Conditions</v-card-title>
-              <v-card-text>
-                Conditions... Lorem ipsum dolor sit amet consectetur adipisicing elit. Inventore, velit iusto molestiae eius officia porro veniam nostrum a assumenda eos ducimus saepe ullam quasi illum voluptatum eligendi non voluptate id!
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn text depressed rounded @click="conditions = false">Ok</v-btn>
+                <v-btn text depressed rounded @click="tos = false">Ok</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -109,8 +90,7 @@ export default {
         emailAddress: decodeURIComponent(this.$route.query.email || ''),
         name: decodeURIComponent(this.$route.query.name || ''),
         password: '',
-        verificationCode: '',
-        acceptTermsAndConditions: false
+        verificationCode: ''
       },
       rules: {
         emailAddress: [
@@ -144,8 +124,7 @@ export default {
           loading: false
         }
       },
-      terms: false,
-      conditions: false
+      tos: false
     };
   },
   methods: {
@@ -247,16 +226,14 @@ export default {
         localStorage.setItem('user-jwt', jwt);
         await client.clearStore();
         this.$router.push({ path: '/profile' });
-      }
-      else
-        this.$router.push({ path: '/' });
+      } else this.$router.push({ path: '/' });
 
       this.forms.logIn.loading = false;
     }
   },
   created() {
     this.removeQueryParameters('email', 'name');
-  },
+  }
 };
 </script>
 

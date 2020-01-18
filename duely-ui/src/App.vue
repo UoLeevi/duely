@@ -25,6 +25,6 @@ export default {
 
 <style scoped>
 #app {
-  background-color: var(--v-grey-darken4);
+  background-color: var(--v-background-base);
 }
 </style>

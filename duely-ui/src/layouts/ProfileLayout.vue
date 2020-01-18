@@ -4,7 +4,7 @@
       <v-row />
       <v-row align="center" class="flex-column fill-height">
         <router-link to="/" v-if="$vuetify.breakpoint.smAndUp">
-          <h1 class="f-4 font-weight-regular pa-2 grey--text text--darken-2">duely.app</h1>
+          <h1 class="f-4 font-weight-regular pa-2 grey--text text--darken-2">duely</h1>
         </router-link>
         <slot name="menu">
         </slot>
@@ -29,7 +29,7 @@ export default {
 }
 
 #profile-layout .content {
-  background-color: var(--v-background-lighten5);
+  background-color: white;
 }
 
 </style>

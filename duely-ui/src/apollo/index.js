@@ -1,6 +1,7 @@
 import { ApolloClient } from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { setContext } from 'apollo-link-context';
+import { onError } from 'apollo-link-error';
 import { ApolloLink, execute, toPromise } from 'apollo-link';
 import { createHttpLink } from 'apollo-link-http';
 //import { WebSocketLink } from 'apollo-link-ws';
@@ -72,8 +73,32 @@ const authLink = setContext(async (req, { headers }) => {
     : {});
 });
 
+const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
+  if (graphQLErrors) {
+    for (let err of graphQLErrors) {
+      switch (err.extensions.code) {
+        case 'UNAUTHENTICATED':
+          // error code is set to UNAUTHENTICATED
+          // when AuthenticationError thrown in resolver
+
+          // reset access tokens
+          localStorage.removeItem('user-jwt')
+          localStorage.removeItem('visitor-jwt')
+
+          // retry the request, returning the new observable
+          return forward(operation);
+      }
+    }
+  }
+
+  if (networkError) 
+    // eslint-disable-next-line
+    console.log(`[Network error]: ${networkError}`);
+});
+
 const client = new ApolloClient({
   link: ApolloLink.from([
+    errorLink,
     authLink,
     httpLink
   ]),

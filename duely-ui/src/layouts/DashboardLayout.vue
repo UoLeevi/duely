@@ -1,6 +1,6 @@
 <template>
-  <v-container fluid class="pa-0 fill-height" id="dashboard-layout">
-    <v-navigation-drawer v-model="drawer" app floating stateless :width="adjustSize(100, 0.3)" class="justify-center d-flex flex-column" color="grey darken-4">
+  <v-container fluid class="pa-0 fill-height" id="dashboard-layout" v-background-color="'grey lighten-5'">
+    <v-navigation-drawer v-model="drawer" fixed app floating stateless :width="adjustSize(100, 0.3)" class="justify-center d-flex flex-column" color="grey darken-4">
       <v-row />
       <v-row align="center" class="flex-column fill-height">
         <slot name="menu">
@@ -25,7 +25,6 @@ export default {
 </script>
 
 <style scoped>
-
 #dashboard-layout .content {
   background-color: var(--v-grey-lighten5);
 }

@@ -12,31 +12,60 @@
           <v-col class="pt-1">
             <v-text-field class="mt-0 mb-1" solo outlined flat single-line rounded v-model="data.name" :rules="rules.name" label="Agency name" spellcheck="false" validate-on-blur></v-text-field>
             <v-text-field class="mt-1 mb-1" suffix=".duely.app" :hint="'Your agency will have a subdomain for duely.app'" solo outlined flat single-line persistent-hint rounded v-model="data.subdomain" :rules="rules.subdomain" label="Subdomain name" spellcheck="false"></v-text-field>
+            <v-select class="mt-1 mb-1" append-icon="public" dense solo outlined flat single-line rounded v-model="data.countryCode" :rules="rules.countryCode" :loading="graph.loading" :items="countries" item-text="id" item-value="id" label="Country" :menu-props="{ offsetY: true, contentClass: 'rounded-corners-small hide-scrollbar elevation-2 ' }" persistent-hint hint="The country in which the agency will primarily operate in" />
+            <div class="f-2 ml-2 mt-1 mb-3">
+              By creating an agency on duely, you agree to our <a href="javascript:;" @click.stop="tos = true">Services Agreement</a> and the <a target="_blank" href="https://stripe.com/connect-account/legal">Stripe Connected Account Agreement</a>.
+            </div>
           </v-col>
           <v-expand-transition>
             <p class="error--text" v-if="forms.createAgencyStep1.errorMessage">{{ forms.createAgencyStep1.errorMessage }}</p>
           </v-expand-transition>
           <v-row class="ml-3 mt-1 mb-1">
-            <v-btn depressed rounded :loading="forms.createAgencyStep1.loading" :disabled="!forms.createAgencyStep1.valid" type="submit" color="primary" class="text-none mr-4">Create agency</v-btn>
+            <v-btn depressed rounded :loading="forms.createAgencyStep1.loading" :disabled="!forms.createAgencyStep1.valid" type="submit" color="primary" class="text-none mr-4" >Continue</v-btn>
             <v-btn text depressed rounded class="text-none" to="/profile">Cancel</v-btn>
           </v-row>
         </v-form>
+        <v-dialog v-model="tos" width="70%" content-class="rounded-corners">
+          <v-card style="border-radius: 2rem;">
+            <v-card-title class="title">Service Agreement</v-card-title>
+            <v-card-text class="py-0">
+              Payment processing services for agencies on duely are provided by Stripe and are subject to the <a target="_blank" href="https://stripe.com/connect-account/legal">Stripe Connected Account Agreement</a>, which includes the <a target="_blank" href="https://stripe.com/legal">Stripe Terms of Service</a> (collectively, the “Stripe Services Agreement”). By agreeing to this agreement or continuing to operate as a agency on duely, you agree to be bound by the Stripe Services Agreement, as the same may be modified by Stripe from time to time. As a condition of duely enabling payment processing services through Stripe, you agree to provide duely accurate and complete information about you and your business, and you authorize duely to share it and transaction information related to your use of the payment processing services provided by Stripe.
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn text depressed rounded @click="tos = false">Ok</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-stepper-content>
 
+      <v-stepper-step :complete="step > 2" step="2">
+        Verify account on Stripe
+      </v-stepper-step>
+
+      <v-stepper-content step="2">
+        <v-col class="pt-1">
+          <p>Redirecting to <span class="primary--text">stripe</span>...</p>
+          <v-progress-circular indeterminate color="primary"/>
+        </v-col>
+      </v-stepper-content>
     </v-stepper>
   </section>
 </template>
 
 <script>
+import ApolloMixin from '@/mixins/ApolloMixin';
 import { client, gql } from '@/apollo';
 
 export default {
+  mixins: [ApolloMixin],
   data() {
     return {
       step: 1,
       data: {
         name: '',
-        subdomain: ''
+        subdomain: '',
+        countryCode: ''
       },
       rules: {
         name: [
@@ -45,9 +74,12 @@ export default {
         ],
         subdomain: [
           v => !!v || 'Subdomain name is required',
-          // eslint-disable-next-line 
+          // eslint-disable-next-line
           v => this.isSubdomainNameValid || 'Invalid subdomain name'
-        ]
+        ],
+        countryCode: [
+          v => !!v || 'Country is required'
+        ],
       },
       forms: {
         createAgencyStep1: {
@@ -56,8 +88,14 @@ export default {
           valid: false
         }
       },
-      terms: false,
-      conditions: false
+      tos: false,
+      watchQuery: {
+        query: gql`
+          query {
+            countrySpecs
+          }
+        `
+      }
     };
   },
   computed: {
@@ -67,10 +105,14 @@ export default {
       if (reservedSubdomains.includes(this.data.subdomain.toLowerCase()))
         return false;
 
-      if (this.data.subdomain.includes('.'))
-        return false;
+      if (this.data.subdomain.includes('.')) return false;
 
-      return /(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)/.test(`${this.data.subdomain}.duely.app`);
+      return /(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)/.test(
+        `${this.data.subdomain}.duely.app`
+      );
+    },
+    countries() {
+      return this.graph.loading ? [] : JSON.parse(this.graph.countrySpecs)
     }
   },
   methods: {
@@ -80,48 +122,62 @@ export default {
       if (this.$refs.createAgencyStep1Form.validate()) {
         this.forms.createAgencyStep1.loading = true;
 
+        const access_token = localStorage.getItem('user-jwt');
+        const returnUrl = process.env.NODE_ENV === 'production'
+            ? `https://${this.data.subdomain}.duely.app/dashboard?access_token=${access_token}`
+            : `${window.location.origin}/dashboard?subdomain=${this.data.subdomain}`;
+
         const res = await client.mutate({
           mutation: gql`
-            mutation($name: String!, $subdomain: String!) {
-              createAgency(name: $name, subdomain: $subdomain) {
+            mutation($name: String!, $subdomain: String!, $countryCode: String!, $successUrl: String!, $failureUrl: String!) {
+              createAgency(name: $name, subdomain: $subdomain, countryCode: $countryCode, successUrl: $successUrl, failureUrl: $failureUrl) {
                 success
                 message
                 agencyUuid
+                stripeVerificationUrl
               }
             }
           `,
           variables: {
             name: this.data.name,
-            subdomain: this.data.subdomain
+            subdomain: this.data.subdomain,
+            countryCode: this.data.countryCode,
+            successUrl: returnUrl,
+            failureUrl: returnUrl
           },
-          refetchQueries: [{
-            query: gql`
-              query {
-                me {
-                  uuid
-                  agenciesConnection {
-                    edges {
-                      cursor
-                      roles
-                      node {
-                        uuid
-                        name
-                        subdomain {
+          refetchQueries: [
+            {
+              query: gql`
+                query {
+                  me {
+                    uuid
+                    agenciesConnection {
+                      edges {
+                        cursor
+                        roles
+                        node {
                           uuid
                           name
+                          subdomain {
+                            uuid
+                            name
+                          }
                         }
                       }
                     }
                   }
                 }
-              }
-            `
-          }],
+              `
+            }
+          ],
           awaitRefetchQueries: true
         });
 
-        if (res.data.createAgency.success) 
-          this.$router.push({ path: '/profile/agencies' });
+        if (res.data.createAgency.success)
+        {
+          this.step = 2;
+          window.location.replace(res.data.createAgency.stripeVerificationUrl);
+        }
         else
           this.forms.createAgencyStep1.errorMessage =
             res.data.createAgency.message;

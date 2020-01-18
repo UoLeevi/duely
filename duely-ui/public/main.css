@@ -6,8 +6,20 @@
   box-shadow: 0 0 0 30px white inset;
 }
 
+#app .hide-scrollbar::-webkit-scrollbar { /* WebKit */
+  display: none;
+}
+#app .hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE 10+ */
+}
+
 #app .rounded-corners {
   border-radius: 2rem;
+}
+#app .rounded-corners-right {
+  border-top-right-radius: 2rem;
+  border-bottom-right-radius: 2rem;
 }
 
 #app.xl .rounded-corners-small,
@@ -20,6 +32,21 @@
 }
 #app.xs .rounded-corners-small {
   border-radius: 0.6rem;
+}
+
+#app.xl .rounded-corners-right-small,
+#app.lg .rounded-corners-right-small,
+#app.md .rounded-corners-right-small {
+  border-top-right-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+}
+#app.sm .rounded-corners-right-small {
+  border-top-right-radius: 0.8rem;
+  border-bottom-right-radius: 0.8rem;
+}
+#app.xs .rounded-corners-right-small {
+  border-top-right-radius: 0.6rem;
+  border-bottom-right-radius: 0.6rem;
 }
 
 #app.xl .rounded-corners-tiny,

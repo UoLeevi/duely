@@ -2,7 +2,7 @@
   <v-app-bar fixed dark prominent short flat color="transparent" :style="{ 'color': textColor }">
     <v-row no-gutters align="center" justify="space-between" style="height: 100%;" >
       <v-col :cols="1" align="left"/>
-      <v-col cols="auto" align="left"><h1 class="f-6 font-weight-regular pa-2">duely.app</h1></v-col>
+      <v-col cols="auto" align="left"><h1 class="f-6 font-weight-regular pa-2">duely</h1></v-col>
       <v-col align="center"></v-col>
       <v-col cols="auto" align="right">
         <v-fade-transition mode="out-in">

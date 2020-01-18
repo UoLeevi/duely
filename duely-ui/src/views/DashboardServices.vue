@@ -1,6 +1,10 @@
 <template>
   <section class="d-flex flex-column" style="width: 100%;">
-    <h2 class="f-5b">Services</h2>
+    <v-container fluid class="ma-0 pa-0">
+      <v-row no-gutters justify="space-between">
+        <h2 class="f-5b">Services</h2>
+      </v-row>
+    </v-container>
     <v-container class="content fill-height rounded-corners">
       <v-row class="fill-height" no-gutters>
         <v-simple-table fixed-header class="flex-grow-1">
@@ -75,8 +79,7 @@ export default {
   },
   methods: {
     truncateString(text, length) {
-      if (text.length <= length) 
-        return text;
+      if (text.length <= length) return text;
 
       var subString = text.substring(0, length - 1);
       return subString.substring(0, subString.lastIndexOf(' ')) + '…';
@@ -97,6 +100,6 @@ export default {
 
 <style scoped>
 .content {
-  background-color: var(--v-background-lighten5);
+  background-color: white;
 }
 </style>

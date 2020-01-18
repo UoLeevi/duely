@@ -118,6 +118,41 @@ Vutil.install = function(Vue) {
     }
   });
 
+  let backgroundColorDefault;
+  const backgroundColorStack = []
+
+  Vue.directive('background-color', {
+    bind(el, binding, vnode) {
+      while (!vnode.componentInstance)
+        vnode = vnode.parent;
+
+      const theme = vnode.componentInstance.$vuetify.theme.currentTheme;
+
+      if (!backgroundColorStack.length) {
+        backgroundColorDefault = JSON.parse(JSON.stringify(theme.background.base));
+        backgroundColorStack.push(backgroundColorDefault);
+      }
+
+      let color = binding.value || backgroundColorDefault;
+
+      if (typeof color === 'string' && !/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(color)) {
+        const [name, variant] = color.split(' ');
+        const themeItem = theme[name];
+        color = themeItem ? themeItem[variant ? variant.replace('-', '') : 'base'] : color;
+      }
+
+      backgroundColorStack.push(color);
+      theme.background.base = backgroundColorStack[backgroundColorStack.length - 1];
+    },
+    unbind(el, binding, vnode) {
+      while (!vnode.componentInstance)
+        vnode = vnode.parent;
+
+      --backgroundColorStack.length;
+      vnode.componentInstance.$vuetify.theme.currentTheme.background.base = backgroundColorStack[backgroundColorStack.length - 1];
+    }
+  });
+
   let ticking = false;
 
   window.addEventListener('scroll', function() {
