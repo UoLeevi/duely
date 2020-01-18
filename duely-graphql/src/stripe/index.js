@@ -49,16 +49,16 @@ async function updateCountrySpecs() {
   }
 }
 
-async function createAccount(countryCode, agency_uuid_) {
+async function createAccount(countryCode, optional_arguments = {}) {
   return await new Promise(async (resolve, reject) => {
     const d = [];
 
-    var postData = querystring.stringify({
-      type: 'custom',
-      country: countryCode,
-      'requested_capabilities[]': ['card_payments', 'transfers'],
-      'metadata[agency_uuid_]': agency_uuid_
-    });
+    var postData = querystring.stringify( 
+      Object.assign(optional_arguments, {
+        type: 'custom',
+        country: countryCode,
+        'requested_capabilities[]': ['card_payments', 'transfers']
+      }));
 
     const options = {
       hostname: 'api.stripe.com',

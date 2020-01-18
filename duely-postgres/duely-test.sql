@@ -41,7 +41,7 @@ BEGIN
   PERFORM operation_.begin_session_(_visitor_jwt);
 
   SELECT * INTO _record
-  FROM operation_.start_email_address_verification_('test@test');
+  FROM operation_.start_email_address_verification_('test@example.com');
   --RAISE NOTICE E'start_email_address_verification_:\n%', _record;
 
   PERFORM operation_.end_session_();
@@ -50,7 +50,7 @@ BEGIN
   PERFORM operation_.begin_session_(_visitor_jwt);
 
   SELECT * INTO _record
-  FROM operation_.sign_up_user_('test@test', _record.verification_code_, 'test user', 'password');
+  FROM operation_.sign_up_user_('test@example.com', _record.verification_code_, 'test user', 'password');
   --RAISE NOTICE E'sign_up_user_:\n%', _record;
 
   PERFORM operation_.end_session_();
@@ -59,7 +59,7 @@ BEGIN
   PERFORM operation_.begin_session_(_visitor_jwt);
 
   SELECT * INTO _user_jwt
-  FROM operation_.log_in_user_('test@test', 'password');
+  FROM operation_.log_in_user_('test@example.com', 'password');
   --RAISE NOTICE E'log_in_user_:\n%', _user_jwt;
 
   SELECT * INTO _record
