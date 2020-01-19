@@ -1,4 +1,4 @@
-import pool from '../../../db';
+import { pool } from '../../../db';
 import gmail from '../../../gmail';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';

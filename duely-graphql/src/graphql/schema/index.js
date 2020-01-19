@@ -24,7 +24,7 @@ import Subdomain from './Subdomain';
 import Subject from './Subject';
 import SubjectAgenciesConnection from './SubjectAgenciesConnection';
 import SubjectAgenciesEdge from './SubjectAgenciesEdge';
-//import Subscription from './Subscription';
+import Subscription from './Subscription';
 
 export default makeExecutableSchema([
   Agency,
@@ -51,8 +51,8 @@ export default makeExecutableSchema([
   Subdomain,
   Subject,
   SubjectAgenciesConnection,
-  SubjectAgenciesEdge
-  //Subscription
+  SubjectAgenciesEdge,
+  Subscription
 ].reduce((schema, type) => ({
   typeDefs: schema.typeDefs.concat(type.typeDef),
   resolvers: {

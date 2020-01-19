@@ -1,4 +1,4 @@
-import pool from '../../../db';
+import { pool } from '../../../db';
 
 export default async function beginVisit(obj, args, context, info) {
   const client = await pool.connect();

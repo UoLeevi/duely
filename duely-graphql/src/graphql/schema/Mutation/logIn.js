@@ -1,4 +1,4 @@
-import pool from '../../../db';
+import { pool } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 
 export default async function logIn(obj, { emailAddress, password }, context, info) {

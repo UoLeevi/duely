@@ -1,4 +1,4 @@
-import pool from '../../../db';
+import { pool } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 
 export default async function agency(obj, { uuid, subdomainName }, context, info) {
