@@ -40,6 +40,8 @@ metadata:
   name: duely-ingress-rules
   annotations:
     kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "999999"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "999999"
 spec:
   tls:
   - hosts:
