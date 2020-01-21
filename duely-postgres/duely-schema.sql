@@ -1098,17 +1098,17 @@ $$;
 ALTER FUNCTION operation_.query_service_(_agency_uuid uuid, _status text[]) OWNER TO postgres;
 
 --
--- Name: query_shared_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: query_shared_agency_(uuid, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_shared_agency_(_subject_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, subdomain_uuid_ uuid, role_names_ text[])
+CREATE FUNCTION operation_.query_shared_agency_(_subject_uuid uuid, _agency_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, subdomain_uuid_ uuid, role_names_ text[])
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
   _arg RECORD;
   _info RECORD;
 BEGIN
-  SELECT _subject_uuid subject_uuid_ INTO _arg; 
+  SELECT _subject_uuid subject_uuid_, _agency_uuid agency_uuid_ INTO _arg; 
   PERFORM security_.control_operation_('query_shared_agency_', _arg);
 
   RETURN QUERY
@@ -1120,13 +1120,14 @@ BEGIN
   LEFT JOIN security_.active_role_ ar ON a.subdomain_uuid_ = ar.subdomain_uuid_
   WHERE u.uuid_ = _subject_uuid
     AND ar.name_ = 'agent'
+    AND (_agency_uuid IS NULL OR _agency_uuid IS NOT DISTINCT FROM a.uuid_)
   GROUP BY a.uuid_, a.name_, a.subdomain_uuid_;
 
 END
 $$;
 
 
-ALTER FUNCTION operation_.query_shared_agency_(_subject_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION operation_.query_shared_agency_(_subject_uuid uuid, _agency_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: query_subdomain_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
