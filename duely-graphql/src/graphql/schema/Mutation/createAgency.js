@@ -3,10 +3,11 @@ import stripe from '../../../stripe';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
-export default async function createAgency(obj, { name, subdomain, countryCode, successUrl, failureUrl }, context, info) {
+export default async function createAgency(obj, { name, subdomain, countryCode, returnUrl }, context, info) {
   if (!context.jwt)
     throw new AuthenticationError('Unauthorized');
 
+  // validate subdomain
   const reservedSubdomains = ['api', 'test', 'example', 'admin'];
 
   if (reservedSubdomains.includes(subdomain.toLowerCase()))
@@ -34,47 +35,76 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
   try {
     await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
 
+    // create agency on database
     const res = await client.query('SELECT uuid_ FROM operation_.create_agency_($1::text, $2::text)', [name, subdomain]);
     const agencyUuid = res.rows[0].uuid_;
 
-    const res_as = await client.query('SELECT * FROM operation_.query_active_subject_()');
-    const emailAddress = res_as.rows[0].email_address_;
+    // create stripe custom account for agency
+    let accountId;
+    try {
+      const { account } = await stripe.accounts.create(
+        {
+          type: 'custom',
+          country: countryCode,
+          requested_capabilities: [
+            'card_payments',
+            'transfers'
+          ],
+          business_profile: {
+            name,
+            url: `${subdomain}.duely.app`
+          },
+          metadata: {
+            agency_uuid_: agencyUuid
+          }
+        }
+      );
 
-    let res_stripe = await stripe.createAccount(countryCode, {
-      'email': emailAddress,
-      'metadata[agency_uuid_]': agencyUuid,
-      'business_profile[name]': name,
-      'business_profile[url]': `${subdomain}.duely.app`,
-    });
+      accountId = account.id;
 
-    if (res_stripe.error)
+    } catch (err) {
+      // if stripe custom account could not be created, delete agency from database
+      await client.query('SELECT operation_.delete_agency_($1::uuid)', [agencyUuid]);
       return {
         success: false,
-        message: res_stripe.error.message,
+        message: err.message,
         type: 'CreateAgencyResult'
       };
+    }
 
-    await client.query('SELECT uuid_ FROM operation_.create_stripe_account_($1::text, $2::uuid)', [res_stripe.id, agencyUuid]);
+    // store stripe custom account id to database
+    await client.query('SELECT operation_.create_stripe_account_($1::text, $2::uuid)', [accountId, agencyUuid]);
 
-    res_stripe = await stripe.createAccountLink(res_stripe.id, successUrl, failureUrl);
+    // create stripe account verification url
+    let stripeVerificationUrl;
+    let message = null;
+    try {
+      const accountLink = await stripe.accountLinks.create(
+        {
+          account: accountId,
+          failure_url: returnUrl,
+          success_url: returnUrl,
+          type: 'custom_account_verification',
+          collect: 'eventually_due'
+        }
+      );
+      stripeVerificationUrl = accountLink.url;
+    } catch (err) {
+      message = err.message;
+    }
 
-    if (res_stripe.error)
-      return {
-        success: false,
-        message: res_stripe.error.message,
-        type: 'CreateAgencyResult'
-      };
-
-    const stripeVerificationUrl = res_stripe.url;
-
+    // success
     return {
       success: true,
+      message,
       agencyUuid,
       stripeVerificationUrl,
       type: 'CreateAgencyResult'
     };
+
   } catch (error) {
     return {
+      // error
       success: false,
       message: error.message,
       type: 'CreateAgencyResult'

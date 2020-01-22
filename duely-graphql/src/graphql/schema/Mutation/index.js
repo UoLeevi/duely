@@ -16,7 +16,7 @@ export default {
       startEmailAddressVerification(emailAddress: String!): StartEmailAddressVerificationResult!
       logIn(emailAddress: String!, password: String!): LogInResult!
       logOut: LogOutResult!
-      createAgency(name: String!, subdomain: String!, countryCode: String!, successUrl: String!, failureUrl: String!): CreateAgencyResult!
+      createAgency(name: String!, subdomain: String!, countryCode: String!, returnUrl: String!): CreateAgencyResult!
       deleteAgency(agencyUuid: ID!): DeleteAgencyResult!
     }
   `,
