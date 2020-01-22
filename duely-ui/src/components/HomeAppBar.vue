@@ -6,8 +6,8 @@
       <v-col align="center"></v-col>
       <v-col cols="auto" align="right">
         <v-fade-transition mode="out-in">
-          <v-progress-circular v-if="loading || $vgraph.loading || !$vgraph.me" indeterminate />
-          <div v-else-if="$root.isLoggedIn" key="log-out">
+          <v-progress-circular v-if="$apollo.queries.me.loading" indeterminate />
+          <div v-else-if="me.type === 'user'" key="log-out">
             <v-btn @click="logOut" rounded text class="text-none mr-1" :color="textColor">Log out</v-btn>
             <v-btn to="/profile" rounded outlined class="text-none ml-1" :color="textColor">Go to profile</v-btn>
           </div>
@@ -27,8 +27,8 @@
 
 <script>
 import LoginDialog from '@/components/LoginDialog';
-import ApolloMixin from '@/mixins/ApolloMixin';
-import { client, gql } from '@/apollo';
+//import ApolloMixin from '@/mixins/ApolloMixin';
+import { gql } from '@/apollo';
 
 export default {
   components: {
@@ -44,49 +44,37 @@ export default {
         : 'white';
     }
   },
-  mixins: [ApolloMixin],
+  //mixins: [ApolloMixin],
   methods: {
     async logOut() {
-      this.loading = true;
-      const res = await client.mutate({
-        mutation: gql`
-          mutation {
-            logOut {
-              success
-              message
-            }
+      await this.$apollo.mutate({
+        mutation: gql`mutation {
+          logOut {
+            success
+            message
           }
-        `
+        }`,
+        update: async (store, { data: { logOut } }) => {
+          if (logOut.success)
+          {
+            localStorage.removeItem('user-jwt');
+            await this.$apollo.provider.defaultClient.clearStore();
+            await this.$apollo.queries.me.refetch();
+          }
+          else
+            /* eslint-disable */
+            console.log(logOut.message);
+        }
       });
-
-      if (!res.data.logOut.success) {
-        //this.errorMessage = res.data.logIn.message;
-        this.loading = false;
-        return;
-      }
-
-      localStorage.removeItem('user-jwt');
-      await client.clearStore();
-      await client.query({
-          query: gql`
-            query {
-              me {
-                uuid
-                name
-                emailAddress
-                type
-              }
-            }
-          `
-        });
-
-      this.loading = false;
     }
   },
-  data() {
-    return {
-      loading: false
-    };
+  apollo : {
+    me: gql`query {
+      me {
+        uuid
+        type
+      }
+    }`
   }
 };
 </script>

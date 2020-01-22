@@ -1,6 +1,6 @@
 <template>
   <section>
-    <v-progress-circular v-if="$vgraph.loading" indeterminate />
+    <v-progress-circular v-if="$apollo.queries.me.loading" indeterminate />
     <template v-else>
       <h2 class="f-5b">Agencies</h2>
       <div class="d-flex flex-column mt-2" v-if="agencies.filter(agency => agency.roles.includes('agent')).length > 0">
@@ -25,16 +25,38 @@
 </template>
 
 <script>
+import { gql } from '@/apollo';
+
 export default {
   computed: {
     agencies() {
-      return this.$vgraph.loading
-        ? []
-        : this.$vgraph.me.agenciesConnection.edges.map(edge => ({
-            ...edge.node,
-            roles: edge.roles
-          }));
+      return this.me.agenciesConnection.edges.map(edge => ({
+        ...edge.node,
+        roles: edge.roles
+      }));
     }
+  },
+  apollo : {
+    me: gql`query {
+      me {
+        uuid
+        name
+        agenciesConnection {
+          edges {
+            cursor
+            roles
+            node {
+              uuid
+              name
+              subdomain {
+                uuid
+                name
+              }
+            }
+          }
+        }
+      }
+    }`
   }
 };
 </script>

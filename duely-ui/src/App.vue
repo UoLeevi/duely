@@ -1,7 +1,7 @@
 <template>
   <v-app v-custom-scroll :class="`${this.$vuetify.breakpoint.name}`">
     <ScrollNav />
-    <SplashScreenLoader :show="$vgraph.loading" />
+    <SplashScreenLoader :show="$apollo.loading" />
     <v-content>
       <v-fade-transition mode="out-in">
         <router-view />

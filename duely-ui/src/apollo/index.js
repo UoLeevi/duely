@@ -135,7 +135,8 @@ const client = new ApolloClient({
     transportLink
   ]),
   cache,
-  resolvers
+  resolvers,
+  connectToDevTools: process.env.NODE_ENV !== 'production'
 });
 
 client.onResetStore(() => {

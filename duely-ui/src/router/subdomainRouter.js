@@ -7,6 +7,7 @@ import DashboardPayments from '@/views/DashboardPayments.vue'
 import DashboardServices from '@/views/DashboardServices.vue'
 import DashboardServicesPanel from '@/views/DashboardServicesPanel.vue'
 import DashboardCompany from '@/views/DashboardCompany.vue'
+import { client, gql } from '@/apollo';
 
 Vue.use(Router)
 
@@ -56,9 +57,16 @@ const router = new Router({
         }
       ],
       async beforeEnter(to, from, next) {
-        await router.app.$vgraph.ready;
+        const res = await client.query({
+          query: gql`query {
+            me {
+              uuid
+              type
+            }
+          }`
+        });
 
-        if (router.app.$vgraph.me.type === 'user')
+        if (res.data.me.type === 'user')
           next();
         else
           next('?login');

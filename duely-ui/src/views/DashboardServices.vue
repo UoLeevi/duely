@@ -7,7 +7,8 @@
     </v-container>
     <v-container class="content fill-height rounded-corners">
       <v-row class="fill-height" no-gutters>
-        <v-simple-table fixed-header class="flex-grow-1">
+        <v-progress-circular v-if="$apollo.queries.loading" indeterminate />
+        <v-simple-table v-else fixed-header class="flex-grow-1">
           <template #default>
             <thead>
               <tr>
@@ -42,6 +43,8 @@
 </template>
 
 <script>
+import { gql } from '@/apollo';
+
 export default {
   data() {
     return {
@@ -68,13 +71,8 @@ export default {
     };
   },
   computed: {
-    agency() {
-      return this.$vgraph.loading ? null : this.$vgraph.session.agency;
-    },
     services() {
-      return this.agency
-        ? this.agency.servicesConnection.edges.map(edge => edge.node)
-        : [];
+      return this.agency ? this.agency[0].servicesConnection.edges.map(edge => edge.node) : [];
     }
   },
   methods: {
@@ -92,6 +90,41 @@ export default {
           return 'blue';
         case 'draft':
           return 'red';
+      }
+    }
+  },
+  apollo: {
+    session: {
+      query: gql`query {
+        session @client {
+          subdomainName
+        }
+      }`
+    },
+    agency: {
+      query: gql`query($subdomainName: String) {
+        agency(subdomainName: $subdomainName) {
+          uuid
+          name
+          servicesConnection {
+            edges {
+              cursor
+              node {
+                uuid
+                name
+                status
+              }
+            }
+          }
+        }
+      }`,
+      variables () {
+        return {
+          subdomainName: this.session.subdomainName,
+        }
+      },
+      skip () {
+        return this.$apollo.queries.session.loading;
       }
     }
   }

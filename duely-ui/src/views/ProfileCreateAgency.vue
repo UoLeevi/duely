@@ -10,9 +10,9 @@
       <v-stepper-content step="1">
         <v-form @submit.prevent="submitCreateAgencyStep1" ref="createAgencyStep1Form" v-model="forms.createAgencyStep1.valid">
           <v-col class="pt-1">
-            <v-text-field class="mt-0 mb-1" solo outlined flat single-line rounded v-model="data.name" :rules="rules.name" label="Agency name" spellcheck="false" validate-on-blur></v-text-field>
-            <v-text-field class="mt-1 mb-1" suffix=".duely.app" :hint="'Your agency will have a subdomain for duely.app'" solo outlined flat single-line persistent-hint rounded v-model="data.subdomain" :rules="rules.subdomain" label="Subdomain name" spellcheck="false"></v-text-field>
-            <v-select class="mt-1 mb-1" append-icon="public" dense solo outlined flat single-line rounded v-model="data.countryCode" :rules="rules.countryCode" :loading="graph.loading" :items="countries" item-text="id" item-value="id" label="Country" :menu-props="{ offsetY: true, contentClass: 'rounded-corners-small hide-scrollbar elevation-2 ' }" persistent-hint hint="The country in which the agency will primarily operate in" />
+            <v-text-field class="mt-0 mb-2" :hint="'Name of your business'" dense solo outlined flat single-line persistent-hint rounded v-model="data.name" :rules="rules.name" label="Agency name" spellcheck="false" validate-on-blur></v-text-field>
+            <v-text-field class="mt-1 mb-2" suffix=".duely.app" :hint="'Your agency will have a subdomain for duely.app'" dense solo outlined flat single-line persistent-hint rounded v-model="data.subdomain" :rules="rules.subdomain" label="Subdomain name" spellcheck="false"></v-text-field>
+            <v-select class="mt-1 mb-2" append-icon="public" dense solo outlined flat single-line rounded v-model="data.countryCode" :rules="rules.countryCode" :loading="$apollo.queries.countryCodes.loading" :items="countryCodes || []" item-text="id" item-value="id" label="Country" :menu-props="{ offsetY: true, contentClass: 'rounded-corners-small hide-scrollbar elevation-2 ' }" persistent-hint hint="The country in which the agency will primarily operate in" />
             <div class="f-2 ml-2 mt-1 mb-3">
               By creating an agency on duely, you agree to our <a href="javascript:;" @click.stop="tos = true">Services Agreement</a> and the <a target="_blank" href="https://stripe.com/connect-account/legal">Stripe Connected Account Agreement</a>.
             </div>
@@ -55,7 +55,7 @@
 
 <script>
 import ApolloMixin from '@/mixins/ApolloMixin';
-import { client, gql } from '@/apollo';
+import { gql } from '@/apollo';
 
 export default {
   mixins: [ApolloMixin],
@@ -88,14 +88,7 @@ export default {
           valid: false
         }
       },
-      tos: false,
-      watchQuery: {
-        query: gql`
-          query {
-            countrySpecs
-          }
-        `
-      }
+      tos: false
     };
   },
   computed: {
@@ -110,9 +103,6 @@ export default {
       return /(?=^.{4,253}$)(^((?!-)[a-zA-Z0-9-]{0,62}[a-zA-Z0-9]\.)+[a-zA-Z]{2,63}$)/.test(
         `${this.data.subdomain}.duely.app`
       );
-    },
-    countries() {
-      return this.graph.loading ? [] : JSON.parse(this.graph.countrySpecs)
     }
   },
   methods: {
@@ -127,64 +117,39 @@ export default {
             ? `https://${this.data.subdomain}.duely.app/dashboard?access_token=${access_token}`
             : `${window.location.origin}/dashboard?subdomain=${this.data.subdomain}`;
 
-        const res = await client.mutate({
-          mutation: gql`
-            mutation($name: String!, $subdomain: String!, $countryCode: String!, $successUrl: String!, $failureUrl: String!) {
-              createAgency(name: $name, subdomain: $subdomain, countryCode: $countryCode, successUrl: $successUrl, failureUrl: $failureUrl) {
-                success
-                message
-                agencyUuid
-                stripeVerificationUrl
-              }
+        await this.$apollo.mutate({
+          mutation: gql`mutation($name: String!, $subdomain: String!, $countryCode: String!, $returnUrl: String!) {
+            createAgency(name: $name, subdomain: $subdomain, countryCode: $countryCode, returnUrl: $returnUrl) {
+              success
+              message
+              agencyUuid
+              stripeVerificationUrl
             }
-          `,
+          }`,
           variables: {
             name: this.data.name,
             subdomain: this.data.subdomain,
             countryCode: this.data.countryCode,
-            successUrl: returnUrl,
-            failureUrl: returnUrl
+            returnUrl
           },
-          refetchQueries: [
-            {
-              query: gql`
-                query {
-                  me {
-                    uuid
-                    agenciesConnection {
-                      edges {
-                        cursor
-                        roles
-                        node {
-                          uuid
-                          name
-                          subdomain {
-                            uuid
-                            name
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              `
+          update: async (store, { data: { createAgency } }) => {
+            if (createAgency.success) {
+              this.step = 2;
+              window.location.replace(createAgency.stripeVerificationUrl);
             }
-          ],
-          awaitRefetchQueries: true
+            else
+              this.forms.createAgencyStep1.errorMessage = createAgency.message;
+
+            this.forms.createAgencyStep1.loading = false;
+          }
         });
-
-        if (res.data.createAgency.success)
-        {
-          this.step = 2;
-          window.location.replace(res.data.createAgency.stripeVerificationUrl);
-        }
-        else
-          this.forms.createAgencyStep1.errorMessage =
-            res.data.createAgency.message;
-
-        this.forms.createAgencyStep1.loading = false;
       }
     }
+  },
+  apollo: {
+    countryCodes: gql`query {
+      countryCodes
+    }`
   }
 };
 </script>
