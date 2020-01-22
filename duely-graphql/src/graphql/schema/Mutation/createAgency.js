@@ -40,27 +40,23 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
     const agencyUuid = res.rows[0].uuid_;
 
     // create stripe custom account for agency
-    let accountId;
+    let account;
     try {
-      const { account } = await stripe.accounts.create(
-        {
-          type: 'custom',
-          country: countryCode,
-          requested_capabilities: [
-            'card_payments',
-            'transfers'
-          ],
-          business_profile: {
-            name,
-            url: `${subdomain}.duely.app`
-          },
-          metadata: {
-            agency_uuid_: agencyUuid
-          }
+      account = await stripe.accounts.create({
+        type: 'custom',
+        country: countryCode,
+        requested_capabilities: [
+          'card_payments',
+          'transfers'
+        ],
+        business_profile: {
+          name,
+          url: `${subdomain}.duely.app`
+        },
+        metadata: {
+          agency_uuid_: agencyUuid
         }
-      );
-
-      accountId = account.id;
+      });
 
     } catch (err) {
       // if stripe custom account could not be created, delete agency from database
@@ -73,24 +69,26 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
     }
 
     // store stripe custom account id to database
-    await client.query('SELECT operation_.create_stripe_account_($1::text, $2::uuid)', [accountId, agencyUuid]);
+    await client.query('SELECT operation_.create_stripe_account_($1::text, $2::uuid)', [account.id, agencyUuid]);
 
     // create stripe account verification url
-    let stripeVerificationUrl;
-    let message = null;
+    let accountLink;
     try {
-      const accountLink = await stripe.accountLinks.create(
-        {
-          account: accountId,
-          failure_url: returnUrl,
-          success_url: returnUrl,
-          type: 'custom_account_verification',
-          collect: 'eventually_due'
-        }
-      );
-      stripeVerificationUrl = accountLink.url;
+      accountLink = await stripe.accountLinks.create({
+        account: account.id,
+        failure_url: returnUrl,
+        success_url: returnUrl,
+        type: 'custom_account_verification',
+        collect: 'eventually_due'
+      });
     } catch (err) {
-      message = err.message;
+      return {
+        // something went wrong during account verification link creation
+        success: true,
+        message: err.message,
+        agencyUuid,
+        type: 'CreateAgencyResult'
+      };
     }
 
     // success
@@ -98,7 +96,7 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
       success: true,
       message,
       agencyUuid,
-      stripeVerificationUrl,
+      stripeVerificationUrl: accountLink.url,
       type: 'CreateAgencyResult'
     };
 
