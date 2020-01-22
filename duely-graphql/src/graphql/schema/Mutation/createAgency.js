@@ -94,7 +94,6 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
     // success
     return {
       success: true,
-      message,
       agencyUuid,
       stripeVerificationUrl: accountLink.url,
       type: 'CreateAgencyResult'
