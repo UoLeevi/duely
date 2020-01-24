@@ -10,6 +10,7 @@ import CreateAgencyResult from './CreateAgencyResult';
 import Date from './Date';
 import DeleteAgencyResult from './DeleteAgencyResult';
 import Edge from './Edge';
+import EditAgencyThemeResult from './EditAgencyThemeResult';
 import EndVisitResult from './EndVisitResult';
 import LogInResult from './LogInResult';
 import LogOutResult from './LogOutResult';
@@ -24,6 +25,7 @@ import Subdomain from './Subdomain';
 import Subject from './Subject';
 import SubjectAgenciesConnection from './SubjectAgenciesConnection';
 import SubjectAgenciesEdge from './SubjectAgenciesEdge';
+import Theme from './Theme';
 import Subscription from './Subscription';
 
 export default makeExecutableSchema([
@@ -38,6 +40,7 @@ export default makeExecutableSchema([
   Date,
   DeleteAgencyResult,
   Edge,
+  EditAgencyThemeResult,
   EndVisitResult,
   LogInResult,
   LogOutResult,
@@ -52,6 +55,7 @@ export default makeExecutableSchema([
   Subject,
   SubjectAgenciesConnection,
   SubjectAgenciesEdge,
+  Theme,
   Subscription
 ].reduce((schema, type) => ({
   typeDefs: schema.typeDefs.concat(type.typeDef),

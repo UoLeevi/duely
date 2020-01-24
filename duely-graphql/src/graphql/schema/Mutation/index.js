@@ -5,6 +5,7 @@ import signUp from './signUp';
 import logIn from './logIn';
 import logOut from './logOut';
 import createAgency from './createAgency';
+import editAgencyTheme from './editAgencyTheme';
 import deleteAgency from './deleteAgency';
 
 export default {
@@ -17,6 +18,7 @@ export default {
       logIn(emailAddress: String!, password: String!): LogInResult!
       logOut: LogOutResult!
       createAgency(name: String!, subdomain: String!, countryCode: String!, returnUrl: String!): CreateAgencyResult!
+      editAgencyTheme(agencyUuid: ID!, imageLogo: String!, imageHero: String!, colorPrimary: String!, colorSecondary: String!, colorAccent: String!, colorError: String!, colorSuccess: String!): EditAgencyThemeResult!
       deleteAgency(agencyUuid: ID!): DeleteAgencyResult!
     }
   `,
@@ -29,6 +31,7 @@ export default {
       logIn,
       logOut,
       createAgency,
+      editAgencyTheme,
       deleteAgency
     }
   }
