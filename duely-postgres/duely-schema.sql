@@ -772,6 +772,62 @@ $$;
 ALTER FUNCTION operation_.delete_service_(_service_uuid uuid) OWNER TO postgres;
 
 --
+-- Name: theme_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.theme_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    name_ text NOT NULL,
+    image_logo_ text,
+    image_hero_ text,
+    color_primary_ text,
+    color_secondary_ text,
+    color_accent_ text,
+    color_error_ text,
+    color_success_ text,
+    standard_ boolean DEFAULT false,
+    agency_uuid_ uuid,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.theme_ OWNER TO postgres;
+
+--
+-- Name: edit_agency_theme_(uuid, text, text, text, text, text, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.edit_agency_theme_(_agency_uuid uuid, _image_logo text, _image_hero text, _color_primary text, _color_secondary text, _color_accent text, _color_error text, _color_success text) RETURNS application_.theme_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _theme application_.theme_;
+  _arg RECORD;
+BEGIN
+  SELECT _agency_uuid agency_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('edit_agency_theme_', _arg);
+
+  INSERT INTO application_.theme_ (name_, agency_uuid_, image_logo_, image_hero_, color_primary_, color_secondary_, color_accent_, color_success_)
+  VALUES ('default', _agency_uuid, _image_logo, _image_hero, _color_primary, _color_secondary, _color_accent, _color_error, _color_success)
+  ON CONFLICT (agency_uuid_) DO UPDATE
+  SET
+    image_logo_ = _image_logo,
+    image_hero_ = _image_hero,
+    color_primary_ = _color_primary,
+    color_secondary_ = _color_secondary,
+    color_accent_ = _color_accent,
+    color_success_ = _color_success
+  RETURNING * INTO _theme;
+
+  RETURN _theme;
+END
+$$;
+
+
+ALTER FUNCTION operation_.edit_agency_theme_(_agency_uuid uuid, _image_logo text, _image_hero text, _color_primary text, _color_secondary text, _color_accent text, _color_error text, _color_success text) OWNER TO postgres;
+
+--
 -- Name: end_session_(); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -995,7 +1051,7 @@ ALTER FUNCTION operation_.query_active_subject_() OWNER TO postgres;
 -- Name: query_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_agency_(_agency_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, name_ text)
+CREATE FUNCTION operation_.query_agency_(_agency_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, theme_uuid_ uuid, name_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -1005,8 +1061,9 @@ BEGIN
   PERFORM security_.control_operation_('query_agency_', _arg);
 
   RETURN QUERY
-  SELECT a.uuid_, a.subdomain_uuid_, a.name_
+  SELECT a.uuid_, a.subdomain_uuid_, t.uuid_ theme_uuid_, a.name_
   FROM application_.agency_ a
+  LEFT JOIN application_.theme_ t ON a.uuid_ = t.agency_uuid_
   WHERE _agency_uuid IS NULL 
      OR _agency_uuid IS NOT DISTINCT FROM a.uuid_;
 
@@ -1020,7 +1077,7 @@ ALTER FUNCTION operation_.query_agency_(_agency_uuid uuid) OWNER TO postgres;
 -- Name: query_agency_by_subdomain_name_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_agency_by_subdomain_name_(_subdomain_name text) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, name_ text)
+CREATE FUNCTION operation_.query_agency_by_subdomain_name_(_subdomain_name text) RETURNS TABLE(uuid_ uuid, subdomain_uuid_ uuid, theme_uuid_ uuid, name_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -1030,11 +1087,12 @@ BEGIN
   PERFORM security_.control_operation_('query_agency_by_subdomain_name_', _arg);
 
   RETURN QUERY
-  SELECT a.uuid_, a.subdomain_uuid_, a.name_
+  SELECT a.uuid_, a.subdomain_uuid_, t.uuid_ theme_uuid_, a.name_
   FROM application_.agency_ a
+  LEFT JOIN application_.theme_ t ON a.uuid_ = t.agency_uuid_
   JOIN security_.subdomain_ d ON d.uuid_ = a.subdomain_uuid_
   WHERE d.name_ = _subdomain_name
-  GROUP BY a.uuid_, a.subdomain_uuid_, a.name_;
+  GROUP BY a.uuid_, a.subdomain_uuid_, t.uuid_, a.name_;
 
 END
 $$;
@@ -1153,6 +1211,31 @@ $$;
 
 
 ALTER FUNCTION operation_.query_subdomain_(_subdomain_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: query_theme_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_theme_(_theme_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, image_logo_ text, image_hero_ text, color_primary_ text, color_secondary_ text, color_accent_ text, color_error_ text, color_success_ text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT _theme_uuid theme_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('query_theme_', _arg);
+
+  RETURN QUERY
+  SELECT t.uuid_, t.name_, t.image_logo_, t.image_hero_, t.color_primary_, t.color_secondary_, t.color_accent_, t.color_error_, t.color_success_
+  FROM application_.theme_ t
+  WHERE (_theme_uuid IS NULL AND t.agency_uuid_ IS NULL AND t.standard_ = 't')
+     OR (_theme_uuid IS NOT DISTINCT FROM t.uuid_);
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_theme_(_theme_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: query_user_(); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1724,6 +1807,70 @@ $_X$;
 ALTER FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_name text, _policy_function_body text) OWNER TO postgres;
 
 --
+-- Name: icon_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.icon_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    name_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.icon_ OWNER TO postgres;
+
+--
+-- Name: service_component_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.service_component_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    service_uuid_ uuid NOT NULL,
+    service_component_template_uuid_ uuid NOT NULL,
+    name_ text NOT NULL,
+    status_ text DEFAULT 'draft'::text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.service_component_ OWNER TO postgres;
+
+--
+-- Name: service_component_delivery_type_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.service_component_delivery_type_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    name_ text NOT NULL,
+    icon_uuid_ uuid NOT NULL,
+    status_ text DEFAULT 'draft'::text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.service_component_delivery_type_ OWNER TO postgres;
+
+--
+-- Name: service_component_template_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.service_component_template_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    service_component_delivery_type_uuid_ uuid NOT NULL,
+    agency_uuid_ uuid,
+    name_ text NOT NULL,
+    status_ text DEFAULT 'draft'::text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.service_component_template_ OWNER TO postgres;
+
+--
 -- Name: agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -1738,6 +1885,21 @@ CREATE TABLE application__audit_.agency_ (
 
 
 ALTER TABLE application__audit_.agency_ OWNER TO postgres;
+
+--
+-- Name: icon_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.icon_ (
+    uuid_ uuid,
+    name_ text,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.icon_ OWNER TO postgres;
 
 --
 -- Name: service_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -1757,6 +1919,59 @@ CREATE TABLE application__audit_.service_ (
 ALTER TABLE application__audit_.service_ OWNER TO postgres;
 
 --
+-- Name: service_component_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.service_component_ (
+    uuid_ uuid,
+    service_uuid_ uuid,
+    service_component_template_uuid_ uuid,
+    name_ text,
+    status_ text,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.service_component_ OWNER TO postgres;
+
+--
+-- Name: service_component_delivery_type_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.service_component_delivery_type_ (
+    uuid_ uuid,
+    name_ text,
+    icon_uuid_ uuid,
+    status_ text,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.service_component_delivery_type_ OWNER TO postgres;
+
+--
+-- Name: service_component_template_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.service_component_template_ (
+    uuid_ uuid,
+    service_component_delivery_type_uuid_ uuid,
+    agency_uuid_ uuid,
+    name_ text,
+    status_ text,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.service_component_template_ OWNER TO postgres;
+
+--
 -- Name: stripe_account_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -1771,6 +1986,30 @@ CREATE TABLE application__audit_.stripe_account_ (
 
 
 ALTER TABLE application__audit_.stripe_account_ OWNER TO postgres;
+
+--
+-- Name: theme_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.theme_ (
+    uuid_ uuid,
+    name_ text,
+    image_logo_ text,
+    image_hero_ text,
+    color_primary_ text,
+    color_secondary_ text,
+    color_accent_ text,
+    color_error_ text,
+    color_success_ text,
+    standard_ boolean,
+    agency_uuid_ uuid,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.theme_ OWNER TO postgres;
 
 --
 -- Name: user_invite_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -2113,18 +2352,20 @@ a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 02:00:00+02	00000
 93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-44836e4b-ecd5-4184-a177-498b412ff251	query_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+44836e4b-ecd5-4184-a177-498b412ff251	query_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 3ae8d981-be1f-4843-bc41-df24bc904e5d	query_agency_by_subdomain_name_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-384605a6-0fb2-4d9c-aacc-3e5a33be8c36	create_stripe_account_	t	2020-01-18 17:41:14.931274+02	00000000-0000-0000-0000-000000000000
+384605a6-0fb2-4d9c-aacc-3e5a33be8c36	create_stripe_account_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+373f84a0-350e-41e9-b714-705d21a79135	query_theme_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2155,7 +2396,10 @@ b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc
 571601fd-1c3c-4d04-b37d-da9a66447025	argument_is_not_null_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 17b0f2a4-d301-41ab-9bf4-2ad2d8ba9784	service_status_contains_only_live_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-4ec948d5-45ea-4cdb-8cf9-aab00b10dfdd	owner_in_agency_	384605a6-0fb2-4d9c-aacc-3e5a33be8c36	allow	2020-01-18 17:41:19.41725+02	00000000-0000-0000-0000-000000000000
+4ec948d5-45ea-4cdb-8cf9-aab00b10dfdd	owner_in_agency_	384605a6-0fb2-4d9c-aacc-3e5a33be8c36	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+6d532fe7-ad14-4d6d-9861-c0813b407fbc	manager_in_agency_	d21b8f48-a57a-45b3-9341-926d735dffb6	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+2a0d6fa5-76c1-4440-9421-53f57185c5df	visitor_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+229bf29f-1dd3-45a2-b845-9c271771a4ab	logged_in_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2195,18 +2439,20 @@ a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 02:00:00+02	00000
 93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-44836e4b-ecd5-4184-a177-498b412ff251	query_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+44836e4b-ecd5-4184-a177-498b412ff251	query_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 3ae8d981-be1f-4843-bc41-df24bc904e5d	query_agency_by_subdomain_name_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-384605a6-0fb2-4d9c-aacc-3e5a33be8c36	create_stripe_account_	t	2020-01-18 17:41:14.931274+02	00000000-0000-0000-0000-000000000000	I
+384605a6-0fb2-4d9c-aacc-3e5a33be8c36	create_stripe_account_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+373f84a0-350e-41e9-b714-705d21a79135	query_theme_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2237,7 +2483,10 @@ b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc
 571601fd-1c3c-4d04-b37d-da9a66447025	argument_is_not_null_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 17b0f2a4-d301-41ab-9bf4-2ad2d8ba9784	service_status_contains_only_live_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-4ec948d5-45ea-4cdb-8cf9-aab00b10dfdd	owner_in_agency_	384605a6-0fb2-4d9c-aacc-3e5a33be8c36	allow	2020-01-18 17:41:19.41725+02	00000000-0000-0000-0000-000000000000	I
+4ec948d5-45ea-4cdb-8cf9-aab00b10dfdd	owner_in_agency_	384605a6-0fb2-4d9c-aacc-3e5a33be8c36	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+6d532fe7-ad14-4d6d-9861-c0813b407fbc	manager_in_agency_	d21b8f48-a57a-45b3-9341-926d735dffb6	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+2a0d6fa5-76c1-4440-9421-53f57185c5df	visitor_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+229bf29f-1dd3-45a2-b845-9c271771a4ab	logged_in_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2288,6 +2537,14 @@ ALTER TABLE ONLY application_.agency_
 
 
 --
+-- Name: icon_ icon__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.icon_
+    ADD CONSTRAINT icon__pkey PRIMARY KEY (uuid_);
+
+
+--
 -- Name: service_ service__agency_uuid__name__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -2301,6 +2558,30 @@ ALTER TABLE ONLY application_.service_
 
 ALTER TABLE ONLY application_.service_
     ADD CONSTRAINT service__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: service_component_ service_component__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_component_
+    ADD CONSTRAINT service_component__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: service_component_delivery_type_ service_component_delivery_type__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_component_delivery_type_
+    ADD CONSTRAINT service_component_delivery_type__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: service_component_template_ service_component_template__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_component_template_
+    ADD CONSTRAINT service_component_template__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -2325,6 +2606,22 @@ ALTER TABLE ONLY application_.stripe_account_
 
 ALTER TABLE ONLY application_.stripe_account_
     ADD CONSTRAINT stripe_account__stripe_id__key UNIQUE (stripe_id_);
+
+
+--
+-- Name: theme_ theme__agency_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.theme_
+    ADD CONSTRAINT theme__agency_uuid__key UNIQUE (agency_uuid_);
+
+
+--
+-- Name: theme_ theme__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.theme_
+    ADD CONSTRAINT theme__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -2518,6 +2815,41 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.servic
 
 
 --
+-- Name: stripe_account_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.stripe_account_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: icon_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.icon_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: service_component_delivery_type_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_component_delivery_type_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: service_component_template_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_component_template_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: service_component_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_component_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
 -- Name: agency_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2525,10 +2857,10 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency
 
 
 --
--- Name: stripe_account_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: theme_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.stripe_account_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -2553,6 +2885,41 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.user_in
 
 
 --
+-- Name: icon_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.icon_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_component_delivery_type_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_component_delivery_type_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_component_template_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_component_template_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_component_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_component_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: theme_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
 -- Name: user_invite_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2567,6 +2934,41 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 
 
 --
+-- Name: stripe_account_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: icon_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.icon_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_component_delivery_type_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_component_delivery_type_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_component_template_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_component_template_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_component_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_component_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: agency_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2574,10 +2976,10 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 
 
 --
--- Name: stripe_account_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: theme_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2602,6 +3004,41 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.user_in
 
 
 --
+-- Name: icon_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.icon_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_component_delivery_type_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_component_delivery_type_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_component_template_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_component_template_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_component_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_component_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: theme_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
 -- Name: user_invite_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2616,6 +3053,41 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
+-- Name: stripe_account_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: icon_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.icon_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_component_delivery_type_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_component_delivery_type_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_component_template_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_component_template_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_component_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_component_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: agency_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2623,10 +3095,10 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
--- Name: stripe_account_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: theme_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -2651,6 +3123,41 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.user_in
 
 
 --
+-- Name: icon_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.icon_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_component_delivery_type_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_component_delivery_type_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_component_template_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_component_template_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_component_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_component_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: theme_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
 -- Name: user_invite_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2665,6 +3172,41 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.servi
 
 
 --
+-- Name: stripe_account_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.stripe_account_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: icon_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.icon_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: service_component_delivery_type_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_component_delivery_type_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: service_component_template_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_component_template_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: service_component_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_component_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
 -- Name: agency_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2672,10 +3214,10 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agenc
 
 
 --
--- Name: stripe_account_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: theme_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.stripe_account_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.theme_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -2982,11 +3524,59 @@ ALTER TABLE ONLY application_.service_
 
 
 --
+-- Name: service_component_ service_component__service_component_template_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_component_
+    ADD CONSTRAINT service_component__service_component_template_uuid__fkey FOREIGN KEY (service_component_template_uuid_) REFERENCES application_.service_component_template_(uuid_);
+
+
+--
+-- Name: service_component_ service_component__service_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_component_
+    ADD CONSTRAINT service_component__service_uuid__fkey FOREIGN KEY (service_uuid_) REFERENCES application_.service_(uuid_);
+
+
+--
+-- Name: service_component_delivery_type_ service_component_delivery_type__icon_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_component_delivery_type_
+    ADD CONSTRAINT service_component_delivery_type__icon_uuid__fkey FOREIGN KEY (icon_uuid_) REFERENCES application_.icon_(uuid_);
+
+
+--
+-- Name: service_component_template_ service_component_template__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_component_template_
+    ADD CONSTRAINT service_component_template__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+
+
+--
+-- Name: service_component_template_ service_component_template__service_component_delivery_typ_fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_component_template_
+    ADD CONSTRAINT service_component_template__service_component_delivery_typ_fkey FOREIGN KEY (service_component_delivery_type_uuid_) REFERENCES application_.service_component_delivery_type_(uuid_);
+
+
+--
 -- Name: stripe_account_ stripe_account__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
 ALTER TABLE ONLY application_.stripe_account_
     ADD CONSTRAINT stripe_account__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+
+
+--
+-- Name: theme_ theme__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.theme_
+    ADD CONSTRAINT theme__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
 
 
 --
