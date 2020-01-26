@@ -54,6 +54,48 @@ Vutil.install = function(Vue) {
         const themeItem = this.$vuetify.theme.currentTheme[name];
         return themeItem ? themeItem[variant ? variant.replace('-', '') : 'base'] : color;
       },
+      changeBrightness(hexColor, percent) {
+        if (hexColor.length === 4)
+          hexColor = '#' + hexColor[1] + hexColor[1] + hexColor[2] + hexColor[2] + hexColor[3] + hexColor[3];
+
+        let r = parseInt(hexColor.substr(1, 2), 16);
+        let g = parseInt(hexColor.substr(3, 2), 16);
+        let b = parseInt(hexColor.substr(5, 2), 16);
+
+        if (percent > 0) {
+          r += percent * (255 - r);
+          g += percent * (255 - g);
+          b += percent * (255 - b);
+        } else {
+          r *= 1.0 + percent;
+          g *= 1.0 + percent;
+          b *= 1.0 + percent;
+        }
+
+        r = Math.round(r).toString(16).padStart(2, '0');
+        g = Math.round(g).toString(16).padStart(2, '0');
+        b = Math.round(b).toString(16).padStart(2, '0');
+
+        return '#' + r + g + b;
+      },
+      generateThemeItem(name, baseHexColor) {
+        return {
+          name,
+          base: baseHexColor,
+          lighten5: this.changeBrightness(baseHexColor, 0.96),
+          lighten4: this.changeBrightness(baseHexColor, 0.8),
+          lighten3: this.changeBrightness(baseHexColor, 0.6),
+          lighten2: this.changeBrightness(baseHexColor, 0.4),
+          lighten1: this.changeBrightness(baseHexColor, 0.2),
+          darken1: this.changeBrightness(baseHexColor, -0.18),
+          darken2: this.changeBrightness(baseHexColor, -0.36),
+          darken3: this.changeBrightness(baseHexColor, -0.54),
+          darken4: this.changeBrightness(baseHexColor, -0.72)
+        };
+      },
+      updateThemeItem(name, baseHexColor) {
+        this.$vuetify.theme.currentTheme[name] = this.generateThemeItem(name, baseHexColor);
+      },
       adjustSize(xl, factor = 1.0) {
         if (this.$vuetify.breakpoint.name === 'xl')
           return xl;
@@ -118,40 +160,40 @@ Vutil.install = function(Vue) {
     }
   });
 
-  let backgroundColorDefault;
-  const backgroundColorStack = []
+  // let backgroundColorDefault;
+  // const backgroundColorStack = []
 
-  Vue.directive('background-color', {
-    bind(el, binding, vnode) {
-      while (!vnode.componentInstance)
-        vnode = vnode.parent;
+  // Vue.directive('background-color', {
+  //   bind(el, binding, vnode) {
+  //     while (!vnode.componentInstance)
+  //       vnode = vnode.parent;
 
-      const theme = vnode.componentInstance.$vuetify.theme.currentTheme;
+  //     const theme = vnode.componentInstance.$vuetify.theme.currentTheme;
 
-      if (!backgroundColorStack.length) {
-        backgroundColorDefault = JSON.parse(JSON.stringify(theme.background.base));
-        backgroundColorStack.push(backgroundColorDefault);
-      }
+  //     if (!backgroundColorStack.length) {
+  //       backgroundColorDefault = JSON.parse(JSON.stringify(theme.background.base));
+  //       backgroundColorStack.push(backgroundColorDefault);
+  //     }
 
-      let color = binding.value || backgroundColorDefault;
+  //     let color = binding.value || backgroundColorDefault;
 
-      if (typeof color === 'string' && !/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(color)) {
-        const [name, variant] = color.split(' ');
-        const themeItem = theme[name];
-        color = themeItem ? themeItem[variant ? variant.replace('-', '') : 'base'] : color;
-      }
+  //     if (typeof color === 'string' && !/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(color)) {
+  //       const [name, variant] = color.split(' ');
+  //       const themeItem = theme[name];
+  //       color = themeItem ? themeItem[variant ? variant.replace('-', '') : 'base'] : color;
+  //     }
 
-      backgroundColorStack.push(color);
-      theme.background.base = backgroundColorStack[backgroundColorStack.length - 1];
-    },
-    unbind(el, binding, vnode) {
-      while (!vnode.componentInstance)
-        vnode = vnode.parent;
+  //     backgroundColorStack.push(color);
+  //     theme.background.base = backgroundColorStack[backgroundColorStack.length - 1];
+  //   },
+  //   unbind(el, binding, vnode) {
+  //     while (!vnode.componentInstance)
+  //       vnode = vnode.parent;
 
-      --backgroundColorStack.length;
-      vnode.componentInstance.$vuetify.theme.currentTheme.background.base = backgroundColorStack[backgroundColorStack.length - 1];
-    }
-  });
+  //     --backgroundColorStack.length;
+  //     vnode.componentInstance.$vuetify.theme.currentTheme.background.base = backgroundColorStack[backgroundColorStack.length - 1];
+  //   }
+  // });
 
   let ticking = false;
 

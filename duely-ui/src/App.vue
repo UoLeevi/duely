@@ -1,5 +1,5 @@
 <template>
-  <v-app v-custom-scroll :class="`${this.$vuetify.breakpoint.name}`">
+  <v-app :class="`${this.$vuetify.breakpoint.name}`">
     <ScrollNav />
     <SplashScreenLoader :show="$apollo.loading" />
     <v-content>
@@ -25,6 +25,6 @@ export default {
 
 <style scoped>
 #app {
-  background-color: var(--v-background-base);
+  background-color: var(--v-background-lighten5);
 }
 </style>

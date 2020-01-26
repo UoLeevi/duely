@@ -1,17 +1,17 @@
 <template>
-  <v-container fluid class="pl-0 py-2 pr-2 fill-height" id="profile-layout">
+  <v-container fluid class="pa-0 fill-height" id="profile-layout">
     <v-col class="fill-height justify-center d-flex flex-column" cols="3" md="3">
       <v-row />
       <v-row align="center" class="flex-column fill-height">
         <router-link to="/" v-if="$vuetify.breakpoint.smAndUp">
-          <h1 class="f-4 font-weight-regular pa-2 grey--text text--darken-2">duely</h1>
+          <h1 class="f-4 font-weight-regular pa-2 surface--text text--lighten-4">duely</h1>
         </router-link>
         <slot name="menu">
         </slot>
       </v-row>
       <v-row />
     </v-col>
-    <v-col class="content fill-height d-flex flex-row rounded-corners py-6 px-8">
+    <v-col class="content fill-height d-flex flex-row py-6 px-8">
       <slot></slot>
     </v-col>
   </v-container>
@@ -25,7 +25,7 @@ export default {
 
 <style scoped>
 #profile-layout {
-  background-color: var(--v-grey-darken4);
+  background-color: var(--v-surface-darken2);
 }
 
 #profile-layout .content {

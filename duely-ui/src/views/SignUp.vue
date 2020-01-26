@@ -80,7 +80,7 @@
 </template>
 
 <script>
-import { client, gql } from '@/apollo';
+import { gql } from '@/apollo';
 
 export default {
   data() {
@@ -134,26 +134,25 @@ export default {
       if (this.$refs.signUpStep1Form.validate()) {
         this.forms.signUpStep1.loading = true;
 
-        const res = await client.mutate({
-          mutation: gql`
-            mutation($emailAddress: String!) {
-              startEmailAddressVerification(emailAddress: $emailAddress) {
-                success
-                message
-              }
+        await this.$apollo.mutate({
+          mutation: gql`mutation($emailAddress: String!) {
+            startEmailAddressVerification(emailAddress: $emailAddress) {
+              success
+              message
             }
-          `,
+          }`,
           variables: {
             emailAddress: this.data.emailAddress
+          },
+          update: async (store, { data: { startEmailAddressVerification } }) => {
+            if (startEmailAddressVerification.success)
+              this.step = 2;
+            else
+              this.forms.signUpStep1.errorMessage = startEmailAddressVerification.message;
+
+            this.forms.signUpStep1.loading = false;
           }
         });
-
-        if (res.data.startEmailAddressVerification.success) this.step = 2;
-        else
-          this.forms.signUpStep1.errorMessage =
-            res.data.startEmailAddressVerification.message;
-
-        this.forms.signUpStep1.loading = false;
       }
     },
     async submitSignUpStep2() {
@@ -162,73 +161,67 @@ export default {
       if (this.$refs.signUpStep2Form.validate()) {
         this.forms.signUpStep2.loading = true;
 
-        const res = await client.mutate({
-          mutation: gql`
-            mutation(
-              $emailAddress: String!
-              $verificationCode: String!
-              $name: String!
-              $password: String!
-            ) {
-              signUp(
-                emailAddress: $emailAddress
-                verificationCode: $verificationCode
-                name: $name
-                password: $password
-              ) {
-                success
-                message
-                userUuid
-              }
+        await this.$apollo.mutate({
+          mutation: gql`mutation($emailAddress: String!, $verificationCode: String!, $name: String!, $password: String!) {
+            signUp(emailAddress: $emailAddress, verificationCode: $verificationCode, name: $name, password: $password) {
+              success
+              message
+              userUuid
             }
-          `,
+          }`,
           variables: {
             emailAddress: this.data.emailAddress,
             verificationCode: this.data.verificationCode,
             name: this.data.name,
             password: this.data.password
+          },
+          update: async (store, { data: { signUp } }) => { 
+            if (signUp.success)
+              this.step = 3;
+            else
+              this.forms.signUpStep2.errorMessage = signUp.message;
+
+            this.forms.signUpStep2.loading = false;
           }
         });
-
-        if (res.data.signUp.success) this.step = 3;
-        else this.forms.signUpStep2.errorMessage = res.data.signUp.message;
-
-        this.forms.signUpStep2.loading = false;
       }
     },
     async logIn() {
       this.forms.logIn.loading = true;
 
-      const res = await client.mutate({
-        mutation: gql`
-          mutation($emailAddress: String!, $password: String!) {
-            logIn(emailAddress: $emailAddress, password: $password) {
-              success
-              message
-              jwt
-            }
+      await this.$apollo.mutate({
+        mutation: gql`mutation($emailAddress: String!, $password: String!) {
+          logIn(emailAddress: $emailAddress, password: $password) {
+            success
+            message
+            jwt
           }
-        `,
+        }`,
         variables: {
           emailAddress: this.data.emailAddress,
           password: this.data.password
-        }
+        },
+        update: async (store, { data: { logIn } }) => {
+        if (logIn.success)
+          {
+            const jwt = logIn.jwt;
+            if (jwt) {
+              localStorage.setItem('user-jwt', jwt);
+              await this.$apollo.provider.defaultClient.clearStore();
+              //await this.$apollo.queries.me.refetch();
+              this.$router.push({ path: '/profile' });
+            } else 
+              this.$router.push({ path: '/' });
+
+            this.forms.logIn.loading = false;
+            this.dialog = false;
+          }
+          else {
+            this.errorMessage = logIn.message;
+            this.forms.logIn.loading = false;
+          }
+        } 
       });
-
-      if (!res.data.logIn.success) {
-        this.errorMessage = res.data.logIn.message;
-        this.loading = false;
-        return;
-      }
-
-      const jwt = res.data.logIn.jwt;
-      if (jwt) {
-        localStorage.setItem('user-jwt', jwt);
-        await client.clearStore();
-        this.$router.push({ path: '/profile' });
-      } else this.$router.push({ path: '/' });
-
-      this.forms.logIn.loading = false;
     }
   },
   created() {

@@ -4,7 +4,7 @@
     <template v-else>
       <div class="text-center">
         <b class="f-8">Hi {{ me.name }}</b>
-        <p class="f-3 grey--text">Welcome back to duely, we missed you!</p>
+        <p class="f-3 surface--text">Welcome back to duely, we missed you!</p>
       </div>
     </template>
   </section>

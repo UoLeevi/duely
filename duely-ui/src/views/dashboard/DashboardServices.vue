@@ -12,12 +12,12 @@
           <template #default>
             <thead>
               <tr>
-                <th class="text-left f-2b grey--text text--lighten-3">Service</th>
-                <th class="text-left f-2b grey--text text--lighten-3">Timeline</th>
-                <th class="text-left f-2b grey--text text--lighten-3">Payment plan</th>
-                <th class="text-left f-2b grey--text text--lighten-3">Deliverables</th>
-                <th class="text-left f-2b grey--text text--lighten-3">Number of active clients</th>
-                <th class="text-center f-2b grey--text text--lighten-3">Status</th>
+                <th class="text-left f-2b surface--text text--lighten-3">Service</th>
+                <th class="text-left f-2b surface--text text--lighten-3">Timeline</th>
+                <th class="text-left f-2b surface--text text--lighten-3">Payment plan</th>
+                <th class="text-left f-2b surface--text text--lighten-3">Deliverables</th>
+                <th class="text-left f-2b surface--text text--lighten-3">Number of active clients</th>
+                <th class="text-center f-2b surface--text text--lighten-3">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -25,7 +25,7 @@
                 <td>
                   <div class="d-flex flex-column">
                     <span class="f-2b">{{ item.name }}</span>
-                    <span class="f-1 grey--text text--lighten-2">{{ truncateString(item.name, 30) }}</span>
+                    <span class="f-1 surface--text text--lighten-2">{{ truncateString(item.name, 30) }}</span>
                   </div>
                 </td>
                 <td></td>

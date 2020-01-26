@@ -8,7 +8,7 @@ if (process.env.NODE_ENV === 'production') {
 
 } else {
   const queryParams = new URLSearchParams(window.location.search);
-  let name = queryParams.get('subdomain')
+  let name = queryParams.get('subdomain');
 
   if (name)
     subdomainName = name.toLowerCase();

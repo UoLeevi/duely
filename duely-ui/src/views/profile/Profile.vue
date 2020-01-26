@@ -35,7 +35,7 @@ export default {
         },
         {
           to: '/profile/settings',
-          color: 'grey',
+          color: 'surface',
           text: 'Settings',
           icon: 'settings'
         }
