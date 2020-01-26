@@ -783,6 +783,8 @@ CREATE TABLE application_.theme_ (
     color_primary_ text,
     color_secondary_ text,
     color_accent_ text,
+    color_background_ text,
+    color_surface_ text,
     color_error_ text,
     color_success_ text,
     standard_ boolean DEFAULT false,
@@ -798,7 +800,7 @@ ALTER TABLE application_.theme_ OWNER TO postgres;
 -- Name: edit_agency_theme_(uuid, text, text, text, text, text, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.edit_agency_theme_(_agency_uuid uuid, _image_logo text, _image_hero text, _color_primary text, _color_secondary text, _color_accent text, _color_error text, _color_success text) RETURNS application_.theme_
+CREATE FUNCTION operation_.edit_agency_theme_(_agency_uuid uuid, _image_logo text, _image_hero text, _color_primary text, _color_secondary text, _color_accent text, _color_background text, _color_surface text, _color_error text, _color_success text) RETURNS application_.theme_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -808,8 +810,8 @@ BEGIN
   SELECT _agency_uuid agency_uuid_ INTO _arg; 
   PERFORM security_.control_operation_('edit_agency_theme_', _arg);
 
-  INSERT INTO application_.theme_ (name_, agency_uuid_, image_logo_, image_hero_, color_primary_, color_secondary_, color_accent_, color_success_)
-  VALUES ('default', _agency_uuid, _image_logo, _image_hero, _color_primary, _color_secondary, _color_accent, _color_error, _color_success)
+  INSERT INTO application_.theme_ (name_, agency_uuid_, image_logo_, image_hero_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_ , color_success_)
+  VALUES ('default', _agency_uuid, _image_logo, _image_hero, _color_primary, _color_secondary, _color_accent, _color_background, _color_surface, _color_error, _color_success)
   ON CONFLICT (agency_uuid_) DO UPDATE
   SET
     image_logo_ = _image_logo,
@@ -817,6 +819,8 @@ BEGIN
     color_primary_ = _color_primary,
     color_secondary_ = _color_secondary,
     color_accent_ = _color_accent,
+    color_background_ = _color_background,
+    color_surface_ = _color_surface,
     color_success_ = _color_success
   RETURNING * INTO _theme;
 
@@ -825,7 +829,7 @@ END
 $$;
 
 
-ALTER FUNCTION operation_.edit_agency_theme_(_agency_uuid uuid, _image_logo text, _image_hero text, _color_primary text, _color_secondary text, _color_accent text, _color_error text, _color_success text) OWNER TO postgres;
+ALTER FUNCTION operation_.edit_agency_theme_(_agency_uuid uuid, _image_logo text, _image_hero text, _color_primary text, _color_secondary text, _color_accent text, color_background_ text, color_surface_ text, _color_error text, _color_success text) OWNER TO postgres;
 
 --
 -- Name: end_session_(); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1216,7 +1220,7 @@ ALTER FUNCTION operation_.query_subdomain_(_subdomain_uuid uuid) OWNER TO postgr
 -- Name: query_theme_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_theme_(_theme_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, image_logo_ text, image_hero_ text, color_primary_ text, color_secondary_ text, color_accent_ text, color_error_ text, color_success_ text)
+CREATE FUNCTION operation_.query_theme_(_theme_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, image_logo_ text, image_hero_ text, color_primary_ text, color_secondary_ text, color_accent_ text, color_background_ text, color_surface_ text, color_error_ text, color_success_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -1226,7 +1230,7 @@ BEGIN
   PERFORM security_.control_operation_('query_theme_', _arg);
 
   RETURN QUERY
-  SELECT t.uuid_, t.name_, t.image_logo_, t.image_hero_, t.color_primary_, t.color_secondary_, t.color_accent_, t.color_error_, t.color_success_
+  SELECT t.uuid_, t.name_, t.image_logo_, t.image_hero_, t.color_primary_, t.color_secondary_, t.color_accent_, t.color_background_, t.color_surface_, t.color_error_, t.color_success_
   FROM application_.theme_ t
   WHERE (_theme_uuid IS NULL AND t.agency_uuid_ IS NULL AND t.standard_ = 't')
      OR (_theme_uuid IS NOT DISTINCT FROM t.uuid_);
@@ -1999,6 +2003,8 @@ CREATE TABLE application__audit_.theme_ (
     color_primary_ text,
     color_secondary_ text,
     color_accent_ text,
+    color_background_ text,
+    color_surface_ text,
     color_error_ text,
     color_success_ text,
     standard_ boolean,
