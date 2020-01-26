@@ -810,7 +810,7 @@ BEGIN
   SELECT _agency_uuid agency_uuid_ INTO _arg; 
   PERFORM security_.control_operation_('edit_agency_theme_', _arg);
 
-  INSERT INTO application_.theme_ (name_, agency_uuid_, image_logo_, image_hero_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_ , color_success_)
+  INSERT INTO application_.theme_ (name_, agency_uuid_, image_logo_, image_hero_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_, color_error_, color_success_)
   VALUES ('default', _agency_uuid, _image_logo, _image_hero, _color_primary, _color_secondary, _color_accent, _color_background, _color_surface, _color_error, _color_success)
   ON CONFLICT (agency_uuid_) DO UPDATE
   SET
@@ -821,6 +821,7 @@ BEGIN
     color_accent_ = _color_accent,
     color_background_ = _color_background,
     color_surface_ = _color_surface,
+    color_error_ = _color_error,
     color_success_ = _color_success
   RETURNING * INTO _theme;
 
@@ -1163,7 +1164,7 @@ ALTER FUNCTION operation_.query_service_(_agency_uuid uuid, _status text[]) OWNE
 -- Name: query_shared_agency_(uuid, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_shared_agency_(_subject_uuid uuid, _agency_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, subdomain_uuid_ uuid, role_names_ text[])
+CREATE FUNCTION operation_.query_shared_agency_(_subject_uuid uuid, _agency_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, subdomain_uuid_ uuid, theme_uuid_ uuid, role_names_ text[])
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -1174,16 +1175,17 @@ BEGIN
   PERFORM security_.control_operation_('query_shared_agency_', _arg);
 
   RETURN QUERY
-  SELECT a.uuid_, a.name_, a.subdomain_uuid_, array_remove(array_agg(r.name_), NULL) role_names_
+  SELECT a.uuid_, a.name_, a.subdomain_uuid_, t.uuid_ theme_uuid_, array_remove(array_agg(r.name_), NULL) role_names_
   FROM security_.user_ u
   LEFT JOIN security_.subject_assignment_flat_ sa ON u.uuid_ = sa.subject_uuid_
   LEFT JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
   LEFT JOIN application_.agency_ a ON a.subdomain_uuid_ = sa.subdomain_uuid_
+  LEFT JOIN application_.theme_ t ON a.uuid_ = t.agency_uuid_
   LEFT JOIN security_.active_role_ ar ON a.subdomain_uuid_ = ar.subdomain_uuid_
   WHERE u.uuid_ = _subject_uuid
     AND ar.name_ = 'agent'
     AND (_agency_uuid IS NULL OR _agency_uuid IS NOT DISTINCT FROM a.uuid_)
-  GROUP BY a.uuid_, a.name_, a.subdomain_uuid_;
+  GROUP BY a.uuid_, a.name_, a.subdomain_uuid_, t.uuid_;
 
 END
 $$;
