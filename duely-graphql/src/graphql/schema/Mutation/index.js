@@ -18,7 +18,7 @@ export default {
       logIn(emailAddress: String!, password: String!): LogInResult!
       logOut: LogOutResult!
       createAgency(name: String!, subdomain: String!, countryCode: String!, returnUrl: String!): CreateAgencyResult!
-      editAgencyTheme(agencyUuid: ID!, imageLogo: String!, imageHero: String!, colorPrimary: String!, colorSecondary: String!, colorAccent: String!, colorError: String!, colorSuccess: String!): EditAgencyThemeResult!
+      editAgencyTheme(agencyUuid: ID!, imageLogo: String!, imageHero: String!, colorPrimary: String!, colorSecondary: String!, colorAccent: String!, colorBackground: String!, colorSurface: String!, colorError: String!, colorSuccess: String!): EditAgencyThemeResult!
       deleteAgency(agencyUuid: ID!): DeleteAgencyResult!
     }
   `,

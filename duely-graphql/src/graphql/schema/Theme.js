@@ -11,6 +11,8 @@ export default {
       colorPrimary: String!
       colorSecondary: String!
       colorAccent: String!
+      colorBackground: String!
+      colorSurface: String!
       colorError: String!
       colorSuccess: String!
       agency: Agency
@@ -21,11 +23,13 @@ export default {
       uuid: source => source.uuid_,
       name: source => source.name_,
       imageLogo: source => source.image_logo_,
-      imageHero: source => source.image_hero_ ,
-      colorPrimary: source => source.color_primary_ ,
-      colorSecondary: source => source.color_secondary_ ,
-      colorAccent: source => source.color_accent_ ,
-      colorError: source => source.color_error_ ,
+      imageHero: source => source.image_hero_,
+      colorPrimary: source => source.color_primary_,
+      colorSecondary: source => source.color_secondary_,
+      colorAccent: source => source.color_accent_,
+      colorBackground: source => source.color_background_,
+      colorSurface: source => source.color_surface_,
+      colorError: source => source.color_error_,
       colorSuccess: source => source.color_success_,
       async agency(theme, args, context, info) {
         if (!context.jwt)
