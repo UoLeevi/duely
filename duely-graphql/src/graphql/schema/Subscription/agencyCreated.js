@@ -10,12 +10,12 @@ getSharedClient().then(client => {
     if (channel !== 'application_.agency_')
       return;
 
-    const { op, row } = JSON.parse(payload);
+    const { op, uuid_ } = JSON.parse(payload);
 
     if (op !== 'I')
       return;
 
-    pubsub.publish(AGENCY_CREATED, { agencyCreated: row });
+    pubsub.publish(AGENCY_CREATED, { uuid_ });
   });
 });
 
@@ -26,7 +26,7 @@ export default {
       const client = await pool.connect();
       try {
         await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-        const res = await client.query('SELECT * FROM operation_.query_agency_($1::uuid)', [obj.agencyCreated.uuid_]);
+        const res = await client.query('SELECT * FROM operation_.query_agency_($1::uuid)', [obj.uuid_]);
         return res.rows.length === 1;
       }
       catch (err) {
