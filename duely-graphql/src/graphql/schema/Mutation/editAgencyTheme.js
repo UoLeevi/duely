@@ -8,17 +8,17 @@ export default async function editAgencyTheme(obj, { agencyUuid, imageLogo, imag
 
   // validate image arguments
 
-  if (!validator.isBase64(imageLogo))
+  if (!validator.isDataURI(imageLogo))
   return {
     success: false,
-    message: `Argument 'imageLogo' has invalid format. Images should be base64 encoded.`,
+    message: `Argument 'imageLogo' has invalid format. Data URL with base64 encoded data is expected.`,
     type: 'EditAgencyThemeResult'
   };
 
-  if (!validator.isBase64(imageHero))
+  if (!validator.isDataURI(imageHero))
   return {
     success: false,
-    message: `Argument 'imageHero' has invalid format. Images should be base64 encoded.`,
+    message: `Argument 'imageHero' has invalid format. Data URL with base64 encoded data is expected.`,
     type: 'EditAgencyThemeResult'
   };
 
