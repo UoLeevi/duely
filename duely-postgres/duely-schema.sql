@@ -332,7 +332,7 @@ CREATE FUNCTION internal_.notify_json_() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  PERFORM pg_notify(TG_TABLE_SCHEMA::text || '.' || TG_TABLE_NAME::text, json_build_object('op', LEFT(TG_OP, 1), 'row', to_json(t.*))::text)
+  PERFORM pg_notify(TG_TABLE_SCHEMA::text || '.' || TG_TABLE_NAME::text, json_build_object('op', LEFT(TG_OP, 1), 'uuid_', t.uuid_::text)::text)
   FROM _transition_table t;
   RETURN NULL;
 END;
