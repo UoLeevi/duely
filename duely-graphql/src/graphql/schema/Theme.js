@@ -6,8 +6,8 @@ export default {
     type Theme implements Node {
       uuid: ID!
       name: String!
-      imageLogo: String!
-      imageHero: String!
+      imageLogo: Image!
+      imageHero: Image!
       colorPrimary: String!
       colorSecondary: String!
       colorAccent: String!
@@ -22,8 +22,46 @@ export default {
     Theme: {
       uuid: source => source.uuid_,
       name: source => source.name_,
-      imageLogo: source => source.image_logo_,
-      imageHero: source => source.image_hero_,
+      async imageLogo(theme, args, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        if (theme.image_logo_uuid_ === null)
+          return null;
+
+        const client = await pool.connect();
+        try {
+          await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
+          const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [theme.image_logo_uuid_]);
+          await client.query('SELECT operation_.end_session_()');
+          return res.rows[0];
+        } catch (error) {
+          throw new AuthenticationError(error.message);
+        }
+        finally {
+          client.release();
+        }
+      },
+      async imageHero(theme, args, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        if (theme.image_hero_uuid_ === null)
+          return null;
+
+        const client = await pool.connect();
+        try {
+          await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
+          const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [theme.image_hero_uuid_]);
+          await client.query('SELECT operation_.end_session_()');
+          return res.rows[0];
+        } catch (error) {
+          throw new AuthenticationError(error.message);
+        }
+        finally {
+          client.release();
+        }
+      },
       colorPrimary: source => source.color_primary_,
       colorSecondary: source => source.color_secondary_,
       colorAccent: source => source.color_accent_,

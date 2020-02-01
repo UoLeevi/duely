@@ -2,25 +2,9 @@ import { pool } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
-export default async function editAgencyTheme(obj, { agencyUuid, imageLogo, imageHero, colorPrimary, colorSecondary, colorAccent, colorBackground, colorSurface, colorError, colorSuccess }, context, info) {
+export default async function editAgencyTheme(obj, { agencyUuid, imageLogoUuid, imageHeroUuid, colorPrimary, colorSecondary, colorAccent, colorBackground, colorSurface, colorError, colorSuccess }, context, info) {
   if (!context.jwt)
     throw new AuthenticationError('Unauthorized');
-
-  // validate image arguments
-
-  if (!validator.isDataURI(imageLogo))
-  return {
-    success: false,
-    message: `Argument 'imageLogo' has invalid format. Data URL with base64 encoded data is expected.`,
-    type: 'EditAgencyThemeResult'
-  };
-
-  if (!validator.isDataURI(imageHero))
-  return {
-    success: false,
-    message: `Argument 'imageHero' has invalid format. Data URL with base64 encoded data is expected.`,
-    type: 'EditAgencyThemeResult'
-  };
 
   // validate color arguments
 
@@ -79,7 +63,7 @@ export default async function editAgencyTheme(obj, { agencyUuid, imageLogo, imag
     await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
 
     // create or update theme on database
-    const res = await client.query('SELECT uuid_ FROM operation_.edit_agency_theme_($1::uuid, $2::text, $3::text, $4::text, $5::text, $6::text, $7::text, $8::text, $9::text, $10::text)', [agencyUuid, imageLogo, imageHero, colorPrimary, colorSecondary, colorAccent, colorBackground, colorSurface, colorError, colorSuccess]);
+    const res = await client.query('SELECT uuid_ FROM operation_.edit_agency_theme_($1::uuid, $2::uuid, $3::uuid, $4::text, $5::text, $6::text, $7::text, $8::text, $9::text, $10::text)', [agencyUuid, imageLogoUuid, imageHeroUuid, colorPrimary, colorSecondary, colorAccent, colorBackground, colorSurface, colorError, colorSuccess]);
     const themeUuid = res.rows[0].uuid_;
 
     // success

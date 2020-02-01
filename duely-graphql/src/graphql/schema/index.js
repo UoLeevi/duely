@@ -11,7 +11,9 @@ import Date from './Date';
 import DeleteAgencyResult from './DeleteAgencyResult';
 import Edge from './Edge';
 import EditAgencyThemeResult from './EditAgencyThemeResult';
+import EditImageResult from './EditImageResult';
 import EndVisitResult from './EndVisitResult';
+import Image from './Image';
 import LogInResult from './LogInResult';
 import LogOutResult from './LogOutResult';
 import Mutation from './Mutation';
@@ -41,7 +43,9 @@ export default makeExecutableSchema([
   DeleteAgencyResult,
   Edge,
   EditAgencyThemeResult,
+  EditImageResult,
   EndVisitResult,
+  Image,
   LogInResult,
   LogOutResult,
   Mutation,
