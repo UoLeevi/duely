@@ -1293,7 +1293,7 @@ ALTER FUNCTION operation_.query_subdomain_(_subdomain_uuid uuid) OWNER TO postgr
 -- Name: query_theme_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_theme_(_theme_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, image_logo_ text, image_hero_ text, color_primary_ text, color_secondary_ text, color_accent_ text, color_background_ text, color_surface_ text, color_error_ text, color_success_ text)
+CREATE FUNCTION operation_.query_theme_(_theme_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid, color_primary_ text, color_secondary_ text, color_accent_ text, color_background_ text, color_surface_ text, color_error_ text, color_success_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -1303,7 +1303,7 @@ BEGIN
   PERFORM security_.control_operation_('query_theme_', _arg);
 
   RETURN QUERY
-  SELECT t.uuid_, t.name_, t.image_logo_, t.image_hero_, t.color_primary_, t.color_secondary_, t.color_accent_, t.color_background_, t.color_surface_, t.color_error_, t.color_success_
+  SELECT t.uuid_, t.name_, t.image_logo_uuid_, t.image_hero_uuid_, t.color_primary_, t.color_secondary_, t.color_accent_, t.color_background_, t.color_surface_, t.color_error_, t.color_success_
   FROM application_.theme_ t
   WHERE (_theme_uuid IS NULL AND t.agency_uuid_ IS NULL AND t.standard_ = 't')
      OR (_theme_uuid IS NOT DISTINCT FROM t.uuid_);
