@@ -1181,6 +1181,31 @@ $$;
 ALTER FUNCTION operation_.query_agency_user_(_agency_uuid uuid) OWNER TO postgres;
 
 --
+-- Name: query_image_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_image_(_image_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, data_ text, color_ text, agency_uuid_ uuid)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT _image_uuid theme_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('query_image_', _arg);
+
+  RETURN QUERY
+  SELECT i.uuid_, i.name_, i.data_, i.color_, i.agency_uuid_
+  FROM application_.image_ i
+  WHERE (_image_uuid IS NULL AND i.agency_uuid_ IS NULL)
+     OR (_image_uuid IS NOT DISTINCT FROM i.uuid_);
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_image_(_image_uuid uuid) OWNER TO postgres;
+
+--
 -- Name: query_service_(uuid, text[]); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -2410,6 +2435,7 @@ a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02
 d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 373f84a0-350e-41e9-b714-705d21a79135	query_theme_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 8a08d468-c946-47d7-bcc1-f45819625d63	edit_image_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2445,6 +2471,8 @@ ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-eb
 2a0d6fa5-76c1-4440-9421-53f57185c5df	visitor_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 229bf29f-1dd3-45a2-b845-9c271771a4ab	logged_in_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 126aa154-9a2b-4e9e-9473-58b90d917a17	manager_in_agency_	8a08d468-c946-47d7-bcc1-f45819625d63	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+4ab56a45-937f-4aa3-bfab-6a3ec95e14d6	visitor_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2499,6 +2527,7 @@ a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02
 d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 373f84a0-350e-41e9-b714-705d21a79135	query_theme_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 8a08d468-c946-47d7-bcc1-f45819625d63	edit_image_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2534,6 +2563,8 @@ ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-eb
 2a0d6fa5-76c1-4440-9421-53f57185c5df	visitor_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 229bf29f-1dd3-45a2-b845-9c271771a4ab	logged_in_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 126aa154-9a2b-4e9e-9473-58b90d917a17	manager_in_agency_	8a08d468-c946-47d7-bcc1-f45819625d63	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+4ab56a45-937f-4aa3-bfab-6a3ec95e14d6	visitor_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
