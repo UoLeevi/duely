@@ -109,8 +109,18 @@ export default {
           theme {
             uuid
             name
-            imageLogo
-            imageHero
+            imageLogo {
+              uuid
+              name
+              data
+              color
+            }
+            imageHero {
+              uuid
+              name
+              data
+              color
+            }
             colorPrimary
             colorSecondary
             colorAccent

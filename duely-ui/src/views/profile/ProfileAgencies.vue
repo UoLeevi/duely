@@ -5,16 +5,8 @@
       <h2 class="f-5b">Agencies</h2>
       <div class="d-flex flex-column mt-2" v-if="agencies.filter(agency => agency.roles.includes('agent')).length > 0">
         <b :class="`f-4`">Your agencies</b>
-        <div class="d-flex flex-row mb-4">
-          <v-card v-for="agency in agencies.filter(agency => agency.roles.includes('agent'))" :key="agency.uuid" :color="agency.theme ? agency.theme.colorPrimary : 'primary'" dark flat class="rounded-corners-small pa-1 ma-1">
-            <v-card-text class="white--text">
-              <h3 class="f-3b pb-1">{{ agency.name }}</h3>
-              <router-link :to="`/dashboard?subdomain=${agency.subdomain.name}`" ><span class="f-2b surface--text text--lighten-3">{{ agency.subdomain.name }}.duely.app</span></router-link>
-            </v-card-text>
-
-            <v-card-actions>
-            </v-card-actions>
-          </v-card>
+        <div class="d-flex flex-row flex-wrap mb-4">
+          <AgencyCard v-for="agency in agencies.filter(agency => agency.roles.includes('agent'))" :key="agency.uuid" :agency="agency" />
         </div>
       </div>
       <div class="d-flex flex-row mt-2" v-if="agencies.filter(agency => agency.roles.includes('client')).length > 0">
@@ -26,8 +18,12 @@
 
 <script>
 import { gql } from '@/apollo';
+import AgencyCard from '@/components/AgencyCard';
 
 export default {
+  components: {
+    AgencyCard
+  },
   computed: {
     agencies() {
       return this.me.agenciesConnection.edges.map(edge => ({
@@ -37,31 +33,51 @@ export default {
     }
   },
   apollo : {
-    me: gql`query {
-      me {
-        uuid
-        name
-        agenciesConnection {
-          edges {
-            cursor
-            roles
-            node {
-              uuid
-              name
-              subdomain {
+    me: {
+      query: gql`query {
+        me {
+          uuid
+          name
+          agenciesConnection {
+            edges {
+              cursor
+              roles
+              node {
                 uuid
                 name
-              }
-              theme {
-                uuid
-                colorPrimary
-                colorSecondary
+                subdomain {
+                  uuid
+                  name
+                }
+                theme {
+                  uuid
+                  name
+                  imageLogo {
+                    uuid
+                    name
+                    color
+                    data
+                  }
+                  imageHero {
+                    uuid
+                    name
+                    color
+                    data
+                  }
+                  colorPrimary
+                  colorSecondary
+                  colorAccent
+                  colorBackground
+                  colorSurface
+                  colorError
+                  colorSuccess
+                }
               }
             }
           }
         }
-      }
-    }`
+      }`
+    }
   }
 };
 </script>

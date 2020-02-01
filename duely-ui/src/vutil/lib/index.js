@@ -78,6 +78,50 @@ Vutil.install = function(Vue) {
 
         return '#' + r + g + b;
       },
+      calcContrastRatio(hexColor1, hexColor2) {
+        function luminanace(hexColor) {
+          if (hexColor.length === 4)
+            hexColor = '#' + hexColor[1] + hexColor[1] + hexColor[2] + hexColor[2] + hexColor[3] + hexColor[3];
+
+          const r = parseInt(hexColor.substr(1, 2), 16);
+          const g = parseInt(hexColor.substr(3, 2), 16);
+          const b = parseInt(hexColor.substr(5, 2), 16);
+
+          const a = [r, g, b].map(function (v) {
+            v /= 255;
+            return v <= 0.03928
+              ? v / 12.92
+              : Math.pow((v + 0.055) / 1.055, 2.4);
+          });
+          return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+        }
+
+        const lum1 = luminanace(hexColor1) + 0.05;
+        const lum2 = luminanace(hexColor2) + 0.05;
+
+        return lum1 > lum2
+          ? lum1 / lum2
+          : lum2 / lum1;
+      },
+      chooseContrastingColor(baseHexColor, hexColor1, ...hexColorN) {
+        const threshold = 3.75;
+        let mostContrasting = {
+          contrastRatio: 0,
+          hexColor: null
+        };
+
+        for (const hexColor of [hexColor1, ...hexColorN]) {
+          const contrastRatio = this.calcContrastRatio(baseHexColor, hexColor);
+
+          if (contrastRatio >= threshold)
+            return hexColor;
+
+          if (contrastRatio > mostContrasting.contrastRatio)
+            mostContrasting = { contrastRatio, hexColor };
+        }
+
+        return mostContrasting.hexColor;
+      },
       generateThemeItem(name, baseHexColor) {
         return {
           name,
@@ -92,6 +136,21 @@ Vutil.install = function(Vue) {
           darken3: this.changeBrightness(baseHexColor, -0.54),
           darken4: this.changeBrightness(baseHexColor, -0.72)
         };
+      },
+      estimateImageColor(dataUrl) {
+        return new Promise(resolve => {
+          const context = document.createElement('canvas').getContext('2d');
+          const img = new Image(); 
+          img.src = dataUrl;
+          img.onload = function () {
+            context.drawImage(img, 0, 0, 1, 1);
+            let [r, g, b] = context.getImageData(0, 0, 1, 1).data.slice(0, 3);
+            r = Math.round(r).toString(16).padStart(2, '0');
+            g = Math.round(g).toString(16).padStart(2, '0');
+            b = Math.round(b).toString(16).padStart(2, '0');
+            resolve('#' + r + g + b);
+          };
+        });
       },
       updateThemeItem(name, baseHexColor) {
         this.$vuetify.theme.currentTheme[name] = this.generateThemeItem(name, baseHexColor);

@@ -1,15 +1,15 @@
 <template>
   <v-container fluid class="pa-0 fill-height" id="dashboard-layout">
-    <v-navigation-drawer v-model="drawer" fixed app floating stateless :width="adjustSize(nested ? 200 : 100, 0.3)" class="d-flex flex-column" color="surface darken-1">
+    <v-navigation-drawer v-model="drawer" app floating stateless :width="adjustSize(nested ? 200 : 100, 0.3)" class="d-flex flex-column flex-nowrap" color="surface darken-1">
       <v-row />
       <v-row no-gutters class="flex-column fill-height align-content-start">
-        <v-navigation-drawer v-model="drawer" floating stateless :width="adjustSize(nested ? 70 : 100, 0.3)" class="d-flex flex-column" color="surface darken-2">
-          <v-row no-gutters align="center" class="flex-column fill-height">
+        <v-navigation-drawer v-model="drawer" floating stateless :width="adjustSize(nested ? 70 : 100, 0.3)" class="d-flex flex-column flex-nowrap" color="surface darken-2">
+          <v-row no-gutters align="center" class="flex-column fill-height flex-nowrap">
             <slot name="menu">
             </slot>
           </v-row>
         </v-navigation-drawer>
-        <v-row no-gutters class="align-self-start flex-column fill-height">
+        <v-row no-gutters class="align-self-start flex-column fill-height flex-nowrap">
           <slot name="sub-menu">
           </slot>
         </v-row>
@@ -26,7 +26,7 @@
 export default {
   computed: {
     nested() {
-      return this.$slots['sub-menu'][0].children.some(v => v.tag !== undefined);
+      return this.$slots['sub-menu'] && this.$slots['sub-menu'][0].children.some(v => v.tag !== undefined);
     }
   },
   data() {

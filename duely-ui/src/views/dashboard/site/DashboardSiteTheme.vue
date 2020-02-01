@@ -4,19 +4,61 @@
     <v-fade-transition mode="out-in">
       <v-progress-circular v-if="$apollo.loading" />
       <v-form v-else @submit.prevent="submitEditAgencyTheme" ref="editAgencyThemeForm" v-model="forms.editAgencyTheme.valid">
-        <v-col class="pt-1">
-          <v-text-field v-model="data.colorPrimary" background-color="primary lighten-4" color="primary" label="Primary color" hint="A primary color is the color displayed most frequently across your app’s screens and components." class="mt-0 mb-2 primary--text" prefix="#" dense filled persistent-hint rounded :rules="rules.color" spellcheck="false" validate-on-blur append-icon="color_lens"/>
-          <v-text-field v-model="data.colorSecondary" background-color="secondary lighten-4" color="secondary" label="Secondary color" hint="A secondary color provides more ways to accent and distinguish your product." class="mt-0 mb-2 secondary--text" prefix="#" dense filled persistent-hint rounded :rules="rules.color" spellcheck="false" validate-on-blur append-icon="color_lens"/>
-          <v-text-field v-model="data.colorAccent" background-color="accent lighten-4" color="accent" label="Accent color" hint="Accent color is used for small elements to provide variation to color scheme." class="mt-0 mb-2 accent--text" prefix="#" dense filled persistent-hint rounded :rules="rules.color" spellcheck="false" validate-on-blur append-icon="color_lens"/>
-          <v-text-field v-model="data.colorBackground" background-color="background lighten-4" color="background" label="Background color" hint="The background color appears behind scrollable content." class="mt-0 mb-2 background--text" prefix="#" dense filled persistent-hint rounded :rules="rules.color" spellcheck="false" validate-on-blur append-icon="color_lens"/>
-          <v-text-field v-model="data.colorSurface" background-color="surface lighten-4" color="surface" label="Surface color" hint="Surface colors affect surfaces of components, such as cards, sheets, and menus." class="mt-0 mb-2 surface--text" prefix="#" dense filled persistent-hint rounded :rules="rules.color" spellcheck="false" validate-on-blur append-icon="color_lens"/>
-          <v-text-field v-model="data.colorError" background-color="error lighten-4" color="error" label="Error color" hint="Error color indicates errors in components, such as invalid text in a text field" class="mt-0 mb-2 error--text" prefix="#" dense filled persistent-hint rounded :rules="rules.color" spellcheck="false" validate-on-blur append-icon="color_lens"/>
-          <v-text-field v-model="data.colorSuccess" background-color="success lighten-4" color="success" label="Success color" hint="Success color can be used to indicate valid data or successful completion." class="mt-0 mb-2 success--text" prefix="#" dense filled persistent-hint rounded :rules="rules.color" spellcheck="false" validate-on-blur append-icon="color_lens"/>
-        </v-col>
+        <v-row class="pt-1 px-4 flex-wrap">
+          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+            <span class="f-3b background--text text--darken4">Logo image</span>
+            <p class="f-2 pt-1 background--text text--darken3">Logo of your agency.</p>
+            <v-img v-if="data.imageLogo.data" :src="data.imageLogo.data" width="200px" />
+            <v-file-input v-model="data.imageLogo.file" show-size full-width label="Select image file" class="mt-auto flex-grow-0 mb-2 primary--text" accept="image/*" :loading="data.imageLogo.loading" dense filled rounded :rules="rules.image" validate-on-blur append-icon="add_photo_alternate" prepend-icon="" />
+          </div>
+          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+            <span class="f-3b background--text text--darken4">Hero image</span>
+            <p class="f-2 pt-1 background--text text--darken3">This image will appear in the agency card in your profile.</p>
+            <v-img v-if="data.imageHero.data" :src="data.imageHero.data" />
+            <v-file-input v-model="data.imageHero.file" show-size full-width label="Select image file" class="mt-auto flex-grow-0 mb-2 primary--text" accept="image/*" :loading="data.imageHero.loading" dense filled rounded :rules="rules.image" validate-on-blur append-icon="add_photo_alternate" prepend-icon="" />
+          </div>
+        </v-row>
+        <v-row class="pt-1 px-4 flex-wrap">
+          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+            <span class="f-3b background--text text--darken4">Primary color</span>
+            <p class="f-2 pt-1 background--text text--darken3">Primary color is the color displayed most frequently across your app’s screens and components.</p>
+            <v-color-picker v-model="data.colorPrimary" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
+          </div>
+          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+            <span class="f-3b background--text text--darken4">Secondary color</span>
+            <p class="f-2 pt-1 background--text text--darken3">Secondary color provides more ways to accent and distinguish your product.</p>
+            <v-color-picker v-model="data.colorSecondary" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
+          </div>
+          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+            <span class="f-3b background--text text--darken4">Accent color</span>
+            <p class="f-2 pt-1 background--text text--darken3">Accent color is used for small elements to provide variation to color scheme.</p>
+            <v-color-picker v-model="data.colorAccent" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
+          </div>
+          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+            <span class="f-3b background--text text--darken4">Background color</span>
+            <p class="f-2 pt-1 background--text text--darken3">The background color appears behind scrollable content.</p>
+            <v-color-picker v-model="data.colorBackground" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
+          </div>
+          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+            <span class="f-3b background--text text--darken4">Surface color</span>
+            <p class="f-2 pt-1 background--text text--darken3">Surface colors affect surfaces of components, such as cards, sheets, and menus.</p>
+            <v-color-picker v-model="data.colorSurface" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
+          </div>
+          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+            <span class="f-3b background--text text--darken4">Error color</span>
+            <p class="f-2 pt-1 background--text text--darken3">Error color indicates errors in components, such as invalid text in a text field.</p>
+            <v-color-picker v-model="data.colorError" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
+          </div>
+          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+            <span class="f-3b background--text text--darken4">Success color</span>
+            <p class="f-2 pt-1 background--text text--darken3">Success color can be used to indicate valid data or successful completion.</p>
+            <v-color-picker v-model="data.colorSuccess" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
+          </div>
+        </v-row>
         <v-expand-transition>
           <p class="error--text" v-if="forms.editAgencyTheme.errorMessage">{{ forms.editAgencyTheme.errorMessage }}</p>
         </v-expand-transition>
-        <v-row class="ml-3 mt-1 mb-1">
+        <v-row class="ml-3 pt-2 pb-1">
           <v-btn depressed rounded :loading="forms.editAgencyTheme.loading" :disabled="!forms.editAgencyTheme.valid" type="submit" color="primary" class="text-none mr-4" >Save</v-btn>
           <v-btn text depressed rounded class="text-none" to="/dashboard/site">Cancel</v-btn>
         </v-row>
@@ -33,8 +75,8 @@ export default {
     return {
       initialTheme: JSON.parse(JSON.stringify(vm.$vuetify.theme.currentTheme)),
       data: {
-        imageLogo: 'dGVzdAo=',
-        imageHero: 'dGVzdAo=',
+        imageLogo: { uuid: null, name: 'logo', color: null, file: null, data: null, loading: false, errorMessage: null },
+        imageHero: { uuid: null, name: 'hero', color: null, file: null, data: null, loading: false, errorMessage: null },
         colorPrimary: '',
         colorSecondary: '',
         colorAccent: '',
@@ -45,10 +87,10 @@ export default {
       },
       rules: {
         color: [
-          v => /^(?:[0-9a-fA-F]{3}){1,2}$/.test(v) || 'Hexadecimal color code is expected',
+          v => /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(v) || 'Hexadecimal color code is expected',
         ],
         image: [
-          v => !!v || 'File is required'
+          () => true
         ]
       },
       forms: {
@@ -61,71 +103,164 @@ export default {
     };
   },
   watch: {
+    async 'data.imageLogo.file'(file) {
+      try {
+        this.data.imageLogo.loading = true;
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => { 
+          this.data.imageLogo.data = reader.result;
+          this.data.imageLogo.error = null;
+          try {
+            this.data.imageLogo.color = await this.estimateImageColor(this.data.imageLogo.data);
+          } catch {
+            this.data.imageLogo.color = '#000000';
+          }
+          this.data.imageLogo.loading = false;
+        };
+        reader.onerror = error => {
+          this.data.imageLogo.uuid = null;
+          this.data.imageLogo.data = null;
+          this.data.imageLogo.loading = false;
+          this.data.imageLogo.error = error.message;
+        };
+      } catch (err) {
+        this.data.imageLogo.uuid = null;
+        this.data.imageLogo.data = null;
+        this.data.imageLogo.loading = false;
+        this.data.imageLogo.error = err.message;
+      }
+    },
+    async 'data.imageHero.file'(file) {
+      try {
+        this.data.imageHero.loading = true;
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => { 
+          this.data.imageHero.data = reader.result;
+          this.data.imageHero.error = null;
+          try {
+            this.data.imageHero.color = await this.estimateImageColor(this.data.imageHero.data);
+          } catch {
+            this.data.imageHero.color = '#000000';
+          }
+          this.data.imageHero.loading = false;
+        };
+        reader.onerror = error => {
+          this.data.imageHero.uuid = null;
+          this.data.imageHero.data = null;
+          this.data.imageHero.loading = false;
+          this.data.imageHero.error = error.message;
+        };
+      } catch (err) {
+        this.data.imageHero.uuid = null;
+        this.data.imageHero.data = null;
+        this.data.imageHero.loading = false;
+        this.data.imageHero.error = err.message;
+      }
+    },
     'data.colorPrimary'(color) {
       if (this.rules.color.every(r => r(color) === true))
-        this.updateThemeItem('primary', `#${color}`);
+        this.updateThemeItem('primary', color);
     },
     'data.colorSecondary'(color) {
       if (this.rules.color.every(r => r(color) === true))
-        this.updateThemeItem('secondary', `#${color}`);
+        this.updateThemeItem('secondary', color);
     },
     'data.colorAccent'(color) {
       if (this.rules.color.every(r => r(color) === true))
-        this.updateThemeItem('accent', `#${color}`);
+        this.updateThemeItem('accent', color);
     },
     'data.colorBackground'(color) {
       if (this.rules.color.every(r => r(color) === true))
-        this.updateThemeItem('background', `#${color}`);
+        this.updateThemeItem('background', color);
     },
     'data.colorSurface'(color) {
       if (this.rules.color.every(r => r(color) === true))
-        this.updateThemeItem('surface', `#${color}`);
+        this.updateThemeItem('surface', color);
     },
     'data.colorError'(color) {
       if (this.rules.color.every(r => r(color) === true))
-        this.updateThemeItem('error', `#${color}`);
+        this.updateThemeItem('error', color);
     },
     'data.colorSuccess'(color) {
       if (this.rules.color.every(r => r(color) === true))
-        this.updateThemeItem('success', `#${color}`);
+        this.updateThemeItem('success', color);
     }
   },
   methods: {
+    async editImage(image) {
+        image.loading = true;
+        await this.$apollo.mutate({
+          mutation: gql`mutation($agencyUuid: ID!, $imageName: String!, $imageData: String!, $imageColor: String!) {
+            editImage(agencyUuid: $agencyUuid, imageName: $imageName, imageData: $imageData, imageColor: $imageColor) {
+              success
+              message
+              imageUuid
+            }
+          }`,
+          variables: {
+            agencyUuid: this.agency !== null ? this.agency.uuid : null, 
+            imageName: image.name,
+            imageData: image.data,
+            imageColor: image.color
+          },
+          update: (store, { data: { editImage } }) => {
+            if (editImage.success)
+              image.uuid = editImage.imageUuid;
+            else
+              image.errorMessage = editImage.message;
+
+            image.loading = false;
+          }
+        });
+    },
     async submitEditAgencyTheme() {
       this.forms.editAgencyTheme.errorMessage = null;
 
       if (this.$refs.editAgencyThemeForm.validate()) {
         this.forms.editAgencyTheme.loading = true;
 
-        await this.$apollo.mutate({
-          mutation: gql`mutation($agencyUuid: ID!, $imageLogo: String!, $imageHero: String!, $colorPrimary: String!, $colorSecondary: String!, $colorAccent: String!, $colorBackground: String!, $colorSurface: String!, $colorError: String!, $colorSuccess: String!) {
-            editAgencyTheme(agencyUuid: $agencyUuid, imageLogo: $imageLogo, imageHero: $imageHero, colorPrimary: $colorPrimary, colorSecondary: $colorSecondary, colorAccent: $colorAccent, colorBackground: $colorBackground, colorSurface: $colorSurface, colorError: $colorError, colorSuccess: $colorSuccess) {
-              success
-              message
-              themeUuid
-            }
-          }`,
-          variables: {
-            agencyUuid: this.agency !== null ? this.agency.uuid : null, 
-            imageLogo: this.data.imageLogo,
-            imageHero: this.data.imageHero,
-            colorPrimary: `#${this.data.colorPrimary}`,
-            colorSecondary: `#${this.data.colorSecondary}`,
-            colorAccent: `#${this.data.colorAccent}`,
-            colorBackground: `#${this.data.colorBackground}`,
-            colorSurface: `#${this.data.colorSurface}`,
-            colorError: `#${this.data.colorError}`,
-            colorSuccess: `#${this.data.colorSuccess}`
-          },
-          update: async (store, { data: { editAgencyTheme } }) => {
-            if (editAgencyTheme.success)
-              this.initialTheme = JSON.parse(JSON.stringify(this.$vuetify.theme.currentTheme));
-            else
-              this.forms.editAgencyTheme.errorMessage = editAgencyTheme.message;
+        try {
+          if (this.data.imageLogo.uuid === null)
+            await this.editImage(this.data.imageLogo);
 
+          if (this.data.imageHero.uuid === null)
+            await this.editImage(this.data.imageHero);
+
+          await this.$apollo.mutate({
+            mutation: gql`mutation($agencyUuid: ID!, $imageLogoUuid: ID!, $imageHeroUuid: ID!, $colorPrimary: String!, $colorSecondary: String!, $colorAccent: String!, $colorBackground: String!, $colorSurface: String!, $colorError: String!, $colorSuccess: String!) {
+              editAgencyTheme(agencyUuid: $agencyUuid, imageLogoUuid: $imageLogoUuid, imageHeroUuid: $imageHeroUuid, colorPrimary: $colorPrimary, colorSecondary: $colorSecondary, colorAccent: $colorAccent, colorBackground: $colorBackground, colorSurface: $colorSurface, colorError: $colorError, colorSuccess: $colorSuccess) {
+                success
+                message
+                themeUuid
+              }
+            }`,
+            variables: {
+              agencyUuid: this.agency !== null ? this.agency.uuid : null, 
+              imageLogoUuid: this.data.imageLogo.uuid,
+              imageHeroUuid: this.data.imageHero.uuid,
+              colorPrimary: this.data.colorPrimary,
+              colorSecondary: this.data.colorSecondary,
+              colorAccent: this.data.colorAccent,
+              colorBackground: this.data.colorBackground,
+              colorSurface: this.data.colorSurface,
+              colorError: this.data.colorError,
+              colorSuccess: this.data.colorSuccess
+            },
+            update: async (store, { data: { editAgencyTheme } }) => {
+              if (editAgencyTheme.success)
+                this.initialTheme = JSON.parse(JSON.stringify(this.$vuetify.theme.currentTheme));
+              else
+                this.forms.editAgencyTheme.errorMessage = editAgencyTheme.message;
+
+              this.forms.editAgencyTheme.loading = false;
+            }
+          });
+        } catch (error) {
+            this.forms.editAgencyTheme.errorMessage = error.message;
             this.forms.editAgencyTheme.loading = false;
-          }
-        });
+        }
       }
     }
   },
@@ -145,8 +280,18 @@ export default {
           theme {
             uuid
             name
-            imageLogo
-            imageHero
+            imageLogo {
+              uuid
+              name
+              data
+              color
+            }
+            imageHero {
+              uuid
+              name
+              data
+              color
+            }
             colorPrimary
             colorSecondary
             colorAccent
@@ -173,16 +318,29 @@ export default {
           this.updateThemeItem('surface', theme.colorSurface);
           this.updateThemeItem('error', theme.colorError);
           this.updateThemeItem('success', theme.colorSuccess);
+
+          if (this.data.imageLogo.data === null) {
+            this.data.imageLogo.uuid = theme.imageLogo.uuid;
+            this.data.imageLogo.data = theme.imageLogo.data;
+            this.data.imageLogo.color = theme.imageLogo.color;
+          }
+
+          if (this.data.imageHero.data === null) {
+            this.data.imageHero.uuid = theme.imageHero.uuid;
+            this.data.imageHero.data = theme.imageHero.data;
+            this.data.imageHero.color = theme.imageHero.color;
+          }
         }
 
         this.initialTheme = JSON.parse(JSON.stringify(this.$vuetify.theme.currentTheme));
-        this.data.colorPrimary = this.$vuetify.theme.currentTheme.primary.base.substr(1);
-        this.data.colorSecondary = this.$vuetify.theme.currentTheme.secondary.base.substr(1);
-        this.data.colorAccent = this.$vuetify.theme.currentTheme.accent.base.substr(1);
-        this.data.colorBackground = this.$vuetify.theme.currentTheme.background.base.substr(1);
-        this.data.colorSurface = this.$vuetify.theme.currentTheme.surface.base.substr(1);
-        this.data.colorError = this.$vuetify.theme.currentTheme.error.base.substr(1);
-        this.data.colorSuccess = this.$vuetify.theme.currentTheme.success.base.substr(1);
+
+        this.data.colorPrimary = this.$vuetify.theme.currentTheme.primary.base;
+        this.data.colorSecondary = this.$vuetify.theme.currentTheme.secondary.base;
+        this.data.colorAccent = this.$vuetify.theme.currentTheme.accent.base;
+        this.data.colorBackground = this.$vuetify.theme.currentTheme.background.base;
+        this.data.colorSurface = this.$vuetify.theme.currentTheme.surface.base;
+        this.data.colorError = this.$vuetify.theme.currentTheme.error.base;
+        this.data.colorSuccess = this.$vuetify.theme.currentTheme.success.base;
 
         return agency[0];
       },
