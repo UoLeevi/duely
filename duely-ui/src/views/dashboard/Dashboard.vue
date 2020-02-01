@@ -14,11 +14,6 @@
     <v-fade-transition mode="out-in">
       <router-view />
     </v-fade-transition>
-    <v-navigation-drawer v-if="$route.matched.some(r => r.components.panel !== undefined)" :value="true" app floating stateless right :width="adjustSize(600, 0.3)" class="justify-center d-flex flex-column pa-5" color="surface lighten-5">
-      <v-fade-transition mode="out-in">
-      <router-view name="panel" />
-    </v-fade-transition>
-    </v-navigation-drawer>
   </DashboardLayout>
 </template>
 
@@ -67,9 +62,9 @@ export default {
           icon: 'attach_money'
         },
         {
-          to: '/dashboard/company',
+          to: '/dashboard/users',
           color: 'surface darken-1',
-          text: 'Company',
+          text: 'Users',
           icon: 'group'
         },
         {

@@ -16,7 +16,7 @@
       </v-row>
       <v-row />
     </v-navigation-drawer>
-    <v-col class="content fill-height d-flex flex-row py-6 px-8">
+    <v-col class="content fill-height d-flex flex-row flex-wrap py-6 px-8">
       <slot></slot>
     </v-col>
   </v-container>
@@ -40,6 +40,7 @@ export default {
 <style scoped>
 #dashboard-layout .content {
   background-color: var(--v-background-lighten5);
+  overflow: auto;
 }
 
 </style>

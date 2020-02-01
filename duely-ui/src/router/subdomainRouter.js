@@ -4,9 +4,10 @@ import AgencyHome from '@/views/AgencyHome.vue'
 import Dashboard from '@/views/dashboard/Dashboard.vue'
 import DashboardHome from '@/views/dashboard/DashboardHome.vue'
 import DashboardPayments from '@/views/dashboard/DashboardPayments.vue'
-import DashboardServices from '@/views/dashboard/DashboardServices.vue'
-import DashboardServicesPanel from '@/views/dashboard/DashboardServicesPanel.vue'
-import DashboardCompany from '@/views/dashboard/DashboardCompany.vue'
+import DashboardServices from '@/views/dashboard/services/DashboardServices.vue'
+import DashboardServicesHome from '@/views/dashboard/services/DashboardServicesHome.vue'
+import DashboardServicesCreateService from '@/views/dashboard/services/DashboardServicesCreateService.vue'
+import DashboardUsers from '@/views/dashboard/DashboardUsers.vue'
 import DashboardSite from '@/views/dashboard/site/DashboardSite.vue'
 import DashboardSiteHome from '@/views/dashboard/site/DashboardSiteHome.vue'
 import DashboardSiteTheme from '@/views/dashboard/site/DashboardSiteTheme.vue'
@@ -50,13 +51,22 @@ const router = new Router({
         {
           path: 'services',
           components: {
-            default: DashboardServices,
-            panel: DashboardServicesPanel
-          }
+            default: DashboardServices
+          },
+          children: [
+            {
+              path: '',
+              component: DashboardServicesHome
+            },
+            {
+              path: 'create-service',
+              component: DashboardServicesCreateService
+            }
+          ]
         },
         {
-          path: 'company',
-          component: DashboardCompany
+          path: 'users',
+          component: DashboardUsers
         },
         {
           path: 'site',

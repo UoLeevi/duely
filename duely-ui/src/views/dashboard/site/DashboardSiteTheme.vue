@@ -6,51 +6,51 @@
       <v-form v-else @submit.prevent="submitEditAgencyTheme" ref="editAgencyThemeForm" v-model="forms.editAgencyTheme.valid">
         <v-row class="pt-1 px-4 flex-wrap">
           <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
-            <span class="f-3b background--text text--darken4">Logo image</span>
+            <span class="f-3b surface--text text--lighten2">Logo image</span>
             <p class="f-2 pt-1 background--text text--darken3">Logo of your agency.</p>
-            <v-img v-if="data.imageLogo.data" :src="data.imageLogo.data" width="200px" />
+            <v-img class="py-1" v-if="data.imageLogo.data" :src="data.imageLogo.data" contain width="200px" />
             <v-file-input v-model="data.imageLogo.file" show-size full-width label="Select image file" class="mt-auto flex-grow-0 mb-2 primary--text" accept="image/*" :loading="data.imageLogo.loading" dense filled rounded :rules="rules.image" validate-on-blur append-icon="add_photo_alternate" prepend-icon="" />
           </div>
           <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
-            <span class="f-3b background--text text--darken4">Hero image</span>
+            <span class="f-3b surface--text text--lighten2">Hero image</span>
             <p class="f-2 pt-1 background--text text--darken3">This image will appear in the agency card in your profile.</p>
-            <v-img v-if="data.imageHero.data" :src="data.imageHero.data" />
+            <v-img class="py-1" v-if="data.imageHero.data" :src="data.imageHero.data" contain />
             <v-file-input v-model="data.imageHero.file" show-size full-width label="Select image file" class="mt-auto flex-grow-0 mb-2 primary--text" accept="image/*" :loading="data.imageHero.loading" dense filled rounded :rules="rules.image" validate-on-blur append-icon="add_photo_alternate" prepend-icon="" />
           </div>
         </v-row>
         <v-row class="pt-1 px-4 flex-wrap">
           <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
-            <span class="f-3b background--text text--darken4">Primary color</span>
+            <span class="f-3b surface--text text--lighten2">Primary color</span>
             <p class="f-2 pt-1 background--text text--darken3">Primary color is the color displayed most frequently across your app’s screens and components.</p>
             <v-color-picker v-model="data.colorPrimary" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
           <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
-            <span class="f-3b background--text text--darken4">Secondary color</span>
+            <span class="f-3b surface--text text--lighten2">Secondary color</span>
             <p class="f-2 pt-1 background--text text--darken3">Secondary color provides more ways to accent and distinguish your product.</p>
             <v-color-picker v-model="data.colorSecondary" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
           <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
-            <span class="f-3b background--text text--darken4">Accent color</span>
+            <span class="f-3b surface--text text--lighten2">Accent color</span>
             <p class="f-2 pt-1 background--text text--darken3">Accent color is used for small elements to provide variation to color scheme.</p>
             <v-color-picker v-model="data.colorAccent" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
           <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
-            <span class="f-3b background--text text--darken4">Background color</span>
+            <span class="f-3b surface--text text--lighten2">Background color</span>
             <p class="f-2 pt-1 background--text text--darken3">The background color appears behind scrollable content.</p>
             <v-color-picker v-model="data.colorBackground" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
           <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
-            <span class="f-3b background--text text--darken4">Surface color</span>
+            <span class="f-3b surface--text text--lighten2">Surface color</span>
             <p class="f-2 pt-1 background--text text--darken3">Surface colors affect surfaces of components, such as cards, sheets, and menus.</p>
             <v-color-picker v-model="data.colorSurface" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
           <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
-            <span class="f-3b background--text text--darken4">Error color</span>
+            <span class="f-3b surface--text text--lighten2">Error color</span>
             <p class="f-2 pt-1 background--text text--darken3">Error color indicates errors in components, such as invalid text in a text field.</p>
             <v-color-picker v-model="data.colorError" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
           <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
-            <span class="f-3b background--text text--darken4">Success color</span>
+            <span class="f-3b surface--text text--lighten2">Success color</span>
             <p class="f-2 pt-1 background--text text--darken3">Success color can be used to indicate valid data or successful completion.</p>
             <v-color-picker v-model="data.colorSuccess" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
@@ -59,9 +59,10 @@
           <p class="error--text" v-if="forms.editAgencyTheme.errorMessage">{{ forms.editAgencyTheme.errorMessage }}</p>
         </v-expand-transition>
         <v-row class="ml-3 pt-2 pb-1">
-          <v-btn depressed rounded :loading="forms.editAgencyTheme.loading" :disabled="!forms.editAgencyTheme.valid" type="submit" color="primary" class="text-none mr-4" >Save</v-btn>
-          <v-btn text depressed rounded class="text-none" to="/dashboard/site">Cancel</v-btn>
+          <v-btn :min-width="100" depressed rounded :loading="forms.editAgencyTheme.loading" :disabled="!forms.editAgencyTheme.valid" type="submit" color="primary" class="text-none mr-4" >Save</v-btn>
+          <v-btn :min-width="100" text depressed rounded class="text-none" to="/dashboard/site">Cancel</v-btn>
         </v-row>
+        <v-snackbar v-model="snackbar" bottom right :timeout="2000" color="surface darken-2" class="success--text"><span class="f-2b">Theme saved.</span></v-snackbar>
       </v-form>
     </v-fade-transition>
   </section>
@@ -99,7 +100,8 @@ export default {
           loading: false,
           valid: true
         }
-      }
+      },
+      snackbar: false
     };
   },
   watch: {
@@ -110,6 +112,7 @@ export default {
         reader.readAsDataURL(file);
         reader.onload = async () => { 
           this.data.imageLogo.data = reader.result;
+          this.data.imageLogo.uuid = null;
           this.data.imageLogo.error = null;
           try {
             this.data.imageLogo.color = await this.estimateImageColor(this.data.imageLogo.data);
@@ -138,6 +141,7 @@ export default {
         reader.readAsDataURL(file);
         reader.onload = async () => { 
           this.data.imageHero.data = reader.result;
+          this.data.imageHero.uuid = null;
           this.data.imageHero.error = null;
           try {
             this.data.imageHero.color = await this.estimateImageColor(this.data.imageHero.data);
@@ -248,10 +252,11 @@ export default {
               colorError: this.data.colorError,
               colorSuccess: this.data.colorSuccess
             },
-            update: async (store, { data: { editAgencyTheme } }) => {
-              if (editAgencyTheme.success)
+            update: (store, { data: { editAgencyTheme } }) => {
+              if (editAgencyTheme.success) {
                 this.initialTheme = JSON.parse(JSON.stringify(this.$vuetify.theme.currentTheme));
-              else
+                this.snackbar = true;
+              } else
                 this.forms.editAgencyTheme.errorMessage = editAgencyTheme.message;
 
               this.forms.editAgencyTheme.loading = false;
@@ -307,7 +312,7 @@ export default {
           subdomainName: this.session.subdomainName,
         }
       },
-      update ({ agency } ) {
+      update ({ agency }) {
         const theme = agency[0].theme;
         
         if (theme) {
@@ -319,13 +324,13 @@ export default {
           this.updateThemeItem('error', theme.colorError);
           this.updateThemeItem('success', theme.colorSuccess);
 
-          if (this.data.imageLogo.data === null) {
+          if (this.data.imageLogo.file === null) {
             this.data.imageLogo.uuid = theme.imageLogo.uuid;
             this.data.imageLogo.data = theme.imageLogo.data;
             this.data.imageLogo.color = theme.imageLogo.color;
           }
 
-          if (this.data.imageHero.data === null) {
+          if (this.data.imageHero.file === null) {
             this.data.imageHero.uuid = theme.imageHero.uuid;
             this.data.imageHero.data = theme.imageHero.data;
             this.data.imageHero.color = theme.imageHero.color;

@@ -1,5 +1,6 @@
+html,
 body {
-  width: 100vw;
+  min-width: 100vw;
 }
 
 .v-form input:-webkit-autofill,
@@ -79,6 +80,7 @@ html:not(.custom-scroll) * {
 
 html:not(.custom-scroll) *::-webkit-scrollbar {
   width: 11px;
+  height: 11px;
 }
 
 html:not(.custom-scroll) *::-webkit-scrollbar-track {

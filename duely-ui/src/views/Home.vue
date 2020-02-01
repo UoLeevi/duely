@@ -4,7 +4,7 @@
       <div style="max-width: 95%;">
         <h2 class="f-10 text-no-wrap`"><span class="f-10b">Simplified</span> <br>business transactions <br>for agencies.</h2>
         <p class="f-4">Platform for digital agencies. Create a service catalogue, seamlessly manage client deliverables, accept payments and grow your business.</p>
-        <v-form @submit.prevent="submit" class="hero-opt-in mt-4" style="max-width: 500px;">
+        <v-form @submit.prevent="$router.push(`/create-account?email=${email}`)" class="hero-opt-in mt-4" style="max-width: 500px;">
           <v-text-field label="email" type="email" spellcheck="false" class="font-weight-bold" v-model="email" light background-color="primary lighten-5" solo flat single-line hide-details rounded>
             <template #append>
               <v-btn type="submit" class="text-none" large depressed rounded color="success" :to="`/create-account?email=${email}`">Get started</v-btn>

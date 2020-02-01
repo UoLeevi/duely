@@ -1,5 +1,5 @@
 <template>
-  <NarrowLayout>
+  <NarrowLayout backgroundColor="surface darken-2">
     <v-stepper v-model="step" vertical class="pa-5 elevation-24 rounded-corners">
       <v-stepper-step :complete="step > 1" step="1">
         Sign up for an account
@@ -8,9 +8,9 @@
       <v-stepper-content step="1">
         <v-form @submit.prevent="submitSignUpStep1" ref="signUpStep1Form" v-model="forms.signUpStep1.valid">
           <v-col class="pt-1">
-            <v-text-field class="mt-0 mb-1" solo outlined flat single-line rounded v-model="data.emailAddress" :rules="rules.emailAddress" label="Email address" type="email" spellcheck="false" validate-on-blur></v-text-field>
-            <v-text-field class="mt-1 mb-1" solo outlined flat single-line rounded v-model="data.name" :rules="rules.name" label="Full name" spellcheck="false" validate-on-blur></v-text-field>
-            <v-text-field class="mt-1 mb-0" solo outlined flat single-line rounded v-model="data.password" :rules="rules.password" label="Password" type="password" spellcheck="false" autocomplete="new-password" validate-on-blur></v-text-field>
+            <v-text-field class="mt-0 mb-1" solo outlined flat single-line rounded v-model="data.emailAddress" :rules="rules.emailAddress" label="Email address" type="email" spellcheck="false" validate-on-blur />
+            <v-text-field class="mt-1 mb-1" solo outlined flat single-line rounded v-model="data.name" :rules="rules.name" label="Full name" spellcheck="false" validate-on-blur />
+            <v-text-field class="mt-1 mb-0" solo outlined flat single-line rounded v-model="data.password" :rules="rules.password" label="Password" type="password" spellcheck="false" autocomplete="new-password" />
             <div class="f-2 ml-2 mt-0 mb-3">
               By signing up, you agree to our <a href="javascript:;" @click.stop="tos = true">Services Agreement</a> and the <a target="_blank" href="https://stripe.com/connect-account/legal">Stripe Connected Account Agreement</a>.
             </div>
