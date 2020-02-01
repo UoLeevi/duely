@@ -12,7 +12,7 @@ export default {
     }
   `,
   resolvers: {
-    Theme: {
+    Image: {
       uuid: source => source.uuid_,
       name: source => source.name_,
       data: source => source.data_,
