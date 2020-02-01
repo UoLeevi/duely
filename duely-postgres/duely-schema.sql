@@ -2695,6 +2695,14 @@ ALTER TABLE ONLY application_.stripe_account_
 
 
 --
+-- Name: theme_ theme__agency_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.theme_
+    ADD CONSTRAINT theme__agency_uuid__key UNIQUE (agency_uuid_);
+
+
+--
 -- Name: theme_ theme__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
