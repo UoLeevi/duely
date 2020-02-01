@@ -54,11 +54,9 @@
 </template>
 
 <script>
-import ApolloMixin from '@/mixins/ApolloMixin';
 import { gql } from '@/apollo';
 
 export default {
-  mixins: [ApolloMixin],
   data() {
     return {
       step: 1,
@@ -132,7 +130,7 @@ export default {
             countryCode: this.data.countryCode,
             returnUrl
           },
-          update: async (store, { data: { createAgency } }) => {
+          update: (store, { data: { createAgency } }) => {
             if (createAgency.success) {
               this.step = 2;
               window.location.replace(createAgency.stripeVerificationUrl);
