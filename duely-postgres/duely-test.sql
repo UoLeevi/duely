@@ -103,15 +103,15 @@ BEGIN
 
   PERFORM operation_.begin_session_(_user_jwt);
 
-  PERFORM operation_.create_stripe_account_('acct_test', _record.uuid_);
+  PERFORM operation_.create_stripe_account_(_record.uuid_, 'acct_test');
 
   PERFORM operation_.end_session_();
 
 
   PERFORM operation_.begin_session_(_user_jwt);
 
-  PERFORM operation_.create_service_('test service 1', _record.uuid_);
-  PERFORM operation_.create_service_('test service 2', _record.uuid_);
+  PERFORM operation_.create_service_(_record.uuid_, 'test service 1');
+  PERFORM operation_.create_service_(_record.uuid_, 'test service 2');
 
   PERFORM operation_.end_session_();
 

@@ -657,7 +657,7 @@ ALTER TABLE application_.service_ OWNER TO postgres;
 -- Name: create_service_(text, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.create_service_(_name text, _agency_uuid uuid) RETURNS application_.service_
+CREATE FUNCTION operation_.create_service_(_agency_uuid uuid, _name text) RETURNS application_.service_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -676,7 +676,7 @@ END
 $$;
 
 
-ALTER FUNCTION operation_.create_service_(_name text, _agency_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION operation_.create_service_(_agency_uuid uuid, _name text) OWNER TO postgres;
 
 --
 -- Name: stripe_account_; Type: TABLE; Schema: application_; Owner: postgres
@@ -697,7 +697,7 @@ ALTER TABLE application_.stripe_account_ OWNER TO postgres;
 -- Name: create_stripe_account_(text, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.create_stripe_account_(_stripe_acct_id text, _agency_uuid uuid) RETURNS application_.stripe_account_
+CREATE FUNCTION operation_.create_stripe_account_(_agency_uuid uuid, _stripe_acct_id text) RETURNS application_.stripe_account_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -716,7 +716,7 @@ END
 $$;
 
 
-ALTER FUNCTION operation_.create_stripe_account_(_stripe_acct_id text, _agency_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION operation_.create_stripe_account_(_agency_uuid uuid, _stripe_acct_id text) OWNER TO postgres;
 
 --
 -- Name: delete_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
