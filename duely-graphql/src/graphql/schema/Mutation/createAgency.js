@@ -69,7 +69,7 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
     }
 
     // store stripe custom account id to database
-    await client.query('SELECT operation_.create_stripe_account_($1::text, $2::uuid)', [account.id, agencyUuid]);
+    await client.query('SELECT operation_.create_stripe_account_($1::uuid, $2::text)', [agencyUuid, account.id]);
 
     // create stripe account verification url
     let accountLink;

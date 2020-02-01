@@ -7,8 +7,10 @@ import AgencySubjectsEdge from './AgencySubjectsEdge';
 import BeginVisitResult from './BeginVisitResult';
 import Connection from './Connection';
 import CreateAgencyResult from './CreateAgencyResult';
+import CreateServiceResult from './CreateServiceResult';
 import Date from './Date';
 import DeleteAgencyResult from './DeleteAgencyResult';
+import DeleteServiceResult from './DeleteServiceResult';
 import Edge from './Edge';
 import EditAgencyThemeResult from './EditAgencyThemeResult';
 import EditImageResult from './EditImageResult';
@@ -39,8 +41,10 @@ export default makeExecutableSchema([
   BeginVisitResult,
   Connection,
   CreateAgencyResult,
+  CreateServiceResult,
   Date,
   DeleteAgencyResult,
+  DeleteServiceResult,
   Edge,
   EditAgencyThemeResult,
   EditImageResult,
