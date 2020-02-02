@@ -25,7 +25,7 @@ getSharedClient().then(client => {
         break;
 
       case 'D':
-        pubsub.publish(AGENCY_DELETED, { uuid_ });
+        pubsub.publish(AGENCY_DELETED, uuid_);
         break;
     }
   });
@@ -71,11 +71,11 @@ const agencyUpdated = {
 const agencyDeleted = {
   subscribe: withFilter(
     () => pubsub.asyncIterator(AGENCY_DELETED),
-    (obj, { agencyUuids }, context, info) => {
+    (agencyUuid, { agencyUuids }, context, info) => {
       if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-      return agencyUuids.includes(obj.uuid_);
+      return agencyUuids.includes(agencyUuid);
     }
   )
 };
