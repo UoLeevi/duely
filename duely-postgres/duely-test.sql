@@ -118,11 +118,10 @@ BEGIN
 
   PERFORM operation_.begin_session_(_user_jwt);
 
-  SELECT * FROM operation_.query_agency_(_record.uuid_) INTO _record;
+  SELECT * INTO _record FROM operation_.query_agency_(_record.uuid_);
   --RAISE NOTICE E'query_agency_:\n%', _record;
 
   PERFORM operation_.end_session_();
-
 
   PERFORM operation_.begin_session_(_user_jwt);
 
@@ -133,6 +132,15 @@ BEGIN
     EXIT WHEN NOT FOUND;
   END LOOP;
   CLOSE _cursor;
+
+  PERFORM operation_.end_session_();
+
+
+  PERFORM operation_.begin_session_(_user_jwt);
+
+  SELECT * INTO _record FROM operation_.query_agency_by_subdomain_name_('test');
+  SELECT * INTO _record FROM operation_.query_service_(_record.uuid_) LIMIT 1;
+  PERFORM operation_.delete_service_(_record.uuid_);
 
   PERFORM operation_.end_session_();
 

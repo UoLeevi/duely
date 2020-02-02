@@ -654,7 +654,7 @@ CREATE TABLE application_.service_ (
 ALTER TABLE application_.service_ OWNER TO postgres;
 
 --
--- Name: create_service_(text, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: create_service_(uuid, text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
 CREATE FUNCTION operation_.create_service_(_agency_uuid uuid, _name text) RETURNS application_.service_
@@ -694,7 +694,7 @@ CREATE TABLE application_.stripe_account_ (
 ALTER TABLE application_.stripe_account_ OWNER TO postgres;
 
 --
--- Name: create_stripe_account_(text, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: create_stripe_account_(uuid, text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
 CREATE FUNCTION operation_.create_stripe_account_(_agency_uuid uuid, _stripe_acct_id text) RETURNS application_.stripe_account_
@@ -757,11 +757,13 @@ DECLARE
   _service application_.service_;
   _arg RECORD;
 BEGIN
-  SELECT _service_uuid service_uuid_ INTO _arg; 
+  SELECT _service_uuid service_uuid_, s.agency_uuid_ INTO _arg
+  FROM application_.service_ s
+  WHERE s.uuid_ = _service_uuid; 
   PERFORM security_.control_operation_('delete_service_', _arg);
 
   DELETE FROM application_.service_
-  WHERE name_ = _name
+  WHERE uuid_ = _service_uuid
   RETURNING * INTO _service;
 
   RETURN _service;
@@ -2473,6 +2475,7 @@ ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-eb
 126aa154-9a2b-4e9e-9473-58b90d917a17	manager_in_agency_	8a08d468-c946-47d7-bcc1-f45819625d63	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 4ab56a45-937f-4aa3-bfab-6a3ec95e14d6	visitor_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+8030c009-6c74-4a8a-9762-82c8d414e6cd	manager_in_agency_	45cf7669-6e10-4c99-bf14-af25985a7f0f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2565,6 +2568,7 @@ ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-eb
 126aa154-9a2b-4e9e-9473-58b90d917a17	manager_in_agency_	8a08d468-c946-47d7-bcc1-f45819625d63	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 4ab56a45-937f-4aa3-bfab-6a3ec95e14d6	visitor_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+8030c009-6c74-4a8a-9762-82c8d414e6cd	manager_in_agency_	45cf7669-6e10-4c99-bf14-af25985a7f0f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
