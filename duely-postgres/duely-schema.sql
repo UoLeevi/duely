@@ -1211,14 +1211,42 @@ ALTER FUNCTION operation_.query_image_(_image_uuid uuid) OWNER TO postgres;
 -- Name: query_service_(uuid, text[]); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_service_(_agency_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text)
+CREATE FUNCTION operation_.query_service_(_service_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT _service_uuid service_uuid_, s.agency_uuid_,  _status service_status_ INTO _arg
+  FROM application_.service_ s
+  WHERE s.uuid_ = _service_uuid;
+  PERFORM security_.control_operation_('query_service_', _arg);
+
+  RETURN QUERY
+  SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_
+  FROM application_.service_ s
+  WHERE s.uuid_ = _service_uuid
+    AND (_status IS NULL 
+     OR s.status_ = ANY (COALESCE(_status, '{}'::text[])));
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_service_(_service_uuid uuid, _status text[]) OWNER TO postgres;
+
+--
+-- Name: query_service_by_agency_(uuid, text[]); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_service_by_agency_(_agency_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
   _arg RECORD;
 BEGIN
   SELECT _agency_uuid agency_uuid_, _status service_status_ INTO _arg; 
-  PERFORM security_.control_operation_('query_service_', _arg);
+  PERFORM security_.control_operation_('query_service_by_agency_', _arg);
 
   RETURN QUERY
   SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_
@@ -1231,7 +1259,7 @@ END
 $$;
 
 
-ALTER FUNCTION operation_.query_service_(_agency_uuid uuid, _status text[]) OWNER TO postgres;
+ALTER FUNCTION operation_.query_service_by_agency_(_agency_uuid uuid, _status text[]) OWNER TO postgres;
 
 --
 -- Name: query_shared_agency_(uuid, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -2438,6 +2466,7 @@ d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02
 373f84a0-350e-41e9-b714-705d21a79135	query_theme_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 8a08d468-c946-47d7-bcc1-f45819625d63	edit_image_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2476,6 +2505,8 @@ ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-eb
 4ab56a45-937f-4aa3-bfab-6a3ec95e14d6	visitor_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 8030c009-6c74-4a8a-9762-82c8d414e6cd	manager_in_agency_	45cf7669-6e10-4c99-bf14-af25985a7f0f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+120c7413-19c3-4bc7-969a-1d701e6e6aa1	agent_in_agency_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+45794325-c9e9-4f3c-a805-13d013205a8f	service_status_contains_only_live_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2531,6 +2562,7 @@ d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02
 373f84a0-350e-41e9-b714-705d21a79135	query_theme_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 8a08d468-c946-47d7-bcc1-f45819625d63	edit_image_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2569,6 +2601,8 @@ ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-eb
 4ab56a45-937f-4aa3-bfab-6a3ec95e14d6	visitor_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 8030c009-6c74-4a8a-9762-82c8d414e6cd	manager_in_agency_	45cf7669-6e10-4c99-bf14-af25985a7f0f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+120c7413-19c3-4bc7-969a-1d701e6e6aa1	agent_in_agency_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+45794325-c9e9-4f3c-a805-13d013205a8f	service_status_contains_only_live_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 

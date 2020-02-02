@@ -125,10 +125,10 @@ BEGIN
 
   PERFORM operation_.begin_session_(_user_jwt);
 
-  OPEN _cursor FOR SELECT * FROM operation_.query_service_(_record.uuid_);
+  OPEN _cursor FOR SELECT * FROM operation_.query_service_by_agency_(_record.uuid_);
   LOOP
     FETCH FROM _cursor INTO _record;
-    --RAISE NOTICE E'query_service_:\n%', _record;
+    --RAISE NOTICE E'query_service_by_agency_:\n%', _record;
     EXIT WHEN NOT FOUND;
   END LOOP;
   CLOSE _cursor;
@@ -139,7 +139,8 @@ BEGIN
   PERFORM operation_.begin_session_(_user_jwt);
 
   SELECT * INTO _record FROM operation_.query_agency_by_subdomain_name_('test');
-  SELECT * INTO _record FROM operation_.query_service_(_record.uuid_) LIMIT 1;
+  SELECT * INTO _record FROM operation_.query_service_by_agency_(_record.uuid_) LIMIT 1;
+  SELECT * INTO _record FROM operation_.query_service_(_record.uuid_);
   PERFORM operation_.delete_service_(_record.uuid_);
 
   PERFORM operation_.end_session_();
