@@ -25,7 +25,7 @@ getSharedClient().then(client => {
         break;
 
       case 'D':
-        pubsub.publish(SERVICE_DELETED, uuid_);
+        pubsub.publish(SERVICE_DELETED, { uuid_ });
         break;
     }
   });
@@ -71,13 +71,16 @@ const serviceUpdated = {
 const serviceDeleted = {
   subscribe: withFilter(
     () => pubsub.asyncIterator(SERVICE_DELETED),
-    (serviceUuid, { serviceUuids }, context, info) => {
+    (obj, { serviceUuids }, context, info) => {
       if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-      return serviceUuids.includes(serviceUuid);
+      return serviceUuids.includes(obj.uuid_);
     }
-  )
+  ),
+  resolve(obj) {
+    return obj.uuid_;
+  }
 };
 
 export {
