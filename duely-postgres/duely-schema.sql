@@ -679,6 +679,71 @@ $$;
 ALTER FUNCTION operation_.create_service_(_agency_uuid uuid, _name text) OWNER TO postgres;
 
 --
+-- Name: service_step_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.service_step_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    service_uuid_ uuid,
+    previous_service_step_uuid_ uuid,
+    name_ text NOT NULL,
+    type_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.service_step_ OWNER TO postgres;
+
+--
+-- Name: create_service_step_(uuid, text, text, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.create_service_step_(_service_uuid uuid, _name text, _type text, _previous_service_step_uuid uuid DEFAULT NULL::uuid) RETURNS application_.service_step_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _service_step application_.service_step_;
+  _next_service_step_uuid uuid;
+  _arg RECORD;
+BEGIN
+  SELECT _service_uuid service_uuid_, s.agency_uuid_ INTO _arg
+  FROM application_.service_ s
+  WHERE s.uuid_ = _service_uuid; 
+  PERFORM security_.control_operation_('create_service_step_', _arg);
+
+  IF _previous_service_step_uuid IS NOT NULL AND NOT EXISTS (
+    SELECT 1
+    FROM application_.service_step_ s
+    WHERE s.service_uuid_ = _service_uuid
+      AND s.uuid_ = _previous_service_step_uuid
+  ) THEN
+    RAISE 'Invalid value for "_after_service_step" argument' USING ERRCODE = '20000';
+  END IF;
+
+  SELECT s.uuid_ INTO _next_service_step_uuid
+  FROM application_.service_step_ s
+  WHERE s.previous_service_step_uuid_ IS NOT DISTINCT FROM _previous_service_step_uuid;
+
+  INSERT INTO application_.service_step_ (service_uuid_, name_, type_, previous_service_step_uuid_)
+  VALUES (_service_uuid, _name, _type, _previous_service_step_uuid)
+  RETURNING * INTO _service_step;
+
+  IF _next_service_step_uuid IS NOT NULL THEN
+    UPDATE application_.service_step_
+    SET
+      previous_service_step_uuid_ = _service_step.uuid_
+    WHERE uuid_ = _next_service_step_uuid;
+  END IF;
+
+  RETURN _service_step;
+END
+$$;
+
+
+ALTER FUNCTION operation_.create_service_step_(_service_uuid uuid, _name text, _type text, _previous_service_step_uuid uuid) OWNER TO postgres;
+
+--
 -- Name: stripe_account_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
@@ -1914,54 +1979,72 @@ $_X$;
 ALTER FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_name text, _policy_function_body text) OWNER TO postgres;
 
 --
--- Name: service_component_; Type: TABLE; Schema: application_; Owner: postgres
+-- Name: service_step_agency_approval_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
-CREATE TABLE application_.service_component_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    service_uuid_ uuid NOT NULL,
-    service_component_template_uuid_ uuid NOT NULL,
-    name_ text NOT NULL,
-    status_ text DEFAULT 'draft'::text NOT NULL,
+CREATE TABLE application_.service_step_agency_approval_ (
+    uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
-ALTER TABLE application_.service_component_ OWNER TO postgres;
+ALTER TABLE application_.service_step_agency_approval_ OWNER TO postgres;
 
 --
--- Name: service_component_delivery_type_; Type: TABLE; Schema: application_; Owner: postgres
+-- Name: service_step_document_delivery_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
-CREATE TABLE application_.service_component_delivery_type_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    name_ text NOT NULL,
-    image_uuid_ uuid NOT NULL,
-    status_ text DEFAULT 'draft'::text NOT NULL,
+CREATE TABLE application_.service_step_document_delivery_ (
+    uuid_ uuid NOT NULL,
+    max_revisions_ integer DEFAULT '-1'::integer NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
-ALTER TABLE application_.service_component_delivery_type_ OWNER TO postgres;
+ALTER TABLE application_.service_step_document_delivery_ OWNER TO postgres;
 
 --
--- Name: service_component_template_; Type: TABLE; Schema: application_; Owner: postgres
+-- Name: service_step_document_submission_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
-CREATE TABLE application_.service_component_template_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    service_component_delivery_type_uuid_ uuid NOT NULL,
-    agency_uuid_ uuid,
-    name_ text NOT NULL,
-    status_ text DEFAULT 'draft'::text NOT NULL,
+CREATE TABLE application_.service_step_document_submission_ (
+    uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
-ALTER TABLE application_.service_component_template_ OWNER TO postgres;
+ALTER TABLE application_.service_step_document_submission_ OWNER TO postgres;
+
+--
+-- Name: service_step_form_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.service_step_form_ (
+    uuid_ uuid NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.service_step_form_ OWNER TO postgres;
+
+--
+-- Name: service_step_payment_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.service_step_payment_ (
+    uuid_ uuid NOT NULL,
+    amount_ bigint NOT NULL,
+    currency_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.service_step_payment_ OWNER TO postgres;
 
 --
 -- Name: agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -2015,57 +2098,95 @@ CREATE TABLE application__audit_.service_ (
 ALTER TABLE application__audit_.service_ OWNER TO postgres;
 
 --
--- Name: service_component_; Type: TABLE; Schema: application__audit_; Owner: postgres
+-- Name: service_step_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
-CREATE TABLE application__audit_.service_component_ (
+CREATE TABLE application__audit_.service_step_ (
     uuid_ uuid,
     service_uuid_ uuid,
-    service_component_template_uuid_ uuid,
+    previous_service_step_uuid_ uuid,
     name_ text,
-    status_ text,
+    type_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
 
-ALTER TABLE application__audit_.service_component_ OWNER TO postgres;
+ALTER TABLE application__audit_.service_step_ OWNER TO postgres;
 
 --
--- Name: service_component_delivery_type_; Type: TABLE; Schema: application__audit_; Owner: postgres
+-- Name: service_step_agency_approval_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
-CREATE TABLE application__audit_.service_component_delivery_type_ (
+CREATE TABLE application__audit_.service_step_agency_approval_ (
     uuid_ uuid,
-    name_ text,
-    image_uuid_ uuid,
-    status_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
 
-ALTER TABLE application__audit_.service_component_delivery_type_ OWNER TO postgres;
+ALTER TABLE application__audit_.service_step_agency_approval_ OWNER TO postgres;
 
 --
--- Name: service_component_template_; Type: TABLE; Schema: application__audit_; Owner: postgres
+-- Name: service_step_document_delivery_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
-CREATE TABLE application__audit_.service_component_template_ (
+CREATE TABLE application__audit_.service_step_document_delivery_ (
     uuid_ uuid,
-    service_component_delivery_type_uuid_ uuid,
-    agency_uuid_ uuid,
-    name_ text,
-    status_ text,
+    max_revisions_ integer,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
 
-ALTER TABLE application__audit_.service_component_template_ OWNER TO postgres;
+ALTER TABLE application__audit_.service_step_document_delivery_ OWNER TO postgres;
+
+--
+-- Name: service_step_document_submission_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.service_step_document_submission_ (
+    uuid_ uuid,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.service_step_document_submission_ OWNER TO postgres;
+
+--
+-- Name: service_step_form_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.service_step_form_ (
+    uuid_ uuid,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.service_step_form_ OWNER TO postgres;
+
+--
+-- Name: service_step_payment_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.service_step_payment_ (
+    uuid_ uuid,
+    amount_ bigint,
+    currency_ text,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.service_step_payment_ OWNER TO postgres;
 
 --
 -- Name: stripe_account_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -2467,6 +2588,7 @@ d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02
 8a08d468-c946-47d7-bcc1-f45819625d63	edit_image_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+9b80cc60-7109-4849-ac2f-fc4df653bd2f	create_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2507,6 +2629,7 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 8030c009-6c74-4a8a-9762-82c8d414e6cd	manager_in_agency_	45cf7669-6e10-4c99-bf14-af25985a7f0f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 120c7413-19c3-4bc7-969a-1d701e6e6aa1	agent_in_agency_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 45794325-c9e9-4f3c-a805-13d013205a8f	service_status_contains_only_live_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+05cacc42-807b-4f51-b9f5-927983b26950	manager_in_agency_	9b80cc60-7109-4849-ac2f-fc4df653bd2f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2563,6 +2686,7 @@ d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02
 8a08d468-c946-47d7-bcc1-f45819625d63	edit_image_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+9b80cc60-7109-4849-ac2f-fc4df653bd2f	create_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2603,6 +2727,7 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 8030c009-6c74-4a8a-9762-82c8d414e6cd	manager_in_agency_	45cf7669-6e10-4c99-bf14-af25985a7f0f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 120c7413-19c3-4bc7-969a-1d701e6e6aa1	agent_in_agency_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 45794325-c9e9-4f3c-a805-13d013205a8f	service_status_contains_only_live_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+05cacc42-807b-4f51-b9f5-927983b26950	manager_in_agency_	9b80cc60-7109-4849-ac2f-fc4df653bd2f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2685,27 +2810,51 @@ ALTER TABLE ONLY application_.service_
 
 
 --
--- Name: service_component_ service_component__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+-- Name: service_step_ service_step__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
-ALTER TABLE ONLY application_.service_component_
-    ADD CONSTRAINT service_component__pkey PRIMARY KEY (uuid_);
-
-
---
--- Name: service_component_delivery_type_ service_component_delivery_type__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.service_component_delivery_type_
-    ADD CONSTRAINT service_component_delivery_type__pkey PRIMARY KEY (uuid_);
+ALTER TABLE ONLY application_.service_step_
+    ADD CONSTRAINT service_step__pkey PRIMARY KEY (uuid_);
 
 
 --
--- Name: service_component_template_ service_component_template__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+-- Name: service_step_agency_approval_ service_step_agency_approval__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
-ALTER TABLE ONLY application_.service_component_template_
-    ADD CONSTRAINT service_component_template__pkey PRIMARY KEY (uuid_);
+ALTER TABLE ONLY application_.service_step_agency_approval_
+    ADD CONSTRAINT service_step_agency_approval__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: service_step_document_delivery_ service_step_document_delivery__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_step_document_delivery_
+    ADD CONSTRAINT service_step_document_delivery__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: service_step_document_submission_ service_step_document_submission__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_step_document_submission_
+    ADD CONSTRAINT service_step_document_submission__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: service_step_form_ service_step_form__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_step_form_
+    ADD CONSTRAINT service_step_form__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: service_step_payment_ service_step_payment__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_step_payment_
+    ADD CONSTRAINT service_step_payment__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -2953,27 +3102,6 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency
 
 
 --
--- Name: service_component_template_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_component_template_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: service_component_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_component_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: service_component_delivery_type_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_component_delivery_type_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: theme_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -2985,6 +3113,48 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.theme_
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.image_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: service_step_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: service_step_payment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_payment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: service_step_form_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_form_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: service_step_agency_approval_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_agency_approval_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_document_submission_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_document_delivery_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -3016,31 +3186,45 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.image_ 
 
 
 --
--- Name: service_component_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_component_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_component_template_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_component_template_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_component_delivery_type_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_component_delivery_type_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
 -- Name: theme_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_document_delivery_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_document_submission_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_agency_approval_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_agency_approval_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_form_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_form_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_payment_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_payment_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -3072,27 +3256,6 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 
 
 --
--- Name: service_component_template_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_component_template_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_component_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_component_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_component_delivery_type_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_component_delivery_type_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: theme_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -3104,6 +3267,48 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.image_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_payment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_payment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_form_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_form_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_agency_approval_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_agency_approval_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -3135,31 +3340,45 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.image_ 
 
 
 --
--- Name: service_component_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_component_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_component_template_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_component_template_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_component_delivery_type_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_component_delivery_type_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
 -- Name: theme_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_agency_approval_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_agency_approval_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_form_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_form_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_payment_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_payment_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -3191,27 +3410,6 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
--- Name: service_component_template_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_component_template_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_component_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_component_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_component_delivery_type_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_component_delivery_type_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: theme_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -3223,6 +3421,48 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.image_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_payment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_payment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_form_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_form_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_agency_approval_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_agency_approval_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -3254,31 +3494,45 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.image_ 
 
 
 --
--- Name: service_component_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_component_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_component_template_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_component_template_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_component_delivery_type_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_component_delivery_type_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
 -- Name: theme_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_agency_approval_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_agency_approval_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_form_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_form_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_step_payment_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_payment_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -3310,27 +3564,6 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agenc
 
 
 --
--- Name: service_component_template_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_component_template_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: service_component_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_component_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: service_component_delivery_type_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_component_delivery_type_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
 -- Name: theme_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -3342,6 +3575,48 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.theme
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.image_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_payment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_payment_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_form_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_form_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_agency_approval_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_agency_approval_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_document_submission_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_document_submission_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_document_delivery_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -3656,43 +3931,59 @@ ALTER TABLE ONLY application_.service_
 
 
 --
--- Name: service_component_ service_component__service_component_template_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+-- Name: service_step_ service_step__previous_service_step_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
-ALTER TABLE ONLY application_.service_component_
-    ADD CONSTRAINT service_component__service_component_template_uuid__fkey FOREIGN KEY (service_component_template_uuid_) REFERENCES application_.service_component_template_(uuid_);
-
-
---
--- Name: service_component_ service_component__service_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.service_component_
-    ADD CONSTRAINT service_component__service_uuid__fkey FOREIGN KEY (service_uuid_) REFERENCES application_.service_component_template_(uuid_);
+ALTER TABLE ONLY application_.service_step_
+    ADD CONSTRAINT service_step__previous_service_step_uuid__fkey FOREIGN KEY (previous_service_step_uuid_) REFERENCES application_.service_step_(uuid_);
 
 
 --
--- Name: service_component_delivery_type_ service_component_delivery_type__image_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+-- Name: service_step_ service_step__service_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
-ALTER TABLE ONLY application_.service_component_delivery_type_
-    ADD CONSTRAINT service_component_delivery_type__image_uuid__fkey FOREIGN KEY (image_uuid_) REFERENCES application_.image_(uuid_);
-
-
---
--- Name: service_component_template_ service_component_template__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.service_component_template_
-    ADD CONSTRAINT service_component_template__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+ALTER TABLE ONLY application_.service_step_
+    ADD CONSTRAINT service_step__service_uuid__fkey FOREIGN KEY (service_uuid_) REFERENCES application_.service_(uuid_);
 
 
 --
--- Name: service_component_template_ service_component_template__service_component_delivery_typ_fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+-- Name: service_step_agency_approval_ service_step_agency_approval__uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
-ALTER TABLE ONLY application_.service_component_template_
-    ADD CONSTRAINT service_component_template__service_component_delivery_typ_fkey FOREIGN KEY (service_component_delivery_type_uuid_) REFERENCES application_.service_component_delivery_type_(uuid_);
+ALTER TABLE ONLY application_.service_step_agency_approval_
+    ADD CONSTRAINT service_step_agency_approval__uuid__fkey FOREIGN KEY (uuid_) REFERENCES application_.service_step_(uuid_);
+
+
+--
+-- Name: service_step_document_delivery_ service_step_document_delivery__uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_step_document_delivery_
+    ADD CONSTRAINT service_step_document_delivery__uuid__fkey FOREIGN KEY (uuid_) REFERENCES application_.service_step_(uuid_);
+
+
+--
+-- Name: service_step_document_submission_ service_step_document_submission__uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_step_document_submission_
+    ADD CONSTRAINT service_step_document_submission__uuid__fkey FOREIGN KEY (uuid_) REFERENCES application_.service_step_(uuid_);
+
+
+--
+-- Name: service_step_form_ service_step_form__uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_step_form_
+    ADD CONSTRAINT service_step_form__uuid__fkey FOREIGN KEY (uuid_) REFERENCES application_.service_step_(uuid_);
+
+
+--
+-- Name: service_step_payment_ service_step_payment__uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_step_payment_
+    ADD CONSTRAINT service_step_payment__uuid__fkey FOREIGN KEY (uuid_) REFERENCES application_.service_step_(uuid_);
 
 
 --
