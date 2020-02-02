@@ -27,7 +27,6 @@
 
 <script>
 import LoginDialog from '@/components/LoginDialog';
-//import ApolloMixin from '@/mixins/ApolloMixin';
 import { gql } from '@/apollo';
 
 export default {
@@ -44,7 +43,6 @@ export default {
         : 'white';
     }
   },
-  //mixins: [ApolloMixin],
   methods: {
     async logOut() {
       await this.$apollo.mutate({

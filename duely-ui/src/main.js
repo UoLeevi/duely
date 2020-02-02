@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import apolloProvider from '@/plugins/vueApollo';
-//import vgraph from '@/plugins/vgraph';
 import vuetify from '@/plugins/vuetify';
 import vutil from '@/plugins/vutil';
 import App from '@/App.vue';
@@ -25,14 +24,8 @@ if (process.env.NODE_ENV === 'production') {
 
 new Vue({
   apolloProvider,
-  //vgraph,
   vuetify,
   vutil,
   router,
-  render: h => h(App),
-  // computed: {
-  //   isLoggedIn() {
-  //     return this.$vgraph.me && this.$vgraph.me.type === 'user';
-  //   }
-  // }
+  render: h => h(App)
 }).$mount('#app');

@@ -124,6 +124,16 @@ export default {
             colorError
             colorSuccess
           }
+          servicesConnection {
+            edges {
+              cursor
+              node {
+                uuid
+                name
+                status
+              }
+            }
+          }
         }
       }`,
       variables () {
@@ -148,7 +158,41 @@ export default {
       },
       skip () {
         return this.$apollo.queries.session.loading;
-      }
+      },
+      subscribeToMore: [
+        {
+          document: gql`subscription {
+            serviceCreated {
+              uuid
+              name
+              status
+            }
+          }`,
+          updateQuery: ({ agency }, { subscriptionData }) => {
+            const service = subscriptionData.data.serviceCreated;
+            agency[0].servicesConnection.edges.push({ cursor: null, node: service, __typename: 'agencyServicesEdge' });
+            return { agency };
+          }
+        },
+        {
+          document: gql`subscription($serviceUuids: [ID!]!) {
+            serviceDeleted(serviceUuids: $serviceUuids)
+          }`,
+          variables() {
+            return {
+              serviceUuids: this.agency 
+                ? this.agency.servicesConnection.edges.map(edge => edge.node.uuid)
+                : []
+            }
+          },
+          updateQuery: ({ agency }, { subscriptionData }) => {
+            const uuid = subscriptionData.data.serviceDeleted;
+            agency[0].servicesConnection.edges = agency[0].servicesConnection.edges
+              .filter(edge => edge.node.uuid !== uuid);
+            return { agency };
+          }
+        }
+      ]
     }
   }
 };
