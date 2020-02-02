@@ -25,7 +25,7 @@ export default {
       editAgencyTheme(agencyUuid: ID!, imageLogoUuid: ID!, imageHeroUuid: ID!, colorPrimary: String!, colorSecondary: String!, colorAccent: String!, colorBackground: String!, colorSurface: String!, colorError: String!, colorSuccess: String!): EditAgencyThemeResult!
       editImage(agencyUuid: ID!, imageName: String!, imageData: String!, imageColor: String!): EditImageResult!
       deleteAgency(agencyUuid: ID!): DeleteAgencyResult!
-      deleteService(serviceyUuid: ID!): DeleteServiceResult!
+      deleteService(serviceUuid: ID!): DeleteServiceResult!
     }
   `,
   resolvers: {
