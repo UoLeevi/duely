@@ -59,11 +59,11 @@ const agencyCreated = {
 const agencyUpdated = {
   subscribe: withFilter(
     () => pubsub.asyncIterator(AGENCY_UPDATED),
-    (obj, { agencyUuid }, context, info) => {
+    (obj, { agencyUuids }, context, info) => {
       if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-      return obj.uuid_ === agencyUuid;
+      return agencyUuids.includes(obj.uuid_);
     }
   )
 };
@@ -71,11 +71,11 @@ const agencyUpdated = {
 const agencyDeleted = {
   subscribe: withFilter(
     () => pubsub.asyncIterator(AGENCY_DELETED),
-    (obj, { agencyUuid }, context, info) => {
+    (obj, { agencyUuids }, context, info) => {
       if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-      return obj.uuid_ === agencyUuid;
+      return agencyUuids.includes(obj.uuid_);
     }
   )
 };

@@ -59,11 +59,11 @@ const serviceCreated = {
 const serviceUpdated = {
   subscribe: withFilter(
     () => pubsub.asyncIterator(SERVICE_UPDATED),
-    (obj, { serviceUuid }, context, info) => {
+    (obj, { serviceUuids }, context, info) => {
       if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-      return obj.uuid_ === serviceUuid;
+      return serviceUuids.includes(obj.uuid_);
     }
   )
 };
@@ -71,11 +71,11 @@ const serviceUpdated = {
 const serviceDeleted = {
   subscribe: withFilter(
     () => pubsub.asyncIterator(SERVICE_DELETED),
-    (obj, { serviceUuid }, context, info) => {
+    (obj, { serviceUuids }, context, info) => {
       if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-      return obj.uuid_ === serviceUuid;
+      return serviceUuids.includes(obj.uuid_);
     }
   )
 };

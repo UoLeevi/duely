@@ -5,11 +5,11 @@ export default {
   typeDef: `
     type Subscription {
       agencyCreated: Agency!
-      agencyUpdated(agencyUuid: ID!): Agency!
-      agencyDeleted(agencyUuid: ID!): ID!
+      agencyUpdated(agencyUuids: [ID!]!): Agency!
+      agencyDeleted(agencyUuids: [ID!]!): ID!
       serviceCreated: Service!
-      serviceUpdated(serviceUuid: ID!): Service!
-      serviceDeleted(serviceUuid: ID!): ID!
+      serviceUpdated(serviceUuids: [ID!]!): Service!
+      serviceDeleted(serviceUuids: [ID!]!): ID!
     }
   `,
   resolvers: {
