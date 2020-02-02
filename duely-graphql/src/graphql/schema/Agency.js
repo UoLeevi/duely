@@ -35,7 +35,7 @@ export default {
       },
       async theme(agency, args, context, info) {
         if (!context.jwt)
-        throw new AuthenticationError('Unauthorized');
+          throw new AuthenticationError('Unauthorized');
 
         const client = await pool.connect();
         try {
