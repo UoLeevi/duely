@@ -124,13 +124,14 @@ BEGIN
 
   PERFORM operation_.end_session_();
 
+
   PERFORM operation_.begin_session_(_user_jwt);
 
   OPEN _cursor FOR SELECT * FROM operation_.query_service_by_agency_(_record_0.uuid_);
   LOOP
     FETCH FROM _cursor INTO _record_0;
-    --RAISE NOTICE E'query_service_by_agency_:\n%', _record_0;
     EXIT WHEN NOT FOUND;
+    --RAISE NOTICE E'query_service_by_agency_:\n%', _record_0;
   END LOOP;
   CLOSE _cursor;
 
@@ -153,6 +154,19 @@ BEGIN
   SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 2', 'payment');
   SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 3', 'payment', _record_1.uuid_);
   SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 1', 'payment');
+
+  PERFORM operation_.end_session_();
+
+
+  PERFORM operation_.begin_session_(_user_jwt);
+
+  OPEN _cursor FOR SELECT * FROM operation_.query_service_step_by_service_(_record_0.uuid_);
+  LOOP
+    FETCH FROM _cursor INTO _record_1;
+    EXIT WHEN NOT FOUND;
+    --RAISE NOTICE E'query_service_step_by_service_:\n%', _record_1;
+  END LOOP;
+  CLOSE _cursor;
 
   PERFORM operation_.end_session_();
 

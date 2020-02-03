@@ -718,7 +718,7 @@ BEGIN
     WHERE s.service_uuid_ = _service_uuid
       AND s.uuid_ = _previous_service_step_uuid
   ) THEN
-    RAISE 'Invalid value for "_after_service_step" argument' USING ERRCODE = '20000';
+    RAISE 'Invalid value for "_previous_service_step_uuid" argument' USING ERRCODE = '20000';
   END IF;
 
   SELECT s.uuid_ INTO _next_service_step_uuid
@@ -1327,6 +1327,40 @@ $$;
 ALTER FUNCTION operation_.query_service_by_agency_(_agency_uuid uuid, _status text[]) OWNER TO postgres;
 
 --
+-- Name: query_service_step_by_service_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_service_step_by_service_(_service_uuid uuid) RETURNS TABLE(uuid_ uuid, service_uuid_ uuid, name_ text, type_ text, previous_service_step_uuid_ uuid)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT _service_uuid service_uuid_, s.agency_uuid_, s.status_ service_status_ INTO _arg
+  FROM application_.service_ s
+  WHERE s.uuid_ = _service_uuid;
+  PERFORM security_.control_operation_('query_service_step_by_service_', _arg);
+
+  RETURN QUERY
+  WITH RECURSIVE _previous_steps(uuid_, service_uuid_, name_, type_, previous_service_step_uuid_) AS (
+      SELECT s.uuid_, s.service_uuid_, s.name_, s.type_, s.previous_service_step_uuid_
+      FROM application_.service_step_ s
+      WHERE s.service_uuid_ = _service_uuid
+        AND s.previous_service_step_uuid_ IS NULL
+    UNION
+      SELECT s.uuid_, s.service_uuid_, s.name_, s.type_, s.previous_service_step_uuid_
+      FROM application_.service_step_ s
+      JOIN _previous_steps p ON s.previous_service_step_uuid_ = p.uuid_
+  )
+  SELECT * FROM _previous_steps;
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_service_step_by_service_(_service_uuid uuid) OWNER TO postgres;
+
+--
 -- Name: query_shared_agency_(uuid, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -1742,6 +1776,24 @@ END
 
 
 ALTER FUNCTION policy_.service_status_contains_only_live_(_arg anyelement) OWNER TO postgres;
+
+
+--
+-- Name: service_status_is_live_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.service_status_is_live_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$  
+BEGIN
+  RETURN (
+    SELECT _arg.service_status_ IS NOT DISTINCT FROM 'live'
+  );
+END
+ $$;
+
+
+ALTER FUNCTION policy_.service_status_is_live_(_arg anyelement) OWNER TO postgres;
 
 --
 -- Name: users_can_remove_themselves_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -2589,6 +2641,7 @@ d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02
 a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 9b80cc60-7109-4849-ac2f-fc4df653bd2f	create_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+08f449e7-8215-484a-a40a-b6bdb9b16b4d	query_service_step_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2630,6 +2683,8 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 120c7413-19c3-4bc7-969a-1d701e6e6aa1	agent_in_agency_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 45794325-c9e9-4f3c-a805-13d013205a8f	service_status_contains_only_live_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 05cacc42-807b-4f51-b9f5-927983b26950	manager_in_agency_	9b80cc60-7109-4849-ac2f-fc4df653bd2f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+832c874c-3b8b-4d51-8704-7ee2ec8ff18c	service_status_is_live_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+7275e0a3-249c-4e32-a26f-4a399d724207	agent_in_agency_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2687,6 +2742,7 @@ d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02
 a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 9b80cc60-7109-4849-ac2f-fc4df653bd2f	create_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+08f449e7-8215-484a-a40a-b6bdb9b16b4d	query_service_step_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2728,6 +2784,8 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 120c7413-19c3-4bc7-969a-1d701e6e6aa1	agent_in_agency_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 45794325-c9e9-4f3c-a805-13d013205a8f	service_status_contains_only_live_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 05cacc42-807b-4f51-b9f5-927983b26950	manager_in_agency_	9b80cc60-7109-4849-ac2f-fc4df653bd2f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+832c874c-3b8b-4d51-8704-7ee2ec8ff18c	service_status_is_live_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+7275e0a3-249c-4e32-a26f-4a399d724207	agent_in_agency_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
