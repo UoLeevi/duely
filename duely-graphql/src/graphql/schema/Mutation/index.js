@@ -6,6 +6,7 @@ import logIn from './logIn';
 import logOut from './logOut';
 import createAgency from './createAgency';
 import createService from './createService';
+import createServiceStep from './createServiceStep';
 import editAgencyTheme from './editAgencyTheme';
 import editImage from './editImage';
 import deleteAgency from './deleteAgency';
@@ -22,6 +23,7 @@ export default {
       logOut: LogOutResult!
       createAgency(name: String!, subdomain: String!, countryCode: String!, returnUrl: String!): CreateAgencyResult!
       createService(agencyUuid: ID!, name: String!): CreateServiceResult!
+      createServiceStep(serviceUuid: ID!, name: String!, type: ServiceStepType!, previousServiceStepUuid: ID): CreateServiceStepResult!
       editAgencyTheme(agencyUuid: ID!, imageLogoUuid: ID!, imageHeroUuid: ID!, colorPrimary: String!, colorSecondary: String!, colorAccent: String!, colorBackground: String!, colorSurface: String!, colorError: String!, colorSuccess: String!): EditAgencyThemeResult!
       editImage(agencyUuid: ID!, imageName: String!, imageData: String!, imageColor: String!): EditImageResult!
       deleteAgency(agencyUuid: ID!): DeleteAgencyResult!
@@ -37,6 +39,7 @@ export default {
       logIn,
       logOut,
       createAgency,
+      createServiceStep,
       createService,
       editAgencyTheme,
       editImage,

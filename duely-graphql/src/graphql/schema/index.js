@@ -8,6 +8,7 @@ import BeginVisitResult from './BeginVisitResult';
 import Connection from './Connection';
 import CreateAgencyResult from './CreateAgencyResult';
 import CreateServiceResult from './CreateServiceResult';
+import CreateServiceStepResult from './CreateServiceStepResult';
 import Date from './Date';
 import DeleteAgencyResult from './DeleteAgencyResult';
 import DeleteServiceResult from './DeleteServiceResult';
@@ -23,6 +24,7 @@ import MutationResult from './MutationResult';
 import Node from './Node';
 import Query from './Query';
 import Service from './Service';
+import ServiceStep from './ServiceStep';
 import SignUpResult from './SignUpResult';
 import StartEmailAddressVerificationResult from './StartEmailAddressVerificationResult';
 import Subdomain from './Subdomain';
@@ -42,6 +44,7 @@ export default makeExecutableSchema([
   Connection,
   CreateAgencyResult,
   CreateServiceResult,
+  CreateServiceStepResult,
   Date,
   DeleteAgencyResult,
   DeleteServiceResult,
@@ -57,6 +60,7 @@ export default makeExecutableSchema([
   Node,
   Query,
   Service,
+  ServiceStep,
   SignUpResult,
   StartEmailAddressVerificationResult,
   Subdomain,
