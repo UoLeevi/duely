@@ -1,15 +1,11 @@
 <template>
   <DashboardLayout>
     <template #menu>
-      <v-row no-gutters class="flex-column justify-center align-self-center">
-        <BtnSquare v-for="item in items" :key="item.to" v-bind="item" small :minimized="subMenuItems.length !== 0" :selected="selectedMenu !== null && selectedMenu.to === item.to" />
-      </v-row>
+      <BtnSquare v-for="item in items" :key="item.to" v-bind="item" small :minimized="$vuetify.breakpoint.xs || subMenuItems.length !== 0" :selected="selectedMenu !== null && selectedMenu.to === item.to" />
     </template>
     <template #sub-menu>
-      <v-row no-gutters class="mt-6 flex-column align-self-start">
-        <h4 v-if="subMenuItems.length !== 0" class="ml-3 py-0 f-3b surface--text text--lighten-3">{{ selectedMenu.text }}</h4>
-        <TextLink v-for="item in subMenuItems" :key="item.to" v-bind="item" >{{ item.text }}</TextLink>
-      </v-row>
+      <h4 v-if="!$vuetify.breakpoint.xs && subMenuItems.length !== 0" class="f-3b surface--text text--lighten-3 ml-2 py-1">{{ selectedMenu.text }}</h4>
+      <TextLink v-for="item in subMenuItems" :key="item.to" v-bind="item" class="px-2">{{ item.text }}</TextLink>
     </template>
     <v-fade-transition mode="out-in">
       <router-view />

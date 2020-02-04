@@ -4,7 +4,7 @@
     <v-progress-circular v-if="$apollo.queries.service.loading" indeterminate />
     <v-timeline dense clipped>
       <v-timeline-item small icon="add" fill-dot></v-timeline-item>
-      <template v-for="step in service.steps">
+      <template v-for="step in service ? service.steps : []">
         <v-timeline-item :key="step.uuid" :icon="stepIcon(step.type)" fill-dot>{{ step.name }}</v-timeline-item>
         <v-timeline-item small :key="step.uuid + '_'" icon="add" fill-dot></v-timeline-item>
       </template>

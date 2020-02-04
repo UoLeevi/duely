@@ -1,6 +1,6 @@
 <template>
-  <router-link :to="to" class="text-link d-flex flex-column align-start ma-2" :class="{ 'route-matches': $route.path === to, selected, notification }">
-    <span :class="small ? 'f-1 pa-2' : 'f-2 pa-3'">{{ text }}</span>
+  <router-link :to="to" class="text-link d-flex flex-column align-start" :class="{ 'route-matches': $route.path === to, selected, notification }">
+    <span :class="small ? 'f-1 pa-1' : 'f-2 pa-2'">{{ text }}</span>
   </router-link>
 </template>
 <script>
