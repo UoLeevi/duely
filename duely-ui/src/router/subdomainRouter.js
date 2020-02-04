@@ -5,8 +5,9 @@ import Dashboard from '@/views/dashboard/Dashboard.vue'
 import DashboardHome from '@/views/dashboard/DashboardHome.vue'
 import DashboardPayments from '@/views/dashboard/DashboardPayments.vue'
 import DashboardServices from '@/views/dashboard/services/DashboardServices.vue'
-import DashboardServicesHome from '@/views/dashboard/services/DashboardServicesHome.vue'
 import DashboardServicesCreateService from '@/views/dashboard/services/DashboardServicesCreateService.vue'
+import DashboardServicesHome from '@/views/dashboard/services/DashboardServicesHome.vue'
+import DashboardServicesService from '@/views/dashboard/services/DashboardServicesService.vue'
 import DashboardUsers from '@/views/dashboard/DashboardUsers.vue'
 import DashboardSite from '@/views/dashboard/site/DashboardSite.vue'
 import DashboardSiteHome from '@/views/dashboard/site/DashboardSiteHome.vue'
@@ -61,6 +62,10 @@ const router = new Router({
             {
               path: 'create-service',
               component: DashboardServicesCreateService
+            },
+            {
+              path: ':uuid',
+              component: DashboardServicesService
             }
           ]
         },
@@ -127,7 +132,7 @@ const router = new Router({
           }
         });
 
-        if (res.data.agency.length !== 1) {
+        if (res.data.agency === null) {
           next(location.href = process.env.NODE_ENV === 'production'
             ? `https://duely.app`
             : `${window.location.origin}`);

@@ -13,10 +13,10 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="service in services" :key="service.name" style="height: 70px;">
+            <tr v-for="service in services" :key="service.uuid" style="height: 70px;">
               <td>
                 <div class="d-flex flex-column">
-                  <span class="f-2b text-no-wrap">{{ service.name }}</span>
+                  <router-link :to="`/dashboard/services/${service.uuid}`"><span class="f-2b text-no-wrap">{{ service.name }}</span></router-link>
                   <span class="f-1 text-no-wrap surface--text text--lighten-2">{{ truncateString(service.name, 30) }}</span>
                 </div>
               </td>
@@ -101,7 +101,7 @@ export default {
         }
       },
       update ({ agency }) {
-        return agency[0].servicesConnection.edges.map(edge => edge.node);
+        return agency.servicesConnection.edges.map(edge => edge.node);
       },
       skip () {
         return this.$apollo.queries.session.loading;

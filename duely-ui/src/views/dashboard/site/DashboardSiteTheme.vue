@@ -313,7 +313,7 @@ export default {
         }
       },
       update ({ agency }) {
-        const theme = agency[0].theme;
+        const theme = agency.theme;
         
         if (theme) {
           this.updateThemeItem('primary', theme.colorPrimary);
@@ -347,7 +347,7 @@ export default {
         this.data.colorError = this.$vuetify.theme.currentTheme.error.base;
         this.data.colorSuccess = this.$vuetify.theme.currentTheme.success.base;
 
-        return agency[0];
+        return agency;
       },
       skip () {
         return this.$apollo.queries.session.loading;

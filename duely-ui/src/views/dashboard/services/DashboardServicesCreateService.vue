@@ -105,7 +105,7 @@ export default {
         }
       },
       update ({ agency }) {
-        return agency[0];
+        return agency;
       },
       skip () {
         return this.$apollo.queries.session.loading;

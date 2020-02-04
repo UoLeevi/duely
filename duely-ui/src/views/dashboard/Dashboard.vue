@@ -142,8 +142,8 @@ export default {
         }
       },
       update ({ agency } ) {
-        const theme = agency[0].theme;
-        
+        const theme = agency.theme;
+
         if (theme) {
           this.updateThemeItem('primary', theme.colorPrimary);
           this.updateThemeItem('secondary', theme.colorSecondary);
@@ -154,7 +154,7 @@ export default {
           this.updateThemeItem('success', theme.colorSuccess);
         }
 
-        return agency[0];
+        return agency;
       },
       skip () {
         return this.$apollo.queries.session.loading;
@@ -170,7 +170,7 @@ export default {
           }`,
           updateQuery: ({ agency }, { subscriptionData }) => {
             const service = subscriptionData.data.serviceCreated;
-            agency[0].servicesConnection.edges.push({ cursor: null, node: service, __typename: 'agencyServicesEdge' });
+            agency.servicesConnection.edges.push({ cursor: null, node: service, __typename: 'agencyServicesEdge' });
             return { agency };
           }
         },
@@ -187,7 +187,7 @@ export default {
           },
           updateQuery: ({ agency }, { subscriptionData }) => {
             const uuid = subscriptionData.data.serviceDeleted;
-            agency[0].servicesConnection.edges = agency[0].servicesConnection.edges
+            agency.servicesConnection.edges = agency.servicesConnection.edges
               .filter(edge => edge.node.uuid !== uuid);
             return { agency };
           }
