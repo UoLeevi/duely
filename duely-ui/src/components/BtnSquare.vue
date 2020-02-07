@@ -1,11 +1,11 @@
 <template>
-  <router-link :to="to" class="btn-square d-flex flex-column align-center my-4" :class="{ 'route-matches': $route.path === to, selected, notification, minimized }" :style="{ 'width': `${adjustSize(small ? 64 : 128, small ? 0.2 : 0.5)}px` }">
+  <router-link :to="to" class="btn-square d-flex flex-column align-center mt-4" :class="{ 'route-matches': $route.path === to, selected, notification, minimized, 'mb-4': minimized, 'mb-2': !minimized }" :style="{ 'width': `${adjustSize(minimized ? 64 : small ? 102 : 128, minimized || small ? 0.2 : 0.5)}px` }">
     <v-avatar class="rounded-corners-small" :color="color" :style="{ 'color': colorHex(color) }" :size="adjustSize(small ? 48 : 64, small ? 0.5 : 0.7)">
       <v-icon v-if="icon" :color="iconColor">{{ icon }}</v-icon>
       <span v-else class="surface--text text--lighten-5 f-5">{{ text[0] }}</span>
     </v-avatar>
     <v-scale-transition leave-absolute mode="out-in">
-      <span v-if="!minimized" :class="small ? 'f-1 pt-3' : 'f-2 pt-4'">{{ text }}</span>
+      <span v-if="!minimized" :class="small ? 'f-1 pt-2' : 'f-2 pt-3'">{{ text }}</span>
     </v-scale-transition>
   </router-link>
 </template>
@@ -42,7 +42,7 @@ export default {
 }
 
 .btn-square > span {
-  color: var(--v-surface-lighten1);
+  color: var(--v-surface-lighten3);
   transition: color 300ms;
 }
 
@@ -75,8 +75,8 @@ export default {
 .btn-square.route-matches > .v-avatar,
 .btn-square.router-link-exact-active .v-avatar,
 .btn-square.selected .v-avatar {
-  box-shadow: 0px 0px 0px 0.3rem var(--v-surface-darken2), 0px 0px 0px 0.45rem,
-    0px 0px 1rem 0.45rem rgba(0, 0, 0, 0.5), 0px 0px 1rem 0.45rem;
+  box-shadow: 0px 0px 0px 0.2rem var(--v-surface-darken2), 0px 0px 0px 0.35rem,
+    0px 0px 1rem 0.35rem rgba(0, 0, 0, 0.5), 0px 0px 1rem 0.35rem;
 }
 
 .btn-square:not(.route-matches):not(.selected):not(.router-link-exact-active):hover .v-avatar {

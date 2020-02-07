@@ -28,7 +28,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: duely-ui
-        image: uoleevi/duely-ui:0.46
+        image: uoleevi/duely-ui:0.47
         resources:
           requests:
             memory: 32Mi

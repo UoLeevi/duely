@@ -1,7 +1,7 @@
 <template>
   <section class="profile-create-agency">
     <h2 class="f-5b">Create new agency</h2>
-    <v-stepper v-model="step" vertical class="elevation-0" :style="{'width': `${adjustSize(600, 0.7)}px`}">
+    <v-stepper v-model="step" vertical class="elevation-0" :style="{'width': `${adjustSize(600, 0.7)}px`, 'background-color': colorHex('background lighten-5')}">
 
       <v-stepper-step :complete="step > 1" step="1">
         Name your agency

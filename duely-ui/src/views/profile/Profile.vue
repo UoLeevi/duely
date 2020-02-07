@@ -1,9 +1,7 @@
 <template>
   <ProfileLayout>
     <template #menu>
-      <v-row class="flex-column justify-center align-self-center">
-        <BtnSquare v-for="item in items" :key="item.to" v-bind="item" />
-      </v-row>
+      <BtnSquare v-for="item in items" :key="item.to" v-bind="item" :small="$vuetify.breakpoint.xs" :class="{ 'py-2': !$vuetify.breakpoint.xs }" />
     </template>
     <v-fade-transition mode="out-in">
       <router-view />
@@ -30,7 +28,7 @@ export default {
         {
           to: '/profile/create-agency',
           color: 'green',
-          text: 'Create new agency',
+          text: 'Create agency',
           icon: 'add'
         },
         {

@@ -120,16 +120,16 @@ a:visited {
 
 #app.xl .f-1, #app.xl .f-1b,
 #app.lg .f-1, #app.lg .f-1b {
-  font-size: 0.8rem;
+  font-size: 0.775rem;
 }
 #app.md .f-1, #app.md .f-1b {
   font-size: 0.75rem;
 }
 #app.sm .f-1, #app.sm .f-1b {
-  font-size: 0.7rem;
+  font-size: 0.725rem;
 }
 #app.xs .f-1, #app.xs .f-1b {
-  font-size: 0.65rem;
+  font-size: 0.7rem;
 }
 
 #app.xl .f-2, #app.xl .f-2b,
