@@ -60,7 +60,7 @@
         <p class="f-4 black--text">Duely makes it easy to offer your services and accept your first client project. Perfect for any industry - whether you are a mid-sized agency or startup, we make it dead simple to create your service offerings with our powerful and intuitive platform.</p>
       </div>
     </HomeSection>
-    <HomeSection v-scroll-target="{ color: 'blue darken-3' }" section-name="Features" background-color="background" text-color="blue darken-3">
+    <HomeSection v-scroll-target="{ color: 'blue darken-3' }" section-name="Features" background-color="background lighten-5" text-color="blue darken-3">
       <template #left>
         <svg xmlns="http://www.w3.org/2000/svg" id="ade8c9af-7e2e-4eda-b5c8-b06129257226" data-name="Layer 1" :width="`${adjustSize(530)}`" viewBox="0 0 1076.06371 755.2279">
           <title>web_developer</title>
@@ -117,10 +117,10 @@
       <h3 class="f-8">Personalized solutions</h3>
       <p class="f-3 black--text">Get a professional services website in just a few clicks. Personalize it according to your brand and business.</p>
     </HomeSection>
-    <HomeSection v-scroll-target="{ color: 'blue lighten-5' }" section-name="qwer" background-color="surface darken4" text-color="blue lighten-5">
-      <h2 class="f-10">Agency-client relationship simplified.</h2>
-      <p class="f-4 surface--text">Selling your your services shouldn’t be so hard. Duely makes it easy for you to accept client requests and manage your deliverables and scale up as you grow.</p>
-      <p class="f-4 surface--text">Get our fully functioning client management system, equipped with payment gateways and invoicing tools so you can focus on what really matters - delivering value to your clients.</p>
+    <HomeSection v-scroll-target="{ color: 'blue lighten-5' }" section-name="qwer" background-color="surface" text-color="blue lighten-5">
+      <h2 class="f-10 mb-3">Agency-client relationship simplified.</h2>
+      <p class="f-4 accent--text text--lighten-4">Selling your your services shouldn’t be so hard. Duely makes it easy for you to accept client requests and manage your deliverables and scale up as you grow.</p>
+      <p class="f-4 accent--text text--lighten-4">Get our fully functioning client management system, equipped with payment gateways and invoicing tools so you can focus on what really matters - delivering value to your clients.</p>
       <template #right>
         <svg xmlns="http://www.w3.org/2000/svg" id="fbf61bc7-949a-4ad5-bdf9-42522344582c" data-name="Layer 1" :width="`${adjustSize(530)}`" viewBox="0 0 1035.47998 627.63641">
           <title>spread_love</title>

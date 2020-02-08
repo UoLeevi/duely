@@ -137,24 +137,24 @@ a:visited {
   font-size: 0.9rem;
 }
 #app.md .f-2, #app.md .f-2b {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
 }
 #app.sm .f-2, #app.sm .f-2b {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 #app.xs .f-2, #app.xs .f-2b {
-  font-size: 0.75rem;
+  font-size: 0.825rem;
 }
 
 #app.xl .f-3, #app.xl .f-3b,
 #app.lg .f-3, #app.lg .f-3b {
-  font-size: 1.2rem;
-}
-#app.md .f-3, #app.md .f-3b {
   font-size: 1.15rem;
 }
-#app.sm .f-3, #app.sm .f-3b {
+#app.md .f-3, #app.md .f-3b {
   font-size: 1.1rem;
+}
+#app.sm .f-3, #app.sm .f-3b {
+  font-size: 1.05rem;
 }
 #app.xs .f-3, #app.xs .f-3b {
   font-size: 1rem;

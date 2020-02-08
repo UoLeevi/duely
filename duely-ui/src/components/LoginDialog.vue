@@ -7,9 +7,9 @@
         </v-btn>
       </slot>
     </template>
-    <v-card flat class="pa-5 rounded-corners">
+    <v-card flat class="pa-4 rounded-corners">
       <v-card-title>
-        <h2 class="display-1">Log in</h2>
+        <h2 class="f-6b text-no-wrap">Log in</h2>
       </v-card-title>
       <v-card-text>
         <v-form class="pb-1 px-4" @submit.prevent="logIn" ref="form">
@@ -18,11 +18,12 @@
           <v-expand-transition>
             <p class="error--text" v-if="errorMessage">{{ errorMessage }}</p>
           </v-expand-transition>
-          <v-row no-gutters align="center" justify="center">
-            <v-btn depressed rounded color="primary" x-large class="body-1 text-none" type="submit" :loading="$apollo.loading">Log in</v-btn>
-            <v-spacer />
-            <span>Don't have an account?</span>
-            <v-btn text depressed rounded small color="primary" class="body-2 ml-1 text-none" :to="emailAddress ? `/create-account?email=${emailAddress}` : '/create-account'">Sign up</v-btn>
+          <v-row no-gutters class="flex-wrap justify-space-around align-center ma-n3 mb-n4">
+            <v-btn depressed rounded min-width="140px" color="primary" x-large class="f-3b ma-3 text-none" type="submit" :loading="$apollo.loading">Log in</v-btn>
+            <div class="d-inline-flex ma-2 align-center">
+              <span class="text-no-wrap f-2 text-none">Don't have an account?</span>
+              <v-btn text depressed rounded small color="primary" class="f-2b text-none" :to="emailAddress ? `/create-account?email=${emailAddress}` : '/create-account'">Sign up</v-btn>
+            </div>
           </v-row>
         </v-form>
       </v-card-text>

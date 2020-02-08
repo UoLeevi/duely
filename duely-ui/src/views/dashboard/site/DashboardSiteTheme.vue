@@ -2,54 +2,57 @@
   <section>
     <h2 class="f-5b">Theme</h2>
     <v-fade-transition mode="out-in">
-      <v-progress-circular v-if="$apollo.loading" />
-      <v-form v-else @submit.prevent="submitEditAgencyTheme" ref="editAgencyThemeForm" v-model="forms.editAgencyTheme.valid">
+      <v-form @submit.prevent="submitEditAgencyTheme" ref="editAgencyThemeForm" v-model="forms.editAgencyTheme.valid">
         <v-row class="pt-1 px-4 flex-wrap">
-          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.4) }px`, 'box-sizing': 'content-box' }">
             <span class="f-3b surface--text text--lighten2">Logo image</span>
             <p class="f-2 pt-1 background--text text--darken3">Logo of your agency.</p>
-            <v-img class="py-1" v-if="data.imageLogo.data" :src="data.imageLogo.data" contain width="200px" />
-            <v-file-input v-model="data.imageLogo.file" show-size full-width label="Select image file" class="mt-auto flex-grow-0 mb-2 primary--text" accept="image/*" :loading="data.imageLogo.loading" dense filled rounded :rules="rules.image" validate-on-blur append-icon="add_photo_alternate" prepend-icon="" />
+            <v-skeleton-loader v-if="$apollo.queries.agency.loading" type="image" height="120px" class="mt-auto mb-4" />
+            <v-img v-else-if="data.imageLogo.data" :src="data.imageLogo.data" contain width="200px" class="py-1 my-auto" />
+            <v-sheet v-else color="background lighten-4" height="120px" :class="`${ data.imageHero.data || data.imageLogo.data ? 'my-auto' : 'mt-auto mb-4' }`" class="d-flex justify-center"><v-icon large color="background lighten-3">image</v-icon></v-sheet>
+            <v-file-input v-model="data.imageLogo.file" show-size full-width label="Select image file" class="flex-grow-0 my-2 primary--text" :style="{ 'box-sizing': 'border-box' }" accept="image/*" :loading="data.imageLogo.loading" dense filled rounded :rules="rules.image" validate-on-blur append-icon="add_photo_alternate" prepend-icon="" />
           </div>
-          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.4) }px`, 'box-sizing': 'content-box' }">
             <span class="f-3b surface--text text--lighten2">Hero image</span>
             <p class="f-2 pt-1 background--text text--darken3">This image will appear in the agency card in your profile.</p>
-            <v-img class="py-1" v-if="data.imageHero.data" :src="data.imageHero.data" contain />
-            <v-file-input v-model="data.imageHero.file" show-size full-width label="Select image file" class="mt-auto flex-grow-0 mb-2 primary--text" accept="image/*" :loading="data.imageHero.loading" dense filled rounded :rules="rules.image" validate-on-blur append-icon="add_photo_alternate" prepend-icon="" />
+            <v-skeleton-loader v-if="$apollo.queries.agency.loading" type="image" height="120px" class="mt-auto mb-4" />
+            <v-img v-else-if="data.imageHero.data" :src="data.imageHero.data" contain class="py-1 my-auto" />
+            <v-sheet v-else color="background lighten-4" height="120px" :class="`${ data.imageHero.data || data.imageLogo.data ? 'my-auto' : 'mt-auto mb-4' }`" class="d-flex justify-center"><v-icon large color="background lighten-3">image</v-icon></v-sheet>
+            <v-file-input v-model="data.imageHero.file" show-size full-width label="Select image file" class="flex-grow-0 my-2 primary--text" :style="{ 'box-sizing': 'border-box' }" accept="image/*" :loading="data.imageHero.loading" dense filled rounded :rules="rules.image" validate-on-blur append-icon="add_photo_alternate" prepend-icon="" />
           </div>
         </v-row>
         <v-row class="pt-1 px-4 flex-wrap">
-          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+          <div class="d-flex flex-column pa-6" :style="{ 'width': '300px', 'box-sizing': 'content-box' }">
             <span class="f-3b surface--text text--lighten2">Primary color</span>
             <p class="f-2 pt-1 background--text text--darken3">Primary color is the color displayed most frequently across your app’s screens and components.</p>
             <v-color-picker v-model="data.colorPrimary" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
-          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+          <div class="d-flex flex-column pa-6" :style="{ 'width': '300px', 'box-sizing': 'content-box' }">
             <span class="f-3b surface--text text--lighten2">Secondary color</span>
             <p class="f-2 pt-1 background--text text--darken3">Secondary color provides more ways to accent and distinguish your product.</p>
             <v-color-picker v-model="data.colorSecondary" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
-          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+          <div class="d-flex flex-column pa-6" :style="{ 'width': '300px', 'box-sizing': 'content-box' }">
             <span class="f-3b surface--text text--lighten2">Accent color</span>
             <p class="f-2 pt-1 background--text text--darken3">Accent color is used for small elements to provide variation to color scheme.</p>
             <v-color-picker v-model="data.colorAccent" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
-          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+          <div class="d-flex flex-column pa-6" :style="{ 'width': '300px', 'box-sizing': 'content-box' }">
             <span class="f-3b surface--text text--lighten2">Background color</span>
             <p class="f-2 pt-1 background--text text--darken3">The background color appears behind scrollable content.</p>
             <v-color-picker v-model="data.colorBackground" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
-          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+          <div class="d-flex flex-column pa-6" :style="{ 'width': '300px', 'box-sizing': 'content-box' }">
             <span class="f-3b surface--text text--lighten2">Surface color</span>
             <p class="f-2 pt-1 background--text text--darken3">Surface colors affect surfaces of components, such as cards, sheets, and menus.</p>
             <v-color-picker v-model="data.colorSurface" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
-          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+          <div class="d-flex flex-column pa-6" :style="{ 'width': '300px', 'box-sizing': 'content-box' }">
             <span class="f-3b surface--text text--lighten2">Error color</span>
             <p class="f-2 pt-1 background--text text--darken3">Error color indicates errors in components, such as invalid text in a text field.</p>
             <v-color-picker v-model="data.colorError" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
           </div>
-          <div class="d-flex flex-column pa-6" :style="{ 'width': `${ adjustSize(400, 0.5) }px` }">
+          <div class="d-flex flex-column pa-6" :style="{ 'width': '300px', 'box-sizing': 'content-box' }">
             <span class="f-3b surface--text text--lighten2">Success color</span>
             <p class="f-2 pt-1 background--text text--darken3">Success color can be used to indicate valid data or successful completion.</p>
             <v-color-picker v-model="data.colorSuccess" :canvas-height="120" flat mode="hexa" class="mt-auto" :style="{ 'background-color': colorHex('background lighten-5') }" />
@@ -58,8 +61,8 @@
         <v-expand-transition>
           <p class="error--text" v-if="forms.editAgencyTheme.errorMessage">{{ forms.editAgencyTheme.errorMessage }}</p>
         </v-expand-transition>
-        <v-row class="ml-3 pt-2 pb-1">
-          <v-btn :min-width="100" depressed rounded :loading="forms.editAgencyTheme.loading" :disabled="!forms.editAgencyTheme.valid" type="submit" color="primary" class="text-none mr-4" >Save</v-btn>
+        <v-row class="ml-6 pt-2 pb-1">
+          <v-btn :min-width="100" depressed rounded :loading="forms.editAgencyTheme.loading || data.imageLogo.loading || data.imageHero.loading" :disabled="!forms.editAgencyTheme.valid" type="submit" color="primary" class="text-none mr-4" >Save</v-btn>
           <v-btn :min-width="100" text depressed rounded class="text-none" to="/dashboard/site">Cancel</v-btn>
         </v-row>
         <v-snackbar v-model="snackbar" bottom right :timeout="2000" color="surface darken-2" class="success--text"><span class="f-2b">Theme saved.</span></v-snackbar>
@@ -226,14 +229,14 @@ export default {
         this.forms.editAgencyTheme.loading = true;
 
         try {
-          if (this.data.imageLogo.uuid === null)
+          if (this.data.imageLogo.uuid === null && this.data.imageLogo.data !== null)
             await this.editImage(this.data.imageLogo);
 
-          if (this.data.imageHero.uuid === null)
+          if (this.data.imageHero.uuid === null && this.data.imageHero.data !== null)
             await this.editImage(this.data.imageHero);
 
           await this.$apollo.mutate({
-            mutation: gql`mutation($agencyUuid: ID!, $imageLogoUuid: ID!, $imageHeroUuid: ID!, $colorPrimary: String!, $colorSecondary: String!, $colorAccent: String!, $colorBackground: String!, $colorSurface: String!, $colorError: String!, $colorSuccess: String!) {
+            mutation: gql`mutation($agencyUuid: ID!, $imageLogoUuid: ID, $imageHeroUuid: ID, $colorPrimary: String!, $colorSecondary: String!, $colorAccent: String!, $colorBackground: String!, $colorSurface: String!, $colorError: String!, $colorSuccess: String!) {
               editAgencyTheme(agencyUuid: $agencyUuid, imageLogoUuid: $imageLogoUuid, imageHeroUuid: $imageHeroUuid, colorPrimary: $colorPrimary, colorSecondary: $colorSecondary, colorAccent: $colorAccent, colorBackground: $colorBackground, colorSurface: $colorSurface, colorError: $colorError, colorSuccess: $colorSuccess) {
                 success
                 message
@@ -324,13 +327,13 @@ export default {
           this.updateThemeItem('error', theme.colorError);
           this.updateThemeItem('success', theme.colorSuccess);
 
-          if (this.data.imageLogo.file === null) {
+          if (this.data.imageLogo.file === null && theme.imageLogo !== null) {
             this.data.imageLogo.uuid = theme.imageLogo.uuid;
             this.data.imageLogo.data = theme.imageLogo.data;
             this.data.imageLogo.color = theme.imageLogo.color;
           }
 
-          if (this.data.imageHero.file === null) {
+          if (this.data.imageHero.file === null && theme.imageHero !== null) {
             this.data.imageHero.uuid = theme.imageHero.uuid;
             this.data.imageHero.data = theme.imageHero.data;
             this.data.imageHero.color = theme.imageHero.color;

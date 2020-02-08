@@ -1,7 +1,7 @@
 <template>
   <router-link :to="`/dashboard?subdomain=${agency.subdomain.name}`" >
     <v-card :color="backgroundColor" dark width="200" class="rounded-corners-tiny pa-1 ma-4 elevation-6">
-      <v-img v-if="agency.theme" contain :src="agency.theme.imageLogo.data" height="100px" class="mb-n5" />
+      <v-img v-if="agency.theme && agency.theme.imageLogo" contain :src="agency.theme.imageLogo.data" height="100px" class="mb-n5" />
       <v-card-text>
         <h3 :style="{ 'color': nameColor }" class="f-3b pb-1">{{ agency.name }}</h3>
         <span :style="{ 'color': subdomainNameColor }" class="f-2b">{{ agency.subdomain.name }}.duely.app</span>
