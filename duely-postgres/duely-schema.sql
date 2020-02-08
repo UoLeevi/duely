@@ -845,8 +845,8 @@ ALTER FUNCTION operation_.delete_service_(_service_uuid uuid) OWNER TO postgres;
 CREATE TABLE application_.theme_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
-    image_logo_uuid_ uuid NOT NULL,
-    image_hero_uuid_ uuid NOT NULL,
+    image_logo_uuid_ uuid,
+    image_hero_uuid_ uuid,
     color_primary_ text NOT NULL,
     color_secondary_ text NOT NULL,
     color_accent_ text NOT NULL,

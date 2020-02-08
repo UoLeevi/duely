@@ -6,8 +6,8 @@ export default {
     type Theme implements Node {
       uuid: ID!
       name: String!
-      imageLogo: Image!
-      imageHero: Image!
+      imageLogo: Image
+      imageHero: Image
       colorPrimary: String!
       colorSecondary: String!
       colorAccent: String!
@@ -34,7 +34,7 @@ export default {
           await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
           const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [theme.image_logo_uuid_]);
           await client.query('SELECT operation_.end_session_()');
-          return res.rows[0];
+          return res.rows.length === 1 ? res.rows[0] : null;
         } catch (error) {
           throw new AuthenticationError(error.message);
         }
@@ -54,7 +54,7 @@ export default {
           await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
           const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [theme.image_hero_uuid_]);
           await client.query('SELECT operation_.end_session_()');
-          return res.rows[0];
+          return res.rows.length === 1 ? res.rows[0] : null;
         } catch (error) {
           throw new AuthenticationError(error.message);
         }

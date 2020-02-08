@@ -1,6 +1,6 @@
 {
   "name": "duely-graphql",
-  "version": "0.46.0",
+  "version": "0.47.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -12,23 +12,23 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@babel/runtime": "^7.8.3",
-    "apollo-server-express": "^2.9.16",
+    "@babel/runtime": "^7.8.4",
+    "apollo-server-express": "^2.10.0",
     "base64url": "^3.0.1",
     "cors": "^2.8.5",
     "express": "^4.16.4",
-    "graphql": "^14.5.8",
+    "graphql": "^14.6.0",
     "graphql-subscriptions": "^1.1.0",
     "graphql-tools": "^4.0.6",
     "jsonwebtoken": "^8.5.1",
-    "pg": "^7.17.1",
-    "stripe": "^8.6.0",
+    "pg": "^7.18.1",
+    "stripe": "^8.14.0",
     "validator": "^11.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.8.3",
-    "@babel/core": "^7.8.3",
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.8.4",
     "@babel/plugin-transform-runtime": "^7.8.3",
-    "@babel/preset-env": "^7.8.3"
+    "@babel/preset-env": "^7.8.4"
   }
 }

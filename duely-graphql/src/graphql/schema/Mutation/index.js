@@ -24,7 +24,7 @@ export default {
       createAgency(name: String!, subdomain: String!, countryCode: String!, returnUrl: String!): CreateAgencyResult!
       createService(agencyUuid: ID!, name: String!): CreateServiceResult!
       createServiceStep(serviceUuid: ID!, name: String!, type: ServiceStepType!, previousServiceStepUuid: ID): CreateServiceStepResult!
-      editAgencyTheme(agencyUuid: ID!, imageLogoUuid: ID!, imageHeroUuid: ID!, colorPrimary: String!, colorSecondary: String!, colorAccent: String!, colorBackground: String!, colorSurface: String!, colorError: String!, colorSuccess: String!): EditAgencyThemeResult!
+      editAgencyTheme(agencyUuid: ID!, imageLogoUuid: ID, imageHeroUuid: ID, colorPrimary: String!, colorSecondary: String!, colorAccent: String!, colorBackground: String!, colorSurface: String!, colorError: String!, colorSuccess: String!): EditAgencyThemeResult!
       editImage(agencyUuid: ID!, imageName: String!, imageData: String!, imageColor: String!): EditImageResult!
       deleteAgency(agencyUuid: ID!): DeleteAgencyResult!
       deleteService(serviceUuid: ID!): DeleteServiceResult!
