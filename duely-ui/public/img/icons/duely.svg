@@ -1,0 +1,10 @@
+<svg viewBox="-100 -100 600 600" xmlns="http://www.w3.org/2000/svg">
+  <path d="
+    M 150 213 a 100 100 0 1 0 0 174
+    l 174 -100 z" fill="#00BEA0" stroke="#242a41" stroke-width="20" />
+  <path d="
+    M 150 213 a 100 100 0 1 0 0 174
+    l 174 -100 z" fill="#5A5AFF" transform="rotate(240, 160, 201)" stroke="#242a41" stroke-width="20" />
+  <path d="
+    M 2 297 v -200 a 100 100 0 1 1 150 87 z" fill="#64C8FF" stroke="#242a41" stroke-width="20" />
+</svg>
