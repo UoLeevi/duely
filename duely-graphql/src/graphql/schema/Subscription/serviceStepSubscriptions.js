@@ -8,7 +8,7 @@ const SERVICE_STEP_UPDATED = 'SERVICE_STEP_UPDATED';
 const SERVICE_STEP_DELETED = 'SERVICE_STEP_DELETED';
 
 addBackgroundJob(async client => {
-  await client.query('LISTEN "application_.service_"');
+  await client.query('LISTEN "application_.service_step_"');
   client.on('notification', ({ channel, payload }) => {
     if (channel !== 'application_.service_step_')
       return;
