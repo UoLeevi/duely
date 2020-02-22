@@ -2,10 +2,12 @@
   <section>
     <h2 class="f-5b">Create service</h2>
     <v-progress-circular v-if="$apollo.queries.loading" indeterminate />
-    <v-stepper v-model="step" vertical class="elevation-0" :style="{'width': `${adjustSize(600, 0.7)}px`, 'background-color': colorHex('background lighten-5')}">
+    <v-stepper v-model="step" vertical class="elevation-0" :style="{'max-width': '600px', 'background-color': colorHex('background lighten-5')}">
 
       <v-stepper-step :complete="step > 1" step="1">
-        Name your service
+        <span class="f-2b text-no-wrap">
+          Name your service
+        </span>
       </v-stepper-step>
 
       <v-stepper-content step="1">

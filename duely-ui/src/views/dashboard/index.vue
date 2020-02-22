@@ -15,11 +15,13 @@
 
 <script>
 import { gql } from '@/apollo';
+import DashboardLayout from './layouts/DashboardLayout';
 import BtnSquare from '@/components/BtnSquare';
 import TextLink from '@/components/TextLink';
 
 export default {
   components: {
+    DashboardLayout,
     BtnSquare,
     TextLink
   },
@@ -127,6 +129,11 @@ export default {
                 uuid
                 name
                 status
+                steps {
+                  uuid
+                  name
+                  type
+                }
               }
             }
           }
@@ -162,6 +169,11 @@ export default {
               uuid
               name
               status
+              steps {
+                uuid
+                name
+                type
+              }
             }
           }`,
           updateQuery: ({ agency }, { subscriptionData }) => {
@@ -185,6 +197,50 @@ export default {
             const uuid = subscriptionData.data.serviceDeleted;
             agency.servicesConnection.edges = agency.servicesConnection.edges
               .filter(edge => edge.node.uuid !== uuid);
+            return { agency };
+          }
+        },
+        {
+          document: gql`subscription {
+            serviceStepCreated {
+              uuid
+              name
+              type
+              previous {
+                uuid
+              }
+              service {
+                uuid
+              }
+            }
+          }`,
+          updateQuery: ({ agency }, { subscriptionData }) => {
+            const serviceStep = subscriptionData.data.serviceStepCreated;
+            const edge = agency.servicesConnection.edges
+              .find(edge => edge.node.uuid === serviceStep.service.uuid);
+            const index = serviceStep.previous ? edge.node.steps.map(s => s.uuid).indexOf(serviceStep.previous.uuid) : null;
+            edge.node.steps.splice(index, 0, serviceStep);
+            return { agency };
+          }
+        },
+        {
+          document: gql`subscription($serviceStepUuids: [ID!]!) {
+            serviceStepDeleted(serviceStepUuids: $serviceStepUuids)
+          }`,
+          variables() {
+            return {
+              serviceStepUuids: this.agency 
+                ? this.agency.servicesConnection.edges
+                  .flatMap(edge => edge.node.steps)
+                  .map(step => step.uuid)
+                : []
+            }
+          },
+          updateQuery: ({ agency }, { subscriptionData }) => {
+            const uuid = subscriptionData.data.serviceStepDeleted;
+            const edge = agency.servicesConnection.edges
+              .find(edge => edge.node.steps.map(s => s.uuid).includes(uuid));
+            edge.node.steps = edge.node.steps.filter(step => step.uuid !== uuid);
             return { agency };
           }
         }

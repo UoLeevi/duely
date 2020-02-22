@@ -3,12 +3,14 @@
     <v-navigation-drawer v-if="$vuetify.breakpoint.smAndUp" v-model="drawer" app floating stateless :width="adjustSize(nested ? 400 : 300, 0.7)" class="d-flex flex-column flex-nowrap" color="surface darken-1">
       <v-row no-gutters class="flex-column fill-height align-content-start">
         <v-navigation-drawer v-model="drawer" floating stateless :width="adjustSize(nested ? 180 : 300, 0.7)" class="d-flex flex-column flex-nowrap" color="surface darken-2">
-          <router-link to="/" v-if="$vuetify.breakpoint.smAndUp">
-            <h1 class="f-4 font-weight-regular pa-2 mt-4 mb-2 surface--text text--lighten-4 text-center">duely</h1>
-          </router-link>
-          <v-row no-gutters fill-height align="center" class="flex-column fill-height flex-nowrap justify-center align-self-center" :class="{ 'pb-12': $vuetify.breakpoint.smAndUp }">
-            <slot name="menu">
-            </slot>
+          <v-row no-gutters fill-height align="center" class="flex-column fill-height flex-nowrap align-self-center">
+            <router-link to="/" v-if="$vuetify.breakpoint.smAndUp">
+              <h1 class="f-4 font-weight-regular pa-2 mt-4 mb-2 surface--text text--lighten-4 text-center">duely</h1>
+            </router-link>
+            <v-row no-gutters fill-height align="center" class="flex-column fill-height flex-nowrap justify-center align-self-center" :class="{ 'pb-12': $vuetify.breakpoint.smAndUp }">
+              <slot name="menu">
+              </slot>
+            </v-row>
           </v-row>
         </v-navigation-drawer>
         <v-row no-gutters class="align-self-start flex-column fill-height flex-nowrap">

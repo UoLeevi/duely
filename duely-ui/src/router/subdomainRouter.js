@@ -1,20 +1,20 @@
-import Vue from 'vue'
-import Router from 'vue-router'
-import AgencyHome from '@/views/AgencyHome.vue'
-import Dashboard from '@/views/dashboard/Dashboard.vue'
-import DashboardHome from '@/views/dashboard/DashboardHome.vue'
-import DashboardPayments from '@/views/dashboard/DashboardPayments.vue'
-import DashboardServices from '@/views/dashboard/services/DashboardServices.vue'
-import DashboardServicesCreateService from '@/views/dashboard/services/DashboardServicesCreateService.vue'
-import DashboardServicesHome from '@/views/dashboard/services/DashboardServicesHome.vue'
-import DashboardServicesService from '@/views/dashboard/services/DashboardServicesService.vue'
-import DashboardUsers from '@/views/dashboard/DashboardUsers.vue'
-import DashboardSite from '@/views/dashboard/site/DashboardSite.vue'
-import DashboardSiteHome from '@/views/dashboard/site/DashboardSiteHome.vue'
-import DashboardSiteTheme from '@/views/dashboard/site/DashboardSiteTheme.vue'
+import Vue from 'vue';
+import Router from 'vue-router';
+import AgencyHome from '@/views/AgencyHome';
+import Dashboard from '@/views/dashboard';
+import DashboardHome from '@/views/dashboard/DashboardHome';
+import DashboardPayments from '@/views/dashboard/DashboardPayments';
+import DashboardServices from '@/views/dashboard/services';
+import DashboardServicesCreateService from '@/views/dashboard/services/DashboardServicesCreateService';
+import DashboardServicesHome from '@/views/dashboard/services/DashboardServicesHome';
+import DashboardServicesService from '@/views/dashboard/services/service';
+import DashboardUsers from '@/views/dashboard/DashboardUsers';
+import DashboardSite from '@/views/dashboard/site';
+import DashboardSiteHome from '@/views/dashboard/site/DashboardSiteHome';
+import DashboardSiteTheme from '@/views/dashboard/site/DashboardSiteTheme';
 import { client, gql } from '@/apollo';
 
-Vue.use(Router)
+Vue.use(Router);
 
 const router = new Router({
   mode: 'history',

@@ -2,7 +2,7 @@
   <v-app :class="`${this.$vuetify.breakpoint.name}`">
     <ScrollNav />
     <SplashScreenLoader :show="$apollo.loading" />
-    <v-content>
+    <v-content style="position: relative;">
       <v-fade-transition mode="out-in">
         <router-view />
       </v-fade-transition>

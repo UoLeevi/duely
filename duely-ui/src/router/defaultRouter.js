@@ -1,15 +1,15 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import Home from '@/views/Home.vue';
-import SignUp from '@/views/SignUp.vue';
-import Profile from '@/views/profile/Profile.vue';
-import ProfileHome from '@/views/profile/ProfileHome.vue';
-import ProfileSettings from '@/views/profile/ProfileSettings.vue';
-import ProfileAgencies from '@/views/profile/ProfileAgencies.vue';
-import ProfileCreateAgency from '@/views/profile/ProfileCreateAgency.vue';
+import Home from '@/views/Home';
+import SignUp from '@/views/SignUp';
+import Profile from '@/views/profile';
+import ProfileHome from '@/views/profile/ProfileHome';
+import ProfileSettings from '@/views/profile/ProfileSettings';
+import ProfileAgencies from '@/views/profile/agencies';
+import ProfileCreateAgency from '@/views/profile/ProfileCreateAgency';
 import { client, gql } from '@/apollo';
 
-Vue.use(Router)
+Vue.use(Router);
 
 const router = new Router({
   mode: 'history',

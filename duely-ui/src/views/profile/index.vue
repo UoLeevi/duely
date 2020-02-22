@@ -10,10 +10,12 @@
 </template>
 
 <script>
+import ProfileLayout from './layouts/ProfileLayout';
 import BtnSquare from '@/components/BtnSquare';
 
 export default {
   components: {
+    ProfileLayout,
     BtnSquare
   },
   data() {

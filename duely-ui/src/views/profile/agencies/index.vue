@@ -18,7 +18,7 @@
 
 <script>
 import { gql } from '@/apollo';
-import AgencyCard from '@/components/AgencyCard';
+import AgencyCard from './components/AgencyCard';
 
 export default {
   components: {
