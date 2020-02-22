@@ -1,5 +1,6 @@
 import { agencyCreated, agencyUpdated, agencyDeleted } from './agencySubscriptions';
 import { serviceCreated, serviceUpdated, serviceDeleted } from './serviceSubscriptions';
+import { serviceStepCreated, serviceStepUpdated, serviceStepDeleted } from './serviceStepSubscriptions';
 
 export default {
   typeDef: `
@@ -10,6 +11,9 @@ export default {
       serviceCreated: Service!
       serviceUpdated(serviceUuids: [ID!]!): Service!
       serviceDeleted(serviceUuids: [ID!]!): ID!
+      serviceStepCreated: ServiceStep!
+      serviceStepUpdated(serviceStepUuids: [ID!]!): ServiceStep!
+      serviceStepDeleted(serviceStepUuids: [ID!]!): ID!
     }
   `,
   resolvers: {
@@ -19,7 +23,10 @@ export default {
       agencyDeleted,
       serviceCreated,
       serviceUpdated,
-      serviceDeleted
+      serviceDeleted,
+      serviceStepCreated,
+      serviceStepUpdated,
+      serviceStepDeleted
     }
   }
 };

@@ -11,6 +11,7 @@ import editAgencyTheme from './editAgencyTheme';
 import editImage from './editImage';
 import deleteAgency from './deleteAgency';
 import deleteService from './deleteService';
+import deleteServiceStep from './deleteServiceStep';
 
 export default {
   typeDef: `
@@ -28,6 +29,7 @@ export default {
       editImage(agencyUuid: ID!, imageName: String!, imageData: String!, imageColor: String!): EditImageResult!
       deleteAgency(agencyUuid: ID!): DeleteAgencyResult!
       deleteService(serviceUuid: ID!): DeleteServiceResult!
+      deleteServiceStep(serviceStepUuid: ID!): DeleteServiceStepResult!
     }
   `,
   resolvers: {
@@ -44,7 +46,8 @@ export default {
       editAgencyTheme,
       editImage,
       deleteAgency,
-      deleteService
+      deleteService,
+      deleteServiceStep
     }
   }
 };

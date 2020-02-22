@@ -12,6 +12,7 @@ import CreateServiceStepResult from './CreateServiceStepResult';
 import Date from './Date';
 import DeleteAgencyResult from './DeleteAgencyResult';
 import DeleteServiceResult from './DeleteServiceResult';
+import DeleteServiceStepResult from './DeleteServiceStepResult';
 import Edge from './Edge';
 import EditAgencyThemeResult from './EditAgencyThemeResult';
 import EditImageResult from './EditImageResult';
@@ -48,6 +49,7 @@ export default makeExecutableSchema([
   Date,
   DeleteAgencyResult,
   DeleteServiceResult,
+  DeleteServiceStepResult,
   Edge,
   EditAgencyThemeResult,
   EditImageResult,
