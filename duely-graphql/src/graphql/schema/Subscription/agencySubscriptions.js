@@ -1,5 +1,5 @@
 import { withFilter } from 'apollo-server-express';
-import { getSharedClient, pool } from '../../../db';
+import { addBackgroundJob, pool } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 import pubsub from '../../pubsub';
 
@@ -7,8 +7,8 @@ const AGENCY_CREATED = 'AGENCY_CREATED';
 const AGENCY_UPDATED = 'AGENCY_UPDATED';
 const AGENCY_DELETED = 'AGENCY_DELETED';
 
-getSharedClient().then(client => {
-  client.query('LISTEN "application_.agency_"');
+addBackgroundJob(async client => {
+  await client.query('LISTEN "application_.agency_"');
   client.on('notification', ({ channel, payload }) => {
     if (channel !== 'application_.agency_')
       return;
