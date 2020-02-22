@@ -4,3 +4,4 @@ kubectl cp C:\Users\uotin\duely\duely\duely-postgres\duely-test.sql  duely-postg
 kubectl exec -it duely-postgres-master-statefulset-0 bash
 psql -U postgres -d postgres -f duely-test.sql
 rm duely-prepare.sql duely-schema.sql duely-test.sql
+exit
