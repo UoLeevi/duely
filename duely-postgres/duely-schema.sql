@@ -839,6 +839,42 @@ $$;
 ALTER FUNCTION operation_.delete_service_(_service_uuid uuid) OWNER TO postgres;
 
 --
+-- Name: delete_service_step_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.delete_service_step_(_service_step_uuid uuid) RETURNS application_.service_step_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _service_step application_.service_step_;
+  _arg RECORD;
+BEGIN
+  SELECT _service_step_uuid service_step_uuid_, ss.service_uuid_, s.agency_uuid_ INTO _arg
+  FROM application_.service_step_ ss
+  JOIN application_.service_ s ON s.uuid_ = ss.service_uuid_
+  WHERE ss.uuid_ = _service_step_uuid;
+  PERFORM security_.control_operation_('delete_service_step_', _arg);
+
+  UPDATE application_.service_step_ ss_next
+  SET
+    previous_service_step_uuid_ = ss_prev.uuid_
+  FROM application_.service_step_ ss
+  LEFT JOIN application_.service_step_ ss_prev ON ss_prev.uuid_ = ss.previous_service_step_uuid_
+  WHERE ss.uuid_ = _service_step_uuid
+    AND ss.uuid_ = ss_next.previous_service_step_uuid_;
+
+  DELETE FROM application_.service_step_
+  WHERE uuid_ = _service_step_uuid
+  RETURNING * INTO _service_step;
+
+  RETURN _service_step;
+END
+$$;
+
+
+ALTER FUNCTION operation_.delete_service_step_(_service_step_uuid uuid) OWNER TO postgres;
+
+--
 -- Name: theme_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
@@ -2028,17 +2064,17 @@ $_X$;
 ALTER FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_name text, _policy_function_body text) OWNER TO postgres;
 
 --
--- Name: service_step_agency_approval_; Type: TABLE; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
-CREATE TABLE application_.service_step_agency_approval_ (
+CREATE TABLE application_.service_step_confirmation_by_agency_ (
     uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
-ALTER TABLE application_.service_step_agency_approval_ OWNER TO postgres;
+ALTER TABLE application_.service_step_confirmation_by_agency_ OWNER TO postgres;
 
 --
 -- Name: service_step_document_delivery_; Type: TABLE; Schema: application_; Owner: postgres
@@ -2165,10 +2201,10 @@ CREATE TABLE application__audit_.service_step_ (
 ALTER TABLE application__audit_.service_step_ OWNER TO postgres;
 
 --
--- Name: service_step_agency_approval_; Type: TABLE; Schema: application__audit_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
-CREATE TABLE application__audit_.service_step_agency_approval_ (
+CREATE TABLE application__audit_.service_step_confirmation_by_agency_ (
     uuid_ uuid,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
@@ -2176,7 +2212,7 @@ CREATE TABLE application__audit_.service_step_agency_approval_ (
 );
 
 
-ALTER TABLE application__audit_.service_step_agency_approval_ OWNER TO postgres;
+ALTER TABLE application__audit_.service_step_confirmation_by_agency_ OWNER TO postgres;
 
 --
 -- Name: service_step_document_delivery_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -2639,6 +2675,7 @@ a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000
 fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 9b80cc60-7109-4849-ac2f-fc4df653bd2f	create_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 08f449e7-8215-484a-a40a-b6bdb9b16b4d	query_service_step_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+1c41ed54-3140-4a9e-8f9e-81f02b185708	delete_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2682,6 +2719,7 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 832c874c-3b8b-4d51-8704-7ee2ec8ff18c	service_status_is_live_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 7275e0a3-249c-4e32-a26f-4a399d724207	agent_in_agency_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 88f38e52-c66d-4f38-9f9e-518fae934d67	service_status_is_live_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+1f6eee50-721b-4716-8f08-42acdb0ce264	manager_in_agency_	1c41ed54-3140-4a9e-8f9e-81f02b185708	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2740,6 +2778,7 @@ a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000
 fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 9b80cc60-7109-4849-ac2f-fc4df653bd2f	create_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 08f449e7-8215-484a-a40a-b6bdb9b16b4d	query_service_step_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+1c41ed54-3140-4a9e-8f9e-81f02b185708	delete_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2783,6 +2822,7 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 832c874c-3b8b-4d51-8704-7ee2ec8ff18c	service_status_is_live_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 7275e0a3-249c-4e32-a26f-4a399d724207	agent_in_agency_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 88f38e52-c66d-4f38-9f9e-518fae934d67	service_status_is_live_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+1f6eee50-721b-4716-8f08-42acdb0ce264	manager_in_agency_	1c41ed54-3140-4a9e-8f9e-81f02b185708	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2873,11 +2913,11 @@ ALTER TABLE ONLY application_.service_step_
 
 
 --
--- Name: service_step_agency_approval_ service_step_agency_approval__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ service_step_confirmation_by_agency__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
-ALTER TABLE ONLY application_.service_step_agency_approval_
-    ADD CONSTRAINT service_step_agency_approval__pkey PRIMARY KEY (uuid_);
+ALTER TABLE ONLY application_.service_step_confirmation_by_agency_
+    ADD CONSTRAINT service_step_confirmation_by_agency__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -3192,10 +3232,10 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.servic
 
 
 --
--- Name: service_step_agency_approval_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_agency_approval_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_confirmation_by_agency_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -3262,10 +3302,10 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service
 
 
 --
--- Name: service_step_agency_approval_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_agency_approval_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_confirmation_by_agency_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -3346,10 +3386,10 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 
 
 --
--- Name: service_step_agency_approval_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_agency_approval_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -3416,10 +3456,10 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service
 
 
 --
--- Name: service_step_agency_approval_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_agency_approval_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -3500,10 +3540,10 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
--- Name: service_step_agency_approval_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_agency_approval_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -3570,10 +3610,10 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service
 
 
 --
--- Name: service_step_agency_approval_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_agency_approval_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -3654,10 +3694,10 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.servi
 
 
 --
--- Name: service_step_agency_approval_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_agency_approval_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_confirmation_by_agency_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -4002,11 +4042,11 @@ ALTER TABLE ONLY application_.service_step_
 
 
 --
--- Name: service_step_agency_approval_ service_step_agency_approval__uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ service_step_confirmation_by_agency__uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
-ALTER TABLE ONLY application_.service_step_agency_approval_
-    ADD CONSTRAINT service_step_agency_approval__uuid__fkey FOREIGN KEY (uuid_) REFERENCES application_.service_step_(uuid_);
+ALTER TABLE ONLY application_.service_step_confirmation_by_agency_
+    ADD CONSTRAINT service_step_confirmation_by_agency__uuid__fkey FOREIGN KEY (uuid_) REFERENCES application_.service_step_(uuid_);
 
 
 --

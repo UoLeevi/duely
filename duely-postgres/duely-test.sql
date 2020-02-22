@@ -151,9 +151,12 @@ BEGIN
   PERFORM operation_.begin_session_(_user_jwt);
 
   SELECT * INTO _record_0 FROM operation_.query_service_by_agency_(_record_0.uuid_) WHERE name_ = 'test service 1';
-  SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 2', 'payment');
-  SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 3', 'payment', _record_1.uuid_);
+  SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 2', 'form');
+  SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 3', 'confirmation_by_agency', _record_1.uuid_);
+  SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 4', 'document_delivery', _record_1.uuid_);
   SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 1', 'payment');
+  SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step del', 'payment', _record_1.uuid_);
+  SELECT * INTO _record_1 FROM operation_.delete_service_step_(_record_1.uuid_);
 
   PERFORM operation_.end_session_();
 
