@@ -6,7 +6,7 @@ export default {
     enum ServiceStepType {
       PAYMENT
       FORM
-      AGENCY_APPROVAL
+      CONFIRMATION_BY_AGENCY
       DOCUMENT_DELIVERY
       DOCUMENT_SUBMISSION
     }
