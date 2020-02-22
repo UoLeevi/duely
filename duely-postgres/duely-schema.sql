@@ -723,7 +723,8 @@ BEGIN
 
   SELECT s.uuid_ INTO _next_service_step_uuid
   FROM application_.service_step_ s
-  WHERE s.previous_service_step_uuid_ IS NOT DISTINCT FROM _previous_service_step_uuid;
+  WHERE s.previous_service_step_uuid_ IS NOT DISTINCT FROM _previous_service_step_uuid
+    AND s.service_uuid_ = _service_uuid;
 
   INSERT INTO application_.service_step_ (service_uuid_, name_, type_, previous_service_step_uuid_)
   VALUES (_service_uuid, _name, _type, _previous_service_step_uuid)
