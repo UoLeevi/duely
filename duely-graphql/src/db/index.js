@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Client, Pool } from 'pg';
 import config from './config';
 
 const RECONNECTION_TIMEOUT = 30000;
@@ -7,46 +7,69 @@ let retryCounter = RECONNECTION_RETRY_COUNT;
 
 const pool = new Pool(config);
 pool.on('error', err => {
-  console.error('error on idle postgres client', err.stack);
+  console.error('error on idle postgres client.', err.stack);
 });
 
-const sharedClientOnConnectCallbacks = [];
-let sharedClientPromise = pool.connect();
+let sharedClient = new Client(config);
+let isSharedClientConnected = false;
+const backgroundJobs = [];
 
 function retrySharedClientConnect() {
   setTimeout(() => {
-    sharedClientPromise = pool.connect().then(client => {
-      retryCounter = RECONNECTION_RETRY_COUNT;
-      sharedClientOnConnectCallbacks.forEach(async callback => await callback(client));
-    }).catch(err => {
-      if (retryCounter-- === 0) {
-        console.error('error on connecting shared postgres client and retries failed.', err.stack);
-        process.exit(1);
+    sharedClient = new Client(config);
+    sharedClient.connect(err => {
+      if (err) {
+        if (retryCounter-- === 0) {
+          console.error('error on connecting shared postgres client and retries failed.', err.stack);
+          process.exit(1);
+        }
+
+        retrySharedClientConnect();
+        return;
       }
 
-      retrySharedClientConnect();
+      isSharedClientConnected = true;
+
+      sharedClient.on('error', err => {
+        isSharedClientConnected = false;
+        console.error('error on shared postgres client.', err.stack);
+        retrySharedClientConnect();
+      });
+
+      retryCounter = RECONNECTION_RETRY_COUNT;
+      backgroundJobs.forEach(async callback => await callback(sharedClient));
     });
   }, RECONNECTION_TIMEOUT);
 }
 
-sharedClientPromise.then(client => {
-  client.on('error', err => {
-    console.error('error on shared postgres client', err.stack);
+sharedClient.connect(err => {
+  if (err) {
+    console.error('error on connecting shared postgres client.', err.stack);
+    retrySharedClientConnect();
+    return;
+  }
+
+  isSharedClientConnected = true;
+
+  sharedClient.on('error', err => {
+    isSharedClientConnected = false;
+    console.error('error on shared postgres client.', err.stack);
     retrySharedClientConnect();
   });
+
+  backgroundJobs.forEach(async callback => await callback(sharedClient));
 });
 
 async function addBackgroundJob(callback = async client => {}, execute = true) {
   function removeBackgroundJob() {
-    const index = sharedClientOnConnectCallbacks.indexOf(callback);
-    sharedClientOnConnectCallbacks.splice(index, 1);
+    const index = backgroundJobs.indexOf(callback);
+    backgroundJobs.splice(index, 1);
   }
 
-  const client = await sharedClientPromise;
-  sharedClientOnConnectCallbacks.push(callback);
+  backgroundJobs.push(callback);
 
-  if (execute)
-    await callback(client);
+  if (isSharedClientConnected && execute)
+    await callback(sharedClient);
 
   return removeBackgroundJob;
 }
