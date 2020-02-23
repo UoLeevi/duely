@@ -22,7 +22,55 @@ const router = new Router({
   routes: [
     {
       path: '/',
-      component: AgencyHome
+      component: AgencyHome,
+      async beforeEnter(to, from, next) {
+        let res = await client.query({
+          query: gql`query {
+            me {
+              uuid
+              type
+            }
+          }`
+        });
+
+        res = await client.query({
+          query: gql`query {
+            session @client {
+              subdomainName
+            }
+          }`
+        });
+
+        if (res.data.session.subdomainName === null) {
+          next(location.href = process.env.NODE_ENV === 'production'
+            ? `https://duely.app`
+            : `${window.location.origin}`);
+          return;
+        }
+
+        const subdomainName = res.data.session.subdomainName;
+        
+        res = await client.query({
+          query: gql`query($subdomainName: String) {
+            agency(subdomainName: $subdomainName) {
+              uuid
+              name
+            }
+          }`,
+          variables: {
+            subdomainName
+          }
+        });
+
+        if (res.data.agency === null) {
+          next(location.href = process.env.NODE_ENV === 'production'
+            ? `https://duely.app`
+            : `${window.location.origin}`);
+          return;
+        }
+
+        next();
+      }
     },
     {
       path: '/profile',

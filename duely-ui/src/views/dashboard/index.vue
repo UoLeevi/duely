@@ -219,7 +219,7 @@ export default {
             const edge = agency.servicesConnection.edges
               .find(edge => edge.node.uuid === serviceStep.service.uuid);
             const index = serviceStep.previous ? edge.node.steps.map(s => s.uuid).indexOf(serviceStep.previous.uuid) : null;
-            edge.node.steps.splice(index, 0, serviceStep);
+            edge.node.steps.splice(index + 1, 0, serviceStep);
             return { agency };
           }
         },

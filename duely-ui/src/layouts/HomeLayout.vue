@@ -1,6 +1,6 @@
 <template>
   <v-container fluid class="pa-0" id="home-layout">
-    <HomeAppBar/>
+    <slot name="app-bar"><HomeAppBar/></slot>
     <slot></slot>
   </v-container>
 </template>

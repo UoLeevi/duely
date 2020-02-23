@@ -2,14 +2,26 @@
   <v-app-bar fixed dark prominent short flat color="transparent" :style="{ 'color': textColor }">
     <v-row no-gutters align="center" justify="space-between" style="height: 100%;" >
       <v-col :cols="1" align="left"/>
-      <v-col cols="auto" align="left"><h1 class="f-6 font-weight-regular pa-2">duely</h1></v-col>
+      <v-col cols="auto" align="left">
+        <template v-if="agency">
+          <div class="d-flex">
+            <img v-if="agency.theme && agency.theme.imageLogo" :src="agency.theme.imageLogo.data" style="max-width: 50px; max-height: 150px;" class="my-auto"/>
+            <h1 class="f-5b font-weight-regular pa-2 text-no-wrap">{{ agency.name }}</h1>
+          </div>
+        </template>
+        <h1 v-else class="f-6 font-weight-regular pa-2">duely</h1>
+      </v-col>
       <v-col align="center"></v-col>
       <v-col cols="auto" align="right">
         <v-fade-transition mode="out-in">
           <v-progress-circular v-if="$apollo.queries.me.loading" indeterminate />
           <div v-else-if="me.type === 'user'" key="log-out">
             <v-btn @click="logOut" rounded text class="text-none mr-1" :color="textColor">Log out</v-btn>
-            <v-btn to="/profile" rounded outlined class="text-none ml-1" :color="textColor">Go to profile</v-btn>
+            <template v-if="agency">
+              <v-btn v-if="agencyRoles && agencyRoles.includes('agent')" to="/dashboard" rounded outlined class="text-none ml-1" :color="textColor">Go to dashboard</v-btn>
+              <v-btn v-else to="/my-dashboard" rounded outlined class="text-none ml-1" :color="textColor">Go to my dashboard</v-btn>
+            </template>
+            <v-btn v-else to="/profile" rounded outlined class="text-none ml-1" :color="textColor">Go to profile</v-btn>
           </div>
           <div v-else key="log-in">
             <LoginDialog>
@@ -32,6 +44,23 @@ import { gql } from '@/apollo';
 export default {
   components: {
     LoginDialog
+  },
+  props: {
+    agency: Object /* {
+      uuid
+      name
+      theme {
+        uuid
+        name
+        imageLogo {
+          uuid
+          name
+          data
+          color
+        }
+      }
+    }*/,
+    agencyRoles: Array
   },
   computed: {
     current() {

@@ -141,7 +141,7 @@ export default {
             serviceUuid: this.service.uuid,
             name: this.data.name,
             type: this.data.type,
-            previousServiceStepUuid: this.previousServiceStep && this.previousServiceStep.uuid
+            previousServiceStepUuid: this.previousServiceStep ? this.previousServiceStep.uuid : null
           },
           update: (store, { data: { createServiceStep } }) => {
             if (createServiceStep.success) {
