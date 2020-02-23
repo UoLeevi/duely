@@ -1431,7 +1431,6 @@ CREATE FUNCTION operation_.query_shared_agency_(_subject_uuid uuid, _agency_uuid
     AS $$
 DECLARE
   _arg RECORD;
-  _info RECORD;
 BEGIN
   SELECT _subject_uuid subject_uuid_, _agency_uuid agency_uuid_ INTO _arg; 
   PERFORM security_.control_operation_('query_shared_agency_', _arg);
