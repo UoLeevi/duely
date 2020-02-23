@@ -6,8 +6,8 @@ const RECONNECTION_RETRY_COUNT = 3;
 let retryCounter = RECONNECTION_RETRY_COUNT;
 
 const pool = new Pool(config);
-pool.on('error', err => {
-  console.error('error on idle postgres client.', err.stack);
+pool.on('error', error => {
+  console.error('error on idle postgres client.', error.stack);
 });
 
 let sharedClient = new Client(config);
@@ -17,10 +17,10 @@ const backgroundJobs = [];
 function retrySharedClientConnect() {
   setTimeout(() => {
     sharedClient = new Client(config);
-    sharedClient.connect(err => {
-      if (err) {
+    sharedClient.connect(error => {
+      if (error) {
         if (retryCounter-- === 0) {
-          console.error('error on connecting shared postgres client and retries failed.', err.stack);
+          console.error('error on connecting shared postgres client and retries failed.', error.stack);
           process.exit(1);
         }
 
@@ -30,9 +30,9 @@ function retrySharedClientConnect() {
 
       isSharedClientConnected = true;
 
-      sharedClient.on('error', err => {
+      sharedClient.on('error', error => {
         isSharedClientConnected = false;
-        console.error('error on shared postgres client.', err.stack);
+        console.error('error on shared postgres client.', error.stack);
         retrySharedClientConnect();
       });
 
@@ -42,18 +42,18 @@ function retrySharedClientConnect() {
   }, RECONNECTION_TIMEOUT);
 }
 
-sharedClient.connect(err => {
-  if (err) {
-    console.error('error on connecting shared postgres client.', err.stack);
+sharedClient.connect(error => {
+  if (error) {
+    console.error('error on connecting shared postgres client.', error.stack);
     retrySharedClientConnect();
     return;
   }
 
   isSharedClientConnected = true;
 
-  sharedClient.on('error', err => {
+  sharedClient.on('error', error => {
     isSharedClientConnected = false;
-    console.error('error on shared postgres client.', err.stack);
+    console.error('error on shared postgres client.', error.stack);
     retrySharedClientConnect();
   });
 

@@ -28,6 +28,9 @@ export default {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
+        if (serviceStep.previous_service_step_uuid_ === null)
+          return null;
+
         const client = await pool.connect();
         try {
           await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);

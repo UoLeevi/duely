@@ -7,9 +7,9 @@ let accountInfo;
 
 async function updateAccountInfo() {
   await new Promise((resolve, reject) => {
-    readFile(process.env.GSERVICEACCOUNTFILE, 'utf8', function (err, data) {
-      if (err) {
-        reject(err);
+    readFile(process.env.GSERVICEACCOUNTFILE, 'utf8', function (error, data) {
+      if (error) {
+        reject(error);
       } else {
         accountInfo = JSON.parse(data);
         resolve();

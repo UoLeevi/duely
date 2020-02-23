@@ -44,8 +44,11 @@ const serviceCreated = {
         const res = await client.query('SELECT 1 FROM operation_.query_service_($1::uuid)', [obj.uuid_]);
         return res.rows.length === 1;
       }
-      catch (err) {
-        console.log(err);
+      catch (error) {
+        // Unauthorized (ERRCODE: 42501) is expected if user does not have access
+        if (error.code !== '42501')
+          console.log(error);
+
         return false;
       }
       finally {

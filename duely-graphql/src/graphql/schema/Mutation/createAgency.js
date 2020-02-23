@@ -58,12 +58,12 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
         }
       });
 
-    } catch (err) {
+    } catch (error) {
       // if stripe custom account could not be created, delete agency from database
       await client.query('SELECT operation_.delete_agency_($1::uuid)', [agencyUuid]);
       return {
         success: false,
-        message: err.message,
+        message: error.message,
         type: 'CreateAgencyResult'
       };
     }
@@ -81,11 +81,11 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
         type: 'custom_account_verification',
         collect: 'eventually_due'
       });
-    } catch (err) {
+    } catch (error) {
       return {
         // something went wrong during account verification link creation
         success: true,
-        message: err.message,
+        message: error.message,
         agencyUuid,
         type: 'CreateAgencyResult'
       };
