@@ -1,5 +1,6 @@
 import beginVisit from './beginVisit';
 import endVisit from './endVisit';
+import inviteUser from './inviteUser';
 import startEmailAddressVerification from './startEmailAddressVerification';
 import signUp from './signUp';
 import logIn from './logIn';
@@ -18,6 +19,7 @@ export default {
     type Mutation {
       beginVisit: BeginVisitResult!
       endVisit: EndVisitResult!
+      inviteUser(agencyUuid: ID!, emailAddress: String!, role: String!, message: String): InviteUserResult!
       signUp(emailAddress: String!, verificationCode: String!, name: String!, password: String!): SignUpResult!
       startEmailAddressVerification(emailAddress: String!): StartEmailAddressVerificationResult!
       logIn(emailAddress: String!, password: String!): LogInResult!
@@ -36,6 +38,7 @@ export default {
     Mutation: {
       beginVisit,
       endVisit,
+      inviteUser,
       startEmailAddressVerification,
       signUp,
       logIn,

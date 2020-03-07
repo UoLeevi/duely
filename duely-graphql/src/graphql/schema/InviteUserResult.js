@@ -1,26 +1,23 @@
 import { pool } from '../../db';
-import { AuthenticationError } from 'apollo-server-core';
 
 export default {
   typeDef: `
-    type Subdomain implements Node {
-      uuid: ID!
-      name: String!
-      agency: Agency!
+    type InviteUserResult implements MutationResult {
+      success: Boolean!
+      message: String
+      invite: Invite
     }
   `,
-  resolvers: {
-    Subdomain: {
-      uuid: source => source.uuid_,
-      name: source => source.name_,
-      async agency(subdomain, args, context, info) {
+  InviteUserResult: {
+    Invite: {
+      async invite(result, args, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
         const client = await pool.connect();
         try {
           await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-          const res = await client.query('SELECT * FROM operation_.query_agency_by_subdomain_name_($1::text)', [subdomain.name_]);
+          const res = await client.query('SELECT * FROM operation_.query_user_invite_($1::uuid)', [result.inviteUuid]);
           await client.query('SELECT operation_.end_session_()');
           return res.rows[0];
         } catch (error) {

@@ -18,6 +18,8 @@ import EditAgencyThemeResult from './EditAgencyThemeResult';
 import EditImageResult from './EditImageResult';
 import EndVisitResult from './EndVisitResult';
 import Image from './Image';
+import Invite from './Invite';
+import InviteUserResult from './InviteUserResult';
 import LogInResult from './LogInResult';
 import LogOutResult from './LogOutResult';
 import Mutation from './Mutation';
@@ -55,6 +57,8 @@ export default makeExecutableSchema([
   EditImageResult,
   EndVisitResult,
   Image,
+  Invite,
+  InviteUserResult,
   LogInResult,
   LogOutResult,
   Mutation,
