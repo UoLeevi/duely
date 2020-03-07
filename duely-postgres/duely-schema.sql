@@ -429,6 +429,8 @@ CREATE TABLE application_.user_invite_ (
     inviter_uuid_ uuid NOT NULL,
     invitee_email_address_ text NOT NULL,
     role_uuid_ uuid NOT NULL,
+    status_ text,
+    status_at_ timestamp with time zone,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -443,35 +445,38 @@ ALTER TABLE application_.user_invite_ OWNER TO postgres;
 CREATE FUNCTION operation_.accept_user_invite_(_invite_uuid uuid) RETURNS application_.user_invite_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
-DECLARE
-  _invitee_uuid uuid;
-  _user_invite application_.user_invite_;
-  _arg RECORD;
-BEGIN
-  SELECT _invite_uuid invite_uuid_ INTO _arg; 
-  PERFORM security_.control_operation_('accept_user_invite_', _arg);
+  DECLARE
+    _invitee_uuid uuid;
+    _user_invite application_.user_invite_;
+    _arg RECORD;
+  BEGIN
+    SELECT _invite_uuid invite_uuid_ INTO _arg; 
+    PERFORM security_.control_operation_('accept_user_invite_', _arg);
 
-  IF NOT EXISTS (
-    SELECT s.uuid_ INTO _invitee_uuid
-    FROM security_.subject_ s
-    JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
-    WHERE ui.uuid_ = _invite_uuid
-  ) THEN
-    RAISE 'User does not exist.' USING ERRCODE = '20000';
-  END IF;
+    IF NOT EXISTS (
+      SELECT s.uuid_ INTO _invitee_uuid
+      FROM security_.subject_ s
+      JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
+      WHERE ui.uuid_ = _invite_uuid
+    ) THEN
+      RAISE 'Invite does not exist.' USING ERRCODE = '20000';
+    END IF;
 
-  DELETE FROM application_.user_invite_
-  WHERE uuid_ = _invite_uuid
-  RETURNING * INTO _user_invite;
+    UPDATE application_.user_invite_
+    SET
+      status_ = 'accepted',
+      status_at_ = CURRENT_TIMESTAMP
+    WHERE uuid_ = _invite_uuid
+    RETURNING * INTO _user_invite;
 
-  INSERT INTO security_.subject_assingment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
-  SELECT ui.uuid_, a.subdomain_uuid_, _invitee_uuid
-  FROM _user_invite ui
-  JOIN application_.agency_ a ON a.uuid_ = ui.agency_uuid_;
+    INSERT INTO security_.subject_assingment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
+    SELECT ui.uuid_, a.subdomain_uuid_, _invitee_uuid
+    FROM _user_invite ui
+    JOIN application_.agency_ a ON a.uuid_ = ui.agency_uuid_;
 
-  RETURN _user_invite;
-END
-$$;
+    RETURN _user_invite;
+  END
+  $$;
 
 
 ALTER FUNCTION operation_.accept_user_invite_(_invite_uuid uuid) OWNER TO postgres;
@@ -783,6 +788,44 @@ $$;
 
 
 ALTER FUNCTION operation_.create_stripe_account_(_agency_uuid uuid, _stripe_acct_id text) OWNER TO postgres;
+
+--
+-- Name: decline_user_invite_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.decline_user_invite_(_invite_uuid uuid) RETURNS application_.user_invite_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+  DECLARE
+    _invitee_uuid uuid;
+    _user_invite application_.user_invite_;
+    _arg RECORD;
+  BEGIN
+    SELECT _invite_uuid invite_uuid_ INTO _arg; 
+    PERFORM security_.control_operation_('decline_user_invite_', _arg);
+
+    IF NOT EXISTS (
+      SELECT s.uuid_ INTO _invitee_uuid
+      FROM security_.subject_ s
+      JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
+      WHERE ui.uuid_ = _invite_uuid
+    ) THEN
+      RAISE 'Invite does not exist.' USING ERRCODE = '20000';
+    END IF;
+
+    UPDATE application_.user_invite_
+    SET
+      status_ = 'declined',
+      status_at_ = CURRENT_TIMESTAMP
+    WHERE uuid_ = _invite_uuid
+    RETURNING * INTO _user_invite;
+
+    RETURN _user_invite;
+  END
+  $$;
+
+
+ALTER FUNCTION operation_.decline_user_invite_(_invite_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: delete_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1431,6 +1474,7 @@ CREATE FUNCTION operation_.query_shared_agency_(_subject_uuid uuid, _agency_uuid
     AS $$
 DECLARE
   _arg RECORD;
+  _info RECORD;
 BEGIN
   SELECT _subject_uuid subject_uuid_, _agency_uuid agency_uuid_ INTO _arg; 
   PERFORM security_.control_operation_('query_shared_agency_', _arg);
@@ -1722,19 +1766,41 @@ ALTER FUNCTION policy_.argument_is_not_null_(_arg anyelement) OWNER TO postgres;
 CREATE FUNCTION policy_.invitee_can_accept_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$ 
-BEGIN 
-  RETURN
-    EXISTS (
-      SELECT 1
-      FROM security_.active_subject_ s
-      JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
-      WHERE ui.uuid_ = _arg.invite_uuid_
-    );
-END
- $$;
+  BEGIN 
+    RETURN
+      EXISTS (
+        SELECT 1
+        FROM security_.active_subject_ s
+        JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
+        WHERE ui.uuid_ = _arg.invite_uuid_
+          AND ui.status_ IS NULL
+      );
+  END
+  $$;
 
 
 ALTER FUNCTION policy_.invitee_can_accept_(_arg anyelement) OWNER TO postgres;
+
+--
+-- Name: invitee_can_decline_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.invitee_can_decline_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$ 
+    BEGIN 
+    RETURN
+      EXISTS (
+        SELECT 1
+        FROM security_.active_subject_ s
+        JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
+        WHERE ui.uuid_ = _arg.invite_uuid_
+      );
+    END
+   $$;
+
+
+ALTER FUNCTION policy_.invitee_can_decline_(_arg anyelement) OWNER TO postgres;
 
 --
 -- Name: logged_in_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -2352,6 +2418,8 @@ CREATE TABLE application__audit_.user_invite_ (
     inviter_uuid_ uuid,
     invitee_email_address_ text,
     role_uuid_ uuid,
+    status_ text,
+    status_at_ timestamp with time zone,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -2704,6 +2772,7 @@ fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00
 08f449e7-8215-484a-a40a-b6bdb9b16b4d	query_service_step_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 1c41ed54-3140-4a9e-8f9e-81f02b185708	delete_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2750,6 +2819,7 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 1f6eee50-721b-4716-8f08-42acdb0ce264	manager_in_agency_	1c41ed54-3140-4a9e-8f9e-81f02b185708	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 8f74e764-531d-4ee0-9501-799a93249f8e	service_status_is_live_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 5ce796c9-2770-477e-ac8f-7b1c2d9b3af6	agent_in_agency_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_can_decline_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2810,6 +2880,7 @@ fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00
 08f449e7-8215-484a-a40a-b6bdb9b16b4d	query_service_step_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 1c41ed54-3140-4a9e-8f9e-81f02b185708	delete_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2856,6 +2927,7 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 1f6eee50-721b-4716-8f08-42acdb0ce264	manager_in_agency_	1c41ed54-3140-4a9e-8f9e-81f02b185708	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 8f74e764-531d-4ee0-9501-799a93249f8e	service_status_is_live_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 5ce796c9-2770-477e-ac8f-7b1c2d9b3af6	agent_in_agency_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_can_decline_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3202,13 +3274,6 @@ ALTER TABLE ONLY security_.user_
 
 
 --
--- Name: user_invite_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: service_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -3283,6 +3348,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.servic
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_document_delivery_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: user_invite_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -3363,13 +3435,6 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service
 
 
 --
--- Name: user_invite_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: service_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -3444,6 +3509,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: user_invite_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -3524,13 +3596,6 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service
 
 
 --
--- Name: user_invite_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: service_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -3605,6 +3670,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: user_invite_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -3685,13 +3757,6 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service
 
 
 --
--- Name: user_invite_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_invite_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
 -- Name: service_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -3766,6 +3831,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.servi
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_document_delivery_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: user_invite_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_invite_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
