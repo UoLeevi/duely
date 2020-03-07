@@ -1572,6 +1572,32 @@ $$;
 ALTER FUNCTION operation_.query_user_() OWNER TO postgres;
 
 --
+-- Name: query_user_invite_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_user_invite_(_invite_uuid uuid) RETURNS TABLE(uuid_ uuid, agency_uuid_ uuid, inviter_uuid_ uuid, invitee_email_address_ text, role_uuid_ uuid, status_ text, status_at_ timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+  DECLARE
+    _arg RECORD;
+  BEGIN
+    SELECT _invite_uuid invite_uuid_, agency_uuid_ INTO _arg
+    FROM application_.user_invite_
+    WHERE uuid_ = _invite_uuid;
+    PERFORM security_.control_operation_('query_user_invite_', _arg);
+
+    RETURN QUERY
+    SELECT uuid_, agency_uuid_, inviter_uuid_, invitee_email_address_, role_uuid_, status_, status_at_
+    FROM application_.user_invite_
+    WHERE uuid_ = _invite_uuid;
+
+  END
+  $$;
+
+
+ALTER FUNCTION operation_.query_user_invite_(_invite_uuid uuid) OWNER TO postgres;
+
+--
 -- Name: remove_user_from_agency_(uuid, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -1760,32 +1786,10 @@ END
 ALTER FUNCTION policy_.argument_is_not_null_(_arg anyelement) OWNER TO postgres;
 
 --
--- Name: invitee_can_accept_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
+-- Name: invitee_of_user_invite_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
-CREATE FUNCTION policy_.invitee_can_accept_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$ 
-  BEGIN 
-    RETURN
-      EXISTS (
-        SELECT 1
-        FROM security_.active_subject_ s
-        JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
-        WHERE ui.uuid_ = _arg.invite_uuid_
-          AND ui.status_ IS NULL
-      );
-  END
-  $$;
-
-
-ALTER FUNCTION policy_.invitee_can_accept_(_arg anyelement) OWNER TO postgres;
-
---
--- Name: invitee_can_decline_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
---
-
-CREATE FUNCTION policy_.invitee_can_decline_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
+CREATE FUNCTION policy_.invitee_of_user_invite_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$ 
     BEGIN 
@@ -1800,7 +1804,7 @@ CREATE FUNCTION policy_.invitee_can_decline_(_arg anyelement DEFAULT NULL::text)
    $$;
 
 
-ALTER FUNCTION policy_.invitee_can_decline_(_arg anyelement) OWNER TO postgres;
+ALTER FUNCTION policy_.invitee_of_user_invite_(_arg anyelement) OWNER TO postgres;
 
 --
 -- Name: logged_in_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -2773,6 +2777,7 @@ fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00
 1c41ed54-3140-4a9e-8f9e-81f02b185708	delete_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2796,7 +2801,6 @@ d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2
 12543ad5-113a-4b09-8174-774119fd999e	owner_in_agency_	89071731-bd21-4505-aab9-fd699c5fd12f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 991b0ec1-11b6-492e-a872-5b8aede7e5c3	owner_in_agency_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_can_accept_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 1b902618-8a68-4c0d-b05e-6bda782c5f30	agent_in_agency_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 75294233-ed0a-4b6a-8903-f206daf0af67	logged_in_	3f020478-e3a3-4674-932d-8b922c17b91b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc41-df24bc904e5d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
@@ -2819,7 +2823,10 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 1f6eee50-721b-4716-8f08-42acdb0ce264	manager_in_agency_	1c41ed54-3140-4a9e-8f9e-81f02b185708	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 8f74e764-531d-4ee0-9501-799a93249f8e	service_status_is_live_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 5ce796c9-2770-477e-ac8f-7b1c2d9b3af6	agent_in_agency_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_can_decline_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+24598e65-5bd4-4a68-9799-4235bddcacc9	agent_in_agency_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+7845ed18-8f5f-438c-9dd1-5ded43bffe6e	invitee_of_user_invite_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_of_user_invite_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2881,6 +2888,7 @@ fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00
 1c41ed54-3140-4a9e-8f9e-81f02b185708	delete_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2928,6 +2936,10 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 8f74e764-531d-4ee0-9501-799a93249f8e	service_status_is_live_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 5ce796c9-2770-477e-ac8f-7b1c2d9b3af6	agent_in_agency_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_can_decline_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+24598e65-5bd4-4a68-9799-4235bddcacc9	agent_in_agency_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+7845ed18-8f5f-438c-9dd1-5ded43bffe6e	invitee_of_user_invite_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_of_user_invite_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	U
+b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	U
 \.
 
 
