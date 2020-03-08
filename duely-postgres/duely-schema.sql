@@ -1687,6 +1687,33 @@ $$;
 ALTER FUNCTION operation_.query_user_invite_by_agency_(_agency_uuid uuid, _status text[]) OWNER TO postgres;
 
 --
+-- Name: query_user_invite_by_subject_(uuid, text[]); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_user_invite_by_subject_(_subject_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, agency_uuid_ uuid, inviter_uuid_ uuid, invitee_email_address_ text, role_uuid_ uuid, status_ text, status_at_ timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT _subject_uuid subject_uuid_, _status invite_status_ INTO _arg;
+  PERFORM security_.control_operation_('query_user_invite_by_subject_', _arg);
+
+  RETURN QUERY
+  SELECT ui.uuid_, ui.agency_uuid_, ui.inviter_uuid_, ui.invitee_email_address_, ui.role_uuid_, ui.status_, ui.status_at_
+  FROM application_.user_invite_ ui
+  JOIN security_.user u ON ui.invitee_email_address_ = u.email_address_
+  WHERE u.uuid_ = _subject_uuid
+    AND (_status IS NULL 
+     OR ui.status_ = ANY (COALESCE(_status, '{}'::text[])));
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_user_invite_by_subject_(_subject_uuid uuid, _status text[]) OWNER TO postgres;
+
+--
 -- Name: remove_user_from_agency_(uuid, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -2014,6 +2041,26 @@ END
 
 
 ALTER FUNCTION policy_.service_status_is_live_(_arg anyelement) OWNER TO postgres;
+
+--
+-- Name: subject_is_active_user_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.subject_is_active_user_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$ 
+BEGIN
+  RETURN
+    EXISTS (
+      SELECT 1
+      FROM security_.active_user_ u
+      WHERE u.uuid_ = _arg.subject_uuid_
+    );
+END
+ $$;
+
+
+ALTER FUNCTION policy_.subject_is_active_user_(_arg anyelement) OWNER TO postgres;
 
 --
 -- Name: users_can_remove_themselves_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -2870,6 +2917,7 @@ d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+
 27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 774d34d3-cd48-45ca-8f70-2f54010f5b48	cancel_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2923,6 +2971,7 @@ b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-
 3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f54010f5b48	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 3a2d166a-ec77-4e20-a0b0-97113c4ac3f9	logged_in_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2987,6 +3036,7 @@ d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+
 27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 774d34d3-cd48-45ca-8f70-2f54010f5b48	cancel_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3040,6 +3090,7 @@ b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-
 3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f54010f5b48	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 3a2d166a-ec77-4e20-a0b0-97113c4ac3f9	logged_in_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
