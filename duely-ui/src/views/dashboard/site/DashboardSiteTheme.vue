@@ -62,7 +62,7 @@
           <p class="error--text" v-if="forms.editAgencyTheme.errorMessage">{{ forms.editAgencyTheme.errorMessage }}</p>
         </v-expand-transition>
         <v-row class="ml-6 pt-2 pb-1">
-          <v-btn :min-width="100" depressed rounded :loading="forms.editAgencyTheme.loading || data.imageLogo.loading || data.imageHero.loading" :disabled="!forms.editAgencyTheme.valid" type="submit" color="primary" class="text-none mr-4" >Save</v-btn>
+          <v-btn :min-width="100" depressed rounded :loading="loading > 0" :disabled="!forms.editAgencyTheme.valid" type="submit" color="primary" class="text-none mr-4" >Save</v-btn>
           <v-btn :min-width="100" text depressed rounded class="text-none" to="/dashboard/site">Cancel</v-btn>
         </v-row>
         <v-snackbar v-model="snackbar" bottom right :timeout="2000" color="surface darken-2" class="success--text"><span class="f-2b">Theme saved.</span></v-snackbar>
@@ -77,6 +77,7 @@ import { gql } from '@/apollo';
 export default {
   data(vm) {
     return {
+      loading: 0,
       initialTheme: JSON.parse(JSON.stringify(vm.$vuetify.theme.currentTheme)),
       data: {
         imageLogo: { uuid: null, name: 'logo', color: null, file: null, data: null, loading: false, errorMessage: null },
@@ -100,7 +101,6 @@ export default {
       forms: {
         editAgencyTheme: {
           errorMessage: null,
-          loading: false,
           valid: true
         }
       },
@@ -110,6 +110,7 @@ export default {
   watch: {
     async 'data.imageLogo.file'(file) {
       try {
+        this.loading++;
         this.data.imageLogo.loading = true;
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -123,22 +124,26 @@ export default {
             this.data.imageLogo.color = '#000000';
           }
           this.data.imageLogo.loading = false;
+          this.loading--;
         };
         reader.onerror = error => {
           this.data.imageLogo.uuid = null;
           this.data.imageLogo.data = null;
           this.data.imageLogo.loading = false;
+          this.loading--;
           this.data.imageLogo.error = error.message;
         };
       } catch (err) {
         this.data.imageLogo.uuid = null;
         this.data.imageLogo.data = null;
         this.data.imageLogo.loading = false;
+        this.loading--;
         this.data.imageLogo.error = err.message;
       }
     },
     async 'data.imageHero.file'(file) {
       try {
+        this.loading++;
         this.data.imageHero.loading = true;
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -152,17 +157,20 @@ export default {
             this.data.imageHero.color = '#000000';
           }
           this.data.imageHero.loading = false;
+          this.loading--;
         };
         reader.onerror = error => {
           this.data.imageHero.uuid = null;
           this.data.imageHero.data = null;
           this.data.imageHero.loading = false;
+          this.loading--;
           this.data.imageHero.error = error.message;
         };
       } catch (err) {
         this.data.imageHero.uuid = null;
         this.data.imageHero.data = null;
         this.data.imageHero.loading = false;
+        this.loading--;
         this.data.imageHero.error = err.message;
       }
     },
@@ -197,6 +205,7 @@ export default {
   },
   methods: {
     async editImage(image) {
+        this.loading++;
         image.loading = true;
         await this.$apollo.mutate({
           mutation: gql`mutation($agencyUuid: ID!, $imageName: String!, $imageData: String!, $imageColor: String!) {
@@ -219,6 +228,7 @@ export default {
               image.errorMessage = editImage.message;
 
             image.loading = false;
+            this.loading--;
           }
         });
     },
@@ -226,7 +236,7 @@ export default {
       this.forms.editAgencyTheme.errorMessage = null;
 
       if (this.$refs.editAgencyThemeForm.validate()) {
-        this.forms.editAgencyTheme.loading = true;
+        this.loading++;
 
         try {
           if (this.data.imageLogo.uuid === null && this.data.imageLogo.data !== null)
@@ -262,12 +272,12 @@ export default {
               } else
                 this.forms.editAgencyTheme.errorMessage = editAgencyTheme.message;
 
-              this.forms.editAgencyTheme.loading = false;
+              this.loading--;
             }
           });
         } catch (error) {
             this.forms.editAgencyTheme.errorMessage = error.message;
-            this.forms.editAgencyTheme.loading = false;
+            this.loading--;
         }
       }
     }

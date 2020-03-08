@@ -1,33 +1,27 @@
 <template>
   <section class="d-flex flex-column flex-grow-1">
-    <h2 class="f-5b">Services</h2>
+    <h2 class="f-5b">Client</h2>
     <TableList>
       <template #header>
         <TableListHeaderRow>
-          <TableListColumnHeader left>Service</TableListColumnHeader>
+          <TableListColumnHeader left>Name</TableListColumnHeader>
+          <TableListColumnHeader left>Email address</TableListColumnHeader>
           <TableListColumnHeader center>Status</TableListColumnHeader>
-          <TableListColumnHeader center>Actions</TableListColumnHeader>
         </TableListHeaderRow>
       </template>
-      <TableListRow v-for="service in services" :key="service.uuid">
+      <TableListRow v-for="client in clients" :key="client.uuid">
         <TableListCell left>
-          <router-link :to="`/dashboard/services/${service.uuid}`"><span class="f-2b text-no-wrap">{{ service.name }}</span></router-link>
-          <span class="f-1 text-no-wrap surface--text text--lighten-2">{{ truncateString(service.name, 30) }}</span>
+          <span class="f-2b surface--text">{{ client.name }}</span>
+        </TableListCell>
+        <TableListCell left>
+          <span class="f-2 text-no-wrap surface--text">{{ client.emailAddress }}</span>
         </TableListCell>
         <TableListCell center>
-          <ColoredChip :color="statusColor(service.status)">{{ service.status }}</ColoredChip>
-        </TableListCell>
-        <TableListCell center>
-          <v-btn @click.native="deleteService(service.uuid)" text small color="background lighten-3">
-            <v-icon>delete</v-icon>
-          </v-btn>
+          <ColoredChip :color="statusColor(client.status)">{{ client.status }}</ColoredChip>
         </TableListCell>
       </TableListRow>
       <template #actions>
-        <v-btn to="/dashboard/services/create-service" absolute dark large rounded bottom right color="primary" style="transform: translateY(220%);" class="my-4">
-          <span class="text-none f-2b">Create service</span>
-          <v-icon right>add</v-icon>
-        </v-btn>
+        <NewUserDialog :agency="agency" role="client" />
       </template>
     </TableList>
   </section>
@@ -42,6 +36,8 @@ import TableListColumnHeader from '@/components/TableListColumnHeader';
 import TableListHeaderRow from '@/components/TableListHeaderRow';
 import TableListRow from '@/components/TableListRow';
 
+import NewUserDialog from './components/NewUserDialog';
+
 import { gql } from '@/apollo';
 
 export default {
@@ -51,7 +47,8 @@ export default {
     TableListCell,
     TableListColumnHeader,
     TableListHeaderRow,
-    TableListRow
+    TableListRow,
+    NewUserDialog
   },
   methods: {
     truncateString(text, length) {
@@ -62,29 +59,31 @@ export default {
     },
     statusColor(status) {
       switch (status) {
-        case 'live':
+        case 'active':
           return 'green';
-        case 'invite only':
+        case 'invited':
           return 'blue';
-        case 'draft':
-          return 'red';
+        case 'inactive':
+          return 'grey';
       }
-    },
-    async deleteService(serviceUuid) {
-      await this.$apollo.mutate({
-        mutation: gql`
-          mutation($serviceUuid: ID!) {
-            deleteService(serviceUuid: $serviceUuid) {
-              success
-              message
-              serviceUuid
-            }
-          }
-        `,
-        variables: {
-          serviceUuid
-        }
-      });
+    }
+  },
+  computed: {
+    clients() {
+      if (this.$apollo.queries.agency.loading || !this.$apollo.queries.agency)
+        return [];
+
+      const users = this.agency.subjectsConnection.edges
+        .filter(edge => edge.roles.includes('client'))
+        .map(edge => edge.node)
+        .map(user => ({ ...user, status: 'active' }));
+
+      const invited = this.agency.invitesConnection.edges
+        .map(edge => edge.node)
+        .filter(invite => invite.status === null)
+        .map(invite => ({ name: invite.inviteeEmailAddress, emailAddress: invite.inviteeEmailAddress, status: 'invited' }));
+
+      return users.concat(invited);
     }
   },
   apollo: {
@@ -97,19 +96,38 @@ export default {
         }
       `
     },
-    services: {
+    agency: {
       query: gql`
         query($subdomainName: String) {
           agency(subdomainName: $subdomainName) {
             uuid
             name
-            servicesConnection {
+            subjectsConnection {
+              edges {
+                cursor
+                roles
+                node {
+                  uuid
+                  name
+                  emailAddress
+                }
+              }
+            }
+            invitesConnection {
               edges {
                 cursor
                 node {
                   uuid
-                  name
                   status
+                  inviteeEmailAddress
+                  agency {
+                    uuid
+                    name
+                    subdomain {
+                      uuid
+                      name
+                    }
+                  }
                 }
               }
             }
@@ -120,9 +138,6 @@ export default {
         return {
           subdomainName: this.session.subdomainName
         };
-      },
-      update({ agency }) {
-        return agency.servicesConnection.edges.map(edge => edge.node);
       },
       skip() {
         return this.$apollo.queries.session.loading;

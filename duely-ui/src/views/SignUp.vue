@@ -8,7 +8,7 @@
       <v-stepper-content step="1">
         <v-form @submit.prevent="submitSignUpStep1" ref="signUpStep1Form" v-model="forms.signUpStep1.valid">
           <v-col class="pt-1">
-            <v-text-field class="mt-0 mb-1" solo outlined flat single-line rounded v-model="data.emailAddress" :rules="rules.emailAddress" label="Email address" type="email" spellcheck="false" validate-on-blur />
+            <v-text-field class="mt-0 mb-1" solo outlined flat single-line rounded v-model="data.emailAddress" :rules="rules.emailAddress" :readonly="verificationCodePrefilled" label="Email address" type="email" spellcheck="false" validate-on-blur />
             <v-text-field class="mt-1 mb-1" solo outlined flat single-line rounded v-model="data.name" :rules="rules.name" label="Full name" spellcheck="false" validate-on-blur />
             <v-text-field class="mt-1 mb-0" solo outlined flat single-line rounded v-model="data.password" :rules="rules.password" label="Password" type="password" spellcheck="false" autocomplete="new-password" />
             <div class="f-2 ml-2 mt-0 mb-3">
@@ -47,7 +47,7 @@
             <p class="text-xs-center">
               Please enter the 6-digit verification code that we sent to your email: <b>{{ data.emailAddress }}</b>
             </p>
-            <v-text-field solo outlined flat single-line rounded v-model="data.verificationCode" :rules="rules.verificationCode" label="Verification code" counter="6" spellcheck="false"></v-text-field>
+            <v-text-field solo outlined flat single-line rounded v-model="data.verificationCode" :rules="rules.verificationCode" :readonly="verificationCodePrefilled" label="Verification code" counter="6" spellcheck="false"></v-text-field>
           </v-col>
           <v-expand-transition>
             <p class="error--text" v-if="forms.signUpStep2.errorMessage">{{ forms.signUpStep2.errorMessage }}</p>
@@ -85,12 +85,14 @@ import { gql } from '@/apollo';
 export default {
   data() {
     return {
+      inviteUuid: this.$route.query.invite !== undefined ? decodeURIComponent(this.$route.query.invite) : null,
+      verificationCodePrefilled: this.$route.query.code !== undefined,
       step: 1,
       data: {
-        emailAddress: decodeURIComponent(this.$route.query.email || ''),
-        name: decodeURIComponent(this.$route.query.name || ''),
+        emailAddress: this.$route.query.email !== undefined ? decodeURIComponent(this.$route.query.email) : '',
+        name: this.$route.query.name !== undefined ? decodeURIComponent(this.$route.query.name) : '',
         password: '',
-        verificationCode: ''
+        verificationCode: this.$route.query.code !== undefined ? decodeURIComponent(this.$route.query.code) : '',
       },
       rules: {
         emailAddress: [
@@ -132,6 +134,12 @@ export default {
       this.forms.signUpStep1.errorMessage = null;
 
       if (this.$refs.signUpStep1Form.validate()) {
+        if (this.verificationCodePrefilled) {
+          // Verification process already started
+          this.step = 2;
+          return;
+        }
+
         this.forms.signUpStep1.loading = true;
 
         await this.$apollo.mutate({
@@ -208,24 +216,121 @@ export default {
             if (jwt) {
               localStorage.setItem('user-jwt', jwt);
               await this.$apollo.provider.defaultClient.clearStore();
-              //await this.$apollo.queries.me.refetch();
-              this.$router.push({ path: '/profile' });
-            } else 
+            } else {
               this.$router.push({ path: '/' });
+              this.forms.logIn.loading = false;
+              return;
+            }
 
-            this.forms.logIn.loading = false;
-            this.dialog = false;
           }
           else {
             this.errorMessage = logIn.message;
             this.forms.logIn.loading = false;
+            return;
           }
-        } 
+        }
+      });
+
+      await this.$apollo.queries.me.refetch();
+
+      if (!this.agency) {
+        this.$router.push({ path: '/profile' });
+        this.forms.logIn.loading = false;
+        return;
+      }
+
+      // accept invite from the agency
+      if (this.inviteUuid === null) {
+        const invite = this.me.invitesConnection.edges.find(edge => edge.node.agency.uuid === this.agency.uuid && edge.node.status === null);
+
+        if (!invite) {
+          this.$router.push({ path: '/' });
+          this.forms.logIn.loading = false;
+          return;
+        }
+
+        this.inviteUuid = invite.uuid;
+      }
+
+      await this.$apollo.mutate({
+        mutation: gql`mutation($inviteUuid: ID!) {
+          acceptInvite(inviteUuid: $inviteUuid) {
+            success
+            message
+            inviteUuid
+          }
+        }`,
+        variables: {
+          inviteUuid: this.inviteUuid
+        },
+        update: async ({ data: { acceptInvite } }) => {
+        if (acceptInvite.success) {
+            this.$router.push({ path: '/my-dashboard' });
+            this.forms.logIn.loading = false;
+            return;
+          } else {
+            // something went wrong
+            console.log(acceptInvite.message);
+            this.$router.push({ path: '/' });
+            this.forms.logIn.loading = false;
+            return;
+          }
+        }
       });
     }
   },
+  apollo: {
+    me: {
+      query: gql`query {
+        me {
+          uuid
+          name
+          invitesConnection {
+            cursor
+            edges {
+              node {
+                uuid
+                status
+                agency {
+                  uuid
+                  name
+                  subdomain {
+                    uuid
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }`
+    },
+    session: {
+      query: gql`query {
+        session @client {
+          subdomainName
+        }
+      }`
+    },
+    agency: {
+      query: gql`query($subdomainName: String) {
+        agency(subdomainName: $subdomainName) {
+          uuid
+          name
+        }
+      }`,
+      variables () {
+        return {
+          subdomainName: this.session.subdomainName,
+        }
+      },
+      skip () {
+        return this.$apollo.queries.session.loading || this.session.subdomainName === null;
+      }
+    }
+  },
   created() {
-    this.removeQueryParameters('email', 'name');
+    this.removeQueryParameters('email', 'name', 'code', 'invite');
   }
 };
 </script>

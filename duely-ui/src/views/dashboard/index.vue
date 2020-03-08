@@ -4,7 +4,9 @@
       <BtnSquare v-for="item in items" :key="item.to" v-bind="item" small :minimized="$vuetify.breakpoint.xs || subMenuItems.length !== 0" :selected="selectedMenu !== null && selectedMenu.to === item.to" />
     </template>
     <template #sub-menu>
-      <h4 v-if="!$vuetify.breakpoint.xs && subMenuItems.length !== 0" class="f-3b surface--text text--lighten-3 ml-2 py-1">{{ selectedMenu.text }}</h4>
+      <router-link v-if="!$vuetify.breakpoint.xs && subMenuItems.length !== 0" :to="selectedMenu.to" class="d-flex flex-column align-start">
+        <h4 class="f-3b surface--text text--lighten-3 ml-2 py-1">{{ selectedMenu.text }}</h4>
+      </router-link>
       <TextLink v-for="item in subMenuItems" :key="item.to" v-bind="item" class="px-2">{{ item.text }}</TextLink>
     </template>
     <v-fade-transition mode="out-in">
@@ -63,7 +65,13 @@ export default {
           to: '/dashboard/users',
           color: 'surface darken-1',
           text: 'Users',
-          icon: 'group'
+          icon: 'group',
+          items: [
+            {
+              to: '/dashboard/users/clients',
+              text: 'Clients'
+            }
+          ]
         },
         {
           to: '/dashboard/site',
@@ -134,6 +142,17 @@ export default {
                   name
                   type
                 }
+              }
+            }
+          }
+          subjectsConnection {
+            edges {
+              cursor
+              roles
+              node {
+                uuid
+                name
+                emailAddress
               }
             }
           }

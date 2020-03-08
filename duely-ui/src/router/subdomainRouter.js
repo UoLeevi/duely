@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import AgencyHome from '@/views/AgencyHome';
+import SignUp from '@/views/SignUp';
 import Dashboard from '@/views/dashboard';
 import DashboardHome from '@/views/dashboard/DashboardHome';
 import DashboardPayments from '@/views/dashboard/DashboardPayments';
@@ -8,7 +9,9 @@ import DashboardServices from '@/views/dashboard/services';
 import DashboardServicesCreateService from '@/views/dashboard/services/DashboardServicesCreateService';
 import DashboardServicesHome from '@/views/dashboard/services/DashboardServicesHome';
 import DashboardServicesService from '@/views/dashboard/services/service';
-import DashboardUsers from '@/views/dashboard/DashboardUsers';
+import DashboardUsers from '@/views/dashboard/users';
+import DashboardUsersHome from '@/views/dashboard/users/DashboardUsersHome';
+import DashboardUsersClients from '@/views/dashboard/users/DashboardUsersClients';
 import DashboardSite from '@/views/dashboard/site';
 import DashboardSiteHome from '@/views/dashboard/site/DashboardSiteHome';
 import DashboardSiteTheme from '@/views/dashboard/site/DashboardSiteTheme';
@@ -23,6 +26,58 @@ const router = new Router({
     {
       path: '/',
       component: AgencyHome,
+      async beforeEnter(to, from, next) {
+        let res = await client.query({
+          query: gql`query {
+            me {
+              uuid
+              type
+            }
+          }`
+        });
+
+        res = await client.query({
+          query: gql`query {
+            session @client {
+              subdomainName
+            }
+          }`
+        });
+
+        if (res.data.session.subdomainName === null) {
+          next(location.href = process.env.NODE_ENV === 'production'
+            ? `https://duely.app`
+            : `${window.location.origin}`);
+          return;
+        }
+
+        const subdomainName = res.data.session.subdomainName;
+        
+        res = await client.query({
+          query: gql`query($subdomainName: String) {
+            agency(subdomainName: $subdomainName) {
+              uuid
+              name
+            }
+          }`,
+          variables: {
+            subdomainName
+          }
+        });
+
+        if (res.data.agency === null) {
+          next(location.href = process.env.NODE_ENV === 'production'
+            ? `https://duely.app`
+            : `${window.location.origin}`);
+          return;
+        }
+
+        next();
+      }
+    },
+    {
+      path: '/create-account',
+      component: SignUp,
       async beforeEnter(to, from, next) {
         let res = await client.query({
           query: gql`query {
@@ -119,7 +174,17 @@ const router = new Router({
         },
         {
           path: 'users',
-          component: DashboardUsers
+          component: DashboardUsers,
+          children: [
+            {
+              path: '',
+              component: DashboardUsersHome
+            },
+            {
+              path: 'clients',
+              component: DashboardUsersClients
+            }
+          ]
         },
         {
           path: 'site',

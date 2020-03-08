@@ -19,6 +19,22 @@ export default {
       me {
         uuid
         name
+        invitesConnection {
+          edges {
+            node {
+              uuid
+              status
+              agency {
+                uuid
+                name
+                subdomain {
+                  uuid
+                  name
+                }
+              }
+            }
+          }
+        }
       }
     }`
   }
