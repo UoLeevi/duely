@@ -6,7 +6,7 @@ export default {
     type Invite implements Node {
       uuid: ID!
       name: String!
-      status: String!
+      status: String
       inviteeEmailAddress: String!
       agency: Agency!
       role: String!
