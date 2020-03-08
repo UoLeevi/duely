@@ -445,38 +445,38 @@ ALTER TABLE application_.user_invite_ OWNER TO postgres;
 CREATE FUNCTION operation_.accept_user_invite_(_invite_uuid uuid) RETURNS application_.user_invite_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
-  DECLARE
-    _invitee_uuid uuid;
-    _user_invite application_.user_invite_;
-    _arg RECORD;
-  BEGIN
-    SELECT _invite_uuid invite_uuid_ INTO _arg; 
-    PERFORM security_.control_operation_('accept_user_invite_', _arg);
+DECLARE
+  _invitee_uuid uuid;
+  _user_invite application_.user_invite_;
+  _arg RECORD;
+BEGIN
+  SELECT _invite_uuid invite_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('accept_user_invite_', _arg);
 
-    IF NOT EXISTS (
-      SELECT s.uuid_ INTO _invitee_uuid
-      FROM security_.subject_ s
-      JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
-      WHERE ui.uuid_ = _invite_uuid
-    ) THEN
-      RAISE 'Invite does not exist.' USING ERRCODE = '20000';
-    END IF;
+  IF NOT EXISTS (
+    SELECT u.uuid_ INTO _invitee_uuid
+    FROM security_.user_ u
+    JOIN application_.user_invite_ ui ON u.email_address_ = ui.invitee_email_address_
+    WHERE ui.uuid_ = _invite_uuid
+  ) THEN
+    RAISE 'Invite does not exist.' USING ERRCODE = '20000';
+  END IF;
 
-    UPDATE application_.user_invite_
-    SET
-      status_ = 'accepted',
-      status_at_ = CURRENT_TIMESTAMP
-    WHERE uuid_ = _invite_uuid
-    RETURNING * INTO _user_invite;
+  UPDATE application_.user_invite_
+  SET
+    status_ = 'accepted',
+    status_at_ = CURRENT_TIMESTAMP
+  WHERE uuid_ = _invite_uuid
+  RETURNING * INTO _user_invite;
 
-    INSERT INTO security_.subject_assingment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
-    SELECT ui.uuid_, a.subdomain_uuid_, _invitee_uuid
-    FROM _user_invite ui
-    JOIN application_.agency_ a ON a.uuid_ = ui.agency_uuid_;
+  INSERT INTO security_.subject_assingment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
+  SELECT ui.uuid_, a.subdomain_uuid_, _invitee_uuid
+  FROM _user_invite ui
+  JOIN application_.agency_ a ON a.uuid_ = ui.agency_uuid_;
 
-    RETURN _user_invite;
-  END
-  $$;
+  RETURN _user_invite;
+END
+$$;
 
 
 ALTER FUNCTION operation_.accept_user_invite_(_invite_uuid uuid) OWNER TO postgres;
@@ -796,33 +796,33 @@ ALTER FUNCTION operation_.create_stripe_account_(_agency_uuid uuid, _stripe_acct
 CREATE FUNCTION operation_.decline_user_invite_(_invite_uuid uuid) RETURNS application_.user_invite_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
-  DECLARE
-    _invitee_uuid uuid;
-    _user_invite application_.user_invite_;
-    _arg RECORD;
-  BEGIN
-    SELECT _invite_uuid invite_uuid_ INTO _arg; 
-    PERFORM security_.control_operation_('decline_user_invite_', _arg);
+DECLARE
+  _invitee_uuid uuid;
+  _user_invite application_.user_invite_;
+  _arg RECORD;
+BEGIN
+  SELECT _invite_uuid invite_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('decline_user_invite_', _arg);
 
-    IF NOT EXISTS (
-      SELECT s.uuid_ INTO _invitee_uuid
-      FROM security_.subject_ s
-      JOIN application_.user_invite_ ui ON s.email_address_ = ui.invitee_email_address_
-      WHERE ui.uuid_ = _invite_uuid
-    ) THEN
-      RAISE 'Invite does not exist.' USING ERRCODE = '20000';
-    END IF;
+  IF NOT EXISTS (
+    SELECT u.uuid_ INTO _invitee_uuid
+    FROM security_.user_ u
+    JOIN application_.user_invite_ ui ON u.email_address_ = ui.invitee_email_address_
+    WHERE ui.uuid_ = _invite_uuid
+  ) THEN
+    RAISE 'Invite does not exist.' USING ERRCODE = '20000';
+  END IF;
 
-    UPDATE application_.user_invite_
-    SET
-      status_ = 'declined',
-      status_at_ = CURRENT_TIMESTAMP
-    WHERE uuid_ = _invite_uuid
-    RETURNING * INTO _user_invite;
+  UPDATE application_.user_invite_
+  SET
+    status_ = 'declined',
+    status_at_ = CURRENT_TIMESTAMP
+  WHERE uuid_ = _invite_uuid
+  RETURNING * INTO _user_invite;
 
-    RETURN _user_invite;
-  END
-  $$;
+  RETURN _user_invite;
+END
+$$;
 
 
 ALTER FUNCTION operation_.decline_user_invite_(_invite_uuid uuid) OWNER TO postgres;
@@ -1119,12 +1119,13 @@ BEGIN
   IF EXISTS (
       SELECT 1
       FROM security_.subject_assignment_ sa
-      JOIN security_.subject_ s ON s.uuid_ = sa.subject_uuid_
+      JOIN security_.user_ u ON u.uuid_ = sa.subject_uuid_
       JOIN application_.agency_ a ON a.subdomain_uuid_ = sa.subdomain_uuid_
-      WHERE s.email_address_ = _email_address
+      JOIN security_.role_ r ON r.name_ = _role_name AND sa.role_uuid_ = r.uuid_
+      WHERE u.email_address_ = _email_address
         AND a.uuid_ = _agency_uuid
     ) THEN
-    RAISE 'User is already part of the agency.' USING ERRCODE = '20000';
+    RAISE 'User is already a % of the agency.', _role_name USING ERRCODE = '20000';
   END IF;
 
   INSERT INTO application_.user_invite_ (agency_uuid_, inviter_uuid_, invitee_email_address_, role_uuid_)
@@ -1672,10 +1673,11 @@ BEGIN
     ),
     _deleted_ui AS (
       DELETE FROM application_.user_invite_ ui
-      USING security_.subject_ s
+      USING security_.user_ u
       WHERE ui.agency_uuid_ = _agency_uuid
-        AND s.subject_uuid_ = _subject_uuid
-        AND s.email_address_ = ui.invitee_email_address_
+        AND ui.subject_uuid_ = _subject_uuid
+        AND u.uuid_ = _subject_uuid
+        AND u.email_address_ = ui.invitee_email_address_
       RETURNING *
     )
   SELECT (SELECT count(1) FROM _deleted_sa) + (SELECT count(1) FROM _deleted_ui) INTO _count;
@@ -2828,6 +2830,7 @@ fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00
 48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	2020-03-08 08:44:38.58705+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2878,6 +2881,7 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_of_user_invite_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 74931d78-6bd6-48c4-a853-1c714b68211e	logged_in_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	2020-03-08 08:44:38.58705+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2940,6 +2944,7 @@ fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00
 48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	2020-03-08 08:44:38.58705+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2990,6 +2995,7 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_of_user_invite_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 74931d78-6bd6-48c4-a853-1c714b68211e	logged_in_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	2020-03-08 08:44:38.58705+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
