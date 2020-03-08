@@ -74,9 +74,12 @@ export default {
   sendEmailAsAdminDuely ({ to, subject, body } = {}) {
     return new Promise(async (resolve, reject) => {
       const message = [
-        'From: duely.app <admin@duely.app>',
         `To: <${to}>`,
         `Subject: ${subject}`,
+        'Content-Type: text/html; charset="UTF-8"',
+        'From: duely.app <admin@duely.app>',
+        'MIME-Version: 1.0',
+        'Content-Transfer-Encoding: 7bit',
         '',
         body,
         ''

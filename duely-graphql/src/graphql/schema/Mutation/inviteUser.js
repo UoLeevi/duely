@@ -46,15 +46,45 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
           to: emailAddress,
           subject: `Invitation from ${agencyName} - Sign up for ${subdomain}.duely.app`,
           body: [
-            `To get started, click this link to sign up: https://${subdomain}.duely.app/create-account?email=${emailAddress}&code=${verificationCode}`
+            '<html>',
+              '<body>',
+                '<p>',
+                  `To get started, click this link to sign up: <a href="https://${subdomain}.duely.app/create-account?email=${encodeURIComponent(emailAddress)}&code=${verificationCode}">Sign up for ${subdomain}.duely.app</a>`,
+                '</p>',
+              '</body>',
+            '</html>'
           ].join('\r\n')
         });
       
         if (!messages.id) {
           // email not sent because of some error
+          try {
+            await client.query('SELECT uuid_ FROM operation_.cancel_user_invite_($1::uuid)', [inviteUuid]);
+          } catch (error) {
+            console.log(error.message);
+          }
+
+          return {
+            success: false,
+            message: 'Something went wrong while trying to send invite email. Invite cancelled.',
+            type: 'InviteUserResult'
+          };
         }
       } catch (error) {
         // email not sent because of some error
+        console.log(error.message);
+
+        try {
+          await client.query('SELECT uuid_ FROM operation_.cancel_user_invite_($1::uuid)', [inviteUuid]);
+        } catch (error) {
+          console.log(error.message);
+        }
+
+        return {
+          success: false,
+          message: 'Something went wrong while trying to send invite email. Invite cancelled.',
+          type: 'InviteUserResult'
+        };
       }
 
     } catch (error) {
@@ -65,15 +95,45 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
             to: emailAddress,
             subject: `Invitation from ${agencyName} - ${subdomain}.duely.app`,
             body: [
-              `To get started, click this link: https://${subdomain}.duely.app?login=${emailAddress}`,
+              '<html>',
+                '<body>',
+                  '<p>',
+                    `To get started, click this link: <a href="https://${subdomain}.duely.app?login=${encodeURIComponent(emailAddress)}">Sign up for ${subdomain}.duely.app</a>`,
+                  '</p>',
+                '</body>',
+              '</html>'
             ].join('\r\n')
           });
         
           if (!messages.id) {
             // email not sent because of some error
+            try {
+              await client.query('SELECT uuid_ FROM operation_.cancel_user_invite_($1::uuid)', [inviteUuid]);
+            } catch (error) {
+              console.log(error.message);
+            }
+
+            return {
+              success: false,
+              message: 'Something went wrong while trying to send invite email. Invite cancelled.',
+              type: 'InviteUserResult'
+            };
           }
         } catch (error) {
           // email not sent because of some error
+          console.log(error.message);
+
+          try {
+            await client.query('SELECT uuid_ FROM operation_.cancel_user_invite_($1::uuid)', [inviteUuid]);
+          } catch (error) {
+            console.log(error.message);
+          }
+
+          return {
+            success: false,
+            message: 'Something went wrong while trying to send invite email. Invite cancelled.',
+            type: 'InviteUserResult'
+          };
         }
       }
     }

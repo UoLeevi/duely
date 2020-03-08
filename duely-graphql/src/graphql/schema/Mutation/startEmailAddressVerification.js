@@ -37,7 +37,13 @@ export default async function startEmailAddressVerification(obj, { emailAddress 
     to: emailAddress,
     subject: 'Email verification - Sign up for duely.app',
     body: [
-      `Your email verification code is ${verificationCode}.`,
+      '<html>',
+        '<body>',
+          '<p>',
+            `Your email verification code is ${verificationCode}.`,
+          '</p>',
+        '</body>',
+      '</html>',
     ].join('\r\n')
   });
 
