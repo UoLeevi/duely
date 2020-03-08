@@ -30,6 +30,7 @@ DECLARE
   _user_jwt text;
   _record_0 RECORD;
   _record_1 RECORD;
+  _record_2 RECORD;
   _cursor refcursor;
 BEGIN
 
@@ -105,6 +106,27 @@ BEGIN
   PERFORM operation_.begin_session_(_user_jwt);
 
   PERFORM operation_.create_stripe_account_(_record_0.uuid_, 'acct_test');
+
+  PERFORM operation_.end_session_();
+
+
+  PERFORM operation_.begin_session_(_user_jwt);
+
+  SELECT * INTO _record_1 FROM operation_.invite_user_(_record_0.uuid_, 'invitee@example.com', 'client');
+  --RAISE NOTICE E'invite_user_:\n%', _record_1;
+  SELECT * INTO _record_1 FROM operation_.query_user_invite_(_record_1.uuid_);
+  --RAISE NOTICE E'query_user_invite_:\n%', _record_1;
+
+  OPEN _cursor FOR SELECT * FROM operation_.query_user_invite_by_agency_(_record_0.uuid_);
+  LOOP
+    FETCH FROM _cursor INTO _record_2;
+    EXIT WHEN NOT FOUND;
+    --RAISE NOTICE E'query_user_invite_by_agency_:\n%', _record_2;
+  END LOOP;
+  CLOSE _cursor;
+
+  SELECT * INTO _record_1 FROM operation_.cancel_user_invite_(_record_1.uuid_);
+  --RAISE NOTICE E'cancel_user_invite_:\n%', _record_1;
 
   PERFORM operation_.end_session_();
 

@@ -603,15 +603,14 @@ DECLARE
   _user_invite application_.user_invite_;
   _arg RECORD;
 BEGIN
-  SELECT _invite_uuid invite_uuid_, agency_uuid_ INTO _arg
-  FROM application_.user_invite_
-  WHERE uuid_ = _invite_uuid;
+  SELECT _invite_uuid invite_uuid_, ui.agency_uuid_ INTO _arg
+  FROM application_.user_invite_ ui
+  WHERE ui.uuid_ = _invite_uuid;
   PERFORM security_.control_operation_('cancel_user_invite_', _arg);
 
   IF NOT EXISTS (
-    SELECT u.uuid_
-    FROM security_.user_ u
-    JOIN application_.user_invite_ ui ON u.email_address_ = ui.invitee_email_address_
+    SELECT ui.uuid_
+    FROM application_.user_invite_ ui
     WHERE ui.uuid_ = _invite_uuid
   ) THEN
     RAISE 'Invite does not exist.' USING ERRCODE = '20000';
@@ -1645,15 +1644,15 @@ CREATE FUNCTION operation_.query_user_invite_(_invite_uuid uuid) RETURNS TABLE(u
   DECLARE
     _arg RECORD;
   BEGIN
-    SELECT _invite_uuid invite_uuid_, agency_uuid_ INTO _arg
-    FROM application_.user_invite_
-    WHERE uuid_ = _invite_uuid;
+    SELECT _invite_uuid invite_uuid_, ui.agency_uuid_ INTO _arg
+    FROM application_.user_invite_ ui
+    WHERE ui.uuid_ = _invite_uuid;
     PERFORM security_.control_operation_('query_user_invite_', _arg);
 
     RETURN QUERY
-    SELECT uuid_, agency_uuid_, inviter_uuid_, invitee_email_address_, role_uuid_, status_, status_at_
-    FROM application_.user_invite_
-    WHERE uuid_ = _invite_uuid;
+    SELECT ui.uuid_, ui.agency_uuid_, ui.inviter_uuid_, ui.invitee_email_address_, ui.role_uuid_, ui.status_, ui.status_at_
+    FROM application_.user_invite_ ui
+    WHERE ui.uuid_ = _invite_uuid;
 
   END
   $$;
@@ -1675,11 +1674,11 @@ BEGIN
   PERFORM security_.control_operation_('query_user_invite_by_agency_', _arg);
 
   RETURN QUERY
-  SELECT uuid_, agency_uuid_, inviter_uuid_, invitee_email_address_, role_uuid_, status_, status_at_
-  FROM application_.user_invite_
-  WHERE agency_uuid_ = _agency_uuid
+  SELECT ui.uuid_, ui.agency_uuid_, ui.inviter_uuid_, ui.invitee_email_address_, ui.role_uuid_, ui.status_, ui.status_at_
+  FROM application_.user_invite_ ui
+  WHERE ui.agency_uuid_ = _agency_uuid
     AND (_status IS NULL 
-      OR status_ = ANY (COALESCE(_status, '{}'::text[])));
+      OR ui.status_ = ANY (COALESCE(_status, '{}'::text[])));
 
 END
 $$;
