@@ -8,6 +8,7 @@ export default {
       type: String!
       emailAddress: String
       agenciesConnection: SubjectAgenciesConnection!
+      invitesConnection: SubjectInvitesConnection!
     }
   `,
   resolvers: {
@@ -21,6 +22,13 @@ export default {
           subjectUuid: subject.uuid_, 
           subjectType: subject.type_,
           type: 'SubjectAgenciesConnection' 
+        };
+      },
+      invitesConnection(subject, args, context, info) {
+        return { 
+          subjectUuid: subject.uuid_, 
+          subjectType: subject.type_,
+          type: 'SubjectInvitesConnection' 
         };
       }
     }

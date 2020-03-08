@@ -1,5 +1,7 @@
 import { makeExecutableSchema } from 'graphql-tools';
 import Agency from './Agency';
+import AgencyInvitesConnection from './AgencyInvitesConnection';
+import AgencyInvitesEdge from './AgencyInvitesEdge';
 import AgencyServicesConnection from './AgencyServicesConnection';
 import AgencyServicesEdge from './AgencyServicesEdge';
 import AgencySubjectsConnection from './AgencySubjectsConnection';
@@ -34,11 +36,15 @@ import Subdomain from './Subdomain';
 import Subject from './Subject';
 import SubjectAgenciesConnection from './SubjectAgenciesConnection';
 import SubjectAgenciesEdge from './SubjectAgenciesEdge';
+import SubjectInvitesConnection from './SubjectInvitesConnection';
+import SubjectInvitesEdge from './SubjectInvitesEdge';
 import Theme from './Theme';
 import Subscription from './Subscription';
 
 export default makeExecutableSchema([
   Agency,
+  AgencyInvitesConnection,
+  AgencyInvitesEdge,
   AgencyServicesConnection,
   AgencyServicesEdge,
   AgencySubjectsConnection,
@@ -73,6 +79,8 @@ export default makeExecutableSchema([
   Subject,
   SubjectAgenciesConnection,
   SubjectAgenciesEdge,
+  SubjectInvitesConnection,
+  SubjectInvitesEdge,
   Theme,
   Subscription
 ].reduce((schema, type) => ({

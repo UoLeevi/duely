@@ -9,6 +9,7 @@ export default {
       subdomain: Subdomain!
       theme: Theme
       subjectsConnection: AgencySubjectsConnection!
+      invitesConnection: AgencyInvitesConnection!
       servicesConnection: AgencyServicesConnection!
     }
   `,
@@ -54,6 +55,12 @@ export default {
         return { 
           agencyUuid: agency.uuid_,
           type: 'AgencySubjectsConnection'
+        };
+      },
+      invitesConnection(agency, args, context, info) {
+        return { 
+          agencyUuid: agency.uuid_,
+          type: 'AgencyInvitesConnection'
         };
       },
       servicesConnection(agency, args, context, info) {
