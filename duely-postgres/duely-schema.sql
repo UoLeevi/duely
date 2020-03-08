@@ -1622,6 +1622,32 @@ CREATE FUNCTION operation_.query_user_invite_(_invite_uuid uuid) RETURNS TABLE(u
 ALTER FUNCTION operation_.query_user_invite_(_invite_uuid uuid) OWNER TO postgres;
 
 --
+-- Name: query_user_invite_by_agency_(uuid, text[]); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_user_invite_by_agency_(_agency_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, agency_uuid_ uuid, inviter_uuid_ uuid, invitee_email_address_ text, role_uuid_ uuid, status_ text, status_at_ timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT _agency_uuid agency_uuid_, _status invite_status_ INTO _arg;
+  PERFORM security_.control_operation_('query_user_invite_by_agency_', _arg);
+
+  RETURN QUERY
+  SELECT uuid_, agency_uuid_, inviter_uuid_, invitee_email_address_, role_uuid_, status_, status_at_
+  FROM application_.user_invite_
+  WHERE agency_uuid_ = _agency_uuid
+    AND (_status IS NULL 
+      OR status_ = ANY (COALESCE(_status, '{}'::text[])));
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_user_invite_by_agency_(_agency_uuid uuid, _status text[]) OWNER TO postgres;
+
+--
 -- Name: remove_user_from_agency_(uuid, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 

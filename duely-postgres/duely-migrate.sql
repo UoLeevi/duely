@@ -12,26 +12,13 @@ $_$
 DECLARE
 
 BEGIN
+-- MIGRATION CODE START
 
-  CREATE FUNCTION operation_.query_role_(_role_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text)
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-  DECLARE
-    _arg RECORD;
-  BEGIN
-    SELECT _role_uuid role_uuid_ INTO _arg;
-    PERFORM security_.control_operation_('query_role_', _arg);
+INSERT INTO security_.operation_(name_, log_events_) VALUES ('query_user_invite_by_agency_', 'f');
 
-    RETURN QUERY
-    SELECT uuid_, name_
-    FROM security_.role_
-    WHERE uuid_ = _role_uuid;
+PERFORM security_.implement_policy_allow_('query_user_invite_by_agency_', 'agent_in_agency_');
 
-  END
-  $$;
-
-  PERFORM security_.implement_policy_allow_('query_user_invite_', 'logged_in_');
-
+-- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
 
   RAISE NOTICE 'MIGRATION FAILED';
