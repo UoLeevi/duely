@@ -1,6 +1,7 @@
 import beginVisit from './beginVisit';
 import endVisit from './endVisit';
 import inviteUser from './inviteUser';
+import acceptInvite from './acceptInvite';
 import startEmailAddressVerification from './startEmailAddressVerification';
 import signUp from './signUp';
 import logIn from './logIn';
@@ -20,6 +21,7 @@ export default {
       beginVisit: BeginVisitResult!
       endVisit: EndVisitResult!
       inviteUser(agencyUuid: ID!, emailAddress: String!, role: String!, message: String): InviteUserResult!
+      acceptInvite(inviteUuid: ID!): AcceptInviteResult!
       signUp(emailAddress: String!, verificationCode: String!, name: String!, password: String!): SignUpResult!
       startEmailAddressVerification(emailAddress: String!): StartEmailAddressVerificationResult!
       logIn(emailAddress: String!, password: String!): LogInResult!
@@ -39,6 +41,7 @@ export default {
       beginVisit,
       endVisit,
       inviteUser,
+      acceptInvite,
       startEmailAddressVerification,
       signUp,
       logIn,

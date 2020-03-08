@@ -1,4 +1,5 @@
 import { makeExecutableSchema } from 'graphql-tools';
+import AcceptInviteResult from './AcceptInviteResult';
 import Agency from './Agency';
 import AgencyInvitesConnection from './AgencyInvitesConnection';
 import AgencyInvitesEdge from './AgencyInvitesEdge';
@@ -42,6 +43,7 @@ import Theme from './Theme';
 import Subscription from './Subscription';
 
 export default makeExecutableSchema([
+  AcceptInviteResult,
   Agency,
   AgencyInvitesConnection,
   AgencyInvitesEdge,
