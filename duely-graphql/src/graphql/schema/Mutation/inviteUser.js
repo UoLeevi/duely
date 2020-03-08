@@ -19,18 +19,18 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
     await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
 
     // query agency info
-    const res_a = await client.query('SELECT uuid_ FROM operation_.query_agency_($1::uuid)', [agencyUuid]);
+    const res_a = await client.query('SELECT name_, subdomain_uuid_ FROM operation_.query_agency_($1::uuid)', [agencyUuid]);
     if (res_a.rows.length !== 1)
       throw new Error('Agency not found!');
 
     const { name_: agencyName, subdomain_uuid_: subdomainUuid } = res_a.rows[0];
 
     // query subdomain info
-    const res_s = await client.query('SELECT uuid_ FROM operation_.query_subdomain_($1::uuid)', [subdomainUuid]);
+    const res_s = await client.query('SELECT name_ FROM operation_.query_subdomain_($1::uuid)', [subdomainUuid]);
     if (res_s.rows.length !== 1)
       throw new Error('Subdomain not found!');
 
-    const { name_: subdomain } = res_s.rows[0];
+    const subdomain = res_s.rows[0].name_;
 
     // create user invite on database 
     const res = await client.query('SELECT uuid_ FROM operation_.invite_user_($1::uuid, $2::text, $3::text)', [agencyUuid, emailAddress, role]);
