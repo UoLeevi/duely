@@ -39,7 +39,7 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
     // get verification code for new user
     try {
       const res = await client.query('SELECT verification_code_ FROM operation_.start_email_address_verification_($1::text)', [emailAddress]);
-      verificationCode = res.rows[0].verification_code_;
+      const verificationCode = res.rows[0].verification_code_;
 
       try {
         const messages = await gmail.sendEmailAsAdminDuely({
