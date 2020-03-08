@@ -593,6 +593,45 @@ $$;
 ALTER FUNCTION operation_.begin_visit_() OWNER TO postgres;
 
 --
+-- Name: cancel_user_invite_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.cancel_user_invite_(_invite_uuid uuid) RETURNS application_.user_invite_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _user_invite application_.user_invite_;
+  _arg RECORD;
+BEGIN
+  SELECT _invite_uuid invite_uuid_, agency_uuid_ INTO _arg
+  FROM application_.user_invite_
+  WHERE uuid_ = _invite_uuid;
+  PERFORM security_.control_operation_('cancel_user_invite_', _arg);
+
+  IF NOT EXISTS (
+    SELECT u.uuid_
+    FROM security_.user_ u
+    JOIN application_.user_invite_ ui ON u.email_address_ = ui.invitee_email_address_
+    WHERE ui.uuid_ = _invite_uuid
+  ) THEN
+    RAISE 'Invite does not exist.' USING ERRCODE = '20000';
+  END IF;
+
+  UPDATE application_.user_invite_
+  SET
+    status_ = 'cancelled',
+    status_at_ = CURRENT_TIMESTAMP
+  WHERE uuid_ = _invite_uuid
+  RETURNING * INTO _user_invite;
+
+  RETURN _user_invite;
+END
+$$;
+
+
+ALTER FUNCTION operation_.cancel_user_invite_(_invite_uuid uuid) OWNER TO postgres;
+
+--
 -- Name: agency_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
@@ -2830,7 +2869,8 @@ fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00
 48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	2020-03-08 08:44:38.58705+02	00000000-0000-0000-0000-000000000000
+59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+774d34d3-cd48-45ca-8f70-2f54010f5b48	cancel_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2881,7 +2921,8 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_of_user_invite_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 74931d78-6bd6-48c4-a853-1c714b68211e	logged_in_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	2020-03-08 08:44:38.58705+02	00000000-0000-0000-0000-000000000000
+3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f54010f5b48	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -2944,7 +2985,8 @@ fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00
 48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	2020-03-08 08:44:38.58705+02	00000000-0000-0000-0000-000000000000	I
+59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+774d34d3-cd48-45ca-8f70-2f54010f5b48	cancel_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -2995,7 +3037,8 @@ eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-63089487
 630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_of_user_invite_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 74931d78-6bd6-48c4-a853-1c714b68211e	logged_in_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	2020-03-08 08:44:38.58705+02	00000000-0000-0000-0000-000000000000	I
+3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f54010f5b48	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
