@@ -19,14 +19,14 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
     await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
 
     // query agency info
-    const res_a = await client.query('SELECT uuid_ FROM operation_.agency_($1::uuid)', [agencyUuid]);
+    const res_a = await client.query('SELECT uuid_ FROM operation_.query_agency_($1::uuid)', [agencyUuid]);
     if (res_a.rows.length !== 1)
       throw new Error('Agency not found!');
 
     const { name_: agencyName, subdomain_uuid_: subdomainUuid } = res_a.rows[0];
 
     // query subdomain info
-    const res_s = await client.query('SELECT uuid_ FROM operation_.subdomain_($1::uuid)', [subdomainUuid]);
+    const res_s = await client.query('SELECT uuid_ FROM operation_.query_subdomain_($1::uuid)', [subdomainUuid]);
     if (res_s.rows.length !== 1)
       throw new Error('Subdomain not found!');
 
