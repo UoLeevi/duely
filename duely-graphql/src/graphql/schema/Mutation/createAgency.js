@@ -37,7 +37,7 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
 
     // create agency on database
     const res = await client.query('SELECT uuid_ FROM operation_.create_agency_($1::text, $2::text)', [name, subdomain]);
-    const agencyUuid = res.rows[0].uuid_;
+    const agency = res.rows[0];
 
     // create stripe custom account for agency
     let account;
@@ -54,13 +54,13 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
           url: `${subdomain}.duely.app`
         },
         metadata: {
-          agency_uuid_: agencyUuid
+          agency_uuid_: agency.uuid_
         }
       });
 
     } catch (error) {
       // if stripe custom account could not be created, delete agency from database
-      await client.query('SELECT operation_.delete_agency_($1::uuid)', [agencyUuid]);
+      await client.query('SELECT operation_.delete_agency_($1::uuid)', [agency.uuid_]);
       return {
         success: false,
         message: error.message,
@@ -69,7 +69,7 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
     }
 
     // store stripe custom account id to database
-    await client.query('SELECT operation_.create_stripe_account_($1::uuid, $2::text)', [agencyUuid, account.id]);
+    await client.query('SELECT operation_.create_stripe_account_($1::uuid, $2::text)', [agency.uuid_, account.id]);
 
     // create stripe account verification url
     let accountLink;
@@ -86,7 +86,7 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
         // something went wrong during account verification link creation
         success: true,
         message: error.message,
-        agencyUuid,
+        agency,
         type: 'CreateAgencyResult'
       };
     }
@@ -94,7 +94,7 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
     // success
     return {
       success: true,
-      agencyUuid,
+      agency,
       stripeVerificationUrl: accountLink.url,
       type: 'CreateAgencyResult'
     };

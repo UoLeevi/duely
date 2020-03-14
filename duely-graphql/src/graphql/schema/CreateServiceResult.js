@@ -5,10 +5,9 @@ export default {
     type CreateServiceResult implements MutationResult {
       success: Boolean!
       message: String
-      serviceUuid: ID
+      service: Service
     }
   `,
   resolvers: {
-
   }
 };

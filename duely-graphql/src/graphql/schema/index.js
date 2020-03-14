@@ -13,6 +13,7 @@ import CreateAgencyResult from './CreateAgencyResult';
 import CreateServiceResult from './CreateServiceResult';
 import CreateServiceStepResult from './CreateServiceStepResult';
 import Date from './Date';
+import DeclineInviteResult from './DeclineInviteResult';
 import DeleteAgencyResult from './DeleteAgencyResult';
 import DeleteServiceResult from './DeleteServiceResult';
 import DeleteServiceStepResult from './DeleteServiceStepResult';
@@ -57,6 +58,7 @@ export default makeExecutableSchema([
   CreateServiceResult,
   CreateServiceStepResult,
   Date,
+  DeclineInviteResult,
   DeleteAgencyResult,
   DeleteServiceResult,
   DeleteServiceStepResult,

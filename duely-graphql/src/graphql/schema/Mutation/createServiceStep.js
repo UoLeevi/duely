@@ -11,12 +11,12 @@ export default async function createServiceStep(obj, { serviceUuid, name, type, 
 
     // create service step on database
     const res = await client.query('SELECT uuid_ FROM operation_.create_service_step_($1::uuid, $2::text, $3::text, $4::uuid)', [serviceUuid, name, type.toLowerCase(), previousServiceStepUuid]);
-    const serviceStepUuid = res.rows[0].uuid_;
+    const step = res.rows[0];
 
     // success
     return {
       success: true,
-      serviceStepUuid,
+      step,
       type: 'CreateServiceStepResult'
     };
 

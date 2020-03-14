@@ -5,7 +5,7 @@ export default {
     type AcceptInviteResult implements MutationResult {
       success: Boolean!
       message: String
-      inviteUuid: ID
+      invite: Invite
     }
   `,
   resolvers: {

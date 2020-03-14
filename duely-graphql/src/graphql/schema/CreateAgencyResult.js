@@ -5,11 +5,10 @@ export default {
     type CreateAgencyResult implements MutationResult {
       success: Boolean!
       message: String
-      agencyUuid: ID
+      agency: Agency
       stripeVerificationUrl: String
     }
   `,
   resolvers: {
-
   }
 };

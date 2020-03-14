@@ -13,7 +13,7 @@ export default async function acceptInvite(obj, { inviteUuid }, context, info) {
     // success
     return {
       success: true,
-      inviteUuid: res.rows[0].uuid_,
+      invite: res.rows[0],
       type: 'AcceptInviteResult'
     };
 
