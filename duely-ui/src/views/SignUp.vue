@@ -286,8 +286,8 @@ export default {
           uuid
           name
           invitesConnection {
-            cursor
             edges {
+              cursor
               node {
                 uuid
                 status
