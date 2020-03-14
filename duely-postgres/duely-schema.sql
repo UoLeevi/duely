@@ -1702,7 +1702,7 @@ BEGIN
   RETURN QUERY
   SELECT ui.uuid_, ui.agency_uuid_, ui.inviter_uuid_, ui.invitee_email_address_, ui.role_uuid_, ui.status_, ui.status_at_
   FROM application_.user_invite_ ui
-  JOIN security_.user u ON ui.invitee_email_address_ = u.email_address_
+  JOIN security_.user_ u ON ui.invitee_email_address_ = u.email_address_
   WHERE u.uuid_ = _subject_uuid
     AND (_status IS NULL 
      OR ui.status_ = ANY (COALESCE(_status, '{}'::text[])));
@@ -1775,21 +1775,20 @@ CREATE FUNCTION operation_.sign_up_user_(_email_address text, _verification_code
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _email_address_verification_matches integer;
+  _verification_uuid uuid;
   _user security_.user_;
 BEGIN
   PERFORM security_.control_operation_('sign_up_user_');
 
-  DELETE FROM security_.email_address_verification_
-  WHERE started_at_ < (CURRENT_TIMESTAMP - '1 day'::interval);
+  UPDATE security_.email_address_verification_ SET
+    status_ = 'verified',
+    status_at_ = CURRENT_TIMESTAMP
+  WHERE email_address_ = lower(_email_address)
+    AND verification_code_ = _verification_code
+    AND status_ IS NULL
+  RETURNING uuid_ INTO _verification_uuid;
 
-  DELETE FROM security_.email_address_verification_
-    WHERE email_address_ = lower(_email_address)
-      AND verification_code_ = _verification_code;
-
-  GET DIAGNOSTICS _email_address_verification_matches = ROW_COUNT;
-
-  IF _email_address_verification_matches = 0 THEN
+  IF _verification_uuid IS NULL THEN
     RAISE 'No matching email address verification code found: %', lower(_email_address) USING ERRCODE = '20000';
   END IF;
 
@@ -1819,6 +1818,8 @@ CREATE TABLE security_.email_address_verification_ (
     email_address_ text NOT NULL,
     verification_code_ text NOT NULL,
     started_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    status_ text,
+    status_at_ timestamp with time zone,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -2759,6 +2760,8 @@ CREATE TABLE security__audit_.email_address_verification_ (
     email_address_ text,
     verification_code_ text,
     started_at_ timestamp with time zone,
+    status_ text,
+    status_at_ timestamp with time zone,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -2972,6 +2975,8 @@ b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-
 abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f54010f5b48	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 3a2d166a-ec77-4e20-a0b0-97113c4ac3f9	logged_in_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+7352ec5f-f88e-457b-b7b2-9825da15895a	logged_in_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3091,6 +3096,8 @@ b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-
 abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f54010f5b48	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 3a2d166a-ec77-4e20-a0b0-97113c4ac3f9	logged_in_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+7352ec5f-f88e-457b-b7b2-9825da15895a	logged_in_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -4004,13 +4011,6 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_
 
 
 --
--- Name: email_address_verification_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.email_address_verification_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: operation_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -4060,6 +4060,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.policy_as
 
 
 --
+-- Name: email_address_verification_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.email_address_verification_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
 -- Name: subject_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -4078,13 +4085,6 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON security_.subdomain_
 --
 
 CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: email_address_verification_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.email_address_verification_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -4137,6 +4137,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 
 
 --
+-- Name: email_address_verification_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.email_address_verification_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: subject_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -4155,13 +4162,6 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON security_.subdomain_
 --
 
 CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: email_address_verification_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.email_address_verification_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -4214,6 +4214,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 
 
 --
+-- Name: email_address_verification_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.email_address_verification_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: subject_ tr_after_update_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -4232,13 +4239,6 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON security_.subdomain_
 --
 
 CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: email_address_verification_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.email_address_verification_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -4288,6 +4288,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subject_
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.policy_assignment_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: email_address_verification_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.email_address_verification_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
