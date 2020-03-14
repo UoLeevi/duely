@@ -446,7 +446,6 @@ CREATE FUNCTION operation_.accept_user_invite_(_invite_uuid uuid) RETURNS applic
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _invitee_uuid uuid;
   _user_invite application_.user_invite_;
   _arg RECORD;
 BEGIN
@@ -454,7 +453,7 @@ BEGIN
   PERFORM security_.control_operation_('accept_user_invite_', _arg);
 
   IF NOT EXISTS (
-    SELECT u.uuid_ INTO _invitee_uuid
+    SELECT 1
     FROM security_.user_ u
     JOIN application_.user_invite_ ui ON u.email_address_ = ui.invitee_email_address_
     WHERE ui.uuid_ = _invite_uuid
@@ -469,10 +468,11 @@ BEGIN
   WHERE uuid_ = _invite_uuid
   RETURNING * INTO _user_invite;
 
-  INSERT INTO security_.subject_assingment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
-  SELECT ui.uuid_, a.subdomain_uuid_, _invitee_uuid
-  FROM _user_invite ui
-  JOIN application_.agency_ a ON a.uuid_ = ui.agency_uuid_;
+  INSERT INTO security_.subject_assignment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
+  SELECT _user_invite.role_uuid_, a.subdomain_uuid_, u.uuid_
+  FROM security_.user_ u
+  JOIN application_.agency_ a ON a.uuid_ = _user_invite.agency_uuid_
+  WHERE u.email_address_ = _user_invite.invitee_email_address_;
 
   RETURN _user_invite;
 END
@@ -835,7 +835,6 @@ CREATE FUNCTION operation_.decline_user_invite_(_invite_uuid uuid) RETURNS appli
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _invitee_uuid uuid;
   _user_invite application_.user_invite_;
   _arg RECORD;
 BEGIN
@@ -843,7 +842,7 @@ BEGIN
   PERFORM security_.control_operation_('decline_user_invite_', _arg);
 
   IF NOT EXISTS (
-    SELECT u.uuid_ INTO _invitee_uuid
+    SELECT u.uuid_
     FROM security_.user_ u
     JOIN application_.user_invite_ ui ON u.email_address_ = ui.invitee_email_address_
     WHERE ui.uuid_ = _invite_uuid

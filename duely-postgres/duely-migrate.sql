@@ -14,43 +14,70 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CALL internal_.drop_auditing_('security_.email_address_verification_');
-ALTER TABLE security_.email_address_verification_ ADD COLUMN status_ text;
-ALTER TABLE security_.email_address_verification_ ADD COLUMN status_at_ timestamp with time zone;
-CALL internal_.setup_auditing_('security_.email_address_verification_');
 
-CREATE OR REPLACE FUNCTION operation_.sign_up_user_(_email_address text, _verification_code text, _name text, _password text) RETURNS security_.user_
+CREATE OR REPLACE FUNCTION operation_.accept_user_invite_(_invite_uuid uuid) RETURNS application_.user_invite_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _verification_uuid uuid;
-  _user security_.user_;
+  _user_invite application_.user_invite_;
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('sign_up_user_');
+  SELECT _invite_uuid invite_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('accept_user_invite_', _arg);
 
-  UPDATE security_.email_address_verification_ SET
-    status_ = 'verified',
-    status_at_ = CURRENT_TIMESTAMP
-  WHERE email_address_ = lower(_email_address)
-    AND verification_code_ = _verification_code
-    AND status_ IS NULL
-  RETURNING uuid_ INTO _verification_uuid;
-
-  IF _verification_uuid IS NULL THEN
-    RAISE 'No matching email address verification code found: %', lower(_email_address) USING ERRCODE = '20000';
+  IF NOT EXISTS (
+    SELECT 1
+    FROM security_.user_ u
+    JOIN application_.user_invite_ ui ON u.email_address_ = ui.invitee_email_address_
+    WHERE ui.uuid_ = _invite_uuid
+  ) THEN
+    RAISE 'Invite does not exist.' USING ERRCODE = '20000';
   END IF;
 
-  WITH _subject AS (
-    INSERT INTO security_.subject_ (name_, type_)
-    VALUES (_name, 'user')
-    RETURNING uuid_
-  )
-  INSERT INTO security_.user_ (uuid_, email_address_, password_hash_)
-  SELECT s.uuid_, lower(_email_address), pgcrypto_.crypt(_password, pgcrypto_.gen_salt('md5'))
-  FROM _subject s
-  RETURNING * INTO _user;
+  UPDATE application_.user_invite_
+  SET
+    status_ = 'accepted',
+    status_at_ = CURRENT_TIMESTAMP
+  WHERE uuid_ = _invite_uuid
+  RETURNING * INTO _user_invite;
 
-  RETURN _user;
+  INSERT INTO security_.subject_assignment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
+  SELECT _user_invite.role_uuid_, a.subdomain_uuid_, u.uuid_
+  FROM security_.user_ u
+  JOIN application_.agency_ a ON a.uuid_ = _user_invite.agency_uuid_
+  WHERE u.email_address_ = _user_invite.invitee_email_address_;
+
+  RETURN _user_invite;
+END
+$$;
+
+CREATE OR REPLACE FUNCTION operation_.decline_user_invite_(_invite_uuid uuid) RETURNS application_.user_invite_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _user_invite application_.user_invite_;
+  _arg RECORD;
+BEGIN
+  SELECT _invite_uuid invite_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('decline_user_invite_', _arg);
+
+  IF NOT EXISTS (
+    SELECT u.uuid_
+    FROM security_.user_ u
+    JOIN application_.user_invite_ ui ON u.email_address_ = ui.invitee_email_address_
+    WHERE ui.uuid_ = _invite_uuid
+  ) THEN
+    RAISE 'Invite does not exist.' USING ERRCODE = '20000';
+  END IF;
+
+  UPDATE application_.user_invite_
+  SET
+    status_ = 'declined',
+    status_at_ = CURRENT_TIMESTAMP
+  WHERE uuid_ = _invite_uuid
+  RETURNING * INTO _user_invite;
+
+  RETURN _user_invite;
 END
 $$;
 
