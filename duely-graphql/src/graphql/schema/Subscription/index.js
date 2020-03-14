@@ -1,6 +1,7 @@
 import { agencyCreated, agencyUpdated, agencyDeleted } from './agencySubscriptions';
 import { serviceCreated, serviceUpdated, serviceDeleted } from './serviceSubscriptions';
 import { serviceStepCreated, serviceStepUpdated, serviceStepDeleted } from './serviceStepSubscriptions';
+import { inviteCreated, inviteUpdated, inviteDeleted } from './inviteSubscriptions';
 
 export default {
   typeDef: `
@@ -14,6 +15,9 @@ export default {
       serviceStepCreated: ServiceStep!
       serviceStepUpdated(serviceStepUuids: [ID!]!): ServiceStep!
       serviceStepDeleted(serviceStepUuids: [ID!]!): ID!
+      inviteCreated: Invite!
+      inviteUpdated(inviteUuids: [ID!]!): Invite!
+      inviteDeleted(inviteUuids: [ID!]!): ID!
     }
   `,
   resolvers: {
@@ -26,7 +30,10 @@ export default {
       serviceDeleted,
       serviceStepCreated,
       serviceStepUpdated,
-      serviceStepDeleted
+      serviceStepDeleted,
+      inviteCreated,
+      inviteUpdated,
+      inviteDeleted
     }
   }
 };
