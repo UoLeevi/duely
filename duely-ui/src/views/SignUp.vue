@@ -241,7 +241,9 @@ export default {
 
       // accept invite from the agency
       if (this.inviteUuid === null) {
-        const invite = this.me.invitesConnection.edges.find(edge => edge.node.agency.uuid === this.agency.uuid && edge.node.status === null);
+        const invite = this.me.invitesConnection.edges
+          .map(edge => edge.node)
+          .find(invite => invite.agency.uuid === this.agency.uuid && invite.status === null);
 
         if (!invite) {
           this.$router.push({ path: '/' });
@@ -257,7 +259,10 @@ export default {
           acceptInvite(inviteUuid: $inviteUuid) {
             success
             message
-            inviteUuid
+            invite {
+              uuid
+              status
+            }
           }
         }`,
         variables: {

@@ -92,7 +92,9 @@ export default {
             CreateServiceStep(agencyUuid: $agencyUuid, name: $name, type: $type) {
               success
               message
-              serviceUuid
+              step {
+                uuid
+              }
             }
           }`,
           variables: {

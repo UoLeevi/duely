@@ -9,8 +9,17 @@
           <AgencyCard v-for="agency in agencies.filter(agency => agency.roles.includes('agent'))" :key="agency.uuid" :agency="agency" />
         </div>
       </div>
-      <div class="d-flex flex-row mt-2" v-if="agencies.filter(agency => agency.roles.includes('client')).length > 0">
+      <div class="d-flex flex-column mt-2" v-if="agencies.filter(agency => agency.roles.includes('client')).length > 0">
         <b :class="`f-4`">Agencies you work with</b>
+        <div class="d-flex flex-row flex-wrap mb-4">
+          <AgencyCard v-for="agency in agencies.filter(agency => agency.roles.includes('client'))" :key="agency.uuid" :agency="agency" />
+        </div>
+      </div>
+      <div class="d-flex flex-column mt-2" v-if="invites.length > 0">
+        <b :class="`f-4`">Invites from agencies</b>
+        <div class="d-flex flex-row flex-wrap mb-4">
+          <AgencyCard v-for="invite in invites" :key="invite.uuid" :agency="invite.agency" :invite="invite" />
+        </div>
       </div>
     </template>
   </section>
@@ -30,6 +39,11 @@ export default {
         ...edge.node,
         roles: edge.roles
       }));
+    },
+    invites() {
+      return this.me.invitesConnection.edges
+        .map(edge => edge.node)
+        .filter(invite => invite.status === null);
     }
   },
   apollo : {
@@ -71,6 +85,22 @@ export default {
                   colorSurface
                   colorError
                   colorSuccess
+                }
+              }
+            }
+          }
+          invitesConnection {
+            edges {
+              node {
+                uuid
+                status
+                agency {
+                  uuid
+                  name
+                  subdomain {
+                    uuid
+                    name
+                  }
                 }
               }
             }

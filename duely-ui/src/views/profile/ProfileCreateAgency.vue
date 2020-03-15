@@ -124,7 +124,9 @@ export default {
             createAgency(name: $name, subdomain: $subdomain, countryCode: $countryCode, returnUrl: $returnUrl) {
               success
               message
-              agencyUuid
+              agency {
+                uuid
+              }
               stripeVerificationUrl
             }
           }`,

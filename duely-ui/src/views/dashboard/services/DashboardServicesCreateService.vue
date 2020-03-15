@@ -65,7 +65,9 @@ export default {
             createService(agencyUuid: $agencyUuid, name: $name) {
               success
               message
-              serviceUuid
+              service {
+                uuid
+              }
             }
           }`,
           variables: {

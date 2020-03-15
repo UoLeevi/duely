@@ -197,7 +197,7 @@ export default {
           }`,
           updateQuery: ({ agency }, { subscriptionData }) => {
             const service = subscriptionData.data.serviceCreated;
-            agency.servicesConnection.edges.push({ cursor: null, node: service, __typename: 'agencyServicesEdge' });
+            agency.servicesConnection.edges.push({ cursor: null, node: service, __typename: 'AgencyServicesEdge' });
             return { agency };
           }
         },

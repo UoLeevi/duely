@@ -57,19 +57,33 @@ export default {
 }
 
 .v-avatar {
+  overflow: visible;
   transition: box-shadow 300ms;
 }
 
-.btn-square.notification .v-avatar::before {
+.btn-square .v-avatar::before {
   position: absolute;
-  top: -0.3rem;
-  right: -0.3rem;
+  top: -0.15rem;
+  right: -0.15rem;
   content: ' ';
-  width: 0.8rem;
-  height: 0.8rem;
+  width: 0;
+  height: 0;
+  background-color: transparent;
   border-radius: 50%;
+  transition: box-shadow 300ms, background-color 300ms, width 300ms, height 300ms;
+}
+
+.btn-square.notification .v-avatar::before {
   background-color: var(--v-surface-lighten5);
+  width: 0.6rem;
+  height: 0.6rem;
   box-shadow: 0px 0px 0px 0.2rem var(--v-surface-darken2);
+}
+
+.btn-square.notification:not(.route-matches):not(.selected):not(.router-link-exact-active):hover .v-avatar::before {
+  box-shadow: 0px 0px 0px 0.15rem var(--v-surface-darken2);
+  width: 0.55rem;
+  height: 0.55rem;
 }
 
 .btn-square.route-matches > .v-avatar,

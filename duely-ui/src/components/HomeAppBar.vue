@@ -82,17 +82,18 @@ export default {
           }
         }`,
         update: async (store, { data: { logOut } }) => {
-          if (logOut.success)
-          {
+          if (logOut.success) {
             localStorage.removeItem('user-jwt');
-            await this.$apollo.provider.defaultClient.clearStore();
-            await this.$apollo.queries.me.refetch();
-          }
-          else
+          } else {
             /* eslint-disable */
             console.log(logOut.message);
+            return;
+          }
         }
       });
+
+      await this.$apollo.provider.defaultClient.clearStore();
+      await this.$apollo.queries.me.refetch();
     }
   },
   apollo : {

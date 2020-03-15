@@ -134,7 +134,9 @@ export default {
             createServiceStep(serviceUuid: $serviceUuid, name: $name, type: $type, previousServiceStepUuid: $previousServiceStepUuid) {
               success
               message
-              serviceStepUuid
+              step {
+                uuid
+              }
             }
           }`,
           variables: {

@@ -3,7 +3,7 @@
     <v-progress-circular v-if="$apollo.queries.me.loading" indeterminate />
     <template v-else>
       <div class="text-center">
-        <b class="f-8">Hi {{ me.name }}</b>
+        <b class="f-8">Hi, {{ me.name }}</b>
         <p class="f-3 surface--text">Welcome back to duely, we missed you!</p>
       </div>
     </template>
@@ -19,22 +19,6 @@ export default {
       me {
         uuid
         name
-        invitesConnection {
-          edges {
-            node {
-              uuid
-              status
-              agency {
-                uuid
-                name
-                subdomain {
-                  uuid
-                  name
-                }
-              }
-            }
-          }
-        }
       }
     }`
   }
