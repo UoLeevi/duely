@@ -69,6 +69,11 @@ export default {
         this.$emit('dialog:update', v);
       }
     }
+  },
+  watch: {
+    dialog(v) {
+      this.c_dialog = v;
+    }
   }
 }
 </script>

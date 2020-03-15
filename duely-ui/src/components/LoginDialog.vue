@@ -119,8 +119,8 @@ export default {
             variables: {
               inviteUuid: this.inviteUuid
             },
-            update: async ({ data: { acceptInvite } }) => {
-            if (acceptInvite.success) {
+            update: async (store, { data: { acceptInvite } }) => {
+              if (acceptInvite.success) {
                 this.$router.push({ path: '/my-dashboard' });
                 this.loading = false;
                 return;
