@@ -3,7 +3,7 @@ import { pool } from '../../db';
 export default {
   typeDef: `
     interface Connection {
-      edges: [Edge!]!
+      edges(uuids: [ID!]): [Edge!]!
     }
   `,
   resolvers: {
