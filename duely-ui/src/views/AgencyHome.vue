@@ -91,10 +91,11 @@ export default {
       }
     },
     agencyRoles: {
-      query: gql`query($agencyUuids: ID!) {
+      query: gql`query($agencyUuids: [ID!]) {
         me {
           uuid
           name
+          type
           agenciesConnection {
             edges(uuids: $agencyUuids) {
               node {
@@ -110,7 +111,7 @@ export default {
           agencyUuids: this.agency.uuid ? [this.agency.uuid] : null
         };
       },
-      update ({ me } ) {
+      update({ me } ) {
         if (me.type === 'visitor' || this.agency === null)
           return [];
 
@@ -118,7 +119,7 @@ export default {
 
         return edge ? edge.roles : [];
       },
-      skip () {
+      skip() {
         return this.$apollo.queries.session.loading
           || this.$apollo.queries.agency.loading;
       }
