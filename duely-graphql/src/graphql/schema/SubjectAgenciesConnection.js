@@ -24,8 +24,13 @@ export default {
           const params = [connection.subjectUuid];
 
           if (uuids != null) {
-            sql += ' WHERE uuid_ = ANY ($2::uuid[])';
-            params.push(uuids);
+            if (uuids.length === 1) {
+              sql = 'SELECT * FROM operation_.query_shared_agency_($1::uuid, $2::uuid)';
+              params.push(uuids[0]);
+            } else {
+              sql += ' WHERE uuid_ = ANY ($2::uuid[])';
+              params.push(uuids);
+            }
           }
 
           const res = await client.query(sql, params);
