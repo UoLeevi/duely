@@ -1,5 +1,5 @@
 <template>
-  <section class="profile-create-agency">
+  <section class="create-agency">
     <h2 class="f-5b">Create new agency</h2>
     <v-stepper v-model="step" vertical class="elevation-0" :style="{'max-width': '600px', 'background-color': colorHex('background lighten-5')}">
 
@@ -24,7 +24,7 @@
           </v-expand-transition>
           <v-row class="ml-3 mt-1 mb-1">
             <v-btn depressed rounded :loading="forms.createAgencyStep1.loading" :disabled="!forms.createAgencyStep1.valid" type="submit" color="primary" class="text-none mr-4" >Continue</v-btn>
-            <v-btn text depressed rounded class="text-none" to="/profile">Cancel</v-btn>
+            <v-btn text depressed rounded class="text-none" to="/profile/agencies">Cancel</v-btn>
           </v-row>
         </v-form>
         <v-dialog v-model="tos" width="70%" content-class="rounded-corners">
@@ -159,7 +159,7 @@ export default {
 </script>
 
 <style scoped>
-.profile-create-agency {
+.create-agency {
   width: 100%;
 }
 </style>

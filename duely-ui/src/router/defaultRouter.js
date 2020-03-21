@@ -6,7 +6,8 @@ import Profile from '@/views/profile';
 import ProfileHome from '@/views/profile/ProfileHome';
 import ProfileSettings from '@/views/profile/ProfileSettings';
 import ProfileAgencies from '@/views/profile/agencies';
-import ProfileCreateAgency from '@/views/profile/ProfileCreateAgency';
+import ProfileAgenciesHome from '@/views/profile/agencies/AgenciesHome';
+import CreateAgency from '@/views/profile/agencies/CreateAgency';
 import { client, gql } from '@/apollo';
 
 Vue.use(Router);
@@ -37,6 +38,19 @@ const router = new Router({
       }
     },
     {
+      path: '/my-dashboard',
+      beforeEnter(to, from, next) {
+        const access_token = localStorage.getItem('user-jwt');
+
+        if (access_token)
+          location.href = process.env.NODE_ENV === 'production'
+            ? `https://${to.query.subdomain}.duely.app/my-dashboard?access_token=${access_token}`
+            : `${window.location.origin}/my-dashboard?subdomain=${to.query.subdomain}`;
+        else
+          next('/');
+      }
+    },
+    {
       path: '/profile',
       component: Profile,
       children: [
@@ -50,11 +64,17 @@ const router = new Router({
         },
         {
           path: 'agencies',
-          component: ProfileAgencies
-        },
-        {
-          path: 'create-agency',
-          component: ProfileCreateAgency
+          component: ProfileAgencies,
+          children: [
+            {
+              path: '',
+              component: ProfileAgenciesHome
+            },
+            {
+              path: 'create-agency',
+              component: CreateAgency
+            }
+          ]
         }
       ],
       async beforeEnter(to, from, next) {
@@ -74,6 +94,6 @@ const router = new Router({
       }
     }
   ]
-})
+});
 
 export default router;

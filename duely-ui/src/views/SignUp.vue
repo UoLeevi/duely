@@ -82,7 +82,12 @@
 <script>
 import { gql } from '@/apollo';
 
+import NarrowLayout from '@/layouts/NarrowLayout';
+
 export default {
+  components: {
+    NarrowLayout
+  },
   data() {
     return {
       inviteUuid: this.$route.query.invite !== undefined ? decodeURIComponent(this.$route.query.invite) : null,

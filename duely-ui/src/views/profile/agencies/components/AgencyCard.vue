@@ -1,10 +1,15 @@
 <template>
   <v-card :color="backgroundColor" dark width="200" class="rounded-corners-tiny pa-1 ma-4 elevation-6">
-    <router-link :to="`/dashboard?subdomain=${agency.subdomain.name}`">
+    <router-link :to="url">
       <v-img v-if="agency.theme && agency.theme.imageLogo" contain :src="agency.theme.imageLogo.data" height="100px" class="mb-n5" />
       <v-card-text>
         <h3 :style="{ 'color': nameColor }" class="f-3b pb-1">{{ agency.name }}</h3>
         <span :style="{ 'color': subdomainNameColor }" class="f-2b">{{ agency.subdomain.name }}.duely.app</span>
+        <div v-if="roles" class="d-flex flex-column mt-1" :style="{ 'color': rolesColor }">
+          <hr class="my-1" style="opacity: 0.2;" />
+          <span class="f-1b mt-1">My roles</span>
+          <span class="f-1 pl-2">{{ roles.join(', ') }}</span>
+        </div>
       </v-card-text>
     </router-link>
     <v-card-actions v-if="invite" class="mt-n2">
@@ -60,9 +65,22 @@ export default {
       uuid
       status
       agency
-    }*/
+    }*/,
+    roles: Array
   },
   computed: {
+    url() {
+      if (!this.roles)
+        return `?subdomain=${this.agency.subdomain.name}`;
+
+      if (this.roles.includes('agent'))
+        return `/dashboard?subdomain=${this.agency.subdomain.name}`;
+
+      if (this.roles.includes('client'))
+        return `/my-dashboard?subdomain=${this.agency.subdomain.name}`;
+
+      throw new Error("Unexpected 'roles' value");
+    },
     backgroundColor() {
       return this.agency.theme
         ? this.chooseContrastingColor(
@@ -103,6 +121,23 @@ export default {
             this.backgroundColor,
             this.colorHex('secondary'),
             this.colorHex('accent'),
+            '#FFFFFF',
+            '#000000'
+          );
+    },
+    rolesColor() {
+      return this.agency.theme
+        ? this.chooseContrastingColor(
+            this.backgroundColor,
+            this.agency.theme.colorAccent,
+            this.agency.theme.colorSecondary,
+            '#FFFFFF',
+            '#000000'
+          )
+        : this.chooseContrastingColor(
+            this.backgroundColor,
+            this.colorHex('accent'),
+            this.colorHex('secondary'),
             '#FFFFFF',
             '#000000'
           );

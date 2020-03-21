@@ -1,9 +1,8 @@
 <template>
   <ProfileLayout>
     <template #menu>
-      <BtnSquare v-bind="items.agencies" :small="$vuetify.breakpoint.xs" :notification="!$apollo.queries.me.loading && me.invitesConnection.edges.length !== 0" :class="{ 'py-2': !$vuetify.breakpoint.xs }" />
-      <BtnSquare v-bind="items.createAgency" :small="$vuetify.breakpoint.xs" :class="{ 'py-2': !$vuetify.breakpoint.xs }" />
-      <BtnSquare v-bind="items.settings" :small="$vuetify.breakpoint.xs" :class="{ 'py-2': !$vuetify.breakpoint.xs }" />
+      <SquareBtn v-bind="items.agencies" :small="$vuetify.breakpoint.xs" :notification="!$apollo.queries.me.loading && me.invitesConnection.edges.some(edge => edge.node.status === null)" :class="{ 'py-2': !$vuetify.breakpoint.xs }" />
+      <SquareBtn v-bind="items.settings" :small="$vuetify.breakpoint.xs" :class="{ 'py-2': !$vuetify.breakpoint.xs }" />
     </template>
     <v-fade-transition mode="out-in">
       <router-view />
@@ -15,12 +14,12 @@
 import { gql } from '@/apollo';
 
 import ProfileLayout from './layouts/ProfileLayout';
-import BtnSquare from '@/components/BtnSquare';
+import SquareBtn from '@/components/SquareBtn';
 
 export default {
   components: {
     ProfileLayout,
-    BtnSquare
+    SquareBtn
   },
   data() {
     return {
@@ -30,12 +29,6 @@ export default {
           color: 'blue',
           text: 'Agencies',
           icon: 'home'
-        },
-        createAgency: {
-          to: '/profile/create-agency',
-          color: 'green',
-          text: 'Create agency',
-          icon: 'add'
         },
         settings: {
           to: '/profile/settings',

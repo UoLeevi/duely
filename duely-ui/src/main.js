@@ -5,7 +5,6 @@ import vutil from '@/plugins/vutil';
 import App from '@/App.vue';
 import subdomainRouter from '@/router/subdomainRouter';
 import defaultRouter from '@/router/defaultRouter';
-import '@/layouts';
 import '@/registerServiceWorker';
 
 Vue.config.productionTip = false;

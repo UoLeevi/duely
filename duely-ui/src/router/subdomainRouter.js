@@ -15,6 +15,12 @@ import DashboardUsersClients from '@/views/dashboard/users/DashboardUsersClients
 import DashboardSite from '@/views/dashboard/site';
 import DashboardSiteHome from '@/views/dashboard/site/DashboardSiteHome';
 import DashboardSiteTheme from '@/views/dashboard/site/DashboardSiteTheme';
+import MyDashboard from '@/views/my-dashboard';
+import MyDashboardHome from '@/views/my-dashboard/MyDashboardHome';
+import MyDashboardPayments from '@/views/my-dashboard/MyDashboardPayments';
+import MyDashboardServices from '@/views/my-dashboard/services';
+import MyDashboardServicesHome from '@/views/my-dashboard/services/MyDashboardServicesHome';
+import MyDashboardServicesService from '@/views/my-dashboard/services/service';
 import { client, gql } from '@/apollo';
 
 Vue.use(Router);
@@ -216,6 +222,8 @@ const router = new Router({
           return
         }
 
+        const userUuid = res.data.me.uuid;
+
         res = await client.query({
           query: gql`query {
             session @client {
@@ -234,18 +242,119 @@ const router = new Router({
         const subdomainName = res.data.session.subdomainName;
         
         res = await client.query({
-          query: gql`query($subdomainName: String) {
+          query: gql`query($subdomainName: String, $subjectUuids: [ID!]) {
             agency(subdomainName: $subdomainName) {
               uuid
               name
+              subjectsConnection {
+                edges(uuids: $subjectUuids) {
+                  roles
+                }
+              }
             }
           }`,
           variables: {
-            subdomainName
+            subdomainName,
+            subjectUuids: [userUuid]
           }
         });
 
-        if (res.data.agency === null) {
+        const agency = res.data.agency;
+
+        if (agency === null || !agency.subjectsConnection.edges.some(edge => edge.roles.includes('agent'))) {
+          next(location.href = process.env.NODE_ENV === 'production'
+            ? `https://duely.app`
+            : `${window.location.origin}`);
+          return;
+        }
+
+        next();
+      }
+    },
+    {
+      path: '/my-dashboard',
+      component: MyDashboard,
+      children: [
+        {
+          path: '',
+          component: MyDashboardHome
+        },
+        {
+          path: 'payments',
+          component: MyDashboardPayments
+        },
+        {
+          path: 'services',
+          components: {
+            default: MyDashboardServices
+          },
+          children: [
+            {
+              path: '',
+              component: MyDashboardServicesHome
+            },
+            {
+              path: ':uuid',
+              component: MyDashboardServicesService
+            }
+          ]
+        }
+      ],
+      async beforeEnter(to, from, next) {
+        let res = await client.query({
+          query: gql`query {
+            me {
+              uuid
+              type
+            }
+          }`
+        });
+
+        if (res.data.me.type !== 'user') {
+          next('?login');
+          return
+        }
+
+        const userUuid = res.data.me.uuid;
+
+        res = await client.query({
+          query: gql`query {
+            session @client {
+              subdomainName
+            }
+          }`
+        });
+
+        if (res.data.session.subdomainName === null) {
+          next(location.href = process.env.NODE_ENV === 'production'
+            ? `https://duely.app`
+            : `${window.location.origin}`);
+          return;
+        }
+
+        const subdomainName = res.data.session.subdomainName;
+        
+        res = await client.query({
+          query: gql`query($subdomainName: String, $subjectUuids: [ID!]) {
+            agency(subdomainName: $subdomainName) {
+              uuid
+              name
+              subjectsConnection {
+                edges(uuids: $subjectUuids) {
+                  roles
+                }
+              }
+            }
+          }`,
+          variables: {
+            subdomainName,
+            subjectUuids: [userUuid]
+          }
+        });
+
+        const agency = res.data.agency;
+
+        if (agency === null || !agency.subjectsConnection.edges.some(edge => edge.roles.includes('client'))) {
           next(location.href = process.env.NODE_ENV === 'production'
             ? `https://duely.app`
             : `${window.location.origin}`);

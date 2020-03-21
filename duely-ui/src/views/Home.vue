@@ -169,10 +169,12 @@
 </template>
 
 <script>
+import HomeLayout from '@/layouts/HomeLayout';
 import HomeSection from '@/components/HomeSection';
 
 export default {
   components: {
+    HomeLayout,
     HomeSection
   },
   data() {

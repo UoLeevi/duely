@@ -2,10 +2,7 @@
   <v-dialog content-class="rounded-corners" max-width="600px" v-model="c_dialog" @click:outside="$refs.form.reset()">
     <template #activator="activator">
       <slot name="activator" v-bind="activator">
-        <v-btn name="activator" v-on="activator.on" absolute dark large rounded bottom right color="primary" :class="activatorClass">
-          <span class="text-none f-2b">{{ title }}</span>
-          <v-icon v-if="activatorIcon" right>{{ activatorIcon }}</v-icon>
-        </v-btn>
+        <FloatingBtn v-on="activator.on" :class="activatorClass" color="primary" :icon="activatorIcon" :text="title"/>
       </slot>
     </template>
     <v-card flat class="pa-4 rounded-corners">
@@ -28,7 +25,12 @@
 </template>
 
 <script>
+import FloatingBtn from '@/components/FloatingBtn';
+
 export default {
+  components: {
+    FloatingBtn
+  },
   props: {
     dialog: {
       type: Boolean,

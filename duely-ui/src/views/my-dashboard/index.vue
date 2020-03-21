@@ -44,46 +44,22 @@ export default {
     return {
       items: [
         {
-          to: '/dashboard',
+          to: '/my-dashboard',
           color: 'surface darken-1',
           text: 'Dashboard',
           icon: 'home'
         },
         {
-          to: '/dashboard/services',
+          to: '/my-dashboard/services',
           color: 'surface darken-1',
           text: 'Services',
           icon: 'business_center'
         },
         {
-          to: '/dashboard/payments',
+          to: '/my-dashboard/payments',
           color: 'surface darken-1',
           text: 'Payments',
           icon: 'attach_money'
-        },
-        {
-          to: '/dashboard/users',
-          color: 'surface darken-1',
-          text: 'Users',
-          icon: 'group',
-          items: [
-            {
-              to: '/dashboard/users/clients',
-              text: 'Clients'
-            }
-          ]
-        },
-        {
-          to: '/dashboard/site',
-          color: 'surface darken-1',
-          text: 'Site',
-          icon: 'web',
-          items: [
-            {
-              to: '/dashboard/site/theme',
-              text: 'Theme'
-            }
-          ]
         },
         {
           to: '/profile',
@@ -131,7 +107,7 @@ export default {
             colorSuccess
           }
           servicesConnection {
-            edges {
+            edges(status: "live") {
               cursor
               node {
                 uuid
@@ -142,17 +118,6 @@ export default {
                   name
                   type
                 }
-              }
-            }
-          }
-          subjectsConnection {
-            edges {
-              cursor
-              roles
-              node {
-                uuid
-                name
-                emailAddress
               }
             }
           }

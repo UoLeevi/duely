@@ -18,11 +18,13 @@
 
 <script>
 import { gql } from '@/apollo';
+import HomeLayout from '@/layouts/HomeLayout';
 import HomeAppBar from '@/components/HomeAppBar';
 import HomeSection from '@/components/HomeSection';
 
 export default {
   components: {
+    HomeLayout,
     HomeAppBar,
     HomeSection
   },
@@ -89,12 +91,12 @@ export default {
       }
     },
     agencyRoles: {
-      query: gql`query {
+      query: gql`query($agencyUuids: ID!) {
         me {
           uuid
           name
           agenciesConnection {
-            edges {
+            edges(uuids: $agencyUuids) {
               node {
                 uuid
               }
@@ -103,6 +105,11 @@ export default {
           }
         }
       }`,
+      variables() {
+        return {
+          agencyUuids: this.agency.uuid ? [this.agency.uuid] : null
+        };
+      },
       update ({ me } ) {
         if (me.type === 'visitor' || this.agency === null)
           return [];
