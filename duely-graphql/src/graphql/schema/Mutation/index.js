@@ -12,6 +12,7 @@ import createService from './createService';
 import createServiceStep from './createServiceStep';
 import editAgencyTheme from './editAgencyTheme';
 import editImage from './editImage';
+import editService from './editService';
 import deleteAgency from './deleteAgency';
 import deleteService from './deleteService';
 import deleteServiceStep from './deleteServiceStep';
@@ -33,6 +34,7 @@ export default {
       createServiceStep(serviceUuid: ID!, name: String!, type: ServiceStepType!, previousServiceStepUuid: ID): CreateServiceStepResult!
       editAgencyTheme(agencyUuid: ID!, imageLogoUuid: ID, imageHeroUuid: ID, colorPrimary: String!, colorSecondary: String!, colorAccent: String!, colorBackground: String!, colorSurface: String!, colorError: String!, colorSuccess: String!): EditAgencyThemeResult!
       editImage(agencyUuid: ID!, imageName: String!, imageData: String!, imageColor: String!): EditImageResult!
+      editService(serviceUuid: ID!, name: String!, description: String, duration: String, price: Int, currency: String, imageLogoUuid: ID, imageHeroUuid: ID): EditServiceResult!
       deleteAgency(agencyUuid: ID!): DeleteAgencyResult!
       deleteService(serviceUuid: ID!): DeleteServiceResult!
       deleteServiceStep(serviceStepUuid: ID!): DeleteServiceStepResult!
@@ -54,6 +56,7 @@ export default {
       createService,
       editAgencyTheme,
       editImage,
+      editService,
       deleteAgency,
       deleteService,
       deleteServiceStep

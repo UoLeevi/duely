@@ -63,13 +63,13 @@ export default async function editAgencyTheme(obj, { agencyUuid, imageLogoUuid, 
     await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
 
     // create or update theme on database
-    const res = await client.query('SELECT uuid_ FROM operation_.edit_agency_theme_($1::uuid, $2::uuid, $3::uuid, $4::text, $5::text, $6::text, $7::text, $8::text, $9::text, $10::text)', [agencyUuid, imageLogoUuid, imageHeroUuid, colorPrimary, colorSecondary, colorAccent, colorBackground, colorSurface, colorError, colorSuccess]);
-    const themeUuid = res.rows[0].uuid_;
+    const res = await client.query('SELECT * FROM operation_.edit_agency_theme_($1::uuid, $2::uuid, $3::uuid, $4::text, $5::text, $6::text, $7::text, $8::text, $9::text, $10::text)', [agencyUuid, imageLogoUuid, imageHeroUuid, colorPrimary, colorSecondary, colorAccent, colorBackground, colorSurface, colorError, colorSuccess]);
+    const theme = res.rows[0];
 
     // success
     return {
       success: true,
-      themeUuid,
+      theme,
       type: 'EditAgencyThemeResult'
     };
 

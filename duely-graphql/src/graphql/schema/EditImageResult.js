@@ -5,7 +5,7 @@ export default {
     type EditImageResult implements MutationResult {
       success: Boolean!
       message: String
-      imageUuid: ID
+      image: Image
     }
   `,
   resolvers: {

@@ -20,6 +20,7 @@ import DeleteServiceStepResult from './DeleteServiceStepResult';
 import Edge from './Edge';
 import EditAgencyThemeResult from './EditAgencyThemeResult';
 import EditImageResult from './EditImageResult';
+import EditServiceResult from './EditServiceResult';
 import EndVisitResult from './EndVisitResult';
 import Image from './Image';
 import Invite from './Invite';
@@ -65,6 +66,7 @@ export default makeExecutableSchema([
   Edge,
   EditAgencyThemeResult,
   EditImageResult,
+  EditServiceResult,
   EndVisitResult,
   Image,
   Invite,

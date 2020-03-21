@@ -29,13 +29,13 @@ export default async function editImage(obj, { agencyUuid, imageName, imageData,
     await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
 
     // create or update theme on database
-    const res = await client.query('SELECT uuid_ FROM operation_.edit_image_($1::uuid, $2::text, $3::text, $4::text)', [agencyUuid, imageName, imageData, imageColor]);
-    const imageUuid = res.rows[0].uuid_;
+    const res = await client.query('SELECT * FROM operation_.edit_image_($1::uuid, $2::text, $3::text, $4::text)', [agencyUuid, imageName, imageData, imageColor]);
+    const image = res.rows[0];
 
     // success
     return {
       success: true,
-      imageUuid,
+      image,
       type: 'EditImageResult'
     };
 
