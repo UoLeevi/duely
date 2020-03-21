@@ -1548,7 +1548,7 @@ BEGIN
   JOIN security_.subject_assignment_flat_ sa ON u.uuid_ = sa.subject_uuid_
   JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
   JOIN application_.agency_ a ON a.subdomain_uuid_ = sa.subdomain_uuid_
-  JOIN security_.active_role_ ar ON a.subdomain_uuid_ = ar.subdomain_uuid_
+  JOIN security_.active_role_ ar ON a.subdomain_uuid_ = ar.subdomain_uuid_ AND r.uuid_ = ar.uuid_
   LEFT JOIN application_.theme_ t ON a.uuid_ = t.agency_uuid_
   CROSS JOIN security_.active_user_ au
   WHERE u.uuid_ = _subject_uuid

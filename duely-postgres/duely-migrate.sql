@@ -14,32 +14,32 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-DROP FUNCTION operation_.query_agency_user_;
-
-CREATE FUNCTION operation_.query_agency_user_(_agency_uuid uuid, _subject_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text, type_ text, role_names_ text[])
+CREATE OR REPLACE FUNCTION operation_.query_shared_agency_(_subject_uuid uuid, _agency_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, subdomain_uuid_ uuid, theme_uuid_ uuid, role_names_ text[])
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
   _arg RECORD;
+  _info RECORD;
 BEGIN
-  SELECT _agency_uuid agency_uuid_, _subject_uuid subject_uuid_ INTO _arg; 
-  PERFORM security_.control_operation_('query_agency_user_', _arg);
+  SELECT _subject_uuid subject_uuid_, _agency_uuid agency_uuid_ INTO _arg; 
+  PERFORM security_.control_operation_('query_shared_agency_', _arg);
 
   RETURN QUERY
-  SELECT s.uuid_, s.name_, u.email_address_, s.type_, array_remove(array_agg(r.name_), NULL) role_names_
-  FROM application_.agency_ a
-  LEFT JOIN security_.subject_assignment_flat_ sa ON a.subdomain_uuid_ = sa.subdomain_uuid_
-  LEFT JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
-  LEFT JOIN security_.subject_ s ON s.uuid_ = sa.subject_uuid_
-  LEFT JOIN security_.user_ u ON s.uuid_ = u.uuid_
-  WHERE a.uuid_ = _agency_uuid
-    AND (_subject_uuid IS NULL OR _subject_uuid IS NOT DISTINCT FROM s.uuid_)
-  GROUP BY s.uuid_, s.name_, u.email_address_, s.type_;
+  SELECT a.uuid_, a.name_, a.subdomain_uuid_, t.uuid_ theme_uuid_, array_remove(array_agg(r.name_), NULL) role_names_
+  FROM security_.user_ u
+  JOIN security_.subject_assignment_flat_ sa ON u.uuid_ = sa.subject_uuid_
+  JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
+  JOIN application_.agency_ a ON a.subdomain_uuid_ = sa.subdomain_uuid_
+  JOIN security_.active_role_ ar ON a.subdomain_uuid_ = ar.subdomain_uuid_ AND r.uuid_ = ar.uuid_
+  LEFT JOIN application_.theme_ t ON a.uuid_ = t.agency_uuid_
+  CROSS JOIN security_.active_user_ au
+  WHERE u.uuid_ = _subject_uuid
+    AND (ar.name_ = 'agent' OR _subject_uuid = au.uuid_)
+    AND (_agency_uuid IS NULL OR _agency_uuid IS NOT DISTINCT FROM a.uuid_)
+  GROUP BY a.uuid_, a.name_, a.subdomain_uuid_, t.uuid_;
 
 END
 $$;
-
-PERFORM security_.implement_policy_allow_('query_agency_user_', 'subject_is_active_user_');
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
