@@ -1337,16 +1337,16 @@ $$;
 ALTER FUNCTION operation_.query_agency_by_subdomain_name_(_subdomain_name text) OWNER TO postgres;
 
 --
--- Name: query_agency_user_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: query_agency_user_(uuid, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_agency_user_(_agency_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text, type_ text, role_names_ text[])
+CREATE FUNCTION operation_.query_agency_user_(_agency_uuid uuid, _subject_uuid uuid DEFAULT NULL::uuid) RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text, type_ text, role_names_ text[])
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
   _arg RECORD;
 BEGIN
-  SELECT _agency_uuid agency_uuid_ INTO _arg; 
+  SELECT _agency_uuid agency_uuid_, _subject_uuid subject_uuid_ INTO _arg; 
   PERFORM security_.control_operation_('query_agency_user_', _arg);
 
   RETURN QUERY
@@ -1357,13 +1357,14 @@ BEGIN
   LEFT JOIN security_.subject_ s ON s.uuid_ = sa.subject_uuid_
   LEFT JOIN security_.user_ u ON s.uuid_ = u.uuid_
   WHERE a.uuid_ = _agency_uuid
+    AND (_subject_uuid IS NULL OR _subject_uuid IS NOT DISTINCT FROM s.uuid_)
   GROUP BY s.uuid_, s.name_, u.email_address_, s.type_;
 
 END
 $$;
 
 
-ALTER FUNCTION operation_.query_agency_user_(_agency_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION operation_.query_agency_user_(_agency_uuid uuid, _subject_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: query_image_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -2977,6 +2978,7 @@ abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f
 d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 7352ec5f-f88e-457b-b7b2-9825da15895a	logged_in_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+2e761c06-11f7-4cb0-914c-267df87a55d5	subject_is_active_user_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3098,6 +3100,7 @@ abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f
 d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 7352ec5f-f88e-457b-b7b2-9825da15895a	logged_in_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+2e761c06-11f7-4cb0-914c-267df87a55d5	subject_is_active_user_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
