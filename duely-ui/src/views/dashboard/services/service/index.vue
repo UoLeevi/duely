@@ -1,188 +1,253 @@
 <template>
   <section style="width: 100%;">
-    <h2 class="f-5b">{{ $apollo.queries.service.loading ? 'Service...' : service.name }}</h2>
-    <v-progress-circular v-if="$apollo.queries.service.loading" indeterminate />
-    <!-- <v-timeline dense clipped>
-      <v-timeline-item small icon="add" fill-dot></v-timeline-item>
-      <template v-for="step in service ? service.steps : []">
-        <v-timeline-item :key="serviceStep.uuid" :icon="stepIcon(serviceStep.type)" fill-dot>{{ serviceStep.name }}</v-timeline-item>
-        <v-timeline-item small :key="serviceStep.uuid + '_'" icon="add" fill-dot></v-timeline-item>
-      </template>
-    </v-timeline> -->
-    <v-stepper v-if="$vuetify.breakpoint.lgAndUp" v-model="step" class="service-steps elevation-0" alt-labels :style="{ 'background-color': colorHex('background lighten-5')}">
-      <v-stepper-header class="elevation-0">
-        <v-stepper-step step="1" editable complete edit-icon="add" color="background lighten-2" class="add px-0" />
-        <template v-for="(serviceStep, index) in service ? service.steps : []">
-          <v-divider :key="serviceStep.uuid + '__'" />
-          <v-stepper-step :key="serviceStep.uuid" :step="(index + 1) * 2" editable complete :edit-icon="stepIcon(serviceStep.type)" :color="stepColor(serviceStep.type)" class="step px-0">
-            <span class="f-2b text-no-wrap">{{ serviceStep.name }}</span>
-            <span class="f-1b text-no-wrap background--text text--lighten-1">{{ stepTypeName(serviceStep.type) }}</span>
-          </v-stepper-step>
-          <v-divider :key="serviceStep.uuid + '___'" />
-          <v-stepper-step :key="serviceStep.uuid + '_'" :step="(index + 1) * 2 + 1" editable complete edit-icon="add" color="background lighten-2" class="add px-0" />
-        </template>
-      </v-stepper-header>
-      <v-stepper-items class="elevation-0">
-        <CreateServiceStepStepperContent step="1" :service="service" />
-        <template v-for="(serviceStep, index) in service ? service.steps : []">
-          <ServiceStepStepperContent :key="serviceStep.uuid" :step="(index + 1) * 2" :service="service" :serviceStep="serviceStep" />
-          <CreateServiceStepStepperContent :key="serviceStep.uuid + '_'" :step="(index + 1) * 2 + 1" :service="service" :previousServiceStep="serviceStep" />
-        </template>
-      </v-stepper-items>
-    </v-stepper>
-    <v-stepper v-else vertical v-model="step" class="service-steps vertical elevation-0" :style="{ 'background-color': colorHex('background lighten-5')}">
-      <v-stepper-step step="1" editable complete edit-icon="add" color="background lighten-2" class="add">
-        <v-fade-transition>
-          <span v-show="step == 1" class="f-2b text-no-wrap">Create step</span>
-        </v-fade-transition>
-      </v-stepper-step>
-      <CreateServiceStepStepperContent step="1" :service="service" />
-      <template v-for="(serviceStep, index) in service ? service.steps : []">
-        <v-stepper-step :key="serviceStep.uuid" :step="(index + 1) * 2" editable complete :edit-icon="stepIcon(serviceStep.type)" :color="stepColor(serviceStep.type)" class="step">
-          <span class="f-2b text-no-wrap">{{ serviceStep.name }}</span>
-          <span class="f-1b text-no-wrap background--text text--lighten-1">{{ stepTypeName(serviceStep.type) }}</span>
-        </v-stepper-step>
-        <ServiceStepStepperContent :key="serviceStep.uuid + '_'" :step="(index + 1) * 2" :service="service" :serviceStep="serviceStep" />
-        <v-stepper-step :key="serviceStep.uuid + '__'" :step="(index + 1) * 2 + 1" editable complete edit-icon="add" color="background lighten-2" class="add">
-          <v-fade-transition>
-            <span v-show="step == (index + 1) * 2 + 1" class="f-2b text-no-wrap">Create step</span>
-          </v-fade-transition>
-        </v-stepper-step>
-        <CreateServiceStepStepperContent :key="serviceStep.uuid + '___'" :step="(index + 1) * 2 + 1" :service="service" :previousServiceStep="serviceStep" />
-      </template>
-    </v-stepper>
+    <h2 class="f-5b">{{ $apollo.queries.service.loading ? '' : service.name }}</h2>
+    <FormPageRow>
+      <FormPageCell heading="Service name" subheading="Name of the service">
+        <v-text-field v-model="data.name" dense color="surface" background-color="background lighten-5" solo outlined flat single-line rounded label="Name" spellcheck="false" />
+      </FormPageCell>
+    </FormPageRow>
+
+    <FormPageRow>
+      <FormPageCell heading="Description" subheading="More detailed information about the service.">
+        <!-- <MarkdownArea :markdown.sync="data.description" edit /> -->
+        <TextEditor :text="data.description" />
+      </FormPageCell>
+    </FormPageRow>
+
+    <FormPageRow>
+      <FormPageCell heading="Price" subheading="Price and the currency of the service.">
+        <v-text-field v-model="data.price" dense color="surface" background-color="background lighten-5" solo outlined flat single-line rounded class="my-1" label="Price" spellcheck="false" />
+        <v-text-field v-model="data.currency" dense color="surface" background-color="background lighten-5" solo outlined flat single-line rounded class="my-1" label="Currency" spellcheck="false" />
+      </FormPageCell>
+      <FormPageCell heading="Duration" subheading="Total duration of the service delivery.">
+        <v-text-field v-model="data.duration" dense color="surface" background-color="background lighten-5" solo outlined flat single-line rounded class="my-1" label="Duration" spellcheck="false" />
+      </FormPageCell>
+    </FormPageRow>
+
+    <FormPageRow>
+      <FormPageCell heading="Logo image" subheading="Optional logo of your service." column>
+        <v-skeleton-loader v-if="$apollo.queries.service.loading" type="image" height="120px" class="mt-auto mb-4" />
+        <v-img v-else-if="data.imageLogo.data" :src="data.imageLogo.data" contain width="200px" class="py-1 my-auto" />
+        <v-sheet v-else color="background lighten-4" height="120px" :class="`${ data.imageHero.data || data.imageLogo.data ? 'my-auto' : 'mt-auto mb-4' }`" class="d-flex justify-center">
+          <v-icon large color="background lighten-3">image</v-icon>
+        </v-sheet>
+        <v-file-input v-model="data.imageLogo.file" show-size full-width label="Select image file" class="flex-grow-0 my-2 primary--text" :style="{ 'box-sizing': 'border-box' }" accept="image/*" :loading="data.imageLogo.loading" dense filled rounded append-icon="add_photo_alternate" prepend-icon="" />
+      </FormPageCell>
+      <FormPageCell heading="Hero image" subheading="Optional hero image will appear in the top part of the service landing page." column>
+        <v-skeleton-loader v-if="$apollo.queries.service.loading" type="image" height="120px" class="mt-auto mb-4" />
+        <v-img v-else-if="data.imageHero.data" :src="data.imageHero.data" contain class="py-1 my-auto" />
+        <v-sheet v-else color="background lighten-4" height="120px" :class="`${ data.imageHero.data || data.imageLogo.data ? 'my-auto' : 'mt-auto mb-4' }`" class="d-flex justify-center">
+          <v-icon large color="background lighten-3">image</v-icon>
+        </v-sheet>
+        <v-file-input v-model="data.imageHero.file" show-size full-width label="Select image file" class="flex-grow-0 my-2 primary--text" :style="{ 'box-sizing': 'border-box' }" accept="image/*" :loading="data.imageHero.loading" dense filled rounded append-icon="add_photo_alternate" prepend-icon="" />
+      </FormPageCell>
+    </FormPageRow>
+
+    <v-expand-transition>
+      <p class="error--text" v-if="errorMessage">{{ errorMessage }}</p>
+    </v-expand-transition>
+    <v-row class="ml-6 pt-2 pb-1">
+      <v-btn :min-width="100" depressed rounded :loading="loading > 0" @click="submitEditService" color="primary" class="text-none mr-4" >Save</v-btn>
+      <v-btn :min-width="100" text depressed rounded class="text-none" to="/dashboard/services">Cancel</v-btn>
+    </v-row>
   </section>
 </template>
 
 <script>
-import CreateServiceStepStepperContent from './components/CreateServiceStepStepperContent';
-import ServiceStepStepperContent from './components/ServiceStepStepperContent';
-
 import { gql } from '@/apollo';
+//import MarkdownArea from '@/components/MarkdownArea';
+import TextEditor from '@/components/TextEditor';
+import FormPageCell from '@/components/FormPageCell';
+import FormPageRow from '@/components/FormPageRow';
 
 export default {
   components: {
-    CreateServiceStepStepperContent,
-    ServiceStepStepperContent
+    // MarkdownArea,
+    TextEditor,
+    FormPageCell,
+    FormPageRow
   },
   data() {
     return {
-      step: 1,
+      loading: 0,
+      errorMessage: null,
       data: {
         name: '',
-        type: ''
-      },
-      rules: {
-        name: [
-          v => !!v || 'Name is required',
-          v => (v && v.length <= 70) || 'Name must be at most 70 characters'
-        ]
-      },
-      forms: {
-        CreateServiceStep: {
-          errorMessage: null,
-          loading: false,
-          valid: false
-        }
+        description: null,
+        duration: null,
+        price: null,
+        currency: null,
+        imageLogo: { uuid: null, name: 'service-logo', color: null, file: null, data: null, loading: false, errorMessage: null },
+        imageHero: { uuid: null, name: 'service-hero', color: null, file: null, data: null, loading: false, errorMessage: null }
       }
     };
   },
   methods: {
-    stepTypeName(type) {
-      switch (type) {
-        case 'PAYMENT':
-          return 'Payment';
+    async editImage(image) {
+      this.loading++;
+      image.loading = true;
+      await this.$apollo.mutate({
+        mutation: gql`mutation($agencyUuid: ID!, $imageName: String!, $imageData: String!, $imageColor: String!) {
+          editImage(agencyUuid: $agencyUuid, imageName: $imageName, imageData: $imageData, imageColor: $imageColor) {
+            success
+            message
+            image {
+              uuid
+            }
+          }
+        }`,
+        variables: {
+          agencyUuid: this.service !== null ? this.service.agency.uuid : null, 
+          imageName: `${image.name}_${this.service !== null ? this.service.uuid : ''}`,
+          imageData: image.data,
+          imageColor: image.color
+        },
+        update: (store, { data: { editImage } }) => {
+          if (editImage.success)
+            image.uuid = editImage.image.uuid;
+          else
+            image.errorMessage = editImage.message;
 
-        case 'FORM':
-          return 'Form';
-
-        case 'CONFIRMATION_BY_AGENCY':
-          return 'Confirmation by agency';
-
-        case 'DOCUMENT_DELIVERY':
-          return 'Document delivery';
-
-        case 'DOCUMENT_SUBMISSION':
-          return 'Document submission';
-
-        default:
-          return '';
-      }
+          image.loading = false;
+          this.loading--;
+        }
+      });
     },
-    stepIcon(type) {
-      switch (type) {
-        case 'PAYMENT':
-          return 'payment';
+    async submitEditService() {
+      this.errorMessage = null;
+      this.loading++;
 
-        case 'FORM':
-          return 'assignment';
+      try {
+        if (this.data.imageLogo.uuid === null && this.data.imageLogo.data !== null)
+          await this.editImage(this.data.imageLogo);
 
-        case 'CONFIRMATION_BY_AGENCY':
-          return 'assignment_turned_in';
-
-        case 'DOCUMENT_DELIVERY':
-          return 'save_alt';
-
-        case 'DOCUMENT_SUBMISSION':
-          return 'note_add';
-
-        default:
-          return '';
-      }
-    },
-    stepColor(type) {
-      switch (type) {
-        case 'PAYMENT':
-          return 'primary';
-
-        case 'FORM':
-          return 'secondary';
-
-        case 'CONFIRMATION_BY_AGENCY':
-          return 'accent';
-
-        case 'DOCUMENT_DELIVERY':
-          return 'success';
-
-        case 'DOCUMENT_SUBMISSION':
-          return 'accent darken-2';
-
-        default:
-          return '';
-      }
-    },
-    async submitCreateServiceStep() {
-      this.forms.CreateServiceStep.errorMessage = null;
-
-      if (this.$refs.CreateServiceStepForm.validate()) {
-        this.forms.CreateServiceStep.loading = true;
+        if (this.data.imageHero.uuid === null && this.data.imageHero.data !== null)
+          await this.editImage(this.data.imageHero);
 
         await this.$apollo.mutate({
-          mutation: gql`mutation($agencyUuid: ID!, $name: String!, $type: ServiceStepType!) {
-            CreateServiceStep(agencyUuid: $agencyUuid, name: $name, type: $type) {
+          mutation: gql`mutation($serviceUuid: ID!, $name: String!, $description: String, $duration: String, $price: Int, $currency: String, $imageLogoUuid: ID, $imageHeroUuid: ID) {
+            editService(serviceUuid: $serviceUuid, name: $name, description: $description, duration: $duration, price: $price, currency: $currency, imageLogoUuid: $imageLogoUuid, imageHeroUuid: $imageHeroUuid) {
               success
               message
               service {
                 uuid
+                name
+                status
+                description
+                price
+                currency
+                duration
+                steps {
+                  uuid
+                  name
+                  type
+                }
+                imageLogo {
+                  uuid
+                  name
+                  data
+                  color
+                }
+                imageHero {
+                  uuid
+                  name
+                  data
+                  color
+                }
               }
             }
           }`,
           variables: {
-            agencyUuid: this.agency.uuid,
+            serviceUuid: this.service !== null ? this.service.uuid : null,
             name: this.data.name,
-            type: this.data.type
+            description: this.data.description,
+            duration: this.data.duration,
+            price: this.data.price,
+            currency: this.data.currency,
+            imageLogoUuid: this.data.imageLogo.uuid,
+            imageHeroUuid: this.data.imageHero.uuid
           },
-          update: (store, { data: { CreateServiceStep } }) => {
-            if (CreateServiceStep.success) {
-              this.step = 2;
-              this.$router.push({ path: '/dashboard/services' });
+          update: (store, { data: { editService } }) => {
+            if (editService.success) {
+              this.initialTheme = JSON.parse(JSON.stringify(this.$vuetify.theme.currentTheme));
+              this.snackbar = true;
             } else
-              this.forms.CreateServiceStep.errorMessage =
-                CreateServiceStep.message;
+              this.errorMessage = editService.message;
 
-            this.forms.CreateServiceStep.loading = false;
+            this.loading--;
           }
         });
+      } catch (error) {
+          this.errorMessage = error.message;
+          this.loading--;
+      }
+    }
+  },
+  watch: {
+    async 'data.imageLogo.file'(file) {
+      try {
+        this.loading++;
+        this.data.imageLogo.loading = true;
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => { 
+          this.data.imageLogo.data = reader.result;
+          this.data.imageLogo.uuid = null;
+          this.data.imageLogo.error = null;
+          try {
+            this.data.imageLogo.color = await this.estimateImageColor(this.data.imageLogo.data);
+          } catch {
+            this.data.imageLogo.color = '#000000';
+          }
+          this.data.imageLogo.loading = false;
+          this.loading--;
+        };
+        reader.onerror = error => {
+          this.data.imageLogo.uuid = null;
+          this.data.imageLogo.data = null;
+          this.data.imageLogo.loading = false;
+          this.loading--;
+          this.data.imageLogo.error = error.message;
+        };
+      } catch (err) {
+        this.data.imageLogo.uuid = null;
+        this.data.imageLogo.data = null;
+        this.data.imageLogo.loading = false;
+        this.loading--;
+        this.data.imageLogo.error = err.message;
+      }
+    },
+    async 'data.imageHero.file'(file) {
+      try {
+        this.loading++;
+        this.data.imageHero.loading = true;
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => { 
+          this.data.imageHero.data = reader.result;
+          this.data.imageHero.uuid = null;
+          this.data.imageHero.error = null;
+          try {
+            this.data.imageHero.color = await this.estimateImageColor(this.data.imageHero.data);
+          } catch {
+            this.data.imageHero.color = '#000000';
+          }
+          this.data.imageHero.loading = false;
+          this.loading--;
+        };
+        reader.onerror = error => {
+          this.data.imageHero.uuid = null;
+          this.data.imageHero.data = null;
+          this.data.imageHero.loading = false;
+          this.loading--;
+          this.data.imageHero.error = error.message;
+        };
+      } catch (err) {
+        this.data.imageHero.uuid = null;
+        this.data.imageHero.data = null;
+        this.data.imageHero.loading = false;
+        this.loading--;
+        this.data.imageHero.error = err.message;
       }
     }
   },
@@ -194,10 +259,29 @@ export default {
             uuid
             name
             status
+            description
+            price
+            currency
+            duration
             steps {
               uuid
               name
               type
+            }
+            imageLogo {
+              uuid
+              name
+              data
+              color
+            }
+            imageHero {
+              uuid
+              name
+              data
+              color
+            }
+            agency {
+              uuid
             }
           }
         }
@@ -208,8 +292,23 @@ export default {
         };
       },
       update({ service }) {
-        if (service.steps.length !== 0)
-          this.step = 2;
+        this.data.name = service.name;
+        this.data.description = service.description;
+        this.data.duration = service.duration;
+        this.data.price = service.price;
+        this.data.currency = service.currency;
+
+        if (this.data.imageLogo.file === null && service.imageLogo !== null) {
+          this.data.imageLogo.uuid = service.imageLogo.uuid;
+          this.data.imageLogo.data = service.imageLogo.data;
+          this.data.imageLogo.color = service.imageLogo.color;
+        }
+
+        if (this.data.imageHero.file === null && service.imageHero !== null) {
+          this.data.imageHero.uuid = service.imageHero.uuid;
+          this.data.imageHero.data = service.imageHero.data;
+          this.data.imageHero.color = service.imageHero.color;
+        }
 
         return service;
       }
@@ -217,33 +316,3 @@ export default {
   }
 };
 </script>
-
-<style>
-.service-steps.v-stepper .v-stepper__step--editable:hover {
-  background: inherit;
-}
-
-/* .service-steps.v-stepper .v-stepper__step--active .v-stepper__step__step {
-box-shadow: 0px 0px 0px 0.2rem var(--v-surface-darken2), 0px 0px 0px 0.35rem,
-    0px 0px 1rem 0.35rem rgba(0, 0, 0, 0.5), 0px 0px 1rem 0.35rem;
-} */
-
-.service-steps.v-stepper .v-stepper__step--editable:hover .v-stepper__step__step {
-  box-shadow: 0px 0px 0px 0.2rem, 0px 0px 1rem 0.2rem rgba(0, 0, 0, 0.5),
-    0px 0px 1rem 0.2rem;
-}
-
-.service-steps.v-stepper .step .v-stepper__step__step {
-  padding: 1rem;
-  margin-top: -0.25rem;
-}
-
-.service-steps.v-stepper.vertcal .step .v-stepper__step__step {
-  margin-left: -0.25rem;
-}
-
-.service-steps.v-stepper .add .v-stepper__step__step {
-  padding: 0.3rem;
-  margin-top: -0.075rem;
-}
-</style>

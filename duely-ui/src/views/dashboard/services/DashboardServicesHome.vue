@@ -5,6 +5,7 @@
       <template #header>
         <TableListHeaderRow>
           <TableListColumnHeader left>Service</TableListColumnHeader>
+          <TableListColumnHeader right>Price</TableListColumnHeader>
           <TableListColumnHeader center>Status</TableListColumnHeader>
           <TableListColumnHeader center>Actions</TableListColumnHeader>
         </TableListHeaderRow>
@@ -12,7 +13,11 @@
       <TableListRow v-for="service in services" :key="service.uuid">
         <TableListCell left>
           <router-link :to="`/dashboard/services/${service.uuid}`"><span class="f-2b text-no-wrap">{{ service.name }}</span></router-link>
-          <span class="f-1 text-no-wrap surface--text text--lighten-2">{{ truncateString(service.name, 30) }}</span>
+          <span class="f-1 text-no-wrap surface--text text--lighten-2">{{ truncateString(service.description || '', 30) }}</span>
+        </TableListCell>
+        <TableListCell right>
+          <span class="f-2">{{ service.price || 'N/A' }}</span>
+          <span class="f-1 text-no-wrap surface--text text--lighten-2">{{ service.currency || '' }}</span>
         </TableListCell>
         <TableListCell center>
           <ColoredChip :color="statusColor(service.status)">{{ service.status }}</ColoredChip>
@@ -110,6 +115,10 @@ export default {
                   uuid
                   name
                   status
+                  description
+                  price
+                  currency
+                  duration
                 }
               }
             }
