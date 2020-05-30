@@ -27,9 +27,9 @@ jobs:
       - run: npm install
         working-directory: duely-ui
       - uses: docker/build-push-action@v1
-        working-directory: duely-ui
         with:
           username: uoleevi
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: uoleevi/duely-ui
           tags: needs.check-version.outputs.version
+          path: duely-ui
