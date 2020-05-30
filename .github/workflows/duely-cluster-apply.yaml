@@ -1,4 +1,4 @@
-name: duely-ui-gke
+name: duely-cluster-apply
 
 on:
   push:
@@ -8,16 +8,16 @@ jobs:
   check-image:
     runs-on: ubuntu-latest
     outputs:
-      image: ${{ steps.detect-image-change.outputs.image }}
+      image: ${{ steps.detect-cluster-change.outputs.files }}
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 2
-      - id: detect-image-change
-        run: git diff -U0 -G'image: uoleevi/duely-ui:' ${{ github.sha }}^ ${{ github.sha }} ./duely-cluster/duely-ui/duely-ui.yaml | sed -rn 's/^.*\+\s+image:\s+(uoleevi\/duely-ui:.*)\W*"(.+)".*/::set-output name=image::\1/p'
+      - id: detect-cluster-change
+        run: git diff --name-only ${{ github.sha }}^ ${{ github.sha }} -- './duely-cluster/*.yaml' | sed -e 's/^/ -f .\//' | paste -sd '' | xargs -I{} echo '::set-output name=files::{}'
   update:
-    needs: [check-image]
-    if: needs.check-image.outputs.image != ''
+    needs: [check-cluster]
+    if: needs.check-cluster.outputs.files != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -27,4 +27,4 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
       - run: gcloud container clusters get-credentials duely-cluster
-      - run: kubectl apply -f .\duely-cluster\duely-ui\duely-ui.yaml
+      - run: kubectl apply ${{ needs.check-cluster.outputs.files }}
