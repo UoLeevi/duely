@@ -5,7 +5,7 @@ on:
     branches: [master]
 
 jobs:
-  check-image:
+  check-cluster:
     runs-on: ubuntu-latest
     outputs:
       files: ${{ steps.detect-cluster-change.outputs.files }}
@@ -16,8 +16,8 @@ jobs:
       - id: detect-cluster-change
         run: git diff --name-only ${{ github.sha }}^ ${{ github.sha }} -- './duely-cluster/*.yaml' | sed -e 's/^/ -f .\//' | paste -sd '' | xargs -I{} echo '::set-output name=files::{}'
   update:
-    needs: [check-cluster-change]
-    if: needs.check-cluster-change.outputs.files != ''
+    needs: [check-cluster]
+    if: needs.check-cluster.outputs.files != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -27,4 +27,4 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
       - run: gcloud container clusters get-credentials duely-cluster
-      - run: kubectl apply ${{ needs.check-cluster-change.outputs.files }}
+      - run: kubectl apply ${{ needs.check-cluster.outputs.files }}
