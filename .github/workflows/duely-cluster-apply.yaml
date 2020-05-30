@@ -8,7 +8,7 @@ jobs:
   check-image:
     runs-on: ubuntu-latest
     outputs:
-      image: ${{ steps.detect-cluster-change.outputs.files }}
+      files: ${{ steps.detect-cluster-change.outputs.files }}
     steps:
       - uses: actions/checkout@v2
         with:
