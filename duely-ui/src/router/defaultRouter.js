@@ -38,14 +38,14 @@ const router = new Router({
       }
     },
     {
-      path: '/my-dashboard',
+      path: '/portal',
       beforeEnter(to, from, next) {
         const access_token = localStorage.getItem('user-jwt');
 
         if (access_token)
           location.href = process.env.NODE_ENV === 'production'
-            ? `https://${to.query.subdomain}.duely.app/my-dashboard?access_token=${access_token}`
-            : `${window.location.origin}/my-dashboard?subdomain=${to.query.subdomain}`;
+            ? `https://${to.query.subdomain}.duely.app/portal?access_token=${access_token}`
+            : `${window.location.origin}/portal?subdomain=${to.query.subdomain}`;
         else
           next('/');
       }

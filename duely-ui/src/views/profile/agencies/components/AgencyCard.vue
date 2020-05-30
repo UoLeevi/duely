@@ -77,7 +77,7 @@ export default {
         return `/dashboard?subdomain=${this.agency.subdomain.name}`;
 
       if (this.roles.includes('client'))
-        return `/my-dashboard?subdomain=${this.agency.subdomain.name}`;
+        return `/portal?subdomain=${this.agency.subdomain.name}`;
 
       throw new Error("Unexpected 'roles' value");
     },

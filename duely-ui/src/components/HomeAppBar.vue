@@ -19,7 +19,7 @@
             <v-btn @click="logOut" rounded text class="text-none mr-1" :color="textColor">Log out</v-btn>
             <template v-if="agency">
               <v-btn v-if="agencyRoles && agencyRoles.includes('agent')" to="/dashboard" rounded outlined class="text-none ml-1" :color="textColor">Go to dashboard</v-btn>
-              <v-btn v-else to="/my-dashboard" rounded outlined class="text-none ml-1" :color="textColor">Go to my dashboard</v-btn>
+              <v-btn v-else to="/portal" rounded outlined class="text-none ml-1" :color="textColor">Go to my dashboard</v-btn>
             </template>
             <v-btn v-else to="/profile" rounded outlined class="text-none ml-1" :color="textColor">Go to profile</v-btn>
           </div>

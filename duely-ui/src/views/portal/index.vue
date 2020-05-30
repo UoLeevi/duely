@@ -44,19 +44,19 @@ export default {
     return {
       items: [
         {
-          to: '/my-dashboard',
+          to: '/portal',
           color: 'surface darken-1',
           text: 'Dashboard',
           icon: 'home'
         },
         {
-          to: '/my-dashboard/services',
+          to: '/portal/services',
           color: 'surface darken-1',
           text: 'Services',
           icon: 'business_center'
         },
         {
-          to: '/my-dashboard/payments',
+          to: '/portal/payments',
           color: 'surface darken-1',
           text: 'Payments',
           icon: 'attach_money'

@@ -15,12 +15,12 @@ import DashboardUsersClients from '@/views/dashboard/users/DashboardUsersClients
 import DashboardSite from '@/views/dashboard/site';
 import DashboardSiteHome from '@/views/dashboard/site/DashboardSiteHome';
 import DashboardSiteTheme from '@/views/dashboard/site/DashboardSiteTheme';
-import MyDashboard from '@/views/my-dashboard';
-import MyDashboardHome from '@/views/my-dashboard/MyDashboardHome';
-import MyDashboardPayments from '@/views/my-dashboard/MyDashboardPayments';
-import MyDashboardServices from '@/views/my-dashboard/services';
-import MyDashboardServicesHome from '@/views/my-dashboard/services/MyDashboardServicesHome';
-import MyDashboardServicesService from '@/views/my-dashboard/services/service';
+import Portal from '@/views/portal';
+import PortalHome from '@/views/portal/PortalHome';
+import PortalPayments from '@/views/portal/PortalPayments';
+import PortalServices from '@/views/portal/services';
+import PortalServicesHome from '@/views/portal/services/PortalServicesHome';
+import PortalServicesService from '@/views/portal/services/service';
 import { client, gql } from '@/apollo';
 
 Vue.use(Router);
@@ -272,30 +272,30 @@ const router = new Router({
       }
     },
     {
-      path: '/my-dashboard',
-      component: MyDashboard,
+      path: '/portal',
+      component: Portal,
       children: [
         {
           path: '',
-          component: MyDashboardHome
+          component: PortalHome
         },
         {
           path: 'payments',
-          component: MyDashboardPayments
+          component: PortalPayments
         },
         {
           path: 'services',
           components: {
-            default: MyDashboardServices
+            default: PortalServices
           },
           children: [
             {
               path: '',
-              component: MyDashboardServicesHome
+              component: PortalServicesHome
             },
             {
               path: ':uuid',
-              component: MyDashboardServicesService
+              component: PortalServicesService
             }
           ]
         }

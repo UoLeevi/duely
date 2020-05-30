@@ -121,7 +121,7 @@ export default {
             },
             update: async (store, { data: { acceptInvite } }) => {
               if (acceptInvite.success) {
-                this.$router.push({ path: '/my-dashboard' });
+                this.$router.push({ path: '/portal' });
                 this.loading = false;
                 return;
               } else {

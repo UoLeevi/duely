@@ -9,7 +9,7 @@
       </template>
       <TableListRow v-for="service in services" :key="service.uuid">
         <TableListCell left>
-          <router-link :to="`/my-dashboard/services/${service.uuid}`"><span class="f-2b text-no-wrap">{{ service.name }}</span></router-link>
+          <router-link :to="`/portal/services/${service.uuid}`"><span class="f-2b text-no-wrap">{{ service.name }}</span></router-link>
           <span class="f-1 text-no-wrap surface--text text--lighten-2">{{ truncateString(service.name, 30) }}</span>
         </TableListCell>
       </TableListRow>

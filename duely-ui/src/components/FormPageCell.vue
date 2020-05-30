@@ -1,7 +1,7 @@
 <template>
   <div class="form-page-cell d-flex flex-column ma-4" :style="{ 'min-width': width == null ? `${ adjustSize(400, 0.2) }px` : 'unset', 'width': width == null ? 'auto' : typeof width === 'string' ? width : `${ width }px` }">
-    <h4 class="f-3b surface--text text--lighten2 pa-0">{{ heading }}</h4>
-    <h5 class="f-2 pt-0 pb-3 background--text text--darken3">{{ subheading }}</h5>
+    <h4 v-if="heading" class="f-3b surface--text text--lighten2 pa-0">{{ heading }}</h4>
+    <h5 v-if="heading || subheading" class="f-2 pt-0 pb-3 background--text text--darken3">{{ subheading }}</h5>
     <div class="form-page-cell-slot d-flex ma-n2 flex-grow-1" :class="{ 'flex-column': column, 'flex-row': row }">
       <slot></slot>
     </div>

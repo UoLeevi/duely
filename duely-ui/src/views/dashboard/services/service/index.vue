@@ -8,9 +8,8 @@
     </FormPageRow>
 
     <FormPageRow>
-      <FormPageCell heading="Description" subheading="More detailed information about the service.">
-        <!-- <MarkdownArea :markdown.sync="data.description" edit /> -->
-        <TextEditor :text="data.description" />
+      <FormPageCell>
+        <TextEditor :text.sync="data.description" label="Description" multiline editable hint="More detailed information about the service." />
       </FormPageCell>
     </FormPageRow>
 
