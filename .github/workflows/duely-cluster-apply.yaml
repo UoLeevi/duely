@@ -26,5 +26,5 @@ jobs:
           project_id: duely-project
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
-      - run: gcloud container clusters get-credentials duely-cluster
+      - run: gcloud container clusters get-credentials duely-cluster --zone europe-north1-a
       - run: kubectl apply ${{ needs.check-cluster.outputs.files }}
