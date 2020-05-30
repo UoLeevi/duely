@@ -26,6 +26,8 @@ jobs:
           node-version: '12'
       - run: npm install
         working-directory: duely-ui
+      - run: npm run build
+        working-directory: duely-ui
       - uses: docker/build-push-action@v1
         with:
           username: uoleevi
