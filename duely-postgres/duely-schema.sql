@@ -1093,6 +1093,7 @@ BEGIN
     currency_ = _currency,
     image_logo_uuid_ = _image_logo_uuid,
     image_hero_uuid_ = _image_hero_uuid
+  WHERE uuid_ = _service_uuid
   RETURNING * INTO _service;
 
   RETURN _service;
@@ -1794,6 +1795,39 @@ $$;
 
 
 ALTER FUNCTION operation_.remove_user_from_agency_(_agency_uuid uuid, _subject_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: set_service_status_(uuid, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.set_service_status_(_service_uuid uuid, _status text) RETURNS application_.service_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _service application_.service_;
+  _arg RECORD;
+BEGIN
+  SELECT _service_uuid service_uuid_, _status service_status_, s.agency_uuid_ INTO _arg
+  FROM application_.service_ s
+  WHERE s.uuid_ = _service_uuid;
+  PERFORM security_.control_operation_('set_service_status_', _arg);
+
+  IF _status NOT IN ('draft', 'live') THEN
+    RAISE 'Invalid service status: %', _status USING ERRCODE = '20000';
+  END IF;
+
+  UPDATE application_.service_
+  SET
+    status_ = _status
+  WHERE uuid_ = _service_uuid
+  RETURNING * INTO _service;
+
+  RETURN _service;
+END
+$$;
+
+
+ALTER FUNCTION operation_.set_service_status_(_service_uuid uuid, _status text) OWNER TO postgres;
 
 --
 -- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
@@ -2969,6 +3003,7 @@ d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+
 774d34d3-cd48-45ca-8f70-2f54010f5b48	cancel_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3027,6 +3062,7 @@ d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-
 fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 2e761c06-11f7-4cb0-914c-267df87a55d5	subject_is_active_user_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 ac7fd563-dbb7-44ad-ab12-ccb314704c31	manager_in_agency_	ddcffba4-934c-46ce-bc8b-6ae23b19dce1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-199f58032ff5	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3093,6 +3129,7 @@ d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+
 774d34d3-cd48-45ca-8f70-2f54010f5b48	cancel_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3151,6 +3188,7 @@ d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-
 fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 2e761c06-11f7-4cb0-914c-267df87a55d5	subject_is_active_user_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 ac7fd563-dbb7-44ad-ab12-ccb314704c31	manager_in_agency_	ddcffba4-934c-46ce-bc8b-6ae23b19dce1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-199f58032ff5	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
