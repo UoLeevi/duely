@@ -1,0 +1,32 @@
+name: duely-postgres-migrate
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  check-migrate:
+    runs-on: ubuntu-latest
+    outputs:
+      file: ${{ steps.detect-migrate-change.outputs.file }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - id: detect-migrate-change
+        run: git diff --name-only ${{ github.sha }}^ ${{ github.sha }} -- './duely-postgres/duely-migrate.sql' | xargs -I{} echo '::set-output name=file::{}'
+  update:
+    needs: [check-migrate]
+    if: needs.check-migrate.outputs.file != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          project_id: duely-project
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+      - run: gcloud container clusters get-credentials duely-cluster --zone europe-north1-a
+      - run: kubectl cp ./duely-postgres/duely-migrate.sql duely-postgres-master-statefulset-0:duely-migrate.sql
+      - run: kubectl exec duely-postgres-master-statefulset-0 -- psql -U postgres -d duely -f duely-migrate.sql
+      - run: kubectl exec duely-postgres-master-statefulset-0 -- rm duely-migrate.sql

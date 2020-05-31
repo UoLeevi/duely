@@ -132,20 +132,6 @@ export default {
             if (!this.multiline || !dispatch)
               return true;
 
-            // const from = state.tr.selection.from;
-
-            // if (from > 1) {
-            //   const prev = state.tr.doc.slice(from - 1, from);
-
-            //   if (prev.content.content[0].type.name === 'hard_break') {
-            //     dispatch(state.tr
-            //       .delete(from - 1, from)
-            //       .replaceSelectionWith(schema.node('paragraph'))
-            //       .scrollIntoView());
-            //     return false;
-            //   }
-            // }
-
             dispatch(state.tr
               .replaceSelectionWith(schema.node('hard_break'))
               .scrollIntoView());

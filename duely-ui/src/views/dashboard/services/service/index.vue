@@ -54,14 +54,12 @@
 
 <script>
 import { gql } from '@/apollo';
-//import MarkdownArea from '@/components/MarkdownArea';
 import TextEditor from '@/components/TextEditor';
 import FormPageCell from '@/components/FormPageCell';
 import FormPageRow from '@/components/FormPageRow';
 
 export default {
   components: {
-    // MarkdownArea,
     TextEditor,
     FormPageCell,
     FormPageRow
