@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 2
       - id: detect-migrate-change
         run: git diff --name-only ${{ github.sha }}^ ${{ github.sha }} -- './duely-postgres/duely-migrate.sql' | xargs -I{} echo '::set-output name=file::{}'
-  update:
+  migrate:
     needs: [check-migrate]
     if: needs.check-migrate.outputs.file != ''
     runs-on: ubuntu-latest
