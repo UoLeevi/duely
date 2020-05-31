@@ -15,7 +15,7 @@
 
     <FormPageRow>
       <FormPageCell heading="Price" subheading="Price and the currency of the service.">
-        <v-text-field v-model="data.price" dense color="surface" background-color="background lighten-5" solo outlined flat single-line rounded class="my-1" label="Price" spellcheck="false" />
+        <v-text-field v-model="data.price" :rules="rules.price" dense color="surface" background-color="background lighten-5" solo outlined flat single-line rounded class="my-1" label="Price" spellcheck="false" />
         <v-text-field v-model="data.currency" dense color="surface" background-color="background lighten-5" solo outlined flat single-line rounded class="my-1" label="Currency" spellcheck="false" />
       </FormPageCell>
       <FormPageCell heading="Duration" subheading="Total duration of the service delivery.">
@@ -49,6 +49,10 @@
       <v-btn :min-width="100" depressed rounded :loading="loading > 0" @click="submitEditService" color="primary" class="text-none mr-4" >Save</v-btn>
       <v-btn :min-width="100" text depressed rounded class="text-none" to="/dashboard/services">Cancel</v-btn>
     </v-row>
+    <v-row class="ml-6 pt-2 pb-1">
+      <v-btn v-if="service && service.status === 'draft'" :min-width="100" depressed rounded :loading="loading > 0" @click="submitPublishService" color="primary" class="text-none mr-4" >Publish service</v-btn>
+      <v-btn v-if="service && service.status === 'live'" :min-width="100" depressed rounded :loading="loading > 0" @click="submitUnpublishService" color="primary" class="text-none mr-4" >Unpublish service</v-btn>
+    </v-row>
   </section>
 </template>
 
@@ -76,6 +80,11 @@ export default {
         currency: null,
         imageLogo: { uuid: null, name: 'service-logo', color: null, file: null, data: null, loading: false, errorMessage: null },
         imageHero: { uuid: null, name: 'service-hero', color: null, file: null, data: null, loading: false, errorMessage: null }
+      },
+      rules: {
+        price: [
+          v => !isNaN(parseFloat(v)) || 'Number expected'
+        ]
       }
     };
   },
@@ -109,6 +118,64 @@ export default {
           this.loading--;
         }
       });
+    },
+    async submitPublishService() {
+      this.errorMessage = null;
+      this.loading++;
+
+      try {
+        await this.$apollo.mutate({
+          mutation: gql`mutation($serviceUuid: ID!) {
+            publishService(serviceUuid: $serviceUuid) {
+              success
+              message
+            }
+          }`,
+          variables: {
+            serviceUuid: this.service !== null ? this.service.uuid : null
+          },
+          update: (store, { data: { publishService } }) => {
+            if (publishService.success) {
+              this.snackbar = true;
+            } else
+              this.errorMessage = publishService.message;
+
+            this.loading--;
+          }
+        });
+      } catch (error) {
+          this.errorMessage = error.message;
+          this.loading--;
+      }
+    },
+    async submitUnpublishService() {
+      this.errorMessage = null;
+      this.loading++;
+
+      try {
+        await this.$apollo.mutate({
+          mutation: gql`mutation($serviceUuid: ID!) {
+            unpublishService(serviceUuid: $serviceUuid) {
+              success
+              message
+            }
+          }`,
+          variables: {
+            serviceUuid: this.service !== null ? this.service.uuid : null
+          },
+          update: (store, { data: { unpublishService } }) => {
+            if (unpublishService.success) {
+              this.snackbar = true;
+            } else
+              this.errorMessage = unpublishService.message;
+
+            this.loading--;
+          }
+        });
+      } catch (error) {
+          this.errorMessage = error.message;
+          this.loading--;
+      }
     },
     async submitEditService() {
       this.errorMessage = null;
@@ -159,7 +226,7 @@ export default {
             name: this.data.name,
             description: this.data.description,
             duration: this.data.duration,
-            price: this.data.price,
+            price: Math.round(parseFloat(this.data.price) * 100),
             currency: this.data.currency,
             imageLogoUuid: this.data.imageLogo.uuid,
             imageHeroUuid: this.data.imageHero.uuid
@@ -292,8 +359,8 @@ export default {
         this.data.name = service.name;
         this.data.description = service.description;
         this.data.duration = service.duration;
-        this.data.price = service.price;
-        this.data.currency = service.currency;
+        this.data.price = service.price != null ? (service.price / 100.0).toFixed(2) : null;
+        this.data.currency = service.currency && service.currency.toUpperCase();
 
         if (this.data.imageLogo.file === null && service.imageLogo !== null) {
           this.data.imageLogo.uuid = service.imageLogo.uuid;

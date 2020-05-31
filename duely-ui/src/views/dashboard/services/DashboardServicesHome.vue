@@ -16,8 +16,8 @@
           <span class="f-1 text-no-wrap surface--text text--lighten-2">{{ truncateString(service.description || '', 30) }}</span>
         </TableListCell>
         <TableListCell right>
-          <span class="f-2">{{ service.price || 'N/A' }}</span>
-          <span class="f-1 text-no-wrap surface--text text--lighten-2">{{ service.currency || '' }}</span>
+          <span class="f-2">{{ service.price != null ? (service.price / 100.0).toFixed(2) : 'N/A' }}</span>
+          <span class="f-1 text-no-wrap surface--text text--lighten-2">{{ service.currency ? service.currency.toUpperCase() : '' }}</span>
         </TableListCell>
         <TableListCell center>
           <ColoredChip :color="statusColor(service.status)">{{ service.status }}</ColoredChip>
