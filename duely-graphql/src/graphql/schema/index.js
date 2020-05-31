@@ -34,6 +34,7 @@ import Query from './Query';
 import Service from './Service';
 import ServiceStep from './ServiceStep';
 import SignUpResult from './SignUpResult';
+import SimpleResult from './SimpleResult';
 import StartEmailAddressVerificationResult from './StartEmailAddressVerificationResult';
 import Subdomain from './Subdomain';
 import Subject from './Subject';
@@ -80,6 +81,7 @@ export default makeExecutableSchema([
   Service,
   ServiceStep,
   SignUpResult,
+  SimpleResult,
   StartEmailAddressVerificationResult,
   Subdomain,
   Subject,
