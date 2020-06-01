@@ -17,7 +17,9 @@ import DashboardSiteHome from '@/views/dashboard/site/DashboardSiteHome';
 import DashboardSiteTheme from '@/views/dashboard/site/DashboardSiteTheme';
 import Portal from '@/views/portal';
 import PortalHome from '@/views/portal/PortalHome';
+import PortalDocuments from '@/views/portal/PortalDocuments';
 import PortalPayments from '@/views/portal/PortalPayments';
+import PortalProjects from '@/views/portal/PortalProjects';
 import PortalServices from '@/views/portal/services';
 import PortalServicesHome from '@/views/portal/services/PortalServicesHome';
 import PortalServicesService from '@/views/portal/services/service';
@@ -278,6 +280,14 @@ const router = new Router({
         {
           path: '',
           component: PortalHome
+        },
+        {
+          path: 'projects',
+          component: PortalProjects
+        },
+        {
+          path: 'documents',
+          component: PortalDocuments
         },
         {
           path: 'payments',

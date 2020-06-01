@@ -1,77 +1,29 @@
 <template>
   <section style="width: 100%;">
-    <h2 class="f-5b">{{ $apollo.queries.service.loading ? 'Service...' : service.name }}</h2>
-    <v-progress-circular v-if="$apollo.queries.service.loading" indeterminate />
+    <template v-if="$apollo.queries.service.loading">
+      <h2 class="f-5b">{{ 'Loading...' }}</h2>
+      <v-progress-circular indeterminate />
+    </template>
+    <template v-else>
+      <h2 class="f-5b">{{ service.name }}</h2>
+      <v-img v-if="service.imageHero" :src="service.imageHero.data" contain :width="`${adjustSize(530)}`" class="my-auto" />
+      <div v-if="service.description" v-html="descriptionHtml"></div>
+
+    </template>
   </section>
 </template>
 
 <script>
 import { gql } from '@/apollo';
+import DOMPurify from 'dompurify';
+import marked from 'marked';
 
 export default {
-  methods: {
-    stepTypeName(type) {
-      switch (type) {
-        case 'PAYMENT':
-          return 'Payment';
-
-        case 'FORM':
-          return 'Form';
-
-        case 'CONFIRMATION_BY_AGENCY':
-          return 'Confirmation by agency';
-
-        case 'DOCUMENT_DELIVERY':
-          return 'Document delivery';
-
-        case 'DOCUMENT_SUBMISSION':
-          return 'Document submission';
-
-        default:
-          return '';
-      }
-    },
-    stepIcon(type) {
-      switch (type) {
-        case 'PAYMENT':
-          return 'payment';
-
-        case 'FORM':
-          return 'assignment';
-
-        case 'CONFIRMATION_BY_AGENCY':
-          return 'assignment_turned_in';
-
-        case 'DOCUMENT_DELIVERY':
-          return 'save_alt';
-
-        case 'DOCUMENT_SUBMISSION':
-          return 'note_add';
-
-        default:
-          return '';
-      }
-    },
-    stepColor(type) {
-      switch (type) {
-        case 'PAYMENT':
-          return 'primary';
-
-        case 'FORM':
-          return 'secondary';
-
-        case 'CONFIRMATION_BY_AGENCY':
-          return 'accent';
-
-        case 'DOCUMENT_DELIVERY':
-          return 'success';
-
-        case 'DOCUMENT_SUBMISSION':
-          return 'accent darken-2';
-
-        default:
-          return '';
-      }
+  computed: {
+    descriptionHtml() {
+      return this.service && this.service.description
+        ? DOMPurify.sanitize(marked(this.service.description))
+        : null;
     }
   },
   apollo: {
@@ -82,10 +34,29 @@ export default {
             uuid
             name
             status
+            description
+            price
+            currency
+            duration
             steps {
               uuid
               name
               type
+            }
+            imageLogo {
+              uuid
+              name
+              data
+              color
+            }
+            imageHero {
+              uuid
+              name
+              data
+              color
+            }
+            agency {
+              uuid
             }
           }
         }
@@ -94,12 +65,6 @@ export default {
         return {
           uuid: this.$route.params.uuid
         };
-      },
-      update({ service }) {
-        if (service.steps.length !== 0)
-          this.step = 2;
-
-        return service;
       }
     }
   }

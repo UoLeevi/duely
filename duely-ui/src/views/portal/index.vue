@@ -1,5 +1,11 @@
 <template>
-  <DashboardLayout>
+  <PortalLayout :bannerSrc="agency && agency.theme && agency.theme.imageHero && agency.theme.imageHero.data">
+    <template #header>
+      <div class="d-flex flex-column pl-4">
+        <h1 class="f-4 background--text text--lighten-5 pb-2">{{ agency ? agency.name : null }}</h1>
+        <h2 class="f-7b background--text text--lighten-5">{{ selectedMenu.text }}</h2>
+      </div>
+    </template>
     <template #menu>
       <SquareBtn v-for="item in items" :key="item.to" v-bind="item" small :minimized="$vuetify.breakpoint.xs || subMenuItems.length !== 0" :selected="selectedMenu !== null && selectedMenu.to === item.to" />
     </template>
@@ -12,18 +18,18 @@
     <v-fade-transition mode="out-in">
       <router-view />
     </v-fade-transition>
-  </DashboardLayout>
+  </PortalLayout>
 </template>
 
 <script>
 import { gql } from '@/apollo';
-import DashboardLayout from '@/layouts/DashboardLayout';
+import PortalLayout from '@/layouts/PortalLayout';
 import SquareBtn from '@/components/SquareBtn';
 import TextLink from '@/components/TextLink';
 
 export default {
   components: {
-    DashboardLayout,
+    PortalLayout,
     SquareBtn,
     TextLink
   },
@@ -46,20 +52,32 @@ export default {
         {
           to: '/portal',
           color: 'surface darken-1',
-          text: 'Dashboard',
+          text: 'Home',
           icon: 'home'
         },
         {
-          to: '/portal/services',
+          to: '/portal/projects',
           color: 'surface darken-1',
-          text: 'Services',
+          text: 'Projects',
           icon: 'business_center'
+        },
+        {
+          to: '/portal/documents',
+          color: 'surface darken-1',
+          text: 'Documents',
+          icon: 'description'
         },
         {
           to: '/portal/payments',
           color: 'surface darken-1',
           text: 'Payments',
           icon: 'attach_money'
+        },
+        {
+          to: '/portal/services',
+          color: 'surface darken-1',
+          text: 'Services',
+          icon: 'storefront'
         },
         {
           to: '/profile',

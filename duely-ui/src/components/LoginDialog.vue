@@ -67,14 +67,12 @@ export default {
           password: this.password
         },
         update: async (store, { data: { logIn } }) => {
-          if (logIn.success)
-          {
+          if (logIn.success) {
             const jwt = logIn.jwt;
             if (jwt) {
               localStorage.setItem('user-jwt', jwt);
             }
-          }
-          else {
+          } else {
             this.errorMessage = logIn.message;
             /* eslint-disable */
             console.log(logIn.message);

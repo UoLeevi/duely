@@ -175,6 +175,9 @@ Vutil.install = function(Vue) {
 
         if (Object.keys(query).length !== Object.keys(this.$route.query).length)
           this.$router.replace({ query });
+      },
+      dataUriFromSvg(svg) {
+        return 'data:image/svg+xml;base64,' + btoa(svg);
       }
     }
   });

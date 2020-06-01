@@ -68,7 +68,7 @@ export default {
           return;
 
         this.d_dialog = v;
-        this.$emit('dialog:update', v);
+        this.$emit('update:dialog', v);
       }
     }
   },

@@ -53,7 +53,7 @@ export default {
           to: '/dashboard/services',
           color: 'surface darken-1',
           text: 'Services',
-          icon: 'business_center'
+          icon: 'storefront'
         },
         {
           to: '/dashboard/payments',

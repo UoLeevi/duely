@@ -1,6 +1,5 @@
 <template>
   <section class="d-flex flex-column flex-grow-1">
-    <h2 class="f-5b">Services</h2>
     <TableList>
       <template #header>
         <TableListHeaderRow>
