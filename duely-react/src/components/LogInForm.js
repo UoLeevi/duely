@@ -7,11 +7,21 @@ const LogInForm = () => {
     password: ''
   });
 
-  const { logIn, loading, error } = useContext(AuthContext);
+  const [errorMessage, setErrorMessage] = useState(null);
 
-  const handleSubmit = e => {
+  const { logIn, loading } = useContext(AuthContext);
+
+  const handleSubmit = async e => {
     e.preventDefault();
-    logIn(credentials);
+    const { data, error } = await logIn(credentials);
+    
+    if (error) {
+      setErrorMessage(error.message);
+    } else if (!data.logIn.success) {
+      setErrorMessage(data.logIn.message);
+    } else {
+      setErrorMessage(null);
+    }
   }
 
   return (
@@ -19,7 +29,7 @@ const LogInForm = () => {
       <input type="text" onChange={e => setCredentials({ ...credentials, emailAddress: e.target.value })} />
       <input type="password" onChange={e => setCredentials({ ...credentials, password: e.target.value })} />
       <input type="submit" value="Log in" />
-      { !error ? null : <span>{ error.message }</span> }
+      { errorMessage === null ? null : <span>{ errorMessage }</span> }
     </form>
   );
 };

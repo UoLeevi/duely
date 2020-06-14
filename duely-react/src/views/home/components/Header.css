@@ -1,0 +1,9 @@
+/* home-header */
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 10rem;
+  margin: 0 var(--gutter-width);
+}

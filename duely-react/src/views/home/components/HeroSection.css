@@ -1,0 +1,12 @@
+/* home-header */
+
+.home-hero-section {
+  --content-offset: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 10rem - var(--content-offset));
+  box-sizing: border-box;
+  padding-bottom: calc(10rem + var(--content-offset));
+  margin: 0 var(--gutter-width);
+}

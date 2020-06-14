@@ -1,3 +1,3 @@
 export default {
-  Subject: { keyFields: ['uuid'] }
+  Subject: { keyFields: ['uuid'] },
 };

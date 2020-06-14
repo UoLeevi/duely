@@ -1,6 +1,73 @@
+/* #region Font faces */
+
+@font-face {
+  font-family: 'Noto Sans';
+  src: url(./fonts/NotoSans-BoldItalic.ttf) format('truetype');
+  font-style: italic;
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Noto Sans';
+  src: url(./fonts/NotoSans-Bold.ttf) format('truetype');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Noto Sans';
+  src: url(./fonts/NotoSans-Italic.ttf) format('truetype');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Noto Sans';
+  src: url(./fonts/NotoSans-Regular.ttf) format('truetype');
+}
+
+/* #endregion */
+
+/* #region Scrollbar */
+
+:root {
+  --scrollbar-color-thumb: rgba(130, 130, 130, 0.18);
+  --scrollbar-color-track: rgba(0, 0, 0, 0);
+}
+
+#app .hide-scrollbar::-webkit-scrollbar { /* WebKit */
+  display: none;
+}
+#app .hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE 10+ */
+}
+
+html:not(.custom-scroll) * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-color-thumb) var(--scrollbar-color-track);
+}
+
+html:not(.custom-scroll) *::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+html:not(.custom-scroll) *::-webkit-scrollbar-track {
+  background: var(--scrollbar-color-track);
+}
+
+html:not(.custom-scroll) *::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-color-thumb);
+  border-radius: 6px;
+  border: 3px solid var(--scrollbar-color-track);
+}
+
+/* #endregion */
+
+/* #region Elements */
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -11,3 +78,146 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+button {
+  outline: none;
+  border: solid rgba(130, 130, 130, 0.18) 2px;
+  background: transparent;
+  padding: 0.8em 1.4em;
+  border-radius: 1em;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+  min-width: 7em;
+  cursor: pointer;
+}
+
+a:link {
+  text-decoration: inherit;
+  color: inherit;
+  cursor: auto;
+}
+
+a:visited {
+  text-decoration: inherit;
+  color: inherit;
+  cursor: auto;
+}
+
+/* #endregion */
+
+/* #region Font sizes, styles, weights */
+
+/* All */
+html {
+  font-size: 12px;
+}
+
+/* Small (sm) */
+@media (min-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Medium (md) */
+@media (min-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Large (lg) */
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Extra Large (xl) */
+@media (min-width: 1280px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.f1 {
+  font-size: 0.5rem;
+}
+.f2 {
+  font-size: 0.75rem;
+}
+.f3 {
+  font-size: 1rem;
+}
+.f4 {
+  font-size: 1.3rem;
+}
+.f5 {
+  font-size: 1.7rem;
+}
+.f6 {
+  font-size: 2.2rem;
+}
+.f7 {
+  font-size: 2.8rem;
+}
+.f8 {
+  font-size: 3.5rem;
+}
+
+.fb {
+  font-weight: bold;
+}
+
+.fi {
+  font-style: italic;
+}
+
+/* #endregion */
+
+/* #region Gutters */
+
+/* All */
+:root {
+  --gutter-width: calc(5vw + 10px);
+}
+
+/* Small (sm) */
+@media (min-width: 640px) {
+  :root {
+    --gutter-width: 10vw;
+  }
+}
+
+/* Medium (md) */
+@media (min-width: 768px) {
+  :root {
+    --gutter-width: 10vw;
+  }
+}
+
+/* Large (lg) */
+@media (min-width: 1024px) {
+  :root {
+    --gutter-width: 20vw;
+  }
+}
+
+/* Extra Large (xl) */
+@media (min-width: 1280px) {
+  :root {
+    --gutter-width: 20vw;
+  }
+}
+
+.gutter {
+  margin-left: var(--gutter-width);
+  margin-right: var(--gutter-width);
+}
+
+/* #endregion */

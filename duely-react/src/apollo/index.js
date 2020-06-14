@@ -5,7 +5,6 @@ import { onError } from '@apollo/link-error';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 
-import resolvers from './resolvers';
 import typePolicies from './typePolicies';
 
 
@@ -131,7 +130,6 @@ const client = new ApolloClient({
     transportLink
   ]),
   cache,
-  resolvers,
   connectToDevTools: process.env.NODE_ENV !== 'production'
 });
 

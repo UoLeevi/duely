@@ -3,11 +3,11 @@ import { AuthContext } from '../contexts/AuthContext';
 
 const LogOutButton = () => {
 
-  const { logOut, loading, error } = useContext(AuthContext);
+  const { logOut, loading } = useContext(AuthContext);
 
-  const handleClick = e => {
+  const handleClick = async e => {
     e.preventDefault();
-    logOut();
+    await logOut();
   }
 
   return (

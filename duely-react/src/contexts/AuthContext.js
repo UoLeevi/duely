@@ -5,6 +5,16 @@ import { client } from '../apollo';
 export const AuthContext = createContext();
 
 const AuthContextProvider = (props) => {
+  const { loading, error, data, refetch } = useQuery(gql`
+    query {
+      me {
+        uuid
+        name
+        emailAddress
+        type
+      }
+    }`
+  );
 
   const [logIn] = useMutation(gql`
     mutation($emailAddress: String!, $password: String!) {
@@ -18,7 +28,8 @@ const AuthContextProvider = (props) => {
       onCompleted: async ({ logIn }) => {
         if (logIn.success) {
           localStorage.setItem('user-jwt', logIn.jwt);
-          await client.resetStore();
+          await client.clearStore();
+          await refetch();
         } else {
           console.log(logIn.message);
           return;
@@ -38,23 +49,13 @@ const AuthContextProvider = (props) => {
       onCompleted: async ({ logOut }) => {
         if (logOut.success) {
           localStorage.removeItem('user-jwt');
-          await client.resetStore();
+          await client.clearStore();
+          await refetch();
         } else {
           console.log(logOut.message);
         }
       }
     }
-  );
-
-  const { loading, error, data } = useQuery(gql`
-    query {
-      me {
-        uuid
-        name
-        emailAddress
-        type
-      }
-    }`
   );
 
   return (
