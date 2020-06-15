@@ -4,6 +4,7 @@ import { client } from './apollo';
 import ViewportContextProvider from './contexts/ViewportContext';
 import AuthContextProvider from './contexts/AuthContext';
 import DomainContextProvider from './contexts/DomainContext';
+import ModalContextProvider from './contexts/ModalContext';
 import ViewRoot from './ViewRoot';
 import DomainSwitch from './DomainSwitch';
 
@@ -13,7 +14,9 @@ const App = () => (
       <DomainContextProvider>
         <ViewportContextProvider>
           <ViewRoot>
-            <DomainSwitch/>
+            <ModalContextProvider>
+              <DomainSwitch/>
+            </ModalContextProvider>
           </ViewRoot>
         </ViewportContextProvider>
       </DomainContextProvider>

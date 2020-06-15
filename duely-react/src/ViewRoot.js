@@ -1,8 +1,7 @@
 import React, { useContext } from 'react';
 import { ViewportContext } from './contexts/ViewportContext';
-import DomainSwitch from './DomainSwitch';
 
-const ViewRoot = () => {
+const ViewRoot = ({ children }) => {
   const { width } = useContext(ViewportContext);
 
   const breakpoints = {
@@ -19,7 +18,7 @@ const ViewRoot = () => {
 
   return (
     <div id="v" className={classList}>
-      <DomainSwitch />
+      { children }
     </div>
   );
 };
