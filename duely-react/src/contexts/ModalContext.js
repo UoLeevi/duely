@@ -8,7 +8,6 @@ const ModalContextProvider = ({ children }) => {
   const [modalContentsMap, setModalContentsMap] = useState(new Map());
 
   function useModal(renderContent) {
-    console.log(modalContentsMap)
 
     const hide = () => {
       const newMap = new Map(modalContentsMap);

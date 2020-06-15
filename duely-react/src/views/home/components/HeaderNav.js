@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../../../contexts/AuthContext';
-import { ModalContext } from '../../../contexts/ModalContext';
+import { useModal } from '../../../hooks';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const getInitialState = () => {
@@ -14,8 +14,6 @@ const initialState = getInitialState();
 
 const HeaderNav = () => {
   const { loading, isLoggedIn, user, logOut } = useContext(AuthContext);
-  const { useModal } = useContext(ModalContext);
-
   const [showModal, hideModal] = useModal(hideModal => (<button key="1" onClick={hideModal}>test</button>));
 
   return (
