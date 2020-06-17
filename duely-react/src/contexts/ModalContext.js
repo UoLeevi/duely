@@ -9,23 +9,23 @@ const ModalContextProvider = ({ children }) => {
 
   function useModal(renderContent, obj = {}) {
 
-    const hide = () => {
+    const hideModal = () => {
       const newMap = new Map(modalContentsMap);
       newMap.delete(renderContent);
       setModalContentsMap(newMap);
     }
 
-    const show = () => {
+    const showModal = () => {
       if (modalContentsMap.has(renderContent)) {
         return;
       }
 
       const newMap = new Map(modalContentsMap);
-      newMap.set(renderContent, renderContent({ ...obj, hide }))
+      newMap.set(renderContent, renderContent({ ...obj, hideModal }))
       setModalContentsMap(newMap);
     }
 
-    return [show, hide];
+    return [showModal, hideModal];
   }
 
   return (

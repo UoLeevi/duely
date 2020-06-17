@@ -7,7 +7,7 @@ const FeaturesSection = () => {
   return (
     <section className="home-features-section">
       <div>
-        <ul className="f6">
+        <ul className="f-6">
           <li>Create a service catalogue</li>
           <li>Manage client deliverables and projects</li>
           <li>Accept payments and setup invoicing</li>

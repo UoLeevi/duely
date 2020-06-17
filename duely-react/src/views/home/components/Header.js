@@ -15,7 +15,7 @@ const Header = () => {
     >
       <div className="row center-v">
         <DuelyLogo />
-        <h1 className="f5 fb pa-2">Duely</h1>
+        <h1 className="f-5 f-b pa-2">Duely</h1>
       </div>
       <HeaderNav />
     </motion.header>

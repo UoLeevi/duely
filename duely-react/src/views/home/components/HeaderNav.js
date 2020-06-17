@@ -14,7 +14,7 @@ const initialState = getInitialState();
 
 const HeaderNav = () => {
   const { loading, isLoggedIn, user, logOut } = useContext(AuthContext);
-  const [showModal] = useModal(({ hide }) => (<button key="1" onClick={ hide }>test</button>));
+  const [showModal] = useModal(({ hideModal }) => (<button key="1" onClick={ hideModal }>test</button>));
 
   return (
     <AnimatePresence>
