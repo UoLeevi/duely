@@ -2,17 +2,13 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './Modal.css';
 import ModalBackground from './ModalBackground';
-import { hidden, visible } from '../animations';
 
 const backdropAnimations = {
   initial: {
     opacity: 0
   },
   animate: {
-    opacity: 1,
-    transition: {
-      duration: 0.16
-    }
+    opacity: 1
   },
   exit: {
     opacity: 0

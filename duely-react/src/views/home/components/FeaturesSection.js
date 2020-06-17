@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import './FeaturesSection.css';
 
 const FeaturesSection = () => {

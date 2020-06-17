@@ -1,6 +1,8 @@
 /* #region Reset */
 
-
+*:focus {
+  outline: none;
+}
 
 /* #endregion */
 
@@ -43,6 +45,15 @@
   --spacing-6: 2.4rem;
   --spacing-7: 2.8rem;
   --spacing-8: 3.2rem;
+
+  --spacing-1n: -0.4rem;
+  --spacing-2n: -0.8rem;
+  --spacing-3n: -1.2rem;
+  --spacing-4n: -1.6rem;
+  --spacing-5n: -2rem;
+  --spacing-6n: -2.4rem;
+  --spacing-7n: -2.8rem;
+  --spacing-8n: -3.2rem;
 }
 
 /* #endregion */
@@ -70,6 +81,12 @@
   --radius-3: 1.4rem;
   --radius-4: 1.7rem;
   --radius-5: 2rem;
+
+  --radius-1-rel: 0.8em;
+  --radius-2-rel: 1.1em;
+  --radius-3-rel: 1.4em;
+  --radius-4-rel: 1.7em;
+  --radius-5-rel: 2em;
 }
 
 /* #endregion */
@@ -557,15 +574,10 @@ ul {
   padding: 0;
 }
 
+input[type="button"],
+input[type="submit"],
 button {
   outline: none;
-  border: solid rgba(130, 130, 130, 0.18) 2px;
-  background: transparent;
-  padding: 0.8em 1.4em;
-  border-radius: 1em;
-  font-weight: bold;
-  letter-spacing: 0.02em;
-  min-width: 7em;
   cursor: pointer;
 }
 
@@ -585,8 +597,44 @@ a:visited {
 
 /* #region Element custom styles */
 
-button.default {
+form.default {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  margin: var(--spacing-1n);
+}
 
+form.default > * {
+  margin: var(--spacing-1);
+}
+
+input[type="button"].default,
+input[type="submit"].default,
+button.default {
+  letter-spacing: 0.02em;
+  border-radius: var(--radius-2-rel);
+  font-weight: bold;
+  border: solid rgba(130, 130, 130, 0.18) 2px;
+  background: transparent;
+  padding: 0.8em 1.4em;
+  min-width: 7em;
+}
+
+input[type="button"].flat,
+input[type="submit"].flat,
+button.flat {
+  border: none;
+}
+
+input.default {
+  border-radius: var(--radius-2-rel);
+  border: solid rgba(130, 130, 130, 0.18) 2px;
+  background: transparent;
+  padding: 0.8em 1.4em;
+  min-width: 7em;
 }
 
 /* #endregion */

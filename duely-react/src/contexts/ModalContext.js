@@ -1,13 +1,19 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useLayoutEffect } from 'react';
 import Modal from '../components/Modal';
 
 export const ModalContext = createContext();
+
+const defaultOptions = {
+  show: false,
+  hideable: true // <- not yet implemented
+};
 
 const ModalContextProvider = ({ children }) => {
 
   const [modalContentsMap, setModalContentsMap] = useState(new Map());
 
-  function useModal(renderContent, obj = {}) {
+  function useModal(renderContent, { props, options } = { props: {}, options: {} }) {
+    options = { ...defaultOptions, ...options }
 
     const hideModal = () => {
       const newMap = new Map(modalContentsMap);
@@ -21,9 +27,12 @@ const ModalContextProvider = ({ children }) => {
       }
 
       const newMap = new Map(modalContentsMap);
-      newMap.set(renderContent, renderContent({ ...obj, hideModal }))
+      newMap.set(renderContent, renderContent({ ...props, hideModal }))
       setModalContentsMap(newMap);
     }
+
+    const initialize = () => { options.show && showModal(); }
+    useLayoutEffect(initialize, []);
 
     return [showModal, hideModal];
   }
