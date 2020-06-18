@@ -1,4 +1,4 @@
-import React, { createContext } from 'react';
+import React, { createContext, useState } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { client } from '../apollo';
 
@@ -16,7 +16,8 @@ const AuthContextProvider = (props) => {
     }`
   );
 
-  const [logIn] = useMutation(gql`
+  const [logInLoading, setLogInLoading] = useState(false);
+  const [logInMutation] = useMutation(gql`
     mutation($emailAddress: String!, $password: String!) {
       logIn(emailAddress: $emailAddress, password: $password) {
         success
@@ -32,13 +33,20 @@ const AuthContextProvider = (props) => {
           await refetch();
         } else {
           console.log(logIn.message);
-          return;
         }
+
+        setLogInLoading(false);
       }
     }
   );
 
-  const [logOut] = useMutation(gql`
+  const logIn = ({ emailAddress, password }) => {
+    setLogInLoading(true);
+    return logInMutation({ variables: { emailAddress, password }});
+  };
+
+  const [logOutLoading, setLogOutLoading] = useState(false);
+  const [logOutMutation] = useMutation(gql`
     mutation {
       logOut {
         success
@@ -54,18 +62,25 @@ const AuthContextProvider = (props) => {
         } else {
           console.log(logOut.message);
         }
+
+        setLogOutLoading(false);
       }
     }
   );
 
+  const logOut = () => {
+    setLogOutLoading(true);
+    return logOutMutation();
+  }
+
   return (
     <AuthContext.Provider value={{ 
-      loading, 
+      loading: loading || logInLoading || logOutLoading, 
       error, 
       isLoggedIn: data && data.me.type === 'user',
       user: data && data.me,
-      logIn: ({ emailAddress, password }) => logIn({ variables: { emailAddress, password }}),
-      logOut: () => logOut()
+      logIn,
+      logOut
     }}>
       { props.children }
     </AuthContext.Provider>

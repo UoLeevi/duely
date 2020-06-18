@@ -20,7 +20,7 @@ const HeaderNav = () => {
   const [showModal] = useModal(({ hideModal }) => <LoginForm key="login-form" whenDone={ hideModal } />, { options: { show: !isLoggedIn && initialState.showLogIn }});
 
   return (
-    <AnimatePresence>
+    <AnimatePresence exitBeforeEnter>
       { !loading && (
         <motion.div
           initial={{ y: '-1rem', opacity: 0 }}
@@ -28,8 +28,8 @@ const HeaderNav = () => {
           exit={{ opacity: 0 }}
         >
           { isLoggedIn 
-            ? <button className="default" onClick={ logOut }>Log out</button> 
-            : <button className="default" onClick={ showModal }>Log in</button>
+            ? <button key="log-out" className="default" onClick={ logOut }>Log out</button> 
+            : <button key="log-in" className="default" onClick={ showModal }>Log in</button>
           }
         </motion.div>
       )}

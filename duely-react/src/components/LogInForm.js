@@ -1,21 +1,22 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
 import { useBreakpoints } from '../hooks';
+import TextField from './TextField';
+import SpinnerLoader from './SpinnerLoader';
 
 const LogInForm = ({ whenDone }) => {
   const { sm } = useBreakpoints();
-  const [credentials, setCredentials] = useState({
-    emailAddress: '',
-    password: ''
-  });
-
+  const [emailAddress, setEmailAddress] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
 
   const { logIn, loading } = useContext(AuthContext);
 
   const handleSubmit = async e => {
+    // TODO: make component reactive by handling logIn state updates in AuthContext (AuthHook)
+
     e.preventDefault();
-    const { data, error } = await logIn(credentials);
+    const { data, error } = await logIn({ emailAddress, password });
     
     if (error) {
       setErrorMessage(error.message);
@@ -35,23 +36,20 @@ const LogInForm = ({ whenDone }) => {
         <h2 className="default f-b">Log in</h2>
       </div>
       <div className="panel-row">
-        <label className="default grow-1">
-          <span>Email</span>
-          <input type="email" onChange={e => setCredentials({ ...credentials, emailAddress: e.target.value })} />
-        </label>
+        <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } />
       </div>
       <div className="panel-row">
-        <label className="default grow-1">
-          <span>Password</span>
-          <input type="password" onChange={e => setCredentials({ ...credentials, password: e.target.value })} />
-        </label>
+        <TextField label="Password" type="password" text={ password } setText={ setPassword } />
       </div>
       { sm
         ? (
           <>
             <div className="panel-row center-v space-between pt-label-text">
               <div className="panel-cell center-v">
-                <input type="submit" className="default prominent" value="Log in" />
+              { loading
+                ? <SpinnerLoader />
+                : <input type="submit" className="default prominent" value="Log in" />
+              }
               </div>
               <div className="panel-cell center-v">
                 <span className="f-1 mr-0">Don't have an account?</span>
@@ -63,7 +61,9 @@ const LogInForm = ({ whenDone }) => {
         : (
           <>
             <div className="panel-row center-h space-between pt-label-text">
-              <input type="submit" className="default prominent" value="Log in" />
+              <SpinnerLoader loading={ loading }>
+                <input type="submit" className="default prominent" value="Log in" />
+              </SpinnerLoader>
             </div>
             <div className="panel-row center-h center-v">
               <span className="f-1 mr-0">Don't have an account?</span>
