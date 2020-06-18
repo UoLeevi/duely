@@ -12,7 +12,7 @@ const HeroSection = () => {
           transition={{ delay: 0.2 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-        >Platform for <span className="f-b">Digital Agencies</span></motion.span>
+        >Platform for <span className="f-b nowrap">Digital Agencies</span></motion.span>
       </div>
     </section>
   );

@@ -1,22 +1,7 @@
 .modal-background {
   position: relative;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  min-height: 70%;
-  max-width: 1200px;
-  width: 70%;
   border-radius: var(--radius-3);
   padding: var(--spacing-6);
-  box-sizing: border-box;
   background-color: var(--color-background);
   box-shadow: var(--box-shadow);
-}
-
-/* Extra Small (xs) */
-@media (max-width: 639px) {
-  :root {
-    min-height: 560px;
-    min-width: 400px;
-  }
 }

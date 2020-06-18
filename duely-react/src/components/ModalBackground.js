@@ -3,7 +3,7 @@ import './ModalBackground.css';
 
 const ModalBackground = ({ children }) => {
   return (
-    <div className="modal-background">
+    <div className="modal-background panel">
       { children }
     </div>
   )
