@@ -1,7 +1,0 @@
-.modal-background {
-  position: relative;
-  border-radius: var(--radius-3);
-  padding: var(--spacing-6);
-  background-color: var(--color-background);
-  box-shadow: var(--box-shadow);
-}

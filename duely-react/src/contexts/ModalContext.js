@@ -5,7 +5,7 @@ export const ModalContext = createContext();
 
 const defaultOptions = {
   show: false,
-  hideable: true // <- not yet implemented
+  dismissable: true // <- not yet implemented
 };
 
 const ModalContextProvider = ({ children }) => {
@@ -13,21 +13,29 @@ const ModalContextProvider = ({ children }) => {
   const [modalContentsMap, setModalContentsMap] = useState(new Map());
 
   function useModal(renderContent, { props, options } = { props: {}, options: {} }) {
-    options = { ...defaultOptions, ...options }
-
+    
     const hideModal = () => {
       const newMap = new Map(modalContentsMap);
       newMap.delete(renderContent);
       setModalContentsMap(newMap);
     }
+    
+    const Content = () => {
+      return (
+        <>
+          { renderContent({ ...props, hideModal }) }
+        </>
+      );
+    }
+
+    options = { ...defaultOptions, ...options, hideModal };
 
     const showModal = () => {
       if (modalContentsMap.has(renderContent)) {
         return;
       }
 
-      const newMap = new Map(modalContentsMap);
-      newMap.set(renderContent, renderContent({ ...props, hideModal }))
+      const newMap = new Map([[renderContent, { Content, options }], ...modalContentsMap.entries()]);
       setModalContentsMap(newMap);
     }
 
@@ -37,10 +45,14 @@ const ModalContextProvider = ({ children }) => {
     return [showModal, hideModal];
   }
 
+  const { value: { Content, options } = { Content: null, options: {} } } = modalContentsMap.values().next();
+
   return (
     <ModalContext.Provider value={{ useModal }}>
-      <Modal>
-        { Array.from(modalContentsMap.values()) }
+      <Modal { ...options }>
+        { Content &&
+          <Content />
+        }
       </Modal>
       { children }
     </ModalContext.Provider>

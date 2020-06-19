@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './Modal.css';
-import ModalBackground from './ModalBackground';
+import CloseButton from './CloseButton';
 
 const backdropAnimations = {
   initial: {
@@ -18,16 +18,37 @@ const backdropAnimations = {
   }
 }
 
-const Modal = ({ children }) => {
+const panelAnimations = {
+  initial: {
+    opacity: 0
+  },
+  animate: {
+    opacity: 1,
+    transition: {
+      delay: 0.2,
+      duration: 0.2
+    }
+  },
+  exit: {
+    opacity: 0
+  }
+}
+
+const Modal = ({ children, dismissable, hideModal }) => {
   return (
     <AnimatePresence exitBeforeEnter>
-      { children.length !== 0 && (
-        <motion.div className="modal-backdrop"
+      { children && (
+        <motion.div className="modal-backdrop" onBlur={ (e) => console.log(e) }
           { ...backdropAnimations }
         >
-          <ModalBackground>
-            { children }
-          </ModalBackground>
+          <AnimatePresence exitBeforeEnter>
+            <motion.div className="modal panel"
+              { ...panelAnimations }
+            >
+              { dismissable && <CloseButton onClick={ hideModal } /> }
+              { children }
+            </motion.div>
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>

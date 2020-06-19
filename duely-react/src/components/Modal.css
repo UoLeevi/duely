@@ -8,5 +8,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.modal {
+  position: relative;
+  border-radius: var(--radius-3);
+  padding: var(--spacing-6);
+  background-color: var(--color-background);
+  box-shadow: var(--box-shadow);
 }

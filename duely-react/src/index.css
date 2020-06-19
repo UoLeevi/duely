@@ -731,7 +731,7 @@ html {
   --box-glow: 0px 0px 0px 0.2rem rgb(var(--color-background-rgb)),
     0px 0px 1rem 0.2rem rgba(var(--color-background-rgb), 0.5), 
     0px 0px 1rem 0.2rem rgb(var(--color-background-rgb));
-  --box-shadow: 0px 0px var(--spacing-4) var(--spacing-1) rgba(0, 0, 0, 0.2);
+  --box-shadow: 0px 0px var(--spacing-6) var(--spacing-1) rgba(0, 0, 0, 0.1);
 }
 
 /* #endregion */
@@ -937,18 +937,28 @@ button.default {
   background: transparent;
   padding: 0.8em 1.4em;
   min-width: 7em;
-  transition: background-color 200ms ease-out;
+  transition: background-color 200ms ease-out, border-color 200ms ease-out;
 }
 
+input[type="button"].default:focus,
+input[type="submit"].default:focus,
+button.default:focus,
 input[type="button"].default:hover,
 input[type="submit"].default:hover,
 button.default:hover {
-  background-color: rgba(130, 130, 130, 0.09)
+  background-color: rgba(130, 130, 130, 0.04);
+  border-color: rgba(130, 130, 130, 0.36);
 }
 
 input[type="button"].flat,
 input[type="submit"].flat,
-button.flat {
+button.flat,
+input[type="button"].flat:focus,
+input[type="submit"].flat:focus,
+button.flat:focus,
+input[type="button"].flat:hover,
+input[type="submit"].flat:hover,
+button.flat:hover {
   border-color: transparent;
 }
 

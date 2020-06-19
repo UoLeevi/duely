@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { useHistory } from 'react-router-dom';
+// import { useHistory } from 'react-router-dom';
 import { AuthContext } from '../../../contexts/AuthContext';
 import { useModal } from '../../../hooks';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,9 +15,9 @@ const getInitialState = () => {
 const initialState = getInitialState();
 
 const HeaderNav = () => {
-  const { push, location } = useHistory(); // TODO: add & remove ?login query parameter when login form is shown (should baybe go in LoginForm)
+  // const { push, location } = useHistory(); // TODO: add & remove ?login query parameter when login form is shown (should maybe go in LoginForm)
   const { loading, isLoggedIn, logOut } = useContext(AuthContext);
-  const [showModal] = useModal(({ hideModal }) => <LoginForm key="login-form" whenDone={ hideModal } />, { options: { show: !isLoggedIn && initialState.showLogIn }});
+  const [showModal] = useModal(({ hideModal }) => <LoginForm whenDone={ hideModal } />, { options: { show: !isLoggedIn && initialState.showLogIn }});
 
   return (
     <AnimatePresence exitBeforeEnter>

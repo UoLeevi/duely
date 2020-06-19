@@ -1,0 +1,16 @@
+.close-button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  margin-top: var(--spacing-4);
+  margin-right: var(--spacing-4);
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+}
+
+.close-button:focus {
+  box-shadow: var(--box-shadow);
+}

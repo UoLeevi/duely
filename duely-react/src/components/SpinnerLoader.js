@@ -1,8 +1,9 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import DuelyLogo from './DuelyLogo';
 
 const SpinnerLoader = ({ children, loading, size = '4rem' }) => {
+
   const svgAnimation = {
     initial: { rotate: 0, opacity: 1 },
     animate: { rotate: 360, transition: { loop: Infinity, duration: 1.2, ease: 'linear' } },
@@ -24,14 +25,10 @@ const SpinnerLoader = ({ children, loading, size = '4rem' }) => {
     exit: { opacity: 0 }
   }
 
-  return (
-    <AnimatePresence exitBeforeEnter>
-      { loading 
-        ? <motion.div key="loader" { ...fadeAnimation }><DuelyLogo size={ size } svgAnimation={ svgAnimation } pathAnimation={ pathAnimation } /></motion.div>
-        : <motion.div key="content" { ...fadeAnimation }>{ children }</motion.div>
-      }
-    </AnimatePresence>
-   );
+  return ( loading 
+    ? <motion.div key="loader" { ...fadeAnimation }><DuelyLogo size={ size } svgAnimation={ svgAnimation } pathAnimation={ pathAnimation } /></motion.div>
+    : <motion.div key="content" { ...fadeAnimation }>{ children }</motion.div>
+  );
 };
 
 export default SpinnerLoader;

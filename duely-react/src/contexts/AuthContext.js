@@ -1,7 +1,8 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { client } from '../apollo';
 
+const errorMessageDuration = 4000;
 export const AuthContext = createContext();
 
 const AuthContextProvider = (props) => {
@@ -17,8 +18,9 @@ const AuthContextProvider = (props) => {
   );
 
   const [logInLoading, setLogInLoading] = useState(false);
+  const [logInError, setLogInError] = useState(null);
   const [logInMutation] = useMutation(gql`
-    mutation($emailAddress: String!, $password: String!) {
+  mutation($emailAddress: String!, $password: String!) {
       logIn(emailAddress: $emailAddress, password: $password) {
         success
         message
@@ -32,7 +34,7 @@ const AuthContextProvider = (props) => {
           await client.clearStore();
           await refetch();
         } else {
-          console.log(logIn.message);
+          setLogInError(logIn.message);
         }
 
         setLogInLoading(false);
@@ -40,12 +42,17 @@ const AuthContextProvider = (props) => {
     }
   );
 
-  const logIn = ({ emailAddress, password }) => {
+  const logIn = async ({ emailAddress, password }) => {
     setLogInLoading(true);
-    return logInMutation({ variables: { emailAddress, password }});
+    await logInMutation({ variables: { emailAddress, password }});
   };
 
+  useEffect(() => {
+    logInError && setTimeout(() => setLogInError(null), errorMessageDuration);
+  }, [logInError, setLogInError]);
+
   const [logOutLoading, setLogOutLoading] = useState(false);
+  const [logOutError, setLogOutError] = useState(null);
   const [logOutMutation] = useMutation(gql`
     mutation {
       logOut {
@@ -60,7 +67,7 @@ const AuthContextProvider = (props) => {
           await client.clearStore();
           await refetch();
         } else {
-          console.log(logOut.message);
+          setLogOutError(logOut.message);
         }
 
         setLogOutLoading(false);
@@ -68,10 +75,14 @@ const AuthContextProvider = (props) => {
     }
   );
 
-  const logOut = () => {
+  const logOut = async () => {
     setLogOutLoading(true);
-    return logOutMutation();
+    await logOutMutation();
   }
+
+  useEffect(() => {
+    logOutError && setTimeout(() => setLogOutLoading(null), errorMessageDuration);
+  }, [logOutError, setLogOutLoading]);
 
   return (
     <AuthContext.Provider value={{ 
@@ -80,7 +91,11 @@ const AuthContextProvider = (props) => {
       isLoggedIn: data && data.me.type === 'user',
       user: data && data.me,
       logIn,
-      logOut
+      logInLoading,
+      logInError,
+      logOut,
+      logOutLoading,
+      logOutError
     }}>
       { props.children }
     </AuthContext.Provider>

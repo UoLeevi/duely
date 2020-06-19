@@ -1,7 +1,9 @@
-import useModal from './useModal';
+import useAuth from './useAuth';
 import useBreakpoints from './useBreakpoints';
+import useModal from './useModal';
 
 export {
-  useModal,
-  useBreakpoints
+  useAuth,
+  useBreakpoints,
+  useModal
 };
