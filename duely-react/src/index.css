@@ -1,17 +1,234 @@
 /* #region Reset */
 
-*:focus,
-*:active {
-  outline: unset;
+html,
+base,
+head,
+link,
+meta,
+style,
+title,
+body,
+address,
+article,
+aside,
+footer,
+header,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hgroup,
+main,
+nav,
+section,
+blockquote,
+dd,
+div,
+dl,
+dt,
+figcaption,
+figure,
+hr,
+li,
+main,
+ol,
+p,
+pre,
+ul,
+a,
+abbr,
+b,
+bdi,
+bdo,
+br,
+cite,
+code,
+data,
+dfn,
+em,
+i,
+kbd,
+mark,
+q,
+rb,
+rp,
+rt,
+rtc,
+ruby,
+s,
+samp,
+small,
+span,
+strong,
+sub,
+sup,
+time,
+u,
+var,
+wbr,
+area,
+audio,
+img,
+map,
+track,
+video,
+embed,
+iframe,
+object,
+param,
+picture,
+source,
+canvas,
+noscript,
+script,
+del,
+ins,
+caption,
+col,
+colgroup,
+table,
+tbody,
+td,
+tfoot,
+th,
+thead,
+tr,
+button,
+datalist,
+fieldset,
+form,
+input,
+label,
+legend,
+meter,
+optgroup,
+option,
+output,
+progress,
+select,
+textarea,
+details,
+dialog,
+menu,
+summary,
+slot,
+template,
+acronym,
+applet,
+basefont,
+bgsound,
+big,
+blink,
+center,
+command,
+content,
+dir,
+element,
+font,
+frame,
+frameset,
+image,
+isindex,
+keygen,
+listing,
+marquee,
+menuitem,
+multicol,
+nextid,
+nobr,
+noembed,
+noframes,
+plaintext,
+shadow,
+spacer,
+strike,
+tt,
+xmp {
+  all: unset;
 }
 
-* { 
-  margin: unset;
-  padding: unset;
-  font-size: unset;
-  font-weight: unset;
-  border: unset;
+/* https://html.spec.whatwg.org/multipage/rendering.html */
+
+[hidden], area, base, basefont, datalist, head, link, meta, noembed,
+noframes, param, rp, script, source, style, template, track, title {
+  display: none;
 }
+
+input[type="hidden"] { display: none !important; }
+
+@media (scripting) {
+  noscript { 
+    display: none !important; 
+  }
+}
+
+html, body { display: block; }
+
+address, blockquote, center, dialog, div, figure, figcaption, footer, form,
+header, hr, legend, listing, main, p, plaintext, pre, xmp {
+  display: block;
+}
+
+article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section {
+  display: block;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: bold;
+}
+
+dir, dd, dl, dt, menu, ol, ul { display: block; }
+li { display: list-item; }
+
+table { display: table; }
+caption { display: table-caption; }
+colgroup, colgroup[hidden] { display: table-column-group; }
+col, col[hidden] { display: table-column; }
+thead, thead[hidden] { display: table-header-group; }
+tbody, tbody[hidden] { display: table-row-group; }
+tfoot, tfoot[hidden] { display: table-footer-group; }
+tr, tr[hidden] { display: table-row; }
+td, th { display: table-cell; }
+
+colgroup[hidden], col[hidden], thead[hidden], tbody[hidden],
+tfoot[hidden], tr[hidden] {
+  visibility: collapse;
+}
+
+input[type="reset"],
+input[type="button"],
+input[type="submit"],
+button {
+  text-align: center;
+}
+
+input[type="reset"],
+input[type="button"],
+input[type="submit"],
+input[type="color"],
+button {
+  display: inline-block;
+}
+
+input[type="radio"],
+input[type="checkbox"],
+input[type="reset"],
+input[type="button"],
+input[type="submit"],
+input[type="color"],
+input[type="search"],
+select,
+button {
+  box-sizing: border-box;
+}
+
+textarea { white-space: pre-wrap; }
+
+/* #endregion */
+
+/* #region Browser specific resets */
 
 input,
 textarea,
@@ -95,7 +312,7 @@ a {
 :root {
   --panel-min-width: min(400px, calc(100% - var(--spacing-5)));
   --panel-width: max-content;
-  --panel-max-width: calc(100% - var(--spacing-5));
+  --panel-max-width: min(1280px, calc(100% - var(--spacing-5)));
 }
 
 /* #endregion */
@@ -128,6 +345,17 @@ a {
   --color-surface-rgb: 57, 66, 101;
   --color-error-rgb: 255, 100, 100;
   --color-success-rgb: 0, 190, 160;
+
+  --color-grey-rgb: 130, 130, 130;
+  --alpha-1: 0.04;
+  --alpha-2: 0.08;
+  --alpha-3: 0.16;
+  --alpha-4: 0.24;
+  --alpha-5: 0.32;
+  --alpha-6: 0.40;
+  --alpha-7: 0.56;
+  --alpha-8: 0.72;
+  --alpha-9: 0.88;
 
   --color-primary: #5A5AFF;
   --color-secondary: #E664FF;
@@ -208,6 +436,14 @@ html {
   font-style: italic;
 }
 
+body {
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* #endregion */
 
 /* #region Gutters */
@@ -215,8 +451,8 @@ html {
 /* All */
 :root {
   --gutter-width: calc(5vw + 10px);
-  --gutter-width-small: calc(var(--gutter-width) * 0.5);
-  --gutter-width-large: calc(var(--gutter-width) * 5);
+  --gutter-width-small: calc(var(--gutter-width) * 0.75);
+  --gutter-width-large: calc(var(--gutter-width) * 1.25);
 }
 
 /* Small (sm) */
@@ -236,14 +472,14 @@ html {
 /* Large (lg) */
 @media (min-width: 1024px) {
   :root {
-    --gutter-width: 20vw;
+    --gutter-width: 15vw;
   }
 }
 
 /* Extra Large (xl) */
 @media (min-width: 1280px) {
   :root {
-    --gutter-width: 20vw;
+    --gutter-width: max(20vw, calc((100vw - 1280px) / 2));
   }
 }
 
@@ -729,9 +965,9 @@ html {
 
 :root {
   --box-glow: 0px 0px 0px 0.2rem rgb(var(--color-background-rgb)),
-    0px 0px 1rem 0.2rem rgba(var(--color-background-rgb), 0.5), 
+    0px 0px 1rem 0.2rem rgba(var(--color-background-rgb), var(--alpha-6)), 
     0px 0px 1rem 0.2rem rgb(var(--color-background-rgb));
-  --box-shadow: 0px 0px var(--spacing-6) var(--spacing-1) rgba(0, 0, 0, 0.1);
+  --box-shadow: 0px 0px var(--spacing-6) var(--spacing-1) rgba(0, 0, 0, var(--alpha-2));
 }
 
 /* #endregion */
@@ -739,7 +975,7 @@ html {
 /* #region Scrollbar */
 
 :root {
-  --scrollbar-color-thumb: rgba(130, 130, 130, 0.18);
+  --scrollbar-color-thumb: rgba(var(--color-grey-rgb), var(--alpha-3));
   --scrollbar-color-track: rgba(0, 0, 0, 0);
 }
 
@@ -775,15 +1011,6 @@ html:not(.custom-scroll) *::-webkit-scrollbar-thumb {
 
 /* #region Element base styles */
 
-body {
-  margin: 0;
-  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 h3 {
   font-size: var(--f-4);
 }
@@ -809,8 +1036,8 @@ ul {
 
 input[type="button"],
 input[type="submit"],
+input[type="reset"],
 button {
-  outline: none;
   cursor: pointer;
 }
 
@@ -831,11 +1058,11 @@ a:visited {
 /* #region Element custom styles */
 
 :root {
-  --label-text-height: calc(var(--f-2) * 1.2)
+  --pt-label-text: calc(var(--f-2) * 1.2)
 }
 
 .pt-label-text {
-  padding-top: var(--label-text-height);
+  padding-top: var(--pt-label-text);
 }
 
 label.default {
@@ -933,7 +1160,7 @@ button.default {
   letter-spacing: 0.04em;
   border-radius: var(--radius-2-rel);
   font-weight: bold;
-  border: solid rgba(130, 130, 130, 0.18) 2px;
+  border: solid rgba(var(--color-grey-rgb), var(--alpha-3)) 2px;
   background: transparent;
   padding: 0.8em 1.4em;
   min-width: 7em;
@@ -946,8 +1173,8 @@ button.default:focus,
 input[type="button"].default:hover,
 input[type="submit"].default:hover,
 button.default:hover {
-  background-color: rgba(130, 130, 130, 0.04);
-  border-color: rgba(130, 130, 130, 0.36);
+  background-color: rgba(var(--color-grey-rgb), var(--alpha-1));
+  border-color: rgba(var(--color-grey-rgb), var(--alpha-5));
 }
 
 input[type="button"].flat,
@@ -980,7 +1207,7 @@ button.prominent {
 label.default > input,
 input.default {
   border-radius: var(--radius-2-rel);
-  border: solid rgba(130, 130, 130, 0.18) 2px;
+  border: solid rgba(var(--color-grey-rgb), var(--alpha-3)) 2px;
   background: transparent;
   padding: 0.8em 1.4em;
   min-width: 7em;
@@ -993,12 +1220,20 @@ label.default > input[type="password"]:focus,
 input[type="text"].default:focus,
 input[type="email"].default:focus,
 input[type="password"].default:focus {
-  border-color: rgba(130, 130, 130, 0.36);
+  border-color: rgba(var(--color-grey-rgb), var(--alpha-5));
 }
 
 /* #endregion */
 
-/* #region Text utilities */
+/* #region utilities */
+
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
 
 .nowrap {
   white-space: nowrap;

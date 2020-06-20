@@ -8,7 +8,7 @@ const Header = () => {
 
   return (
     <motion.header
-      className="home-header"
+      className="home-header gutter"
       transition={{ delay: 1.2 }}
       initial={{ y: '-1rem', opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}

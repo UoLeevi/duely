@@ -5,7 +5,7 @@ import './HeroSection.css';
 const HeroSection = () => {
 
   return (
-    <section className="home-hero-section">
+    <section className="home-hero-section gutter">
       <div>
         <motion.span
           className="f-7"

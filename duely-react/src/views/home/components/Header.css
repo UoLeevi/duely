@@ -1,9 +1,12 @@
 /* home-header */
 
+:root {
+  --header-height: calc(5rem + 5vh);
+}
+
 .home-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 10rem;
-  margin: 0 var(--gutter-width);
+  height: var(--header-height);
 }

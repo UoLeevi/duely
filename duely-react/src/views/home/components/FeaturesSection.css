@@ -8,7 +8,6 @@
   height: calc(100vh - var(--content-offset));
   box-sizing: border-box;
   padding-bottom: var(--content-offset);
-  margin: 0 var(--gutter-width);
 }
 
 .home-features-section li {

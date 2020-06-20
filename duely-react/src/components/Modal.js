@@ -8,13 +8,18 @@ const backdropAnimations = {
     opacity: 0
   },
   animate: {
-    opacity: 1
+    opacity: 1,
+    transition: {
+      duration: 0.2,
+      when: 'beforeChildren'
+    }
   },
   exit: {
-    opacity: 0
-  },
-  transition: {
-    duration: 0.2
+    opacity: 0,
+    transition: {
+      duration: 0.2,
+      when: 'afterChildren'
+    }
   }
 }
 
@@ -25,25 +30,31 @@ const panelAnimations = {
   animate: {
     opacity: 1,
     transition: {
-      delay: 0.2,
       duration: 0.2
     }
   },
   exit: {
-    opacity: 0
+    opacity: 0,
+    transition: {
+      duration: 0.2
+    }
   }
 }
 
 const Modal = ({ children, dismissable, hideModal }) => {
+
   return (
     <AnimatePresence exitBeforeEnter>
       { children && (
-        <motion.div className="modal-backdrop" onBlur={ (e) => console.log(e) }
-          { ...backdropAnimations }
+        <motion.div className="modal-backdrop"
+          variants={ backdropAnimations }
+          initial="initial"
+          animate="animate"
+          exit="exit"
         >
           <AnimatePresence exitBeforeEnter>
             <motion.div className="modal panel"
-              { ...panelAnimations }
+              variants={ panelAnimations }
             >
               { dismissable && <CloseButton onClick={ hideModal } /> }
               { children }

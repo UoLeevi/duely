@@ -4,7 +4,7 @@ import './FeaturesSection.css';
 const FeaturesSection = () => {
 
   return (
-    <section className="home-features-section">
+    <section className="home-features-section gutter">
       <div>
         <ul className="f-6">
           <li>Create a service catalogue</li>

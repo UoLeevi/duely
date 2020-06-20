@@ -61,7 +61,7 @@ const LogInForm = ({ whenDone }) => {
         : (
           <>
             <div className="panel-row center-h space-between pt-label-text">
-              <SpinnerLoader loading={ loading }>
+              <SpinnerLoader { ...{ loading } }>
                 <motion.input type="submit" className="default prominent" value="Log in" { ...buttonAnimations } />
               </SpinnerLoader>
             </div>
@@ -74,7 +74,7 @@ const LogInForm = ({ whenDone }) => {
       }
       <AnimatePresence>
         { logInError && (
-          <motion.div className="panel-row center-h" { ...errorMessageAnimations }>
+          <motion.div className="panel-row center-h" { ...errorMessageAnimations } animate>
             <span className="color-error" >{ logInError }</span>
          </motion.div>
         ) }
