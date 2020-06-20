@@ -1,5 +1,5 @@
-import React, { useState, useLayoutEffect, useEffect, useRef } from 'react';
-import { motion, useAnimation, AnimatePresence } from 'framer-motion';
+import React, { useState, useLayoutEffect, useRef } from 'react';
+import { motion, useAnimation } from 'framer-motion';
 import DuelyLogo from './DuelyLogo';
 import { usePrevious } from '../hooks';
 
@@ -9,10 +9,11 @@ const SpinnerLoader = ({ children, loading, size }) => {
   const contentControls = useAnimation();
   const loaderControls = useAnimation();
   const previousLoading = usePrevious(loading);
+  const [animationPromise, setAnimationPromise] = useState(Promise.resolve());
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     async function animate() {
-      const duration = 0.3;
+      const duration = 0.2;
 
       const [from, to] = loading
         ? [contentControls, loaderControls] 
@@ -22,13 +23,13 @@ const SpinnerLoader = ({ children, loading, size }) => {
         from.stop();
         await from.start({ 
           opacity: 0,
-          transition: { duration }
+          transition: { duration },
+          transitionEnd: { visibility: 'hidden' }
         });
-        from.set({ visibility: 'hidden' });
       }
 
       to.stop();
-      from.set({ visibility: 'visible' });
+      to.set({ visibility: 'visible' });
       await to.start({ 
         opacity: 1,
         transition: { duration }
@@ -36,9 +37,9 @@ const SpinnerLoader = ({ children, loading, size }) => {
     }
 
     if (loading !== previousLoading) {
-      animate();
+      setAnimationPromise(animationPromise.then(animate));
     }
-  }, [previousLoading, loading, contentControls, loaderControls]);
+  }, [loading, previousLoading, contentControls, loaderControls, animationPromise, setAnimationPromise]);
 
   useLayoutEffect(() => {
     const { offsetTop: top, offsetLeft: left, clientWidth: width, clientHeight: height } = ref.current;
@@ -63,13 +64,13 @@ const SpinnerLoader = ({ children, loading, size }) => {
   const loaderAnimation = {
     animate: loaderControls,
     initial: { opacity: 0 },
-    exit: { opacity: 0 },
-    style: { position: 'absolute', top: rect.top, left: rect.left + rect.width / 2, x: '-50%' }
+    style: { position: 'absolute', top: rect.top, left: rect.left + rect.width / 2, x: '-50%', visibility: 'hidden' }
   }
 
   const contentAnimation = {
     animate: contentControls,
-    initial: { opacity: 0 }
+    initial: { opacity: 0 },
+    style: { visibility: 'hidden' }
   }
 
   return (
@@ -77,13 +78,9 @@ const SpinnerLoader = ({ children, loading, size }) => {
       <motion.div ref={ref} { ...contentAnimation }>
         { children }
       </motion.div>
-      <AnimatePresence>
-        { loading && (
-          <motion.div key="loader" { ...loaderAnimation }>
-            <DuelyLogo { ...{ svgAnimation, pathAnimation } } />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <motion.div key="loader" { ...loaderAnimation }>
+        <DuelyLogo { ...{ svgAnimation, pathAnimation } } />
+      </motion.div>
     </motion.div>
   );
 };
