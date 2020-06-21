@@ -1,0 +1,36 @@
+.choose {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  justify-items: center;
+}
+
+.choose > * {
+  grid-column-start: 1;
+  grid-row-start: 1;
+  transition: opacity ease 0.2s;
+}
+
+.choose > .fit {
+  position: absolute;
+  height: 100%;
+}
+
+.choose > .hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.choose > .visible {
+  opacity: 1;
+}
+
+.choose > .visible.hide {
+  opacity: 0;
+}
+
+.choose > .hidden.show {
+  visibility: visible;
+  opacity: 1;
+}

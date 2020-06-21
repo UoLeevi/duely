@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth, useBreakpoints } from '../hooks';
 import TextField from './TextField';
-import SpinnerLoader from './SpinnerLoader';
+import Choose from './Choose';
+import Spinner from './Spinner';
 
 const LogInForm = ({ whenDone }) => {
   const { sm } = useBreakpoints();
@@ -20,12 +21,6 @@ const LogInForm = ({ whenDone }) => {
     e.preventDefault();
     await logIn({ emailAddress, password });
   }
-
-  const errorMessageAnimations = {
-    initial: { opacity: 0, scaleY: 0 },
-    animate: { opacity: 1, scaleY: 1, transition: { duration: 0.4 } },
-    exit: { opacity: 0, scaleY: 0 }
-  };
 
   const buttonAnimations = {
     whileTap: { scale: 0.95 }
@@ -47,9 +42,9 @@ const LogInForm = ({ whenDone }) => {
           <>
             <div className="panel-row center-v space-between pt-label-text">
               <div className="panel-cell center-v">
-                <SpinnerLoader loading={ loading }>
+                <Spinner loading={ loading }>
                   <motion.input type="submit" className="default prominent" value="Log in" { ...buttonAnimations } />
-                </SpinnerLoader>
+                </Spinner>
               </div>
               <div className="panel-cell center-v">
                 <span className="f-1 mr-0">Don't have an account?</span>
@@ -61,24 +56,25 @@ const LogInForm = ({ whenDone }) => {
         : (
           <>
             <div className="panel-row center-h space-between pt-label-text">
-              <SpinnerLoader { ...{ loading } }>
+              <Choose index={ loading ? 1 : 0 }>
                 <motion.input type="submit" className="default prominent" value="Log in" { ...buttonAnimations } />
-              </SpinnerLoader>
+                <Spinner fit spin={ loading } />
+              </Choose>
             </div>
             <div className="panel-row center-h center-v">
-              <span className="f-1 mr-0">Don't have an account?</span>
-              <motion.input type="button" className="default flat dense ml-1 f-2 color-primary" value="Sign up" onClick={ whenDone } { ...buttonAnimations } />
+              <div className="panel-cell center-h center-v">
+              <Choose index={ logInError ? 0 : 1 }>
+                <span className="f-2 color-error">{ logInError }</span>
+                <div className="row center-v center-h">
+                  <span className="f-1 mr-0">Don't have an account?</span>
+                  <motion.input type="button" className="default flat dense ml-1 f-2 color-primary" value="Sign up" onClick={ whenDone } { ...buttonAnimations } />
+                </div>
+              </Choose>
+              </div>
             </div>
           </>
         )
       }
-      <AnimatePresence>
-        { logInError && (
-          <motion.div className="panel-row center-h" { ...errorMessageAnimations } animate>
-            <span className="color-error" >{ logInError }</span>
-         </motion.div>
-        ) }
-      </AnimatePresence>
     </form>
   );
 };
