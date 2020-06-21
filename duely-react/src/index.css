@@ -392,7 +392,7 @@ html {
 /* Large (lg) */
 @media (min-width: 1024px) {
   html {
-    font-size: 15px;
+    font-size: 14px;
   }
 }
 
@@ -1237,6 +1237,14 @@ input[type="password"].default:focus {
 
 .nowrap {
   white-space: nowrap;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.size-string {
+  visibility: hidden !important;
 }
 
 /* #endregion */

@@ -9,7 +9,7 @@
 .choose > * {
   grid-column-start: 1;
   grid-row-start: 1;
-  transition: opacity ease 0.2s;
+  transition: opacity ease-in-out 0.3s;
 }
 
 .choose > .fit {

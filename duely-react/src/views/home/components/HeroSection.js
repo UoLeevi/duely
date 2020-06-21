@@ -6,7 +6,7 @@ const HeroSection = () => {
 
   return (
     <section className="home-hero-section gutter">
-      <div>
+      <div className="text-center">
         <motion.span
           className="f-7"
           transition={{ delay: 0.2 }}
