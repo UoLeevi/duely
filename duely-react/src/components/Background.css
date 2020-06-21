@@ -1,0 +1,24 @@
+.background {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  justify-items: center;
+  overflow-x: hidden;
+}
+
+.background > * {
+  grid-column-start: 1;
+  grid-row-start: 1;
+}
+
+.background > *:first-child {
+  position: absolute;
+  height: 100%;
+  z-index: -1;
+}
+
+.background.fullscreen > *:first-child {
+  position: absolute;
+  width: 100vw;
+}

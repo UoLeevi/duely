@@ -960,6 +960,13 @@ body {
   color: var(--color-success);
 }
 
+.color-white {
+  color: #ffffff;;
+}
+.color-black {
+  color: #000000;
+}
+
 /* #endregion */
 
 /* #region Box shadows */
