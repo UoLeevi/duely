@@ -9,3 +9,8 @@
   box-sizing: border-box;
   padding-bottom: calc(var(--header-height) + var(--content-offset));
 }
+
+.home-hero-section > div {
+  width: calc(100vw - var(--gutter-width) * 2);
+  max-width: 768px;
+}
