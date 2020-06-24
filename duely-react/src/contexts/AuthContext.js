@@ -5,28 +5,42 @@ import { client } from '../apollo';
 const errorMessageDuration = 4000;
 export const AuthContext = createContext();
 
+const ME_QUERY = gql`
+  query {
+    me {
+      uuid
+      name
+      emailAddress
+      type
+    }
+  }
+`;
+
+const LOG_IN_MUTATION = gql`
+  mutation($emailAddress: String!, $password: String!) {
+    logIn(emailAddress: $emailAddress, password: $password) {
+      success
+      message
+      jwt
+    }
+  }
+`;
+
+const LOG_OUT_MUTATION = gql`
+  mutation {
+    logOut {
+      success
+      message
+    }
+  }
+`;
+
 const AuthContextProvider = (props) => {
-  const { loading, error, data, refetch } = useQuery(gql`
-    query {
-      me {
-        uuid
-        name
-        emailAddress
-        type
-      }
-    }`
-  );
+  const { loading, error, data, refetch } = useQuery(ME_QUERY);
 
   const [logInLoading, setLogInLoading] = useState(false);
   const [logInError, setLogInError] = useState(null);
-  const [logInMutation] = useMutation(gql`
-  mutation($emailAddress: String!, $password: String!) {
-      logIn(emailAddress: $emailAddress, password: $password) {
-        success
-        message
-        jwt
-      }
-    }`,
+  const [logInMutation] = useMutation(LOG_IN_MUTATION,
     {
       onCompleted: async ({ logIn }) => {
         if (logIn.success) {
@@ -53,13 +67,7 @@ const AuthContextProvider = (props) => {
 
   const [logOutLoading, setLogOutLoading] = useState(false);
   const [logOutError, setLogOutError] = useState(null);
-  const [logOutMutation] = useMutation(gql`
-    mutation {
-      logOut {
-        success
-        message
-      }
-    }`,
+  const [logOutMutation] = useMutation(LOG_OUT_MUTATION,
     {
       onCompleted: async ({ logOut }) => {
         if (logOut.success) {

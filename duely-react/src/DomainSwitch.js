@@ -2,9 +2,9 @@ import React, { useContext } from 'react';
 import { Switch, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion';
 import { DomainContext } from './contexts/DomainContext';
-import AgencyHome from './views/AgencyHome';
+import AgencyHome from './views/agency-home';
 import Dashboard from './views/Dashboard';
-import Home from './views/home/Home';
+import Home from './views/home';
 import Portal from './views/Portal';
 import Profile from './views/Profile';
 

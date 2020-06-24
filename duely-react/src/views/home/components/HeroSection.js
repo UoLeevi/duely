@@ -13,29 +13,27 @@ const HeroSection = () => {
           animate={{ opacity: 1 }}
         >
           <defs>
-            <motion.radialGradient id="hero-text-gradient" gradientUnits="userSpaceOnUse" r="160%"
-              transition={{ duration: 5, delay: 2 }}
-              animate={{
-                cx: ['0%', '15%', '10%', '30%', '50%', '70%', '80%', '100%'],
-                cy: ['0%', '40%', '60%', '50%', '30%', '50%', '70%', '100%']
+          <linearGradient id="hero-text-gradient">
+            <stop offset="0" stopColor="#5A5AFF" />
+            <stop offset="1" stopColor="#00BEA0" />
+          </linearGradient>
+          <mask id="hero-text-mask">
+            <motion.circle cy="45" fill="#ffffff"
+              transition={{ 
+                delay: 4, 
+                duration: 1.4,
+                ease: "easeInOut"
               }}
-            >
-              <motion.stop offset="20%"
-                transition={{ duration: 5, delay: 2 }}
-                animate={{ stopColor: ['#000000', '#000000', '#d7d2cc', '#d7d2cc', '#d6ae7b', '#eacda3', '#304352', '#000000'] }}
-              />
-              <motion.stop offset="40%"
-                transition={{ duration: 5, delay: 2 }}
-                animate={{ stopColor: ['#000000', '#000000', '#304352', '#2980b9', '#eacda3', '#d6ae7b', '#304352', '#000000'] }}
-              /> 
-              <motion.stop offset="60%"
-                transition={{ duration: 5, delay: 2 }}
-                animate={{ stopColor: ['#000000', '#000000', '#304352', '#283E51', '#CCCCB2', '#d7d2cc', '#d7d2cc', '#000000'] }}
-              /> 
-            </motion.radialGradient>
+              animate={{ 
+                r: [0, 200, 200, 0],
+                cx: [0, 0, 200, 200],
+              }}
+            />
+          </mask>
           </defs>
           <text x="0" y="20" fontSize="20" fill="#000000">Platform for</text>
-          <text x="0" y="45" fontSize="20" fontWeight="bold" fill="url('#hero-text-gradient')">Digital Agencies</text>
+          <text x="0" y="45" fontSize="20" fontWeight="bold" fill="#000000">Digital Agencies</text>
+          <text x="0" y="45" fontSize="20" fontWeight="bold" fill="url('#hero-text-gradient')" mask="url('#hero-text-mask')">Digital Agencies</text>
         </motion.svg>
       </div>
     </section>

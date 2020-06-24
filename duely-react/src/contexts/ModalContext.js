@@ -5,7 +5,7 @@ export const ModalContext = createContext();
 
 const defaultOptions = {
   show: false,
-  dismissable: true // <- not yet implemented
+  dismissable: true
 };
 
 const ModalContextProvider = ({ children }) => {
@@ -13,13 +13,13 @@ const ModalContextProvider = ({ children }) => {
   const [modalContentsMap, setModalContentsMap] = useState(new Map());
 
   function useModal(renderContent, { props, options } = { props: {}, options: {} }) {
-    
+
     const hideModal = () => {
       const newMap = new Map(modalContentsMap);
       newMap.delete(renderContent);
       setModalContentsMap(newMap);
     }
-    
+
     const Content = () => {
       return (
         <>
