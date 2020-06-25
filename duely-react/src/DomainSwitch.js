@@ -3,10 +3,10 @@ import { Switch, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion';
 import { DomainContext } from './contexts/DomainContext';
 import AgencyHome from './views/agency-home';
-import Dashboard from './views/Dashboard';
+import Dashboard from './views/dashboard';
 import Home from './views/home';
-import Portal from './views/Portal';
-import Profile from './views/Profile';
+import Portal from './views/portal';
+import Profile from './views/profile';
 
 const DomainSwitch = () => {
   const { subdomain } = useContext(DomainContext);

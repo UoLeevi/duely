@@ -31,9 +31,11 @@ const HeroSection = () => {
             />
           </mask>
           </defs>
-          <text x="0" y="20" fontSize="20" fill="#000000">Platform for</text>
-          <text x="0" y="45" fontSize="20" fontWeight="bold" fill="#000000">Digital Agencies</text>
-          <text x="0" y="45" fontSize="20" fontWeight="bold" fill="url('#hero-text-gradient')" mask="url('#hero-text-mask')">Digital Agencies</text>
+          <text x="0" y="0" fontSize="20">
+            <tspan x="0" dy="20" className="color-grey-2">Platform for</tspan>
+            <tspan x="0" dy="25" className="color-black" fontWeight="bold">Digital Agencies</tspan>
+            <tspan x="0" dy="0" fontWeight="bold" fill="url('#hero-text-gradient')" mask="url('#hero-text-mask')">Digital Agencies</tspan>
+          </text>
         </motion.svg>
       </div>
     </section>
