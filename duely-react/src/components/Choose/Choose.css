@@ -2,14 +2,25 @@
   position: relative;
   display: grid;
   grid-template-columns: 1fr;
-  align-items: center;
-  justify-items: center;
+}
+
+.choose > .top {
+  align-self: start;
+}
+.choose > .right {
+  justify-self: end;
+}
+.choose > .bottom {
+  align-self: end;
+}
+.choose > .left {
+  justify-self: start;
 }
 
 .choose > * {
   grid-column-start: 1;
   grid-row-start: 1;
-  transition: opacity ease-in-out 0.3s;
+  transition: opacity ease-in-out 0.2s;
 }
 
 .choose > .fit {
@@ -30,7 +41,3 @@
   opacity: 0;
 }
 
-.choose > .hidden.show {
-  visibility: visible;
-  opacity: 1;
-}
