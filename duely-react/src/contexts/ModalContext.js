@@ -1,5 +1,5 @@
 import React, { createContext, useState, useLayoutEffect } from 'react';
-import Modal from '../components/Modal';
+import Modal from 'components/Modal';
 
 export const ModalContext = createContext();
 
@@ -9,7 +9,6 @@ const defaultOptions = {
 };
 
 const ModalContextProvider = ({ children }) => {
-
   const [modalContentsMap, setModalContentsMap] = useState(new Map());
 
   function useModal(renderContent, { props, options } = { props: {}, options: {} }) {
@@ -56,6 +55,14 @@ const ModalContextProvider = ({ children }) => {
       </Modal>
       { children }
     </ModalContext.Provider>
+  );
+};
+
+export function withModalContext(Fn) {
+  return (
+    <ModalContextProvider>
+      <Fn />
+    </ModalContextProvider>
   );
 }
 

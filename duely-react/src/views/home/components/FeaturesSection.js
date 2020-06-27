@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import './FeaturesSection.css';
 import { useIntersectionObserver } from '../../../hooks';
 import Background from '../../../components/Background';
+
 const FeaturesSection = () => {
   const ref = useRef();
   useIntersectionObserver(ref, (entry) => {

@@ -327,7 +327,7 @@ a {
   --radius-4: 1.7rem;
   --radius-5: 2rem;
 
-  --radius-1-rel: 0.8em;
+  --radius-1-rel: 0.6em;
   --radius-2-rel: 1.1em;
   --radius-3-rel: 1.4em;
   --radius-4-rel: 1.7em;
@@ -1091,11 +1091,11 @@ a:visited {
 /* #region Element custom styles */
 
 :root {
-  --pt-label-text: calc(var(--f-2) * 1.2)
+  --label-height: calc(var(--f-2) * 1.1)
 }
 
 .pt-label-text {
-  padding-top: var(--pt-label-text);
+  padding-top: var(--label-height);
 }
 
 label.default {
@@ -1112,7 +1112,7 @@ label.default > span {
   font-size: var(--f-2);
   font-weight: bold;
   letter-spacing: 0.04em;
-  padding-bottom: calc(var(--label-text-height) - var(--f-2));
+  padding-bottom: calc(var(--label-height) - var(--f-2));
   padding-left: 0.4em;
 }
 
@@ -1191,7 +1191,7 @@ input[type="button"].default,
 input[type="submit"].default,
 button.default {
   letter-spacing: 0.04em;
-  border-radius: var(--radius-2-rel);
+  border-radius: var(--radius-1-rel);
   font-weight: bold;
   border: solid rgba(var(--color-grey-rgb), var(--alpha-3)) 2px;
   background: transparent;
@@ -1239,7 +1239,7 @@ button.prominent {
 
 label.default > input,
 input.default {
-  border-radius: var(--radius-2-rel);
+  border-radius: var(--radius-1-rel);
   border: solid rgba(var(--color-grey-rgb), var(--alpha-3)) 2px;
   background: transparent;
   padding: 0.8em 1.4em;

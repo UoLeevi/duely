@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '../hooks';
-import TextField from './TextField';
-import Choose from './Choose';
-import Spinner from './Spinner';
+import { useAuth } from '../../hooks';
+import TextField from '../TextField';
+import Choose from '../Choose';
+import Spinner from '../Spinner';
 
 const LogInForm = ({ whenDone }) => {
   const [emailAddress, setEmailAddress] = useState('');

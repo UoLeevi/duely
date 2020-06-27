@@ -9,7 +9,7 @@ end_of_line = lf
 insert_final_newline = true
 
 # Indentation
-[**.{css,svg}]
+[**.{css,svg,json,code-snippets}]
 indent_style = space
 indent_size = 2
 charset = utf-8

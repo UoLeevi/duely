@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './Modal.css';
-import CloseButton from './CloseButton';
+import CloseButton from '../CloseButton';
 
 const backdropAnimations = {
   initial: {
@@ -25,18 +25,21 @@ const backdropAnimations = {
 
 const panelAnimations = {
   initial: {
-    opacity: 0
+    opacity: 0,
+    scale: 0.9
   },
   animate: {
     opacity: 1,
+    scale: 1,
     transition: {
-      duration: 0.2
+      duration: 0.1
     }
   },
   exit: {
     opacity: 0,
+    scale: 0.9,
     transition: {
-      duration: 0.2
+      duration: 0.1
     }
   }
 }
