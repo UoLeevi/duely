@@ -24,4 +24,12 @@ const ViewportContextProvider = (props) => {
   );
 }
 
+export function withViewportContext(Fn) {
+  return (
+    <ViewportContextProvider>
+      <Fn />
+    </ViewportContextProvider>
+  );
+}
+
 export default ViewportContextProvider;

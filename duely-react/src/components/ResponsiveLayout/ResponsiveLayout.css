@@ -1,0 +1,42 @@
+.responsive-layout {
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 30px 1fr 30px;
+}
+
+.responsive-layout > *,
+.responsive-layout > .body > * {
+  border: 1px solid rgb(var(--color-grey-rgb));
+}
+
+.responsive-layout > .body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4fr minmax(0, 1fr);
+  overflow: hidden;}
+
+.responsive-layout > .body > main {
+  overflow-y: scroll;
+}
+
+.responsive-layout > header {
+
+}
+
+.responsive-layout > footer {
+
+}
+
+.responsive-layout > .body > main {
+
+}
+
+.responsive-layout > .body > nav {
+
+}
+
+.responsive-layout > .body > aside {
+
+}
