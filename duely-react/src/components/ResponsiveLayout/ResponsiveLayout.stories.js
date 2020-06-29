@@ -18,18 +18,30 @@ const routes = [
   {
     path: "/",
     exact: true,
-    nav: () => <div>home!</div>,
-    main: () => <h2>Home</h2>
-  },
-  {
-    path: "/bubblegum",
-    nav: () => <div>bubblegum!</div>,
-    main: () => <h2>Bubblegum</h2>
-  },
-  {
-    path: "/shoelaces",
-    nav: () => <div>shoelaces!</div>,
-    main: () => <h2>Shoelaces</h2>
+    topbar: {
+      props: { style: { backgroundColor: 'var(--color-primary)', color: '#ffffff' } },
+      component: () => <div>topbar</div>
+    },
+    nav: {
+      props: { style: { backgroundColor: 'var(--color-secondary)', color: '#ffffff' } },
+      component: () => <div>nav</div>
+    },
+    aside: {
+      props: { style: { backgroundColor: 'var(--color-error)', color: '#ffffff' } },
+      component: () => <div>aside</div>
+    },
+    header: {
+      props: { style: { backgroundColor: 'var(--color-accent)', color: '#ffffff' } },
+      component: () => <div>header</div>
+    },
+    main: {
+      props: { style: { backgroundColor: 'var(--color-success)', color: '#ffffff' } },
+      component: () => <div>main</div>
+    },
+    footer: {
+      props: { style: { backgroundColor: 'var(--color-surface)', color: '#ffffff' } },
+      component: () => <div>footer</div>
+    },
   }
 ];
 

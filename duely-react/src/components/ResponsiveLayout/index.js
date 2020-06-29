@@ -4,45 +4,88 @@ import './ResponsiveLayout.css';
 
 // routes
 
+
+const elements = {
+  'topbar': 'header',
+  'nav': 'nav',
+  'aside': 'aside',
+  'header': 'header',
+  'main': 'main',
+  'footer': 'footer'
+};
+
 const ResponsiveLayout = ({ routes }) => {
   function contentFor(section) {
     const sectionRoutes = routes
-      .filter(route => route[section] !== undefined)
       .map((route, index) => {
-        const Component = route[section];
+        const Element = elements[section];
 
-        return (
-          <Route
-            key={ index }
-            path={ route.path }
-            exact={ route.exact }
-            children={ <Component /> }
-          />
-        );
+        if (route[section] === undefined) {
+          return (
+            <Route
+              key={ index }
+              path={ route.path }
+              exact={ route.exact }
+              children={ <Element /> }
+            />
+          );
+        }
+
+        if (typeof route[section] === 'function') {
+          const Content = route[section];
+          return (
+            <Route
+              key={ index }
+              path={ route.path }
+              exact={ route.exact }
+              children={ 
+                <Element>
+                  <Content />
+               </Element>
+              }
+            />
+          );
+        } else {
+          const { props, component: Content } = route[section];
+          return (
+            <Route
+              key={ index }
+              path={ route.path }
+              exact={ route.exact }
+              children={ 
+                <Element { ...props }>
+                  <Content />
+               </Element>
+              }
+            />
+          );
+        }
       });
 
-    return (
+    return () => (
       <Switch>
         { sectionRoutes }
       </Switch>
     );
   }
 
-  const headerContent = contentFor('header');
-  const navContent = contentFor('nav');
-  const mainContent = contentFor('main');
-  const asideContent = contentFor('aside');
-  const footerContent = contentFor('footer');
+  const Topbar = contentFor('topbar');
+  const Nav = contentFor('nav');
+  const Aside = contentFor('aside');
+  const Header= contentFor('header');
+  const Main = contentFor('main');
+  const Footer = contentFor('footer');
 
   return (
     <div className="responsive-layout">
-      <header>{ headerContent }</header>
+      <Topbar />
+      <Nav />
+      <Aside />
       <div className="body">
-        <nav>{ navContent }</nav>
-        <main>{ mainContent }</main>
-        <aside>{ asideContent }</aside>
+        <Header />
+        <Main />
+        <Footer />
       </div>
-      <footer>{ footerContent }</footer>
     </div>
   );
 };
