@@ -29,11 +29,11 @@
   overflow-y: scroll;
 }
 
-.responsive-layout > header {
+.responsive-layout > [data-layout="topbar"] {
   grid-area: t;
 }
 
-.responsive-layout > nav {
+.responsive-layout > [data-layout="nav"] {
   grid-area: n;
 }
 
@@ -41,20 +41,20 @@
   grid-area: b;
 }
 
-.responsive-layout > aside {
+.responsive-layout > [data-layout="aside"] {
   grid-area: a;
 }
 
-.responsive-layout > .body > header {
+.responsive-layout > .body > [data-layout="header"] {
   grid-area: h;
 }
 
-.responsive-layout > .body > main {
+.responsive-layout > .body > [data-layout="main"] {
   grid-area: m;
   overflow-x: scroll;
 }
 
-.responsive-layout > .body > footer {
+.responsive-layout > .body > [data-layout="footer"] {
   grid-area: f;
 }
 

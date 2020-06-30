@@ -14,38 +14,41 @@ export default {
   ]
 };
 
-const routes = [
-  {
-    path: "/",
-    exact: true,
-    topbar: {
-      props: { style: { backgroundColor: 'var(--color-primary)', color: '#ffffff' } },
-      component: () => <div>topbar</div>
-    },
-    nav: {
-      props: { style: { backgroundColor: 'var(--color-secondary)', color: '#ffffff' } },
-      component: () => <div>nav</div>
-    },
-    aside: {
-      props: { style: { backgroundColor: 'var(--color-error)', color: '#ffffff' } },
-      component: () => <div>aside</div>
-    },
-    header: {
-      props: { style: { backgroundColor: 'var(--color-accent)', color: '#ffffff' } },
-      component: () => <div>header</div>
-    },
-    main: {
-      props: { style: { backgroundColor: 'var(--color-success)', color: '#ffffff' } },
-      component: () => <div>main</div>
-    },
-    footer: {
-      props: { style: { backgroundColor: 'var(--color-surface)', color: '#ffffff' } },
-      component: () => <div>footer</div>
-    },
-  }
-];
 
-export const Default = () => {
+export const Areas = () => {
+  const routes = [
+    {
+      path: "/",
+      exact: true,
+      topbar: () => <div style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>topbar</div>,
+      nav: () => <nav style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>nav</nav>,
+      aside: () => <aside style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>aside</aside>,
+      header: () => <header style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>header</header>,
+      main: () => <main style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>main</main>,
+      footer: () => <footer style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>footer</footer>,
+    }
+  ];
+
+  return (
+    <ResponsiveLayout routes={ routes } />
+  )
+};
+
+
+export const WithDefaultComponents = () => {
+  const routes = [
+    {
+      path: "/",
+      exact: true,
+      topbar: () => <div style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>topbar</div>,
+      nav: () => <nav style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>nav</nav>,
+      aside: () => <aside style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>aside</aside>,
+      header: () => <header style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>header</header>,
+      main: () => <main style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>main</main>,
+      footer: () => <footer style={{ backgroundColor: 'var(--color-primary)', color: '#ffffff' }}>footer</footer>
+    }
+  ];
+
   return (
     <ResponsiveLayout routes={ routes } />
   )

@@ -5,7 +5,7 @@ import './ResponsiveLayout.css';
 // routes
 
 
-const elements = {
+const defaultElements = {
   'topbar': 'header',
   'nav': 'nav',
   'aside': 'aside',
@@ -18,48 +18,15 @@ const ResponsiveLayout = ({ routes }) => {
   function contentFor(section) {
     const sectionRoutes = routes
       .map((route, index) => {
-        const Element = elements[section];
+        
+        const Element = route[section] || defaultElements[section];
+        const LayoutElement = () => React.cloneElement(<Element/>, { 'data-layout': section });
 
-        if (route[section] === undefined) {
-          return (
-            <Route
-              key={ index }
-              path={ route.path }
-              exact={ route.exact }
-              children={ <Element /> }
-            />
-          );
-        }
-
-        if (typeof route[section] === 'function') {
-          const Content = route[section];
-          return (
-            <Route
-              key={ index }
-              path={ route.path }
-              exact={ route.exact }
-              children={ 
-                <Element>
-                  <Content />
-               </Element>
-              }
-            />
-          );
-        } else {
-          const { props, component: Content } = route[section];
-          return (
-            <Route
-              key={ index }
-              path={ route.path }
-              exact={ route.exact }
-              children={ 
-                <Element { ...props }>
-                  <Content />
-               </Element>
-              }
-            />
-          );
-        }
+        return (
+          <Route key={ index } path={ route.path } exact={ route.exact }>
+            <LayoutElement />
+          </Route>
+        );
       });
 
     return () => (
