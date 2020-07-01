@@ -1,4 +1,5 @@
 import React from 'react';
+import { IconContext } from 'react-icons';
 import { ApolloProvider } from '@apollo/client';
 import { client } from './apollo';
 import ViewportContextProvider from './contexts/ViewportContext';
@@ -13,11 +14,13 @@ const App = () => (
     <AuthContextProvider>
       <DomainContextProvider>
         <ViewportContextProvider>
-          <ViewRoot>
-            <ModalContextProvider>
-              <DomainSwitch/>
-            </ModalContextProvider>
-          </ViewRoot>
+          <IconContext.Provider>
+            <ViewRoot>
+              <ModalContextProvider>
+                <DomainSwitch/>
+              </ModalContextProvider>
+            </ViewRoot>
+          </IconContext.Provider>
         </ViewportContextProvider>
       </DomainContextProvider>
     </AuthContextProvider>

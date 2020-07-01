@@ -1,0 +1,14 @@
+.nav {
+  display: grid;
+}
+
+.nav > ul {
+  width: min-content;
+  display: flex;
+  margin: var(--spacing-2n);
+}
+
+.nav > ul > li {
+  display: block;
+  margin: var(--spacing-2);
+}
