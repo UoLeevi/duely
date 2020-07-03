@@ -2,7 +2,7 @@ import React from 'react';
 import NavButton from 'components/NavButton';
 import './Nav.css';
 
-const Nav = ({ items = [] }) => {
+const Nav = ({ items = [], horizontal }) => {
   
   const menuItems = items.map(({ link, text, icon }) => {
     return (
@@ -11,7 +11,7 @@ const Nav = ({ items = [] }) => {
   });
 
   return (
-    <nav className="nav">
+    <nav className={ 'nav ' + (horizontal ? 'h' : 'v') }>
       <ul>
         { menuItems }
       </ul>

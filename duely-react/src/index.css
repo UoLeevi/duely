@@ -1,3 +1,5 @@
+@import url(styles/colors.css);
+
 /* #region Reset */
 
 html,
@@ -332,39 +334,6 @@ a {
   --radius-3-rel: 1.4em;
   --radius-4-rel: 1.7em;
   --radius-5-rel: 2em;
-}
-
-/* #endregion */
-
-/* #region Color variables */
-
-:root {
-  --color-primary-rgb: 90, 90, 255;
-  --color-secondary-rgb: 230, 100, 255;
-  --color-accent-rgb: 100, 200, 255;
-  --color-background-rgb: 255, 255, 255;
-  --color-surface-rgb: 57, 66, 101;
-  --color-error-rgb: 255, 100, 100;
-  --color-success-rgb: 0, 190, 160;
-
-  --color-grey-rgb: 130, 130, 130;
-  --alpha-1: 0.04;
-  --alpha-2: 0.08;
-  --alpha-3: 0.16;
-  --alpha-4: 0.24;
-  --alpha-5: 0.32;
-  --alpha-6: 0.40;
-  --alpha-7: 0.56;
-  --alpha-8: 0.72;
-  --alpha-9: 0.88;
-
-  --color-primary: #5A5AFF;
-  --color-secondary: #E664FF;
-  --color-accent: #64C8FF;
-  --color-background: #ffffff;
-  --color-surface: #394265;
-  --color-error: #FF6464;
-  --color-success: #00BEA0;
 }
 
 /* #endregion */
@@ -932,64 +901,6 @@ body {
 }
 .ma-5n {
   margin: var(--spacing-5n) !important;
-}
-
-/* #endregion */
-
-/* #region Colors */
-
-.color-primary {
-  color: var(--color-primary);
-  fill: var(--color-primary);
-}
-.color-secondary {
-  color: var(--color-secondary);
-  fill: var(--color-secondary);
-}
-.color-accent {
-  color: var(--color-accent);
-  fill: var(--color-accent);
-}
-.color-background {
-  color: var(--color-background);
-  fill: var(--color-background);
-}
-.color-surface {
-  color: var(--color-surface);
-  fill: var(--color-surface);
-}
-.color-error {
-  color: var(--color-error);
-  fill: var(--color-error);
-}
-.color-success {
-  color: var(--color-success);
-  fill: var(--color-success);
-}
-
-.color-white {
-  color: #ffffff;
-  fill: #ffffff;
-}
-.color-black {
-  color: #000000;
-  fill: #000000;
-}
-.color-grey {
-  color: rgb(var(--color-grey-rgb));
-  fill: rgb(var(--color-grey-rgb));
-}
-.color-grey-3 {
-  color: rgba(var(--color-grey-rgb), 0.75);
-  fill: rgba(var(--color-grey-rgb), 0.75);
-}
-.color-grey-2 {
-  color: rgba(var(--color-grey-rgb), 0.5);
-  fill: rgba(var(--color-grey-rgb), 0.5);
-}
-.color-grey-1 {
-  color: rgba(var(--color-grey-rgb), 0.25);
-  fill: rgba(var(--color-grey-rgb), 0.25);
 }
 
 /* #endregion */

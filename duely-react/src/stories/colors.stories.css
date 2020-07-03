@@ -1,0 +1,15 @@
+.colors-story {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  width: max-content;
+  gap: var(--spacing-1);
+}
+
+.colors-story > div {
+  display: grid;
+  grid-auto-flow: row;
+  grid-auto-rows: minmax(0, 1fr);
+  height: max-content;
+  gap: var(--spacing-1);
+}

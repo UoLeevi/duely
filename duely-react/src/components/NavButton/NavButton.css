@@ -1,5 +1,5 @@
 .nav-button {
-  color: rgb(var(--color-grey-rgb));
+  color: var(--color-primary-s1nl3n);
   text-align: center;
   cursor: pointer;
 }
@@ -9,16 +9,15 @@
   flex-direction: column;
   align-items: center;
   width: auto;
+  margin-top: calc(var(--spacing-1) * 0.6);
 }
 
 .nav-button .nav-button-text {
   transition: color 300ms;
 }
 
-.nav-button.route-matches .nav-button-text,
-.nav-button > .active .nav-button-text,
-.nav-button.selected .nav-button-text {
-  color: rgb(var(--color-grey-rgb));
+.nav-button > .active .nav-button-text {
+  color: var(--color-primary-s1nl4n);
 }
 
 .nav-button .nav-button-icon {
@@ -53,20 +52,18 @@
   box-shadow: 0px 0px 0px 0.2rem var(--color-white);
 }
 
-.nav-button.notification:not(.route-matches):not(.selected):not(.router-link-exact-active):hover .nav-button-icon::before {
+.nav-button.notification:hover .nav-button-icon::before {
   box-shadow: 0px 0px 0px 0.15rem var(--color-white);
   width: 0.55rem;
   height: 0.55rem;
 }
 
-.nav-button.route-matches .nav-button-icon,
-.nav-button > .active .nav-button-icon,
-.nav-button.selected .nav-button-icon {
-  box-shadow: 0px 0px 0px 0.2rem var(--color-white), 0px 0px 0px 0.35rem,
+.nav-button > .active .nav-button-icon {
+  box-shadow: 0px 0px 0px 0.2rem rgba(255, 255, 255, 0.5), 0px 0px 0px 0.35rem,
     0px 0px 1rem 0.35rem rgba(255, 255, 255, 0.5), 0px 0px 1rem 0.35rem;
 }
 
-.nav-button:not(.route-matches):not(.selected):not(.router-link-exact-active):hover .nav-button-icon {
+.nav-button:hover > *:not(.active) .nav-button-icon {
   box-shadow: 0px 0px 0px 0.2rem,
     0px 0px 1rem 0.2rem rgba(255, 255, 255, 0.5), 0px 0px 1rem 0.2rem;
 }

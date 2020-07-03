@@ -17,6 +17,8 @@ export default {
 
 export const Default = () => {
   return (
-    <NavButton text="Home" link={{ to: '/'  }} icon={ IoIosHome } />
+    <div className="ma-2">
+      <NavButton text="Home" link={{ to: '/asdf'  }} icon={ IoIosHome } />
+    </div>
   )
 };

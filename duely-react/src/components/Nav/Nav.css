@@ -1,11 +1,39 @@
 .nav {
   display: grid;
+  place-items: center;
+  width: max-content;
+  background-color: var(--color-primary-s1nl4);
+}
+
+.nav.v {
+  height: 100vh;
+  grid-template:
+    "m s" 1fr / auto auto;
+}
+
+.nav.h {
+  width: 100vw;
+  grid-template:
+    "s" auto
+    "m" auto;
 }
 
 .nav > ul {
-  width: min-content;
-  display: flex;
-  margin: var(--spacing-2n);
+  grid-area: m;
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.nav.v > ul {
+  grid-auto-flow: row;
+  grid-auto-rows: minmax(0, 1fr);
+  height: max-content;
+}
+
+.nav.h > ul {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  width: max-content;
 }
 
 .nav > ul > li {

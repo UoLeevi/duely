@@ -15,24 +15,31 @@ export default {
   ]
 };
 
-export const Example = () => {
-  const items = [
-    {
-      text: 'Portal',
-      icon: IoIosHome,
-      link: {
-        to: '/portal'
-      }
-    },
-    {
-      text: 'Projects',
-      icon: IoIosBriefcase,
-      link: {
-        to: '/projects'
-      }
+const items = [
+  {
+    text: 'Portal',
+    icon: IoIosHome,
+    link: {
+      to: '/portal'
     }
-  ];
+  },
+  {
+    text: 'Projects',
+    icon: IoIosBriefcase,
+    link: {
+      to: '/projects'
+    }
+  }
+];
+
+export const Vertical = () => {
   return (
     <Nav items={ items } />
+  )
+};
+
+export const Horizontal = () => {
+  return (
+    <Nav items={ items } horizontal />
   )
 };

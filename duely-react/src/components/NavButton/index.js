@@ -5,16 +5,16 @@ import './NavButton.css';
 const NavButton = ({ link, text, icon, tag = 'button' }) => {
   const Element = tag;
   const Icon = icon;
-  const Asdf = link
+  const Wrapper = link
     ? ({ children }) => (<NavLink { ...link }>{ children }</NavLink>)
     : null;
 
   return (
     <Element className="nav-button">
-      <Asdf>
+      <Wrapper>
         <div className="nav-button-icon"><Icon/></div>
-        <span className="nav-button-text">{ text }</span>
-      </Asdf>
+        <span className="nav-button-text f-1 f-b mt-1">{ text }</span>
+      </Wrapper>
     </Element>
   );
 };
