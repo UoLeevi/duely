@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { text } from '@storybook/addon-knobs';
 import Choose from '../Choose';
 import Spinner from '../Spinner';
 
@@ -22,10 +21,13 @@ export default {
         ~data-fit~ data attribute.
       `
     }
+  },
+  argTypes: {
+    index: { disable: true }
   }
 };
 
-export const ToggleContent = () => {
+export const ToggleContent = ({ justifyItems, alignItems }) => {
   const [index, setIndex] = useState(0);
 
   return (
@@ -34,7 +36,7 @@ export const ToggleContent = () => {
         <button className="default" onClick={ () => setIndex((index + 1) % 3) }>Toggle</button>
       </div>
       <div className="panel-row">
-        <Choose index={ index } justifyItems={ text('justifyItems', 'center') } alignItems={ text('alignItems', 'center') }>
+        <Choose index={ index } justifyItems={ justifyItems } alignItems={ alignItems }>
           <span>Choose component selects is size based on the largest child.</span>
           <span>Other items are centered</span>
           <span data-left>Individual child justified left</span>
@@ -43,6 +45,11 @@ export const ToggleContent = () => {
     </div>
   );
 };
+
+ToggleContent.args = {
+  justifyItems: 'center',
+  alignItems: 'center'
+}
 
 export const LoadingSpinner = () => {
   const [loading, setLoading] = useState(false);

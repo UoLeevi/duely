@@ -232,12 +232,8 @@ textarea { white-space: pre-wrap; }
 
 /* #region Browser specific resets */
 
-input,
-textarea,
-button,
-select,
-a {
-  -webkit-tap-highlight-color: transparent;
+* {
+  -webkit-tap-highlight-color: transparent !important;
 }
 
 /* #endregion */
@@ -983,6 +979,12 @@ input[type="submit"],
 input[type="reset"],
 button {
   cursor: pointer;
+}
+
+a {
+  text-decoration: inherit;
+  color: inherit;
+  cursor: auto;
 }
 
 a:link {

@@ -41,7 +41,7 @@ const Background = ({ children, scale = 1.0, justifyItems = 'start', alignItems 
   }, [scale, contain]);
 
   return (
-    <div className="background" style={{ justifyItems, alignItems }} ref={ ref }>
+    <div className="background-component" style={{ justifyItems, alignItems }} ref={ ref }>
       { children }
     </div>
   );

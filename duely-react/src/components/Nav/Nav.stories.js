@@ -1,11 +1,14 @@
 import React from 'react';
 import Nav from '../Nav';
-import { IoIosHome, IoIosBriefcase } from 'react-icons/io';
+import { RiHome2Line, RiBriefcase2Line } from 'react-icons/ri';
 import { MemoryRouter as Router } from 'react-router-dom';
 
 export default {
   title: 'Nav',
   component: Nav,
+  parameters: {
+    layout: 'fullscreen'
+  },
   decorators: [
     Fn => (
       <Router>
@@ -18,14 +21,14 @@ export default {
 const items = [
   {
     text: 'Portal',
-    icon: IoIosHome,
+    icon: RiHome2Line,
     link: {
       to: '/portal'
     }
   },
   {
     text: 'Projects',
-    icon: IoIosBriefcase,
+    icon: RiBriefcase2Line,
     link: {
       to: '/projects'
     }
@@ -40,6 +43,6 @@ export const Vertical = () => {
 
 export const Horizontal = () => {
   return (
-    <Nav items={ items } horizontal />
+    <Nav items={ items } layout={{ orientation: 'horizontal' }} />
   )
 };

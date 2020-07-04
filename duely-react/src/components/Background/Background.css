@@ -1,16 +1,16 @@
-.background {
+.background-component {
   position: relative;
   display: grid;
   grid-template-columns: 1fr;
   overflow: hidden;
 }
 
-.background > * {
+.background-component > * {
   grid-column-start: 1;
   grid-row-start: 1;
 }
 
-.background > *:first-child {
+.background-component > *:first-child {
   position: absolute;
   justify-self: center;
   align-self: center;

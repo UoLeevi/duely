@@ -1,18 +1,17 @@
 .nav {
   display: grid;
   place-items: center;
-  width: max-content;
   background-color: var(--color-primary-s1nl4);
 }
 
 .nav.v {
-  height: 100vh;
+  width: max-content;
   grid-template:
     "m s" 1fr / auto auto;
 }
 
 .nav.h {
-  width: 100vw;
+  height: max-content;
   grid-template:
     "s" auto
     "m" auto;

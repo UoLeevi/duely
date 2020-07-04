@@ -1,5 +1,4 @@
 .nav-button {
-  color: var(--color-primary-s1nl3n);
   text-align: center;
   cursor: pointer;
 }
@@ -16,10 +15,6 @@
   transition: color 300ms;
 }
 
-.nav-button > .active .nav-button-text {
-  color: var(--color-primary-s1nl4n);
-}
-
 .nav-button .nav-button-icon {
   display: flex;
   justify-content: center;
@@ -27,7 +22,6 @@
   font-size: var(--f-5);
   width: 2.4rem;
   height: 2.4rem;
-  background-color: rgba(var(--color-grey-rgb), 0.12);
   border-radius: var(--radius-1-rel);
   overflow: visible;
   transition: box-shadow 300ms;

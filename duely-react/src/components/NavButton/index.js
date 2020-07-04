@@ -10,9 +10,9 @@ const NavButton = ({ link, text, icon, tag = 'button' }) => {
     : null;
 
   return (
-    <Element className="nav-button">
+    <Element className="nav-button surface color-l2">
       <Wrapper>
-        <div className="nav-button-icon"><Icon/></div>
+        <div className="nav-button-icon surface-bg bg-sn1 bg-l4"><Icon/></div>
         <span className="nav-button-text f-1 f-b mt-1">{ text }</span>
       </Wrapper>
     </Element>

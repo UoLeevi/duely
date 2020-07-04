@@ -1,9 +1,7 @@
 import React from 'react';
 import { Route, Switch } from 'react-router-dom';
 import './ResponsiveLayout.css';
-
-// routes
-
+import useBreakpoints from 'hooks/useBreakpoints';
 
 const defaultElements = {
   'topbar': 'header',
@@ -15,18 +13,60 @@ const defaultElements = {
 };
 
 const ResponsiveLayout = ({ routes }) => {
+  const { md } = useBreakpoints();
+
+  function layoutPropFor(section) {
+    const layout = {
+      section
+    };
+
+    if (section === 'nav') {
+      layout.orientation = md ? 'vertical' : 'horizontal';
+    }
+
+    return layout;
+  }
+
   function contentFor(section) {
     const sectionRoutes = routes
       .map((route, index) => {
-        
-        const Element = route[section] || defaultElements[section];
-        const LayoutElement = () => React.cloneElement(<Element/>, { 'data-layout': section });
 
-        return (
-          <Route key={ index } path={ route.path } exact={ route.exact }>
-            <LayoutElement />
-          </Route>
-        );
+        const content = route[section] || defaultElements[section];
+        let LayoutElement;
+
+        switch (typeof content) {
+          case 'function':
+            LayoutElement = content;
+            return (
+              <Route key={ index } path={ route.path } exact={ route.exact }>
+                <LayoutElement layout={ layoutPropFor(section) } />
+              </Route>
+            );
+
+          case 'object':
+            if (typeof content.type === 'function') {
+              LayoutElement = () => React.cloneElement(content, { layout: layoutPropFor(section) });
+            } else {
+              LayoutElement = () => React.cloneElement(content, { 'data-layout': section });
+            }
+            
+            return (
+              <Route key={ index } path={ route.path } exact={ route.exact }>
+                <LayoutElement />
+              </Route>
+            );
+
+          case 'string':
+            LayoutElement = content;
+            return (
+              <Route key={ index } path={ route.path } exact={ route.exact }>
+                <LayoutElement data-layout={ section } />
+              </Route>
+            );
+
+          default:
+            throw new Error('Invalid layout element.');
+        }
       });
 
     return () => (
