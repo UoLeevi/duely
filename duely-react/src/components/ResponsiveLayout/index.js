@@ -38,7 +38,7 @@ const ResponsiveLayout = ({ routes }) => {
           case 'function':
             LayoutElement = content;
             return (
-              <Route key={ index } path={ route.path } exact={ route.exact }>
+              <Route key={ route.path } path={ route.path } exact={ route.exact }>
                 <LayoutElement layout={ layoutPropFor(section) } />
               </Route>
             );
@@ -51,7 +51,7 @@ const ResponsiveLayout = ({ routes }) => {
             }
             
             return (
-              <Route key={ index } path={ route.path } exact={ route.exact }>
+              <Route key={ route.path } path={ route.path } exact={ route.exact }>
                 <LayoutElement />
               </Route>
             );
@@ -59,7 +59,7 @@ const ResponsiveLayout = ({ routes }) => {
           case 'string':
             LayoutElement = content;
             return (
-              <Route key={ index } path={ route.path } exact={ route.exact }>
+              <Route key={ route.path } path={ route.path } exact={ route.exact }>
                 <LayoutElement data-layout={ section } />
               </Route>
             );
@@ -69,29 +69,22 @@ const ResponsiveLayout = ({ routes }) => {
         }
       });
 
-    return () => (
-      <Switch>
+    return (
+      <Switch key={ section }>
         { sectionRoutes }
       </Switch>
     );
   }
 
-  const Topbar = contentFor('topbar');
-  const Nav = contentFor('nav');
-  const Aside = contentFor('aside');
-  const Header= contentFor('header');
-  const Main = contentFor('main');
-  const Footer = contentFor('footer');
-
   return (
     <div className="responsive-layout">
-      <Topbar />
-      <Nav />
-      <Aside />
+      { contentFor('topbar') }
+      { contentFor('nav') }
+      { contentFor('aside') }
       <div className="body">
-        <Header />
-        <Main />
-        <Footer />
+        { contentFor('header') }
+        { contentFor('main') }
+        { contentFor('footer') }
       </div>
     </div>
   );

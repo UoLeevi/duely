@@ -1,7 +1,6 @@
 .nav {
   display: grid;
-  place-items: center;
-  background-color: var(--color-primary-s1nl4);
+  box-shadow: 0px 0px 0px var(--border-t1) var(--color-background-l2);
 }
 
 .nav.v {
@@ -17,25 +16,111 @@
     "m" auto;
 }
 
-.nav > ul {
-  grid-area: m;
+.nav > div {
   display: grid;
+  place-items: center;
+}
+
+.nav > div > ul {
+  display: grid;
+}
+
+.nav > div.nav-menu {
+  grid-area: m;
+  background-color: var(--color-background-l4);
+  z-index: 2;
+}
+
+.nav > div.nav-submenu {
+  grid-area: s;
+  background-color: var(--color-background-l3);
+  z-index: 1;
+}
+
+.nav > div.nav-menu > ul {
   gap: var(--spacing-2);
 }
 
-.nav.v > ul {
+.nav > div.nav-submenu > ul {
+  gap: var(--spacing-1);
+}
+
+.nav.v > div.nav-submenu {
+  grid-template: 
+    "h" auto
+    "l" auto;
+  transition: margin-left 200ms;
+  margin-left: var(--spacing-5n);
+}
+
+.nav.v[data-expanded="true"] > div.nav-submenu { 
+  margin-left: 0;
+}
+
+.nav.h > div.nav-submenu {
+  grid-template: 
+    "h l" auto / auto auto;
+  transition: margin-bottom 200ms;
+  margin-bottom: var(--spacing-5n);
+}
+
+.nav.h[data-expanded="true"] > div.nav-submenu { 
+  margin-bottom: 0;
+}
+
+.nav > div.nav-submenu > * {
+  transition: opacity 100ms;
+  opacity: 0;
+}
+
+.nav[data-expanded="true"] > div.nav-submenu > * {
+  opacity: 1;
+}
+
+.nav > div.nav-submenu > div {
+  grid-area: h;
+  display: grid;
+}
+
+.nav.v > div.nav-submenu > div {
+  justify-self: stretch;
+  align-self: end;
+  padding-bottom: var(--spacing-2);
+  border-bottom: var(--border-t2) solid var(--color-background-l1);
+}
+
+.nav.h > div.nav-submenu > div {
+  justify-self: end;
+  padding-right: var(--spacing-3);
+  border-right: var(--border-t2) solid var(--color-background-l1);
+}
+
+.nav > div.nav-submenu > ul {
+  grid-area: l;
+  align-self: start;
+}
+
+.nav.v > div > ul {
   grid-auto-flow: row;
   grid-auto-rows: minmax(0, 1fr);
   height: max-content;
 }
 
-.nav.h > ul {
+.nav.h > div > ul {
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
   width: max-content;
 }
 
-.nav > ul > li {
+.nav.h > div.nav-submenu > ul {
+  justify-self: start;
+}
+
+.nav.v > div.nav-submenu > ul {
+  justify-items: start;
+}
+
+.nav > div > ul > li {
   display: block;
-  margin: var(--spacing-2);
+  margin: var(--spacing-1);
 }

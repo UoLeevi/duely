@@ -1,4 +1,5 @@
 @import url(styles/colors.css);
+@import url(styles/borders.css);
 
 /* #region Reset */
 
@@ -312,24 +313,6 @@ textarea { white-space: pre-wrap; }
   --panel-min-width: min(360px, calc(100% - var(--spacing-5)));
   --panel-width: max-content;
   --panel-max-width: min(1280px, calc(100% - var(--spacing-5)));
-}
-
-/* #endregion */
-
-/* #region Border radius variables */
-
-:root {
-  --radius-1: 0.8rem;
-  --radius-2: 1.1rem;
-  --radius-3: 1.4rem;
-  --radius-4: 1.7rem;
-  --radius-5: 2rem;
-
-  --radius-1-rel: 0.6em;
-  --radius-2-rel: 1.1em;
-  --radius-3-rel: 1.4em;
-  --radius-4-rel: 1.7em;
-  --radius-5-rel: 2em;
 }
 
 /* #endregion */

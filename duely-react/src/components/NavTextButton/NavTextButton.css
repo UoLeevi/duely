@@ -1,0 +1,26 @@
+.nav-text-button {
+  text-align: center;
+  cursor: pointer;
+  transition: color 300ms, box-shadow 200ms;
+}
+
+.nav-text-button > * {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: auto;
+}
+
+.nav-text-button * {
+  cursor: pointer;
+}
+
+.nav-text-button:not([data-active="true"]):not(:active):focus-within {
+  box-shadow: 
+    0px calc(3 * var(--border-t1)) 0px calc(-2 * var(--border-t1)) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-4));
+}
+
+.nav-text-button[data-active="true"] {
+  color: var(--color-surface) !important;
+}
+

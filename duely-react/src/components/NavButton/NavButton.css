@@ -1,6 +1,7 @@
 .nav-button {
   text-align: center;
   cursor: pointer;
+  transition: color 300ms;
 }
 
 .nav-button > * {
@@ -8,24 +9,56 @@
   flex-direction: column;
   align-items: center;
   width: auto;
-  margin-top: calc(var(--spacing-1) * 0.6);
+  margin-top: calc(var(--spacing-1) * 0.3);
+  transition: margin-bottom 200ms;
+}
+
+.nav-button[data-active="true"] {
+  color: var(--color-surface) !important;
 }
 
 .nav-button .nav-button-text {
-  transition: color 300ms;
+  transition: opacity 100ms, margin-bottom 200ms;
+}
+
+.nav-button[data-minimized="true"] .nav-button-text {
+  opacity: 0;
+  margin-bottom: var(--spacing-5n);
+}
+
+.nav-button[data-minimized="true"] > * {
+  margin-bottom: calc(var(--spacing-1) * 0.3);
 }
 
 .nav-button .nav-button-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: grid;
+  place-items: center;
   font-size: var(--f-5);
   width: 2.4rem;
   height: 2.4rem;
   border-radius: var(--radius-1-rel);
   overflow: visible;
-  transition: box-shadow 300ms;
+  transition: box-shadow 200ms;
 }
+
+.nav-button[data-active="true"] .nav-button-icon {
+  box-shadow: 
+    0px 0px 0px var(--border-t1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-6)),
+    0px 0px var(--spacing-4) var(--spacing-1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-3));
+}
+
+.nav-button:focus-within[data-active="false"] .nav-button-icon {
+  box-shadow: 
+    0px 0px 0px var(--border-t1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-6));
+}
+
+.nav-button[data-active="false"]:active .nav-button-icon,
+.nav-button[data-active="false"]:hover .nav-button-icon {
+  box-shadow: 
+    0px 0px var(--spacing-3) var(--spacing-1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-4));
+}
+
+/* TODO: notification icon */
 
 .nav-button .nav-button-icon::before {
   position: absolute;
@@ -50,14 +83,4 @@
   box-shadow: 0px 0px 0px 0.15rem var(--color-white);
   width: 0.55rem;
   height: 0.55rem;
-}
-
-.nav-button > .active .nav-button-icon {
-  box-shadow: 0px 0px 0px 0.2rem rgba(255, 255, 255, 0.5), 0px 0px 0px 0.35rem,
-    0px 0px 1rem 0.35rem rgba(255, 255, 255, 0.5), 0px 0px 1rem 0.35rem;
-}
-
-.nav-button:hover > *:not(.active) .nav-button-icon {
-  box-shadow: 0px 0px 0px 0.2rem,
-    0px 0px 1rem 0.2rem rgba(255, 255, 255, 0.5), 0px 0px 1rem 0.2rem;
 }

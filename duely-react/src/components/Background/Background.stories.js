@@ -4,6 +4,9 @@ import Background from '../Background';
 export default {
   title: 'Background',
   component: Background,
+  parameters: {
+    layout: 'fullscreen'
+  }
 };
 
 export const Default = ({ backgroundText, content }) => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { RiHome2Line, RiBriefcase2Line } from 'react-icons/ri';
+import { BsHouse, BsBriefcase, BsFolder, BsPeople, BsLayoutTextWindowReverse } from 'react-icons/bs';
 import { MemoryRouter as Router } from 'react-router-dom';
 import ResponsiveLayout from '../ResponsiveLayout';
 import Nav from 'components/Nav';
@@ -25,12 +25,12 @@ export const Areas = () => {
     {
       path: "/",
       exact: false,
-      topbar: <div className="background-bg bg-l4">topbar</div>,
-      nav: <nav className="background-bg bg-l4">nav</nav>,
-      aside: <aside className="background-bg bg-l4">aside</aside>,
-      header: <header className="background-bg bg-l4">header</header>,
-      main: <main className="background-bg bg-l4">main</main>,
-      footer: <footer className="background-bg bg-l4">footer</footer>,
+      topbar: <div className="pa-1 background-bg bg-l4">topbar</div>,
+      nav: <nav className="pa-1 background-bg bg-l4">nav</nav>,
+      aside: <aside className="pa-1 background-bg bg-l4">aside</aside>,
+      header: <header className="pa-1 background-bg bg-l4">header</header>,
+      main: <main className="pa-1 background-bg bg-l4">main</main>,
+      footer: <footer className="pa-1 background-bg bg-l4">footer</footer>,
     }
   ];
 
@@ -43,17 +43,66 @@ export const WithDefaultComponents = () => {
   const navItems = [
     {
       text: 'Portal',
-      icon: RiHome2Line,
+      icon: BsHouse,
       link: {
         to: '/portal'
       }
     },
     {
       text: 'Projects',
-      icon: RiBriefcase2Line,
+      icon: BsBriefcase,
       link: {
         to: '/projects'
       }
+    },
+    {
+      text: 'Files',
+      icon: BsFolder,
+      link: {
+        to: '/files'
+      }
+    },
+    {
+      text: 'Users',
+      icon: BsPeople,
+      link: {
+        to: '/users'
+      },
+      items: [
+        {
+          text: 'Agency',
+          link: {
+            to: '/users/agency'
+          }
+        },
+        {
+          text: 'Clients',
+          link: {
+            to: '/users/clients'
+          }
+        }
+      ]
+    },
+    {
+      text: 'Site',
+      icon: BsLayoutTextWindowReverse,
+      link: {
+        to: '/site'
+      },
+      items: [
+        {
+          text: 'Theme',
+          link: {
+            to: '/site/theme'
+          }
+        },
+        {
+          text: 'Domains',
+          link: {
+            to: '/site/domains'
+          }
+        }
+      ]
     }
   ];
 

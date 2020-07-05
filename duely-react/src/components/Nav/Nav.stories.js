@@ -1,6 +1,6 @@
 import React from 'react';
 import Nav from '../Nav';
-import { RiHome2Line, RiBriefcase2Line } from 'react-icons/ri';
+import { BsHouse, BsBriefcase, BsFolder, BsLayoutTextWindowReverse } from 'react-icons/bs';
 import { MemoryRouter as Router } from 'react-router-dom';
 
 export default {
@@ -21,17 +21,39 @@ export default {
 const items = [
   {
     text: 'Portal',
-    icon: RiHome2Line,
+    icon: BsHouse,
     link: {
       to: '/portal'
     }
   },
   {
     text: 'Projects',
-    icon: RiBriefcase2Line,
+    icon: BsBriefcase,
     link: {
       to: '/projects'
     }
+  },
+  {
+    text: 'Files',
+    icon: BsFolder,
+    link: {
+      to: '/files'
+    }
+  },
+  {
+    text: 'Site',
+    icon: BsLayoutTextWindowReverse,
+    link: {
+      to: '/site'
+    },
+    items: [
+      {
+        text: 'Site',
+        link: {
+          to: '/site/theme'
+        }
+      }
+    ]
   }
 ];
 
