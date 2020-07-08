@@ -20,25 +20,6 @@ export default {
 };
 
 
-export const Areas = () => {
-  const routes = [
-    {
-      path: "/",
-      exact: false,
-      topbar: <div className="pa-1 background-bg bg-l4">topbar</div>,
-      nav: <nav className="pa-1 background-bg bg-l4">nav</nav>,
-      aside: <aside className="pa-1 background-bg bg-l4">aside</aside>,
-      header: <header className="pa-1 background-bg bg-l4">header</header>,
-      main: <main className="pa-1 background-bg bg-l4">main</main>,
-      footer: <footer className="pa-1 background-bg bg-l4">footer</footer>,
-    }
-  ];
-
-  return (
-    <ResponsiveLayout routes={ routes } />
-  )
-};
-
 export const WithDefaultComponents = () => {
   const navItems = [
     {
@@ -72,13 +53,13 @@ export const WithDefaultComponents = () => {
         {
           text: 'Agency',
           link: {
-            to: '/users/agency'
+            to: 'users/agency'
           }
         },
         {
           text: 'Clients',
           link: {
-            to: '/users/clients'
+            to: 'users/clients'
           }
         }
       ]
@@ -93,24 +74,50 @@ export const WithDefaultComponents = () => {
         {
           text: 'Theme',
           link: {
-            to: '/site/theme'
+            to: 'site/theme'
           }
         },
         {
           text: 'Domains',
           link: {
-            to: '/site/domains'
+            to: 'site/domains'
           }
         }
       ]
     }
   ];
 
+  const nav = (props) => <Nav items={ navItems } { ...props } />;
+
+  const routes = [
+    {
+      path: "/portal",
+      exact: false,
+      nav
+    },
+    {
+      path: "*",
+      exact: false,
+      nav
+    }
+  ];
+
+  return (
+    <ResponsiveLayout routes={ routes } />
+  )
+};
+
+export const Areas = () => {
   const routes = [
     {
       path: "/",
       exact: false,
-      nav: <Nav items={ navItems } />
+      topbar: <div className="pa-1 background-bg bg-l4">topbar</div>,
+      nav: <nav className="pa-1 background-bg bg-l4">nav</nav>,
+      aside: <aside className="pa-1 background-bg bg-l4">aside</aside>,
+      header: <header className="pa-1 background-bg bg-l4">header</header>,
+      main: <main className="pa-1 background-bg bg-l4">main</main>,
+      footer: <footer className="pa-1 background-bg bg-l4">footer</footer>,
     }
   ];
 

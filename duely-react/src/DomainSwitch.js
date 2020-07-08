@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Switch, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion';
 import { DomainContext } from './contexts/DomainContext';
 import AgencyHome from './views/agency-home';
@@ -15,7 +15,7 @@ const DomainSwitch = () => {
   if (subdomain === null) {
     return (
       <AnimatePresence exitBeforeEnter>
-        <Switch location={ location } key={ location.key }>
+        <Routes location={ location } key={ location.key }>
           <Route path="/dashboard">
             <Dashboard />
           </Route>
@@ -25,21 +25,21 @@ const DomainSwitch = () => {
           <Route path="/">
             <Home />
           </Route>
-        </Switch>
+        </Routes>
       </AnimatePresence>
     );
   }
 
   return (
     <AnimatePresence exitBeforeEnter>
-      <Switch location={ location } key={ location.key }>
+      <Routes location={ location } key={ location.key }>
         <Route path="/portal">
           <Portal />
         </Route>
         <Route path="/">
           <AgencyHome />
         </Route>
-      </Switch>
+      </Routes>
     </AnimatePresence>
   );
 };

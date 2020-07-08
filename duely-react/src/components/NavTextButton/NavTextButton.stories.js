@@ -16,8 +16,6 @@ export default {
 
 export const Default = () => {
   return (
-    <div className="ma-2">
-      <NavTextButton text="Home" link={{ to: '/asdf'  }} />
-    </div>
+    <NavTextButton text="Home" link={{ to: '/asdf' }} />
   );
 };

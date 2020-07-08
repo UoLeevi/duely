@@ -18,7 +18,7 @@ const Nav = ({ items = [], layout: { orientation, section } = { orientation: 've
       <NavButton tag="li" key={ link.to } text={ text } link={ link } icon={ icon } minimize={ expanded } />
     );
   });
-  const sizeString = expanded && orientation === 'vertical' && 'w'.repeat(
+  const sizeString = orientation === 'vertical' && 'w'.repeat(
     Math.max(...items
       .flatMap(item => item.items ?? [])
       .map(item => item.text.length)
@@ -56,7 +56,7 @@ const Nav = ({ items = [], layout: { orientation, section } = { orientation: 've
         <ul>
           { submenuItems }
           { sizeString && /* this is only for visual purposes */
-            <li key="_sizeString" style={{ visibility: 'hidden' }} className="f-1 f-b pa-1">{ sizeString }</li>
+            <li key="_sizeString" style={{ visibility: 'hidden' }} className="sizestring f-1 f-b pa-1">{ sizeString }</li>
           }
         </ul>
       </div>

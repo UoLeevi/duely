@@ -89,6 +89,17 @@
   border-bottom: var(--border-t2) solid var(--color-background-l1);
 }
 
+.nav.v > div.nav-submenu > ul > li.sizestring {
+  transition: width 200ms;
+  overflow: hidden;
+}
+.nav.v[data-expanded="false"] > div.nav-submenu > ul > li.sizestring {
+  width: 0;
+}
+.nav.v[data-expanded="true"] > div.nav-submenu > ul > li.sizestring {
+  width: auto;
+}
+
 .nav.h > div.nav-submenu > div {
   justify-self: end;
   padding-right: var(--spacing-3);
