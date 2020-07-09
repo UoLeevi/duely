@@ -1,11 +1,16 @@
 import { useRef, useEffect } from 'react';
 
-export default function usePrevious(value) {
+const defaultOptions = { skip: false }
+
+export default function usePrevious(value, options = defaultOptions ) {
   const ref = useRef(value);
 
+  const { skip } = { ...defaultOptions, ...options }
   useEffect(() => {
-    ref.current = value;
-  }, [value]);
+    if (!skip) {
+      ref.current = value;
+    }
+  }, [value, skip]);
 
   return ref.current;
 }

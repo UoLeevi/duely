@@ -1,10 +1,10 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useMatch } from 'react-router-dom';
 import './NavTextButton.css';
 
 const NavTextButton = ({ link, text, tag = 'button' }) => {
-  const { pathname } = useLocation();
-  const active = pathname.startsWith(link?.to);
+  const pathMatch = useMatch(link?.to + '*');
+  const active = pathMatch !== null;
   const Element = tag;
   const Wrapper = link
     ? ({ children }) => (<NavLink { ...link }>{ children }</NavLink>)

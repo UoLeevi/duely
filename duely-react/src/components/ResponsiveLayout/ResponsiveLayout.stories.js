@@ -61,7 +61,13 @@ export const WithDefaultComponents = () => {
           link: {
             to: 'users/clients'
           }
-        }
+        },
+        {
+          text: 'Subscribers',
+          link: {
+            to: 'users/subscribers'
+          }
+        },
       ]
     },
     {
@@ -92,12 +98,10 @@ export const WithDefaultComponents = () => {
   const routes = [
     {
       path: "/portal",
-      exact: false,
       nav
     },
     {
       path: "*",
-      exact: false,
       nav
     }
   ];
@@ -111,7 +115,6 @@ export const Areas = () => {
   const routes = [
     {
       path: "/",
-      exact: false,
       topbar: <div className="pa-1 background-bg bg-l4">topbar</div>,
       nav: <nav className="pa-1 background-bg bg-l4">nav</nav>,
       aside: <aside className="pa-1 background-bg bg-l4">aside</aside>,
