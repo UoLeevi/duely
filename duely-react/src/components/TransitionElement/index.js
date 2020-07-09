@@ -13,19 +13,29 @@ const transitions = {
   }
 };
 
-const TransitionElement = ({ tag = 'div', compare: value, transition = 'fade', children, ...props }) => {
+const TransitionElement = ({ tag = 'div', compare: value, skipCompare: skipValue, transition = 'fade', children, ...props }) => {
   const Component = tag;
   const [state, setState] = useState(NO_TRANSITION);
+  const previousSkipValue = usePrevious(skipValue);
+  const skip = skipValue !== previousSkipValue;
   const previousValue = usePrevious(value);
   const changed = value !== previousValue;
   const previousChildren = usePrevious(children, { skip: state === TRANSITION_OUT || changed });
   const style = transitions[transition][state];
 
   useLayoutEffect(() => {
-    if (state !== TRANSITION_OUT && changed) {
+    if (state !== TRANSITION_OUT && changed && !skip) {
       setState(TRANSITION_OUT);
     }
-  }, [state, changed]);
+  }, [state, changed, skip]);
+
+  if (skip) {
+    return (
+      <Component style={ style } onTransitionEnd={ () => setState(NO_TRANSITION) } { ...props }>
+        { children }
+      </Component>
+    );
+  }
 
   switch (state) {
     case TRANSITION_IN:

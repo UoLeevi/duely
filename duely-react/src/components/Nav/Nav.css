@@ -35,9 +35,11 @@
   grid-area: s;
   background-color: var(--color-background-l3);
   z-index: 1;
+  overflow: hidden;
 }
 
-.nav > div.nav-submenu.sizer {
+.nav > div.nav-submenu [data-sizer] {
+  visibility: hidden;
   z-index: 0;
   pointer-events: none;
 }
@@ -55,7 +57,7 @@
   "h" auto
   "l" auto;
   transition: margin-left 200ms;
-  margin-left: var(--spacing-5n);
+  margin-left: -30vw;
 }
 
 .nav.v[data-expanded="true"] > div.nav-submenu { 
@@ -66,7 +68,7 @@
   grid-template: 
   "h l" auto / auto auto;
   transition: margin-bottom 200ms;
-  margin-bottom: var(--spacing-5n);
+  margin-bottom: -30vh;
 }
 
 .nav.h[data-expanded="true"] > div.nav-submenu { 
@@ -98,31 +100,10 @@
   border-bottom: var(--border-t2) solid var(--color-background-l1);
 }
 
-
-.nav.v > div.nav-submenu.sizer > * > * {
-  transition: width 200ms;
-}
-.nav.v[data-expanded="false"] > div.nav-submenu > * > * {
-  width: 0;
-}
-.nav.v[data-expanded="true"] > div.nav-submenu.sizer > * > * {
-  width: auto;
-}
-
 .nav.h > div.nav-submenu > div {
   justify-self: end;
   padding-right: var(--spacing-3);
   border-right: var(--border-t2) solid var(--color-background-l1);
-}
-
-.nav.h > div.nav-submenu.sizer > * > * {
-  transition: height 200ms;
-}
-.nav.h[data-expanded="false"] > div.nav-submenu > * > * {
-  height: 0;
-}
-.nav.h[data-expanded="true"] > div.nav-submenu.sizer > * > * {
-  height: auto;
 }
 
 .nav > div.nav-submenu > ul {

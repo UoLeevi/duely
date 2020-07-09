@@ -19,7 +19,7 @@ const Nav = ({ items = [], layout: { orientation, section } = { orientation: 've
       <NavButton tag="li" key={ link.to } text={ text } link={ link } icon={ icon } minimize={ expanded } />
     );
   });
-  const sizeString = 'w'.repeat(
+  const sizeString = orientation === 'vertical' && 'w'.repeat(
     Math.max(
       ...items
         .flatMap(item => item.items ?? [])
@@ -51,21 +51,15 @@ const Nav = ({ items = [], layout: { orientation, section } = { orientation: 've
           { menuItems }
         </ul>
       </div>
-      <TransitionElement className="nav-submenu" tag="div" compare={ submenu?.text }>
-        <div className="f-1 f-b surface color-s1n color-l2 ma-2">
+      <div className="nav-submenu" tag="div">
+        <TransitionElement tag="div" className="f-1 f-b surface color-s1n color-l2 ma-2" compare={ submenu?.text } skipCompare={ orientation }>
+          { sizeString && <span data-sizer>{ sizeString }</span> }
           <span>{ expanded && submenu?.text }</span>
-        </div>
-        <ul>
+        </TransitionElement>
+        <TransitionElement tag="ul" compare={ submenu?.text }>
           { submenuItems }
-        </ul>
-      </TransitionElement>
-      <div className="nav-submenu sizer">
-        <div style={{ visibility: 'hidden' }} className="f-1 f-b surface color-s1n color-l2 ma-2">
-          <span>{ sizeString }</span>
-        </div>
-        <ul>
-          <li style={{ visibility: 'hidden' }} className="f-1 f-b pa-1">{ sizeString }</li>
-        </ul>
+          { sizeString && <li data-sizer className="f-1 f-b pa-1">{ sizeString }</li> }
+        </TransitionElement>
       </div>
     </nav>
   );
