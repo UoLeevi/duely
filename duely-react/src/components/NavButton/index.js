@@ -1,10 +1,10 @@
 import React from 'react';
-import { NavLink, useMatch } from 'react-router-dom';
+import { NavLink, matchPath, useLocation } from 'react-router-dom';
 import './NavButton.css';
 
-const NavButton = ({ link, text, icon, tag = 'button', minimize = false }) => {
-  const pathMatch = useMatch(link?.to + '*');
-  const active = pathMatch !== null;
+const NavButton = ({ link, text, icon, tag = 'button', minimize = false, activePaths }) => {
+  const { pathname } = useLocation();
+  const active = [link?.to, ...(activePaths ?? [])].some(pattern => matchPath(pattern, pathname) !== null);
   const Element = tag;
   const Icon = icon;
 

@@ -3,6 +3,7 @@ import { BsHouse, BsBriefcase, BsFolder, BsPeople, BsLayoutTextWindowReverse } f
 import { MemoryRouter as Router } from 'react-router-dom';
 import ResponsiveLayout from '../ResponsiveLayout';
 import Nav from 'components/Nav';
+import HeaderWithActions from 'components/HeaderWithActions';
 
 export default {
   title: 'ResponsiveLayout',
@@ -26,7 +27,7 @@ export const WithDefaultComponents = () => {
       text: 'Portal',
       icon: BsHouse,
       link: {
-        to: '/portal'
+        to: '/'
       }
     },
     {
@@ -53,19 +54,19 @@ export const WithDefaultComponents = () => {
         {
           text: 'Agency',
           link: {
-            to: 'users/agency'
+            to: '/users/agency'
           }
         },
         {
           text: 'Clients',
           link: {
-            to: 'users/clients'
+            to: '/users/clients'
           }
         },
         {
           text: 'Subscribers',
           link: {
-            to: 'users/subscribers'
+            to: '/users/subscribers'
           }
         },
       ]
@@ -80,25 +81,31 @@ export const WithDefaultComponents = () => {
         {
           text: 'Theme',
           link: {
-            to: 'site/theme'
+            to: '/site/theme'
           }
         },
         {
           text: 'Domains',
           link: {
-            to: 'site/domains'
+            to: '/site/domains'
           }
         }
       ]
     }
   ];
 
-  const nav = (props) => <Nav items={ navItems } { ...props } />;
+  const nav = props => <Nav items={ navItems } { ...props } />;
 
   const routes = [
     {
-      path: "/portal",
-      nav
+      path: "/",
+      nav,
+      header: props => <HeaderWithActions title="Portal" subtitle="Overview" { ...props } />
+    },
+    {
+      path: "/projects",
+      nav,
+      header: props => <HeaderWithActions title="Projects" { ...props } />
     },
     {
       path: "*",

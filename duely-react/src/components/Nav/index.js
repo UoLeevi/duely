@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, matchPath } from 'react-router-dom';
 import NavButton from 'components/NavButton';
 import NavTextButton from 'components/NavTextButton';
 import TransitionElement from 'components/TransitionElement';
@@ -7,16 +7,16 @@ import './Nav.css';
 
 const Nav = ({ items = [], layout: { orientation, section } = { orientation: 'vertical' } }) => {
   const { pathname } = useLocation();
-  const submenu = items.find(item => pathname.startsWith(item?.link?.to));
+  const submenu = items.find(item => (matchPath(item.link?.to, pathname) !== null) || (item.items?.some(item => matchPath(item.link?.to, pathname) !== null)));
   const submenuItems = submenu?.items?.map(({ link, text }) => {
     return (
       <NavTextButton tag="li" key={ link.to } text={ text } link={ link } />
     );
   });
   const expanded = (submenuItems?.length ?? 0) > 0;
-  const menuItems = items.map(({ link, text, icon }) => {
+  const menuItems = items.map(({ link, text, icon, items = [] }) => {
     return (
-      <NavButton tag="li" key={ link.to } text={ text } link={ link } icon={ icon } minimize={ expanded } />
+      <NavButton tag="li" key={ link.to } text={ text } link={ link } icon={ icon } minimize={ expanded } activePaths={ items.map(({ link }) => link?.to ) } />
     );
   });
   const sizeString = orientation === 'vertical' && 'w'.repeat(
