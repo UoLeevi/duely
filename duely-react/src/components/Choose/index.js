@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import './Choose.css';
 
-const Choose = ({ children, index, justifyItems = 'center', alignItems = 'center' }) => {
+const Choose = ({ children, index, placeItems = 'center', ...props }) => {
   const ref = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(index);
 
@@ -61,7 +61,7 @@ const Choose = ({ children, index, justifyItems = 'center', alignItems = 'center
   }, [index, currentIndex, components.length]);
 
   return (
-    <div className='choose' style={{ justifyItems, alignItems }} ref={ ref }>
+    <div className='choose' style={{ placeItems }} { ...props } ref={ ref }>
       { components }
     </div>
   );

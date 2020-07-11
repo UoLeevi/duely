@@ -12,7 +12,7 @@ const defaultComponents = {
   'footer': 'footer'
 };
 
-const ResponsiveLayout = ({ routes }) => {
+const ResponsiveLayout = ({ routes, ...props }) => {
   const { md } = useBreakpoints();
 
   function layoutPropFor(section) {
@@ -28,11 +28,12 @@ const ResponsiveLayout = ({ routes }) => {
   }
 
   function routesFor(section) {
-    const elements = new Map();
+    const elements = new Map(); /* <-- reusing elements might be an unnecessary optimization */
+
     return routes
       .map(({ [section]: component = defaultComponents[section], path, children }) => {
 
-        let element = elements.get(component);
+        let element = elements.get(component); /* get cached element */
 
         if (element === undefined) {
           switch (typeof component) {
@@ -46,7 +47,7 @@ const ResponsiveLayout = ({ routes }) => {
               } else {
                 element = React.cloneElement(component, { 'data-layout': section });
               }
-              
+
               break;
 
             case 'string':
@@ -57,7 +58,7 @@ const ResponsiveLayout = ({ routes }) => {
               throw new Error('Invalid layout element.');
           }
 
-          elements.set(component, element);
+          elements.set(component, element); /* cache element */
         }
 
         return { element, path, children };
@@ -65,7 +66,7 @@ const ResponsiveLayout = ({ routes }) => {
   }
 
   return (
-    <div className="responsive-layout">
+    <div className="responsive-layout" { ...props }>
       { useRoutes(routesFor('topbar')) }
       { useRoutes(routesFor('nav')) }
       { useRoutes(routesFor('aside')) }

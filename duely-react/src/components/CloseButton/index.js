@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import './CloseButton.css';
 
-const CloseButton = ({ onClick, size = '1rem', svgAnimation, pathAnimation, bottom, left }) => {
+const CloseButton = ({ onClick, size = '1rem', svgAnimation, pathAnimation, bottom, left, ...props }) => {
   const defaultSvgAnimation = {
     initial: { scale: 0 },
     animate: { scale: 1 },
@@ -23,7 +23,7 @@ const CloseButton = ({ onClick, size = '1rem', svgAnimation, pathAnimation, bott
   const className = `close-button ${ bottom ? 'bottom' : 'top' } ${ left ? 'left' : 'right'}`;
 
   return (
-    <button className={ className } onClick={ onClick } tabIndex="0">
+    <button className={ className } onClick={ onClick } tabIndex="0" { ...props }>
       <motion.svg viewBox="-100 -100 200 200" xmlns="http://www.w3.org/2000/svg"
       { ...(svgAnimation || defaultSvgAnimation) }
       >

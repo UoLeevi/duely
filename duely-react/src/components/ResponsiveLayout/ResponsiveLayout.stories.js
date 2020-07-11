@@ -4,6 +4,10 @@ import { MemoryRouter as Router } from 'react-router-dom';
 import ResponsiveLayout from '../ResponsiveLayout';
 import Nav from 'components/Nav';
 import HeaderWithActions from 'components/HeaderWithActions';
+import withProps from 'hoc/withProps';
+import withDynamicProps from 'hoc/withDynamicProps';
+import withLocation from 'hoc/withLocation';
+import { subdomainRoutes } from 'routes';
 
 export default {
   title: 'ResponsiveLayout',
@@ -27,46 +31,53 @@ export const WithDefaultComponents = () => {
       text: 'Portal',
       icon: BsHouse,
       link: {
-        to: '/'
+        to: '/portal',
+        end: true
       }
     },
     {
       text: 'Projects',
       icon: BsBriefcase,
       link: {
-        to: '/projects'
+        to: '/portal/projects',
+        end: false
       }
     },
     {
       text: 'Files',
       icon: BsFolder,
       link: {
-        to: '/files'
+        to: '/portal/files',
+        end: false
       }
     },
     {
       text: 'Users',
       icon: BsPeople,
       link: {
-        to: '/users'
+        to: '/portal/users',
+        end: false
       },
       items: [
         {
           text: 'Agency',
           link: {
-            to: '/users/agency'
+            to: '/portal/users/agency',
+            end: false
           }
         },
         {
           text: 'Clients',
           link: {
-            to: '/users/clients'
+            to: '/portal/users/clients',
+            end: false
           }
         },
         {
           text: 'Subscribers',
           link: {
-            to: '/users/subscribers'
+            to: '/portal/users/subscribers',
+            end: false
           }
         },
       ]
@@ -75,40 +86,62 @@ export const WithDefaultComponents = () => {
       text: 'Site',
       icon: BsLayoutTextWindowReverse,
       link: {
-        to: '/site'
+        to: '/site',
+        end: false
       },
       items: [
         {
           text: 'Theme',
           link: {
-            to: '/site/theme'
+            to: '/site/theme',
+            end: false
           }
         },
         {
           text: 'Domains',
           link: {
-            to: '/site/domains'
+            to: '/site/domains',
+            end: false
           }
         }
       ]
     }
   ];
 
-  const nav = props => <Nav items={ navItems } { ...props } />;
+  const nav = withProps(Nav, { items: navItems });
+  const header = withLocation(withDynamicProps(HeaderWithActions, ({ location, ...props }) => {
+    console.log(location.pathname)
+    return { title: subdomainRoutes[location.pathname]?.name, ...props };
+  }));
 
   const routes = [
     {
-      path: "/",
+      path: '/portal',
       nav,
-      header: props => <HeaderWithActions title="Portal" subtitle="Overview" { ...props } />
+      header: withProps(HeaderWithActions, { title: 'Portal', subtitle: 'Overview' })
     },
     {
-      path: "/projects",
+      path: '/portal/projects',
       nav,
-      header: props => <HeaderWithActions title="Projects" { ...props } />
+      header
     },
     {
-      path: "*",
+      path: '/portal/files',
+      nav,
+      header
+    },
+    {
+      path: '/portal/users',
+      nav,
+      header,
+      children: [
+        { path: 'agency' },
+        { path: 'clients' },
+        { path: 'subscribers' },
+      ]
+    },
+    {
+      path: '*',
       nav
     }
   ];
@@ -121,7 +154,7 @@ export const WithDefaultComponents = () => {
 export const Areas = () => {
   const routes = [
     {
-      path: "/",
+      path: '/',
       topbar: <div className="pa-1 background-bg bg-l4">topbar</div>,
       nav: <nav className="pa-1 background-bg bg-l4">nav</nav>,
       aside: <aside className="pa-1 background-bg bg-l4">aside</aside>,

@@ -16,9 +16,6 @@ const DomainSwitch = () => {
     return (
       <AnimatePresence exitBeforeEnter>
         <Routes location={ location } key={ location.key }>
-          <Route path="/dashboard">
-            <Dashboard />
-          </Route>
           <Route path="/profile">
             <Profile />
           </Route>
@@ -33,6 +30,9 @@ const DomainSwitch = () => {
   return (
     <AnimatePresence exitBeforeEnter>
       <Routes location={ location } key={ location.key }>
+        <Route path="/dashboard">
+          <Dashboard />
+        </Route>
         <Route path="/portal">
           <Portal />
         </Route>

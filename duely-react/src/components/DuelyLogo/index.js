@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const DuelyLogo = ({ size = '4rem', svgAnimation, pathAnimation }) => {
+const DuelyLogo = ({ size = '4rem', svgAnimation, pathAnimation, ...props }) => {
   const defaultSvgAnimation = {
     initial: { rotate: -520 },
     animate: { rotate: 0 },
@@ -20,6 +20,7 @@ const DuelyLogo = ({ size = '4rem', svgAnimation, pathAnimation }) => {
   return (
     <motion.svg className="duely-logo" viewBox="-300 -300 600 600" xmlns="http://www.w3.org/2000/svg"
       { ...(svgAnimation || defaultSvgAnimation) }
+      { ...props }
     >
       <motion.path fill="none" stroke="#000000" strokeWidth="20" d="M-4.29,-59.19a100,100,0,1,0,-170.71,-70.71l0,241.4z" shapeRendering="geometricPrecision"
         { ...(pathAnimation || defaultPathAnimation) }

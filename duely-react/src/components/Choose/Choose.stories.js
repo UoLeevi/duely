@@ -27,7 +27,7 @@ export default {
   }
 };
 
-export const ToggleContent = ({ justifyItems, alignItems }) => {
+export const ToggleContent = ({ placeItems }) => {
   const [index, setIndex] = useState(0);
 
   return (
@@ -36,7 +36,7 @@ export const ToggleContent = ({ justifyItems, alignItems }) => {
         <button className="default" onClick={ () => setIndex((index + 1) % 3) }>Toggle</button>
       </div>
       <div className="panel-row">
-        <Choose index={ index } justifyItems={ justifyItems } alignItems={ alignItems }>
+        <Choose index={ index } placeItems={ placeItems }>
           <span>Choose component selects is size based on the largest child.</span>
           <span>Other items are centered</span>
           <span data-left>Individual child justified left</span>
@@ -47,8 +47,7 @@ export const ToggleContent = ({ justifyItems, alignItems }) => {
 };
 
 ToggleContent.args = {
-  justifyItems: 'center',
-  alignItems: 'center'
+  placeItems: 'center'
 }
 
 export const LoadingSpinner = () => {

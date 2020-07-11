@@ -4,7 +4,7 @@ import './Background.css';
 
 const precision = 4;
 
-const Background = ({ children, scale = 1.0, justifyItems = 'start', alignItems = 'start', contain }) => {
+const Background = ({ children, scale = 1.0, placeItems = 'start center', contain, ...props }) => {
   const ref = useRef();
   useResizeObserver(ref, (entry) => {
     const threshold = 0.01;
@@ -41,7 +41,7 @@ const Background = ({ children, scale = 1.0, justifyItems = 'start', alignItems 
   }, [scale, contain]);
 
   return (
-    <div className="background-component" style={{ justifyItems, alignItems }} ref={ ref }>
+    <div className="background-component" style={{ placeItems }} { ...props } ref={ ref }>
       { children }
     </div>
   );

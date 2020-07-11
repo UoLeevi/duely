@@ -5,9 +5,9 @@ import NavTextButton from 'components/NavTextButton';
 import TransitionElement from 'components/TransitionElement';
 import './Nav.css';
 
-const Nav = ({ items = [], layout: { orientation, section } = { orientation: 'vertical' } }) => {
+const Nav = ({ items = [], layout: { orientation, section } = { orientation: 'vertical' }, ...props }) => {
   const { pathname } = useLocation();
-  const submenu = items.find(item => (matchPath(item.link?.to, pathname) !== null) || (item.items?.some(item => matchPath(item.link?.to, pathname) !== null)));
+  const submenu = items.find(({ link: { to: path, caseSensitive, end } = {} }) => matchPath({ path, caseSensitive, end }, pathname) !== null);
   const submenuItems = submenu?.items?.map(({ link, text }) => {
     return (
       <NavTextButton tag="li" key={ link.to } text={ text } link={ link } />
@@ -16,7 +16,7 @@ const Nav = ({ items = [], layout: { orientation, section } = { orientation: 've
   const expanded = (submenuItems?.length ?? 0) > 0;
   const menuItems = items.map(({ link, text, icon, items = [] }) => {
     return (
-      <NavButton tag="li" key={ link.to } text={ text } link={ link } icon={ icon } minimize={ expanded } activePaths={ items.map(({ link }) => link?.to ) } />
+      <NavButton tag="li" key={ link.to } text={ text } link={ link } icon={ icon } minimize={ expanded } />
     );
   });
   const sizeString = orientation === 'vertical' && 'w'.repeat(
@@ -45,7 +45,7 @@ const Nav = ({ items = [], layout: { orientation, section } = { orientation: 've
   }
 
   return (
-    <nav className={ className } data-layout={ section } data-expanded={ expanded }>
+    <nav className={ className } data-layout={ section } data-expanded={ expanded } { ...props }>
       <div className="nav-menu">
         <ul>
           { menuItems }

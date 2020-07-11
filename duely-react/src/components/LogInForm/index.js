@@ -5,7 +5,7 @@ import TextField from '../TextField';
 import Choose from '../Choose';
 import Spinner from '../Spinner';
 
-const LogInForm = ({ whenDone }) => {
+const LogInForm = ({ whenDone, ...props }) => {
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
   const { loading, logIn, logInError, isLoggedIn } = useAuth();
@@ -26,7 +26,7 @@ const LogInForm = ({ whenDone }) => {
   };
 
   return (
-    <form className="panel" key="login-form" onSubmit={ handleSubmit } autoComplete="new-password">
+    <form className="panel" key="login-form" onSubmit={ handleSubmit } autoComplete="new-password" { ...props }>
       <div className="panel-row">
         <h2 className="default f-b">Log in</h2>
       </div>

@@ -44,7 +44,7 @@ const panelAnimations = {
   }
 }
 
-const Modal = ({ children, dismissable, hideModal }) => {
+const Modal = ({ children, dismissable, hideModal, ...props }) => {
 
   return (
     <AnimatePresence exitBeforeEnter>
@@ -54,6 +54,7 @@ const Modal = ({ children, dismissable, hideModal }) => {
           initial="initial"
           animate="animate"
           exit="exit"
+          { ...props }
         >
           <AnimatePresence exitBeforeEnter>
             <motion.div className="modal panel"
