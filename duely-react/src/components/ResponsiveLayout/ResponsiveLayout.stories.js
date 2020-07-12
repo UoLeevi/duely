@@ -5,9 +5,8 @@ import ResponsiveLayout from '../ResponsiveLayout';
 import Nav from 'components/Nav';
 import HeaderWithActions from 'components/HeaderWithActions';
 import withProps from 'hoc/withProps';
-import withDynamicProps from 'hoc/withDynamicProps';
 import withLocation from 'hoc/withLocation';
-import { subdomainRoutes } from 'routes';
+import { createRoutesProxy } from 'routes';
 
 export default {
   title: 'ResponsiveLayout',
@@ -23,6 +22,57 @@ export default {
     )
   ]
 };
+
+const routesProxy = createRoutesProxy([
+  {
+    path: 'portal',
+    name: 'Portal'
+  },
+  {
+    path: 'portal/projects',
+    name: 'Projects'
+  },
+  {
+    path: 'portal/files',
+    name: 'Files'
+  },
+  {
+    path: 'portal/users',
+    name: 'Users',
+    children: [
+      {
+        path: 'agency',
+        name: 'Agency'
+      },
+      {
+        path: 'clients',
+        name: 'Clients'
+      },
+      {
+        path: 'subscribers',
+        name: 'Subscribers'
+      },
+    ]
+  },
+  {
+    path: 'portal/site',
+    name: 'Site',
+    children: [
+      {
+        path: 'theme',
+        name: 'Theme'
+      },
+      {
+        path: 'domains',
+        name: 'Domains'
+      },
+    ]
+  },
+  {
+    path: '/',
+    name: 'Portal'
+  }
+]);
 
 
 export const WithDefaultComponents = () => {
@@ -86,21 +136,21 @@ export const WithDefaultComponents = () => {
       text: 'Site',
       icon: BsLayoutTextWindowReverse,
       link: {
-        to: '/site',
+        to: '/portal/site',
         end: false
       },
       items: [
         {
           text: 'Theme',
           link: {
-            to: '/site/theme',
+            to: '/portal/site/theme',
             end: false
           }
         },
         {
           text: 'Domains',
           link: {
-            to: '/site/domains',
+            to: '/portal/site/domains',
             end: false
           }
         }
@@ -109,29 +159,28 @@ export const WithDefaultComponents = () => {
   ];
 
   const nav = withProps(Nav, { items: navItems });
-  const header = withLocation(withDynamicProps(HeaderWithActions, ({ location, ...props }) => {
-    console.log(location.pathname)
-    return { title: subdomainRoutes[location.pathname]?.name, ...props };
+  const header = withLocation(withProps(HeaderWithActions, ({ location, ...props }) => {
+    return { title: routesProxy[location.pathname]?.name, ...props };
   }));
 
   const routes = [
     {
-      path: '/portal',
-      nav,
-      header: withProps(HeaderWithActions, { title: 'Portal', subtitle: 'Overview' })
-    },
-    {
-      path: '/portal/projects',
+      path: 'portal',
       nav,
       header
     },
     {
-      path: '/portal/files',
+      path: 'portal/projects',
       nav,
       header
     },
     {
-      path: '/portal/users',
+      path: 'portal/files',
+      nav,
+      header
+    },
+    {
+      path: 'portal/users',
       nav,
       header,
       children: [
@@ -141,8 +190,18 @@ export const WithDefaultComponents = () => {
       ]
     },
     {
+      path: 'portal/site',
+      nav,
+      header,
+      children: [
+        { path: 'theme' },
+        { path: 'domains' },
+      ]
+    },
+    {
       path: '*',
-      nav
+      nav,
+      header
     }
   ];
 

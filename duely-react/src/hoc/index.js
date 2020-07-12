@@ -1,11 +1,9 @@
 import withLocation from './withLocation';
-import withFadeInOut from './withFadeInOut';
+import withAnimatedTransition from './withAnimatedTransition';
 import withProps from './withProps';
-import withDynamicProps from './withDynamicProps';
 
 export {
   withLocation,
-  withFadeInOut,
-  withProps,
-  withDynamicProps
+  withAnimatedTransition,
+  withProps
 };

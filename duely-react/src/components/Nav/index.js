@@ -2,19 +2,34 @@ import React from 'react';
 import { useLocation, matchPath } from 'react-router-dom';
 import NavButton from 'components/NavButton';
 import NavTextButton from 'components/NavTextButton';
-import TransitionElement from 'components/TransitionElement';
+import withAnimatedTransition from 'hoc/withAnimatedTransition';
 import './Nav.css';
+
+const SubmenuList = withAnimatedTransition(
+  ({ submenu, sizeString, ...props }) => {
+    const submenuItems = submenu?.items?.map(({ link, text }) => {
+      return (
+        <NavTextButton tag="li" key={ link.to } text={ text } link={ link } />
+      );
+    });
+
+    return (
+      <ul { ...props }>
+        { sizeString && <li data-sizer className="f-1 f-b pa-1">{ sizeString }</li> }
+        { submenu && <NavTextButton tag="li" className="nav-submenu-title f-1 f-b surface color-s1n color-l2" text={ submenu?.text } link={ submenu?.link && { ...submenu.link, end: true } } /> }
+        { submenuItems }
+        { sizeString && <li data-sizer className="f-1 f-b pa-1">{ sizeString }</li> }
+      </ul>
+    );
+  }, { 
+    shouldTransition: (prevProps, props) => prevProps && prevProps.submenu?.text !== props.submenu?.text
+  });
 
 const Nav = ({ items = [], layout: { orientation, section } = { orientation: 'vertical' }, ...props }) => {
   const { pathname } = useLocation();
   const submenu = items.find(({ link: { to: path, caseSensitive, end } = {} }) => matchPath({ path, caseSensitive, end }, pathname) !== null);
-  const submenuItems = submenu?.items?.map(({ link, text }) => {
-    return (
-      <NavTextButton tag="li" key={ link.to } text={ text } link={ link } />
-    );
-  });
-  const expanded = (submenuItems?.length ?? 0) > 0;
-  const menuItems = items.map(({ link, text, icon, items = [] }) => {
+  const expanded = (submenu?.items?.length ?? 0) > 0;
+  const menuItems = items.map(({ link, text, icon }) => {
     return (
       <NavButton tag="li" key={ link.to } text={ text } link={ link } icon={ icon } minimize={ expanded } />
     );
@@ -52,14 +67,7 @@ const Nav = ({ items = [], layout: { orientation, section } = { orientation: 've
         </ul>
       </div>
       <div className="nav-submenu" tag="div">
-        <TransitionElement tag="div" className="f-1 f-b surface color-s1n color-l2 ma-2" compare={ submenu?.text } skipCompare={ orientation }>
-          { sizeString && <span data-sizer>{ sizeString }</span> }
-          <span>{ expanded && submenu?.text }</span>
-        </TransitionElement>
-        <TransitionElement tag="ul" compare={ submenu?.text }>
-          { submenuItems }
-          { sizeString && <li data-sizer className="f-1 f-b pa-1">{ sizeString }</li> }
-        </TransitionElement>
+        <SubmenuList submenu={ submenu } sizeString={ sizeString } />
       </div>
     </nav>
   );

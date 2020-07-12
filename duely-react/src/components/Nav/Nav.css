@@ -53,9 +53,6 @@
 }
 
 .nav.v > div.nav-submenu {
-  grid-template: 
-  "h" auto
-  "l" auto;
   transition: margin-left 200ms;
   margin-left: -30vw;
 }
@@ -65,50 +62,12 @@
 }
 
 .nav.h > div.nav-submenu {
-  grid-template: 
-  "h l" auto / auto auto;
   transition: margin-bottom 200ms;
   margin-bottom: -30vh;
 }
 
 .nav.h[data-expanded="true"] > div.nav-submenu { 
   margin-bottom: 0;
-}
-
-.nav > div.nav-submenu > * {
-  transition: opacity 100ms;
-  opacity: 0;
-}
-
-.nav[data-expanded="true"] > div.nav-submenu > * {
-  opacity: 1;
-}
-
-.nav > div.nav-submenu > div {
-  grid-area: h;
-  display: grid;
-}
-
-.nav > div.nav-submenu.sizer {
-  overflow: hidden;
-}
-
-.nav.v > div.nav-submenu > div {
-  justify-self: stretch;
-  align-self: end;
-  padding-bottom: var(--spacing-2);
-  border-bottom: var(--border-t2) solid var(--color-background-l1);
-}
-
-.nav.h > div.nav-submenu > div {
-  justify-self: end;
-  padding-right: var(--spacing-3);
-  border-right: var(--border-t2) solid var(--color-background-l1);
-}
-
-.nav > div.nav-submenu > ul {
-  grid-area: l;
-  align-self: start;
 }
 
 .nav.v > div > ul {
@@ -123,10 +82,6 @@
   width: max-content;
 }
 
-.nav.h > div.nav-submenu > ul {
-  justify-self: start;
-}
-
 .nav.v > div.nav-submenu > ul {
   justify-items: start;
 }
@@ -134,4 +89,12 @@
 .nav > div > ul > li {
   display: block;
   margin: var(--spacing-1);
+}
+
+.nav.h > div.nav-submenu .nav-submenu-title {
+  border-right: var(--border-t2) solid var(--color-background-l1);
+}
+
+.nav.v > div.nav-submenu .nav-submenu-title {
+  border-bottom: var(--border-t2) solid var(--color-background-l1);
 }

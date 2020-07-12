@@ -122,7 +122,7 @@ function flattenRoutes(routes, base = '') {
   return flatRoutes;
 }
 
-function createProxyFor(routes) {
+export function createRoutesProxy(routes) {
   const flatRoutes = flattenRoutes(routes);
   const handler = {
     get(target, prop, receiver) {
@@ -137,11 +137,4 @@ function createProxyFor(routes) {
   return new Proxy(routes, handler);
 }
 
-export default createProxyFor(routes);
-
-const subdomainRoutesProxy = createProxyFor(subdomainRoutes);
-const duelyRoutesProxy = createProxyFor(duelyRoutes);
-export { 
-  subdomainRoutesProxy as subdomainRoutes,
-  duelyRoutesProxy as duelyRoutes
-};
+export default createRoutesProxy(routes);

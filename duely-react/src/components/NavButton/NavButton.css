@@ -36,26 +36,26 @@
   font-size: var(--f-5);
   width: 2.4rem;
   height: 2.4rem;
+  border-style: solid;
+  border-width: var(--border-t2);
+  border-color: transparent;
   border-radius: var(--radius-1-rel);
   overflow: visible;
-  transition: box-shadow 200ms;
+  transition: box-shadow 200ms, border-color 200ms;
 }
 
 .nav-button[data-active="true"] .nav-button-icon {
-  box-shadow: 
-    0px 0px 0px var(--border-t1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-6)),
-    0px 0px var(--spacing-4) var(--spacing-1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-3));
+  border-color: hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-6));
+  box-shadow: 0px 0px var(--spacing-4) var(--spacing-1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-3));
 }
 
 .nav-button:focus-within[data-active="false"] .nav-button-icon {
-  box-shadow: 
-    0px 0px 0px var(--border-t1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-6));
+  border-color: hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-6));
 }
 
 .nav-button[data-active="false"]:active .nav-button-icon,
 .nav-button[data-active="false"]:hover .nav-button-icon {
-  box-shadow: 
-    0px 0px var(--spacing-3) var(--spacing-1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-4));
+  box-shadow: 0px 0px var(--spacing-3) var(--spacing-1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-4));
 }
 
 /* TODO: notification icon */
