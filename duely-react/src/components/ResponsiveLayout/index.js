@@ -1,18 +1,8 @@
 import React from 'react';
-import { useRoutes } from 'react-router-dom';
 import './ResponsiveLayout.css';
 import useBreakpoints from 'hooks/useBreakpoints';
 
-const defaultComponents = {
-  'topbar': 'header',
-  'nav': 'nav',
-  'aside': 'aside',
-  'header': 'header',
-  'main': 'main',
-  'footer': 'footer'
-};
-
-const ResponsiveLayout = ({ routes, ...props }) => {
+const ResponsiveLayout = ({ topbar, nav, aside, header, main, footer, ...props }) => {
   const { md } = useBreakpoints();
 
   function layoutPropFor(section) {
@@ -27,53 +17,23 @@ const ResponsiveLayout = ({ routes, ...props }) => {
     return layout;
   }
 
-  function routesFor(section) {
-    const elements = new Map(); /* <-- reusing elements might be an unnecessary optimization */
-
-    return routes
-      .map(({ [section]: component = defaultComponents[section], path, children }) => {
-
-        let element = elements.get(component); /* get cached element */
-
-        if (element === undefined) {
-          switch (typeof component) {
-            case 'function':
-              element = React.createElement(component, { layout: layoutPropFor(section) });
-              break;
-
-            case 'object': // elements are also accepted
-              if (typeof component.type === 'function') {
-                element = React.cloneElement(component, { layout: layoutPropFor(section) });
-              } else {
-                element = React.cloneElement(component, { 'data-layout': section });
-              }
-
-              break;
-
-            case 'string':
-              element = React.createElement(component, { 'data-layout': section });
-              break;
-
-            default:
-              throw new Error('Invalid layout element.');
-          }
-
-          elements.set(component, element); /* cache element */
-        }
-
-        return { element, path, children };
-      });
+  function createLayoutElement(element, section) {
+    return element === undefined 
+      ? undefined
+      : typeof element.type === 'function'
+        ? React.cloneElement(element, { layout: layoutPropFor(section) })
+        : React.cloneElement(element, { 'data-layout': section });
   }
 
   return (
     <div className="responsive-layout" { ...props }>
-      { useRoutes(routesFor('topbar')) }
-      { useRoutes(routesFor('nav')) }
-      { useRoutes(routesFor('aside')) }
+      { createLayoutElement(topbar, 'topbar') }
+      { createLayoutElement(nav, 'nav') }
+      { createLayoutElement(aside, 'aside') }
       <div className="body">
-        { useRoutes(routesFor('header')) }
-        { useRoutes(routesFor('main')) }
-        { useRoutes(routesFor('footer')) }
+        { createLayoutElement(header, 'header') }
+        { createLayoutElement(main, 'main') }
+        { createLayoutElement(footer, 'footer') }
       </div>
     </div>
   );

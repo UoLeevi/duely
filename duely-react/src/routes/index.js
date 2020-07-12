@@ -1,102 +1,21 @@
+import portal from './portal';
+import dashboard from './dashboard';
+
 const duelyRoutes = Array.from([
   {
-    path: '/',
-    name: 'Home'
+    path: '/'
   },
   {
-    path: 'profile',
-    name: 'Profile',
-    children: [
-      
-    ]
+    path: 'profile'
   }
 ]);
 
 const subdomainRoutes = [
   {
-    path: '/',
-    name: 'Home'
+    path: '/'
   },
-  {
-    path: 'dashboard',
-    name: 'Dashboard',
-    children: [
-      {
-        path: '',
-        name: 'Overview'
-      },
-      {
-        path: 'projects',
-        name: 'Projects'
-      },
-      {
-        path: 'services',
-        name: 'Services'
-      },
-      {
-        path: 'users',
-        name: 'Users',
-        children: [
-          {
-            path: 'agency',
-            name: 'Agency'
-          },
-          {
-            path: 'clients',
-            name: 'Clients'
-          },
-          {
-            path: 'invites',
-            name: 'Invites'
-          }
-        ]
-      },
-      {
-        path: 'site',
-        name: 'Site',
-        children: [
-          {
-            path: 'theme',
-            name: 'Theme'
-          },
-          {
-            path: 'domains',
-            name: 'Domains'
-          }
-        ]
-      },
-      {
-        path: 'payments',
-        name: 'Payments'
-      }
-    ]
-  },
-  {
-    path: 'portal',
-    name: 'Portal',
-    children: [
-      {
-        path: '',
-        name: 'Overview'
-      },
-      {
-        path: 'projects',
-        name: 'Projects'
-      },
-      {
-        path: 'files',
-        name: 'Files'
-      },
-      {
-        path: 'billing',
-        name: 'Billing'
-      },
-      {
-        path: 'services',
-        name: 'Services'
-      }
-    ]
-  }
+  ...dashboard,
+  ...portal
 ];
 
 const routes = process.env.NODE_ENV === 'production'
@@ -126,11 +45,9 @@ export function createRoutesProxy(routes) {
   const flatRoutes = flattenRoutes(routes);
   const handler = {
     get(target, prop, receiver) {
-      if (typeof prop === 'string') {
-        return flatRoutes[prop];
-      }
-  
-      return Reflect.get(...arguments);
+      return (prop in target)
+        ? target[prop]
+        : flatRoutes[prop];
     }
   };
 
