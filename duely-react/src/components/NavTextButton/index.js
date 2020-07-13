@@ -10,7 +10,7 @@ const NavTextButton = ({ link, text, tag = 'button', className = '', ...props })
     ? ({ children }) => (<NavLink { ...link }>{ children }</NavLink>)
     : null;
 
-  className = Array.from(new Set((className + ' nav-text-button surface color-s1n color-l1').split(' '))).join(' ');
+  className = Array.from(new Set(((className ?? '') + ' nav-text-button surface color-s1n color-l1').split(' '))).join(' ');
 
   return (
     <Element className={ className } data-active={ active } { ...props }>

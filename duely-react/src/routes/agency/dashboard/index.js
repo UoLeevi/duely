@@ -5,7 +5,7 @@ import Nav from 'components/Nav';
 import HeaderWithActions from 'components/HeaderWithActions';
 
 const nav = (
-  <Nav items={ [
+  <Nav items={[
     {
       text: 'Overview',
       icon: BsHouse,
@@ -79,7 +79,7 @@ const nav = (
         end: false
       }
     }
-  ] } />
+  ]} />
 );
 
 export default [

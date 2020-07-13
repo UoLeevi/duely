@@ -39,7 +39,7 @@ const LogInForm = ({ whenDone, ...props }) => {
       <div className="panel-row center-h space-between pt-label-text">
         <Choose index={ loading ? 1 : 0 }>
           <motion.input type="submit" className="default prominent f-4" value="Log in" { ...buttonAnimations } />
-          <Spinner fit spin={ loading } />
+          <Spinner data-fit={ true } spin={ loading } />
         </Choose>
       </div>
       <div className="panel-row center-h center-v">
@@ -47,9 +47,9 @@ const LogInForm = ({ whenDone, ...props }) => {
         <Choose index={ logInError ? 1 : 0 }>
           <div className="row center-v center-h">
             <span className="f-2 mr-0">Don't have an account?</span>
-            <motion.input type="button" className="default flat dense ml-1 color-primary" value="Sign up" onClick={ whenDone } { ...buttonAnimations } />
+            <motion.input type="button" className="default flat dense ml-1 primary" value="Sign up" onClick={ whenDone } { ...buttonAnimations } />
           </div>
-          <span className="color-error">{ logInError }</span>
+          <span className="error">{ logInError }</span>
           <span className="size-string">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span>
         </Choose>
         </div>

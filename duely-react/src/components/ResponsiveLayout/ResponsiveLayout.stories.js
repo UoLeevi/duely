@@ -4,7 +4,6 @@ import { MemoryRouter as Router, useRoutes } from 'react-router-dom';
 import ResponsiveLayout from '../ResponsiveLayout';
 import Nav from 'components/Nav';
 import HeaderWithActions from 'components/HeaderWithActions';
-import { createRoutesProxy } from 'routes';
 
 export default {
   title: 'ResponsiveLayout',
@@ -103,7 +102,7 @@ const navItems = [
   }
 ];
 
-const routesProxy = createRoutesProxy([
+const routes = [
   {
     path: '/',
     element: (
@@ -203,7 +202,7 @@ const routesProxy = createRoutesProxy([
       />
     )
   },
-]);
+];
 
 
-export const WithDefaultComponents = () => useRoutes(routesProxy);
+export const WithDefaultComponents = () => useRoutes(routes);

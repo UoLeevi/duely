@@ -1,12 +1,12 @@
-import React from 'react';
-import useAnimatedTransitionProps from 'hooks/useAnimatedTransitionProps';
+import { isValidElement } from 'react';
+import useAnimatedTransition from 'hooks/useAnimatedTransition';
 
 /**
  * Component of the child element is required to pass `onTransitionEnd` and `style` props to DOM tag element.
- */
-const AnimatedTransition = ({ animation = 'fade', shouldTransition, children }) => {
-  const props = useAnimatedTransitionProps(children.props, { animation, shouldTransition });
-  return React.cloneElement(children, props);
+ */ 
+const AnimatedTransition = ({ children: element, ...options }) => {
+  element = useAnimatedTransition(element, options);
+  return isValidElement(element) && element;
 };
 
 export default AnimatedTransition;

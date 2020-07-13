@@ -11,26 +11,6 @@ const Choose = ({ children, index, placeItems = 'center', ...props }) => {
       ? 'visible' 
       : 'hidden';
 
-    if (child.props.fit || child.props['data-fit']) {
-      className += ' fit';
-    }
-
-    if (child.props.top || child.props['data-top']) {
-      className += ' top';
-    }
-
-    if (child.props.right || child.props['data-right']) {
-      className += ' right';
-    }
-
-    if (child.props.bottom || child.props['data-bottom']) {
-      className += ' bottom';
-    }
-
-    if (child.props.left || child.props['data-left']) {
-      className += ' left';
-    }
-
     return (
       <div key={ i } className={ className }>
         { child }

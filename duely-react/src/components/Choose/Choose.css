@@ -4,16 +4,16 @@
   grid-template-columns: 1fr;
 }
 
-.choose > .top {
+.choose > [data-top] {
   align-self: start;
 }
-.choose > .right {
+.choose > [data-right] {
   justify-self: end;
 }
-.choose > .bottom {
+.choose > [data-bottom] {
   align-self: end;
 }
-.choose > .left {
+.choose > [data-left] {
   justify-self: start;
 }
 
@@ -23,7 +23,7 @@
   transition: opacity ease-in-out 0.2s;
 }
 
-.choose > .fit {
+.choose > [data-fit] {
   position: absolute;
   height: 100%;
 }

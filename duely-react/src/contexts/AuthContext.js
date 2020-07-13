@@ -35,9 +35,8 @@ const LOG_OUT_MUTATION = gql`
   }
 `;
 
-const AuthContextProvider = (props) => {
+const AuthContextProvider = ({ children }) => {
   const { loading, error, data, refetch } = useQuery(ME_QUERY);
-
   const [logInLoading, setLogInLoading] = useState(false);
   const [logInError, setLogInError] = useState(null);
   const [logInMutation] = useMutation(LOG_IN_MUTATION,
@@ -105,7 +104,7 @@ const AuthContextProvider = (props) => {
       logOutLoading,
       logOutError
     }}>
-      { props.children }
+      { children }
     </AuthContext.Provider>
   );
 }

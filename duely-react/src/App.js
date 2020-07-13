@@ -2,29 +2,29 @@ import React from 'react';
 import { IconContext } from 'react-icons';
 import { ApolloProvider } from '@apollo/client';
 import { client } from './apollo';
+import { BrowserRouter as Router } from 'react-router-dom';
 import ViewportContextProvider from './contexts/ViewportContext';
 import AuthContextProvider from './contexts/AuthContext';
 import DomainContextProvider from './contexts/DomainContext';
 import ModalContextProvider from './contexts/ModalContext';
-import ViewRoot from './ViewRoot';
-import DomainSwitch from './DomainSwitch';
+import { RoutesRoot } from './routes';
 
 const App = () => (
-  <ApolloProvider client={client}>
-    <AuthContextProvider>
-      <DomainContextProvider>
-        <ViewportContextProvider>
-          <IconContext.Provider>
-            <ViewRoot>
+  <Router>
+    <ApolloProvider client={client}>
+      <AuthContextProvider>
+        <DomainContextProvider>
+          <ViewportContextProvider>
+            <IconContext.Provider value={{}}>
               <ModalContextProvider>
-                <DomainSwitch/>
+                <RoutesRoot/>
               </ModalContextProvider>
-            </ViewRoot>
-          </IconContext.Provider>
-        </ViewportContextProvider>
-      </DomainContextProvider>
-    </AuthContextProvider>
-  </ApolloProvider>
+            </IconContext.Provider>
+          </ViewportContextProvider>
+        </DomainContextProvider>
+      </AuthContextProvider>
+    </ApolloProvider>
+  </Router>
 );
 
 export default App;
