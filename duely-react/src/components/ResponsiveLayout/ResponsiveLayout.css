@@ -1,4 +1,5 @@
 .responsive-layout {
+  position: relative;
   overflow: hidden;
   height: 100vh;
   width: 100vw;
@@ -11,38 +12,43 @@
   overflow-y: hidden;
 }
 
-/* Medium (md) */
-@media (min-width: 768px) {
-  .responsive-layout {
-    grid-template:
-      "t t t" auto
-      "n b a" 1fr / auto 1fr auto;
-  }
+.responsive-layout > ::before {
+  content: ' ';
+  background-color: white; /* <- this should match main background color */
+  mask-image: linear-gradient(rgba(0, 0, 0, 1), rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 0));
+  grid-area: t / t / a / a;
+  position: absolute;
+  top: 0;
+  right: var(--scrollbar-width);
+  bottom: -10%;
+  left: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.responsive-layout > [data-layout="topbar"] {
+  grid-area: t;
+  z-index: 2;
+}
+
+.responsive-layout > [data-layout="nav"] {
+  grid-area: n;
+  z-index: 1;
 }
 
 .responsive-layout > .body {
+  grid-area: t / b / b / b;
   display: grid;
   grid-template: 
     "h" auto
     "m" 1fr
     "f" auto;
-  overflow-y: scroll;
-}
-
-.responsive-layout > [data-layout="topbar"] {
-  grid-area: t;
-}
-
-.responsive-layout > [data-layout="nav"] {
-  grid-area: n;
-}
-
-.responsive-layout > .body {
-  grid-area: b;
+  overflow-y: auto;
 }
 
 .responsive-layout > [data-layout="aside"] {
   grid-area: a;
+  z-index: 1;
 }
 
 .responsive-layout > .body > [data-layout="header"] {
@@ -51,10 +57,32 @@
 
 .responsive-layout > .body > [data-layout="main"] {
   grid-area: m;
-  overflow-x: scroll;
+  overflow-x: auto;
 }
 
 .responsive-layout > .body > [data-layout="footer"] {
   grid-area: f;
 }
 
+/* Medium (md) */
+@media (min-width: 768px) {
+  .responsive-layout {
+    grid-template:
+      "t t t" auto
+      "n b a" 1fr / auto 1fr auto;
+  }
+
+  .responsive-layout > ::before {
+    content: ' ';
+    background-color: white; /* <- this should match main background color */
+    mask-image: linear-gradient(rgba(0, 0, 0, 1), rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 0));
+    grid-area: t;
+    position: absolute;
+    top: 0;
+    right: var(--scrollbar-width);
+    bottom: -10%;
+    left: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+}

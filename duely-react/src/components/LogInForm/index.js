@@ -39,7 +39,7 @@ const LogInForm = ({ whenDone, ...props }) => {
       <div className="panel-row center-h space-between pt-label-text">
         <Choose index={ loading ? 1 : 0 }>
           <motion.input type="submit" className="default prominent f-4" value="Log in" { ...buttonAnimations } />
-          <Spinner data-fit={ true } spin={ loading } />
+          <Spinner data-choose="fit" spin={ loading } />
         </Choose>
       </div>
       <div className="panel-row center-h center-v">

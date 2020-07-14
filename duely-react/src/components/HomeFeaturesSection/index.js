@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
-import './FeaturesSection.css';
-import { useIntersectionObserver } from '../../../hooks';
-import Background from '../../../components/Background';
+import useIntersectionObserver from 'hooks/useIntersectionObserver';
+import Background from 'components/Background';
+import './HomeFeaturesSection.css';
 
-const FeaturesSection = () => {
+const HomeFeaturesSection = ({ ...props }) => {
   const ref = useRef();
   useIntersectionObserver(ref, (entry) => {
     if (entry.isIntersecting) {
@@ -13,20 +13,21 @@ const FeaturesSection = () => {
     }
   }, { threshold: 0.1 });
   return (
-    <Background fullscreen>
+    <Background className="home-features-section gutter" placeItems="center" { ...props }>
       <svg className="home-features-section-background" xmlns="http://www.w3.org/2000/svg" viewBox="0 -10 300 120">
 
       </svg>
-      <section className="home-features-section gutter">
+      <section>
         <div ref={ ref }>
           <ul className="f-6 f-b">
             <li>Create a service catalogue</li>
             <li>Manage client deliverables and projects</li>
-            <li>Accept payments and setup invoicing</li>
+            <li>Setup invoicing and accept payments</li>
           </ul>
         </div>
       </section>
     </Background>
   );
 };
-export default FeaturesSection;
+
+export default HomeFeaturesSection;

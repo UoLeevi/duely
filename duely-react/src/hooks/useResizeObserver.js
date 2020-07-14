@@ -9,7 +9,7 @@ export default function useResizeObserver(targetRef, callback, options = {}) {
 
     const observer = new ResizeObserver(entries => callback(entries[0]), options);
     observer.observe(targetRef.current);
-    const unobserve = () => observer.unobserve(targetRef.current);
+    const unobserve = () => observer.disconnect();
     ref.current = unobserve;
     return unobserve;
   }, [targetRef, callback, options]);

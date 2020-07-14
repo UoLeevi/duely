@@ -302,7 +302,7 @@ textarea { white-space: pre-wrap; }
   --f-6: 1.7rem;
   --f-7: 2.2rem;
   --f-8: 2.8rem;
-  --f-8: 3.5rem;
+  --f-9: 3.5rem;
 }
 
 /* #endregion */
@@ -399,7 +399,7 @@ body {
 
 /* All */
 :root {
-  --gutter-width: calc(5vw + 10px);
+  --gutter-width: calc(5% + 10px);
   --gutter-width-small: calc(var(--gutter-width) * 0.75);
   --gutter-width-large: calc(var(--gutter-width) * 1.25);
 }
@@ -407,42 +407,42 @@ body {
 /* Small (sm) */
 @media (min-width: 640px) {
   :root {
-    --gutter-width: 10vw;
+    --gutter-width: 10%;
   }
 }
 
 /* Medium (md) */
 @media (min-width: 768px) {
   :root {
-    --gutter-width: 10vw;
+    --gutter-width: 10%;
   }
 }
 
 /* Large (lg) */
 @media (min-width: 1024px) {
   :root {
-    --gutter-width: 15vw;
+    --gutter-width: 15%;
   }
 }
 
 /* Extra Large (xl) */
 @media (min-width: 1280px) {
   :root {
-    --gutter-width: max(20vw, calc((100vw - 1280px) / 2));
+    --gutter-width: max(20%, calc((100% - 1280px) / 2));
   }
 }
 
 .gutter {
-  margin-left: var(--gutter-width);
-  margin-right: var(--gutter-width);
+  padding-left: var(--gutter-width);
+  padding-right: var(--gutter-width);
 }
 .gutter-small {
-  margin-left: var(--gutter-width-small);
-  margin-right: var(--gutter-width-small);
+  padding-left: var(--gutter-width-small);
+  padding-right: var(--gutter-width-small);
 }
 .gutter-large {
-  margin-left: var(--gutter-width-large);
-  margin-right: var(--gutter-width-large);
+  padding-left: var(--gutter-width-large);
+  padding-right: var(--gutter-width-large);
 }
 
 /* #endregion */
@@ -900,31 +900,32 @@ body {
 :root {
   --scrollbar-color-thumb: rgba(var(--color-grey-rgb), var(--alpha-3));
   --scrollbar-color-track: rgba(0, 0, 0, 0);
+  --scrollbar-width: 11px;
 }
 
-#app .hide-scrollbar::-webkit-scrollbar { /* WebKit */
-  display: none;
+.hide-scrollbar::-webkit-scrollbar { /* WebKit */
+  display: none !important;
 }
-#app .hide-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE 10+ */
+.hide-scrollbar {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important;  /* IE 10+ */
 }
 
-html:not(.custom-scroll) * {
+html * {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-color-thumb) var(--scrollbar-color-track);
 }
 
-html:not(.custom-scroll) *::-webkit-scrollbar {
-  width: 11px;
-  height: 11px;
+::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
 }
 
-html:not(.custom-scroll) *::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: var(--scrollbar-color-track);
 }
 
-html:not(.custom-scroll) *::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background-color: var(--scrollbar-color-thumb);
   border-radius: 6px;
   border: 3px solid var(--scrollbar-color-track);
@@ -1085,8 +1086,10 @@ label.default > span {
 
 input[type="button"].default,
 input[type="submit"].default,
-button.default {
+button.default,
+.button {
   letter-spacing: 0.04em;
+  text-align: center;
   border-radius: var(--radius-1-rel);
   font-weight: bold;
   border: solid rgba(var(--color-grey-rgb), var(--alpha-3)) 2px;
@@ -1099,28 +1102,43 @@ button.default {
 input[type="button"].default:focus,
 input[type="submit"].default:focus,
 button.default:focus,
+.button:focus,
 input[type="button"].default:hover,
 input[type="submit"].default:hover,
-button.default:hover {
+button.default:hover,
+.button:hover {
   background-color: rgba(var(--color-grey-rgb), var(--alpha-1));
   border-color: rgba(var(--color-grey-rgb), var(--alpha-5));
+}
+
+input[type="button"].flat:focus,
+input[type="submit"].flat:focus,
+button.flat:focus,
+.button.flat:focus,
+input[type="button"].flat:hover,
+input[type="submit"].flat:hover {
+  background-color: rgba(var(--color-grey-rgb), var(--alpha-2));
 }
 
 input[type="button"].flat,
 input[type="submit"].flat,
 button.flat,
+.button.flat,
 input[type="button"].flat:focus,
 input[type="submit"].flat:focus,
 button.flat:focus,
+.button.flat:focus,
 input[type="button"].flat:hover,
 input[type="submit"].flat:hover,
-button.flat:hover {
+button.flat:hover,
+.button.flat:hover {
   border-color: transparent;
 }
 
 input[type="button"].dense,
 input[type="submit"].dense,
-button.dense {
+button.dense,
+.button.dense {
   padding: 0.5em 1.1em;
   border-radius: var(--radius-1-rel);
   min-width: 5em;
@@ -1128,7 +1146,8 @@ button.dense {
 
 input[type="button"].prominent,
 input[type="submit"].prominent,
-button.prominent {
+button.prominent,
+.button.prominent {
   padding: 1em 1.5em;
   min-width: 8em;
 }
@@ -1209,3 +1228,29 @@ input[type="password"].default:focus {
 }
 
 /* #endregion */
+
+/* #region Grid */
+
+.grid {
+  display: grid;
+}
+
+.gap-1 {
+  gap: var(--spacing-1);
+}
+
+.grid.row {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+/* #endregion */
+
+/* #region Alignment */
+
+.items-center {
+  place-items: center;
+}
+
+/* #endregion */
+

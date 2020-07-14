@@ -1,6 +1,17 @@
 import React from 'react';
 import './ResponsiveLayout.css';
 import useBreakpoints from 'hooks/useBreakpoints';
+import withAnimatedTransition from 'hoc/withAnimatedTransition';
+import AnimatedTransition from 'components/AnimatedTransition';
+
+const didTypeChange = (previous, next) => previous.type !== next.type;
+const didCriticalSectionsChange = (previous, next) => {  
+  if (!previous.nav !== !next.nav) {
+    return true;
+  }
+
+  return false;
+};
 
 const ResponsiveLayout = ({ topbar, nav, aside, header, main, footer, ...props }) => {
   const { md } = useBreakpoints();
@@ -27,16 +38,28 @@ const ResponsiveLayout = ({ topbar, nav, aside, header, main, footer, ...props }
 
   return (
     <div className="responsive-layout" { ...props }>
-      { createLayoutElement(topbar, 'topbar') }
-      { createLayoutElement(nav, 'nav') }
-      { createLayoutElement(aside, 'aside') }
+      <AnimatedTransition shouldTransition={ didTypeChange }>
+        { createLayoutElement(topbar, 'topbar') }
+      </AnimatedTransition>
+      <AnimatedTransition shouldTransition={ didTypeChange }>
+        { createLayoutElement(nav, 'nav') }
+      </AnimatedTransition>
+      <AnimatedTransition shouldTransition={ didTypeChange }>
+        { createLayoutElement(aside, 'aside') }
+      </AnimatedTransition>
       <div className="body">
-        { createLayoutElement(header, 'header') }
-        { createLayoutElement(main, 'main') }
-        { createLayoutElement(footer, 'footer') }
+        <AnimatedTransition shouldTransition={ didTypeChange }>
+          { createLayoutElement(header, 'header') }
+        </AnimatedTransition>
+        <AnimatedTransition shouldTransition={ didTypeChange }>
+          { createLayoutElement(main, 'main') }
+        </AnimatedTransition>
+        <AnimatedTransition shouldTransition={ didTypeChange }>
+          { createLayoutElement(footer, 'footer') }
+        </AnimatedTransition>
       </div>
     </div>
   );
 };
 
-export default ResponsiveLayout;
+export default withAnimatedTransition(ResponsiveLayout, { shouldTransition: didCriticalSectionsChange });

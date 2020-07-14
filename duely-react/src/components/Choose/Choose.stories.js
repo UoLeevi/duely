@@ -39,7 +39,7 @@ export const ToggleContent = ({ placeItems }) => {
         <Choose index={ index } placeItems={ placeItems }>
           <span>Choose component selects is size based on the largest child.</span>
           <span>Other items are centered</span>
-          <span data-left>Individual child justified left</span>
+          <span data-choose="center left">Individual child justified left</span>
         </Choose>
       </div>
     </div>
@@ -67,7 +67,7 @@ export const LoadingSpinner = () => {
       <div className="panel-row">
         <Choose index={ loading ? 1 : 0 } >
           <button className="default" onClick={ () => setLoading(true) }>Start loading</button>
-          <Spinner fit />
+          <Spinner data-choose="fit" />
         </Choose>
       </div>
     </div>

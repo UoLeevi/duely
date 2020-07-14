@@ -1,6 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-// import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, Link } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
 import useModal from 'hooks/useModal';
 import LoginForm from 'components/LogInForm';
@@ -15,35 +14,35 @@ const getInitialState = () => {
 
 const initialState = getInitialState();
 
-const TopbarActions = ({ ...props }) => {
+const shouldUpdateLinks = (previous, next) => {
+  if (previous.children !== next.children) {
+    return true;
+  }
+};
+
+const TopbarActions = ({ links, ...props }) => {
   const navigate = useNavigate(); // TODO: add & remove ?login query parameter when login form is shown (should maybe go in LoginForm)
   const { loading, isLoggedIn, logOut } = useAuth();
   const [showModal] = useModal(({ hideModal }) => <LoginForm whenDone={ () => { hideModal(); navigate('/profile'); } } />, { options: { show: !isLoggedIn && initialState.showLogIn }});
 
   return (
-    <AnimatedTransition>
+    <AnimatedTransition { ...props } shouldTransition={ shouldUpdateLinks }>
       { loading
         ? null
         : isLoggedIn 
-          ? <button className="default dense" onClick={ logOut }>Log out</button> 
+          ? (
+            <div className="grid row gap-1 items-center">
+              { links?.map(({ to, text }) => 
+                <AnimatedTransition key={ to }>
+                  <Link className="button dense flat" to={ to }>{ text }</Link>
+                </AnimatedTransition>
+              )}
+              <button className="default dense flat" onClick={ logOut }>Log out</button> 
+            </div>
+          )
           : <button className="default" onClick={ showModal }>Log in</button>
       }
     </AnimatedTransition>
-    // <AnimatePresence exitBeforeEnter>
-    //   { !loading && (
-    //     <motion.div
-    //       initial={{ y: '-1rem', opacity: 0 }}
-    //       animate={{ y: 0, opacity: 1 }}
-    //       exit={{ opacity: 0 }}
-    //       { ...props }
-    //     >
-    //       { isLoggedIn 
-    //         ? <button key="log-out" className="default dense" onClick={ logOut }>Log out</button> 
-    //         : <button key="log-in" className="default" onClick={ showModal }>Log in</button>
-    //       }
-    //     </motion.div>
-    //   )}
-    // </AnimatePresence>
   );
 };
 

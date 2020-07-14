@@ -1,41 +1,13 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { useQuery, useMutation, gql } from '@apollo/client';
-import { client } from '../apollo';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@apollo/client';
+import { client, ME_QUERY, LOG_IN_MUTATION, LOG_OUT_MUTATION } from '../apollo';
 
 const errorMessageDuration = 4000;
 export const AuthContext = createContext();
 
-const ME_QUERY = gql`
-  query {
-    me {
-      uuid
-      name
-      emailAddress
-      type
-    }
-  }
-`;
-
-const LOG_IN_MUTATION = gql`
-  mutation($emailAddress: String!, $password: String!) {
-    logIn(emailAddress: $emailAddress, password: $password) {
-      success
-      message
-      jwt
-    }
-  }
-`;
-
-const LOG_OUT_MUTATION = gql`
-  mutation {
-    logOut {
-      success
-      message
-    }
-  }
-`;
-
 const AuthContextProvider = ({ children }) => {
+  const navigate = useNavigate();
   const { loading, error, data, refetch } = useQuery(ME_QUERY);
   const [logInLoading, setLogInLoading] = useState(false);
   const [logInError, setLogInError] = useState(null);
@@ -85,6 +57,7 @@ const AuthContextProvider = ({ children }) => {
   const logOut = async () => {
     setLogOutLoading(true);
     await logOutMutation();
+    navigate('/', { replace: true });
   }
 
   useEffect(() => {

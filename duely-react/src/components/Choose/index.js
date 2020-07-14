@@ -7,12 +7,23 @@ const Choose = ({ children, index, placeItems = 'center', ...props }) => {
   const [currentIndex, setCurrentIndex] = useState(index);
 
   const components = React.Children.map(children, (child, i) => {
-    let className = currentIndex === i
+    const className = currentIndex === i
       ? 'visible' 
       : 'hidden';
 
+    const modifier = child.props?.['data-choose'];
+    const style = {};
+
+    if (modifier) {
+      if (modifier === 'fit') {
+        // handled in css file
+      } else {
+        style.placeSelf = modifier;
+      }
+    }
+
     return (
-      <div key={ i } className={ className }>
+      <div key={ i } className={ className } style={ style }>
         { child }
       </div>
     );

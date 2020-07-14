@@ -4,28 +4,13 @@
   grid-template-columns: 1fr;
 }
 
-.choose > [data-top] {
-  align-self: start;
-}
-.choose > [data-right] {
-  justify-self: end;
-}
-.choose > [data-bottom] {
-  align-self: end;
-}
-.choose > [data-left] {
-  justify-self: start;
-}
-
-.choose > * {
+.choose > div {
+  display: grid;
+  place-items: center;
+  grid-template-columns: 1fr;
   grid-column-start: 1;
   grid-row-start: 1;
   transition: opacity ease-in-out 0.2s;
-}
-
-.choose > [data-fit] {
-  position: absolute;
-  height: 100%;
 }
 
 .choose > .hidden {
@@ -41,3 +26,7 @@
   opacity: 0;
 }
 
+.choose > div > [data-choose="fit"] {
+  position: absolute;
+  height: 100%;
+}
