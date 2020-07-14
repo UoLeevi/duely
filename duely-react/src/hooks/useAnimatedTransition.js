@@ -1,9 +1,13 @@
-import React, { useState, useLayoutEffect, useRef, isValidElement } from 'react';
+import React, { useState, useLayoutEffect, useEffect, useRef, isValidElement } from 'react';
 
 const INITIAL = 'INITIAL';
 const ENTERING = 'ENTERING';
 const EXITING = 'EXITING';
 const IDLE = 'IDLE';
+
+// By delaying the enter transition we can sometimes avoid unnecessary 
+// rerendering when props change repeteatedly.
+const enteringDelayMs = 80;
 
 const durationMs = 200;
 
@@ -53,13 +57,18 @@ export default function useAnimatedTransition(next, options) {
     ref.current = next;
   }
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (state === INITIAL && next) {
-      setState(ENTERING);
-    } else if (changed && previous) {
+      const startEnteringTimeout = setTimeout(() => setState(ENTERING), enteringDelayMs);
+      return () => clearTimeout(startEnteringTimeout);
+    }
+  }, [next, state]);
+
+  useLayoutEffect(() => {
+    if (changed && previous) {
       setState(EXITING);
     }
-  }, [previous, next, state, changed]);
+  }, [previous, changed]);
 
   const current = ref.current;
   const element = isValidElement(current) && current;
