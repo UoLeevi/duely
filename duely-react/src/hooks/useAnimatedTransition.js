@@ -1,37 +1,18 @@
-import React, { useState, useLayoutEffect, useEffect, useRef, isValidElement } from 'react';
+import React, { useState, useLayoutEffect, useRef, isValidElement } from 'react';
 
-const INITIAL = 'INITIAL';
-const ENTERING = 'ENTERING';
-const EXITING = 'EXITING';
-const IDLE = 'IDLE';
+const ENTER = 'enter';
+const EXIT = 'exit';
+const IDLE = 'idle';
 
-// By delaying the enter transition we can sometimes avoid unnecessary 
-// rerendering when props change repeteatedly.
-const enteringDelayMs = 80;
-
-const durationMs = 500;
-
-const animationProperties = {
-  fade: 'opacity'
-}
-
-const animationStyles = {
+const animations = {
   fade: {
-    [INITIAL]: { value: '0' },
-    [ENTERING]: { value: '1' },
-    [EXITING]: { value: '0', pointerEvents: 'none' },
-    [IDLE]: { value: '1' }
+    [ENTER]: [[{ opacity: '0' }, { opacity: '1' }], { duration: 200, fill: 'forwards' }],
+    [EXIT]: [[{ opacity: '1', pointerEvents: 'none' }, { opacity: '0', pointerEvents: 'none' }], { duration: 200, fill: 'forwards' }]
   }
 };
 
-function createAnimationStyles(animation, state) {
-  const property = animationProperties[animation];
-  const { value, ...style } = animationStyles[animation][state];
-  return { ...style, transition: `${property} ${durationMs}ms`, [property]: value };
-}
-
 const defaultOptions = {
-  animation: 'fade',
+  animations: animations['fade'],
   shouldTransition: (previous, next) => {
     if (isValidElement(previous ?? next)) {
       // arguments are elements
@@ -56,18 +37,23 @@ const defaultOptions = {
 };
 
 export default function useAnimatedTransition(next, options) {
-  const { shouldTransition, animation } = { ...defaultOptions, ...options };
-  const [state, setState] = useState(INITIAL);
-  const ref = useRef();
-  const previous = ref.current;
+  const { shouldTransition, animations } = { ...defaultOptions, ...options };
+  const [,setForceUpdateCount] = useState(0);
+  const ref = useRef({ state: ENTER, previous: undefined, animation: undefined });
+  const { previous, animation } = ref.current;
+  const changed = ref.current.state !== EXIT && (!previous || !next || shouldTransition(previous, next));
 
-  const changed = [ENTERING, IDLE].includes(state) && (!previous || !next || shouldTransition(previous, next));
-
-  if (!changed && state !== EXITING && next) {
-    ref.current = next;
+  if (changed && previous) {
+    ref.current.state = EXIT;
   }
 
-  const current = ref.current;
+  const state = ref.current.state;
+
+  if ((!ref.current.previous || (!changed && state !== EXIT)) && next) {
+    ref.current.previous = next;
+  }
+
+  const current = ref.current.previous;
   let element = undefined;
   let props = undefined;
   let domRef = useRef();
@@ -83,88 +69,42 @@ export default function useAnimatedTransition(next, options) {
     props = current;
   }
 
-  useEffect(() => {
-    if (state === INITIAL && next) {
-      const startEnteringTimeout = setTimeout(() => setState(ENTERING), enteringDelayMs);
-      return () => clearTimeout(startEnteringTimeout);
-    }
-  }, [next, state]);
-
   useLayoutEffect(() => {
-    if (changed && previous) {
-      setState(EXITING);
-    }
-  }, [previous, changed]);
+    if (current && (animation?.id !== state || animation.playState === 'paused')) {
+      const [keyframes, options] = animations[state] ?? [];
 
-  useLayoutEffect(() => {
-    const stateAfterTransition = state === EXITING
-      ? INITIAL
-      : !changed && state === ENTERING
-        ? IDLE
-        : undefined;
+      if (keyframes) {
+        let animation = ref.current.animation;
 
-    if (!stateAfterTransition) {
-      return;
-    }
+        if (animation?.playState === 'paused') {
+          // TODO: continue or replace animation
+        }
 
-    console.assert(domRef.current, 'Ref pointing to DOM element is required. Remember to use `React.forwardRef` to pass ref to DOM element.');
+        const domElement = domRef.current;
+        animation = ref.current.animation = domElement.animate(keyframes, options);
+        animation.id = state;
 
-    const domElement = domRef.current;
-    const style = window.getComputedStyle(domElement);
-    const property = animationProperties[animation];
-    const value = animationStyles[animation][stateAfterTransition].value;
+        animation.onfinish = () => {
+          ref.current.state = state === EXIT ? ENTER : IDLE;
 
-    if (style[property] === value) {
-      setState(stateAfterTransition);
-    } else {
-      const listener = () => {
-        domElement.removeEventListener('transitionend', listener);
-        setState(stateAfterTransition);
+          if (state === EXIT) {
+            ref.current.previous = undefined;
+            setForceUpdateCount(s => s + 1);
+          }
+        };
+
+        return () => {
+          if (animation.playState === 'running') {
+            animation.pause();
+          }
+        }
       }
-
-      domElement.addEventListener('transitionend', listener);
-      return () => domElement.removeEventListener('transitionend', listener);
     }
-  }, [state, changed, animation]);
+  }, [animations, current, state, animation]);
 
-  props = { ...props, ref: domRef, style: { ...props?.style, ...createAnimationStyles(animation, state) } };
+  props = { ...props, style: { ...props?.style, ...animations[state]?.[0]?.[0] }, ref: domRef };
 
   return element
     ? React.cloneElement(element, props)
     : props;
 }
-
-// # State matrix
-// p = previous
-// n = next
-// @ = ignore
-// x = true / set
-// / = some is true / set
-//   = false / undefined
-//
-// case no.   0 1 2 3 4 5 
-//           | |@|p|p|p|p|
-//           | |n|n|n|@|n|
-// - changed |@|@| | |x|@|
-// ## render +-+-+-+-+-+-+
-// INITIAL   |x|x| | | | |
-// ENTERING  | | |x| |/| |
-// IDLE      | | | |x|/| |
-// EXITING   | | | | | |x|
-// - current |@|n|n|n|p|p|
-//           +-+-+-+-+-+-+
-//              V     V   
-// ## effect +-+-+-+-+-+-+
-// INITIAL   |@| |@|@| |@|
-// ENTERING  |@|x|@|@| |@|
-// IDLE      |@| |@|@| |@|
-// EXITING   |@| |@|@|x|@|
-//           +-+-+-+-+-+-+
-//                V     V 
-// ## tr.end +-+-+-+-+-+-+
-// - current |@|@|@|@|@| |
-// INITIAL   |@|@| |@|@|x|
-// ENTERING  |@|@| |@|@| |
-// IDLE      |@|@|x|@|@| |
-// EXITING   |@|@| |@|@| |
-// next case  0 2 3 3 5 0 

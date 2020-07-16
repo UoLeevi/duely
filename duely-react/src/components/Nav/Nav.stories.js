@@ -57,6 +57,6 @@ export const Vertical = () => {
 
 export const Horizontal = () => {
   return (
-    <Nav items={ items } layout={{ orientation: 'horizontal' }} />
+    <Nav items={ items } data-layout="nav-orientation:horizontal" />
   )
 };
