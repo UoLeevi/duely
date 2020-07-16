@@ -58,9 +58,35 @@ BEGIN
 
   PERFORM operation_.begin_session_(_visitor_jwt);
 
+  PERFORM operation_.sign_up_user_('test@example.com', _record_0.verification_code_, 'test user', 'temp password');
+
+  PERFORM operation_.end_session_();
+
+
+  PERFORM operation_.begin_session_(_visitor_jwt);
+  BEGIN
+    PERFORM operation_.reset_password_('test@example.com', _record_0.verification_code_, 'malicious password');
+    RAISE EXCEPTION 'Verification code should not be able to be reused!';
+  EXCEPTION WHEN SQLSTATE '20000' THEN
+  END;
+
+  PERFORM operation_.end_session_();
+
+
+  PERFORM operation_.begin_session_(_visitor_jwt);
+
   SELECT * INTO _record_0
-  FROM operation_.sign_up_user_('test@example.com', _record_0.verification_code_, 'test user', 'password');
-  --RAISE NOTICE E'sign_up_user_:\n%', _record_0;
+  FROM operation_.start_email_address_verification_('test@example.com');
+  --RAISE NOTICE E'start_email_address_verification_:\n%', _record_0;
+
+  PERFORM operation_.end_session_();
+
+
+  PERFORM operation_.begin_session_(_visitor_jwt);
+
+  SELECT * INTO _record_0
+  FROM operation_.reset_password_('test@example.com', _record_0.verification_code_, 'password');
+  --RAISE NOTICE E'reset_password_:\n%', _record_0;
 
   PERFORM operation_.end_session_();
 

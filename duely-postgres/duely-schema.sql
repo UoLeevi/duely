@@ -1797,6 +1797,61 @@ $$;
 ALTER FUNCTION operation_.remove_user_from_agency_(_agency_uuid uuid, _subject_uuid uuid) OWNER TO postgres;
 
 --
+-- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.user_ (
+    uuid_ uuid NOT NULL,
+    email_address_ text,
+    password_hash_ text
+);
+
+
+ALTER TABLE security_.user_ OWNER TO postgres;
+
+--
+-- Name: reset_password_(text, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.reset_password_(_email_address text, _verification_code text, _password text) RETURNS security_.user_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _verification_uuid uuid;
+  _user security_.user_;
+BEGIN
+  PERFORM security_.control_operation_('reset_password_');
+
+  UPDATE security_.email_address_verification_ SET
+    status_ = 'verified',
+    status_at_ = CURRENT_TIMESTAMP
+  WHERE email_address_ = lower(_email_address)
+    AND verification_code_ = _verification_code
+    AND status_ IS NULL
+  RETURNING uuid_ INTO _verification_uuid;
+
+  IF _verification_uuid IS NULL THEN
+    RAISE 'No matching email address verification code found: %', lower(_email_address) USING ERRCODE = '20000';
+  END IF;
+
+  UPDATE security_.user_
+  SET
+    password_hash_ = pgcrypto_.crypt(_password, pgcrypto_.gen_salt('md5'))
+  WHERE email_address_ = lower(_email_address)
+  RETURNING * INTO _user;
+
+  IF _user IS NULL THEN
+    RAISE 'No user matching email address found: %', lower(_email_address) USING ERRCODE = '20000';
+  END IF;
+
+  RETURN _user;
+END
+$$;
+
+
+ALTER FUNCTION operation_.reset_password_(_email_address text, _verification_code text, _password text) OWNER TO postgres;
+
+--
 -- Name: set_service_status_(uuid, text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -1828,19 +1883,6 @@ $$;
 
 
 ALTER FUNCTION operation_.set_service_status_(_service_uuid uuid, _status text) OWNER TO postgres;
-
---
--- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.user_ (
-    uuid_ uuid NOT NULL,
-    email_address_ text,
-    password_hash_ text
-);
-
-
-ALTER TABLE security_.user_ OWNER TO postgres;
 
 --
 -- Name: sign_up_user_(text, text, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1911,25 +1953,18 @@ CREATE FUNCTION operation_.start_email_address_verification_(_email_address text
     AS $$
 DECLARE
   _email_address_verification security_.email_address_verification_;
-  _verification_code text := lpad(floor(random() * 1000000)::text, 6, '0');
+  _verification_code text := pgcrypto_.gen_random_uuid();
 BEGIN
   PERFORM security_.control_operation_('start_email_address_verification_');
 
-  IF EXISTS (
-    SELECT 1
-    FROM security_.user_ u
-    WHERE u.email_address_ = lower(_email_address)
-  ) THEN
-    RAISE 'Email address already verified: %', lower(_email_address) USING ERRCODE = '23505';
-  END IF;
-
   INSERT INTO security_.email_address_verification_ (email_address_, verification_code_)
   VALUES (lower(_email_address), _verification_code)
-  ON CONFLICT (email_address_) DO UPDATE
+  ON CONFLICT (email_address_) WHERE (status_ IS NULL) DO UPDATE
   SET
     verification_code_ = _verification_code,
     started_at_ = DEFAULT
   WHERE security_.email_address_verification_.email_address_ = lower(_email_address)
+  AND security_.email_address_verification_.status_ IS NULL
   RETURNING * INTO _email_address_verification;
 
   RETURN _email_address_verification;
@@ -3004,6 +3039,7 @@ d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+
 dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	reset_password_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3063,6 +3099,8 @@ fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721
 2e761c06-11f7-4cb0-914c-267df87a55d5	subject_is_active_user_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 ac7fd563-dbb7-44ad-ab12-ccb314704c31	manager_in_agency_	ddcffba4-934c-46ce-bc8b-6ae23b19dce1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-199f58032ff5	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+60d3ee39-0f5a-40b9-941e-c606f015fb12	visitor_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3130,6 +3168,7 @@ d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+
 dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	reset_password_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3189,6 +3228,8 @@ fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721
 2e761c06-11f7-4cb0-914c-267df87a55d5	subject_is_active_user_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 ac7fd563-dbb7-44ad-ab12-ccb314704c31	manager_in_agency_	ddcffba4-934c-46ce-bc8b-6ae23b19dce1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-199f58032ff5	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+60d3ee39-0f5a-40b9-941e-c606f015fb12	visitor_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3375,14 +3416,6 @@ ALTER TABLE ONLY application_.user_invite_
 
 
 --
--- Name: email_address_verification_ email_address_verification__email_address__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.email_address_verification_
-    ADD CONSTRAINT email_address_verification__email_address__key UNIQUE (email_address_);
-
-
---
 -- Name: email_address_verification_ email_address_verification__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
 --
 
@@ -3532,6 +3565,13 @@ ALTER TABLE ONLY security_.user_
 
 ALTER TABLE ONLY security_.user_
     ADD CONSTRAINT user__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: email_address_verification__email_address__idx; Type: INDEX; Schema: security_; Owner: postgres
+--
+
+CREATE UNIQUE INDEX email_address_verification__email_address__idx ON security_.email_address_verification_ USING btree (email_address_) WHERE (status_ IS NULL);
 
 
 --

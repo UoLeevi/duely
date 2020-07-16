@@ -14,31 +14,72 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE OR REPLACE FUNCTION operation_.set_service_status_(_service_uuid uuid, _status text) RETURNS application_.service_
+ALTER TABLE security_.email_address_verification_
+DROP CONSTRAINT email_address_verification__email_address__key;
+
+CREATE UNIQUE INDEX ON security_.email_address_verification_ (email_address_) WHERE (status_ is NULL);
+
+CREATE OR REPLACE FUNCTION operation_.start_email_address_verification_(_email_address text) RETURNS security_.email_address_verification_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _service application_.service_;
-  _arg RECORD;
+  _email_address_verification security_.email_address_verification_;
+  _verification_code text := pgcrypto_.gen_random_uuid();
 BEGIN
-  SELECT _service_uuid service_uuid_, _status service_status_, s.agency_uuid_ INTO _arg
-  FROM application_.service_ s
-  WHERE s.uuid_ = _service_uuid;
-  PERFORM security_.control_operation_('set_service_status_', _arg);
+  PERFORM security_.control_operation_('start_email_address_verification_');
 
-  IF _status NOT IN ('draft', 'live') THEN
-    RAISE 'Invalid service status: %', _status USING ERRCODE = '20000';
-  END IF;
-
-  UPDATE application_.service_
+  INSERT INTO security_.email_address_verification_ (email_address_, verification_code_)
+  VALUES (lower(_email_address), _verification_code)
+  ON CONFLICT (email_address_) WHERE (status_ IS NULL) DO UPDATE
   SET
-    status_ = _status
-  WHERE uuid_ = _service_uuid
-  RETURNING * INTO _service;
+    verification_code_ = _verification_code,
+    started_at_ = DEFAULT
+  WHERE security_.email_address_verification_.email_address_ = lower(_email_address)
+  AND security_.email_address_verification_.status_ IS NULL
+  RETURNING * INTO _email_address_verification;
 
-  RETURN _service;
+  RETURN _email_address_verification;
 END
 $$;
+
+CREATE FUNCTION operation_.reset_password_(_email_address text, _verification_code text, _password text) RETURNS security_.user_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _verification_uuid uuid;
+  _user security_.user_;
+BEGIN
+  PERFORM security_.control_operation_('reset_password_');
+
+  UPDATE security_.email_address_verification_ SET
+    status_ = 'verified',
+    status_at_ = CURRENT_TIMESTAMP
+  WHERE email_address_ = lower(_email_address)
+    AND verification_code_ = _verification_code
+    AND status_ IS NULL
+  RETURNING uuid_ INTO _verification_uuid;
+
+  IF _verification_uuid IS NULL THEN
+    RAISE 'No matching email address verification code found: %', lower(_email_address) USING ERRCODE = '20000';
+  END IF;
+
+  UPDATE security_.user_
+  SET
+    password_hash_ = pgcrypto_.crypt(_password, pgcrypto_.gen_salt('md5'))
+  WHERE email_address_ = lower(_email_address)
+  RETURNING * INTO _user;
+
+  IF _user IS NULL THEN
+    RAISE 'No user matching email address found: %', lower(_email_address) USING ERRCODE = '20000';
+  END IF;
+
+  RETURN _user;
+END
+$$;
+
+INSERT INTO security_.operation_ (name_, log_events_) VALUES ('reset_password_', 't');
+PERFORM security_.implement_policy_allow_('reset_password_', 'visitor_');
+PERFORM security_.implement_policy_allow_('reset_password_', 'logged_in_');
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
