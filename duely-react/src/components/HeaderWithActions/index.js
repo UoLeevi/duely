@@ -2,9 +2,9 @@ import React from 'react';
 import AnimatedTransition from 'components/AnimatedTransition';
 import './HeaderWithActions.css';
 
-const HeaderWithActions = ({ layout: { section }, title, subtitle, children, ...props }) => {
+const HeaderWithActions = React.forwardRef(({ title, subtitle, children, ...props }, ref) => {
   return (
-    <header className="header-with-actions pa-4" data-layout={ section } { ...props }>
+    <header className="header-with-actions pa-4" { ...props } ref={ ref }>
       <AnimatedTransition>
         <h2 className="f-4b">{ title }</h2>
       </AnimatedTransition>
@@ -14,6 +14,6 @@ const HeaderWithActions = ({ layout: { section }, title, subtitle, children, ...
       <div>{ children }</div>
     </header>
   );
-};
+});
 
 export default HeaderWithActions;

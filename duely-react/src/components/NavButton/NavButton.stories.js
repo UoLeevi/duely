@@ -1,18 +1,10 @@
 import React from 'react';
 import NavButton from '../NavButton';
 import { BsHouse } from 'react-icons/bs';
-import { MemoryRouter as Router } from 'react-router-dom';
 
 export default {
   title: 'NavButton',
-  component: NavButton,
-  decorators: [
-    Fn => (
-      <Router>
-        <Fn />
-      </Router>
-    )
-  ]
+  component: NavButton
 };
 
 export const Default = () => {

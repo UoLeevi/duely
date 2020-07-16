@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
 import useModal from 'hooks/useModal';
@@ -23,7 +23,8 @@ const shouldUpdateLinks = (previous, next) => {
 const TopbarActions = ({ links, ...props }) => {
   const navigate = useNavigate(); // TODO: add & remove ?login query parameter when login form is shown (should maybe go in LoginForm)
   const { loading, isLoggedIn, logOut } = useAuth();
-  const [showModal] = useModal(({ hideModal }) => <LoginForm whenDone={ () => { hideModal(); navigate('/profile'); } } />, { options: { show: !isLoggedIn && initialState.showLogIn }});
+  const hideModalRef = useRef();
+  const showModal = useModal(<LoginForm whenDone={ () => { hideModalRef.current(); navigate('/profile'); } } />, { hideModalRef, show: !isLoggedIn && initialState.showLogIn });
 
   return (
     <AnimatedTransition { ...props } shouldTransition={ shouldUpdateLinks }>
@@ -34,13 +35,18 @@ const TopbarActions = ({ links, ...props }) => {
             <div className="grid row gap-1 items-center">
               { links?.map(({ to, text }) => 
                 <AnimatedTransition key={ to }>
-                  <Link className="button dense flat" to={ to }>{ text }</Link>
+                  <Link className="button text" to={ to }>{ text }</Link>
                 </AnimatedTransition>
               )}
-              <button className="default dense flat" onClick={ logOut }>Log out</button> 
+              <button className="default text" onClick={ logOut }>Log out</button> 
             </div>
           )
-          : <button className="default" onClick={ showModal }>Log in</button>
+          : (
+            <div className="grid row gap-5 items-center">
+              <button className="default text" onClick={ showModal }>Log in</button>
+              <Link className="button text primary" to='/create-account'>Sign up</Link>
+            </div>
+          )
       }
     </AnimatedTransition>
   );

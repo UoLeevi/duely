@@ -1,0 +1,35 @@
+.text-field {
+  flex-grow: 1;
+  display: grid;
+  grid-template: 
+    "l a" auto
+    "i i" auto / 1fr auto;
+}
+
+.text-field > span {
+  grid-area: l;
+  font-size: var(--f-2);
+}
+
+.text-field-actions {
+  grid-area: a;
+  font-size: var(--f-1);
+}
+
+.text-field-actions > span {
+  cursor: pointer;
+  position: relative;
+}
+
+.text-field span {
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  margin-bottom: calc(var(--label-height) - var(--f-2));
+  margin-left: 0.4em;
+  margin-right: 0.4em;
+}
+
+
+.text-field > input {
+  grid-area: i;
+}

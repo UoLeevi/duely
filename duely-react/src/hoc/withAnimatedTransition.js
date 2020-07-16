@@ -4,9 +4,8 @@ import useAnimatedTransition from 'hooks/useAnimatedTransition';
 /**
  * Component is required to pass `onTransitionEnd` and `style` props to DOM tag element.
  */
-const withAnimatedTransition = (Component, options) => props => {
-  props = useAnimatedTransition(props, options)
-
+const withAnimatedTransition = (Component, options) => (props, ref) => {
+  props = useAnimatedTransition({ ...props, ref }, options)
   return (
     <Component { ...props } />
   );

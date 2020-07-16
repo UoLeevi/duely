@@ -1,7 +1,9 @@
 import React from 'react';
+import { useBlocker } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion';
 import './Modal.css';
 import CloseButton from '../CloseButton';
+import AnimatedTransition from 'components/AnimatedTransition';
 
 const backdropAnimations = {
   initial: {
@@ -44,7 +46,29 @@ const panelAnimations = {
   }
 }
 
-const Modal = ({ children, dismissable, hideModal, ...props }) => {
+const didChildKeyChange = (previous, next) => {
+  return previous.key !== next.key;
+};
+
+const Modal = ({ children, dismissable, hideModal, navigationAction, ...props }) => {
+  function handleNavigation({ retry: navigate }) {
+    switch (navigationAction) {
+      case 'block':
+        break;
+
+      case 'persist':
+        navigate();
+        break;
+
+      case 'dismiss':
+      default:
+        hideModal();
+        navigate();
+        break;
+    }
+  }
+
+  useBlocker(handleNavigation, !!children);
 
   return (
     <AnimatePresence exitBeforeEnter>
@@ -61,7 +85,9 @@ const Modal = ({ children, dismissable, hideModal, ...props }) => {
               variants={ panelAnimations }
             >
               { dismissable && <CloseButton onClick={ hideModal } /> }
-              { children }
+              <AnimatedTransition shouldTransition={ didChildKeyChange }>
+                { children }
+              </AnimatedTransition>
             </motion.div>
           </AnimatePresence>
         </motion.div>

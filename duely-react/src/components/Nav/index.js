@@ -2,30 +2,29 @@ import React from 'react';
 import { useLocation, matchPath } from 'react-router-dom';
 import NavButton from 'components/NavButton';
 import NavTextButton from 'components/NavTextButton';
-import withAnimatedTransition from 'hoc/withAnimatedTransition';
+import AnimatedTransition from 'components/AnimatedTransition';
 import './Nav.css';
 
-const SubmenuList = withAnimatedTransition(
-  ({ submenu, sizeString, ...props }) => {
-    const submenuItems = submenu?.items?.map(({ link, text }) => {
-      return (
-        <NavTextButton tag="li" key={ link.to } text={ text } link={ link } />
-      );
-    });
-
+const SubmenuList = ({ submenu, sizeString, ...props }) => {
+  const submenuItems = submenu?.items?.map(({ link, text }) => {
     return (
+      <NavTextButton tag="li" key={ link.to } text={ text } link={ link } />
+    );
+  });
+
+  return (
+    <AnimatedTransition shouldTransition={ (prevProps, props) => prevProps && prevProps.submenu?.text !== props.submenu?.text }>
       <ul { ...props }>
         { sizeString && <li data-sizer className="f-1 f-b pa-1">{ sizeString }</li> }
         { submenu && <NavTextButton tag="li" className="nav-submenu-title f-1 f-b surface color-s1n color-l2" text={ submenu?.text } link={ submenu?.link && { ...submenu.link, end: true } } /> }
         { submenuItems }
         { sizeString && <li data-sizer className="f-1 f-b pa-1">{ sizeString }</li> }
       </ul>
-    );
-  }, { 
-    shouldTransition: (prevProps, props) => prevProps && prevProps.submenu?.text !== props.submenu?.text
-  });
+    </AnimatedTransition>
+  );
+};
 
-const Nav = ({ items = [], layout: { orientation, section } = { orientation: 'vertical' }, ...props }) => {
+const Nav = React.forwardRef(({ items = [], 'data-layout': layout, ...props }, ref) => {
   const { pathname } = useLocation();
   const submenu = items.find(({ link: { to: path, caseSensitive, end } = {} }) => matchPath({ path, caseSensitive, end }, pathname) !== null);
   const expanded = (submenu?.items?.length ?? 0) > 0;
@@ -34,6 +33,8 @@ const Nav = ({ items = [], layout: { orientation, section } = { orientation: 've
       <NavButton tag="li" key={ link.to } text={ text } link={ link } icon={ icon } minimize={ expanded } />
     );
   });
+
+  const orientation = /orientation:([^;]*)/.exec(layout)?.[1] ?? 'vertical';
   const sizeString = orientation === 'vertical' && 'w'.repeat(
     Math.max(
       ...items
@@ -60,7 +61,7 @@ const Nav = ({ items = [], layout: { orientation, section } = { orientation: 've
   }
 
   return (
-    <nav className={ className } data-layout={ section } data-expanded={ expanded } { ...props }>
+    <nav className={ className } data-layout={ layout } data-expanded={ expanded } { ...props } ref={ ref }>
       <div className="nav-menu">
         <ul>
           { menuItems }
@@ -71,6 +72,6 @@ const Nav = ({ items = [], layout: { orientation, section } = { orientation: 've
       </div>
     </nav>
   );
-};
+});
 
 export default Nav;

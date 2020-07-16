@@ -13,31 +13,25 @@ const didCriticalSectionsChange = (previous, next) => {
   return false;
 };
 
-const ResponsiveLayout = ({ topbar, nav, aside, header, main, footer, ...props }) => {
+const ResponsiveLayout = React.forwardRef(({ topbar, nav, aside, header, main, footer, ...props }, ref) => {
   const { md } = useBreakpoints();
 
-  function layoutPropFor(section) {
-    const layout = {
-      section
-    };
+  function layoutModifiersFor(section) {
+    const modifiers = [];
 
     if (section === 'nav') {
-      layout.orientation = md ? 'vertical' : 'horizontal';
+      modifiers.push(`orientation-${ md ? 'vertical' : 'horizontal' }`);
     }
 
-    return layout;
+    return modifiers.length === 0 ? '' : '-' + modifiers.join(';');
   }
 
   function createLayoutElement(element, section) {
-    return element === undefined 
-      ? undefined
-      : typeof element.type === 'function'
-        ? React.cloneElement(element, { layout: layoutPropFor(section) })
-        : React.cloneElement(element, { 'data-layout': section });
+    return element && React.cloneElement(element, { 'data-layout': section + layoutModifiersFor(section) });
   }
 
   return (
-    <div className="responsive-layout" { ...props }>
+    <div className="responsive-layout" ref={ ref } { ...props }>
       <AnimatedTransition shouldTransition={ didTypeChange }>
         { createLayoutElement(topbar, 'topbar') }
       </AnimatedTransition>
@@ -60,6 +54,6 @@ const ResponsiveLayout = ({ topbar, nav, aside, header, main, footer, ...props }
       </div>
     </div>
   );
-};
+});
 
 export default withAnimatedTransition(ResponsiveLayout, { shouldTransition: didCriticalSectionsChange });

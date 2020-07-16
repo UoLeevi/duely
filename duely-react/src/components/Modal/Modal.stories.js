@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import useModal from 'hooks/useModal';
 import TextField from 'components/TextField';
 
@@ -7,22 +7,23 @@ export default {
 };
 
 export const Default = () => {
-  const [showModal] = useModal(({ hideModal }) => (
-      <div className="panel">
-        <div className="panel-row">
-          <h2 className="default f-b">Heading</h2>
-        </div>
-        <div className="panel-row">
-          <span>Could be any content here</span>
-        </div>
-        <div className="panel-row">
-          <TextField label="Label" />
-        </div>
-        <div className="panel-row pt-label-text center-h">
-          <button className="default" onClick={ hideModal }>Click me</button>
-        </div>
+  const hideModalRef = useRef();
+  const showModal = useModal(
+    <div className="panel">
+      <div className="panel-row">
+        <h2 className="default f-b">Heading</h2>
       </div>
-    )
+      <div className="panel-row">
+        <span>Could be any content here</span>
+      </div>
+      <div className="panel-row">
+        <TextField label="Label" />
+      </div>
+      <div className="panel-row pt-label-text center-h">
+        <button className="default" onClick={ () => hideModalRef.current() }>Click me</button>
+      </div>
+    </div>,
+    { hideModalRef }
   );
   return (
     <div className="panel ma-2">

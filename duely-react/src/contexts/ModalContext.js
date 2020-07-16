@@ -1,57 +1,16 @@
-import React, { createContext, useState, useLayoutEffect } from 'react';
+import React, { createContext, useState } from 'react';
 import Modal from 'components/Modal';
 
 export const ModalContext = createContext();
 
-const defaultOptions = {
-  show: false,
-  dismissable: true
-};
-
 const ModalContextProvider = ({ children }) => {
-  const [modalContentsMap, setModalContentsMap] = useState(new Map());
-
-  function useModal(renderContent, { props, options } = { props: {}, options: {} }) {
-
-    const hideModal = () => {
-      const newMap = new Map(modalContentsMap);
-      newMap.delete(renderContent);
-      setModalContentsMap(newMap);
-    }
-
-    const Content = () => {
-      return (
-        <>
-          { renderContent({ ...props, hideModal }) }
-        </>
-      );
-    }
-
-    options = { ...defaultOptions, ...options, hideModal };
-
-    const showModal = () => {
-      if (modalContentsMap.has(renderContent)) {
-        return;
-      }
-
-      const newMap = new Map([[renderContent, { Content, options }], ...modalContentsMap.entries()]);
-      setModalContentsMap(newMap);
-    }
-
-    const initialize = () => { options.show && showModal(); }
-    useLayoutEffect(initialize, []);
-
-    return [showModal, hideModal];
-  }
-
-  const { value: { Content, options } = { Content: null, options: {} } } = modalContentsMap.values().next();
+  const [modalElementsMap, setModalElementsMap] = useState(new Map());
+  const [element, options] = modalElementsMap.entries().next()?.value ?? [];
 
   return (
-    <ModalContext.Provider value={{ useModal }}>
+    <ModalContext.Provider value={ setModalElementsMap }>
       <Modal { ...options }>
-        { Content &&
-          <Content />
-        }
+        { element }
       </Modal>
       { children }
     </ModalContext.Provider>

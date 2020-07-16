@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useAuth } from '../../hooks';
-import TextField from '../TextField';
-import Choose from '../Choose';
-import Spinner from '../Spinner';
+import { Link } from 'react-router-dom';
+import useAuth from 'hooks/useAuth';
+import useModal from 'hooks/useModal';
+import TextField from 'components/TextField';
+import Choose from 'components/Choose';
+import Spinner from 'components/Spinner';
 
-const LogInForm = ({ whenDone, ...props }) => {
+const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
   const { loading, logIn, logInError, isLoggedIn } = useAuth();
+  const showModal = useModal(<div key="moi">moi</div>);
 
   useEffect(() => {
     if (!loading && isLoggedIn) {
@@ -21,12 +23,8 @@ const LogInForm = ({ whenDone, ...props }) => {
     await logIn({ emailAddress, password });
   }
 
-  const buttonAnimations = {
-    whileTap: { scale: 0.95 }
-  };
-
   return (
-    <form className="panel" key="login-form" onSubmit={ handleSubmit } autoComplete="new-password" { ...props }>
+    <form className="panel" key="login-form" onSubmit={ handleSubmit } autoComplete="new-password" { ...props } ref={ ref }>
       <div className="panel-row">
         <h2 className="default f-b">Log in</h2>
       </div>
@@ -34,11 +32,11 @@ const LogInForm = ({ whenDone, ...props }) => {
         <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } autoFocus />
       </div>
       <div className="panel-row">
-        <TextField label="Password" type="password" text={ password } setText={ setPassword } />
+        <TextField label="Password" type="password" text={ password } setText={ setPassword } actions={{ 'Reset password': () => { console.log('reset password'); showModal(); } }} />
       </div>
       <div className="panel-row center-h space-between pt-label-text">
         <Choose index={ loading ? 1 : 0 }>
-          <motion.input type="submit" className="default prominent f-4" value="Log in" { ...buttonAnimations } />
+          <input type="submit" className="default prominent f-4" value="Log in" />
           <Spinner data-choose="fit" spin={ loading } />
         </Choose>
       </div>
@@ -46,8 +44,8 @@ const LogInForm = ({ whenDone, ...props }) => {
         <div className="panel-cell center-h center-v">
         <Choose index={ logInError ? 1 : 0 }>
           <div className="row center-v center-h">
-            <span className="f-2 mr-0">Don't have an account?</span>
-            <motion.input type="button" className="default flat dense ml-1 primary" value="Sign up" onClick={ whenDone } { ...buttonAnimations } />
+            <span className="f-2 mr-2">Don't have an account?</span>
+            <Link className="button text ml-2 primary" to="/create-account">Sign up</Link>
           </div>
           <span className="error">{ logInError }</span>
           <span className="size-string">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span>
@@ -56,6 +54,6 @@ const LogInForm = ({ whenDone, ...props }) => {
       </div>
     </form>
   );
-};
+});
 
 export default LogInForm;

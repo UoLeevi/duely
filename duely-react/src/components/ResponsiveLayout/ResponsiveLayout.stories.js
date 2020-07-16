@@ -1,6 +1,6 @@
 import React from 'react';
 import { BsHouse, BsBriefcase, BsFolder, BsPeople, BsLayoutTextWindowReverse } from 'react-icons/bs';
-import { MemoryRouter as Router, useRoutes } from 'react-router-dom';
+import { useRoutes } from 'react-router-dom';
 import ResponsiveLayout from '../ResponsiveLayout';
 import Nav from 'components/Nav';
 import HeaderWithActions from 'components/HeaderWithActions';
@@ -10,14 +10,7 @@ export default {
   component: ResponsiveLayout,
   parameters: {
     layout: 'fullscreen'
-  },
-  decorators: [
-    Fn => (
-      <Router>
-        <Fn />
-      </Router>
-    )
-  ]
+  }
 };
 
 const navItems = [

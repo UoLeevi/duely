@@ -9,16 +9,26 @@ const IDLE = 'IDLE';
 // rerendering when props change repeteatedly.
 const enteringDelayMs = 80;
 
-const durationMs = 200;
+const durationMs = 500;
 
-const animations = {
+const animationProperties = {
+  fade: 'opacity'
+}
+
+const animationStyles = {
   fade: {
-    [INITIAL]: { transition: `opacity ${durationMs}ms`, opacity: 0 },
-    [ENTERING]: { transition: `opacity ${durationMs}ms`, opacity: 1 },
-    [EXITING]: { transition: `opacity ${durationMs}ms`, opacity: 0, pointerEvents: 'none' },
-    [IDLE]: { transition: `opacity ${durationMs}ms`, opacity: 1 }
+    [INITIAL]: { value: '0' },
+    [ENTERING]: { value: '1' },
+    [EXITING]: { value: '0', pointerEvents: 'none' },
+    [IDLE]: { value: '1' }
   }
 };
+
+function createAnimationStyles(animation, state) {
+  const property = animationProperties[animation];
+  const { value, ...style } = animationStyles[animation][state];
+  return { ...style, transition: `${property} ${durationMs}ms`, [property]: value };
+}
 
 const defaultOptions = {
   animation: 'fade',
@@ -57,6 +67,22 @@ export default function useAnimatedTransition(next, options) {
     ref.current = next;
   }
 
+  const current = ref.current;
+  let element = undefined;
+  let props = undefined;
+  let domRef = useRef();
+
+  if (current?.ref && 'current' in current.ref) {
+    domRef = current.ref;
+  }
+
+  if (isValidElement(current)) {
+    element = current;
+    props = element.props;
+  } else {
+    props = current;
+  }
+
   useEffect(() => {
     if (state === INITIAL && next) {
       const startEnteringTimeout = setTimeout(() => setState(ENTERING), enteringDelayMs);
@@ -70,27 +96,42 @@ export default function useAnimatedTransition(next, options) {
     }
   }, [previous, changed]);
 
-  const current = ref.current;
-  const element = isValidElement(current) && current;
-  const props = element?.props ?? current;
-  const animationProps = { style: { ...props?.style, ...animations[animation][state] } };
+  useLayoutEffect(() => {
+    const stateAfterTransition = state === EXITING
+      ? INITIAL
+      : !changed && state === ENTERING
+        ? IDLE
+        : undefined;
 
-  if (state === EXITING) {
-    // TODO: check current style property value
-    animationProps.onTransitionEnd = e => {
-      ref.current = undefined;
-      setState(INITIAL);
-    };
-  } else if (!changed && state === ENTERING) {
-    // TODO: check current style property value
-    animationProps.onTransitionEnd = e => {
-      setState(IDLE);
-    };
-  }
+    if (!stateAfterTransition) {
+      return;
+    }
+
+    console.assert(domRef.current, 'Ref pointing to DOM element is required. Remember to use `React.forwardRef` to pass ref to DOM element.');
+
+    const domElement = domRef.current;
+    const style = window.getComputedStyle(domElement);
+    const property = animationProperties[animation];
+    const value = animationStyles[animation][stateAfterTransition].value;
+
+    if (style[property] === value) {
+      setState(stateAfterTransition);
+    } else {
+      const listener = () => {
+        domElement.removeEventListener('transitionend', listener);
+        setState(stateAfterTransition);
+      }
+
+      domElement.addEventListener('transitionend', listener);
+      return () => domElement.removeEventListener('transitionend', listener);
+    }
+  }, [state, changed, animation]);
+
+  props = { ...props, ref: domRef, style: { ...props?.style, ...createAnimationStyles(animation, state) } };
 
   return element
-    ? React.cloneElement(element, animationProps)
-    : { ...props, ...animationProps };
+    ? React.cloneElement(element, props)
+    : props;
 }
 
 // # State matrix

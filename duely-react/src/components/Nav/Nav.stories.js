@@ -1,21 +1,13 @@
 import React from 'react';
 import Nav from '../Nav';
 import { BsHouse, BsBriefcase, BsFolder, BsLayoutTextWindowReverse } from 'react-icons/bs';
-import { MemoryRouter as Router } from 'react-router-dom';
 
 export default {
   title: 'Nav',
   component: Nav,
   parameters: {
     layout: 'fullscreen'
-  },
-  decorators: [
-    Fn => (
-      <Router>
-        <Fn />
-      </Router>
-    )
-  ]
+  }
 };
 
 const items = [

@@ -2,7 +2,7 @@ import React from 'react';
 import { action } from '@storybook/addon-actions';
 
 export default {
-  title: 'Test'
+  title: 'Buttons'
 };
 
 export const Sizes = () => (
@@ -15,6 +15,12 @@ export const Sizes = () => (
     </div>
     <div className="panel-row">
       <button className="default dense" onClick={action('clicked')}>Dense</button>
+    </div>
+    <div className="panel-row">
+      <button className="default flat" onClick={action('clicked')}>Flat</button>
+    </div>
+    <div className="panel-row">
+      <button className="default text" onClick={action('clicked')}>Text</button>
     </div>
   </div>
 );
