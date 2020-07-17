@@ -1937,6 +1937,7 @@ CREATE TABLE security_.email_address_verification_ (
     started_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     status_ text,
     status_at_ timestamp with time zone,
+    redirect_url_ text,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -1945,10 +1946,10 @@ CREATE TABLE security_.email_address_verification_ (
 ALTER TABLE security_.email_address_verification_ OWNER TO postgres;
 
 --
--- Name: start_email_address_verification_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: start_email_address_verification_(text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.start_email_address_verification_(_email_address text) RETURNS security_.email_address_verification_
+CREATE FUNCTION operation_.start_email_address_verification_(_email_address text, _redirect_url text DEFAULT NULL::text) RETURNS security_.email_address_verification_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -1957,10 +1958,11 @@ DECLARE
 BEGIN
   PERFORM security_.control_operation_('start_email_address_verification_');
 
-  INSERT INTO security_.email_address_verification_ (email_address_, verification_code_)
-  VALUES (lower(_email_address), _verification_code)
+  INSERT INTO security_.email_address_verification_ (email_address_, redirect_url_, verification_code_)
+  VALUES (lower(_email_address), _redirect_url, _verification_code)
   ON CONFLICT (email_address_) WHERE (status_ IS NULL) DO UPDATE
   SET
+    redirect_url_ = _redirect_url,
     verification_code_ = _verification_code,
     started_at_ = DEFAULT
   WHERE security_.email_address_verification_.email_address_ = lower(_email_address)
@@ -1972,7 +1974,7 @@ END
 $$;
 
 
-ALTER FUNCTION operation_.start_email_address_verification_(_email_address text) OWNER TO postgres;
+ALTER FUNCTION operation_.start_email_address_verification_(_email_address text, _redirect_url text) OWNER TO postgres;
 
 --
 -- Name: agent_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -2878,6 +2880,7 @@ CREATE TABLE security__audit_.email_address_verification_ (
     started_at_ timestamp with time zone,
     status_ text,
     status_at_ timestamp with time zone,
+    redirect_url_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
