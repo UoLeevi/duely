@@ -1954,7 +1954,11 @@ CREATE FUNCTION operation_.start_email_address_verification_(_email_address text
     AS $$
 DECLARE
   _email_address_verification security_.email_address_verification_;
-  _verification_code text := pgcrypto_.gen_random_uuid();
+  _verification_code text :=
+    CASE
+        WHEN _redirect_url IS NULL THEN lpad(floor(random() * 1000000)::text, 6, '0')
+        ELSE pgcrypto_.gen_random_uuid()::text
+    END;
 BEGIN
   PERFORM security_.control_operation_('start_email_address_verification_');
 
