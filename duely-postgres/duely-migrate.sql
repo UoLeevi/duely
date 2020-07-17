@@ -14,33 +14,42 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE OR REPLACE FUNCTION operation_.start_email_address_verification_(_email_address text, _redirect_url text DEFAULT NULL::text) RETURNS security_.email_address_verification_
+CREATE OR REPLACE FUNCTION operation_.query_user_() RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _email_address_verification security_.email_address_verification_;
-  _verification_code text :=
-    CASE
-        WHEN _redirect_url IS NULL THEN lpad(floor(random() * 1000000)::text, 6, '0')
-        ELSE pgcrypto_.gen_random_uuid()::text
-    END;
+  _arg RECORD;
 BEGIN
-  PERFORM security_.control_operation_('start_email_address_verification_');
+  PERFORM security_.control_operation_('query_user_');
 
-  INSERT INTO security_.email_address_verification_ (email_address_, redirect_url_, verification_code_)
-  VALUES (lower(_email_address), _redirect_url, _verification_code)
-  ON CONFLICT (email_address_) WHERE (status_ IS NULL) DO UPDATE
-  SET
-    redirect_url_ = _redirect_url,
-    verification_code_ = _verification_code,
-    started_at_ = DEFAULT
-  WHERE security_.email_address_verification_.email_address_ = lower(_email_address)
-  AND security_.email_address_verification_.status_ IS NULL
-  RETURNING * INTO _email_address_verification;
+  RETURN QUERY
+  SELECT s.uuid_, s.name_, u.email_address_
+  FROM security_.subject_ s
+  JOIN security_.user_ u ON s.uuid_ = u.uuid_;
 
-  RETURN _email_address_verification;
 END
 $$;
+
+CREATE OR REPLACE FUNCTION operation_.query_user_by_email_address_(_email_address text) RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT _email_address email_address_ INTO _arg; 
+  PERFORM security_.control_operation_('query_user_by_email_address_', _arg);
+
+  RETURN QUERY
+  SELECT s.uuid_, s.name_, u.email_address_
+  FROM security_.subject_ s
+  JOIN security_.user_ u ON s.uuid_ = u.uuid_
+  WHERE u.email_address_ = lower(_email_address);
+
+END
+$$;
+
+INSERT INTO security_.operation_ (name_, log_events_) VALUES ('query_user_by_email_address_', 'f');
+PERFORM security_.implement_policy_allow_('query_user_by_email_address_', 'logged_in_');
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN

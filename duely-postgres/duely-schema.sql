@@ -1668,13 +1668,38 @@ BEGIN
   RETURN QUERY
   SELECT s.uuid_, s.name_, u.email_address_
   FROM security_.subject_ s
-  JOIN security_.user_ ON s.uuid_ = u.uuid_;
+  JOIN security_.user_ u ON s.uuid_ = u.uuid_;
 
 END
 $$;
 
 
 ALTER FUNCTION operation_.query_user_() OWNER TO postgres;
+
+--
+-- Name: query_user_by_email_address_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_user_by_email_address_(_email_address text) RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT _email_address email_address_ INTO _arg; 
+  PERFORM security_.control_operation_('query_user_by_email_address_', _arg);
+
+  RETURN QUERY
+  SELECT s.uuid_, s.name_, u.email_address_
+  FROM security_.subject_ s
+  JOIN security_.user_ u ON s.uuid_ = u.uuid_
+  WHERE u.email_address_ = lower(_email_address);
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_user_by_email_address_(_email_address text) OWNER TO postgres;
 
 --
 -- Name: query_user_invite_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -3047,6 +3072,7 @@ dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 
 ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	reset_password_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+906655f2-4bbb-441a-b10b-7231da7bccad	query_user_by_email_address_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3108,6 +3134,7 @@ ac7fd563-dbb7-44ad-ab12-ccb314704c31	manager_in_agency_	ddcffba4-934c-46ce-bc8b-
 c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-199f58032ff5	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 60d3ee39-0f5a-40b9-941e-c606f015fb12	visitor_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+7bacfdbd-84bb-4078-bca1-aee9f6790ef0	logged_in_	906655f2-4bbb-441a-b10b-7231da7bccad	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3176,6 +3203,7 @@ dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 
 ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	reset_password_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+906655f2-4bbb-441a-b10b-7231da7bccad	query_user_by_email_address_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3237,6 +3265,7 @@ ac7fd563-dbb7-44ad-ab12-ccb314704c31	manager_in_agency_	ddcffba4-934c-46ce-bc8b-
 c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-199f58032ff5	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 60d3ee39-0f5a-40b9-941e-c606f015fb12	visitor_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+7bacfdbd-84bb-4078-bca1-aee9f6790ef0	logged_in_	906655f2-4bbb-441a-b10b-7231da7bccad	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 

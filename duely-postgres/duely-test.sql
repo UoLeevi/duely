@@ -138,6 +138,23 @@ BEGIN
 
   PERFORM operation_.begin_session_(_user_jwt);
 
+  SELECT * INTO _record_2 FROM operation_.query_user_by_email_address_('test@example.com');
+
+  IF _record_2 IS NULL THEN
+    RAISE EXCEPTION 'A user should have been returned';
+  END IF;
+
+  SELECT * INTO _record_2 FROM operation_.query_user_by_email_address_('invitee@example.com');
+
+  IF _record_2 IS NOT NULL THEN
+    RAISE EXCEPTION 'No user should have been returned';
+  END IF;
+
+  PERFORM operation_.end_session_();
+
+
+  PERFORM operation_.begin_session_(_user_jwt);
+
   SELECT * INTO _record_1 FROM operation_.invite_user_(_record_0.uuid_, 'invitee@example.com', 'client');
   --RAISE NOTICE E'invite_user_:\n%', _record_1;
   SELECT * INTO _record_1 FROM operation_.query_user_invite_(_record_1.uuid_);
