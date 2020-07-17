@@ -1,6 +1,6 @@
 {
   "name": "duely-graphql",
-  "version": "0.77.0",
+  "version": "0.78.0",
   "repository": "github:uoleevi/duely",
   "main": "src/index.js",
   "scripts": {

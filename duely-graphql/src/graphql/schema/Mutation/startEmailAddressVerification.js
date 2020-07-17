@@ -24,7 +24,7 @@ export default async function startEmailAddressVerification(obj, { emailAddress,
   }
 
   if (redirectUrl) {
-    if (!validator.isURL(redirectUrl))
+    if (!validator.isURL(redirectUrl, { require_tld: false, protocols: ['http', 'https'], require_protocol: true, allow_underscores: true }))
       return {
         success: false,
         message: `URL '${redirectUrl}' format is invalid.`,
@@ -43,15 +43,7 @@ export default async function startEmailAddressVerification(obj, { emailAddress,
             type: 'StartEmailAddressVerificationResult'
           };
         }
-      } else if (redirectUrl.protocol === 'http:') {
-        if (redirectUrl.hostname !== 'localhost') {
-          return {
-            success: false,
-            message: `URL '${redirectUrl}' is invalid.`,
-            type: 'StartEmailAddressVerificationResult'
-          };
-        }
-      } else {
+      } else if (redirectUrl.hostname !== 'localhost') {
         return {
           success: false,
           message: `URL '${redirectUrl}' is invalid.`,
