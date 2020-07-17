@@ -32,14 +32,22 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
 
     const subdomain = res_s.rows[0].name_;
 
+    // query user info
+    const res_u = await client.query('SELECT name_ FROM operation_.query_user_by_email_address_($1::text)', [emailAddress]);
+    const nameOfExistingUser = res_u.rows.length === 1
+      ? res_u.rows[0].name_
+      : null;
+
     // create user invite on database 
     const res = await client.query('SELECT uuid_ FROM operation_.invite_user_($1::uuid, $2::text, $3::text)', [agencyUuid, emailAddress, role]);
     const inviteUuid = res.rows[0].uuid_;
-    const redirectUrl = new URL(`https://${subdomain}.duely.app/sign-up?email_address=${encodeURIComponent(emailAddress)}&invite=${encodeURIComponent(inviteUuid)}`)
 
-    // get verification code for new user
-    try {
-      const res = await client.query('SELECT verification_code_ FROM operation_.start_email_address_verification_($1::text, $2::text)', [emailAddress]);
+    if (nameOfExistingUser === null) {
+      // user does not exist yet, let's start the sign up process
+      const redirectUrl = new URL(`https://${subdomain}.duely.app/sign-up?invite=${encodeURIComponent(inviteUuid)}&email_address=${encodeURIComponent(emailAddress)}`)
+
+      // get verification code for new user
+      const res = await client.query('SELECT verification_code_ FROM operation_.start_email_address_verification_($1::text, $2::text)', [emailAddress, redirectUrl.href]);
       const verificationCode = res.rows[0].verification_code_;
       redirectUrl.searchParams.set('verification_code', verificationCode);
 
@@ -60,7 +68,7 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
               '</style>',
               '<body>',
                 '<p>',
-                  `To get started, click this link to sign up: <a href="${redirectUrl.href}">Sign up for ${subdomain}.duely.app</a>`,
+                  `To get started, click this link to sign up: <a href="${redirectUrl.href}"><strong>Sign up for ${subdomain}.duely.app</strong></a>`,
                 '</p>',
                 message 
                   ? `<p>${escapeHtml(message)}</p>`
@@ -101,34 +109,30 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
         };
       }
 
-    } catch (error) {
-      if (error.code !== '43505') {
-        // unexpected error
-        console.log(error.message);
-
-        try {
-          await client.query('SELECT uuid_ FROM operation_.cancel_user_invite_($1::uuid)', [inviteUuid]);
-        } catch (error) {
-          console.log(error.message);
-        }
-
-        return {
-          success: false,
-          message: 'Something unexpected happened. Invite cancelled.',
-          type: 'InviteUserResult'
-        };
-      }
-
+    } else {
       // user already exists
+      const redirectUrl = new URL(`https://${subdomain}.duely.app?invite=${encodeURIComponent(inviteUuid)}&login=${encodeURIComponent(emailAddress)}`)
+
       try {
         const messages = await gmail.sendEmailAsAdminDuely({
           to: emailAddress,
           subject: `Invitation from ${agencyName} - ${subdomain}.duely.app`,
           body: [
             '<html>',
+              '<style type="text/css">',
+                'body, p, div {',
+                '  font-family: Helvetica, Arial, sans-serif;',
+                '  font-size: 14px;',
+                '}',
+                'a {',
+                '  text-decoration: none;',
+                '}',
+              '</style>',
               '<body>',
+                `<p>Hello, ${nameOfExistingUser},</p>`,
                 '<p>',
-                  `To get started, click this link: <a href="https://${subdomain}.duely.app?login=${encodeURIComponent(emailAddress)}&invite=${encodeURIComponent(inviteUuid)}">Sign up for ${subdomain}.duely.app</a>`,
+                  `You have been invited to join ${agencyName} at ${subdomain}.duely.app.`,
+                  `To get started, click this link: <a href="${redirectUrl.href}"><strong>Get started with ${subdomain}.duely.app</strong></a>`,
                 '</p>',
               '</body>',
             '</html>'
