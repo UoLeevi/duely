@@ -47,13 +47,25 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
           subject: `Invitation from ${agencyName} - Sign up for ${subdomain}.duely.app`,
           body: [
             '<html>',
+              '<style type="text/css">',
+                'body, p, div {',
+                '  font-family: Helvetica, Arial, sans-serif;',
+                '  font-size: 14px;',
+                '}',
+                'a {',
+                '  text-decoration: none;',
+                '}',
+              '</style>',
               '<body>',
                 '<p>',
                   `To get started, click this link to sign up: <a href="https://${subdomain}.duely.app/create-account?email=${encodeURIComponent(emailAddress)}&verification_code=${verificationCode}&invite=${encodeURIComponent(inviteUuid)}">Sign up for ${subdomain}.duely.app</a>`,
                 '</p>',
+                message 
+                  ? `<p>${escapeHtml(message)}</p>`
+                  : null,
               '</body>',
-            '</html>'
-          ].join('\r\n')
+            '</html>',
+          ].filter(l => l !== null).join('\r\n')
         });
       
         if (!messages.id) {
