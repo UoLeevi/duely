@@ -49,7 +49,7 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
             '<html>',
               '<body>',
                 '<p>',
-                  `To get started, click this link to sign up: <a href="https://${subdomain}.duely.app/create-account?email=${encodeURIComponent(emailAddress)}&code=${verificationCode}&invite=${encodeURIComponent(inviteUuid)}">Sign up for ${subdomain}.duely.app</a>`,
+                  `To get started, click this link to sign up: <a href="https://${subdomain}.duely.app/create-account?email=${encodeURIComponent(emailAddress)}&verification_code=${verificationCode}&invite=${encodeURIComponent(inviteUuid)}">Sign up for ${subdomain}.duely.app</a>`,
                 '</p>',
               '</body>',
             '</html>'

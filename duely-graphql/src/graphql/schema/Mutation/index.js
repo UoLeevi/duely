@@ -5,6 +5,7 @@ import acceptInvite from './acceptInvite';
 import declineInvite from './declineInvite';
 import startEmailAddressVerification from './startEmailAddressVerification';
 import signUp from './signUp';
+import resetPassword from './resetPassword';
 import logIn from './logIn';
 import logOut from './logOut';
 import createAgency from './createAgency';
@@ -28,7 +29,8 @@ export default {
       acceptInvite(inviteUuid: ID!): AcceptInviteResult!
       declineInvite(inviteUuid: ID!): DeclineInviteResult!
       signUp(emailAddress: String!, verificationCode: String!, name: String!, password: String!): SignUpResult!
-      startEmailAddressVerification(emailAddress: String!): StartEmailAddressVerificationResult!
+      resetPassword(emailAddress: String!, verificationCode: String!, password: String!): SignUpResult!
+      startEmailAddressVerification(emailAddress: String!, redirectUrl: String, subjectSuffix: String, message: String): StartEmailAddressVerificationResult!
       logIn(emailAddress: String!, password: String!): LogInResult!
       logOut: LogOutResult!
       createAgency(name: String!, subdomain: String!, countryCode: String!, returnUrl: String!): CreateAgencyResult!
@@ -53,6 +55,7 @@ export default {
       declineInvite,
       startEmailAddressVerification,
       signUp,
+      resetPassword,
       logIn,
       logOut,
       createAgency,

@@ -30,6 +30,7 @@ import LogOutResult from './LogOutResult';
 import Mutation from './Mutation';
 import MutationResult from './MutationResult';
 import Node from './Node';
+import ResetPasswordResult from './ResetPasswordResult';
 import Query from './Query';
 import Service from './Service';
 import ServiceStep from './ServiceStep';
@@ -77,6 +78,7 @@ export default makeExecutableSchema([
   Mutation,
   MutationResult,
   Node,
+  ResetPasswordResult,
   Query,
   Service,
   ServiceStep,
