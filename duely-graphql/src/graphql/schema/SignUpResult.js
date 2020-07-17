@@ -6,6 +6,7 @@ export default {
       success: Boolean!
       message: String
       userUuid: ID
+      jwt: String
     }
   `,
   resolvers: {
