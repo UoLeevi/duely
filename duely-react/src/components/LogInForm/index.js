@@ -5,12 +5,13 @@ import useModal from 'hooks/useModal';
 import TextField from 'components/TextField';
 import Choose from 'components/Choose';
 import Spinner from 'components/Spinner';
+import StartPasswordResetForm from 'components/StartPasswordResetForm';
 
 const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
   const { loading, logIn, logInError, isLoggedIn } = useAuth();
-  const showModal = useModal(<div key="moi">moi</div>);
+  const showModal = useModal(<StartPasswordResetForm key="password-reset-form" />);
 
   useEffect(() => {
     if (!loading && isLoggedIn) {
@@ -32,7 +33,7 @@ const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
         <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } autoFocus />
       </div>
       <div className="panel-row">
-        <TextField label="Password" type="password" text={ password } setText={ setPassword } actions={{ 'Reset password': () => { console.log('reset password'); showModal(); } }} />
+        <TextField label="Password" type="password" text={ password } setText={ setPassword } actions={{ 'Reset password': showModal }} />
       </div>
       <div className="panel-row center-h space-between pt-label-text">
         <Choose index={ loading ? 1 : 0 }>

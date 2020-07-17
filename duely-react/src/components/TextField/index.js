@@ -1,7 +1,7 @@
 import React from 'react';
 import './TextField.css';
 
-const TextField = ({ label, type = 'text', onChange, text, setText = () => {}, autoFocus, actions, className, ...props }) => {
+const TextField = ({ label, type = 'text', onChange, text, setText = () => {}, autoFocus, actions, className, disabled, ...props }) => {
   className = Array.from(new Set(((className ?? '') + ' text-field default').split(' '))).join(' ');
 
   return (
@@ -12,7 +12,7 @@ const TextField = ({ label, type = 'text', onChange, text, setText = () => {}, a
           <span className="button text primary" key={ text } onClick={ onClick }>{ text }</span>
         )}
       </div>
-      <input type={ type } onChange={ onChange || ((e) => { e.preventDefault(); setText(e.target.value); }) } defaultValue={ text } spellCheck="false" autoFocus={ autoFocus } />
+      <input type={ type } onChange={ onChange || ((e) => { e.preventDefault(); setText(e.target.value); }) } defaultValue={ text } spellCheck="false" autoFocus={ autoFocus } disabled={ disabled } />
     </label>
   )
 };

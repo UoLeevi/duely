@@ -18,3 +18,12 @@ export const LOG_OUT_MUTATION = gql`
     }
   }
 `;
+
+export const START_EMAIL_ADDRESS_VERIFICATION_MUTATION = gql`
+  mutation($emailAddress: String!, $redirectUrl: String, $subjectSuffix: String, $message: String) {
+    startEmailAddressVerification(emailAddress: $emailAddress, redirectUrl: $redirectUrl, subjectSuffix: $subjectSuffix, message: $message) {
+      success
+      message
+    }
+  }
+`;
