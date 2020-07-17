@@ -34,7 +34,7 @@ const Nav = React.forwardRef(({ items = [], 'data-layout': layout, ...props }, r
     );
   });
 
-  const orientation = /orientation:([^;]*)/.exec(layout)?.[1] ?? 'vertical';
+  const orientation = /\sorientation:(\S*)/.exec(layout)?.[1] ?? 'vertical';
   const sizeString = orientation === 'vertical' && 'w'.repeat(
     Math.max(
       ...items

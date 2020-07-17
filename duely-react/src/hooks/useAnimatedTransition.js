@@ -1,4 +1,5 @@
-import React, { useState, useLayoutEffect, useRef, isValidElement } from 'react';
+import React, { useState, useLayoutEffect, useEffect, useRef, useContext, isValidElement } from 'react';
+import { AnimationContext } from 'contexts/AnimationContext';
 
 const ENTER = 'enter';
 const EXIT = 'exit';
@@ -6,8 +7,8 @@ const IDLE = 'idle';
 
 const animations = {
   fade: {
-    [ENTER]: [[{ opacity: '0' }, { opacity: '1' }], { duration: 200, fill: 'forwards' }],
-    [EXIT]: [[{ opacity: '1', pointerEvents: 'none' }, { opacity: '0', pointerEvents: 'none' }], { duration: 200, fill: 'forwards' }]
+    [ENTER]: [[{ opacity: '0', pointerEvents: 'auto' }, { opacity: '1', pointerEvents: 'auto' }], { duration: 140, fill: 'forwards' }],
+    [EXIT]: [[{ opacity: '1', pointerEvents: 'none' }, { opacity: '0', pointerEvents: 'none' }], { duration: 100, fill: 'forwards' }]
   }
 };
 
@@ -37,6 +38,7 @@ const defaultOptions = {
 };
 
 export default function useAnimatedTransition(next, options) {
+  const { registerAnimationSource, setAnimationState } = useContext(AnimationContext);
   const { shouldTransition, animations } = { ...defaultOptions, ...options };
   const [,setForceUpdateCount] = useState(0);
   const ref = useRef({ state: ENTER, previous: undefined, animation: undefined });
@@ -62,6 +64,10 @@ export default function useAnimatedTransition(next, options) {
     domRef = current.ref;
   }
 
+  useEffect(() => {
+    return registerAnimationSource(domRef);
+  }, [registerAnimationSource, domRef])
+
   if (isValidElement(current)) {
     element = current;
     props = element.props;
@@ -77,8 +83,11 @@ export default function useAnimatedTransition(next, options) {
         let animation = ref.current.animation;
 
         if (animation?.playState === 'paused') {
+          console.log('Animation was interupted.');
           // TODO: continue or replace animation
         }
+
+        setAnimationState({ ref: domRef, state, keyframes, options });
 
         const domElement = domRef.current;
         animation = ref.current.animation = domElement.animate(keyframes, options);
@@ -100,7 +109,7 @@ export default function useAnimatedTransition(next, options) {
         }
       }
     }
-  }, [animations, current, state, animation]);
+  }, [animations, current, state, animation, setAnimationState]);
 
   props = { ...props, style: { ...props?.style, ...animations[state]?.[0]?.[0] }, ref: domRef };
 

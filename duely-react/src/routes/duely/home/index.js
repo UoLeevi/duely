@@ -6,7 +6,8 @@ import TopbarActions from 'components/TopbarActions';
 import DuelyLogo from 'components/DuelyLogo';
 import HomeHeroSection from 'components/HomeHeroSection';
 import HomeFeaturesSection from 'components/HomeFeaturesSection';
-import HeaderWithActions from 'components/HeaderWithActions'
+import HeaderWithActions from 'components/HeaderWithActions';
+import SignUpForm from 'components/SignUpForm';
 
 export default [
   {
@@ -14,7 +15,7 @@ export default [
     element: (
       <ResponsiveLayout
         topbar={
-          <Topbar className="gutter py-4">
+          <Topbar className="gutter py-4" data-layout="floating">
             <div className="row center-v">
               <DuelyLogo />
               <h1 className="f-5 f-b pa-2">Duely</h1>
@@ -34,7 +35,7 @@ export default [
     )
   },
   {
-    path: '/create-account',
+    path: '/sign-up',
     element: (
       <ResponsiveLayout
         topbar={
@@ -48,7 +49,27 @@ export default [
             ]} />
           </Topbar>
         }
-        header={ <HeaderWithActions title="Sign up" subtitle="Create a new account for duely.app" /> }
+        header={ <HeaderWithActions title="Sign up" subtitle="Create a new Duely account" /> }
+        main={ <SignUpForm className="gutter" /> }
+      />
+    )
+  },
+  {
+    path: '/new-password',
+    element: (
+      <ResponsiveLayout
+        topbar={
+          <Topbar className="gutter py-4">
+            <Link className="row center-v" to="/">
+              <DuelyLogo />
+              <h1 className="f-5 f-b pa-2">Duely</h1>
+            </Link>
+            <TopbarActions links={[
+              { to: '/', text: 'Home' }
+            ]} />
+          </Topbar>
+        }
+        header={ <HeaderWithActions title="Set a new password" /> }
       />
     )
   }

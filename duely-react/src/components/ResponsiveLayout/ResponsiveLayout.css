@@ -7,6 +7,7 @@
   grid-template:
     "t" auto
     "a" auto
+    "tf" auto
     "b" 1fr
     "n" auto;
   overflow-y: hidden;
@@ -16,7 +17,7 @@
   content: ' ';
   background-color: white; /* <- this should match main background color */
   mask-image: linear-gradient(rgba(0, 0, 0, 1), rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 0));
-  grid-area: t / t / a / a;
+  grid-area: tf;
   position: absolute;
   top: 0;
   right: var(--scrollbar-width);
@@ -31,13 +32,17 @@
   z-index: 2;
 }
 
+.responsive-layout > [data-layout|="topbar"][data-layout~="floating"] {
+  grid-area: tf;
+}
+
 .responsive-layout > [data-layout|="nav"] {
   grid-area: n;
   z-index: 1;
 }
 
 .responsive-layout > .body {
-  grid-area: t / b / b / b;
+  grid-area: tf / b / b / b;
   display: grid;
   grid-template: 
     "h" auto
@@ -69,20 +74,7 @@
   .responsive-layout {
     grid-template:
       "t t t" auto
+      "tf tf tf" auto
       "n b a" 1fr / auto 1fr auto;
-  }
-
-  .responsive-layout > ::before {
-    content: ' ';
-    background-color: white; /* <- this should match main background color */
-    mask-image: linear-gradient(rgba(0, 0, 0, 1), rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 0));
-    grid-area: t;
-    position: absolute;
-    top: 0;
-    right: var(--scrollbar-width);
-    bottom: -10%;
-    left: 0;
-    pointer-events: none;
-    z-index: -1;
   }
 }

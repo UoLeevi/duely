@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client'
-import { Link } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
 import TextField from 'components/TextField';
 import Choose from 'components/Choose';
 import Spinner from 'components/Spinner';
 import { START_EMAIL_ADDRESS_VERIFICATION_MUTATION } from 'apollo';
 
-const StartPasswordResetForm = React.forwardRef(({ whenDone, ...props }, ref) => {
+const SignUpForm = React.forwardRef(({ whenDone, className, ...props }, ref) => {
   const [startEmailAddressVerification, { loading: mutationLoading, data: mutationData }] = useMutation(START_EMAIL_ADDRESS_VERIFICATION_MUTATION);
+  const [name, setName] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
   const { loading, isLoggedIn } = useAuth();
 
@@ -24,9 +25,9 @@ const StartPasswordResetForm = React.forwardRef(({ whenDone, ...props }, ref) =>
 
     const { error, data: { startEmailAddressVerification: data } = {} } = await startEmailAddressVerification({ variables: {
       emailAddress,
-      redirectUrl: `${window.location.origin}/new-password?email_address=${encodeURIComponent(emailAddress)}`,
-      subjectSuffix: 'Set new password',
-      message: 'Use link above to set a new password and log in.'
+      redirectUrl: `${window.location.origin}/sign-up?email_address=${encodeURIComponent(emailAddress)}`,
+      subjectSuffix: 'Sign up for Duely',
+      message: 'Use link above to verify email address and log in.'
     }});
 
     if (error || !data.success) {
@@ -39,38 +40,33 @@ const StartPasswordResetForm = React.forwardRef(({ whenDone, ...props }, ref) =>
     }
   }
 
+  className = Array.from(new Set(((className ?? '') + ' panel').split(' '))).join(' ');
+
   return (
-    <form className="panel" key="start-password-reset-form" onSubmit={ handleSubmit } autoComplete="new-password" { ...props } ref={ ref }>
+    <form className={ className } onSubmit={ handleSubmit } autoComplete="new-password" { ...props } ref={ ref }>
       <div className="panel-row">
-        <h3 className="default f-b">Password reset</h3>
+        <TextField label="Name" type="text" text={ name } setText={ setName } autoFocus disabled={ mutationData?.startEmailAddressVerification?.success } />
       </div>
       <div className="panel-row">
         <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } autoFocus disabled={ mutationData?.startEmailAddressVerification?.success } />
       </div>
+      <div className="panel-row">
+        <TextField label="Password" type="password" text={ password } setText={ setPassword } autoFocus disabled={ mutationData?.startEmailAddressVerification?.success } />
+      </div>
       <div className="panel-row center-h space-between pt-label-text">
-        <Choose index={ loading || mutationLoading ? 0 : mutationData?.startEmailAddressVerification?.success ? 1 : 2 }>
+        <Choose index={ loading || mutationLoading ? 0 : mutationData?.startEmailAddressVerification?.success ? 1 : errorMessage ? 3 : 2 }>
           <Spinner data-choose="fit" spin={ loading || mutationLoading } />
           <p className="success">
-            <span>Password reset link has been sent to</span><br />
+            <span>Email address verification link sent to</span><br />
             <span className="f-b">{ emailAddress }</span>
           </p>
-          <input type="submit" className="default prominent f-2" value="Send link to reset password" />
-        </Choose>
-      </div>
-      <div className="panel-row center-h center-v">
-        <div className="panel-cell center-h center-v">
-        <Choose index={ errorMessage ? 1 : 0 }>
-          <div className="row center-v center-h">
-            <span className="f-2 mr-2">Don't have an account?</span>
-            <Link className="button text ml-2 primary" to="/sign-up">Sign up</Link>
-          </div>
+          <input type="submit" className="default prominent f-3 primary" value="Sign up" />
           <span className="error">{ errorMessage }</span>
           <span className="size-string">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span>
         </Choose>
-        </div>
       </div>
     </form>
   );
 });
 
-export default StartPasswordResetForm;
+export default SignUpForm;

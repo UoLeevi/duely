@@ -10,8 +10,9 @@ import StartPasswordResetForm from 'components/StartPasswordResetForm';
 const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
-  const { loading, logIn, logInError, isLoggedIn } = useAuth();
-  const showModal = useModal(<StartPasswordResetForm key="password-reset-form" />);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const { loading, logIn, isLoggedIn } = useAuth();
+  const showModal = useModal(<StartPasswordResetForm key="password-reset-form" whenDone={ whenDone } />);
 
   useEffect(() => {
     if (!loading && isLoggedIn) {
@@ -21,7 +22,16 @@ const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    await logIn({ emailAddress, password });
+    const { error, data } = await logIn({ emailAddress, password });
+
+    if (error || !data.success) {
+      setErrorMessage(error?.message || data.message);
+      setTimeout(() => setErrorMessage(null), 4000);
+    } else if (data.success) {
+      whenDone();
+    } else {
+      throw new Error();
+    }
   }
 
   return (
@@ -43,12 +53,12 @@ const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
       </div>
       <div className="panel-row center-h center-v">
         <div className="panel-cell center-h center-v">
-        <Choose index={ logInError ? 1 : 0 }>
+        <Choose index={ errorMessage ? 1 : 0 }>
           <div className="row center-v center-h">
             <span className="f-2 mr-2">Don't have an account?</span>
-            <Link className="button text ml-2 primary" to="/create-account">Sign up</Link>
+            <Link className="button text ml-2 primary" to="/sign-up">Sign up</Link>
           </div>
-          <span className="error">{ logInError }</span>
+          <span className="error">{ errorMessage }</span>
           <span className="size-string">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span>
         </Choose>
         </div>

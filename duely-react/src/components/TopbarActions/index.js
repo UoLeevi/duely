@@ -24,7 +24,7 @@ const TopbarActions = ({ links, ...props }) => {
   const navigate = useNavigate(); // TODO: add & remove ?login query parameter when login form is shown (should maybe go in LoginForm)
   const { loading, isLoggedIn, logOut } = useAuth();
   const hideModalRef = useRef();
-  const showModal = useModal(<LoginForm whenDone={ () => { hideModalRef.current(); navigate('/profile'); } } />, { hideModalRef, show: !isLoggedIn && initialState.showLogIn });
+  const showModal = useModal(<LoginForm whenDone={ () => { hideModalRef.current(); navigate('/profile', { replace: true }); } } />, { hideModalRef, show: !isLoggedIn && initialState.showLogIn });
 
   return (
     <AnimatedTransition { ...props } shouldTransition={ shouldUpdateLinks }>
@@ -38,13 +38,13 @@ const TopbarActions = ({ links, ...props }) => {
                   <Link className="button text" to={ to }>{ text }</Link>
                 </AnimatedTransition>
               )}
-              <button className="default text" onClick={ logOut }>Log out</button> 
+              <button className="default text" onClick={ () => logOut() }>Log out</button> 
             </div>
           )
           : (
             <div className="grid row gap-5 items-center">
               <button className="default text" onClick={ showModal }>Log in</button>
-              <Link className="button text primary" to='/create-account'>Sign up</Link>
+              <Link className="button text primary" to='/sign-up'>Sign up</Link>
             </div>
           )
       }
