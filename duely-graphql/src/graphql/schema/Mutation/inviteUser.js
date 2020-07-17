@@ -35,11 +35,13 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
     // create user invite on database 
     const res = await client.query('SELECT uuid_ FROM operation_.invite_user_($1::uuid, $2::text, $3::text)', [agencyUuid, emailAddress, role]);
     const inviteUuid = res.rows[0].uuid_;
+    const redirectUrl = new URL(`https://${subdomain}.duely.app/sign-up?email_address=${encodeURIComponent(emailAddress)}&invite=${encodeURIComponent(inviteUuid)}`)
 
     // get verification code for new user
     try {
-      const res = await client.query('SELECT verification_code_ FROM operation_.start_email_address_verification_($1::text)', [emailAddress]);
+      const res = await client.query('SELECT verification_code_ FROM operation_.start_email_address_verification_($1::text, $2::text)', [emailAddress]);
       const verificationCode = res.rows[0].verification_code_;
+      redirectUrl.searchParams.set('verification_code', verificationCode);
 
       try {
         const messages = await gmail.sendEmailAsAdminDuely({
@@ -58,7 +60,7 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
               '</style>',
               '<body>',
                 '<p>',
-                  `To get started, click this link to sign up: <a href="https://${subdomain}.duely.app/create-account?email=${encodeURIComponent(emailAddress)}&verification_code=${verificationCode}&invite=${encodeURIComponent(inviteUuid)}">Sign up for ${subdomain}.duely.app</a>`,
+                  `To get started, click this link to sign up: <a href="${redirectUrl.href}">Sign up for ${subdomain}.duely.app</a>`,
                 '</p>',
                 message 
                   ? `<p>${escapeHtml(message)}</p>`
