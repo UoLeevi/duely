@@ -1822,59 +1822,45 @@ $$;
 ALTER FUNCTION operation_.remove_user_from_agency_(_agency_uuid uuid, _subject_uuid uuid) OWNER TO postgres;
 
 --
--- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
+-- Name: reset_password_(uuid, text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE TABLE security_.user_ (
-    uuid_ uuid NOT NULL,
-    email_address_ text,
-    password_hash_ text
-);
-
-
-ALTER TABLE security_.user_ OWNER TO postgres;
-
---
--- Name: reset_password_(text, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.reset_password_(_email_address text, _verification_code text, _password text) RETURNS security_.user_
+CREATE FUNCTION operation_.reset_password_(_verification_uuid uuid, _password text) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _verification_uuid uuid;
   _user security_.user_;
+  _email_address text;
 BEGIN
   PERFORM security_.control_operation_('reset_password_');
 
   UPDATE security_.email_address_verification_ SET
     status_ = 'verified',
     status_at_ = CURRENT_TIMESTAMP
-  WHERE email_address_ = lower(_email_address)
-    AND verification_code_ = _verification_code
+  WHERE uuid_ = _verification_uuid
     AND status_ IS NULL
-  RETURNING uuid_ INTO _verification_uuid;
+  RETURNING email_address_ INTO _email_address;
 
-  IF _verification_uuid IS NULL THEN
-    RAISE 'No matching email address verification code found: %', lower(_email_address) USING ERRCODE = '20000';
+  IF _email_address IS NULL THEN
+    RAISE 'No matching verification found.' USING ERRCODE = '20000';
   END IF;
 
   UPDATE security_.user_
   SET
     password_hash_ = pgcrypto_.crypt(_password, pgcrypto_.gen_salt('md5'))
-  WHERE email_address_ = lower(_email_address)
+  WHERE email_address_ = _email_address
   RETURNING * INTO _user;
 
   IF _user IS NULL THEN
-    RAISE 'No user matching email address found: %', lower(_email_address) USING ERRCODE = '20000';
+    RAISE 'No user matching email address found: %', _email_address USING ERRCODE = '20000';
   END IF;
 
-  RETURN _user;
+  RETURN (SELECT operation_.log_in_user_(_email_address, _password));
 END
 $$;
 
 
-ALTER FUNCTION operation_.reset_password_(_email_address text, _verification_code text, _password text) OWNER TO postgres;
+ALTER FUNCTION operation_.reset_password_(_verification_uuid uuid, _password text) OWNER TO postgres;
 
 --
 -- Name: set_service_status_(uuid, text); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1910,28 +1896,36 @@ $$;
 ALTER FUNCTION operation_.set_service_status_(_service_uuid uuid, _status text) OWNER TO postgres;
 
 --
--- Name: sign_up_user_(text, text, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: sign_up_user_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.sign_up_user_(_email_address text, _verification_code text, _name text, _password text) RETURNS security_.user_
+CREATE FUNCTION operation_.sign_up_user_(_verification_uuid uuid) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _verification_uuid uuid;
   _user security_.user_;
+  _email_address text;
+  _data json;
+  _password text;
+  _name text;
 BEGIN
   PERFORM security_.control_operation_('sign_up_user_');
 
   UPDATE security_.email_address_verification_ SET
     status_ = 'verified',
     status_at_ = CURRENT_TIMESTAMP
-  WHERE email_address_ = lower(_email_address)
-    AND verification_code_ = _verification_code
+  WHERE uuid_ = _verification_uuid
     AND status_ IS NULL
-  RETURNING uuid_ INTO _verification_uuid;
+  RETURNING email_address_, data_ INTO _email_address, _data;
 
-  IF _verification_uuid IS NULL THEN
-    RAISE 'No matching email address verification code found: %', lower(_email_address) USING ERRCODE = '20000';
+  IF _email_address IS NULL OR _data IS NULL THEN
+    RAISE 'No matching verification found.' USING ERRCODE = '20000';
+  END IF;
+
+  SELECT _data->>'password', _data->>'name' INTO _password, _name;
+
+  IF _password IS NULL OR _name IS NULL THEN
+    RAISE 'Invalid data.' USING ERRCODE = '20000';
   END IF;
 
   WITH _subject AS (
@@ -1940,16 +1934,16 @@ BEGIN
     RETURNING uuid_
   )
   INSERT INTO security_.user_ (uuid_, email_address_, password_hash_)
-  SELECT s.uuid_, lower(_email_address), pgcrypto_.crypt(_password, pgcrypto_.gen_salt('md5'))
+  SELECT s.uuid_, _email_address, pgcrypto_.crypt(_password, pgcrypto_.gen_salt('md5'))
   FROM _subject s
   RETURNING * INTO _user;
 
-  RETURN _user;
+  RETURN (SELECT operation_.log_in_user_(_email_address, _password));
 END
 $$;
 
 
-ALTER FUNCTION operation_.sign_up_user_(_email_address text, _verification_code text, _name text, _password text) OWNER TO postgres;
+ALTER FUNCTION operation_.sign_up_user_(_verification_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: email_address_verification_; Type: TABLE; Schema: security_; Owner: postgres
@@ -1958,11 +1952,10 @@ ALTER FUNCTION operation_.sign_up_user_(_email_address text, _verification_code 
 CREATE TABLE security_.email_address_verification_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     email_address_ text NOT NULL,
-    verification_code_ text NOT NULL,
     started_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     status_ text,
     status_at_ timestamp with time zone,
-    redirect_url_ text,
+    data_ json,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -1971,28 +1964,22 @@ CREATE TABLE security_.email_address_verification_ (
 ALTER TABLE security_.email_address_verification_ OWNER TO postgres;
 
 --
--- Name: start_email_address_verification_(text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: start_email_address_verification_(text, json); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.start_email_address_verification_(_email_address text, _redirect_url text DEFAULT NULL::text) RETURNS security_.email_address_verification_
+CREATE FUNCTION operation_.start_email_address_verification_(_email_address text, _data json DEFAULT NULL::json) RETURNS security_.email_address_verification_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
   _email_address_verification security_.email_address_verification_;
-  _verification_code text :=
-    CASE
-        WHEN _redirect_url IS NULL THEN lpad(floor(random() * 1000000)::text, 6, '0')
-        ELSE pgcrypto_.gen_random_uuid()::text
-    END;
 BEGIN
   PERFORM security_.control_operation_('start_email_address_verification_');
 
-  INSERT INTO security_.email_address_verification_ (email_address_, redirect_url_, verification_code_)
-  VALUES (lower(_email_address), _redirect_url, _verification_code)
+  INSERT INTO security_.email_address_verification_ (email_address_, data_)
+  VALUES (lower(_email_address), _data)
   ON CONFLICT (email_address_) WHERE (status_ IS NULL) DO UPDATE
   SET
-    redirect_url_ = _redirect_url,
-    verification_code_ = _verification_code,
+    data_ = _data,
     started_at_ = DEFAULT
   WHERE security_.email_address_verification_.email_address_ = lower(_email_address)
   AND security_.email_address_verification_.status_ IS NULL
@@ -2003,7 +1990,7 @@ END
 $$;
 
 
-ALTER FUNCTION operation_.start_email_address_verification_(_email_address text, _redirect_url text) OWNER TO postgres;
+ALTER FUNCTION operation_.start_email_address_verification_(_email_address text, _data json) OWNER TO postgres;
 
 --
 -- Name: agent_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -2733,6 +2720,19 @@ CREATE TABLE security_.subject_ (
 ALTER TABLE security_.subject_ OWNER TO postgres;
 
 --
+-- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.user_ (
+    uuid_ uuid NOT NULL,
+    email_address_ text,
+    password_hash_ text
+);
+
+
+ALTER TABLE security_.user_ OWNER TO postgres;
+
+--
 -- Name: active_subject_; Type: VIEW; Schema: security_; Owner: postgres
 --
 
@@ -2905,11 +2905,10 @@ ALTER TABLE security_.subdomain_ OWNER TO postgres;
 CREATE TABLE security__audit_.email_address_verification_ (
     uuid_ uuid,
     email_address_ text,
-    verification_code_ text,
     started_at_ timestamp with time zone,
     status_ text,
     status_at_ timestamp with time zone,
-    redirect_url_ text,
+    data_ json,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
