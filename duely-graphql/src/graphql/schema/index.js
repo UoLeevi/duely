@@ -30,13 +30,10 @@ import LogOutResult from './LogOutResult';
 import Mutation from './Mutation';
 import MutationResult from './MutationResult';
 import Node from './Node';
-import ResetPasswordResult from './ResetPasswordResult';
 import Query from './Query';
 import Service from './Service';
 import ServiceStep from './ServiceStep';
-import SignUpResult from './SignUpResult';
 import SimpleResult from './SimpleResult';
-import StartEmailAddressVerificationResult from './StartEmailAddressVerificationResult';
 import Subdomain from './Subdomain';
 import Subject from './Subject';
 import SubjectAgenciesConnection from './SubjectAgenciesConnection';
@@ -44,6 +41,8 @@ import SubjectAgenciesEdge from './SubjectAgenciesEdge';
 import SubjectInvitesConnection from './SubjectInvitesConnection';
 import SubjectInvitesEdge from './SubjectInvitesEdge';
 import Theme from './Theme';
+import VerifyPasswordResetResult from './VerifyPasswordResetResult';
+import VerifySignUpResult from './VerifySignUpResult';
 import Subscription from './Subscription';
 
 export default makeExecutableSchema([
@@ -78,13 +77,10 @@ export default makeExecutableSchema([
   Mutation,
   MutationResult,
   Node,
-  ResetPasswordResult,
   Query,
   Service,
   ServiceStep,
-  SignUpResult,
   SimpleResult,
-  StartEmailAddressVerificationResult,
   Subdomain,
   Subject,
   SubjectAgenciesConnection,
@@ -92,6 +88,8 @@ export default makeExecutableSchema([
   SubjectInvitesConnection,
   SubjectInvitesEdge,
   Theme,
+  VerifyPasswordResetResult,
+  VerifySignUpResult,
   Subscription
 ].reduce((schema, type) => ({
   typeDefs: schema.typeDefs.concat(type.typeDef),

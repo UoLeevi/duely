@@ -2,10 +2,9 @@ import { pool } from '../../db';
 
 export default {
   typeDef: `
-    type ResetPasswordResult implements MutationResult {
+    type VerifyPasswordResetResult implements MutationResult {
       success: Boolean!
       message: String
-      userUuid: ID
       jwt: String
     }
   `,

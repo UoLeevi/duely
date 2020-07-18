@@ -3,9 +3,10 @@ import endVisit from './endVisit';
 import inviteUser from './inviteUser';
 import acceptInvite from './acceptInvite';
 import declineInvite from './declineInvite';
-import startEmailAddressVerification from './startEmailAddressVerification';
-import signUp from './signUp';
-import resetPassword from './resetPassword';
+import startPasswordReset from './startPasswordReset';
+import verifyPasswordReset from './verifyPasswordReset';
+import startSignUp from './startSignUp';
+import verifySignUp from './verifySignUp';
 import logIn from './logIn';
 import logOut from './logOut';
 import createAgency from './createAgency';
@@ -28,9 +29,10 @@ export default {
       inviteUser(agencyUuid: ID!, emailAddress: String!, role: String!, message: String): InviteUserResult!
       acceptInvite(inviteUuid: ID!): AcceptInviteResult!
       declineInvite(inviteUuid: ID!): DeclineInviteResult!
-      signUp(emailAddress: String!, verificationCode: String!, name: String!, password: String!): SignUpResult!
-      resetPassword(emailAddress: String!, verificationCode: String!, password: String!): SignUpResult!
-      startEmailAddressVerification(emailAddress: String!, redirectUrl: String, subjectSuffix: String, message: String): StartEmailAddressVerificationResult!
+      startPasswordReset(emailAddress: String!, redirectUrl: String): SimpleResult!
+      verifyPasswordReset(verificationCode: String!, password: String!): VerifyPasswordResetResult!
+      startSignUp(emailAddress: String!, password: String!, name: String!, redirectUrl: String): SimpleResult!
+      verifySignUp(verificationCode: String!): VerifySignUpResult!
       logIn(emailAddress: String!, password: String!): LogInResult!
       logOut: LogOutResult!
       createAgency(name: String!, subdomain: String!, countryCode: String!, returnUrl: String!): CreateAgencyResult!
@@ -53,9 +55,10 @@ export default {
       inviteUser,
       acceptInvite,
       declineInvite,
-      startEmailAddressVerification,
-      signUp,
-      resetPassword,
+      startPasswordReset,
+      verifyPasswordReset,
+      startSignUp,
+      verifySignUp,
       logIn,
       logOut,
       createAgency,

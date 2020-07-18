@@ -2,9 +2,8 @@ import { pool } from '../../../db';
 import gmail from '../../../gmail';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
-import escapeHtml from 'escape-html';
 
-export default async function startEmailAddressVerification(obj, { emailAddress, redirectUrl, subjectSuffix, message }, context, info) {
+export default async function startSignUp(obj, { emailAddress, password, name, redirectUrl }, context, info) {
   if (!context.jwt)
     throw new AuthenticationError('Unauthorized');
 
@@ -12,23 +11,15 @@ export default async function startEmailAddressVerification(obj, { emailAddress,
     return {
       success: false,
       message: `Email address '${emailAddress}' format is invalid.`,
-      type: 'StartEmailAddressVerificationResult'
+      type: 'SimpleResult'
     };
-
-  if (subjectSuffix && /[\r\n]+/.test(subjectSuffix)) {
-    return {
-      success: false,
-      message: `Subject suffix '${subjectSuffix}' format is invalid.`,
-      type: 'StartEmailAddressVerificationResult'
-    };
-  }
 
   if (redirectUrl) {
     if (!validator.isURL(redirectUrl, { require_tld: false, protocols: ['http', 'https'], require_protocol: true, allow_underscores: true }))
       return {
         success: false,
         message: `URL '${redirectUrl}' format is invalid.`,
-        type: 'StartEmailAddressVerificationResult'
+        type: 'SimpleResult'
       };
 
       redirectUrl = new URL(redirectUrl);
@@ -40,31 +31,32 @@ export default async function startEmailAddressVerification(obj, { emailAddress,
           return {
             success: false,
             message: `URL '${redirectUrl}' is invalid. Redirect URL is not known by Duely.`,
-            type: 'StartEmailAddressVerificationResult'
+            type: 'SimpleResult'
           };
         }
       } else if (redirectUrl.hostname !== 'localhost') {
         return {
           success: false,
           message: `URL '${redirectUrl}' is invalid.`,
-          type: 'StartEmailAddressVerificationResult'
+          type: 'SimpleResult'
         };
       }
   }
 
   let verificationCode;
+  const json = JSON.stringify({ password, name, redirectUrl: redirectUrl ? redirectUrl.href : null });
 
   const client = await pool.connect();
   try {
     await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-    const res = await client.query('SELECT verification_code_ FROM operation_.start_email_address_verification_($1::text, $2::text)', [emailAddress, redirectUrl ? redirectUrl.href : null]);
+    const res = await client.query('SELECT uuid_ FROM operation_.start_email_address_verification_($1::text, $2::json)', [emailAddress, json]);
     await client.query('SELECT operation_.end_session_()');
-    verificationCode = res.rows[0].verification_code_;
+    verificationCode = res.rows[0].uuid_;
   } catch (error) {
     return {
       success: false,
       message: error.message,
-      type: 'StartEmailAddressVerificationResult'
+      type: 'SimpleResult'
     };
   }
   finally {
@@ -77,7 +69,7 @@ export default async function startEmailAddressVerification(obj, { emailAddress,
 
   const messages = await gmail.sendEmailAsAdminDuely({
     to: emailAddress,
-    subject: `Email verification ${ subjectSuffix ? '- ' + subjectSuffix : 'for duely.app' }`,
+    subject: 'Sign up for duely.app',
     body: [
       '<html>',
         '<style type="text/css">',
@@ -91,26 +83,23 @@ export default async function startEmailAddressVerification(obj, { emailAddress,
         '</style>',
         '<body>',
           redirectUrl
-            ? `<a href="${redirectUrl.href}"><strong>Click here to verify</strong></a>`
-            : `<p>Your verification code is <strong>${verificationCode}</strong>.</p>`,
-          message 
-            ? `<p>${escapeHtml(message)}</p>`
-            : null,
+            ? `<a href="${redirectUrl.href}"><strong>Click to verify and create an account</strong></a>`
+            : `<p>Your password reset verification code is <strong>${verificationCode}</strong>.</p>`,
         '</body>',
       '</html>',
-    ].filter(l => l !== null).join('\r\n')
+    ].join('\r\n')
   });
 
   if (!messages.id)
     return {
       success: false,
       message: `Error while sending verification code email to '${emailAddress}'.`,
-      type: 'StartEmailAddressVerificationResult'
+      type: 'SimpleResult'
     };
 
   return {
     success: true,
     message: `Verification code sent to '${emailAddress}'.`,
-    type: 'StartEmailAddressVerificationResult'
+    type: 'SimpleResult'
   };
 };
