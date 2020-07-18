@@ -19,9 +19,9 @@ export const LOG_OUT_MUTATION = gql`
   }
 `;
 
-export const SIGN_UP_MUTATION = gql`
-  mutation($emailAddress: String!, $verificationCode: String!, $name: String!, $password: String!) {
-    signUp(emailAddress: $emailAddress, verificationCode: $verificationCode, name: $name, password: $password) {
+export const VERIFY_PASSWORD_RESET_MUTATION = gql`
+  mutation($verificationCode: String!, $password: String!) {
+    verifyPasswordReset(verificationCode: $verificationCode, password: $password) {
       success
       message
       jwt
@@ -29,9 +29,9 @@ export const SIGN_UP_MUTATION = gql`
   }
 `;
 
-export const RESET_PASSWORD_MUTATION = gql`
-  mutation($emailAddress: String!, $verificationCode: String!, $password: String!) {
-    resetPassword(emailAddress: $emailAddress, verificationCode: $verificationCode, password: $password) {
+export const VERIFY_SIGN_UP_MUTATION = gql`
+  mutation($verificationCode: String!) {
+    verifySignUp(verificationCode: $verificationCode) {
       success
       message
       jwt
@@ -39,9 +39,18 @@ export const RESET_PASSWORD_MUTATION = gql`
   }
 `;
 
-export const START_EMAIL_ADDRESS_VERIFICATION_MUTATION = gql`
-  mutation($emailAddress: String!, $redirectUrl: String, $subjectSuffix: String, $message: String) {
-    startEmailAddressVerification(emailAddress: $emailAddress, redirectUrl: $redirectUrl, subjectSuffix: $subjectSuffix, message: $message) {
+export const START_PASSWORD_RESET_MUTATION = gql`
+  mutation($emailAddress: String!, $redirectUrl: String) {
+    startPasswordReset(emailAddress: $emailAddress, redirectUrl: $redirectUrl) {
+      success
+      message
+    }
+  }
+`;
+
+export const START_SIGN_UP_MUTATION = gql`
+  mutation($emailAddress: String!, $password: String!, $name: String!, $redirectUrl: String) {
+    startSignUp(emailAddress: $emailAddress, password: $password, name: $name, redirectUrl: $redirectUrl) {
       success
       message
     }

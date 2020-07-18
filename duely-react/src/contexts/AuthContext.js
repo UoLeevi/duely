@@ -1,7 +1,7 @@
 import React, { createContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@apollo/client';
-import { client, ME_QUERY, LOG_IN_MUTATION, LOG_OUT_MUTATION, SIGN_UP_MUTATION, RESET_PASSWORD_MUTATION } from '../apollo';
+import { client, ME_QUERY, LOG_IN_MUTATION, LOG_OUT_MUTATION, VERIFY_SIGN_UP_MUTATION, VERIFY_PASSWORD_RESET_MUTATION } from '../apollo';
 
 export const AuthContext = createContext();
 
@@ -51,11 +51,11 @@ const AuthContextProvider = ({ children }) => {
   const [logInMutation] = useMutation(LOG_IN_MUTATION, { onCompleted: updateJwtFromMutationResult('logIn') });
   const logIn = authActionForMutation('logIn', logInMutation);
 
-  const [signUpMutation] = useMutation(SIGN_UP_MUTATION, { onCompleted: updateJwtFromMutationResult('signUp') });
-  const signUp = authActionForMutation('signUp', signUpMutation);
+  const [verifySignUpMutation] = useMutation(VERIFY_SIGN_UP_MUTATION, { onCompleted: updateJwtFromMutationResult('verifySignUp') });
+  const verifySignUp = authActionForMutation('verifySignUp', verifySignUpMutation);
 
-  const [resetPasswordMutation] = useMutation(RESET_PASSWORD_MUTATION, { onCompleted: updateJwtFromMutationResult('resetPassword') });
-  const resetPassword = authActionForMutation('resetPassword', resetPasswordMutation);
+  const [verifyPasswordResetMutation] = useMutation(VERIFY_PASSWORD_RESET_MUTATION, { onCompleted: updateJwtFromMutationResult('verifyPasswordReset') });
+  const verifyPasswordReset = authActionForMutation('verifyPasswordReset', verifyPasswordResetMutation);
 
   const [logOutMutation] = useMutation(LOG_OUT_MUTATION, { onCompleted: updateJwtFromMutationResult('logOut', 'remove') });
   const logOut = authActionForMutation('logOut', logOutMutation);
@@ -67,8 +67,8 @@ const AuthContextProvider = ({ children }) => {
       isLoggedIn: data && data.me.type === 'user',
       user: data && data.me,
       logIn,
-      signUp,
-      resetPassword,
+      verifySignUp,
+      verifyPasswordReset,
       logOut
     }}>
       { children }

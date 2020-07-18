@@ -32,7 +32,7 @@ const TopbarActions = ({ links, ...props }) => {
         ? null
         : isLoggedIn 
           ? (
-            <div className="grid row gap-1 items-center">
+            <div className="grid row gap-5 items-center">
               { links?.map(({ to, text }) => 
                 <AnimatedTransition key={ to }>
                   <Link className="button text" to={ to }>{ text }</Link>
