@@ -8,7 +8,7 @@ export default async function verifySignUp(obj, { verificationCode }, context, i
   const client = await pool.connect();
   try {
     await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-    const res = await client.query('SELECT operation_.sign_up_user_($1::text) jwt_', [verificationCode]);
+    const res = await client.query('SELECT operation_.sign_up_user_($1::uuid) jwt_', [verificationCode]);
     await client.query('SELECT operation_.end_session_()');
     return {
       success: true,

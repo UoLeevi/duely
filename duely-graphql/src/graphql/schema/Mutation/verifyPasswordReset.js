@@ -8,7 +8,7 @@ export default async function verifyPasswordReset(obj, { verificationCode, passw
   const client = await pool.connect();
   try {
     await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-    const res = await client.query('SELECT operation_.reset_password_($1::text, $2::text) jwt_', [verificationCode, password]);
+    const res = await client.query('SELECT operation_.reset_password_($1::uuid, $2::text) jwt_', [verificationCode, password]);
     await client.query('SELECT operation_.end_session_()');
     return {
       success: true,
