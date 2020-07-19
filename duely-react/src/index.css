@@ -882,6 +882,22 @@ body {
   margin: var(--spacing-5n) !important;
 }
 
+#root .gap-1 {
+  gap: var(--spacing-1);
+}
+#root .gap-2 {
+  gap: var(--spacing-2);
+}
+#root .gap-3 {
+  gap: var(--spacing-3);
+}
+#root .gap-4 {
+  gap: var(--spacing-4);
+}
+#root .gap-5 {
+  gap: var(--spacing-5);
+}
+
 /* #endregion */
 
 /* #region Box shadows */
@@ -987,6 +1003,13 @@ a:visited {
 
 /* #region Element custom styles */
 
+#root {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
 :root {
   --label-height: calc(var(--f-2) * 1.1)
 }
@@ -1068,8 +1091,7 @@ a:visited {
 
 input[type="button"].default,
 input[type="submit"].default,
-button.default,
-#root .button {
+button.default {
   cursor: pointer;
   letter-spacing: 0.04em;
   text-align: center;
@@ -1078,8 +1100,7 @@ button.default,
 
 input[type="button"].default:not(.text),
 input[type="submit"].default:not(.text),
-button.default:not(.text),
-#root .button:not(.text) {
+button.default:not(.text) {
   border-radius: var(--radius-1-rel);
   border: solid rgba(var(--color-grey-rgb), var(--alpha-3)) 2px;
   background: transparent;
@@ -1088,22 +1109,37 @@ button.default:not(.text),
   transition: background-color 200ms ease-out, border-color 200ms ease-out;
 }
 
+input[type="button"].default.filled,
+input[type="submit"].default.filled,
+button.default.filled {
+  border: solid transparent 2px;
+  transform-origin: center;
+  transition: background-color 200ms ease-out, transform 200ms ease-out;
+}
+
 input[type="button"].default:not(.text):focus,
 input[type="submit"].default:not(.text):focus,
 button.default:not(.text):focus,
-#root .button:not(.text):focus,
 input[type="button"].default:not(.text):hover,
 input[type="submit"].default:not(.text):hover,
-button.default:not(.text):hover,
-#root .button:not(.text):hover {
+button.default:not(.text):hover {
   background-color: rgba(var(--color-grey-rgb), var(--alpha-1));
   border-color: rgba(var(--color-grey-rgb), var(--alpha-5));
+}
+
+input[type="button"].default.filled:focus,
+input[type="submit"].default.filled:focus,
+button.default.filled:focus,
+input[type="button"].default.filled:hover,
+input[type="submit"].default.filled:hover,
+button.default.filled:hover {
+  border-color: transparent;
+  transform: scale(0.95);
 }
 
 input[type="button"].flat:focus,
 input[type="submit"].flat:focus,
 button.flat:focus,
-#root .button.flat:focus,
 input[type="button"].flat:hover,
 input[type="submit"].flat:hover {
   background-color: rgba(var(--color-grey-rgb), var(--alpha-2));
@@ -1112,29 +1148,24 @@ input[type="submit"].flat:hover {
 input[type="button"].flat,
 input[type="submit"].flat,
 button.flat,
-#root .button.flat,
 input[type="button"].flat:focus,
 input[type="submit"].flat:focus,
 button.flat:focus,
-#root .button.flat:focus,
 input[type="button"].flat:hover,
 input[type="submit"].flat:hover,
-button.flat:hover,
-#root .button.flat:hover {
+button.flat:hover {
   border-color: transparent !important;
 }
 
 input[type="button"].text,
 input[type="submit"].text,
-button.text,
-#root .button.text {
+button.text {
   position: relative;
 }
 
 input[type="button"].text:before,
 input[type="submit"].text:before,
-button.text:before,
-#root .button.text:before {
+button.text:before {
   content: '';
   position: absolute;
   bottom: -0.2em;
@@ -1154,18 +1185,14 @@ input[type="submit"].text:active:before,
 input[type="submit"].text:hover:before,
 button.text:focus:before,
 button.text:active:before,
-button.text:hover:before,
-#root .button.text:focus:before,
-#root .button.text:active:before,
-#root .button.text:hover:before {
+button.text:hover:before {
   box-shadow: 0 0 5px currentColor;
   background-color: currentColor;
 }
 
 input[type="button"].dense,
 input[type="submit"].dense,
-button.dense,
-#root .button.dense {
+button.dense {
   padding: 0.4em 1em !important;
   border-radius: var(--radius-1-rel) !important;
   min-width: 5em !important;
@@ -1173,8 +1200,7 @@ button.dense,
 
 input[type="button"].prominent,
 input[type="submit"].prominent,
-button.prominent,
-#root .button.prominent {
+button.prominent {
   padding: 0.9em 1.3em !important;
   min-width: 8em !important;
 }
@@ -1226,27 +1252,34 @@ input[type="password"].default:focus {
 
 /* #region Flex */
 
-#root .row {
+#root .flex {
   display: flex;
+}
+
+#root .row {
   flex-direction: row;
 }
 
 #root .column {
-  display: flex;
   flex-direction: column;
 }
 
-#root .row.center-h,
-#root .column.center-v {
+#root .flex.row.center-h,
+#root .flex.column.center-v {
   justify-content: center;
 }
 
-#root .row.center-v,
-#root .column.center-h {
+#root .flex.row.center-v,
+#root .flex.column.center-h {
   align-items: center;
 }
 
-#root .space-between {
+#root .flex.center {
+  justify-content: center;
+  align-items: center;
+}
+
+#root .flex.space-between {
   justify-content: space-between;
 }
 
@@ -1258,25 +1291,14 @@ input[type="password"].default:focus {
   display: grid;
 }
 
-#root .gap-1 {
-  gap: var(--spacing-1);
-}
-#root .gap-2 {
-  gap: var(--spacing-2);
-}
-#root .gap-3 {
-  gap: var(--spacing-3);
-}
-#root .gap-4 {
-  gap: var(--spacing-4);
-}
-#root .gap-5 {
-  gap: var(--spacing-5);
-}
-
 #root .grid.row {
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
+}
+
+#root .grid.column {
+  grid-auto-flow: row;
+  grid-auto-rows: minmax(0, 1fr);
 }
 
 /* #endregion */

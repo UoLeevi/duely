@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ResponsiveLayout from 'components/ResponsiveLayout';
+import SplitLayout from 'components/SplitLayout';
 import Topbar from 'components/Topbar';
 import TopbarActions from 'components/TopbarActions';
 import DuelyLogo from 'components/DuelyLogo';
@@ -16,7 +17,7 @@ export default [
       <ResponsiveLayout
         topbar={
           <Topbar className="gutter py-4" data-layout="floating">
-            <div className="row center-v">
+            <div className="flex row center-v">
               <DuelyLogo />
               <h1 className="f-5 f-b pa-2">Duely</h1>
             </div>
@@ -39,8 +40,8 @@ export default [
     element: (
       <ResponsiveLayout
         topbar={
-          <Topbar className="gutter py-4">
-            <Link className="row center-v" to="/">
+          <Topbar className="gutter py-4" data-layout="floating">
+            <Link className="flex row center-v" to="/">
               <DuelyLogo />
               <h1 className="f-5 f-b pa-2">Duely</h1>
             </Link>
@@ -49,8 +50,12 @@ export default [
             ]} />
           </Topbar>
         }
-        header={ <HeaderWithActions title="Sign up" subtitle="Create a new Duely account" /> }
-        main={ <SignUpForm className="gutter" /> }
+        main={
+          <SplitLayout
+            left={ <SignUpForm className="gutter" data-layout="center 5fr" /> }
+            right={ <div className="background-bg bg-l3" data-layout="collapse-sm 4fr" ></div> }
+          />
+        }
       />
     )
   },
@@ -60,7 +65,7 @@ export default [
       <ResponsiveLayout
         topbar={
           <Topbar className="gutter py-4">
-            <Link className="row center-v" to="/">
+            <Link className="flex row center-v" to="/">
               <DuelyLogo />
               <h1 className="f-5 f-b pa-2">Duely</h1>
             </Link>

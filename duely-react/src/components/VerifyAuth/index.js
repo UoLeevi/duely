@@ -17,6 +17,7 @@ const VerifyAuth = () => {
       const newSearchParams = new URLSearchParams(searchParams.toString());
       newSearchParams.delete('verify');
       newSearchParams.delete('verification_code');
+      debugger;
       setSearchParams(newSearchParams);
 
       switch (verify) {

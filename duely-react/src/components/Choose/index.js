@@ -1,17 +1,24 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
-import PropTypes from 'prop-types';
 import './Choose.css';
 
-const Choose = ({ children, index, placeItems = 'center', ...props }) => {
+const Choose = ({ children, index, placeItems = 'center', className, ...props }) => {
   const ref = useRef(null);
+  const childrenRef = useRef(React.Children.toArray(children));
   const [currentIndex, setCurrentIndex] = useState(index);
+  const renderedChildren = [];
 
-  const components = React.Children.map(children, (child, i) => {
-    const className = currentIndex === i
-      ? 'visible' 
-      : 'hidden';
+  const components = React.Children.map(children, (element, i) => {
+    if (!element && index !== currentIndex) {
+      element = childrenRef.current[i];
+    }
 
-    const modifier = child.props?.['data-choose'];
+    if (!element) {
+      renderedChildren.push(element);
+      return element;
+    }
+
+    const className = currentIndex === i ? 'visible' : 'hidden';
+    const modifier = element.props?.['data-choose'];
     const style = {};
 
     if (modifier) {
@@ -22,19 +29,29 @@ const Choose = ({ children, index, placeItems = 'center', ...props }) => {
       }
     }
 
+    renderedChildren.push(element);
     return (
       <div key={ i } className={ className } style={ style }>
-        { child }
+        { element }
       </div>
     );
   });
+
+  childrenRef.current = renderedChildren;
 
   useLayoutEffect(() => {
     if (index === currentIndex) {
       return;
     }
   
-    const hideEl = ref.current.children[currentIndex];
+    const renderedChild = renderedChildren[currentIndex];
+    const actualIndex = renderedChildren.filter(e => e).indexOf(renderedChild);
+    const hideEl = ref.current.children[actualIndex];
+
+    if (!hideEl) {
+      setCurrentIndex(index);
+      return;
+    }
 
     function show(e) {
       hideEl.removeEventListener('transitionend', show);
@@ -49,19 +66,15 @@ const Choose = ({ children, index, placeItems = 'center', ...props }) => {
       hideEl.removeEventListener('transitionend', show);
       hideEl.classList.remove('hide');
     };
-  }, [index, currentIndex, components.length]);
+  }, [index, currentIndex, components.length, renderedChildren]);
+
+  className = Array.from(new Set(((className ?? '') + ' choose').split(' '))).join(' ');
 
   return (
-    <div className='choose' style={{ placeItems }} { ...props } ref={ ref }>
+    <div className={ className } style={{ placeItems }} { ...props } ref={ ref }>
       { components }
     </div>
   );
-};
-
-Choose.propTypes = {
-  index: PropTypes.number.isRequired,
-  justifyItems: PropTypes.oneOf(['center', 'start', 'end']),
-  alignItems: PropTypes.oneOf(['center', 'start', 'end'])
 };
 
 export default Choose;

@@ -1016,6 +1016,13 @@
   color: var(--color-success-s1nl4n);
 }
 
+#root .white {
+  color: #ffffff;
+}
+#root .black {
+  color: #000000;
+}
+
 
 
 

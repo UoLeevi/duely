@@ -17,6 +17,9 @@ export const Sizes = () => (
       <button className="default dense" onClick={action('clicked')}>Dense</button>
     </div>
     <div className="panel-row">
+      <button className="default filled primary-bg white" onClick={action('clicked')}>Filled</button>
+    </div>
+    <div className="panel-row">
       <button className="default flat" onClick={action('clicked')}>Flat</button>
     </div>
     <div className="panel-row">

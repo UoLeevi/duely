@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
 import useModal from 'hooks/useModal';
 import TextField from 'components/TextField';
-import Choose from 'components/Choose';
-import Spinner from 'components/Spinner';
+import Button from 'components/Button';
 import StartPasswordResetForm from 'components/StartPasswordResetForm';
 
 const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
@@ -46,21 +44,14 @@ const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
         <TextField label="Password" type="password" text={ password } setText={ setPassword } actions={{ 'Reset password': showModal }} />
       </div>
       <div className="panel-row center-h space-between pt-label-text">
-        <Choose index={ loading ? 1 : 0 }>
-          <input type="submit" className="default prominent f-4" value="Log in" />
-          <Spinner data-choose="fit" spin={ loading } />
-        </Choose>
+        <Button loading={ loading } error={ errorMessage } completed={ isLoggedIn && 'You are logged in' } prominent filled color="primary">Log in</Button>
       </div>
       <div className="panel-row center-h center-v">
         <div className="panel-cell center-h center-v">
-        <Choose index={ errorMessage ? 1 : 0 }>
-          <div className="row center-v center-h">
-            <span className="f-2 mr-2">Don't have an account?</span>
-            <Link className="button text ml-2 primary" to="/sign-up">Sign up</Link>
+          <div className="flex row center gap-5">
+            <span className="f-2">Don't have an account?</span>
+            <Button text color="primary" link={{ to: '/sign-up' }}>Sign up</Button>
           </div>
-          <span className="error">{ errorMessage }</span>
-          <span className="size-string">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span>
-        </Choose>
         </div>
       </div>
     </form>

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import useAuth from 'hooks/useAuth';
 import TextField from 'components/TextField';
-import Choose from 'components/Choose';
-import Spinner from 'components/Spinner';
+import Button from 'components/Button';
 
-const NewPasswordForm = React.forwardRef(({ verificationCode, whenDone, ...props }, ref) => {
+const NewPasswordForm = React.forwardRef(({ verificationCode, whenDone = () => {}, ...props }, ref) => {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
+  const [completed, setCompleted] = useState(null);
   const { loading, isLoggedIn, verifyPasswordReset } = useAuth();
 
   useEffect(() => {
@@ -23,6 +23,7 @@ const NewPasswordForm = React.forwardRef(({ verificationCode, whenDone, ...props
       setErrorMessage(error?.message || data.message);
       setTimeout(() => setErrorMessage(null), 4000);
     } else if (data.success) {
+      setCompleted('Password changed successfully. You are now logged in.');
       whenDone();
     } else {
       throw new Error();
@@ -38,12 +39,7 @@ const NewPasswordForm = React.forwardRef(({ verificationCode, whenDone, ...props
         <TextField label="New password" type="password" text={ password } setText={ setPassword } />
       </div>
       <div className="panel-row center-h space-between pt-label-text">
-        <Choose index={ loading ? 1 : errorMessage ? 2 : 0 }>
-          <input type="submit" className="default f-3" value="Change password and log in" />
-          <Spinner data-choose="fit" spin={ loading } />
-          <span className="error">{ errorMessage }</span>
-          <span className="size-string">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span>
-        </Choose>
+        <Button areaWidth="40ch" loading={ loading } error={ errorMessage } completed={ completed } filled color="primary">Change password and log in</Button>
       </div>
     </form>
   );

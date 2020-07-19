@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client'
 import useAuth from 'hooks/useAuth';
 import TextField from 'components/TextField';
-import Choose from 'components/Choose';
-import Spinner from 'components/Spinner';
+import Button from 'components/Button';
 import { START_SIGN_UP_MUTATION } from 'apollo';
 
-const SignUpForm = React.forwardRef(({ whenDone, className, ...props }, ref) => {
+const SignUpForm = React.forwardRef(({ whenDone = () => {}, className, ...props }, ref) => {
   const [startSignUp, { loading: mutationLoading, data: mutationData }] = useMutation(START_SIGN_UP_MUTATION);
   const [name, setName] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
@@ -44,6 +43,9 @@ const SignUpForm = React.forwardRef(({ whenDone, className, ...props }, ref) => 
 
   return (
     <form className={ className } onSubmit={ handleSubmit } autoComplete="new-password" { ...props } ref={ ref }>
+      <div className="panel-row center-h">
+        <h2 className="default f-b">Sign up</h2>
+      </div>
       <div className="panel-row">
         <TextField label="Name" type="text" text={ name } setText={ setName } autoFocus disabled={ mutationData?.startSignUp?.success } />
       </div>
@@ -54,16 +56,7 @@ const SignUpForm = React.forwardRef(({ whenDone, className, ...props }, ref) => 
         <TextField label="Password" type="password" text={ password } setText={ setPassword } disabled={ mutationData?.startSignUp?.success } />
       </div>
       <div className="panel-row center-h space-between pt-label-text">
-        <Choose index={ loading || mutationLoading ? 0 : mutationData?.startSignUp?.success ? 1 : errorMessage ? 3 : 2 }>
-          <Spinner data-choose="fit" spin={ loading || mutationLoading } />
-          <p className="success">
-            <span>Email address verification link sent to</span><br />
-            <span className="f-b">{ emailAddress }</span>
-          </p>
-          <input type="submit" className="default prominent f-3 primary" value="Sign up" />
-          <span className="error">{ errorMessage }</span>
-          <span className="size-string">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</span>
-        </Choose>
+        <Button areaWidth="40ch" loading={ loading || mutationLoading } error={ errorMessage } completed={ mutationData?.startSignUp?.success && `Password reset link has been sent to ${emailAddress}` } prominent filled color="primary">Sign up</Button>
       </div>
     </form>
   );

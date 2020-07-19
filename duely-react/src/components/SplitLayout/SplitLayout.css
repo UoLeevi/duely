@@ -1,0 +1,23 @@
+.split-layout {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  display: grid;
+  grid-auto-flow: column;
+}
+
+.split-layout > [data-layout|="left"] {
+  order: 1;
+}
+
+.split-layout > [data-layout|="right"] {
+  order: 2
+}
+
+.split-layout > [data-layout~="center"] {
+  place-self: center;
+}
+
+.split-layout > :only-child {
+  grid-column: 1 / span 2;
+}

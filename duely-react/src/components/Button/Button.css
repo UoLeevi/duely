@@ -1,0 +1,92 @@
+.button {
+  background: transparent;
+}
+
+#root .button {
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  text-align: center;
+  font-weight: bold;
+  transition: all 160ms ease-out;
+}
+
+#root .button:not([data-button~="text"]) {
+  border-radius: var(--radius-1-rel);
+  padding: 0.6em 1.1em;
+  min-width: 6em;
+}
+
+#root .button[data-button~="default"],
+#root .button[data-button~="outlined"] {
+  border: solid rgba(var(--color-grey-rgb), var(--alpha-3)) 2px;
+}
+
+#root .button[data-button~="filled"] {
+  border: solid transparent 2px;
+  transform-origin: center;
+}
+
+#root .button[data-button~="default"]:focus,
+#root .button[data-button~="default"]:hover,
+#root .button[data-button~="outlined"]:focus,
+#root .button[data-button~="outlined"]:hover {
+  background-color: rgba(var(--color-grey-rgb), var(--alpha-1));
+  border-color: rgba(var(--color-grey-rgb), var(--alpha-5));
+}
+
+#root .button[data-button~="filled"]:focus,
+#root .button[data-button~="filled"]:hover {
+  border-color: transparent;
+  transform: scale(0.95);
+}
+
+#root .button[data-button~="flat"]:focus,
+#root .button[data-button~="flat"]:hover {
+  background-color: rgba(var(--color-grey-rgb), var(--alpha-2));
+}
+
+#root .button[data-button~="flat"],
+#root .button[data-button~="flat"]:focus,
+#root .button[data-button~="flat"]:hover {
+  border-color: transparent !important;
+}
+
+#root .button[data-button~="text"] {
+  position: relative;
+}
+
+#root .button[data-button~="text"]:before {
+  content: '';
+  position: absolute;
+  bottom: -0.2em;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: transparent;
+  box-shadow: 0 0 5px transparent;
+  transition: all 160ms ease-out;
+}
+
+#root .button[data-button~="text"]:focus:before,
+#root .button[data-button~="text"]:active:before,
+#root .button[data-button~="text"]:hover:before {
+  box-shadow: 0 0 5px currentColor;
+  background-color: currentColor;
+}
+
+#root .button[data-button~="dense"]:not([data-button~="text"]) {
+  padding: 0.4em 1em;
+  min-width: 5em;
+}
+
+#root .button[data-button~="prominent"]:not([data-button~="text"]) {
+  padding: 0.8em 1.2em;
+  min-width: 8em;
+}
+
+.button-container.choose div.completed,
+.button-container.choose div.error {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}

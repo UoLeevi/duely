@@ -6,6 +6,7 @@ import TopbarActions from 'components/TopbarActions';
 import DuelyLogo from 'components/DuelyLogo';
 import Nav from 'components/Nav';
 import HeaderWithActions from 'components/HeaderWithActions';
+import Profile from 'components/Profile';
 
 const nav = (
   <Nav items={[
@@ -23,22 +24,28 @@ const nav = (
 export default [
   {
     path: 'profile',
-    element: (
-      <ResponsiveLayout
-        topbar={
-          <Topbar className="gutter py-4">
-            <div className="row center-v">
-              <DuelyLogo />
-              <h1 className="f-5 f-b pa-2">Duely</h1>
-            </div>
-            <TopbarActions links={[
-              { to: '/', text: 'Home' }
-            ]} />
-          </Topbar>
-        }
-        nav={ nav }
-        header={ <HeaderWithActions title="Profile" subtitle="Overview" /> }
-      />
-    )
+    element: <Profile />,
+    children: [
+      {
+        path: '/',
+        element: (
+          <ResponsiveLayout
+            topbar={
+              <Topbar className="gutter py-4">
+                <div className="flex row center-v">
+                  <DuelyLogo />
+                  <h1 className="f-5 f-b pa-2">Duely</h1>
+                </div>
+                <TopbarActions links={[
+                  { to: '/', text: 'Home' }
+                ]} />
+              </Topbar>
+            }
+            nav={ nav }
+            header={ <HeaderWithActions title="Profile" subtitle="Overview" /> }
+          />
+        )
+      }
+    ]
   }
 ];
