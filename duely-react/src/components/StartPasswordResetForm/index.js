@@ -36,15 +36,15 @@ const StartPasswordResetForm = React.forwardRef(({ whenDone = () => {}, ...props
   }
 
   return (
-    <form className="panel" key="start-password-reset-form" onSubmit={ handleSubmit } autoComplete="new-password" { ...props } ref={ ref }>
+    <form className="panel" onSubmit={ handleSubmit } autoComplete="new-password" { ...props } ref={ ref }>
       <div className="panel-row">
         <h3 className="default f-b">Password reset</h3>
       </div>
       <div className="panel-row">
-        <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } autoFocus disabled={ mutationData?.startPasswordReset?.success } />
+        <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } autoFocus disabled={ mutationData?.startPasswordReset?.success } required />
       </div>
-      <div className="panel-row center-h space-between pt-label-text">
-        <Button loading={ loading || mutationLoading } error={ errorMessage } completed={ mutationData?.startPasswordReset?.success && `Password reset link has been sent to ${emailAddress}` } filled color="primary">Reset password</Button>
+      <div className="panel-row center-h pt-label-text">
+        <Button loading={ loading || mutationLoading } error={ errorMessage } completed={ mutationData?.startPasswordReset?.success && `Password reset link has been sent to ${emailAddress}` } filled prominent color="primary">Reset password</Button>
       </div>
       <div className="panel-row center-h center-v">
         <div className="panel-cell center-h center-v">

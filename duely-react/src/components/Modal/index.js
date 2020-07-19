@@ -1,5 +1,4 @@
 import React from 'react';
-import { useBlocker } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion';
 import './Modal.css';
 import CloseButton from '../CloseButton';
@@ -50,26 +49,7 @@ const didChildKeyChange = (previous, next) => {
   return previous.key !== next.key;
 };
 
-const Modal = ({ children, dismissable, hideModal, navigationAction, ...props }) => {
-  function handleNavigation({ retry: navigate }) {
-    switch (navigationAction) {
-      case 'block':
-        break;
-
-      case 'persist':
-        navigate();
-        break;
-
-      case 'dismiss':
-      default:
-        hideModal();
-        navigate();
-        break;
-    }
-  }
-
-  useBlocker(handleNavigation, !!children);
-
+const Modal = ({ children, dismissable, hideModal, ...props }) => {
   return (
     <AnimatePresence exitBeforeEnter>
       { children && (
@@ -81,9 +61,7 @@ const Modal = ({ children, dismissable, hideModal, navigationAction, ...props })
           { ...props }
         >
           <AnimatePresence exitBeforeEnter>
-            <motion.div className="modal panel"
-              variants={ panelAnimations }
-            >
+            <motion.div className="modal panel" variants={ panelAnimations }>
               { dismissable && <CloseButton onClick={ hideModal } /> }
               <AnimatedTransition shouldTransition={ didChildKeyChange }>
                 { children }

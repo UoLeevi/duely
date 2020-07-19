@@ -33,15 +33,15 @@ const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
   }
 
   return (
-    <form className="panel" key="login-form" onSubmit={ handleSubmit } autoComplete="new-password" { ...props } ref={ ref }>
+    <form className="panel" onSubmit={ handleSubmit } { ...props } ref={ ref }>
       <div className="panel-row">
         <h2 className="default f-b">Log in</h2>
       </div>
       <div className="panel-row">
-        <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } autoFocus />
+        <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } autoFocus required />
       </div>
       <div className="panel-row">
-        <TextField label="Password" type="password" text={ password } setText={ setPassword } actions={{ 'Reset password': showModal }} />
+        <TextField label="Password" type="password" text={ password } setText={ setPassword } actions={{ 'Reset password': showModal }} required />
       </div>
       <div className="panel-row center-h space-between pt-label-text">
         <Button loading={ loading } error={ errorMessage } completed={ isLoggedIn && 'You are logged in' } prominent filled color="primary">Log in</Button>

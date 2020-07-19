@@ -47,13 +47,13 @@ const SignUpForm = React.forwardRef(({ whenDone = () => {}, className, ...props 
         <h2 className="default f-b">Sign up</h2>
       </div>
       <div className="panel-row">
-        <TextField label="Name" type="text" text={ name } setText={ setName } autoFocus disabled={ mutationData?.startSignUp?.success } />
+        <TextField label="Name" type="text" text={ name } setText={ setName } autoFocus disabled={ mutationData?.startSignUp?.success } required />
       </div>
       <div className="panel-row">
-        <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } disabled={ mutationData?.startSignUp?.success } />
+        <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } disabled={ mutationData?.startSignUp?.success } required />
       </div>
       <div className="panel-row">
-        <TextField label="Password" type="password" text={ password } setText={ setPassword } disabled={ mutationData?.startSignUp?.success } />
+        <TextField label="Password" type="password" text={ password } setText={ setPassword } disabled={ mutationData?.startSignUp?.success } required />
       </div>
       <div className="panel-row center-h space-between pt-label-text">
         <Button areaWidth="40ch" loading={ loading || mutationLoading } error={ errorMessage } completed={ mutationData?.startSignUp?.success && `Password reset link has been sent to ${emailAddress}` } prominent filled color="primary">Sign up</Button>

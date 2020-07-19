@@ -36,9 +36,9 @@ const NewPasswordForm = React.forwardRef(({ verificationCode, whenDone = () => {
         <h2 className="default f-b">Set new password</h2>
       </div>
       <div className="panel-row">
-        <TextField label="New password" type="password" text={ password } setText={ setPassword } />
+        <TextField label="New password" type="password" text={ password } setText={ setPassword } required />
       </div>
-      <div className="panel-row center-h space-between pt-label-text">
+      <div className="panel-row center-h">
         <Button areaWidth="40ch" loading={ loading } error={ errorMessage } completed={ completed } filled color="primary">Change password and log in</Button>
       </div>
     </form>
