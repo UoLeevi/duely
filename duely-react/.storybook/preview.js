@@ -4,8 +4,10 @@ import { MemoryRouter as Router } from 'react-router-dom';
 import { withViewportContext } from '../src/contexts/ViewportContext';
 import { withAnimationContext } from '../src/contexts/AnimationContext';
 import { withModalContext } from '../src/contexts/ModalContext';
+import { withFormValidationContext } from '../src/contexts/FormValidationContext';
 import '../src/index.css'
 
+addDecorator(withFormValidationContext);
 addDecorator(withModalContext);
 addDecorator(withAnimationContext)
 addDecorator(withViewportContext);

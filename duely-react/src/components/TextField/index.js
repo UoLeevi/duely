@@ -1,7 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext, useEffect, useCallback } from 'react';
+import { FormValidationContext } from 'contexts/FormValidationContext';
 import './TextField.css';
 
+const requiredMessage = 'Required';
+
 const TextField = React.forwardRef(({ label, type = 'text', hint, onChange, onBlur, text, setText = () => {}, rules = [], completed = rules, actions, className, ...props }, ref) => {
+  const inputRef = useRef();
   const defaultRef = useRef();
   ref = ref ?? defaultRef;
 
@@ -23,53 +27,75 @@ const TextField = React.forwardRef(({ label, type = 'text', hint, onChange, onBl
     }
   }
 
-  function validate(e) {
-    if (e.target.value.length > 0) {
+  const validate = useCallback((value) => {
+    if (value.length > 0) {
       for (const rule of rules) {
-        const message = rule(e.target.value);
+        const message = rule(value);
 
         if (typeof message === 'string') {
           // validation failed
           ref.current.classList.add('invalid');
           setMessage(message);
-
-          if (onBlur) onBlur(e);
-          return;
+          return false;
         }
       }
 
       if (rules.length > 0 && completed === rules) {
         // all rules passed and completed defaults to using rules
         ref.current.classList.add('completed');
-
-        if (onBlur) onBlur(e);
-        return;
+        return true;
       }
     }
 
     if (typeof completed === 'function') {
-      if (completed(e.target.value)) {
+      if (completed(value)) {
         ref.current.classList.add('completed');
       }
     } else if (completed !== rules && completed) {
       ref.current.classList.add('completed');
     }
 
-    if (onBlur) onBlur(e);
-    return;
-  }
+    return true;
+  }, [ref, rules, completed]);
+
+  const { registerValidation } = useContext(FormValidationContext);
+
+  useEffect(() => {
+    registerValidation(ref, () => {
+      if (inputRef.current.value.length > 0) {
+        const isValid = validate(inputRef.current.value);
+
+        if (!isValid) {
+          inputRef.current.focus();
+        }
+
+        return isValid;
+      }
+
+      if (inputRef.current.required) {
+        ref.current.classList.add('invalid');
+
+        if (requiredMessage !== hint) {
+          setMessage(requiredMessage);
+        }
+
+        inputRef.current.focus();
+        return false;
+      }
+    })
+  }, [ref, inputRef, hint, registerValidation, validate]);
 
   className = Array.from(new Set(((className ?? '') + ' text-field').split(' '))).join(' ');
 
   return (
-    <label className={ className } ref={ ref }>
+    <label className={ className } data-input ref={ ref }>
       <span className="label">{ label }</span>
       <div className="text-field-actions">
         { Object.entries(actions ?? {}).map(([text, onClick]) => 
           <span key={ text } onClick={ onClick }>{ text }</span>
         )}
       </div>
-      <input type={ type } onBlur={ validate } onChange={ processInput } defaultValue={ text } spellCheck="false" { ...props } />
+      <input type={ type } onBlur={ e => { validate(e.target.value); if (onBlur) onBlur(e); }} onChange={ processInput } defaultValue={ text } spellCheck="false" { ...props } ref={ inputRef } />
       <span className="message">{ message }</span>
     </label>
   )
