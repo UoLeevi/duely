@@ -45,7 +45,7 @@ const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
         <TextField { ...passwordFieldProps } text={ password } setText={ setPassword } actions={{ 'Reset password': showModal }} completed={ null } />
       </div>
       <div className="panel-row center-h space-between pt-label-text">
-        <Button loading={ loading } error={ errorMessage } completed={ isLoggedIn && 'You are logged in' } prominent filled color="primary">Log in</Button>
+        <Button areaWidth="40ch" loading={ loading } error={ errorMessage } completed={ isLoggedIn && 'You are logged in' } prominent filled color="primary">Log in</Button>
       </div>
       <div className="panel-row center-h center-v">
         <div className="panel-cell center-h center-v">

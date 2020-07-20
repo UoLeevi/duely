@@ -1,4 +1,4 @@
-import React, { isValidElement } from 'react';
+import React, { isValidElement, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Choose from 'components/Choose';
 import Spinner from 'components/Spinner';
@@ -34,7 +34,10 @@ function getColorClassNames(modifiers, color) {
   return classNames;
 }
 
-const Button = ({ element, link, dense, prominent, filled, outlined, text, flat, error, loading, completed, className, areaWidth, areaHeight, color, ...props }) => {
+const Button = React.forwardRef(({ element, link, dense, prominent, filled, outlined, text, flat, error, loading, completed, className, areaWidth, areaHeight, color, ...props }, ref) => {
+  const defaultRef = useRef();
+  ref = ref ?? defaultRef;
+
   let modifiers = Object
     .entries({ filled, outlined, text, flat })
     .filter(([, v]) => v)
@@ -60,7 +63,7 @@ const Button = ({ element, link, dense, prominent, filled, outlined, text, flat,
   const areaStyle = { width: areaWidth, height: areaHeight };
 
   return (
-    <Choose className="button-container" index={ completed ? 3 : loading ? 2 : error ? 1 : 0 }>
+    <Choose className="button-container" index={ completed ? 3 : loading ? 2 : error ? 1 : 0 } ref={ ref }>
       { element }
       { error && (isValidElement(error) ? error : <div className="error f-2 f-b" style={ messageStyle }>{ error }</div>) }
       { loading && (isValidElement(loading) ? loading : <Spinner data-choose="fit" />) }
@@ -68,6 +71,6 @@ const Button = ({ element, link, dense, prominent, filled, outlined, text, flat,
       { <div style={ areaStyle }></div> }
     </Choose>
   )
-};
+});
 
 export default Button;

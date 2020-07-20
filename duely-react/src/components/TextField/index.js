@@ -1,8 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './TextField.css';
 
-const TextField = ({ label, type = 'text', hint, onChange, onBlur, text, setText = () => {}, rules = [], completed = rules, actions, className, ...props }) => {
-  const ref = useRef();
+const TextField = React.forwardRef(({ label, type = 'text', hint, onChange, onBlur, text, setText = () => {}, rules = [], completed = rules, actions, className, ...props }, ref) => {
+  const defaultRef = useRef();
+  ref = ref ?? defaultRef;
+
   const [message, setMessage] = useState(hint);
 
   function processInput(e) {
@@ -71,6 +73,6 @@ const TextField = ({ label, type = 'text', hint, onChange, onBlur, text, setText
       <span className="message">{ message }</span>
     </label>
   )
-};
+});
 
 export default TextField;

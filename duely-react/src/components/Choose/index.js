@@ -1,8 +1,10 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import './Choose.css';
 
-const Choose = ({ children, index, placeItems = 'center', className, ...props }) => {
-  const ref = useRef(null);
+const Choose = React.forwardRef(({ children, index, placeItems = 'center', className, ...props }, ref) => {
+  const defaultRef = useRef();
+  ref = ref ?? defaultRef;
+
   const childrenRef = useRef(React.Children.toArray(children));
   const [currentIndex, setCurrentIndex] = useState(index);
   const renderedChildren = [];
@@ -66,7 +68,7 @@ const Choose = ({ children, index, placeItems = 'center', className, ...props })
       hideEl.removeEventListener('transitionend', show);
       hideEl.classList.remove('hide');
     };
-  }, [index, currentIndex, components.length, renderedChildren]);
+  }, [index, currentIndex, components.length, renderedChildren, ref]);
 
   className = Array.from(new Set(((className ?? '') + ' choose').split(' '))).join(' ');
 
@@ -75,6 +77,6 @@ const Choose = ({ children, index, placeItems = 'center', className, ...props })
       { components }
     </div>
   );
-};
+});
 
 export default Choose;

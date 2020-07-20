@@ -45,7 +45,7 @@ const StartPasswordResetForm = React.forwardRef(({ whenDone = () => {}, ...props
         <TextField { ...emailFieldProps } text={ emailAddress } setText={ setEmailAddress } completed={ null } autoFocus />
       </div>
       <div className="panel-row center-h pt-label-text">
-        <Button loading={ loading || mutationLoading } error={ errorMessage } completed={ mutationData?.startPasswordReset?.success && `Password reset link has been sent to ${emailAddress}` } filled prominent color="primary">Reset password</Button>
+        <Button areaWidth="40ch" loading={ loading || mutationLoading } error={ errorMessage } completed={ mutationData?.startPasswordReset?.success && `Password reset link has been sent to ${emailAddress}` } filled prominent color="primary">Reset password</Button>
       </div>
       <div className="panel-row center-h center-v">
         <div className="panel-cell center-h center-v">
