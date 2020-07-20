@@ -1,5 +1,5 @@
 import React, { useState, useRef, useContext, useEffect, useCallback } from 'react';
-import { FormValidationContext } from 'contexts/FormValidationContext';
+import { FormContext } from 'contexts/FormContext';
 import './TextField.css';
 
 const requiredMessage = 'Required';
@@ -58,18 +58,25 @@ const TextField = React.forwardRef(({ label, type = 'text', hint, onChange, onBl
     return true;
   }, [ref, rules, completed]);
 
-  const { registerValidation } = useContext(FormValidationContext);
+  const { registerValidation } = useContext(FormContext);
+  const key = props['data-form'];
 
   useEffect(() => {
+    if (key === undefined) {
+      return;
+    }
+
     registerValidation(ref, () => {
-      if (inputRef.current.value.length > 0) {
-        const isValid = validate(inputRef.current.value);
+      const value = inputRef.current.value;
+
+      if (value.length > 0) {
+        const isValid = validate(value);
 
         if (!isValid) {
           inputRef.current.focus();
         }
 
-        return isValid;
+        return { isValid, key, value };
       }
 
       if (inputRef.current.required) {
@@ -80,10 +87,12 @@ const TextField = React.forwardRef(({ label, type = 'text', hint, onChange, onBl
         }
 
         inputRef.current.focus();
-        return false;
+        return { isValid: false, key, value };
       }
-    })
-  }, [ref, inputRef, hint, registerValidation, validate]);
+
+      return { isValid: true, key, value };
+    });
+  }, [ref, inputRef, key, hint, registerValidation, validate]);
 
   className = Array.from(new Set(((className ?? '') + ' text-field').split(' '))).join(' ');
 

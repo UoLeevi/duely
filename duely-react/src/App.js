@@ -8,7 +8,7 @@ import AuthContextProvider from './contexts/AuthContext';
 import DomainContextProvider from './contexts/DomainContext';
 import ModalContextProvider from './contexts/ModalContext';
 import AnimationContextProvider from './contexts/AnimationContext';
-import FormValidationContextProvider from './contexts/FormValidationContext';
+import FormContextProvider from './contexts/FormContext';
 import { RoutesRoot } from './routes';
 
 const App = () => (
@@ -20,9 +20,9 @@ const App = () => (
             <IconContext.Provider value={{}}>
               <AnimationContextProvider>
                 <ModalContextProvider>
-                  <FormValidationContextProvider>
+                  <FormContextProvider>
                     <RoutesRoot/>
-                  </FormValidationContextProvider>
+                  </FormContextProvider>
                 </ModalContextProvider>
               </AnimationContextProvider>
             </IconContext.Provider>

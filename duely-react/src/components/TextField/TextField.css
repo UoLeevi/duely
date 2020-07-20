@@ -1,13 +1,20 @@
 :root {
   --text-field-label-height: calc(var(--f-2) * 1.2);
   --text-field-message-height: calc(var(--f-1) * 1.2);
+  --text-field-space: calc(var(--text-field-label-height) + var(--text-field-message-height));
 }
 
 #root .pt-label-text {
   padding-top: var(--text-field-label-height);
 }
-#root .pb-label-text {
+#root .pb-hint-text {
   padding-bottom: var(--text-field-message-height);
+}
+#root .mt-label-text {
+  margin-top: var(--text-field-label-height);
+}
+#root .mb-hint-text {
+  margin-bottom: var(--text-field-message-height);
 }
 
 .text-field {

@@ -1,5 +1,5 @@
 import React, { useRef, useContext, useMemo } from 'react';
-import { FormValidationContext } from 'contexts/FormValidationContext';
+import { FormContext } from 'contexts/FormContext';
 import './Form.css';
 
 const Form = React.forwardRef(({ handleSubmit, className, children, ...props }, ref) => {
@@ -10,25 +10,33 @@ const Form = React.forwardRef(({ handleSubmit, className, children, ...props }, 
   const elementRefs = useMemo(() => Array.from({ length: elementCount }).map(() => React.createRef()), [elementCount]);
   children = React.Children.map(children, (element, i) => element?.ref ? element : React.cloneElement(element, { ref: elementRefs[i] }), [elementRefs, children]);
 
-  const { validate } = useContext(FormValidationContext);
+  const { validate } = useContext(FormContext);
 
   async function onSubmit(e) { 
     e.preventDefault();
+
+    const data = {};
 
     for (const element of React.Children.toArray(children)) {
       const ref = element?.ref;
 
       if (ref) {
-        const isValid = validate(ref);
+        const { isValid, key, value } = validate(ref) ?? {};
+
+        if (key === undefined) {
+          continue;
+        }
 
         if (!isValid) {
           return;
         }
+
+        data[key] = value;
       }
     }
 
     if (handleSubmit) {
-      await handleSubmit(e);
+      await handleSubmit(data);
     }
   }
 
