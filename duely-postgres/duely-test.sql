@@ -50,7 +50,7 @@ BEGIN
   PERFORM operation_.begin_session_(_visitor_jwt);
 
   SELECT * INTO _record_0
-  FROM operation_.start_email_address_verification_('test@example.com', '{"password":"temp password","name":"test user"}');
+  FROM operation_.start_email_address_verification_('test@example.com', 'f', '{"password":"temp password","name":"test user"}');
   --RAISE NOTICE E'start_email_address_verification_:\n%', _record_0;
 
   PERFORM operation_.end_session_();
@@ -76,7 +76,7 @@ BEGIN
   PERFORM operation_.begin_session_(_visitor_jwt);
 
   SELECT * INTO _record_0
-  FROM operation_.start_email_address_verification_('test@example.com');
+  FROM operation_.start_email_address_verification_('test@example.com', 't');
   --RAISE NOTICE E'start_email_address_verification_:\n%', _record_0;
 
   PERFORM operation_.end_session_();

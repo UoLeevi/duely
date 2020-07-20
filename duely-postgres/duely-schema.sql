@@ -1964,16 +1964,34 @@ CREATE TABLE security_.email_address_verification_ (
 ALTER TABLE security_.email_address_verification_ OWNER TO postgres;
 
 --
--- Name: start_email_address_verification_(text, json); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: start_email_address_verification_(text, boolean, json); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.start_email_address_verification_(_email_address text, _data json DEFAULT NULL::json) RETURNS security_.email_address_verification_
+CREATE FUNCTION operation_.start_email_address_verification_(_email_address text, _is_existing_user boolean, _data json DEFAULT NULL::json) RETURNS security_.email_address_verification_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
   _email_address_verification security_.email_address_verification_;
 BEGIN
   PERFORM security_.control_operation_('start_email_address_verification_');
+
+  IF _is_existing_user THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM security_.user_
+      WHERE email_address_ = lower(_email_address)
+    ) THEN
+      RAISE 'User does not exist.' USING ERRCODE = '20000';
+    END IF;
+  ELSE
+    IF EXISTS (
+      SELECT 1
+      FROM security_.user_
+      WHERE email_address_ = lower(_email_address)
+    ) THEN
+      RAISE 'User already exists.' USING ERRCODE = '20000';
+    END IF;
+  END IF;
 
   INSERT INTO security_.email_address_verification_ (email_address_, data_)
   VALUES (lower(_email_address), _data)
@@ -1990,7 +2008,7 @@ END
 $$;
 
 
-ALTER FUNCTION operation_.start_email_address_verification_(_email_address text, _data json) OWNER TO postgres;
+ALTER FUNCTION operation_.start_email_address_verification_(_email_address text, _is_existing_user boolean, _data json) OWNER TO postgres;
 
 --
 -- Name: agent_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
