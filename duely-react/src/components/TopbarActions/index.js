@@ -1,9 +1,10 @@
 import React, { useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
 import useModal from 'hooks/useModal';
 import LoginForm from 'components/LogInForm';
 import AnimatedTransition from 'components/AnimatedTransition';
+import Button from 'components/Button';
 
 const getInitialState = () => {
   const queryParams = new URLSearchParams(window.location.search);
@@ -35,16 +36,16 @@ const TopbarActions = ({ links, ...props }) => {
             <div className="grid row gap-5 items-center">
               { links?.map(({ to, text }) => 
                 <AnimatedTransition key={ to }>
-                  <Link className="button text" to={ to }>{ text }</Link>
+                  <Button text link={{ to }}>{ text }</Button>
                 </AnimatedTransition>
               )}
-              <button className="default text" onClick={ () => logOut() }>Log out</button> 
+              <Button text onClick={ () => logOut() }>Log out</Button>
             </div>
           )
           : (
             <div className="grid row gap-5 items-center">
-              <button className="default text" onClick={ showModal }>Log in</button>
-              <Link className="button text primary" to='/sign-up'>Sign up</Link>
+              <Button text onClick={ showModal }>Log in</Button>
+              <Button text link={{ to: '/sign-up' }} color="primary">Sign up</Button>
             </div>
           )
       }

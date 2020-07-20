@@ -16,8 +16,8 @@ function layoutModifiersFor(element, section, breakpoints) {
   return modifiers.length === 0 ? '' : '- ' + modifiers.join(' ');
 }
 
-function createLayoutElement(element, section) {
-  return element && React.cloneElement(element, { 'data-layout': section + layoutModifiersFor(element, section) });
+function createLayoutElement(element, section, breakpoints) {
+  return element && React.cloneElement(element, { 'data-layout': section + layoutModifiersFor(element, section, breakpoints) });
 }
 
 const ResponsiveLayout = React.forwardRef(({ topbar, nav, aside, header, main, footer, ...props }, ref) => {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client'
 import useAuth from 'hooks/useAuth';
 import TextField from 'components/TextField';
+import { emailFieldProps } from 'components/TextField/presets';
 import Button from 'components/Button';
 import { START_PASSWORD_RESET_MUTATION } from 'apollo';
 
@@ -41,7 +42,7 @@ const StartPasswordResetForm = React.forwardRef(({ whenDone = () => {}, ...props
         <h3 className="default f-b">Password reset</h3>
       </div>
       <div className="panel-row">
-        <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } autoFocus disabled={ mutationData?.startPasswordReset?.success } required />
+        <TextField { ...emailFieldProps } text={ emailAddress } setText={ setEmailAddress } completed={ null } autoFocus />
       </div>
       <div className="panel-row center-h pt-label-text">
         <Button loading={ loading || mutationLoading } error={ errorMessage } completed={ mutationData?.startPasswordReset?.success && `Password reset link has been sent to ${emailAddress}` } filled prominent color="primary">Reset password</Button>

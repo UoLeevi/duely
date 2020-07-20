@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client'
 import useAuth from 'hooks/useAuth';
 import TextField from 'components/TextField';
+import { emailFieldProps, passwordFieldProps } from 'components/TextField/presets';
 import Button from 'components/Button';
 import { START_SIGN_UP_MUTATION } from 'apollo';
 
@@ -50,10 +51,10 @@ const SignUpForm = React.forwardRef(({ whenDone = () => {}, className, ...props 
         <TextField label="Name" type="text" text={ name } setText={ setName } autoFocus disabled={ mutationData?.startSignUp?.success } required />
       </div>
       <div className="panel-row">
-        <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } disabled={ mutationData?.startSignUp?.success } required />
+        <TextField { ...emailFieldProps } text={ emailAddress } setText={ setEmailAddress } completed={ null } />
       </div>
       <div className="panel-row">
-        <TextField label="Password" type="password" text={ password } setText={ setPassword } disabled={ mutationData?.startSignUp?.success } required />
+        <TextField { ...passwordFieldProps } text={ password } setText={ setPassword } completed={ null } />
       </div>
       <div className="panel-row center-h space-between pt-label-text">
         <Button areaWidth="40ch" loading={ loading || mutationLoading } error={ errorMessage } completed={ mutationData?.startSignUp?.success && `Password reset link has been sent to ${emailAddress}` } prominent filled color="primary">Sign up</Button>

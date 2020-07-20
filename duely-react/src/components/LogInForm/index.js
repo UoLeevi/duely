@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import useAuth from 'hooks/useAuth';
 import useModal from 'hooks/useModal';
 import TextField from 'components/TextField';
+import { emailFieldProps, passwordFieldProps } from 'components/TextField/presets';
 import Button from 'components/Button';
 import StartPasswordResetForm from 'components/StartPasswordResetForm';
 
@@ -38,10 +39,10 @@ const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
         <h2 className="default f-b">Log in</h2>
       </div>
       <div className="panel-row">
-        <TextField label="Email" type="email" text={ emailAddress } setText={ setEmailAddress } autoFocus required />
+        <TextField { ...emailFieldProps } text={ emailAddress } setText={ setEmailAddress } autoFocus completed={ null } />
       </div>
       <div className="panel-row">
-        <TextField label="Password" type="password" text={ password } setText={ setPassword } actions={{ 'Reset password': showModal }} required />
+        <TextField { ...passwordFieldProps } text={ password } setText={ setPassword } actions={{ 'Reset password': showModal }} completed={ null } />
       </div>
       <div className="panel-row center-h space-between pt-label-text">
         <Button loading={ loading } error={ errorMessage } completed={ isLoggedIn && 'You are logged in' } prominent filled color="primary">Log in</Button>

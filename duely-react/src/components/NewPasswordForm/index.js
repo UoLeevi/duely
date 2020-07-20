@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useAuth from 'hooks/useAuth';
 import TextField from 'components/TextField';
+import { passwordFieldProps } from 'components/TextField/presets';
 import Button from 'components/Button';
 
 const NewPasswordForm = React.forwardRef(({ verificationCode, whenDone = () => {}, ...props }, ref) => {
@@ -36,7 +37,7 @@ const NewPasswordForm = React.forwardRef(({ verificationCode, whenDone = () => {
         <h2 className="default f-b">Set new password</h2>
       </div>
       <div className="panel-row">
-        <TextField label="New password" type="password" text={ password } setText={ setPassword } required />
+        <TextField { ...passwordFieldProps } text={ password } setText={ setPassword } autoFocus />
       </div>
       <div className="panel-row center-h">
         <Button areaWidth="40ch" loading={ loading } error={ errorMessage } completed={ completed } filled color="primary">Change password and log in</Button>

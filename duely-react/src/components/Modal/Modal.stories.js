@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import useModal from 'hooks/useModal';
 import TextField from 'components/TextField';
+import Button from 'components/Button';
 
 export default {
   title: 'Modal'
@@ -20,8 +21,8 @@ export const Default = () => {
       <div className="panel-row">
         <TextField label="Label" text={ text } setText={ setText } />
       </div>
-      <div className="panel-row pt-label-text center-h">
-        <button className="default" onClick={ () => hideModalRef.current() }>Click me</button>
+      <div className="panel-row center-h">
+        <Button onClick={ () => hideModalRef.current() }>Click me</Button>
       </div>
     </div>,
     { hideModalRef }
@@ -29,7 +30,7 @@ export const Default = () => {
   return (
     <div className="panel ma-2">
       <div className="panel-row">
-        <button className="default" onClick={ showModal }>Show modal</button>
+        <Button onClick={ showModal }>Show modal</Button>
       </div>
     </div>
   )

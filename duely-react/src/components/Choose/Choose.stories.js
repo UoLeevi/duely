@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Choose from '../Choose';
 import Spinner from '../Spinner';
+import Button from 'components/Button';
 
 export default {
   title: 'Choose',
@@ -33,7 +34,7 @@ export const ToggleContent = ({ placeItems }) => {
   return (
     <div className="panel ma-2">
       <div className="panel-row">
-        <button className="default" onClick={ () => setIndex((index + 1) % 3) }>Toggle</button>
+        <Button onClick={ () => setIndex((index + 1) % 3) }>Toggle</Button>
       </div>
       <div className="panel-row">
         <Choose index={ index } placeItems={ placeItems }>
@@ -66,7 +67,7 @@ export const LoadingSpinner = () => {
     <div className="panel ma-2">
       <div className="panel-row">
         <Choose index={ loading ? 1 : 0 } >
-          <button className="default" onClick={ () => setLoading(true) }>Start loading</button>
+          <Button onClick={ () => setLoading(true) }>Start loading</Button>
           <Spinner data-choose="fit" />
         </Choose>
       </div>
