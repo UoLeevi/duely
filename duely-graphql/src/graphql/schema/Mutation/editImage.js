@@ -1,4 +1,4 @@
-import { pool } from '../../../db';
+import { withConnection } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
@@ -24,31 +24,28 @@ export default async function editImage(obj, { agencyUuid, imageName, imageData,
     type: 'EditImageResult'
   };
 
-  const client = await pool.connect();
-  try {
-    await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
+  return await withConnection(context, async withSession => {
+    return await withSession(async client => {
+      try {
+        // create or update theme on database
+        const res = await client.query('SELECT * FROM operation_.edit_image_($1::uuid, $2::text, $3::text, $4::text)', [agencyUuid, imageName, imageData, imageColor]);
+        const image = res.rows[0];
 
-    // create or update theme on database
-    const res = await client.query('SELECT * FROM operation_.edit_image_($1::uuid, $2::text, $3::text, $4::text)', [agencyUuid, imageName, imageData, imageColor]);
-    const image = res.rows[0];
+        // success
+        return {
+          success: true,
+          image,
+          type: 'EditImageResult'
+        };
 
-    // success
-    return {
-      success: true,
-      image,
-      type: 'EditImageResult'
-    };
-
-  } catch (error) {
-    return {
-      // error
-      success: false,
-      message: error.message,
-      type: 'EditImageResult'
-    };
-  }
-  finally {
-    await client.query('SELECT operation_.end_session_()');
-    client.release();
-  }
+      } catch (error) {
+        return {
+          // error
+          success: false,
+          message: error.message,
+          type: 'EditImageResult'
+        };
+      }
+    });
+  });
 };

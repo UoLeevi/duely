@@ -1,4 +1,4 @@
-import { pool } from '../../db';
+import { withConnection } from '../../db';
 import { AuthenticationError } from 'apollo-server-core';
 
 export default {
@@ -17,18 +17,16 @@ export default {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-        const client = await pool.connect();
-        try {
-          await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-          const res = await client.query('SELECT * FROM operation_.query_agency_by_subdomain_name_($1::text)', [subdomain.name_]);
-          await client.query('SELECT operation_.end_session_()');
-          return res.rows[0];
-        } catch (error) {
-          throw new AuthenticationError(error.message);
-        }
-        finally {
-          client.release();
-        }
+        return await withConnection(context, async withSession => {
+          return await withSession(async client => {
+            try {
+              const res = await client.query('SELECT * FROM operation_.query_agency_by_subdomain_name_($1::text)', [subdomain.name_]);
+              return res.rows[0];
+            } catch (error) {
+              throw new AuthenticationError(error.message);
+            }
+          });
+        });
       }
     }
   }

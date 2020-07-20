@@ -1,5 +1,3 @@
-import { pool } from '../../db';
-
 export default {
   typeDef: `
     type CreateServiceResult implements MutationResult {

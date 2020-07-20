@@ -1,34 +1,31 @@
-import { pool } from '../../../db';
+import { withConnection } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 
 export default async function publishService(obj, { serviceUuid }, context, info) {
   if (!context.jwt)
     throw new AuthenticationError('Unauthorized');
 
-  const client = await pool.connect();
-  try {
-    await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
+  return await withConnection(context, async withSession => {
+    return await withSession(async client => {
+      try {
+        // update service on the database
+        const res = await client.query('SELECT * FROM operation_.set_service_status_($1::uuid, $2::text)', [serviceUuid, 'live']);
+        const service = res.rows[0];
 
-    // update service on the database
-    const res = await client.query('SELECT * FROM operation_.set_service_status_($1::uuid, $2::text)', [serviceUuid, 'live']);
-    const service = res.rows[0];
+        // success
+        return {
+          success: true,
+          type: 'SimpleResult'
+        };
 
-    // success
-    return {
-      success: true,
-      type: 'SimpleResult'
-    };
-
-  } catch (error) {
-    return {
-      // error
-      success: false,
-      message: error.message,
-      type: 'SimpleResult'
-    };
-  }
-  finally {
-    await client.query('SELECT operation_.end_session_()');
-    client.release();
-  }
+      } catch (error) {
+        return {
+          // error
+          success: false,
+          message: error.message,
+          type: 'SimpleResult'
+        };
+      }
+    });
+  });
 };

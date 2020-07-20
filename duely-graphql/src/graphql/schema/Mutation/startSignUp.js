@@ -1,4 +1,4 @@
-import { pool } from '../../../db';
+import { withConnection } from '../../../db';
 import gmail from '../../../gmail';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
@@ -46,21 +46,19 @@ export default async function startSignUp(obj, { emailAddress, password, name, r
   let verificationCode;
   const json = JSON.stringify({ password, name, redirectUrl: redirectUrl ? redirectUrl.href : null });
 
-  const client = await pool.connect();
   try {
-    await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-    const res = await client.query('SELECT uuid_ FROM operation_.start_email_address_verification_($1::text, $2::json)', [emailAddress, json]);
-    await client.query('SELECT operation_.end_session_()');
-    verificationCode = res.rows[0].uuid_;
+    verificationCode = await withConnection(context, async withSession => {
+      return await withSession(async client => {
+        const res = await client.query('SELECT uuid_ FROM operation_.start_email_address_verification_($1::text, $2::boolean, $3::json)', [emailAddress, false, json]);
+        return res.rows[0].uuid_;
+      });
+    });
   } catch (error) {
     return {
       success: false,
       message: error.message,
       type: 'SimpleResult'
     };
-  }
-  finally {
-    client.release();
   }
 
   if (redirectUrl) {

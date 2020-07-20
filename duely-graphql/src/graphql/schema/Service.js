@@ -1,4 +1,4 @@
-import { pool } from '../../db';
+import { withConnection } from '../../db';
 import { AuthenticationError } from 'apollo-server-core';
 
 export default {
@@ -33,18 +33,16 @@ export default {
         if (service.image_logo_uuid_ === null)
           return null;
 
-        const client = await pool.connect();
-        try {
-          await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-          const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [service.image_logo_uuid_]);
-          await client.query('SELECT operation_.end_session_()');
-          return res.rows.length === 1 ? res.rows[0] : null;
-        } catch (error) {
-          throw new AuthenticationError(error.message);
-        }
-        finally {
-          client.release();
-        }
+        return await withConnection(context, async withSession => {
+          return await withSession(async client => {
+            try {
+              const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [service.image_logo_uuid_]);
+              return res.rows.length === 1 ? res.rows[0] : null;
+            } catch (error) {
+              throw new AuthenticationError(error.message);
+            }
+          });
+        });
       },
       async imageHero(service, args, context, info) {
         if (!context.jwt)
@@ -53,52 +51,46 @@ export default {
         if (service.image_hero_uuid_ === null)
           return null;
 
-        const client = await pool.connect();
-        try {
-          await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-          const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [service.image_hero_uuid_]);
-          await client.query('SELECT operation_.end_session_()');
-          return res.rows.length === 1 ? res.rows[0] : null;
-        } catch (error) {
-          throw new AuthenticationError(error.message);
-        }
-        finally {
-          client.release();
-        }
+        return await withConnection(context, async withSession => {
+          return await withSession(async client => {
+            try {
+              const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [service.image_hero_uuid_]);
+              return res.rows.length === 1 ? res.rows[0] : null;
+            } catch (error) {
+              throw new AuthenticationError(error.message);
+            }
+          });
+        });
       },
       async agency(service, args, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-        const client = await pool.connect();
-        try {
-          await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-          const res = await client.query('SELECT * FROM operation_.query_agency_($1::uuid)', [service.agency_uuid_]);
-          return res.rows[0];
-        } catch (error) {
-          throw new AuthenticationError(error.message);
-        }
-        finally {
-          await client.query('SELECT operation_.end_session_()');
-          client.release();
-        }
+        return await withConnection(context, async withSession => {
+          return await withSession(async client => {
+            try {
+              const res = await client.query('SELECT * FROM operation_.query_agency_($1::uuid)', [service.agency_uuid_]);
+              return res.rows[0];
+            } catch (error) {
+              throw new AuthenticationError(error.message);
+            }
+          });
+        });
       },
       async steps(service, args, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-        const client = await pool.connect();
-        try {
-          await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-          const res = await client.query('SELECT * FROM operation_.query_service_step_by_service_($1::uuid)', [service.uuid_]);
-          return res.rows;
-        } catch (error) {
-          throw new AuthenticationError(error.message);
-        }
-        finally {
-          await client.query('SELECT operation_.end_session_()');
-          client.release();
-        }
+        return await withConnection(context, async withSession => {
+          return await withSession(async client => {
+            try {
+              const res = await client.query('SELECT * FROM operation_.query_service_step_by_service_($1::uuid)', [service.uuid_]);
+              return res.rows;
+            } catch (error) {
+              throw new AuthenticationError(error.message);
+            }
+          });
+        });
       }
     }
   }

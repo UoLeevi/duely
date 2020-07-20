@@ -1,4 +1,4 @@
-import { pool } from '../../../db';
+import { withConnection } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 
 export default async function editService(obj, { serviceUuid, name, description, duration, price, currency, imageLogoUuid, imageHeroUuid }, context, info) {
@@ -15,31 +15,28 @@ export default async function editService(obj, { serviceUuid, name, description,
       type: 'EditServiceResult'
     };
 
-  const client = await pool.connect();
-  try {
-    await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
+  return await withConnection(context, async withSession => {
+    return await withSession(async client => {
+      try {
+        // update service on the database
+        const res = await client.query('SELECT * FROM operation_.edit_service_($1::uuid, $2::text, $3::text, $4::text, $5::int, $6::text, $7::uuid, $8::uuid)', [serviceUuid, name, description, duration, price, currency, imageLogoUuid, imageHeroUuid]);
+        const service = res.rows[0];
 
-    // update service on the database
-    const res = await client.query('SELECT * FROM operation_.edit_service_($1::uuid, $2::text, $3::text, $4::text, $5::int, $6::text, $7::uuid, $8::uuid)', [serviceUuid, name, description, duration, price, currency, imageLogoUuid, imageHeroUuid]);
-    const service = res.rows[0];
+        // success
+        return {
+          success: true,
+          service,
+          type: 'EditServiceResult'
+        };
 
-    // success
-    return {
-      success: true,
-      service,
-      type: 'EditServiceResult'
-    };
-
-  } catch (error) {
-    return {
-      // error
-      success: false,
-      message: error.message,
-      type: 'EditServiceResult'
-    };
-  }
-  finally {
-    await client.query('SELECT operation_.end_session_()');
-    client.release();
-  }
+      } catch (error) {
+        return {
+          // error
+          success: false,
+          message: error.message,
+          type: 'EditServiceResult'
+        };
+      }
+    });
+  });
 };

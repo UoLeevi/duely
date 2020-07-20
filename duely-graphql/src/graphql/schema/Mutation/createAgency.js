@@ -1,4 +1,4 @@
-import { pool } from '../../../db';
+import { withConnection } from '../../../db';
 import stripe from '../../../stripe';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
@@ -31,84 +31,81 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
       type: 'CreateAgencyResult'
     };
 
-  const client = await pool.connect();
-  try {
-    await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
+  return await withConnection(context, async withSession => {
+    return await withSession(async client => {
+      try {
+        // create agency on database
+        const res = await client.query('SELECT uuid_ FROM operation_.create_agency_($1::text, $2::text)', [name, subdomain]);
+        const agency = res.rows[0];
 
-    // create agency on database
-    const res = await client.query('SELECT uuid_ FROM operation_.create_agency_($1::text, $2::text)', [name, subdomain]);
-    const agency = res.rows[0];
+        // create stripe custom account for agency
+        let account;
+        try {
+          account = await stripe.accounts.create({
+            type: 'custom',
+            country: countryCode,
+            requested_capabilities: [
+              'card_payments',
+              'transfers'
+            ],
+            business_profile: {
+              name,
+              url: `${subdomain}.duely.app`
+            },
+            metadata: {
+              agency_uuid_: agency.uuid_
+            }
+          });
 
-    // create stripe custom account for agency
-    let account;
-    try {
-      account = await stripe.accounts.create({
-        type: 'custom',
-        country: countryCode,
-        requested_capabilities: [
-          'card_payments',
-          'transfers'
-        ],
-        business_profile: {
-          name,
-          url: `${subdomain}.duely.app`
-        },
-        metadata: {
-          agency_uuid_: agency.uuid_
+        } catch (error) {
+          // if stripe custom account could not be created, delete agency from database
+          await client.query('SELECT operation_.delete_agency_($1::uuid)', [agency.uuid_]);
+          return {
+            success: false,
+            message: error.message,
+            type: 'CreateAgencyResult'
+          };
         }
-      });
 
-    } catch (error) {
-      // if stripe custom account could not be created, delete agency from database
-      await client.query('SELECT operation_.delete_agency_($1::uuid)', [agency.uuid_]);
-      return {
-        success: false,
-        message: error.message,
-        type: 'CreateAgencyResult'
-      };
-    }
+        // store stripe custom account id to database
+        await client.query('SELECT operation_.create_stripe_account_($1::uuid, $2::text)', [agency.uuid_, account.id]);
 
-    // store stripe custom account id to database
-    await client.query('SELECT operation_.create_stripe_account_($1::uuid, $2::text)', [agency.uuid_, account.id]);
+        // create stripe account verification url
+        let accountLink;
+        try {
+          accountLink = await stripe.accountLinks.create({
+            account: account.id,
+            failure_url: returnUrl,
+            success_url: returnUrl,
+            type: 'custom_account_verification',
+            collect: 'eventually_due'
+          });
+        } catch (error) {
+          return {
+            // something went wrong during account verification link creation
+            success: true,
+            message: error.message,
+            agency,
+            type: 'CreateAgencyResult'
+          };
+        }
 
-    // create stripe account verification url
-    let accountLink;
-    try {
-      accountLink = await stripe.accountLinks.create({
-        account: account.id,
-        failure_url: returnUrl,
-        success_url: returnUrl,
-        type: 'custom_account_verification',
-        collect: 'eventually_due'
-      });
-    } catch (error) {
-      return {
-        // something went wrong during account verification link creation
-        success: true,
-        message: error.message,
-        agency,
-        type: 'CreateAgencyResult'
-      };
-    }
+        // success
+        return {
+          success: true,
+          agency,
+          stripeVerificationUrl: accountLink.url,
+          type: 'CreateAgencyResult'
+        };
 
-    // success
-    return {
-      success: true,
-      agency,
-      stripeVerificationUrl: accountLink.url,
-      type: 'CreateAgencyResult'
-    };
-
-  } catch (error) {
-    return {
-      // error
-      success: false,
-      message: error.message,
-      type: 'CreateAgencyResult'
-    };
-  }
-  finally {
-    await client.query('SELECT operation_.end_session_()');
-    client.release();
-  }
+      } catch (error) {
+        return {
+          // error
+          success: false,
+          message: error.message,
+          type: 'CreateAgencyResult'
+        };
+      }
+    });
+  });
 };

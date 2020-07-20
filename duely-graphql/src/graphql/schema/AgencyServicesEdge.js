@@ -1,4 +1,4 @@
-import { pool } from '../../db';
+import { withConnection } from '../../db';
 
 export default {
   typeDef: `

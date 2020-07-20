@@ -1,4 +1,3 @@
-import { pool } from '../../db';
 import { GraphQLScalarType } from 'graphql';
 import { Kind } from 'graphql/language';
 

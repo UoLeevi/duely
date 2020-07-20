@@ -74,7 +74,30 @@ async function addBackgroundJob(callback = async client => {}, execute = true) {
   return removeBackgroundJob;
 }
 
+async function withConnection(context, callback = async withSession => {}) {
+  const client = await pool.connect();
+
+  try {
+    async function withSession(callback = async client => {}) {
+      await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
+
+      try {
+        return callback(client);
+      } finally {
+        await client.query('SELECT operation_.end_session_()');
+      }
+    }
+
+    return callback(withSession);
+
+  }
+  finally {
+    client.release();
+  }
+}
+
 export {
   pool,
-  addBackgroundJob
+  addBackgroundJob,
+  withConnection
 };

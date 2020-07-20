@@ -1,4 +1,4 @@
-import { pool } from '../../db';
+import { withConnection } from '../../db';
 import { AuthenticationError } from 'apollo-server-core';
 
 export default {
@@ -29,18 +29,16 @@ export default {
         if (theme.image_logo_uuid_ === null)
           return null;
 
-        const client = await pool.connect();
-        try {
-          await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-          const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [theme.image_logo_uuid_]);
-          await client.query('SELECT operation_.end_session_()');
-          return res.rows.length === 1 ? res.rows[0] : null;
-        } catch (error) {
-          throw new AuthenticationError(error.message);
-        }
-        finally {
-          client.release();
-        }
+        return await withConnection(context, async withSession => {
+          return await withSession(async client => {
+            try {
+              const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [theme.image_logo_uuid_]);
+              return res.rows.length === 1 ? res.rows[0] : null;
+            } catch (error) {
+              throw new AuthenticationError(error.message);
+            }
+          });
+        });
       },
       async imageHero(theme, args, context, info) {
         if (!context.jwt)
@@ -49,18 +47,16 @@ export default {
         if (theme.image_hero_uuid_ === null)
           return null;
 
-        const client = await pool.connect();
-        try {
-          await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-          const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [theme.image_hero_uuid_]);
-          await client.query('SELECT operation_.end_session_()');
-          return res.rows.length === 1 ? res.rows[0] : null;
-        } catch (error) {
-          throw new AuthenticationError(error.message);
-        }
-        finally {
-          client.release();
-        }
+        return await withConnection(context, async withSession => {
+          return await withSession(async client => {
+            try {
+              const res = await client.query('SELECT * FROM operation_.query_image_($1::uuid)', [theme.image_hero_uuid_]);
+              return res.rows.length === 1 ? res.rows[0] : null;
+            } catch (error) {
+              throw new AuthenticationError(error.message);
+            }
+          });
+        });
       },
       colorPrimary: source => source.color_primary_,
       colorSecondary: source => source.color_secondary_,
@@ -76,18 +72,16 @@ export default {
         if (theme.agency_uuid_ === null)
           return null;
 
-        const client = await pool.connect();
-        try {
-          await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-          const res = await client.query('SELECT * FROM operation_.query_agency_($1::uuid)', [theme.agency_uuid_]);
-          await client.query('SELECT operation_.end_session_()');
-          return res.rows[0];
-        } catch (error) {
-          throw new AuthenticationError(error.message);
-        }
-        finally {
-          client.release();
-        }
+        return await withConnection(context, async withSession => {
+          return await withSession(async client => {
+            try {
+              const res = await client.query('SELECT * FROM operation_.query_agency_($1::uuid)', [theme.agency_uuid_]);
+              return res.rows[0];
+            } catch (error) {
+              throw new AuthenticationError(error.message);
+            }
+          });
+        });
       }
     }
   }

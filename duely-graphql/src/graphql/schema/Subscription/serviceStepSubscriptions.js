@@ -36,41 +36,36 @@ const serviceStepCreated = {
     () => pubsub.asyncIterator(SERVICE_STEP_CREATED),
     async (obj, args, context, info) => {
       if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+        throw new AuthenticationError('Unauthorized');
 
-      const client = await pool.connect();
-      try {
-        await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-        const res = await client.query('SELECT 1 FROM operation_.query_service_step_($1::uuid)', [obj.uuid_]);
-        return res.rows.length === 1;
-      }
-      catch (error) {
-        // Unauthorized (ERRCODE: 42501) is expected if user does not have access
-        if (error.code !== '42501')
-          console.log(error);
+      return await withConnection(context, async withSession => {
+        return await withSession(async client => {
+          try {
+            const res = await client.query('SELECT 1 FROM operation_.query_service_step_($1::uuid)', [obj.uuid_]);
+            return res.rows.length === 1;
+          }
+          catch (error) {
+            // Unauthorized (ERRCODE: 42501) is expected if user does not have access
+            if (error.code !== '42501')
+              console.log(error);
 
-        return false;
-      }
-      finally {
-        await client.query('SELECT operation_.end_session_()');
-        client.release();
-      }
+            return false;
+          }
+        });
+      });
     }
   ),
   async resolve(obj, args, context, info) {
-    const client = await pool.connect();
-    try {
-      await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-      const res = await client.query('SELECT * FROM operation_.query_service_step_($1::uuid)', [obj.uuid_]);
-      return res.rows[0];
-    }
-    catch (error) {
-      throw new AuthenticationError(error.message);
-    }
-    finally {
-      await client.query('SELECT operation_.end_session_()');
-      client.release();
-    }
+    return await withConnection(context, async withSession => {
+      return await withSession(async client => {
+        try {
+          const res = await client.query('SELECT * FROM operation_.query_service_step_($1::uuid)', [obj.uuid_]);
+          return res.rows[0];
+        } catch (error) {
+          throw new AuthenticationError(error.message);
+        }
+      });
+    });
   }
 };
 
@@ -85,19 +80,16 @@ const serviceStepUpdated = {
     }
   ),
   async resolve(obj, args, context, info) {
-    const client = await pool.connect();
-    try {
-      await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-      const res = await client.query('SELECT * FROM operation_.query_service_step_($1::uuid)', [obj.uuid_]);
-      return res.rows[0];
-    }
-    catch (error) {
-      throw new AuthenticationError(error.message);
-    }
-    finally {
-      await client.query('SELECT operation_.end_session_()');
-      client.release();
-    }
+    return await withConnection(context, async withSession => {
+      return await withSession(async client => {
+        try {
+          const res = await client.query('SELECT * FROM operation_.query_service_step_($1::uuid)', [obj.uuid_]);
+          return res.rows[0];
+        } catch (error) {
+          throw new AuthenticationError(error.message);
+        }
+      });
+    });
   }
 };
 

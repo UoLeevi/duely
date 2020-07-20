@@ -1,4 +1,4 @@
-import { pool } from '../../db';
+import { withConnection } from '../../db';
 import { AuthenticationError } from 'apollo-server-core';
 
 export default {
@@ -16,37 +16,34 @@ export default {
         if (connection.subjectType === 'visitor')
           return [];
 
-        const client = await pool.connect();
-        try {
-          await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
+        return await withConnection(context, async withSession => {
+          return await withSession(async client => {
+            try {
+              let sql = 'SELECT * FROM operation_.query_shared_agency_($1::uuid)';
+              const params = [connection.subjectUuid];
 
-          let sql = 'SELECT * FROM operation_.query_shared_agency_($1::uuid)';
-          const params = [connection.subjectUuid];
+              if (uuids != null) {
+                if (uuids.length === 1) {
+                  sql = 'SELECT * FROM operation_.query_shared_agency_($1::uuid, $2::uuid)';
+                  params.push(uuids[0]);
+                } else {
+                  sql += ' WHERE uuid_ = ANY ($2::uuid[])';
+                  params.push(uuids);
+                }
+              }
 
-          if (uuids != null) {
-            if (uuids.length === 1) {
-              sql = 'SELECT * FROM operation_.query_shared_agency_($1::uuid, $2::uuid)';
-              params.push(uuids[0]);
-            } else {
-              sql += ' WHERE uuid_ = ANY ($2::uuid[])';
-              params.push(uuids);
+              const res = await client.query(sql, params);
+
+              return res.rows.map(row => ({
+                subjectUuid: connection.subjectUuid,
+                ...row,
+                type: 'SubjectAgenciesEdge'
+              }));
+            } catch (error) {
+              throw new AuthenticationError(error.message);
             }
-          }
-
-          const res = await client.query(sql, params);
-
-          await client.query('SELECT operation_.end_session_()');
-          return res.rows.map(row => ({
-            subjectUuid: connection.subjectUuid,
-            ...row,
-            type: 'SubjectAgenciesEdge'
-          }));
-        } catch (error) {
-          throw new AuthenticationError(error.message);
-        }
-        finally {
-          client.release();
-        }
+          });
+        });
       }
     }
   }

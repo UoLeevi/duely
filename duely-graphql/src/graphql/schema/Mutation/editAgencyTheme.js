@@ -1,4 +1,4 @@
-import { pool } from '../../../db';
+import { withConnection } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
@@ -57,32 +57,28 @@ export default async function editAgencyTheme(obj, { agencyUuid, imageLogoUuid, 
     type: 'EditAgencyThemeResult'
   };
 
+  return await withConnection(context, async withSession => {
+    return await withSession(async client => {
+      try {
+        // create or update theme on database
+        const res = await client.query('SELECT * FROM operation_.edit_agency_theme_($1::uuid, $2::uuid, $3::uuid, $4::text, $5::text, $6::text, $7::text, $8::text, $9::text, $10::text)', [agencyUuid, imageLogoUuid, imageHeroUuid, colorPrimary, colorSecondary, colorAccent, colorBackground, colorSurface, colorError, colorSuccess]);
+        const theme = res.rows[0];
 
-  const client = await pool.connect();
-  try {
-    await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
+        // success
+        return {
+          success: true,
+          theme,
+          type: 'EditAgencyThemeResult'
+        };
 
-    // create or update theme on database
-    const res = await client.query('SELECT * FROM operation_.edit_agency_theme_($1::uuid, $2::uuid, $3::uuid, $4::text, $5::text, $6::text, $7::text, $8::text, $9::text, $10::text)', [agencyUuid, imageLogoUuid, imageHeroUuid, colorPrimary, colorSecondary, colorAccent, colorBackground, colorSurface, colorError, colorSuccess]);
-    const theme = res.rows[0];
-
-    // success
-    return {
-      success: true,
-      theme,
-      type: 'EditAgencyThemeResult'
-    };
-
-  } catch (error) {
-    return {
-      // error
-      success: false,
-      message: error.message,
-      type: 'EditAgencyThemeResult'
-    };
-  }
-  finally {
-    await client.query('SELECT operation_.end_session_()');
-    client.release();
-  }
+      } catch (error) {
+        return {
+          // error
+          success: false,
+          message: error.message,
+          type: 'EditAgencyThemeResult'
+        };
+      }
+    });
+  });
 };
