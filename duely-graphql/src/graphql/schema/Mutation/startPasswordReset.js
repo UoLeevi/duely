@@ -73,13 +73,13 @@ export default async function startPasswordReset(obj, { emailAddress, redirectUr
     subject: 'Verify password reset for duely.app',
     body: (redirectUrl
       ? [
-        p`Hi, ${validator.escape(name)}! 👋`,
+        p`Hi! 👋`,
         p`Click the link below to verify your email address for Duely.${br``}* this link ${strong`expires in 24 hours`}. After that you will need to request another link.${br``}* this link ${strong`can only be used once`}. After you click the link it will no longer work.`,
         p`${strong`==&gt; ${a`${redirectUrl.href}Click here to verify your email and access Duely`}`}`,
         p`${em`This link expires in 24 hours and can only be used once. You can always request another link to be sent if this one has been used or is expired.`}`
       ]
       : [
-        p`Hi, ${validator.escape(name)}! 👋`,
+        p`Hi! 👋`,
         p`Your password reset verification code is ${strong`${verificationCode}`}.`,
         p`${em`This code expires in 24 hours and can only be used once. You can always request another verification code to be sent if this one has been used or is expired.`}`
       ]
