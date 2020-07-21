@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import './Choose.css';
 
 const Choose = React.forwardRef(({ children, index, placeItems = 'center', className, ...props }, ref) => {
@@ -6,11 +6,10 @@ const Choose = React.forwardRef(({ children, index, placeItems = 'center', class
   ref = ref ?? defaultRef;
 
   const childrenRef = useRef(React.Children.toArray(children));
-  const [currentIndex, setCurrentIndex] = useState(index);
   const renderedChildren = [];
 
   const components = React.Children.map(children, (element, i) => {
-    if (!element && index !== currentIndex) {
+    if (!element) {
       element = childrenRef.current[i];
     }
 
@@ -19,7 +18,7 @@ const Choose = React.forwardRef(({ children, index, placeItems = 'center', class
       return element;
     }
 
-    const className = currentIndex === i ? 'visible' : 'hidden';
+    const className = index === i ? 'visible' : 'hidden';
     const modifier = element.props?.['data-choose'];
     const style = {};
 
@@ -40,36 +39,6 @@ const Choose = React.forwardRef(({ children, index, placeItems = 'center', class
   });
 
   childrenRef.current = renderedChildren;
-
-  useLayoutEffect(() => {
-    if (index === currentIndex) {
-      return;
-    }
-  
-    const renderedChild = renderedChildren[currentIndex];
-    const actualIndex = renderedChildren.filter(e => e).indexOf(renderedChild);
-    const hideEl = ref.current.children[actualIndex];
-
-    if (!hideEl) {
-      setCurrentIndex(index);
-      return;
-    }
-
-    function show(e) {
-      hideEl.removeEventListener('transitionend', show);
-      hideEl.classList.remove('hide');
-      setCurrentIndex(index);
-    }
-
-    hideEl.addEventListener('transitionend', show);
-    hideEl.classList.add('hide');
-
-    return () => {
-      hideEl.removeEventListener('transitionend', show);
-      hideEl.classList.remove('hide');
-    };
-  }, [index, currentIndex, components.length, renderedChildren, ref]);
-
   className = Array.from(new Set(((className ?? '') + ' choose').split(' '))).join(' ');
 
   return (

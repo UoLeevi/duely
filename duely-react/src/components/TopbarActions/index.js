@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import useAuth from 'hooks/useAuth';
 import useModal from 'hooks/useModal';
 import LoginForm from 'components/LogInForm';
@@ -9,7 +8,7 @@ import Button from 'components/Button';
 const getInitialState = () => {
   const queryParams = new URLSearchParams(window.location.search);
   return {
-    showLogIn: queryParams.has('login')
+    showLogIn: queryParams.has('log-in')
   };
 };
 
@@ -22,10 +21,9 @@ const shouldUpdateLinks = (previous, next) => {
 };
 
 const TopbarActions = ({ links, ...props }) => {
-  const navigate = useNavigate(); // TODO: add & remove ?login query parameter when login form is shown (should maybe go in LoginForm)
   const { loading, isLoggedIn, logOut } = useAuth();
   const hideModalRef = useRef();
-  const showModal = useModal(<LoginForm whenDone={ () => { hideModalRef.current(); navigate('/profile', { replace: true }); } } />, { hideModalRef, show: !isLoggedIn && initialState.showLogIn });
+  const showModal = useModal(<LoginForm redirectUrl={ '/profile' } />, { hideModalRef, show: !isLoggedIn && initialState.showLogIn });
 
   return (
     <AnimatedTransition { ...props } shouldTransition={ shouldUpdateLinks }>

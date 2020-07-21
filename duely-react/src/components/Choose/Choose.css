@@ -19,11 +19,8 @@
 }
 
 .choose > .visible {
+  transition-delay: 170ms;
   opacity: 1;
-}
-
-.choose > .visible.hide {
-  opacity: 0;
 }
 
 .choose > div > [data-choose="fit"] {
