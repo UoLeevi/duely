@@ -1,6 +1,3 @@
-@import url(styles/colors.css);
-@import url(styles/borders.css);
-
 /* #region Reset */
 
 html,
@@ -243,26 +240,26 @@ textarea { white-space: pre-wrap; }
 
 @font-face {
   font-family: 'Noto Sans';
-  src: url(./fonts/NotoSans-BoldItalic.ttf) format('truetype');
+  src: url(../fonts/NotoSans-BoldItalic.ttf) format('truetype');
   font-style: italic;
   font-weight: bold;
 }
 
 @font-face {
   font-family: 'Noto Sans';
-  src: url(./fonts/NotoSans-Bold.ttf) format('truetype');
+  src: url(../fonts/NotoSans-Bold.ttf) format('truetype');
   font-weight: bold;
 }
 
 @font-face {
   font-family: 'Noto Sans';
-  src: url(./fonts/NotoSans-Italic.ttf) format('truetype');
+  src: url(../fonts/NotoSans-Italic.ttf) format('truetype');
   font-style: italic;
 }
 
 @font-face {
   font-family: 'Noto Sans';
-  src: url(./fonts/NotoSans-Regular.ttf) format('truetype');
+  src: url(../fonts/NotoSans-Regular.ttf) format('truetype');
 }
 
 /* #endregion */

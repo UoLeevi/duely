@@ -1,6 +1,6 @@
 {
   "name": "duely-react",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "dependencies": {
     "@apollo/client": "^3.0.2",
@@ -35,9 +35,7 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
+      "> 5%"
     ],
     "development": [
       "last 1 chrome version",
