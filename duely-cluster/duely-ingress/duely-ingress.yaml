@@ -31,7 +31,7 @@ spec:
     - '*.duely.app'
     secretName: duely-secret-tls
   backend:
-    serviceName: duely-ui-service
+    serviceName: duely-react-service
     servicePort: 8080
 ---
 apiVersion: extensions/v1beta1
