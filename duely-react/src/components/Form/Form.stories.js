@@ -11,12 +11,10 @@ export default {
 
 export const Default = () => {
   return (
-    <div className="panel">
-      <Form handleSubmit={ data => alert('Form submitted with data:\n' + JSON.stringify(data)) }>
-        <TextField data-form="email" { ...emailFieldProps } autoFocus completed={ null } />
-        <TextField data-form="password" { ...passwordFieldProps } completed={ null } />
-        <Button className="mt-2" areaWidth="40ch" prominent filled color="primary">Submit</Button>
-      </Form>
-    </div>
+    <Form className="w-panel" handleSubmit={ data => alert('Form submitted with data:\n' + JSON.stringify(data)) }>
+      <TextField data-form="email" { ...emailFieldProps } autoFocus completed={ null } />
+      <TextField data-form="password" { ...passwordFieldProps } completed={ null } />
+      <Button className="mt-2" areaWidth="40ch" prominent filled color="primary">Submit</Button>
+    </Form>
   );
 };

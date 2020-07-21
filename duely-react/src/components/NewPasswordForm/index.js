@@ -3,9 +3,9 @@ import useAuth from 'hooks/useAuth';
 import TextField from 'components/TextField';
 import { passwordFieldProps } from 'components/TextField/presets';
 import Button from 'components/Button';
+import Form from 'components/Form';
 
 const NewPasswordForm = React.forwardRef(({ verificationCode, whenDone = () => {}, ...props }, ref) => {
-  const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
   const [completed, setCompleted] = useState(null);
   const { loading, isLoggedIn, verifyPasswordReset } = useAuth();
@@ -16,8 +16,7 @@ const NewPasswordForm = React.forwardRef(({ verificationCode, whenDone = () => {
     }
   }, [loading, isLoggedIn, whenDone]);
 
-  const handleSubmit = async e => {
-    e.preventDefault();
+  const handleSubmit = async ({ password }) => {
     const { error, data } = await verifyPasswordReset({ verificationCode, password });
 
     if (error || !data.success) {
@@ -32,17 +31,11 @@ const NewPasswordForm = React.forwardRef(({ verificationCode, whenDone = () => {
   }
 
   return (
-    <form className="panel" onSubmit={ handleSubmit } autoComplete="new-password" { ...props } ref={ ref }>
-      <div className="panel-row">
-        <h2 className="default f-b">Set new password</h2>
-      </div>
-      <div className="panel-row">
-        <TextField { ...passwordFieldProps } text={ password } setText={ setPassword } autoFocus />
-      </div>
-      <div className="panel-row center-h">
-        <Button areaWidth="40ch" loading={ loading } error={ errorMessage } completed={ completed } filled color="primary">Change password and log in</Button>
-      </div>
-    </form>
+    <Form className="w-panel" handleSubmit={ handleSubmit } autoComplete="new-password" { ...props } ref={ ref }>
+      <h2 className="default f-b mb-2">Set new password</h2>
+      <TextField data-form="password" { ...passwordFieldProps } autoFocus />
+      <Button className="mt-2" areaWidth="40ch" loading={ loading } error={ errorMessage } completed={ completed } filled color="primary">Change password and log in</Button>
+    </Form>
   );
 });
 

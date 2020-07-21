@@ -310,9 +310,9 @@ textarea { white-space: pre-wrap; }
 /* #region Container size variables */
 
 :root {
-  --panel-min-width: min(360px, calc(100% - var(--spacing-5)));
+  --panel-min-width: min(360px, 100%, 100vw - var(--spacing-5));
   --panel-width: max-content;
-  --panel-max-width: min(1280px, calc(100% - var(--spacing-5)));
+  --panel-max-width: min(1280px, 100%, 100vw - var(--spacing-5));
 }
 
 /* #endregion */
@@ -900,6 +900,17 @@ body {
 
 /* #endregion */
 
+/* #region Width */
+
+#root .w-panel {
+  min-width: var(--panel-min-width);
+  max-width: var(--panel-max-width);
+  width: var(--panel-width);
+  box-sizing: border-box;
+}
+
+/* #endregion */
+
 /* #region Box shadows */
 
 :root {
@@ -1003,10 +1014,17 @@ a:visited {
 
 /* #region Element custom styles */
 
+html,
+body {
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 #root {
   position: relative;
-  height: 100vh;
-  width: 100vw;
+  height: 100%;
+  width: 100%;
   overflow: hidden;
 }
 

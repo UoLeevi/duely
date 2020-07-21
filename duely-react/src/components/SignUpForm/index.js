@@ -4,14 +4,13 @@ import useAuth from 'hooks/useAuth';
 import TextField from 'components/TextField';
 import { emailFieldProps, passwordFieldProps } from 'components/TextField/presets';
 import Button from 'components/Button';
+import Form from 'components/Form';
 import { START_SIGN_UP_MUTATION } from 'apollo';
 
 const SignUpForm = React.forwardRef(({ whenDone = () => {}, className, ...props }, ref) => {
   const [startSignUp, { loading: mutationLoading, data: mutationData }] = useMutation(START_SIGN_UP_MUTATION);
-  const [name, setName] = useState('');
-  const [emailAddress, setEmailAddress] = useState('');
-  const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
+  const [completedMessage, setCompletedMessage] = useState(null);
   const { loading, isLoggedIn } = useAuth();
 
   useEffect(() => {
@@ -20,9 +19,7 @@ const SignUpForm = React.forwardRef(({ whenDone = () => {}, className, ...props 
     }
   }, [loading, isLoggedIn, whenDone]);
 
-  const handleSubmit = async e => {
-    e.preventDefault();
-
+  const handleSubmit = async ({ emailAddress, password, name }) => {
     const { error, data: { startSignUp: data } = {} } = await startSignUp({ variables: {
       emailAddress,
       password,
@@ -34,6 +31,7 @@ const SignUpForm = React.forwardRef(({ whenDone = () => {}, className, ...props 
       setErrorMessage(error?.message || data.message);
       setTimeout(() => setErrorMessage(null), 4000);
     } else if (data.success) {
+      setCompletedMessage(`Password reset link has been sent to ${emailAddress}`);
       whenDone();
     } else {
       throw new Error();
@@ -43,23 +41,13 @@ const SignUpForm = React.forwardRef(({ whenDone = () => {}, className, ...props 
   className = Array.from(new Set(((className ?? '') + ' panel').split(' '))).join(' ');
 
   return (
-    <form className={ className } onSubmit={ handleSubmit } autoComplete="new-password" { ...props } ref={ ref }>
-      <div className="panel-row center-h">
-        <h2 className="default f-b">Sign up</h2>
-      </div>
-      <div className="panel-row">
-        <TextField label="Name" type="text" text={ name } setText={ setName } autoFocus disabled={ mutationData?.startSignUp?.success } required />
-      </div>
-      <div className="panel-row">
-        <TextField { ...emailFieldProps } text={ emailAddress } setText={ setEmailAddress } completed={ null } />
-      </div>
-      <div className="panel-row">
-        <TextField { ...passwordFieldProps } text={ password } setText={ setPassword } completed={ null } />
-      </div>
-      <div className="panel-row center-h space-between pt-label-text">
-        <Button areaWidth="40ch" loading={ loading || mutationLoading } error={ errorMessage } completed={ mutationData?.startSignUp?.success && `Password reset link has been sent to ${emailAddress}` } prominent filled color="primary">Sign up</Button>
-      </div>
-    </form>
+    <Form className="w-panel" handleSubmit={ handleSubmit } autoComplete="new-password" { ...props } ref={ ref }>
+      <h2 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Sign up</h2>
+      <TextField data-form="name" label="Name" type="text" autoFocus disabled={ mutationData?.startSignUp?.success } required />
+      <TextField data-form="emailAddress" { ...emailFieldProps } autoFocus completed={ null } />
+      <TextField data-form="password" { ...passwordFieldProps } completed={ null } />
+      <Button className="my-2" areaWidth="40ch" loading={ loading || mutationLoading } error={ errorMessage } completed={ completedMessage } prominent filled color="primary">Sign up</Button>
+    </Form>
   );
 });
 

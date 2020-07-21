@@ -4,11 +4,10 @@ import useModal from 'hooks/useModal';
 import TextField from 'components/TextField';
 import { emailFieldProps, passwordFieldProps } from 'components/TextField/presets';
 import Button from 'components/Button';
+import Form from 'components/Form';
 import StartPasswordResetForm from 'components/StartPasswordResetForm';
 
 const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
-  const [emailAddress, setEmailAddress] = useState('');
-  const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
   const { loading, logIn, isLoggedIn } = useAuth();
   const showModal = useModal(<StartPasswordResetForm key="password-reset-form" whenDone={ whenDone } />);
@@ -19,9 +18,8 @@ const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
     }
   }, [loading, isLoggedIn, whenDone]);
 
-  const handleSubmit = async e => {
-    e.preventDefault();
-    const { error, data } = await logIn({ emailAddress, password });
+  const handleSubmit = async variables => {
+    const { error, data } = await logIn(variables);
 
     if (error || !data.success) {
       setErrorMessage(error?.message || data.message);
@@ -34,28 +32,16 @@ const LogInForm = React.forwardRef(({ whenDone, ...props }, ref) => {
   }
 
   return (
-    <form className="panel" onSubmit={ handleSubmit } { ...props } ref={ ref }>
-      <div className="panel-row">
-        <h2 className="default f-b">Log in</h2>
+    <Form className="w-panel" handleSubmit={ handleSubmit } { ...props } ref={ ref }>
+      <h2 className="default f-b mb-2">Log in</h2>
+      <TextField data-form="emailAddress" { ...emailFieldProps } autoFocus completed={ null } />
+      <TextField data-form="password" { ...passwordFieldProps } completed={ null } actions={{ 'Reset password': showModal }} />
+      <Button className="my-2" areaWidth="40ch" loading={ loading } error={ errorMessage } completed={ isLoggedIn && 'You are logged in' } prominent filled color="primary">Log in</Button>
+      <div className="flex row center gap-5">
+        <span className="f-2">Don't have an account?</span>
+        <Button text color="primary" link={{ to: '/sign-up' }}>Sign up</Button>
       </div>
-      <div className="panel-row">
-        <TextField { ...emailFieldProps } text={ emailAddress } setText={ setEmailAddress } autoFocus completed={ null } />
-      </div>
-      <div className="panel-row">
-        <TextField { ...passwordFieldProps } text={ password } setText={ setPassword } actions={{ 'Reset password': showModal }} completed={ null } />
-      </div>
-      <div className="panel-row center-h space-between pt-label-text">
-        <Button areaWidth="40ch" loading={ loading } error={ errorMessage } completed={ isLoggedIn && 'You are logged in' } prominent filled color="primary">Log in</Button>
-      </div>
-      <div className="panel-row center-h center-v">
-        <div className="panel-cell center-h center-v">
-          <div className="flex row center gap-5">
-            <span className="f-2">Don't have an account?</span>
-            <Button text color="primary" link={{ to: '/sign-up' }}>Sign up</Button>
-          </div>
-        </div>
-      </div>
-    </form>
+    </Form>
   );
 });
 

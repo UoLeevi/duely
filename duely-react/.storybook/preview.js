@@ -7,8 +7,8 @@ import { withModalContext } from '../src/contexts/ModalContext';
 import { withFormContext } from '../src/contexts/FormContext';
 import '../src/index.css'
 
-addDecorator(withFormContext);
 addDecorator(withModalContext);
+addDecorator(withFormContext);
 addDecorator(withAnimationContext)
 addDecorator(withViewportContext);
 addDecorator(Fn => <Router><Fn /></Router>);

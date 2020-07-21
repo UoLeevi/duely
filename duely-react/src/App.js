@@ -19,11 +19,11 @@ const App = () => (
           <ViewportContextProvider>
             <IconContext.Provider value={{}}>
               <AnimationContextProvider>
-                <ModalContextProvider>
-                  <FormContextProvider>
+                <FormContextProvider>
+                  <ModalContextProvider>
                     <RoutesRoot/>
-                  </FormContextProvider>
-                </ModalContextProvider>
+                  </ModalContextProvider>
+                </FormContextProvider>
               </AnimationContextProvider>
             </IconContext.Provider>
           </ViewportContextProvider>
