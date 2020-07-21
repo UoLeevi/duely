@@ -9,7 +9,7 @@ const VerifyAuth = () => {
   const verify = searchParams.get('verify');
   const verificationCode = searchParams.get('verification_code');
   const hideModalRef = useRef();
-  const showNewPasswordModal = useModal(<NewPasswordForm verificationCode={ verificationCode } whenDone={ () => hideModalRef?.current() }/>, { hideModalRef, dismissable: false });
+  const showNewPasswordModal = useModal(<NewPasswordForm verificationCode={ verificationCode } />, { hideModalRef, dismissable: false });
   const { verifySignUp } = useAuth();
 
   useEffect(() => {

@@ -8,9 +8,10 @@ import Form from 'components/Form';
 import StartPasswordResetForm from 'components/StartPasswordResetForm';
 
 const LogInForm = React.forwardRef(({ redirectUrl, ...props }, ref) => {
+  const [emailAddress, setSetEmailAddress] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const { loading, logIn, isLoggedIn } = useAuth();
-  const showModal = useModal(<StartPasswordResetForm />);
+  const showModal = useModal(<StartPasswordResetForm emailAddress={ emailAddress } />);
 
   const handleSubmit = async variables => {
     const { error, data } = await logIn(variables, redirectUrl);
@@ -26,7 +27,7 @@ const LogInForm = React.forwardRef(({ redirectUrl, ...props }, ref) => {
   return (
     <Form className="w-panel" handleSubmit={ handleSubmit } { ...props } ref={ ref }>
       <h2 className="default f-b mb-2">Log in</h2>
-      <TextField data-form="emailAddress" { ...emailFieldProps } autoFocus completed={ null } />
+      <TextField data-form="emailAddress" setText={ setSetEmailAddress } { ...emailFieldProps } autoFocus completed={ null } />
       <TextField data-form="password" { ...passwordFieldProps } completed={ null } actions={{ 'Reset password': showModal }} />
       <Button className="my-2" areaWidth="40ch" loading={ loading } error={ errorMessage } completed={ isLoggedIn && 'You are now logged in.' } prominent filled color="primary">Log in</Button>
       <div className="flex row center gap-5">

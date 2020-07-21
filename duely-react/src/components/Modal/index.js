@@ -2,7 +2,6 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './Modal.css';
 import CloseButton from '../CloseButton';
-import AnimatedTransition from 'components/AnimatedTransition';
 
 const backdropAnimations = {
   initial: {
@@ -45,10 +44,6 @@ const panelAnimations = {
   }
 }
 
-const didChildKeyChange = (previous, next) => {
-  return previous.key !== next.key;
-};
-
 const Modal = ({ children, dismissable, hideModal, ...props }) => {
   return (
     <AnimatePresence exitBeforeEnter>
@@ -63,9 +58,7 @@ const Modal = ({ children, dismissable, hideModal, ...props }) => {
           <AnimatePresence exitBeforeEnter>
             <motion.div className="modal panel" variants={ panelAnimations }>
               { dismissable && <CloseButton onClick={ hideModal } /> }
-              <AnimatedTransition shouldTransition={ didChildKeyChange }>
-                { children }
-              </AnimatedTransition>
+              { children }
             </motion.div>
           </AnimatePresence>
         </motion.div>

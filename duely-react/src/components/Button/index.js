@@ -65,9 +65,9 @@ const Button = React.forwardRef(({ element, link, dense, prominent, filled, outl
   return (
     <Choose className="button-container" index={ completed ? 3 : loading ? 2 : error ? 1 : 0 } ref={ ref }>
       { element }
-      { error && <div className="error" style={ messageStyle }>{ isValidElement(error) ? error : <span className="f-2 f-b">{ error }</span> }</div> }
+      { error && <div className="button-error" style={ messageStyle }>{ isValidElement(error) ? error : <span className="f-2 f-b error">{ error }</span> }</div> }
       { loading && (isValidElement(loading) ? loading : <Spinner data-choose="fit" />) }
-      { completed && <div className="success" style={ messageStyle }>{ isValidElement(completed) ? completed : <span className="f-2 f-b">{ completed }</span> }</div> }
+      { completed && <div className="button-completed" style={ messageStyle }>{ isValidElement(completed) ? completed : <span className="f-2 f-b success">{ completed }</span> }</div> }
       { <div style={ areaStyle }></div> }
     </Choose>
   )

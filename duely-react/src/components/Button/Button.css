@@ -84,8 +84,8 @@
   min-width: 8em;
 }
 
-.button-container.choose div.completed,
-.button-container.choose div.error {
+.button-container.choose div.button-completed,
+.button-container.choose div.button-error {
   display: grid;
   place-items: center;
   text-align: center;

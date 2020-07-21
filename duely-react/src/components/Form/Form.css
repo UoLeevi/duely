@@ -3,3 +3,10 @@
   flex-direction: column;
   gap: var(--spacing-2);
 }
+
+.form-container.choose div.form-completed,
+.form-container.choose div.form-error {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
