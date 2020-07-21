@@ -14,6 +14,8 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
       type: 'InviteUserResult'
     };
 
+  emailAddress = validator.normalizeEmail(emailAddress);
+
   return await withConnection(context, async withSession => {
     return await withSession(async client => {
       try {
@@ -55,27 +57,21 @@ export default async function inviteUser(obj, { agencyUuid, emailAddress, role, 
             const messages = await gmail.sendEmailAsAdminDuely({
               to: emailAddress,
               subject: `Invitation from ${agencyName} - Sign up for ${subdomain}.duely.app`,
-              body: [
-                '<html>',
-                  '<style type="text/css">',
-                    'body, p, div {',
-                    '  font-family: Helvetica, Arial, sans-serif;',
-                    '  font-size: 14px;',
-                    '}',
-                    'a {',
-                    '  text-decoration: none;',
-                    '}',
-                  '</style>',
-                  '<body>',
-                    '<p>',
-                      `To get started, click this link to sign up: <a href="${redirectUrl.href}"><strong>Sign up for ${subdomain}.duely.app</strong></a>`,
-                    '</p>',
-                    message 
-                      ? `<p>${escapeHtml(message)}</p>`
-                      : null,
-                  '</body>',
-                '</html>',
-              ].filter(l => l !== null).join('\r\n')
+              body: (redirectUrl
+                ? [
+                  p`Hi! 👋`,
+                  p`You have been invited to join Duely by ${strong`${validator.escape(agencyName)}`}.`,
+                  p`Click the link below to verify your email address for Duely.${br``}* this link ${strong`expires in 24 hours`}. After that you will need to request another link.${br``}* this link ${strong`can only be used once`}. After you click the link it will no longer work.`,
+                  p`${strong`${em`==&gt; ${a`${redirectUrl.href}Click here to verify your email and access Duely`}`}`}`,
+                  p`${em`This link expires in 24 hours and can only be used once. You can always request another link to be sent if this one has been used or is expired.`}`
+                ]
+                : [
+                  p`Hi! 👋`,
+                  p`You have been invited to join Duely by ${strong`${validator.escape(agencyName)}`}.`,
+                  p`Your invite verification code is ${strong`${verificationCode}`}.`,
+                  p`${em`This code expires in 24 hours and can only be used once. You can always request another verification code to be sent if this one has been used or is expired.`}`
+                ]
+              ).filter(l => l !== null).join('\r\n')
             });
           
             if (!messages.id) {

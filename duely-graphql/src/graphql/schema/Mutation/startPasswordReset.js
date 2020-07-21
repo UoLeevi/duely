@@ -14,6 +14,8 @@ export default async function startPasswordReset(obj, { emailAddress, redirectUr
       type: 'SimpleResult'
     };
 
+  emailAddress = validator.normalizeEmail(emailAddress);
+
   if (redirectUrl) {
     if (!validator.isURL(redirectUrl, { require_tld: false, protocols: ['http', 'https'], require_protocol: true, allow_underscores: true }))
       return {
@@ -67,25 +69,20 @@ export default async function startPasswordReset(obj, { emailAddress, redirectUr
 
   const messages = await gmail.sendEmailAsAdminDuely({
     to: emailAddress,
-    subject: 'Reset password for duely.app',
-    body: [
-      '<html>',
-        '<style type="text/css">',
-          'body, p, div {',
-          '  font-family: Helvetica, Arial, sans-serif;',
-          '  font-size: 14px;',
-          '}',
-          'a {',
-          '  text-decoration: none;',
-          '}',
-        '</style>',
-        '<body>',
-          redirectUrl
-            ? `<a href="${redirectUrl.href}"><strong>Click here to set a new password</strong></a>`
-            : `<p>Your password reset verification code is <strong>${verificationCode}</strong>.</p>`,
-        '</body>',
-      '</html>',
-    ].join('\r\n')
+    subject: 'Verify password reset for duely.app',
+    body: (redirectUrl
+      ? [
+        p`Hi, ${validator.escape(name)}! 👋`,
+        p`Click the link below to verify your email address for Duely.${br``}* this link ${strong`expires in 24 hours`}. After that you will need to request another link.${br``}* this link ${strong`can only be used once`}. After you click the link it will no longer work.`,
+        p`${strong`${em`==&gt; ${a`${redirectUrl.href}Click here to verify your email and access Duely`}`}`}`,
+        p`${em`This link expires in 24 hours and can only be used once. You can always request another link to be sent if this one has been used or is expired.`}`
+      ]
+      : [
+        p`Hi, ${validator.escape(name)}! 👋`,
+        p`Your password reset verification code is ${strong`${verificationCode}`}.`,
+        p`${em`This code expires in 24 hours and can only be used once. You can always request another verification code to be sent if this one has been used or is expired.`}`
+      ]
+    ).join('\r\n')
   });
 
   if (!messages.id)

@@ -3,7 +3,23 @@ import { readFile } from 'fs';
 import https from 'https';
 import base64url from 'base64url';
 
+const templatesPath = 'dist/gmail/templates'
+
 let accountInfo;
+const templates = {};
+
+async function loadTemplate(template = 'default') {
+  await new Promise((resolve, reject) => {
+    readFile(`${templatesPath}/${template}.html`, 'utf8', function (error, data) {
+      if (error) {
+        reject(error);
+      } else {
+        templates[template] = data;
+        resolve();
+      }
+    });
+  });
+}
 
 async function updateAccountInfo() {
   await new Promise((resolve, reject) => {
@@ -73,11 +89,17 @@ function requestAccessTokenForAdminDuelyGmailSend() {
 export default {
   sendEmailAsAdminDuely ({ to, subject, body } = {}) {
     return new Promise(async (resolve, reject) => {
+      if (!templates.default) {
+        await loadTemplate('default');
+      }
+
+      body = templates.default.replace('<!-- \{BODY\} -->', body);
+
       const message = [
         `To: <${to}>`,
         `Subject: ${subject}`,
         'Content-Type: text/html; charset="UTF-8"',
-        'From: duely.app <admin@duely.app>',
+        'From: Duely <admin@duely.app>',
         'MIME-Version: 1.0',
         'Content-Transfer-Encoding: 7bit',
         '',

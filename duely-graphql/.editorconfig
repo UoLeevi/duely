@@ -9,7 +9,14 @@ end_of_line = lf
 insert_final_newline = true
 
 # Indentation override for all JS under src directory
-[src/**.js]
+[src/**.{js,html}]
+indent_style = space
+indent_size = 2
+charset = utf-8
+
+# CrLf line breaks for email templates
+[**/gmail/templates/**.html]
+end_of_line = crlf
 indent_style = space
 indent_size = 2
 charset = utf-8
