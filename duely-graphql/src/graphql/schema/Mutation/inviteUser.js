@@ -1,5 +1,6 @@
 import { withConnection } from '../../../db';
 import gmail from '../../../gmail';
+import { p, br, strong, em, a } from '../../../gmail/utilities';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
