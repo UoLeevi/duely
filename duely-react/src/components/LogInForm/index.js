@@ -15,8 +15,15 @@ const LogInForm = React.forwardRef(({ redirectUrl, ...props }, ref) => {
   const showModal = useModal(<StartPasswordResetForm emailAddress={ emailAddress } />);
 
   return (
-    <Form className="w-panel" handleSubmit={ data => send({ type: 'LOG_IN', ...data }) } completed={ state.matches('loggedIn') && 'You are now logged in.' } { ...props } ref={ ref }>
-      <h2 className="default f-b mb-2">Log in</h2>
+    <Form className="w-panel" handleSubmit={ data => send({ type: 'LOG_IN', ...data }) }
+      completed={ state.matches('loggedIn') && (
+        <div className="flex column center gap-5">
+          <span className="f-4 f-b">You are logged in</span>
+          <Button link={{ to: redirectUrl ?? '/profile' }} text color="primary">Continue</Button>
+        </div>
+      )} { ...props } ref={ ref }
+    >
+      <h2 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Log in</h2>
       <TextField data-form="emailAddress" setText={ setSetEmailAddress } { ...emailFieldProps } autoFocus completed={ null } />
       <TextField data-form="password" { ...passwordFieldProps } completed={ null } actions={{ 'Reset password': showModal }} />
       <Button className="my-2" areaWidth="40ch" 

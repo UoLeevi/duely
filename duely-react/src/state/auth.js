@@ -1,34 +1,26 @@
-import { Machine, assign } from 'xstate';
+import { Machine, assign, sendParent } from 'xstate';
 import { client, query, mutate } from '../apollo';
 
 export const authMachine = Machine({
   id: 'auth',
-  initial: 'queryUser',
+  initial: 'loadingUser',
   context: {
     user: undefined
   },
   states: {
-    queryUser: {
+    loadingUser: {
       invoke: {
         src: 'queryMe',
         onDone: [
-          { target: 'loggedIn', cond: 'isUser', actions: ['assignUser'] },
-          { target: 'visitor', cond: 'isVisitor', actions: ['assignUser'] }
+          { target: 'loggedIn', cond: 'isUser', actions: ['updateUser', 'notifyUserUpdated'] },
+          { target: 'visitor', cond: 'isVisitor', actions: ['updateUser', 'notifyUserUpdated'] }
         ]
       }
     },
     visitor: {
       initial: 'idle',
       states: {
-        idle: {
-          on: {
-            LOG_IN: 'logInLoading',
-            START_PASSWORD_RESET: 'startPasswordResetLoading',
-            START_SIGN_UP: 'startSignUpLoading',
-            VERIFY_PASSWORD_RESET: 'verifyPasswordResetLoading',
-            VERIFY_SIGN_UP: 'verifySignUpLoading'
-          },
-        },
+        idle: {},
         logInLoading: {
           invoke: {
             src: 'logIn',
@@ -42,14 +34,6 @@ export const authMachine = Machine({
           }
         },
         logInFailed: {
-          on: {
-            CONTINUE: 'idle',
-            LOG_IN: 'logInLoading',
-            START_PASSWORD_RESET: 'startPasswordResetLoading',
-            START_SIGN_UP: 'startSignUpLoading',
-            VERIFY_PASSWORD_RESET: 'verifyPasswordResetLoading',
-            VERIFY_SIGN_UP: 'verifySignUpLoading'
-          },
           after: {
             4000: 'idle'
           }
@@ -58,7 +42,7 @@ export const authMachine = Machine({
           invoke: {
             src: 'startPasswordReset',
             onDone: [
-              { target: 'startPasswordResetSuccess', cond: 'isMutationSuccessful' },
+              { target: 'startPasswordResetCompleted', cond: 'isMutationSuccessful' },
               { target: 'startPasswordResetFailed' }
             ],
             onError: {
@@ -66,27 +50,12 @@ export const authMachine = Machine({
             }
           }
         },
-        startPasswordResetSuccess: {
-          on: {
-            LOG_IN: 'logInLoading',
-            START_PASSWORD_RESET: 'startPasswordResetLoading',
-            START_SIGN_UP: 'startSignUpLoading',
-            VERIFY_PASSWORD_RESET: 'verifyPasswordResetLoading',
-            VERIFY_SIGN_UP: 'verifySignUpLoading'
-          },
+        startPasswordResetCompleted: {
           after: {
             60000: 'idle'
           }
         },
         startPasswordResetFailed: {
-          on: {
-            CONTINUE: 'idle',
-            LOG_IN: 'logInLoading',
-            START_PASSWORD_RESET: 'startPasswordResetLoading',
-            START_SIGN_UP: 'startSignUpLoading',
-            VERIFY_PASSWORD_RESET: 'verifyPasswordResetLoading',
-            VERIFY_SIGN_UP: 'verifySignUpLoading'
-          },
           after: {
             4000: 'idle'
           }
@@ -95,7 +64,7 @@ export const authMachine = Machine({
           invoke: {
             src: 'startSignUp',
             onDone: [
-              { target: 'startSignUpSuccess', cond: 'isMutationSuccessful' },
+              { target: 'startSignUpCompleted', cond: 'isMutationSuccessful' },
               { target: 'startSignUpFailed' }
             ],
             onError: {
@@ -103,27 +72,12 @@ export const authMachine = Machine({
             }
           }
         },
-        startSignUpSuccess: {
-          on: {
-            LOG_IN: 'logInLoading',
-            START_PASSWORD_RESET: 'startPasswordResetLoading',
-            START_SIGN_UP: 'startSignUpLoading',
-            VERIFY_PASSWORD_RESET: 'verifyPasswordResetLoading',
-            VERIFY_SIGN_UP: 'verifySignUpLoading'
-          },
+        startSignUpCompleted: {
           after: {
             60000: 'idle'
           }
         },
         startSignUpFailed: {
-          on: {
-            CONTINUE: 'idle',
-            LOG_IN: 'logInLoading',
-            START_PASSWORD_RESET: 'startPasswordResetLoading',
-            START_SIGN_UP: 'startSignUpLoading',
-            VERIFY_PASSWORD_RESET: 'verifyPasswordResetLoading',
-            VERIFY_SIGN_UP: 'verifySignUpLoading'
-          },
           after: {
             4000: 'idle'
           }
@@ -141,14 +95,6 @@ export const authMachine = Machine({
           }
         },
         verifyPasswordResetFailed: {
-          on: {
-            CONTINUE: 'idle',
-            LOG_IN: 'logInLoading',
-            START_PASSWORD_RESET: 'startPasswordResetLoading',
-            START_SIGN_UP: 'startSignUpLoading',
-            VERIFY_PASSWORD_RESET: 'verifyPasswordResetLoading',
-            VERIFY_SIGN_UP: 'verifySignUpLoading'
-          },
           after: {
             4000: 'idle'
           }
@@ -166,18 +112,17 @@ export const authMachine = Machine({
           }
         },
         verifySignUpFailed: {
-          on: {
-            CONTINUE: 'idle',
-            LOG_IN: 'logInLoading',
-            START_PASSWORD_RESET: 'startPasswordResetLoading',
-            START_SIGN_UP: 'startSignUpLoading',
-            VERIFY_PASSWORD_RESET: 'verifyPasswordResetLoading',
-            VERIFY_SIGN_UP: 'verifySignUpLoading'
-          },
           after: {
             4000: 'idle'
           }
-        },
+        }
+      },
+      on: {
+        LOG_IN: '.logInLoading',
+        START_PASSWORD_RESET: '.startPasswordResetLoading',
+        START_SIGN_UP: '.startSignUpLoading',
+        VERIFY_PASSWORD_RESET: '.verifyPasswordResetLoading',
+        VERIFY_SIGN_UP: '.verifySignUpLoading'
       }
     },
     loggedIn: {
@@ -214,13 +159,14 @@ export const authMachine = Machine({
     updateAccessToken: {
       invoke: {
         src: 'updateAccessToken',
-        onDone: { target: 'queryUser' }
+        onDone: { target: 'loadingUser' }
       }
     }
   }
 }, {
   actions: {
-    assignUser: assign({ user: (context, { data }) => data })
+    updateUser: assign({ user: (context, { data }) => data }),
+    notifyUserUpdated: sendParent((context, event) => ({ ...context, type: 'USER_UPDATED' }))
   },
   services: {
     queryMe: async () => query('me'),

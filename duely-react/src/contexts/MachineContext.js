@@ -12,7 +12,7 @@ const MachineContextProvider = ({ children }) => {
     serviceRef.current = interpret(appMachine)
       .onTransition(state => { 
         setState([state, serviceRef.current?.send]);
-        console.log(state.context.authRef.state);
+        // console.log(state);
       })
       .start();
     return () => serviceRef.current.stop();

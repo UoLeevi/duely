@@ -19,7 +19,7 @@ const NewPasswordForm = React.forwardRef(({ verificationCode, ...props }, ref) =
         </div>
        } { ...props } ref={ ref }
       >
-      <h2 className="default f-b mb-2">Set new password</h2>
+      <h3 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Set new password</h3>
       <TextField data-form="password" { ...passwordFieldProps } autoFocus />
       <Button className="mt-2" areaWidth="40ch"
         loading={ state.matches('visitor.verifyPasswordResetLoading') }

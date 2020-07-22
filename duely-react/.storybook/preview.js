@@ -5,7 +5,7 @@ import { withViewportContext } from '../src/contexts/ViewportContext';
 import { withAnimationContext } from '../src/contexts/AnimationContext';
 import { withModalContext } from '../src/contexts/ModalContext';
 import { withFormContext } from '../src/contexts/FormContext';
-import '../src/index.css'
+import '../src/styles';
 
 addDecorator(withModalContext);
 addDecorator(withFormContext);

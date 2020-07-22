@@ -9,6 +9,7 @@ import HomeHeroSection from 'components/HomeHeroSection';
 import HomeFeaturesSection from 'components/HomeFeaturesSection';
 import HeaderWithActions from 'components/HeaderWithActions';
 import SignUpForm from 'components/SignUpForm';
+import LogInForm from 'components/LogInForm';
 
 export default [
   {
@@ -31,6 +32,30 @@ export default [
             <HomeHeroSection />
             <HomeFeaturesSection />
           </div>
+        }
+      />
+    )
+  },
+  {
+    path: '/log-in',
+    element: (
+      <ResponsiveLayout
+        topbar={
+          <Topbar className="gutter py-4" data-layout="floating">
+            <Link className="flex row center-v" to="/">
+              <DuelyLogo />
+              <h1 className="f-5 f-b pa-2">Duely</h1>
+            </Link>
+            <TopbarActions links={[
+              { to: '/', text: 'Home' }
+            ]} />
+          </Topbar>
+        }
+        main={
+          <SplitLayout
+            left={ <LogInForm className="gutter" data-layout="center 5fr" /> }
+            right={ <div className="background-bg bg-l3" data-layout="collapse-sm 4fr" ></div> }
+          />
         }
       />
     )

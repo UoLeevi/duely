@@ -17,7 +17,7 @@ const StartPasswordResetForm = React.forwardRef(({ emailAddress: defaultEmailAdd
 
   return (
     <Form className="w-panel" handleSubmit={ handleSubmit } autoComplete="new-password" 
-      completed={ state.matches('visitor.startPasswordResetSuccess') &&
+      completed={ state.matches('visitor.startPasswordResetCompleted') &&
         <div className="flex column center gap-5">
           <span className="f-4 f-b">Please check your inbox</span>
           <span className="f-2 f-b">We've sent an email to { emailAddress } for confirmation.</span>
@@ -26,12 +26,12 @@ const StartPasswordResetForm = React.forwardRef(({ emailAddress: defaultEmailAdd
         </div>
       } { ...props } ref={ ref }
     >
-      <h3 className="default f-b mb-2">Password reset</h3>
+      <h3 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Password reset</h3>
       <TextField data-form="emailAddress" defaultValue={ emailAddress } { ...emailFieldProps } autoFocus completed={ null } />
       <Button className="my-2" areaWidth="40ch" 
         loading={ state.matches('visitor.startPasswordResetLoading') } 
         error={ state.matches('visitor.startPasswordResetFailed') && (message ?? 'We could\'t send a password reset link to this email address') } 
-        completed={ state.matches('visitor.startPasswordResetSuccess') } filled prominent color="primary">Reset password</Button>
+        completed={ state.matches('visitor.startPasswordResetCompleted') } filled prominent color="primary">Reset password</Button>
       <div className="flex row center gap-5">
         <span className="f-2">Don't have an account?</span>
         <Button text color="primary" link={{ to: '/sign-up' }}>Sign up</Button>
