@@ -1,5 +1,5 @@
 import { Machine, assign } from 'xstate';
-import { query, mutate } from '../apollo';
+import { query } from '../apollo';
 
 export const profileMachine = Machine({
   id: 'profile',
