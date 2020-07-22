@@ -20,7 +20,8 @@
     "react-router": "^6.0.0-beta.0",
     "react-router-dom": "^6.0.0-beta.0",
     "react-scripts": "3.4.1",
-    "subscriptions-transport-ws": "^0.9.17"
+    "subscriptions-transport-ws": "^0.9.17",
+    "xstate": "^4.11.0"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -1,12 +1,12 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import RestrictedArea from 'components/RestrictedArea';
-import useAuth from 'hooks/useAuth';
+import useAuthState from 'hooks/useAuthState';
 
 const Profile = ({ ...props }) => {
-  const { isLoggedIn, loading } = useAuth();
+  const [state] = useAuthState();
   return (
-    <RestrictedArea restrict={ !isLoggedIn } loading={ loading } message="You need to first log in to access your profile." { ...props }>
+    <RestrictedArea restrict={ state.matches('visitor') } loading={ state.matches('updateAccessToken') } message="You need to first log in to access your profile." { ...props }>
       <Outlet />
     </RestrictedArea>
   );

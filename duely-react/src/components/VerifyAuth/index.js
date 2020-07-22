@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Outlet, useSearchParams } from 'react-router-dom';
 import useModal from 'hooks/useModal';
-import useAuth from 'hooks/useAuth';
+import useAuthState from 'hooks/useAuthState';
 import NewPasswordForm from 'components/NewPasswordForm';
 
 const VerifyAuth = () => {
@@ -10,7 +10,7 @@ const VerifyAuth = () => {
   const verificationCode = searchParams.get('verification_code');
   const hideModalRef = useRef();
   const showNewPasswordModal = useModal(<NewPasswordForm verificationCode={ verificationCode } />, { hideModalRef, dismissable: false });
-  const { verifySignUp } = useAuth();
+  const [, send] = useAuthState();
 
   useEffect(() => {
     if (verify && verificationCode) {
@@ -23,7 +23,7 @@ const VerifyAuth = () => {
       switch (verify) {
 
         case 'sign-up':
-          verifySignUp({ verificationCode });
+          send({ type: 'VERIFY_SIGN_UP', verificationCode });
           break;
 
         case 'password-reset':
@@ -34,7 +34,7 @@ const VerifyAuth = () => {
           throw new Error();
       }
     }
-  }, [searchParams, setSearchParams, verify, verificationCode, showNewPasswordModal, verifySignUp])
+  }, [searchParams, setSearchParams, verify, verificationCode, showNewPasswordModal, send])
 
   return (
     <Outlet />

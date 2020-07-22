@@ -4,8 +4,9 @@ import { setContext } from '@apollo/link-context';
 import { onError } from '@apollo/link-error';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
-
 import typePolicies from './typePolicies';
+import queries from './queries';
+import mutations from './mutations';
 
 
 // Get access token from url query string and replace history entry
@@ -98,6 +99,8 @@ const authLink = setContext(async (req, { headers }) => {
 });
 
 const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
+  // TODO: handle with xstate
+
   if (graphQLErrors) {
     for (let err of graphQLErrors) {
       switch (err.extensions.code) {
@@ -123,7 +126,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
     console.log(`[Network error]: ${networkError}`);
 });
 
-const client = new ApolloClient({
+export const client = new ApolloClient({
   link: ApolloLink.from([
     errorLink,
     authLink,
@@ -134,12 +137,36 @@ const client = new ApolloClient({
 });
 
 client.onClearStore(() => {
+  // TODO: handle with xstate
+
   // Close socket connection which will also unregister subscriptions on the server-side.
   wsClient.close();
   // Reconnect to the server.
   wsClient.connect();
 });
 
-export { client };
-export * from './queries';
-export * from './mutations';
+
+// just a wrapper for convenience
+export async function query(queryName, variables, ...options) {
+  const { result, ...defaultOptions } = queries[queryName];
+  const { data } = await client.query({
+    variables,
+    ...defaultOptions,
+    ...options
+  });
+
+  return result(data);
+}
+
+
+// just a wrapper for convenience
+export async function mutate(mutationName, variables, ...options) {
+  const { result, ...defaultOptions } = mutations[mutationName];
+  const { data } = await client.mutate({
+    variables,
+    ...defaultOptions,
+    ...options
+  });
+
+  return result(data);
+}

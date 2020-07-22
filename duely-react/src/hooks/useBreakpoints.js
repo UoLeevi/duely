@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { ViewportContext } from '../contexts';
+import { ViewportContext } from 'contexts/ViewportContext';
 
 export default function useBreakpoints() {
   const { width } = useContext(ViewportContext);

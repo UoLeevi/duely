@@ -1,192 +1,207 @@
 import { gql } from '@apollo/client';
 
-export const ME_QUERY = gql`
-  query {
-    me {
-      uuid
-      name
-      emailAddress
-      type
-    }
-  }
-`;
-
-export const PROFILE_QUERY = gql`
-  query {
-    me {
-      uuid
-      name
-      invitesConnection {
-        edges {
-          node {
-            uuid
-            status
-            agency {
-              uuid
-              name
-              subdomain {
+export default {
+  me: {
+    query: gql`
+      query {
+        me {
+          uuid
+          name
+          emailAddress
+          type
+        }
+      }
+    `,
+    result: d => d['me']
+  },
+  profile: {
+    query: gql`
+      query {
+        me {
+          uuid
+          name
+          invitesConnection {
+            edges {
+              node {
                 uuid
-                name
+                status
+                agency {
+                  uuid
+                  name
+                  subdomain {
+                    uuid
+                    name
+                  }
+                }
               }
             }
           }
         }
       }
-    }
-  }
-`;
-
-export const PORTAL_QUERY = gql`
-  query($subdomainName: String) {
-    agency(subdomainName: $subdomainName) {
-      uuid
-      name
-      theme {
-        uuid
-        name
-        imageLogo {
+    `,
+    result: d => d['me']
+  },
+  portal: {
+    query: gql`
+      query($subdomainName: String) {
+        agency(subdomainName: $subdomainName) {
           uuid
           name
-          data
-          color
-        }
-        imageHero {
-          uuid
-          name
-          data
-          color
-        }
-        colorPrimary
-        colorSecondary
-        colorAccent
-        colorBackground
-        colorSurface
-        colorError
-        colorSuccess
-      }
-      servicesConnection {
-        edges(status: "live") {
-          cursor
-          node {
+          theme {
             uuid
             name
-            status
-            steps {
+            imageLogo {
               uuid
               name
-              type
+              data
+              color
+            }
+            imageHero {
+              uuid
+              name
+              data
+              color
+            }
+            colorPrimary
+            colorSecondary
+            colorAccent
+            colorBackground
+            colorSurface
+            colorError
+            colorSuccess
+          }
+          servicesConnection {
+            edges(status: "live") {
+              cursor
+              node {
+                uuid
+                name
+                status
+                steps {
+                  uuid
+                  name
+                  type
+                }
+              }
             }
           }
         }
       }
-    }
-  }
-`;
-
-export const DASHBOARD_QUERY = gql`
-  query($subdomainName: String) {
-    agency(subdomainName: $subdomainName) {
-      uuid
-      name
-      theme {
-        uuid
-        name
-        imageLogo {
+    `,
+    result: d => d['agency']
+  },
+  dashboard: {
+    query: gql`
+      query($subdomainName: String) {
+        agency(subdomainName: $subdomainName) {
           uuid
           name
-          data
-          color
-        }
-        imageHero {
-          uuid
-          name
-          data
-          color
-        }
-        colorPrimary
-        colorSecondary
-        colorAccent
-        colorBackground
-        colorSurface
-        colorError
-        colorSuccess
-      }
-      servicesConnection {
-        edges {
-          cursor
-          node {
+          theme {
             uuid
             name
-            status
-            steps {
+            imageLogo {
               uuid
               name
-              type
+              data
+              color
+            }
+            imageHero {
+              uuid
+              name
+              data
+              color
+            }
+            colorPrimary
+            colorSecondary
+            colorAccent
+            colorBackground
+            colorSurface
+            colorError
+            colorSuccess
+          }
+          servicesConnection {
+            edges {
+              cursor
+              node {
+                uuid
+                name
+                status
+                steps {
+                  uuid
+                  name
+                  type
+                }
+              }
+            }
+          }
+          subjectsConnection {
+            edges {
+              cursor
+              roles
+              node {
+                uuid
+                name
+                emailAddress
+              }
             }
           }
         }
       }
-      subjectsConnection {
-        edges {
-          cursor
-          roles
-          node {
+    `,
+    result: d => d['agency']
+  },
+  agency: {
+    query: gql`
+      query($subdomainName: String) {
+        agency(subdomainName: $subdomainName) {
+          uuid
+          name
+          theme {
             uuid
             name
-            emailAddress
+            imageLogo {
+              uuid
+              name
+              data
+              color
+            }
+            imageHero {
+              uuid
+              name
+              data
+              color
+            }
+            colorPrimary
+            colorSecondary
+            colorAccent
+            colorBackground
+            colorSurface
+            colorError
+            colorSuccess
           }
         }
       }
-    }
-  }
-`;
-
-export const AGENCY_QUERY = gql`
-  query($subdomainName: String) {
-    agency(subdomainName: $subdomainName) {
-      uuid
-      name
-      theme {
-        uuid
-        name
-        imageLogo {
+    `,
+    result: d => d['agency']
+  },
+  agencyRoles: {
+    query: gql`
+      query($agencyUuids: [ID!]) {
+        me {
           uuid
           name
-          data
-          color
-        }
-        imageHero {
-          uuid
-          name
-          data
-          color
-        }
-        colorPrimary
-        colorSecondary
-        colorAccent
-        colorBackground
-        colorSurface
-        colorError
-        colorSuccess
-      }
-    }
-  }
-`;
-
-export const AGENCY_ROLES_QUERY = gql`
-  query($agencyUuids: [ID!]) {
-    me {
-      uuid
-      name
-      type
-      agenciesConnection {
-        edges(uuids: $agencyUuids) {
-          node {
-            uuid
+          type
+          agenciesConnection {
+            edges(uuids: $agencyUuids) {
+              node {
+                uuid
+              }
+              roles
+            }
           }
-          roles
         }
       }
-    }
+    `,
+    result: d => d['me']['agenciesConnection']
   }
-`;
+};

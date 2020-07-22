@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import useAuth from 'hooks/useAuth';
+import useAuthState from 'hooks/useAuthState';
 import useModal from 'hooks/useModal';
 import LoginForm from 'components/LogInForm';
 import AnimatedTransition from 'components/AnimatedTransition';
@@ -14,41 +14,34 @@ const getInitialState = () => {
 
 const initialState = getInitialState();
 
-const shouldUpdateLinks = (previous, next) => {
-  if (previous.children !== next.children) {
-    return true;
-  }
-};
-
 const TopbarActions = ({ links, ...props }) => {
-  const { loading, isLoggedIn, logOut } = useAuth();
+  const [state, send] = useAuthState();
   const hideModalRef = useRef();
-  const showModal = useModal(<LoginForm redirectUrl={ '/profile' } />, { hideModalRef, show: !isLoggedIn && initialState.showLogIn });
+  const showModal = useModal(<LoginForm redirectUrl={ '/profile' } />, { hideModalRef, show: state.matches('visitor') && initialState.showLogIn });
 
-  return (
-    <AnimatedTransition { ...props } shouldTransition={ shouldUpdateLinks }>
-      { loading
-        ? null
-        : isLoggedIn 
-          ? (
-            <div className="grid row gap-5 items-center">
-              { links?.map(({ to, text }) => 
-                <AnimatedTransition key={ to }>
-                  <Button text link={{ to }}>{ text }</Button>
-                </AnimatedTransition>
-              )}
-              <Button text onClick={ () => logOut() }>Log out</Button>
-            </div>
-          )
-          : (
-            <div className="grid row gap-5 items-center">
-              <Button text onClick={ showModal }>Log in</Button>
-              <Button text link={{ to: '/sign-up' }} color="primary">Sign up</Button>
-            </div>
-          )
-      }
-    </AnimatedTransition>
-  );
+  if (state.matches('loggedIn')) {
+    return (
+      <div className="grid row gap-5 items-center">
+        { links?.map(({ to, text }) => 
+          <AnimatedTransition key={ to }>
+            <Button text link={{ to }}>{ text }</Button>
+          </AnimatedTransition>
+        )}
+        <Button text onClick={ () => send('LOG_OUT') }>Log out</Button>
+      </div>
+    );
+  }
+
+  if (state.matches('visitor')) {
+    return (
+      <div className="grid row gap-5 items-center">
+          <Button text onClick={ showModal }>Log in</Button>
+          <Button text link={{ to: '/sign-up' }} color="primary">Sign up</Button>
+        </div>
+    );
+  }
+
+  return null;
 };
 
 export default TopbarActions;
