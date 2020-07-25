@@ -3,10 +3,10 @@ import { client, query, mutate } from '../apollo';
 
 export const authMachine = Machine({
   id: 'auth',
-  initial: 'loadingUser',
   context: {
     user: undefined
   },
+  initial: 'loadingUser',
   states: {
     loadingUser: {
       invoke: {

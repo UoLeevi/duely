@@ -10,7 +10,7 @@ const nav = (
       text: 'Overview',
       icon: BsHouse,
       link: {
-        to: '/portal',
+        to: 'portal',
         end: true
       }
     },
@@ -18,7 +18,7 @@ const nav = (
       text: 'Projects',
       icon: BsKanban,
       link: {
-        to: '/portal/projects',
+        to: 'portal/projects',
         end: false
       }
     },
@@ -26,7 +26,7 @@ const nav = (
       text: 'Files',
       icon: BsFolder,
       link: {
-        to: '/portal/files',
+        to: 'portal/files',
         end: false
       }
     },
@@ -34,7 +34,7 @@ const nav = (
       text: 'Billing',
       icon: BsCreditCard,
       link: {
-        to: '/portal/billing',
+        to: 'portal/billing',
         end: false
       }
     },
@@ -42,7 +42,7 @@ const nav = (
       text: 'Services',
       icon: BsBriefcase,
       link: {
-        to: '/portal/services',
+        to: 'portal/services',
         end: false
       }
     }
@@ -50,15 +50,6 @@ const nav = (
 );
 
 export default [
-  {
-    path: 'portal',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Overview" /> }
-      />
-    )
-  },
   {
     path: 'portal/projects',
     element: (
@@ -94,5 +85,14 @@ export default [
         header={ <HeaderWithActions title="Services" /> }
       />
     )
-  }
+  },
+  {
+    path: 'portal',
+    element: (
+      <ResponsiveLayout 
+        nav={ nav }
+        header={ <HeaderWithActions title="Overview" /> }
+      />
+    )
+  },
 ];

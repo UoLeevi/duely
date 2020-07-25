@@ -1,0 +1,29 @@
+.loading-bar {
+  overflow: hidden;
+  height: 2px;
+  opacity: 0;
+  transition: opacity ease-in-out 100ms;
+  background: linear-gradient(to left, rgba(255,255,255,0) 10%, var(--color-primary), var(--color-success), rgba(255,255,255,0) 90%);
+}
+
+.loading-bar.play-animation {
+  animation-name: progress;
+  animation-duration: 1800ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(.02,.25,1,.61);
+}
+
+.loading-bar.loading {
+  transition-delay: 100ms;
+  opacity: 1;
+}
+
+@keyframes progress {
+  from { 
+    transform: translateX(-100%);
+  }
+
+  to { 
+    transform: translateX(110%);
+  }
+}

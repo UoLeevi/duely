@@ -1,14 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'components/Link';
 import Choose from 'components/Choose';
-import Spinner from 'components/Spinner';
+import LoadingSpinner from 'components/LoadingSpinner';
 
 const RestrictedArea = ({ children, loading, restrict, message, fallback, ...props }) => {
   if (loading || restrict) {
     if (fallback) {
       return (
         <Choose index={ loading ? 0 : 1 }>
-          <Spinner spin={ loading } { ...props } data-choose="fit"/>
+          <LoadingSpinner loading={ loading } { ...props } data-choose="fit"/>
           { React.cloneElement(fallback, props) }
         </Choose>
       );
@@ -17,7 +17,7 @@ const RestrictedArea = ({ children, loading, restrict, message, fallback, ...pro
         <div className="grid items-center" style={{ height: '100vh' }}>
           <div className="ma-5 pa-5 f-b" { ...props }>
             <Choose index={ loading ? 0 : 1 }>
-              <Spinner spin={ loading } { ...props } data-choose="fit"/>
+              <LoadingSpinner loading={ loading } { ...props } data-choose="fit"/>
               <div className="flex column center-h">
                 { message &&
                   <span>{ message }</span>

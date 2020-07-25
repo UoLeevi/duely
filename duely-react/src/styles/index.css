@@ -897,12 +897,22 @@ body {
 
 /* #endregion */
 
-/* #region Width */
+/* #region Width & height */
 
 #root .w-panel {
   min-width: var(--panel-min-width);
   max-width: var(--panel-max-width);
   width: var(--panel-width);
+  box-sizing: border-box;
+}
+
+#root .w-100 {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#root .h-100 {
+  height: 100%;
   box-sizing: border-box;
 }
 

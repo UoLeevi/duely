@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'components/Link';
 import ResponsiveLayout from 'components/ResponsiveLayout';
 import SplitLayout from 'components/SplitLayout';
 import Topbar from 'components/Topbar';
@@ -13,31 +13,7 @@ import LogInForm from 'components/LogInForm';
 
 export default [
   {
-    path: '/',
-    element: (
-      <ResponsiveLayout
-        topbar={
-          <Topbar className="gutter py-4" data-layout="floating">
-            <div className="flex row center-v">
-              <DuelyLogo />
-              <h1 className="f-5 f-b pa-2">Duely</h1>
-            </div>
-            <TopbarActions links={[
-              { to: '/profile', text: 'Profile' }
-            ]} />
-          </Topbar>
-        }
-        main={
-          <div style={{ position: 'relative' }}>
-            <HomeHeroSection />
-            <HomeFeaturesSection />
-          </div>
-        }
-      />
-    )
-  },
-  {
-    path: '/log-in',
+    path: 'log-in',
     element: (
       <ResponsiveLayout
         topbar={
@@ -61,7 +37,7 @@ export default [
     )
   },
   {
-    path: '/sign-up',
+    path: 'sign-up',
     element: (
       <ResponsiveLayout
         topbar={
@@ -85,7 +61,7 @@ export default [
     )
   },
   {
-    path: '/new-password',
+    path: 'new-password',
     element: (
       <ResponsiveLayout
         topbar={
@@ -100,6 +76,30 @@ export default [
           </Topbar>
         }
         header={ <HeaderWithActions title="Set a new password" /> }
+      />
+    )
+  },
+  {
+    path: '/',
+    element: (
+      <ResponsiveLayout
+        topbar={
+          <Topbar className="gutter py-4" data-layout="floating">
+            <div className="flex row center-v">
+              <DuelyLogo />
+              <h1 className="f-5 f-b pa-2">Duely</h1>
+            </div>
+            <TopbarActions links={[
+              { to: '/profile', text: 'Profile' }
+            ]} />
+          </Topbar>
+        }
+        main={
+          <div style={{ position: 'relative' }}>
+            <HomeHeroSection />
+            <HomeFeaturesSection />
+          </div>
+        }
       />
     )
   }

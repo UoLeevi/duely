@@ -1,6 +1,6 @@
 import { useContext } from 'react';
-import { MachineContext } from 'contexts/MachineContext';
+import { AppStateContext } from 'contexts/AppStateContext';
 
 export default function useAppState() {
-  return useContext(MachineContext);
+  return useContext(AppStateContext);
 }

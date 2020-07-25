@@ -1,7 +1,7 @@
 import React, { isValidElement, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'components/Link';
 import Choose from 'components/Choose';
-import Spinner from 'components/Spinner';
+import LoadingSpinner from 'components/LoadingSpinner';
 import './Button.css';
 
 function getColorClassNames(modifiers, color) {
@@ -66,7 +66,7 @@ const Button = React.forwardRef(({ element, link, dense, prominent, filled, outl
     <Choose className="button-container" index={ completed ? 3 : loading ? 2 : error ? 1 : 0 } ref={ ref }>
       { element }
       { error && <div className="button-error" style={ messageStyle }>{ isValidElement(error) ? error : <span className="f-2 f-b error">{ error }</span> }</div> }
-      { loading && (isValidElement(loading) ? loading : <Spinner data-choose="fit" />) }
+      { loading && (isValidElement(loading) ? loading : <LoadingSpinner data-choose="fit" />) }
       { completed && <div className="button-completed" style={ messageStyle }>{ isValidElement(completed) ? completed : <span className="f-2 f-b success">{ completed }</span> }</div> }
       { <div style={ areaStyle }></div> }
     </Choose>
