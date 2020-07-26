@@ -22,14 +22,24 @@ export const appMachine = Machine({
       entry: 'spawnAuth'
     },
     routing: {
-      entry: ['spawnRoute', 'requestNavigation']
+      entry: ['spawnRoute', 'requestUnblocking'],
+      on: {
+        NAVIGATION: { actions: 'requestUnblocking', cond: 'navigationNotHandled' },
+        NAVIGATION_REQUESTED: { actions: 'requestUnblocking' },
+        NAVIGATION_UNBLOCKED: { actions: 'requestNavigation' },
+        NAVIGATION_CONFIRMED: { actions: 'updateHistory' }
+      }
+    },
+    modal: {
+      initial: 'closed',
+      states: {
+        closed: {},
+        open: {}
+      }
     }
   },
   on: {
-    USER_UPDATED: { actions: ['updateUser'] },
-    NAVIGATION_REQUESTED: { actions: 'forwardToRoute' },
-    NAVIGATION_CONFIRMED: { actions: 'updateHistory' },
-    NAVIGATION: { actions: 'requestNavigation', cond: 'navigationNotHandled' }
+    USER_UPDATED: { actions: ['updateUser'] }
   }
 }, {
   actions: {
@@ -37,11 +47,13 @@ export const appMachine = Machine({
     spawnRoute: assign({ routeRef: context => spawn(createRouteMachine(context.routes), { sync: true }) }),
     updateUser: assign({ user: (context, { user }) => user }),
     forwardToRoute: send((context, event) => event, { to: context => context.routeRef }),
-    requestNavigation: send(context => ({ type: 'NAVIGATION_REQUESTED', location: context.history.location }), { to: context => context.routeRef }),
+    requestUnblocking: send((context, event) => ({ location: context.history.location, action: 'REPLACE', ...event, type: 'UNBLOCKING_REQUESTED' }), { to: context => context.routeRef }),
+    requestNavigation: send((context, event) => ({ location: context.history.location, action: 'REPLACE', ...event, type: 'NAVIGATION_REQUESTED' }), { to: context => context.routeRef }),
     updateHistory: (context, event) => {
       if (createPath(context.history.location) !== createPath(event.location)) {
         lastNavigation = Date.now();
-        context.history.push(event.location, { id: lastNavigation });
+        const action = event.action === 'REPLACE' ? 'replace' : 'push';
+        context.history[action](event.location, { id: lastNavigation });
       }
     }
   },

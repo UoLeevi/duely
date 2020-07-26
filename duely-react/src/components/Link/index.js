@@ -2,7 +2,7 @@ import React from 'react';
 import { createPath, parsePath } from 'history';
 import useAppState from 'hooks/useAppState';
 
-const Link = ({ to, children, ...props }) => {
+const Link = ({ to, end, children, ...props }) => {
   const [, send] = useAppState();
 
   const path = typeof to === 'string' ? to : createPath(to);
@@ -10,7 +10,7 @@ const Link = ({ to, children, ...props }) => {
 
   const handleClick = e => {
     e.preventDefault();
-    send({ type: 'NAVIGATION_REQUESTED', location });
+    send({ type: 'NAVIGATION', location });
   };
 
   return (

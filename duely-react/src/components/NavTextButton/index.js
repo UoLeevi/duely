@@ -1,13 +1,17 @@
 import React from 'react';
-import { NavLink, useMatch } from 'react-router-dom';
+import Link from 'components/Link';
+import useAppState from 'hooks/useAppState';
+import { matchPath } from 'routes';
 import './NavTextButton.css';
 
 const NavTextButton = ({ link, text, tag = 'button', className = '', ...props }) => {
-  const { to: path, caseSensitive, end } = link ?? {};
-  const active = useMatch({ path, caseSensitive, end }) !== null;
+  const [state, send] = useAppState();
+  const { pathname } = state.context.history.location;
+  const { to: path, end } = link ?? {};
+  const active = matchPath({ path, end }, pathname) !== null;
   const Element = tag;
   const Wrapper = link
-    ? ({ children }) => (<NavLink { ...link }>{ children }</NavLink>)
+    ? ({ children }) => (<Link { ...link }>{ children }</Link>)
     : null;
 
   className = Array.from(new Set(((className ?? '') + ' nav-text-button surface color-s1n color-l1').split(' '))).join(' ');

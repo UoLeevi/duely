@@ -12,11 +12,11 @@ import agency from './agency';
 
 const matchFunctions = {}
 
-function pathMatcher(path) {
+function pathMatcher(path, end = false) {
   let matcher = matchFunctions[path];
 
   if (!matcher) {
-    matcher = match(path, { encode: encodeURI, decode: decodeURIComponent, end: false });
+    matcher = match(path, { encode: encodeURI, decode: decodeURIComponent, end });
     matchFunctions[path] = matcher;
   }
 
@@ -43,7 +43,11 @@ export function joinPathParts(base, path) {
   return base + '/' + path;
 }
 
-export function matchRoutes(location, routes) {
+export function matchPath({ path, end }, pathname) {
+  return pathMatcher(path, end)(pathname);
+}
+
+export function matchRoutes({ location, action }, routes) {
   if (typeof location === 'string') {
     location = parsePath(location);
   }
@@ -53,14 +57,14 @@ export function matchRoutes(location, routes) {
 
   if (!route) {
     return location.pathname === ''
-      ? Promise.resolve({ location })
-      : Promise.reject({ location });
+      ? Promise.resolve({ location, action })
+      : Promise.reject({ location, action });
   }
 
   const { path, params } = pathMatcher(route.path)(pathname);
   const basename = joinPathParts(location.basename, path);
   location = { ...location, pathname: location.pathname.substring(path.length), basename };
-  return Promise.resolve({ location, route, params });
+  return Promise.resolve({ location, action, route, params });
 }
 
 function resolveDomain() {

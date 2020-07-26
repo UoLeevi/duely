@@ -1183,6 +1183,10 @@ body {
   grid-auto-rows: minmax(0, 1fr);
 }
 
+#root .grid.layered > * {
+  grid-area: 1 / 1;
+}
+
 /* #endregion */
 
 /* #region Alignment */

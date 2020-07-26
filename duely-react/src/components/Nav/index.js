@@ -1,5 +1,6 @@
 import React from 'react';
-import { useLocation, matchPath } from 'react-router-dom';
+import useAppState from 'hooks/useAppState';
+import { matchPath } from 'routes';
 import NavButton from 'components/NavButton';
 import NavTextButton from 'components/NavTextButton';
 import AnimatedTransition from 'components/AnimatedTransition';
@@ -25,8 +26,9 @@ const SubmenuList = ({ submenu, sizeString, ...props }) => {
 };
 
 const Nav = React.forwardRef(({ items = [], 'data-layout': layout, ...props }, ref) => {
-  const { pathname } = useLocation();
-  const submenu = items.find(({ link: { to: path, caseSensitive, end } = {} }) => matchPath({ path, caseSensitive, end }, pathname) !== null);
+  const [state, send] = useAppState();
+  const { pathname } = state.context.history.location;
+  const submenu = items.find(({ link: { to: path, end } = {} }) => matchPath({ path, end }, pathname) !== null);
   const expanded = (submenu?.items?.length ?? 0) > 0;
   const menuItems = items.map(({ link, text, icon }) => {
     return (

@@ -8,7 +8,7 @@ const Choose = React.forwardRef(({ children, index, placeItems = 'center', class
   const childrenRef = useRef(React.Children.toArray(children));
   const renderedChildren = [];
 
-  const components = React.Children.map(children, (element, i) => {
+  children = React.Children.map(children, (element, i) => {
     if (!element) {
       element = childrenRef.current[i];
     }
@@ -43,7 +43,7 @@ const Choose = React.forwardRef(({ children, index, placeItems = 'center', class
 
   return (
     <div className={ className } style={{ placeItems }} { ...props } ref={ ref }>
-      { components }
+      { children }
     </div>
   );
 });

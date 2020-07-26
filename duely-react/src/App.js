@@ -9,14 +9,14 @@ import ModalContextProvider from './contexts/ModalContext';
 import AnimationContextProvider from './contexts/AnimationContext';
 import FormContextProvider from './contexts/FormContext';
 import AppStateContextProvider from './contexts/AppStateContext';
-import RoutingContextProvider from './contexts/RoutingContext';
+import RouteContextProvider from './contexts/RouteContext';
 import { RoutesRoot } from './routes';
 
 const App = () => (
   // <Router>
     <ApolloProvider client={client}>
       <AppStateContextProvider>
-        <RoutingContextProvider>
+        <RouteContextProvider>
           <DomainContextProvider>
             <ViewportContextProvider>
               <IconContext.Provider value={{}}>
@@ -30,7 +30,7 @@ const App = () => (
               </IconContext.Provider>
             </ViewportContextProvider>
           </DomainContextProvider>
-        </RoutingContextProvider>
+        </RouteContextProvider>
       </AppStateContextProvider>
     </ApolloProvider>
   // </Router>
