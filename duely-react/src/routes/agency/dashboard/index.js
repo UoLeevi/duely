@@ -84,6 +84,15 @@ const nav = (
 
 export default [
   {
+    path: 'dashboard',
+    element: (
+      <ResponsiveLayout 
+        nav={ nav }
+        header={ <HeaderWithActions title="Overview" /> }
+      />
+    )
+  },
+  {
     path: 'dashboard/projects',
     element: (
       <ResponsiveLayout 
@@ -152,15 +161,6 @@ export default [
       <ResponsiveLayout 
         nav={ nav }
         header={ <HeaderWithActions title="Payments" /> }
-      />
-    )
-  },
-  {
-    path: 'dashboard',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Overview" /> }
       />
     )
   }

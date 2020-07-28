@@ -13,6 +13,30 @@ import LogInForm from 'components/LogInForm';
 
 export default [
   {
+    path: '/',
+    element: (
+      <ResponsiveLayout
+        topbar={
+          <Topbar className="gutter py-4" data-layout="floating">
+            <div className="flex row center-v">
+              <DuelyLogo />
+              <h1 className="f-5 f-b pa-2">Duely</h1>
+            </div>
+            <TopbarActions links={[
+              { to: '/profile', text: 'Profile' }
+            ]} />
+          </Topbar>
+        }
+        main={
+          <div style={{ position: 'relative' }}>
+            <HomeHeroSection />
+            <HomeFeaturesSection />
+          </div>
+        }
+      />
+    )
+  },
+  {
     path: 'log-in',
     element: (
       <ResponsiveLayout
@@ -76,30 +100,6 @@ export default [
           </Topbar>
         }
         header={ <HeaderWithActions title="Set a new password" /> }
-      />
-    )
-  },
-  {
-    path: '/',
-    element: (
-      <ResponsiveLayout
-        topbar={
-          <Topbar className="gutter py-4" data-layout="floating">
-            <div className="flex row center-v">
-              <DuelyLogo />
-              <h1 className="f-5 f-b pa-2">Duely</h1>
-            </div>
-            <TopbarActions links={[
-              { to: '/profile', text: 'Profile' }
-            ]} />
-          </Topbar>
-        }
-        main={
-          <div style={{ position: 'relative' }}>
-            <HomeHeroSection />
-            <HomeFeaturesSection />
-          </div>
-        }
       />
     )
   }

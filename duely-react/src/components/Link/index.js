@@ -10,7 +10,7 @@ const Link = ({ to, end, children, ...props }) => {
 
   const handleClick = e => {
     e.preventDefault();
-    send({ type: 'NAVIGATION', location });
+    send({ type: 'NAVIGATION_REQUESTED', location });
   };
 
   return (

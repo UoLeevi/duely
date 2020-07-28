@@ -5,14 +5,15 @@ export const RouteContext = createContext();
 
 function RouteContextProvider({ children }) {
   const [state, ] = useAppState();
-  let { activeRoute, data } = state.context.routeRef.state.context;
+  let { active } = state.context.routeRef.state.context;
+  const { route, path, params } = active ?? {};
 
-  while (activeRoute && !activeRoute.route.element) {
-    ({ activeRoute, data } = activeRoute.ref.state.context);
+  while (active && !active.route.element) {
+    active = active.ref.state.context.active;
   }
 
   return (
-    <RouteContext.Provider value={{ activeRoute, _data: data }}>
+    <RouteContext.Provider value={{ active, route, path, params }}>
       { children }
     </RouteContext.Provider>
   );

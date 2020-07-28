@@ -51,6 +51,15 @@ const nav = (
 
 export default [
   {
+    path: 'portal',
+    element: (
+      <ResponsiveLayout 
+        nav={ nav }
+        header={ <HeaderWithActions title="Overview" /> }
+      />
+    )
+  },
+  {
     path: 'portal/projects',
     element: (
       <ResponsiveLayout 
@@ -85,14 +94,5 @@ export default [
         header={ <HeaderWithActions title="Services" /> }
       />
     )
-  },
-  {
-    path: 'portal',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Overview" /> }
-      />
-    )
-  },
+  }
 ];

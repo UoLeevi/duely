@@ -12,60 +12,67 @@ import agency from './agency';
 
 const matchFunctions = {}
 
-function pathMatcher(path, end = false) {
+function pathMatcher(path, options) {
   let matcher = matchFunctions[path];
 
   if (!matcher) {
-    matcher = match(path, { encode: encodeURI, decode: decodeURIComponent, end });
+    matcher = match(path, { encode: encodeURI, decode: decodeURIComponent, end: false, ...options });
     matchFunctions[path] = matcher;
   }
 
   return matcher;
 }
 
-export function joinPathParts(base, path) {
-  if (!base) {
-    return path;
-  }
+// export function joinPathParts(base, path) {
+//   if (!base) {
+//     return path;
+//   }
 
-  if (!path) {
-    return base;
-  }
+//   if (!path) {
+//     return base;
+//   }
 
-  if (base[base.length - 1] === '/') {
-    base = base.substr(0, base.length - 1);
-  }
+//   if (base[base.length - 1] === '/') {
+//     base = base.substr(0, base.length - 1);
+//   }
 
-  if (path[0] === '/') {
-    path = path.substr(1);
-  }
+//   if (path[0] === '/') {
+//     path = path.substr(1);
+//   }
 
-  return base + '/' + path;
-}
+//   return base + '/' + path;
+// }
 
 export function matchPath({ path, end }, pathname) {
-  return pathMatcher(path, end)(pathname);
+  return pathMatcher(path, { end })(pathname);
 }
 
-export function matchRoutes({ location, action }, routes) {
-  if (typeof location === 'string') {
-    location = parsePath(location);
-  }
+export function matchRoute(route, pathname) {
+  const { path, children } = route;
+  const end = (children?.length ?? 0) === 0;
 
-  const pathname = location.pathname || '/';
-  const route = routes?.find(({ path }) => pathMatcher(path)(pathname)?.index === 0);
-
-  if (!route) {
-    return location.pathname === ''
-      ? Promise.resolve({ location, action })
-      : Promise.reject({ location, action });
-  }
-
-  const { path, params } = pathMatcher(route.path)(pathname);
-  const basename = joinPathParts(location.basename, path);
-  location = { ...location, pathname: location.pathname.substring(path.length), basename };
-  return Promise.resolve({ location, action, route, params });
+  return pathMatcher(path, { end })(pathname || '/');
 }
+
+// export function matchRoutes(routes, { location, ...event }) {
+//   if (typeof location === 'string') {
+//     location = parsePath(location);
+//   }
+
+//   const pathname = location.pathname || '/';
+//   const route = routes?.find(({ path }) => pathMatcher(path)(pathname)?.index === 0);
+
+//   if (!route) {
+//     return location.pathname === ''
+//       ? Promise.resolve({ location, ...event })
+//       : Promise.reject({ location, ...event });
+//   }
+
+//   const { path, params } = pathMatcher(route.path)(pathname);
+//   const basename = joinPathParts(location.basename, path);
+//   location = { ...location, pathname: location.pathname.substring(path.length), basename };
+//   return Promise.resolve({ location, ...event, route, params });
+// }
 
 function resolveDomain() {
   const domain = window.location.hostname.toLowerCase();

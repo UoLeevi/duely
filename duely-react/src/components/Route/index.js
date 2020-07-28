@@ -2,21 +2,20 @@ import React, { useContext } from 'react';
 import { RouteContext } from 'contexts/RouteContext';
 
 function Route() {
-  let { activeRoute, _data } = useContext(RouteContext);
+  let { active } = useContext(RouteContext);
   
-  if (!activeRoute) {
+  if (!active) {
     return null;
   }
 
-  const route = activeRoute.route;
+  const { route, path, params } = active ?? {};
   const element = route?.element;
-  let data = undefined;
 
   do {
-    ({ activeRoute, data } = activeRoute.ref.state.context);
-  } while (activeRoute && !activeRoute.route.element);
+    active = active.ref.state.context.active;
+  } while (active && !active.route.element);
 
-  return <RouteContext.Provider value={{ activeRoute, route, data: _data, _data: data }} children={ element } />;
+  return <RouteContext.Provider value={{ active, route, path, params }} children={ element } />;
 };
 
 export default Route;

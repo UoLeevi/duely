@@ -22,12 +22,12 @@ export const appMachine = Machine({
       entry: 'spawnAuth'
     },
     routing: {
-      entry: ['spawnRoute', 'requestUnblocking'],
+      entry: ['spawnRoute', 'requestNavigation'],
       on: {
-        NAVIGATION: { actions: 'requestUnblocking', cond: 'navigationNotHandled' },
-        NAVIGATION_REQUESTED: { actions: 'requestUnblocking' },
-        NAVIGATION_UNBLOCKED: { actions: 'requestNavigation' },
-        NAVIGATION_CONFIRMED: { actions: 'updateHistory' }
+        NAVIGATION: { actions: 'requestNavigation', cond: 'navigationNotHandled' },
+        NAVIGATION_REQUESTED: { actions: 'requestNavigation', cond: 'notCurrentlyActive' },
+        NAVIGATION_CONFIRMED: { actions: 'updateHistory' },
+        NAVIGATION_REJECTED: { actions: 'correctHistory' }
       }
     },
     modal: {
@@ -47,19 +47,26 @@ export const appMachine = Machine({
     spawnRoute: assign({ routeRef: context => spawn(createRouteMachine(context.routes), { sync: true }) }),
     updateUser: assign({ user: (context, { user }) => user }),
     forwardToRoute: send((context, event) => event, { to: context => context.routeRef }),
-    requestUnblocking: send((context, event) => ({ location: context.history.location, action: 'REPLACE', ...event, type: 'UNBLOCKING_REQUESTED' }), { to: context => context.routeRef }),
-    requestNavigation: send((context, event) => ({ location: context.history.location, action: 'REPLACE', ...event, type: 'NAVIGATION_REQUESTED' }), { to: context => context.routeRef }),
+    requestNavigation: send((context, event) => ({ location: context.history.location, ...event, type: 'NAVIGATION_REQUESTED' }), { to: context => context.routeRef }),
     updateHistory: (context, event) => {
       if (createPath(context.history.location) !== createPath(event.location)) {
         lastNavigation = Date.now();
         const action = event.action === 'REPLACE' ? 'replace' : 'push';
         context.history[action](event.location, { id: lastNavigation });
+      } else if (context.history.location.state?.id === undefined) {
+        lastNavigation = Date.now();
+        context.history.replace(event.location, { id: lastNavigation });
       }
+    },
+    correctHistory: (context, event) => {
+      // TODO: this is not the right way
+      context.history.back();
     }
   },
   guards: {
     isLoggedIn: context => context.user?.type === 'user',
-    navigationNotHandled: context => !context.history.location.state?.id !== lastNavigation
+    navigationNotHandled: context => context.history.location.state?.id !== lastNavigation,
+    notCurrentlyActive: (context, event) => createPath(context.history.location) !== createPath(event.location)
   }
 });
 
