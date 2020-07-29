@@ -2,8 +2,10 @@ import React from 'react';
 import useRoute from 'hooks/useRoute';
 
 const BrandCardList = ({ ...props }) => {
-  const route = useRoute();
-  debugger;
+  const { data } = useRoute();
+
+  console.log(data);
+
   return (
     <div { ...props }>
       

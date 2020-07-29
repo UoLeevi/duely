@@ -2,7 +2,7 @@ import { Machine, assign, spawn, send, interpret } from 'xstate';
 import { createBrowserHistory, createPath } from 'history';
 import { authMachine } from './auth';
 // import { profileMachine } from './profile';
-import { createRouteMachine } from './route';
+import { createRouteMachine, getActivePath } from './route';
 import { routes } from 'routes';
 
 let lastNavigation = 0;
@@ -21,13 +21,22 @@ export const appMachine = Machine({
     auth: {
       entry: 'spawnAuth'
     },
-    routing: {
+    navigation: {
+      initial: 'processing',
       entry: ['spawnRoute', 'requestNavigation'],
-      on: {
-        NAVIGATION: { actions: 'requestNavigation', cond: 'navigationNotHandled' },
-        NAVIGATION_REQUESTED: { actions: 'requestNavigation', cond: 'notCurrentlyActive' },
-        NAVIGATION_CONFIRMED: { actions: 'updateHistory' },
-        NAVIGATION_REJECTED: { actions: 'correctHistory' }
+      states: {
+        idle: {
+          on: {
+            NAVIGATION: { target: 'processing', actions: 'requestNavigation', cond: 'navigationNotHandled' },
+            NAVIGATION_REQUESTED: { target: 'processing', actions: 'requestNavigation', cond: 'notCurrentlyActive' }
+          }
+        },
+        processing: {
+          on: {
+            NAVIGATION_CONFIRMED: { target: 'idle', actions: 'updateHistory' },
+            NAVIGATION_REJECTED: { target: 'idle', actions: 'handleRejection' }
+          }
+        }
       }
     },
     modal: {
@@ -58,9 +67,13 @@ export const appMachine = Machine({
         context.history.replace(event.location, { id: lastNavigation });
       }
     },
-    correctHistory: (context, event) => {
-      // TODO: this is not the right way
-      context.history.back();
+    handleRejection: context => {
+      console.log('navigation rejected');
+      const activePath = getActivePath(context.routeRef);
+
+      if (context.history.location.pathname !== activePath) {
+        context.history.replace(activePath, { id: lastNavigation });
+      }
     }
   },
   guards: {

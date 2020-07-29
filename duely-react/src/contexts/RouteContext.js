@@ -7,13 +7,15 @@ function RouteContextProvider({ children }) {
   const [state, ] = useAppState();
   let { active } = state.context.routeRef.state.context;
   const { route, path, params } = active ?? {};
+  let data = active?.data;
 
   while (active && !active.route.element) {
     active = active.ref.state.context.active;
+    data = { ...data, ...active?.data };
   }
 
   return (
-    <RouteContext.Provider value={{ active, route, path, params }}>
+    <RouteContext.Provider value={{ active, route, path, params, data }}>
       { children }
     </RouteContext.Provider>
   );

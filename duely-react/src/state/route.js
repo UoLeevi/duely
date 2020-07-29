@@ -1,5 +1,5 @@
 import { Machine, assign, spawn, send, sendParent, actions } from 'xstate';
-import { matchRoute } from 'routes';
+import { matchRoute, joinPathParts } from 'routes';
 const { pure } = actions;
 
 export const routeCallbacks = {
@@ -19,22 +19,31 @@ function executeCallbacks(type) {
 
   return async (context, event) => {
     if (!context[routeKey]) {
-      return;
+      return undefined;
     }
 
     const route = context[routeKey].route;
+    const data = await route[type]?.(context[routeKey]);
     const callbacks = routeCallbacks[type].get(route);
 
-    if (!callbacks) {
-      return;
-    }
-
-    for (const [ref, callback] of callbacks) {
+    for (const [ref, callback] of callbacks ?? []) {
       ref.current = await callback(context[routeKey]);
     }
 
-    return;
+    return data;
   }
+}
+
+export function getActivePath(ref) {
+  let activePath = '/';
+  let path;
+
+  while (ref.state.context.active) {
+    ({ ref, path } = ref.state.context.active);
+    activePath = joinPathParts(activePath, path);
+  }
+
+  return activePath;
 }
 
 export function createRouteMachine(routes) {
@@ -103,8 +112,8 @@ export function createRouteMachine(routes) {
         invoke: {
           src: 'beforeRouteExit',
           onDone: [
-            { target: 'beforeEnter', cond: 'isRequestRoot' },
-            { target: 'idle', actions: 'allowRouteExit' }
+            { target: 'beforeEnter', actions: 'updataActiveData', cond: 'isRequestRoot' },
+            { target: 'idle', actions: ['updataActiveData', 'allowRouteExit'] }
           ],
           onError: { target: 'idle', actions: 'rejectNavigation' }
         }
@@ -112,7 +121,7 @@ export function createRouteMachine(routes) {
       beforeEnter: {
         invoke: {
           src: 'beforeRouteEnter',
-          onDone: { actions: 'requestRouteEnter' },
+          onDone: { actions: ['updataPendingData', 'requestRouteEnter'] },
           onError: { target: 'idle', actions: 'rejectNavigation' }
         },
         on: {
@@ -139,8 +148,8 @@ export function createRouteMachine(routes) {
       entering: {
         invoke: {
           src: 'onRouteEnter',
-          onDone: { actions: 'enterRoute' },
-          onError: { actions: 'enterRoute' }
+          onDone: { actions: ['updataPendingData', 'enterRoute'] },
+          onError: { actions: ['updataPendingData', 'enterRoute'] }
         },
         on: {
           ROUTE_ENTERED: [
@@ -220,6 +229,24 @@ export function createRouteMachine(routes) {
         const { request } = context;
         context.request = undefined;
         return { ...request, type: 'NAVIGATION_CONFIRMED' };
+      }),
+      updataActiveData: assign({
+        active: (context, event) => context.active && ({
+          ...context.active,
+          data: {
+            ...context.active.data,
+            ...event.data
+          }
+        })
+      }),
+      updataPendingData: assign({
+        pending: (context, event) => ({
+          ...context.pending,
+          data: {
+            ...context.pending.data,
+            ...event.data
+          }
+        })
       })
     },
     services: {

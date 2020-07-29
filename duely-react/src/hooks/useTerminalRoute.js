@@ -12,6 +12,6 @@ export default function useTerminalRoute() {
     active = active.ref.state.context.active;
   }
 
-  const { route, path, params } = active;
-  return { route, path, params };
+  const { route, path, params, data } = active;
+  return { route, path, params, data };
 }

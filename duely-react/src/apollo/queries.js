@@ -20,6 +20,43 @@ export default {
         me {
           uuid
           name
+          agenciesConnection {
+            edges {
+              cursor
+              roles
+              node {
+                uuid
+                name
+                subdomain {
+                  uuid
+                  name
+                }
+                theme {
+                  uuid
+                  name
+                  imageLogo {
+                    uuid
+                    name
+                    color
+                    data
+                  }
+                  imageHero {
+                    uuid
+                    name
+                    color
+                    data
+                  }
+                  colorPrimary
+                  colorSecondary
+                  colorAccent
+                  colorBackground
+                  colorSurface
+                  colorError
+                  colorSuccess
+                }
+              }
+            }
+          }
           invitesConnection {
             edges {
               node {

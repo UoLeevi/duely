@@ -1,8 +1,5 @@
 import React from 'react';
 import { match } from 'path-to-regexp';
-import { parsePath } from 'history';
-// import { useBlocker, useNavigate, useLocation, useRoutes } from 'react-router-dom';
-// import { DomainContext } from 'contexts/DomainContext';
 import LoadingBar from 'components/LoadingBar';
 import LoadingSpinner from 'components/LoadingSpinner';
 import Route from 'components/Route';
@@ -23,25 +20,25 @@ function pathMatcher(path, options) {
   return matcher;
 }
 
-// export function joinPathParts(base, path) {
-//   if (!base) {
-//     return path;
-//   }
+export function joinPathParts(base, path) {
+  if (!base) {
+    return path;
+  }
 
-//   if (!path) {
-//     return base;
-//   }
+  if (!path) {
+    return base;
+  }
 
-//   if (base[base.length - 1] === '/') {
-//     base = base.substr(0, base.length - 1);
-//   }
+  if (base[base.length - 1] === '/') {
+    base = base.substr(0, base.length - 1);
+  }
 
-//   if (path[0] === '/') {
-//     path = path.substr(1);
-//   }
+  if (path[0] === '/') {
+    path = path.substr(1);
+  }
 
-//   return base + '/' + path;
-// }
+  return base + '/' + path;
+}
 
 export function matchPath({ path, end }, pathname) {
   return pathMatcher(path, { end })(pathname);
@@ -103,36 +100,9 @@ export const routes = subdomain === null ? duely : agency;
 
 export const RoutesRoot = () => {
   const [state, ] = useActiveRouteState();
-  // const navigate = useNavigate();
-  // const location = useLocation();
-  // const { subdomain } = useContext(DomainContext);
-
-  // useEffect(() => {
-  //   if (state.matches('navigation.indeterminate')) {
-  //     send({ type: 'NAVIGATION', location });
-  //     return;
-  //   }
-
-  //   if (state.matches('navigation.confirmed') && state.context.location.pathname !== location.pathname) {
-  //     navigate(state.context.location);
-  //     return;
-  //   }
-
-  // }, [state, send, location, navigate]);
-
-  // function handleNavigation({ action, location, retry }) {
-  //   if (state.context.navigatingLocation?.pathname !== location.pathname) {
-  //     send({ type: 'NAVIGATION', action, location });
-  //   }
-  // }
-
-  // console.log(state.value.navigation)
-
-  // useBlocker(handleNavigation, true);
-  // const element = useRoutes(subdomain === null ? duely : agency);
   return (
     <>
-      <LoadingBar loading={ state.matches('processing') } style={{ position: 'absolute', top: '0', left: '0', zIndex: 1 }} />
+      <LoadingBar loading={ state.matches('navigation.processing') } style={{ position: 'absolute', top: '0', left: '0', zIndex: 1 }} />
       <Route />
       {/* { element ?? <div className="grid w-100 h-100 items-center gutter"><LoadingSpinner size="20%" stroke="var(--color-primary-l4)" /></div> } */}
     </>

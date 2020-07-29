@@ -1,10 +1,7 @@
 import React from 'react';
 import { BsHouse } from 'react-icons/bs';
-import { client, query } from 'apollo';
+import { query } from 'apollo';
 import ResponsiveLayout from 'components/ResponsiveLayout';
-import Topbar from 'components/Topbar';
-import TopbarActions from 'components/TopbarActions';
-import DuelyLogo from 'components/DuelyLogo';
 import Nav from 'components/Nav';
 import HeaderWithActions from 'components/HeaderWithActions';
 import Profile from 'components/Profile';
@@ -39,6 +36,6 @@ export default [
         )
       }
     ],
-    validate: () => query('profile')
+    enter: () => query('profile')
   }
 ];
