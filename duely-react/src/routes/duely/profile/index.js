@@ -1,24 +1,10 @@
 import React from 'react';
-import { BsHouse } from 'react-icons/bs';
 import { query } from 'apollo';
-import ResponsiveLayout from 'components/ResponsiveLayout';
-import Nav from 'components/Nav';
-import HeaderWithActions from 'components/HeaderWithActions';
+import FocusedLayout from 'components/FocusedLayout';
 import Profile from 'components/Profile';
 import BrandCardList from 'components/BrandCardList';
-
-const nav = (
-  <Nav items={[
-    {
-      text: 'Overview',
-      icon: BsHouse,
-      link: {
-        to: '/profile',
-        end: true
-      }
-    }
-  ]} />
-);
+import NavButton from 'components/NavButton';
+import { BsGear } from 'react-icons/bs';
 
 export default [
   {
@@ -28,10 +14,9 @@ export default [
       {
         path: '/',
         element: (
-          <ResponsiveLayout
-            nav={ nav }
-            header={ <HeaderWithActions title="Profile" subtitle="Overview" /> }
+          <FocusedLayout
             main={ <BrandCardList /> }
+            actions={ <NavButton link={{ to: '/profile/settings' }} icon={ BsGear } /> }
           />
         )
       }
