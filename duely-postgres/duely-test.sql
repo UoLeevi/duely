@@ -37,6 +37,17 @@ BEGIN
   SELECT operation_.begin_visit_() INTO _visitor_jwt;
   --RAISE NOTICE E'begin_visit_:\n%', _visitor_jwt;
 
+  PERFORM operation_.begin_session_(_visitor_jwt);
+  PERFORM operation_.begin_session_(_visitor_jwt);
+  -- Nested sessions are allowed
+  PERFORM operation_.end_session_();
+  PERFORM operation_.end_session_();
+
+  BEGIN
+    PERFORM operation_.end_session_();
+    RAISE EXCEPTION 'Ending not existing session should raise an error';
+  EXCEPTION WHEN SQLSTATE '20000' THEN
+  END;
 
   PERFORM operation_.begin_session_(_visitor_jwt);
 
