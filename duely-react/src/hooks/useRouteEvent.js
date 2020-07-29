@@ -32,7 +32,7 @@ export default function useRouteEvent(type, listener, route) {
     if (callbacks) {
       callbacks.delete(ref);
     }
-  }, [route]);
+  }, [callbacks]);
 
   return ref.current;
 }

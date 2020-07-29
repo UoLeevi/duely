@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef, useCallback } from 'react';
+import React, { createContext } from 'react';
 import useAppState from 'hooks/useAppState';
 
 export const RouteContext = createContext();

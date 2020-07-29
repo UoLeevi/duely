@@ -26,7 +26,7 @@ const SubmenuList = ({ submenu, sizeString, ...props }) => {
 };
 
 const Nav = React.forwardRef(({ items = [], 'data-layout': layout, ...props }, ref) => {
-  const [state, send] = useAppState();
+  const [state, ] = useAppState();
   const { pathname } = state.context.history.location;
   const submenu = items.find(({ link: { to: path, end } = {} }) => matchPath({ path, end }, pathname) !== null);
   const expanded = (submenu?.items?.length ?? 0) > 0;

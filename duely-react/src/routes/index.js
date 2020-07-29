@@ -1,9 +1,9 @@
 import React from 'react';
 import { match } from 'path-to-regexp';
 import LoadingBar from 'components/LoadingBar';
-import LoadingSpinner from 'components/LoadingSpinner';
+// import LoadingSpinner from 'components/LoadingSpinner';
 import Route from 'components/Route';
-import useActiveRouteState from 'hooks/useActiveRouteState';
+import useAppState from 'hooks/useAppState';
 import duely from './duely';
 import agency from './agency';
 
@@ -51,26 +51,6 @@ export function matchRoute(route, pathname) {
   return pathMatcher(path, { end })(pathname || '/');
 }
 
-// export function matchRoutes(routes, { location, ...event }) {
-//   if (typeof location === 'string') {
-//     location = parsePath(location);
-//   }
-
-//   const pathname = location.pathname || '/';
-//   const route = routes?.find(({ path }) => pathMatcher(path)(pathname)?.index === 0);
-
-//   if (!route) {
-//     return location.pathname === ''
-//       ? Promise.resolve({ location, ...event })
-//       : Promise.reject({ location, ...event });
-//   }
-
-//   const { path, params } = pathMatcher(route.path)(pathname);
-//   const basename = joinPathParts(location.basename, path);
-//   location = { ...location, pathname: location.pathname.substring(path.length), basename };
-//   return Promise.resolve({ location, ...event, route, params });
-// }
-
 function resolveDomain() {
   const domain = window.location.hostname.toLowerCase();
   let subdomain = null;
@@ -99,7 +79,7 @@ export const { domain, subdomain } = resolveDomain();
 export const routes = subdomain === null ? duely : agency;
 
 export const RoutesRoot = () => {
-  const [state, ] = useActiveRouteState();
+  const [state, ] = useAppState();
   return (
     <>
       <LoadingBar loading={ state.matches('navigation.processing') } style={{ position: 'absolute', top: '0', left: '0', zIndex: 1 }} />

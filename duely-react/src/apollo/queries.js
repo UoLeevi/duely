@@ -12,7 +12,83 @@ export default {
         }
       }
     `,
-    result: d => d['me']
+    result: d => d?.me
+  },
+  agencies: {
+    query: gql`
+      query {
+        me {
+          uuid
+          agenciesConnection {
+            edges {
+              cursor
+              roles
+              node {
+                uuid
+                name
+                subdomain {
+                  uuid
+                  name
+                }
+                theme {
+                  uuid
+                  name
+                  imageLogo {
+                    uuid
+                    name
+                    color
+                    data
+                  }
+                  imageHero {
+                    uuid
+                    name
+                    color
+                    data
+                  }
+                  colorPrimary
+                  colorSecondary
+                  colorAccent
+                  colorBackground
+                  colorSurface
+                  colorError
+                  colorSuccess
+                }
+              }
+            }
+          }
+        }
+      }
+    `,
+    result: d => d?.me.agenciesConnection.edges
+      .map(edge => ({ ...edge.node, roles: edge.roles }))
+  },
+  invites: {
+    query: gql`
+      query {
+        me {
+          uuid
+          invitesConnection {
+            edges {
+              node {
+                uuid
+                status
+                agency {
+                  uuid
+                  name
+                  subdomain {
+                    uuid
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `,
+    result: d => d?.me.invitesConnection.edges
+      .map(edge => edge.node)
+      .filter(invite => invite.status === null)
   },
   profile: {
     query: gql`
@@ -76,7 +152,7 @@ export default {
         }
       }
     `,
-    result: d => d['me']
+    result: d => d?.me
   },
   portal: {
     query: gql`
@@ -125,7 +201,7 @@ export default {
         }
       }
     `,
-    result: d => d['agency']
+    result: d => d?.agency
   },
   dashboard: {
     query: gql`
@@ -185,7 +261,7 @@ export default {
         }
       }
     `,
-    result: d => d['agency']
+    result: d => d?.agency
   },
   agency: {
     query: gql`
@@ -219,7 +295,7 @@ export default {
         }
       }
     `,
-    result: d => d['agency']
+    result: d => d?.agency
   },
   agencyRoles: {
     query: gql`
@@ -239,6 +315,6 @@ export default {
         }
       }
     `,
-    result: d => d['me']['agenciesConnection']
+    result: d => d?.me.agenciesConnection
   }
 };

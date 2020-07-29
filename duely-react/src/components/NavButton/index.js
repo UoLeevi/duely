@@ -5,7 +5,7 @@ import { matchPath } from 'routes';
 import './NavButton.css';
 
 const NavButton = ({ link, text, icon, tag = 'button', minimize = false, className, ...props }) => {
-  const [state, send] = useAppState();
+  const [state, ] = useAppState();
   const { pathname } = state.context.history.location;
   const { to: path, end } = link ?? {};
   const active = matchPath({ path, end }, pathname) !== null;
