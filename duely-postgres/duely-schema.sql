@@ -490,7 +490,8 @@ CREATE TABLE security_.session_ (
     begin_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     end_at_ timestamp with time zone,
     token_uuid_ uuid NOT NULL,
-    tag_ text
+    tag_ text,
+    nesting_ integer DEFAULT 0 NOT NULL
 );
 
 
@@ -509,33 +510,37 @@ DECLARE
   _subject_uuid uuid;
   _session security_.session_;
 BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid <> '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    PERFORM operation_.end_session_();
-  END IF;
-
-  SELECT internal_.jwt_verify_hs256_(_jwt, x.value_) INTO _claims
-  FROM security_.secret_ x
-  WHERE x.name_ = 'jwt_hs256';
-
-  IF _claims IS NULL THEN
-    RAISE 'Invalid JWT.' USING ERRCODE = '20000';
-  END IF;
-
-  SELECT t.uuid_, t.subject_uuid_ INTO _token_uuid, _subject_uuid
-  FROM security_.token_ t
-  WHERE t.uuid_ = (_claims->>'jti')::uuid
-    AND t.revoked_at_ IS NULL;
-
-  IF _token_uuid IS NULL THEN
-    RAISE 'Invalid JWT.' USING ERRCODE = '20000';
-  END IF;
-
-  INSERT INTO security_.session_ (token_uuid_, tag_)
-  VALUES (_token_uuid, _tag)
+  UPDATE security_.session_
+  SET
+    nesting_ = nesting_ + 1
+  WHERE uuid_ = current_setting('security_.session_.uuid_'::text, true)::uuid
   RETURNING * INTO _session;
 
-  PERFORM set_config('security_.token_.subject_uuid_', _subject_uuid::text, 'f');
-  PERFORM set_config('security_.session_.uuid_', _session.uuid_::text, 'f');
+  IF _session IS NULL THEN
+    SELECT internal_.jwt_verify_hs256_(_jwt, x.value_) INTO _claims
+    FROM security_.secret_ x
+    WHERE x.name_ = 'jwt_hs256';
+
+    IF _claims IS NULL THEN
+      RAISE 'Invalid JWT.' USING ERRCODE = '20000';
+    END IF;
+
+    SELECT t.uuid_, t.subject_uuid_ INTO _token_uuid, _subject_uuid
+    FROM security_.token_ t
+    WHERE t.uuid_ = (_claims->>'jti')::uuid
+      AND t.revoked_at_ IS NULL;
+
+    IF _token_uuid IS NULL THEN
+      RAISE 'Invalid JWT.' USING ERRCODE = '20000';
+    END IF;
+
+    INSERT INTO security_.session_ (token_uuid_, tag_)
+    VALUES (_token_uuid, _tag)
+    RETURNING * INTO _session;
+
+    PERFORM set_config('security_.token_.subject_uuid_', _subject_uuid::text, 'f');
+    PERFORM set_config('security_.session_.uuid_', _session.uuid_::text, 'f');
+  END IF;
 
   RETURN _session;
 END
@@ -1113,18 +1118,29 @@ CREATE FUNCTION operation_.end_session_() RETURNS security_.session_
 DECLARE
   _session security_.session_;
 BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+  SELECT * INTO _session
+  FROM security_.session_
+  WHERE uuid_ = current_setting('security_.session_.uuid_'::text, true)::uuid
+  FOR UPDATE;
+
+  IF _session IS NULL THEN
     RAISE 'No active session.' USING ERRCODE = '20000';
+  ELSEIF _session.nesting_ > 0 THEN
+    UPDATE security_.session_
+    SET
+      nesting_ = nesting_ - 1
+    WHERE uuid_ = _session.uuid_
+    RETURNING * INTO _session;
+  ELSE
+    UPDATE security_.session_
+    SET
+      end_at_ = CURRENT_TIMESTAMP
+    WHERE uuid_ = _session.uuid_
+    RETURNING * INTO _session;
+
+    PERFORM set_config('security_.token_.subject_uuid_', '00000000-0000-0000-0000-000000000000', 'f');
+    PERFORM set_config('security_.session_.uuid_', '00000000-0000-0000-0000-000000000000', 'f');
   END IF;
-
-  UPDATE security_.session_
-  SET
-    end_at_ = CURRENT_TIMESTAMP
-  WHERE uuid_ = current_setting('security_.session_.uuid_', 'f')::uuid
-  RETURNING * INTO _session;
-
-  PERFORM set_config('security_.token_.subject_uuid_', '00000000-0000-0000-0000-000000000000', 'f');
-  PERFORM set_config('security_.session_.uuid_', '00000000-0000-0000-0000-000000000000', 'f');
 
   RETURN _session;
 END
@@ -2723,6 +2739,22 @@ CREATE TABLE application__audit_.user_invite_ (
 ALTER TABLE application__audit_.user_invite_ OWNER TO postgres;
 
 --
+-- Name: _session; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public._session (
+    uuid_ uuid,
+    begin_at_ timestamp with time zone,
+    end_at_ timestamp with time zone,
+    token_uuid_ uuid,
+    tag_ text,
+    nesting_ integer
+);
+
+
+ALTER TABLE public._session OWNER TO postgres;
+
+--
 -- Name: subject_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
@@ -3045,6 +3077,15 @@ CREATE TABLE security__audit_.subject_ (
 
 
 ALTER TABLE security__audit_.subject_ OWNER TO postgres;
+
+--
+-- Data for Name: _session; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public._session (uuid_, begin_at_, end_at_, token_uuid_, tag_, nesting_) FROM stdin;
+15cdb1b6-6ee9-4d41-9983-5b301004dffe	2020-07-29 11:38:01.641507+03	\N	c1ae203b-addb-4171-922b-6fdd9448eefc	\N	0
+\.
+
 
 --
 -- Data for Name: operation_; Type: TABLE DATA; Schema: security_; Owner: postgres
