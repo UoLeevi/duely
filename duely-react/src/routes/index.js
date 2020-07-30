@@ -21,11 +21,14 @@ function pathMatcher(path, options) {
 }
 
 export function joinPathParts(base, path) {
-  if (!base) {
+  base = base ?? '/';
+  path = path ?? '/';
+
+  if (base === '/') {
     return path;
   }
 
-  if (!path) {
+  if (path === '/') {
     return base;
   }
 
