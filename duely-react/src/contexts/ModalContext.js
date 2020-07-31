@@ -1,5 +1,6 @@
 import React, { createContext, useState } from 'react';
-import { useBlocker } from 'react-router-dom'
+import useTerminalRoute from 'hooks/useTerminalRoute';
+import useRouteEvent from 'hooks/useRouteEvent';
 import Modal from 'components/Modal';
 
 export const ModalContext = createContext();
@@ -7,16 +8,16 @@ export const ModalContext = createContext();
 const ModalContextProvider = ({ children }) => {
   const [modalElementsMap, setModalElementsMap] = useState(new Map());
   const [element, { navigationAction, ...options } = {}] = modalElementsMap.entries().next()?.value ?? [];
+  const { route } = useTerminalRoute();
 
-  function handleNavigation({ retry: navigate }) {
+  const handleNavigation = () => {
     for (const { navigationAction, hideModal } of modalElementsMap.values()) {
       switch (navigationAction) {
 
         case 'block':
-          return;
+          throw new Error('Navigation not allowed');
 
         case 'persist':
-          navigate();
           return;
 
         case 'dismiss':
@@ -25,11 +26,9 @@ const ModalContextProvider = ({ children }) => {
           break;
       }
     }
-
-    navigate();
   }
 
-  useBlocker(handleNavigation, element);
+  useRouteEvent('beforeExit', handleNavigation, route);
 
   return (
     <ModalContext.Provider value={ setModalElementsMap }>

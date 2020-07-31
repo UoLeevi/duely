@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'components/Link';
 import ResponsiveLayout from 'components/ResponsiveLayout';
 import SplitLayout from 'components/SplitLayout';
 import Topbar from 'components/Topbar';
@@ -37,7 +37,7 @@ export default [
     )
   },
   {
-    path: '/log-in',
+    path: 'log-in',
     element: (
       <ResponsiveLayout
         topbar={
@@ -61,7 +61,7 @@ export default [
     )
   },
   {
-    path: '/sign-up',
+    path: 'sign-up',
     element: (
       <ResponsiveLayout
         topbar={
@@ -85,7 +85,7 @@ export default [
     )
   },
   {
-    path: '/new-password',
+    path: 'new-password',
     element: (
       <ResponsiveLayout
         topbar={

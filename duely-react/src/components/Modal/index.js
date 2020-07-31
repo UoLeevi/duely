@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './Modal.css';
-import CloseButton from '../CloseButton';
+import CloseButton from 'components/CloseButton';
 
 const backdropAnimations = {
   initial: {

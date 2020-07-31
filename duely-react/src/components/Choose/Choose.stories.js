@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Choose from '../Choose';
-import Spinner from '../Spinner';
+import LoadingSpinner from '../LoadingSpinner';
 import Button from 'components/Button';
 
 export default {
@@ -51,7 +51,7 @@ ToggleContent.args = {
   placeItems: 'center'
 }
 
-export const LoadingSpinner = () => {
+export const LoadingLoadingSpinner = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export const LoadingSpinner = () => {
       <div className="panel-row">
         <Choose index={ loading ? 1 : 0 } >
           <Button onClick={ () => setLoading(true) }>Start loading</Button>
-          <Spinner data-choose="fit" />
+          <LoadingSpinner data-choose="fit" />
         </Choose>
       </div>
     </div>

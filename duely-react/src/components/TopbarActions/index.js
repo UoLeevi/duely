@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import useAuthState from 'hooks/useAuthState';
 import useModal from 'hooks/useModal';
 import LoginForm from 'components/LogInForm';
-import AnimatedTransition from 'components/AnimatedTransition';
 import Button from 'components/Button';
 
 const getInitialState = () => {
@@ -22,10 +21,8 @@ const TopbarActions = ({ links, ...props }) => {
   if (state.matches('loggedIn')) {
     return (
       <div className="grid row gap-5 items-center">
-        { links?.map(({ to, text }) => 
-          <AnimatedTransition key={ to }>
-            <Button text link={{ to }}>{ text }</Button>
-          </AnimatedTransition>
+        { links?.map(({ to, text }) =>
+          <Button key={ to } text link={{ to }}>{ text }</Button>
         )}
         <Button text onClick={ () => send('LOG_OUT') }>Log out</Button>
       </div>
@@ -35,9 +32,9 @@ const TopbarActions = ({ links, ...props }) => {
   if (state.matches('visitor')) {
     return (
       <div className="grid row gap-5 items-center">
-          <Button text onClick={ showModal }>Log in</Button>
-          <Button text link={{ to: '/sign-up' }} color="primary">Sign up</Button>
-        </div>
+        <Button text onClick={ showModal }>Log in</Button>
+        <Button text link={{ to: '/sign-up' }} color="primary">Sign up</Button>
+      </div>
     );
   }
 

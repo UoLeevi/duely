@@ -1,19 +1,19 @@
-.spinner {
-  /* document.querySelector('.spinner path').getTotalLength(); */
+.loading-spinner {
+  /* document.querySelector('.loading-spinner path').getTotalLength(); */
   --path-length: 876
 }
 
-.spinner > path {
+.loading-spinner > path {
   stroke-dasharray: var(--path-length);
   stroke-dashoffset: var(--path-length);
 }
 
-.spinner.spin {
+.loading-spinner.loading {
   animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
   transform-origin: 50% 50%;
 }
 
-.spinner.spin > path {
+.loading-spinner.loading > path {
   animation: draw 1.2s cubic-bezier(0.5, 0, 0.5, 1) forwards;
 }
 

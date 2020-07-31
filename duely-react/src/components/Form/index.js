@@ -2,7 +2,7 @@ import React, { useRef, useContext, useMemo, isValidElement } from 'react';
 import { FormContext } from 'contexts/FormContext';
 import './Form.css';
 import Choose from 'components/Choose';
-import Spinner from 'components/Spinner';
+import LoadingSpinner from 'components/LoadingSpinner';
 
 const Form = React.forwardRef(({ handleSubmit, className, children, loading, completed, error, areaWidth, areaHeight, ...props }, ref) => {
   const defaultRef = useRef();
@@ -57,7 +57,7 @@ const Form = React.forwardRef(({ handleSubmit, className, children, loading, com
         { children }
       </form>
       { error && <div className="form-error" style={ messageStyle }>{ isValidElement(error) ? error : <span className="f-2 f-b error">{ error }</span> }</div> }
-      { loading && (isValidElement(loading) ? loading : <Spinner data-choose="fit" />) }
+      { loading && (isValidElement(loading) ? loading : <LoadingSpinner data-choose="fit" />) }
       { completed && <div className="form-completed" style={ messageStyle }>{ isValidElement(completed) ? completed : <span className="f-2 f-b success">{ completed }</span> }</div> }
       { <div style={ areaStyle }></div> }
     </Choose>

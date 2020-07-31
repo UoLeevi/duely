@@ -23,7 +23,7 @@ const LogInForm = React.forwardRef(({ redirectUrl, ...props }, ref) => {
         </div>
       )} { ...props } ref={ ref }
     >
-      <h2 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Log in</h2>
+      <h3 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Log in</h3>
       <TextField data-form="emailAddress" setText={ setSetEmailAddress } { ...emailFieldProps } autoFocus completed={ null } />
       <TextField data-form="password" { ...passwordFieldProps } completed={ null } actions={{ 'Reset password': showModal }} />
       <Button className="my-2" areaWidth="40ch" 

@@ -1,12 +1,12 @@
 import { Machine, assign, sendParent } from 'xstate';
-import { client, query, mutate } from '../apollo';
+import { client, query, mutate } from 'apollo';
 
 export const authMachine = Machine({
   id: 'auth',
-  initial: 'loadingUser',
   context: {
     user: undefined
   },
+  initial: 'loadingUser',
   states: {
     loadingUser: {
       invoke: {

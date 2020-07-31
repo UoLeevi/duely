@@ -30,7 +30,7 @@ function getColumnWidth(element) {
   return modifiers.find(m => parseInt(m[0])) ?? '1fr';
 }
 
-const SplitLayout =  React.forwardRef(({ left, right, style, ...props }, ref) => {
+const SplitLayout = React.forwardRef(({ left, right, style, ...props }, ref) => {
   const breakpoints = useBreakpoints();
   style = { ...style, gridTemplateColumns: `minmax(auto, ${getColumnWidth(left)}) minmax(auto, ${getColumnWidth(right)})` }
 
