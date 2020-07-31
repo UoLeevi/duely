@@ -15,7 +15,12 @@ export default [
         path: '/',
         element: (
           <FocusedLayout
-            main={ <BrandCardList /> }
+            main={ 
+              <div className="flex column">
+                <span className="f-7 f-b mb-5 text-center">Select a brand</span>
+                <BrandCardList className="my-3" /> 
+              </div>
+            }
             actions={ <NavButton link={{ to: '/profile/settings' }} icon={ BsGear } /> }
           />
         )

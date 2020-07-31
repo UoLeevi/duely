@@ -1,31 +1,33 @@
 .brand-card {
-  width: 30vmin;
   display: grid;
   grid-template: 
-    "l" 30vmin
+    "l" auto
     "n" auto
     "d" auto
     "r" auto;
   gap: var(--spacing-1);
   place-items: start;
-  background-color: var(--color-surface-l4);
+  background-color: var(--color-primary);
   border-radius: var(--radius-1);
-  padding: var(--spacing-4);
-  border-style: solid;
-  border-width: var(--border-t2);
-  border-color: hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-6));
-  box-shadow: 0px 0px var(--spacing-4) var(--spacing-1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-3));
-  transition-property: transform;
-  transition-duration: 200ms;
+  padding: var(--spacing-6);
+  box-shadow: 0px 0px var(--spacing-4) var(--spacing-1) hsla(var(--color-primary-hsl), var(--alpha-6));
+  transition-property: transform, box-shadow;
+  transition-duration: 200ms, 200ms;
 }
 
 .brand-card:hover {
   transform: scale(1.05);
+  box-shadow: 0px 0px var(--spacing-5) var(--spacing-3) hsla(var(--color-primary-hsl), var(--alpha-4));
 }
-
 
 .brand-card > .logo {
   grid-area: l;
+  width: clamp(40vmin, 300px, 90vw);
+  height: clamp(40vmin, 300px, 90vw);
+  background-image: var(--url-image-logo);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .brand-card > .name {
