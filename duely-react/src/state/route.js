@@ -6,7 +6,8 @@ export const routeCallbacks = {
   beforeEnter: new WeakMap(),
   enter: new WeakMap(),
   beforeExit: new WeakMap(),
-  exit: new WeakMap()
+  exit: new WeakMap(),
+  rejected: new WeakMap()
 }
 
 function executeCallbacks(type) {
@@ -14,7 +15,8 @@ function executeCallbacks(type) {
     beforeEnter: 'pending',
     enter: 'pending',
     beforeExit: 'active',
-    exit: 'active'
+    exit: 'active',
+    rejected: 'active'
   }[type];
 
   return async (context, event) => {
@@ -112,6 +114,7 @@ export function createRouteMachine(routes) {
         invoke: {
           src: 'beforeRouteExit',
           onDone: [
+            { target: 'idle', actions: ['updateActiveData', 'allowRouteExit'], cond: 'noPendingRoute' },
             { target: 'beforeEnter', actions: 'updateActiveData', cond: 'isRequestRoot' },
             { target: 'idle', actions: ['updateActiveData', 'allowRouteExit'] }
           ],
@@ -148,8 +151,8 @@ export function createRouteMachine(routes) {
       entering: {
         invoke: {
           src: 'onRouteEnter',
-          onDone: { actions: ['updatePendingData', 'enterRoute'] },
-          onError: { actions: ['updatePendingData', 'enterRoute'] }
+          onDone: { actions: 'enterRoute' },
+          onError: { actions: 'enterRoute' }
         },
         on: {
           ROUTE_ENTERED: [
@@ -157,31 +160,35 @@ export function createRouteMachine(routes) {
             { target: 'idle', actions: 'forwardToParent' }
           ]
         }
+      },
+      rejected: {
+        invoke: {
+          src: 'onNavigationRejected',
+          onDone: { target: 'idle' },
+          onError: { target: 'idle' }
+        }
       }
     },
     on: {
-      NAVIGATION_REJECTED: { target: 'idle', actions: 'forwardToParent' }
+      NAVIGATION_REJECTED: { target: 'rejected', actions: 'forwardToParent' }
     }
   }, {
     actions: {
       forwardToParent: sendParent((context, event) => event),
       captureRequest: assign({ request: (context, event) => event }),
-      rejectNavigation: pure(() => {
-        debugger;
-        return [
-          assign({
-            request: () => undefined,
-            pending: context => {
-              if (context.pending) {
-                context.pending.ref.stop();
-              }
-
-              return undefined;
+      rejectNavigation: pure(() => [
+        assign({
+          request: () => undefined,
+          pending: context => {
+            if (context.pending) {
+              context.pending.ref.stop();
             }
-          }),
-          sendParent('NAVIGATION_REJECTED')
-        ]
-      }),
+
+            return undefined;
+          }
+        }),
+        sendParent('NAVIGATION_REJECTED')
+      ]),
       requestNavigation: send((context, event) => {
         const { pathname, ...location } = event.location;
         // send only the not yet matched tail of the path to child route
@@ -204,8 +211,19 @@ export function createRouteMachine(routes) {
       allowRouteExit: sendParent('ROUTE_EXIT_ALLOWED'),
       allowRouteEnter: sendParent('ROUTE_ENTER_ALLOWED'),
       enterRoute: pure(() => [
-        assign({ active: context => context.pending }),
-        assign({ pending: () => undefined }),
+        assign((context, event) => {
+          return {
+            ...context,
+            pending: undefined,
+            active: {
+              ...context.pending,
+              data: {
+                ...context.pending.data,
+                ...event.data
+              }
+            }
+          };
+        }),
         send('ROUTE_ENTER', { to: context => context.active.ref })
       ]),
       routeEntered: sendParent('ROUTE_ENTERED'),
@@ -276,7 +294,8 @@ export function createRouteMachine(routes) {
       beforeRouteExit: executeCallbacks('beforeExit'),
       beforeRouteEnter: executeCallbacks('beforeEnter'),
       onRouteExit: executeCallbacks('exit'),
-      onRouteEnter: executeCallbacks('enter')
+      onRouteEnter: executeCallbacks('enter'),
+      onNavigationRejected: executeCallbacks('rejected')
     },
     guards: {
       isUninitializedRequestRoot: context => context.request !== undefined && !context.active,

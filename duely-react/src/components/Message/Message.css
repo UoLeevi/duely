@@ -1,0 +1,12 @@
+.message {
+  z-index: 99;
+  position: fixed;
+  bottom: var(--spacing-4);
+  right: var(--spacing-4);
+  border-radius: var(--radius-1);
+  padding: var(--spacing-4);
+  padding-right: calc(var(--spacing-1) * 9);
+  background-color: var(--color-background-l4);
+  box-shadow: 0px 0px var(--spacing-5) var(--spacing-1) rgba(130, 130, 130, var(--alpha-4));
+  min-width: 20ch;
+}

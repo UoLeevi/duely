@@ -5,6 +5,7 @@ import { client } from './apollo';
 // import { BrowserRouter as Router } from 'react-router-dom';
 import ViewportContextProvider from './contexts/ViewportContext';
 import DomainContextProvider from './contexts/DomainContext';
+import MessageContextProvider from './contexts/MessageContext';
 import ModalContextProvider from './contexts/ModalContext';
 import AnimationContextProvider from './contexts/AnimationContext';
 import FormContextProvider from './contexts/FormContext';
@@ -22,9 +23,11 @@ const App = () => (
               <IconContext.Provider value={{}}>
                 <AnimationContextProvider>
                   <FormContextProvider>
-                    <ModalContextProvider>
-                      <RoutesRoot/>
-                    </ModalContextProvider>
+                    <MessageContextProvider>
+                      <ModalContextProvider>
+                        <RoutesRoot/>
+                      </ModalContextProvider>
+                    </MessageContextProvider>
                   </FormContextProvider>
                 </AnimationContextProvider>
               </IconContext.Provider>
