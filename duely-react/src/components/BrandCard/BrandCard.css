@@ -9,6 +9,7 @@
   place-items: start;
   background-color: var(--color-primary);
   border-radius: var(--radius-1);
+  box-sizing: border-box;
   padding: var(--spacing-6);
   box-shadow: 0px 0px var(--spacing-4) var(--spacing-1) hsla(var(--color-primary-hsl), var(--alpha-6));
   transition-property: transform, box-shadow;
@@ -22,8 +23,8 @@
 
 .brand-card > .logo {
   grid-area: l;
-  width: clamp(40vmin, 300px, 90vw);
-  height: clamp(40vmin, 300px, 90vw);
+  width: 100%;
+  padding-bottom: 100%;
   background-image: var(--url-image-logo);
   background-size: contain;
   background-repeat: no-repeat;

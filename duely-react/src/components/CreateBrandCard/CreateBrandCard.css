@@ -1,0 +1,20 @@
+.create-brand-card {
+  display: grid;
+  gap: var(--spacing-1);
+  place-items: center;
+  border-style: solid;
+  border-width: 2px;
+  border-color: var(--color-primary-l2);
+  border-radius: var(--radius-1);
+  padding: var(--spacing-6);
+  box-shadow: 0px 0px var(--spacing-4) var(--spacing-1) hsla(var(--color-primary-hsl), var(--alpha-2));
+  transition-property: transform, box-shadow;
+  transition-duration: 200ms, 200ms;
+  box-sizing: border-box;
+}
+
+.create-brand-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 0px var(--spacing-5) var(--spacing-3) hsla(var(--color-primary-hsl), var(--alpha-2));
+}
+

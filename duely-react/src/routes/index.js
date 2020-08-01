@@ -87,7 +87,7 @@ export const RoutesRoot = () => {
     <>
       <LoadingBar loading={ state.matches('navigation.processing') } style={{ position: 'absolute', top: '0', left: '0', zIndex: 1 }} />
       <Route />
-      {/* { element ?? <div className="grid w-100 h-100 items-center gutter"><LoadingSpinner size="20%" stroke="var(--color-primary-l4)" /></div> } */}
+      {/* { element ?? <div className="grid w-100 h-100 items-center g-2"><LoadingSpinner size="20%" stroke="var(--color-primary-l4)" /></div> } */}
     </>
   );
 };

@@ -396,50 +396,50 @@ body {
 
 /* All */
 :root {
-  --gutter-width: calc(5% + 10px);
-  --gutter-width-small: calc(var(--gutter-width) * 0.75);
-  --gutter-width-large: calc(var(--gutter-width) * 1.25);
+  --g-2: calc(5% + 10px);
+  --g-1: calc(var(--g-2) * 0.75);
+  --g-3: calc(var(--g-2) * 1.25);
 }
 
 /* Small (sm) */
 @media (min-width: 640px) {
   :root {
-    --gutter-width: 10%;
+    --g-2: 10%;
   }
 }
 
 /* Medium (md) */
 @media (min-width: 768px) {
   :root {
-    --gutter-width: 10%;
+    --g-2: 10%;
   }
 }
 
 /* Large (lg) */
 @media (min-width: 1024px) {
   :root {
-    --gutter-width: 15%;
+    --g-2: 15%;
   }
 }
 
 /* Extra Large (xl) */
 @media (min-width: 1280px) {
   :root {
-    --gutter-width: max(20%, calc((100% - 1280px) / 2));
+    --g-2: max(20%, calc((100% - 1280px) / 2));
   }
 }
 
-#root .gutter {
-  padding-left: var(--gutter-width);
-  padding-right: var(--gutter-width);
+#root .g-2 {
+  padding-left: var(--g-2);
+  padding-right: var(--g-2);
 }
-#root .gutter-small {
-  padding-left: var(--gutter-width-small);
-  padding-right: var(--gutter-width-small);
+#root .g-1 {
+  padding-left: var(--g-1);
+  padding-right: var(--g-1);
 }
-#root .gutter-large {
-  padding-left: var(--gutter-width-large);
-  padding-right: var(--gutter-width-large);
+#root .g-3 {
+  padding-left: var(--g-3);
+  padding-right: var(--g-3);
 }
 
 /* #endregion */

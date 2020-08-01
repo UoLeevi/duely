@@ -4,7 +4,7 @@ import './HomeHeroSection.css';
 
 const HomeHeroSection = ({ ...props }) => {
   return (
-    <section className="home-hero-section gutter" { ...props }>
+    <section className="home-hero-section g-2" { ...props }>
       <div>
         <motion.svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" width="100%"
           transition={{ delay: 0.4 }}

@@ -1,3 +1,22 @@
 .brand-card-list {
+  box-sizing: border-box;
   place-items: center;
+  display: grid;
+  overflow-x: scroll;
+  overflow-y: visible;
+}
+
+.brand-card-list > * {
+  box-sizing: border-box;
+  padding: var(--spacing-5);
+  place-items: center;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: auto;
+  gap: calc(var(--spacing-5) * 2);
+}
+
+.brand-card-list[data-view="one-brand"] > * > * {
+  width: clamp(30vmin, 300px, 70vw);
+  align-self: stretch;
 }

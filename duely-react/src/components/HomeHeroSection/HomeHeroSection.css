@@ -11,6 +11,6 @@
 }
 
 .home-hero-section > div {
-  width: calc(100vw - var(--gutter-width) * 2);
+  width: calc(100vw - var(--g-2) * 2);
   max-width: 768px;
 }

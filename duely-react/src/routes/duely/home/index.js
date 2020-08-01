@@ -17,13 +17,13 @@ export default [
     element: (
       <ResponsiveLayout
         topbar={
-          <Topbar className="gutter py-4" data-layout="floating">
+          <Topbar className="g-2 py-4" data-layout="floating">
             <div className="flex row center-v">
-              <DuelyLogo />
+              <DuelyLogo animate />
               <h1 className="f-5 f-b pa-2">Duely</h1>
             </div>
             <TopbarActions links={[
-              { to: '/profile', text: 'Profile' }
+              { to: '/profile', text: 'Profile', color: 'primary' }
             ]} />
           </Topbar>
         }
@@ -41,19 +41,16 @@ export default [
     element: (
       <ResponsiveLayout
         topbar={
-          <Topbar className="gutter py-4" data-layout="floating">
+          <Topbar className="g-2 py-4" data-layout="floating">
             <Link className="flex row center-v" to="/">
               <DuelyLogo />
               <h1 className="f-5 f-b pa-2">Duely</h1>
             </Link>
-            <TopbarActions links={[
-              { to: '/', text: 'Home' }
-            ]} />
           </Topbar>
         }
         main={
           <SplitLayout
-            left={ <LogInForm className="gutter" data-layout="center 5fr" /> }
+            left={ <LogInForm className="g-2" data-layout="center 5fr" /> }
             right={ <div className="background-bg bg-l3" data-layout="collapse-sm 4fr" ></div> }
           />
         }
@@ -65,19 +62,16 @@ export default [
     element: (
       <ResponsiveLayout
         topbar={
-          <Topbar className="gutter py-4" data-layout="floating">
+          <Topbar className="g-2 py-4" data-layout="floating">
             <Link className="flex row center-v" to="/">
               <DuelyLogo />
               <h1 className="f-5 f-b pa-2">Duely</h1>
             </Link>
-            <TopbarActions links={[
-              { to: '/', text: 'Home' }
-            ]} />
           </Topbar>
         }
         main={
           <SplitLayout
-            left={ <SignUpForm className="gutter" data-layout="center 5fr" /> }
+            left={ <SignUpForm className="g-2" data-layout="center 5fr" /> }
             right={ <div className="background-bg bg-l3" data-layout="collapse-sm 4fr" ></div> }
           />
         }
@@ -89,14 +83,11 @@ export default [
     element: (
       <ResponsiveLayout
         topbar={
-          <Topbar className="gutter py-4">
+          <Topbar className="g-2 py-4">
             <Link className="flex row center-v" to="/">
               <DuelyLogo />
               <h1 className="f-5 f-b pa-2">Duely</h1>
             </Link>
-            <TopbarActions links={[
-              { to: '/', text: 'Home' }
-            ]} />
           </Topbar>
         }
         header={ <HeaderWithActions title="Set a new password" /> }

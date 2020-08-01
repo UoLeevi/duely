@@ -27,8 +27,8 @@ function getColorClassNames(modifiers, color) {
     if (l) classNames += ' bg-' + l;
   } else {
     if (c) classNames += ' ' + c;
-    if (s) classNames += ' ' + s;
-    if (l) classNames += ' ' + l;
+    if (s) classNames += ' color-' + s;
+    if (l) classNames += ' color-' + l;
   }
 
   return classNames;

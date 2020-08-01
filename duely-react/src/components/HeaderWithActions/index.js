@@ -4,7 +4,7 @@ import './HeaderWithActions.css';
 
 const HeaderWithActions = React.forwardRef(({ title, subtitle, children, ...props }, ref) => {
   return (
-    <header className="header-with-actions py-4 gutter" { ...props } ref={ ref }>
+    <header className="header-with-actions py-4 g-2" { ...props } ref={ ref }>
       <AnimatedTransition>
         <h2 className="f-6 f-b">{ title }</h2>
       </AnimatedTransition>

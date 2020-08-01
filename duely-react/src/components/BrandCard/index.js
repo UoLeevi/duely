@@ -26,7 +26,7 @@ const roleColors = {
 
 const BrandCard = ({ agency, className, ...props }) => {
   className = Array.from(new Set(((className ?? '') + ' brand-card').split(' '))).join(' ');
-  console.log(agency);
+
   return (
     <Theme theme={ agency.theme }>
       <Link className={ className } { ...props } to={ createUrl(agency) }>

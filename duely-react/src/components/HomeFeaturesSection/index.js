@@ -13,7 +13,7 @@ const HomeFeaturesSection = ({ ...props }) => {
     }
   }, { threshold: 0.1 });
   return (
-    <Background className="home-features-section gutter" placeItems="center" { ...props }>
+    <Background className="home-features-section g-2" placeItems="center" { ...props }>
       <svg className="home-features-section-background" xmlns="http://www.w3.org/2000/svg" viewBox="0 -10 300 120">
 
       </svg>
