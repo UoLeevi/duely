@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { useQuery, gql } from '@apollo/client';
-import { DomainContext } from '../../contexts/DomainContext';
-import Choose from '../../components/Choose';
+import { subdomain } from 'routes';
+import Choose from 'components/Choose';
 
 const PORTAL_QUERY = gql`
   query($subdomainName: String) {
@@ -51,8 +51,6 @@ const PORTAL_QUERY = gql`
 `;
 
 const Portal = () => {
-
-  const { subdomain } = useContext(DomainContext);
   const { loading, error, data } = useQuery(PORTAL_QUERY, {
     variables: {
       subdomainName: subdomain,

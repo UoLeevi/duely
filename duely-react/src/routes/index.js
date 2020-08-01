@@ -10,55 +10,30 @@ import useRouteEvent from 'hooks/useRouteEvent';
 import duely from './duely';
 import agency from './agency';
 
-const matchFunctions = {}
-
 function pathMatcher(path, options) {
-  let matcher = matchFunctions[path];
-
-  if (!matcher) {
-    matcher = match(path, { encode: encodeURI, decode: decodeURIComponent, end: false, ...options });
-    matchFunctions[path] = matcher;
-  }
-
-  return matcher;
+  return match(path, { encode: encodeURI, decode: decodeURIComponent, end: false, ...options });
 }
 
 export function joinPathParts(base, path) {
-  base = base ?? '/';
-  path = path ?? '/';
+  base = base ?? '';
+  path = path ?? '';
+  path = base + '/' + path;
+  path = path.replace(/\/\/+/g, '/');
 
-  if (base === '/') {
-    return path;
+  if (path.length > 1 && path[path.length - 1] === '/') {
+    path = path.substr(0, path.length - 1);
   }
 
-  if (path === '/') {
-    return base;
-  }
-
-  if (base[base.length - 1] === '/') {
-    base = base.substr(0, base.length - 1);
-  }
-
-  if (path[0] === '/') {
-    path = path.substr(1);
-  }
-
-  return base + '/' + path;
+  return path;
 }
 
 export function matchPath({ path, end }, pathname) {
   return pathMatcher(path, { end })(pathname);
 }
 
-export function matchRoute(route, pathname) {
-  const { path, children } = route;
-  const end = (children?.length ?? 0) === 0;
-
-  return pathMatcher(path, { end })(pathname || '/');
-}
-
 function resolveDomain() {
-  const domain = window.location.hostname.toLowerCase();
+  const url = new URL(window.location.href);
+  const domain = url.hostname.toLowerCase();
   let subdomain = null;
 
   if (process.env.NODE_ENV === 'production') {
@@ -71,10 +46,11 @@ function resolveDomain() {
       }
     }
   } else {
-    const queryParams = new URLSearchParams(window.location.search);
-    let name = queryParams.get('subdomain');
+    let name = url.searchParams.get('subdomain');
 
     if (name) {
+      url.searchParams.delete('subdomain');
+      window.history.replaceState(window.history.state, document.title, url.href);
       subdomain = name.toLowerCase();
     }
   }

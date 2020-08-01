@@ -1,6 +1,7 @@
 .focused-layout {
   position: relative;
   box-sizing: border-box;
+  background-color: var(--color-background-l3);
   overflow: hidden;
   height: 100%;
   display: grid;

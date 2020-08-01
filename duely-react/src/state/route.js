@@ -1,5 +1,5 @@
 import { Machine, assign, spawn, send, sendParent, actions } from 'xstate';
-import { matchRoute, joinPathParts } from 'routes';
+import { matchPath, joinPathParts } from 'routes';
 const { pure } = actions;
 
 export const routeCallbacks = {
@@ -37,22 +37,21 @@ function executeCallbacks(type) {
 }
 
 export function getActivePath(ref) {
-  let activePath = '/';
-  let path;
+  let active;
 
   while (ref.state.context.active) {
-    ({ ref, path } = ref.state.context.active);
-    activePath = joinPathParts(activePath, path);
+    active = ref.state.context.active;
   }
 
-  return activePath;
+  return active?.path ?? '/';
 }
 
-export function createRouteMachine(routes) {
+export function createRouteMachine(routes, base = '/') {
   return Machine({
     id: 'route',
     context: {
       routes,
+      base,
       params: undefined,
       active: undefined,
       pending: undefined,
@@ -190,17 +189,12 @@ export function createRouteMachine(routes) {
         sendParent('NAVIGATION_REJECTED')
       ]),
       requestNavigation: send((context, event) => {
-        const { pathname, ...location } = event.location;
-        // send only the not yet matched tail of the path to child route
-        location.pathname = pathname.substring(context.active.path.length);
-        return { ...event, location, type: 'NAVIGATION_REQUESTED' }
+        return { ...event, type: 'NAVIGATION_REQUESTED' }
       }, { to: context => context.active.ref }),
       requestRouteMatching: pure((context, event) => {
-        const { route, path, params, location: { pathname, ...location } } = event.data;
-        const ref = spawn(createRouteMachine(route.children));
-        // send only the not yet matched tail of the path to child route
-        location.pathname = pathname.substring(path.length);
-
+        const { route, path, params, location } = event.data;
+        const base = joinPathParts(context.base, route.path);
+        const ref = spawn(createRouteMachine(route.children, base));
         return [
           assign({ pending: () => ({ path, params, route, ref }) }),
           send({ location, type: 'ROUTE_MATCHING_REQUESTED' }, { to: context => context.pending.ref })
@@ -282,10 +276,12 @@ export function createRouteMachine(routes) {
         const routes = [...context.routes].sort(compareRouteSpecificity);
 
         for (const route of routes) {
-          const { path, params, index } = matchRoute(route, location.pathname || '/') ?? {};
+          const end = (route.children?.length ?? 0) === 0;
+          const path = joinPathParts(context.base, route.path);
+          const { path: matchedPath, params, index } = matchPath({ path, end }, location.pathname || '/') ?? {};
 
           if (index === 0) {
-            return { route, path, params, location };
+            return { route, path: matchedPath, params, location };
           }
         }
 
@@ -302,10 +298,19 @@ export function createRouteMachine(routes) {
       isRequestRoot: context => context.request !== undefined,
       matchesActiveRoute: (context, event) => {
         if (!context.active) return false;
-        const { path, index } = matchRoute(context.active.route, event.location.pathname) ?? {};
-        return index === 0 && path === context.active.path;
+        const { pathname } = event.location;
+        const route = context.active.route;
+        const path = joinPathParts(context.base, route.path);
+        const end = (route.children?.length ?? 0) === 0;
+        const { path: matchedPath, index } = matchPath({ path, end }, pathname || '/') ?? {};
+        return index === 0 && matchedPath === context.active.path;
       },
-      isFullyMatched: (context, event) => (context.routes?.length ?? 0) === 0 && (event.location.pathname || '/') === '/',
+      isFullyMatched: (context, event) => {
+        if (context.routes?.length) return false;
+        const { pathname } = event.location;
+        const { index } = matchPath({ path: context.base, end: true }, pathname || '/') ?? {};
+        return index === 0;
+      },
       noActiveRoute: context => !context.active,
       noPendingRoute: context => !context.pending
     }

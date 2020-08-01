@@ -1,7 +1,6 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { useQuery, gql } from '@apollo/client';
-import { DomainContext } from '../../contexts/DomainContext';
-import Choose from '../../components/Choose';
+import Choose from 'components/Choose';
 
 const PROFILE_QUERY = gql`
   query {
@@ -29,8 +28,6 @@ const PROFILE_QUERY = gql`
 `;
 
 const Profile = () => {
-
-  const { subdomain } = useContext(DomainContext);
   const { loading, error, data } = useQuery(PROFILE_QUERY);
 
   return (

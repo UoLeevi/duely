@@ -9,7 +9,7 @@ const CreateBrandCard = ({ className, ...props }) => {
 
   return (
     <Link className={ className } { ...props } to={ '/profile/create-brand' }>
-      <Button className="f-6" text color="primary">Create a Brand</Button>
+      <Button className="f-6" text color="primary">Create brand</Button>
     </Link>
   );
 };

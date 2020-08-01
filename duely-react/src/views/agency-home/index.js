@@ -1,7 +1,7 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { useQuery, gql } from '@apollo/client';
-import { DomainContext } from '../../contexts/DomainContext';
-import Choose from '../../components/Choose';
+import { subdomain } from 'routes';
+import Choose from 'components/Choose';
 
 const AGENCY_QUERY = gql`
   query($subdomainName: String) {
@@ -54,7 +54,6 @@ const AGENCY_ROLES_QUERY = gql`
 `;
 
 const AgencyHome = () => {
-  const { subdomain } = useContext(DomainContext);
   const { loading: loadingAgency, error: errorAgencyQuery, data: dataAgencyQuery } = useQuery(AGENCY_QUERY, {
     variables: {
       subdomainName: subdomain,

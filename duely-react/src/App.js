@@ -4,7 +4,6 @@ import { ApolloProvider } from '@apollo/client';
 import { client } from './apollo';
 // import { BrowserRouter as Router } from 'react-router-dom';
 import ViewportContextProvider from './contexts/ViewportContext';
-import DomainContextProvider from './contexts/DomainContext';
 import MessageContextProvider from './contexts/MessageContext';
 import ModalContextProvider from './contexts/ModalContext';
 import AnimationContextProvider from './contexts/AnimationContext';
@@ -18,21 +17,19 @@ const App = () => (
     <ApolloProvider client={client}>
       <AppStateContextProvider>
         <RouteContextProvider>
-          <DomainContextProvider>
-            <ViewportContextProvider>
-              <IconContext.Provider value={{}}>
-                <AnimationContextProvider>
-                  <FormContextProvider>
-                    <MessageContextProvider>
-                      <ModalContextProvider>
-                        <RoutesRoot/>
-                      </ModalContextProvider>
-                    </MessageContextProvider>
-                  </FormContextProvider>
-                </AnimationContextProvider>
-              </IconContext.Provider>
-            </ViewportContextProvider>
-          </DomainContextProvider>
+          <ViewportContextProvider>
+            <IconContext.Provider value={{}}>
+              <AnimationContextProvider>
+                <FormContextProvider>
+                  <MessageContextProvider>
+                    <ModalContextProvider>
+                      <RoutesRoot/>
+                    </ModalContextProvider>
+                  </MessageContextProvider>
+                </FormContextProvider>
+              </AnimationContextProvider>
+            </IconContext.Provider>
+          </ViewportContextProvider>
         </RouteContextProvider>
       </AppStateContextProvider>
     </ApolloProvider>

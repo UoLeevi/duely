@@ -1,4 +1,4 @@
-.message {
+.message-box {
   z-index: 99;
   position: fixed;
   bottom: var(--spacing-4);
