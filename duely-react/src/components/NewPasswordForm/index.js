@@ -5,7 +5,7 @@ import { passwordFieldProps } from 'components/TextField/presets';
 import Button from 'components/Button';
 import Form from 'components/Form';
 
-const NewPasswordForm = React.forwardRef(({ verificationCode, ...props }, ref) => {
+const NewPasswordForm = React.forwardRef(({ verificationCode, completedButton, ...props }, ref) => {
   const [state, send] = useAuthState();
   const { message } = state.event?.data ?? {};
 
@@ -15,7 +15,7 @@ const NewPasswordForm = React.forwardRef(({ verificationCode, ...props }, ref) =
         <div className="flex column center gap-5">
           <span className="f-4 f-b">Password changed successfully</span>
           <span className="f-2 f-b">You are now logged in.</span>
-          <Button type="button" link={{ to: '/profile' }} filled color="primary">Continue to profile</Button>
+          { completedButton }
         </div>
        } { ...props } ref={ ref }
       >

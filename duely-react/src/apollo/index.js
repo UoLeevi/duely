@@ -8,7 +8,6 @@ import typePolicies from './typePolicies';
 import queries from './queries';
 import mutations from './mutations';
 
-
 // Get access token from url query string and replace history entry
 const url = new URL(window.location.href);
 const access_token = url.searchParams.get('access_token');
@@ -16,7 +15,7 @@ const access_token = url.searchParams.get('access_token');
 if (access_token) {
   localStorage.setItem('user-jwt', access_token);
   url.searchParams.delete('access_token');
-  window.history.replaceState(window.history.state, document.title, url.toString());
+  window.history.replaceState(window.history.state, document.title, url.href);
 }
 
 const cache = new InMemoryCache({

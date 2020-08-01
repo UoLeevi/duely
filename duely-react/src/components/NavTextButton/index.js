@@ -8,7 +8,7 @@ const NavTextButton = ({ link, text, tag = 'button', className = '', ...props })
   const [state, ] = useAppState();
   const { pathname } = state.context.history.location;
   const { to: path, end } = link ?? {};
-  const active = matchPath({ path, end }, pathname) !== null;
+  const active = matchPath({ path, end }, pathname) !== false;
   const Element = tag;
   const Wrapper = link
     ? ({ children }) => (<Link { ...link }>{ children }</Link>)

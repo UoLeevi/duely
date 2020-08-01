@@ -20,7 +20,15 @@ export const authMachine = Machine({
     visitor: {
       initial: 'idle',
       states: {
-        idle: {},
+        idle: {
+          on: {
+            LOG_IN: 'logInLoading',
+            START_PASSWORD_RESET: 'startPasswordResetLoading',
+            START_SIGN_UP: 'startSignUpLoading',
+            VERIFY_PASSWORD_RESET: 'verifyPasswordResetLoading',
+            VERIFY_SIGN_UP: 'verifySignUpLoading'
+          }
+        },
         logInLoading: {
           invoke: {
             src: 'logIn',
@@ -36,6 +44,9 @@ export const authMachine = Machine({
         logInFailed: {
           after: {
             4000: 'idle'
+          },
+          on: {
+            CONTINUE: 'idle'
           }
         },
         startPasswordResetLoading: {
@@ -53,11 +64,17 @@ export const authMachine = Machine({
         startPasswordResetCompleted: {
           after: {
             60000: 'idle'
+          },
+          on: {
+            CONTINUE: 'idle'
           }
         },
         startPasswordResetFailed: {
           after: {
             4000: 'idle'
+          },
+          on: {
+            CONTINUE: 'idle'
           }
         },
         startSignUpLoading: {
@@ -75,11 +92,17 @@ export const authMachine = Machine({
         startSignUpCompleted: {
           after: {
             60000: 'idle'
+          },
+          on: {
+            CONTINUE: 'idle'
           }
         },
         startSignUpFailed: {
           after: {
             4000: 'idle'
+          },
+          on: {
+            CONTINUE: 'idle'
           }
         },
         verifyPasswordResetLoading: {
@@ -97,6 +120,9 @@ export const authMachine = Machine({
         verifyPasswordResetFailed: {
           after: {
             4000: 'idle'
+          },
+          on: {
+            CONTINUE: 'idle'
           }
         },
         verifySignUpLoading: {
@@ -114,15 +140,11 @@ export const authMachine = Machine({
         verifySignUpFailed: {
           after: {
             4000: 'idle'
+          },
+          on: {
+            CONTINUE: 'idle'
           }
         }
-      },
-      on: {
-        LOG_IN: '.logInLoading',
-        START_PASSWORD_RESET: '.startPasswordResetLoading',
-        START_SIGN_UP: '.startSignUpLoading',
-        VERIFY_PASSWORD_RESET: '.verifyPasswordResetLoading',
-        VERIFY_SIGN_UP: '.verifySignUpLoading'
       }
     },
     loggedIn: {

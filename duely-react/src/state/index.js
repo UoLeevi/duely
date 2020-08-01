@@ -48,7 +48,8 @@ export const appMachine = Machine({
     }
   },
   on: {
-    USER_UPDATED: { actions: ['updateUser'] }
+    MODIFY_LOCATION: { actions: 'modifyLocation' },
+    USER_UPDATED: { actions: 'updateUser' }
   }
 }, {
   actions: {
@@ -74,6 +75,10 @@ export const appMachine = Machine({
       if (context.history.location.pathname !== activePath) {
         context.history.replace(activePath, { id: lastNavigation });
       }
+    },
+    modifyLocation: (context, event) => {
+      const location = { ...context.history.location, ...event.location };
+      context.history.replace(location, { id: lastNavigation });
     }
   },
   guards: {

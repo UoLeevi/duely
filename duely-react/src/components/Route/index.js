@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { RouteContext } from 'contexts/RouteContext';
 
-function Route() {
+const Route = props => {
   let { active, data } = useContext(RouteContext);
   
   if (!active) {
@@ -9,7 +9,7 @@ function Route() {
   }
 
   const { route, path, params } = active ?? {};
-  const element = route?.element;
+  const element = route?.element && React.cloneElement(route.element, props);
 
   do {
     active = active.ref.state.context.active;

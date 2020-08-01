@@ -112,8 +112,8 @@ export function createRouteMachine(routes) {
         invoke: {
           src: 'beforeRouteExit',
           onDone: [
-            { target: 'beforeEnter', actions: 'updataActiveData', cond: 'isRequestRoot' },
-            { target: 'idle', actions: ['updataActiveData', 'allowRouteExit'] }
+            { target: 'beforeEnter', actions: 'updateActiveData', cond: 'isRequestRoot' },
+            { target: 'idle', actions: ['updateActiveData', 'allowRouteExit'] }
           ],
           onError: { target: 'idle', actions: 'rejectNavigation' }
         }
@@ -121,7 +121,7 @@ export function createRouteMachine(routes) {
       beforeEnter: {
         invoke: {
           src: 'beforeRouteEnter',
-          onDone: { actions: ['updataPendingData', 'requestRouteEnter'] },
+          onDone: { actions: ['updatePendingData', 'requestRouteEnter'] },
           onError: { target: 'idle', actions: 'rejectNavigation' }
         },
         on: {
@@ -148,8 +148,8 @@ export function createRouteMachine(routes) {
       entering: {
         invoke: {
           src: 'onRouteEnter',
-          onDone: { actions: ['updataPendingData', 'enterRoute'] },
-          onError: { actions: ['updataPendingData', 'enterRoute'] }
+          onDone: { actions: ['updatePendingData', 'enterRoute'] },
+          onError: { actions: ['updatePendingData', 'enterRoute'] }
         },
         on: {
           ROUTE_ENTERED: [
@@ -230,7 +230,7 @@ export function createRouteMachine(routes) {
         context.request = undefined;
         return { ...request, type: 'NAVIGATION_CONFIRMED' };
       }),
-      updataActiveData: assign({
+      updateActiveData: assign({
         active: (context, event) => context.active && ({
           ...context.active,
           data: {
@@ -239,7 +239,7 @@ export function createRouteMachine(routes) {
           }
         })
       }),
-      updataPendingData: assign({
+      updatePendingData: assign({
         pending: (context, event) => ({
           ...context.pending,
           data: {

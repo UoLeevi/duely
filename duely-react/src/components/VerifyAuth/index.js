@@ -1,29 +1,39 @@
 import React, { useEffect, useRef } from 'react';
-import { Outlet, useSearchParams } from 'react-router-dom';
+import Route from 'components/Route';
 import useModal from 'hooks/useModal';
+import useAppState from 'hooks/useAppState';
 import useAuthState from 'hooks/useAuthState';
+import Button from 'components/Button';
 import NewPasswordForm from 'components/NewPasswordForm';
 
 const VerifyAuth = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [state, send] = useAppState();
+  const { history } = state.context;
+  const searchParams = new URLSearchParams(history.location.search);
   const verify = searchParams.get('verify');
   const verificationCode = searchParams.get('verification_code');
   const hideModalRef = useRef();
-  const showNewPasswordModal = useModal(<NewPasswordForm verificationCode={ verificationCode } />, { hideModalRef, dismissable: false });
-  const [, send] = useAuthState();
+  const [, sendAuth] = useAuthState();
+  const showNewPasswordModal = useModal(
+    <NewPasswordForm 
+      verificationCode={ verificationCode }
+      completedButton={ <Button type="button" onClick={ hideModalRef.current } filled color="primary">Continue</Button> }
+    />, 
+    { hideModalRef, dismissable: false }
+  );
 
   useEffect(() => {
     if (verify && verificationCode) {
       const newSearchParams = new URLSearchParams(searchParams.toString());
       newSearchParams.delete('verify');
       newSearchParams.delete('verification_code');
-      debugger;
-      setSearchParams(newSearchParams);
+
+      send({ type: 'MODIFY_LOCATION', location: { search: newSearchParams.toString() } });
 
       switch (verify) {
 
         case 'sign-up':
-          send({ type: 'VERIFY_SIGN_UP', verificationCode });
+          sendAuth({ type: 'VERIFY_SIGN_UP', verificationCode });
           break;
 
         case 'password-reset':
@@ -34,10 +44,10 @@ const VerifyAuth = () => {
           throw new Error();
       }
     }
-  }, [searchParams, setSearchParams, verify, verificationCode, showNewPasswordModal, send])
+  }, [searchParams, verify, verificationCode, showNewPasswordModal, send, sendAuth])
 
   return (
-    <Outlet />
+    <Route />
   );
 };
 

@@ -8,7 +8,7 @@ const NavButton = ({ link, text, icon, tag = 'button', minimize = false, classNa
   const [state, ] = useAppState();
   const { pathname } = state.context.history.location;
   const { to: path, end } = link ?? {};
-  const active = matchPath({ path, end }, pathname) !== null;
+  const active = matchPath({ path, end }, pathname) !== false;
   const Element = tag;
   const Icon = icon;
   className = Array.from(new Set(((className ?? '') + ' nav-button surface color-s1n color-l1').split(' '))).join(' ');
