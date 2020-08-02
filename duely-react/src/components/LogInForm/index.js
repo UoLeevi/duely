@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import useAuthState from 'hooks/useAuthState';
 import useModal from 'hooks/useModal';
-import TextField from 'components/TextField';
-import { emailFieldProps, passwordFieldProps } from 'components/TextField/presets';
+import TextInput from 'components/TextInput';
+import { emailFieldProps, passwordFieldProps } from 'components/TextInput/presets';
 import Button from 'components/Button';
 import Form from 'components/Form';
 import StartPasswordResetForm from 'components/StartPasswordResetForm';
@@ -24,8 +24,8 @@ const LogInForm = React.forwardRef(({ redirectUrl, ...props }, ref) => {
       )} { ...props } ref={ ref }
     >
       <h3 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Log in</h3>
-      <TextField data-form="emailAddress" setText={ setSetEmailAddress } { ...emailFieldProps } autoFocus completed={ null } />
-      <TextField data-form="password" { ...passwordFieldProps } completed={ null } actions={{ 'Reset password': showModal }} />
+      <TextInput name="emailAddress" setValue={ setSetEmailAddress } { ...emailFieldProps } autoFocus completed={ null } />
+      <TextInput name="password" { ...passwordFieldProps } completed={ null } actions={{ 'Reset password': showModal }} />
       <Button className="my-2" areaWidth="40ch" 
         loading={ state.matches('visitor.logInLoading') }
         error={ state.matches('visitor.logInFailed') && (message ?? 'Wrong email or password') }

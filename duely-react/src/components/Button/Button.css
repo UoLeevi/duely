@@ -4,6 +4,7 @@
 
 #root .button {
   cursor: pointer;
+  appearance: none;
   letter-spacing: 0.04em;
   text-align: center;
   font-weight: bold;

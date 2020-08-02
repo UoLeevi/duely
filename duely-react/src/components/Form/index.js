@@ -27,9 +27,9 @@ const Form = React.forwardRef(({ handleSubmit, className, children, loading, com
       const ref = element?.ref;
 
       if (ref) {
-        const { isValid, key, value } = validate(ref) ?? {};
+        const { isValid, name, value } = validate(ref) ?? {};
 
-        if (key === undefined) {
+        if (name === undefined) {
           continue;
         }
 
@@ -37,7 +37,7 @@ const Form = React.forwardRef(({ handleSubmit, className, children, loading, com
           return;
         }
 
-        data[key] = value;
+        data[name] = value;
       }
     }
 

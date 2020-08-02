@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import useAuthState from 'hooks/useAuthState';
-import TextField from 'components/TextField';
-import { emailFieldProps } from 'components/TextField/presets';
+import TextInput from 'components/TextInput';
+import { emailFieldProps } from 'components/TextInput/presets';
 import Button from 'components/Button';
 import Form from 'components/Form';
 
@@ -27,7 +27,7 @@ const StartPasswordResetForm = React.forwardRef(({ emailAddress: defaultEmailAdd
       } { ...props } ref={ ref }
     >
       <h3 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Password reset</h3>
-      <TextField data-form="emailAddress" defaultValue={ emailAddress } { ...emailFieldProps } autoFocus completed={ null } />
+      <TextInput name="emailAddress" defaultValue={ emailAddress } { ...emailFieldProps } autoFocus completed={ null } />
       <Button className="my-2" areaWidth="40ch" 
         loading={ state.matches('visitor.startPasswordResetLoading') } 
         error={ state.matches('visitor.startPasswordResetFailed') && (message ?? 'We could\'t send a password reset link to this email address') } 

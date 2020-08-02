@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import useAuthState from 'hooks/useAuthState';
-import TextField from 'components/TextField';
-import { emailFieldProps, passwordFieldProps } from 'components/TextField/presets';
+import TextInput from 'components/TextInput';
+import { emailFieldProps, passwordFieldProps } from 'components/TextInput/presets';
 import Button from 'components/Button';
 import Form from 'components/Form';
 
@@ -37,9 +37,9 @@ const SignUpForm = React.forwardRef(({ ...props }, ref) => {
       )} { ...props } ref={ ref }
     >
       <h2 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Sign up</h2>
-      <TextField data-form="name" label="Name" type="text" autoFocus required />
-      <TextField data-form="emailAddress" { ...emailFieldProps } completed={ null } />
-      <TextField data-form="password" { ...passwordFieldProps } completed={ null } />
+      <TextInput name="name" label="Name" type="text" autoFocus required />
+      <TextInput name="emailAddress" { ...emailFieldProps } completed={ null } />
+      <TextInput name="password" { ...passwordFieldProps } completed={ null } />
       <Button className="my-2" areaWidth="40ch"
         loading={ state.matches('visitor.startSignUpLoading') } 
         error={ state.matches('visitor.startSignUpFailed') && (message ?? 'We could\'t send a verification link to this email address') } 

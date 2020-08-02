@@ -1,7 +1,7 @@
 import React from 'react';
 import useAuthState from 'hooks/useAuthState';
-import TextField from 'components/TextField';
-import { passwordFieldProps } from 'components/TextField/presets';
+import TextInput from 'components/TextInput';
+import { passwordFieldProps } from 'components/TextInput/presets';
 import Button from 'components/Button';
 import Form from 'components/Form';
 
@@ -20,7 +20,7 @@ const NewPasswordForm = React.forwardRef(({ verificationCode, completedButton, .
        } { ...props } ref={ ref }
       >
       <h3 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Set new password</h3>
-      <TextField data-form="password" { ...passwordFieldProps } autoFocus />
+      <TextInput name="password" { ...passwordFieldProps } autoFocus />
       <Button className="mt-2" areaWidth="40ch"
         loading={ state.matches('visitor.verifyPasswordResetLoading') }
         error={ state.matches('visitor.verifyPasswordResetFailed') && (message ?? 'Something went wrong') }

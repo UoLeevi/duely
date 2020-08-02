@@ -1,0 +1,4 @@
+.input.file-input > span.input-element:empty:before {
+  content: "Drop a file here or click to upload";
+  color: rgba(var(--color-grey-rgb), var(--alpha-8));
+}

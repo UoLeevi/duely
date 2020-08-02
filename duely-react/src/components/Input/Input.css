@@ -1,0 +1,133 @@
+:root {
+  --input-label-height: calc(var(--f-2) * 1.2);
+  --input-message-height: calc(var(--f-1) * 1.2);
+  --input-space: calc(var(--input-label-height) + var(--input-message-height));
+}
+
+#root .pt-label-text {
+  padding-top: var(--input-label-height);
+}
+#root .pb-hint-text {
+  padding-bottom: var(--input-message-height);
+}
+#root .mt-label-text {
+  margin-top: var(--input-label-height);
+}
+#root .mb-hint-text {
+  margin-bottom: var(--input-message-height);
+}
+
+.input {
+  position: relative;
+  flex-grow: 1;
+  display: grid;
+  grid-template:
+    "l a a" auto
+    "i i d" auto
+    "m m m" auto
+    / 1fr auto auto;
+  align-items: baseline;
+}
+
+.input > span.input-label {
+  grid-area: l;
+  font-size: var(--f-2);
+}
+
+.input-actions {
+  grid-area: a;
+  font-size: var(--f-1);
+}
+
+.input > span.input-message {
+  grid-area: m;
+  font-size: var(--f-1);
+  font-weight: normal;
+  color: rgb(var(--color-grey-rgb));
+  transition: color 160ms ease-out;
+}
+
+.input > span.input-message:empty:before,
+.input > span.input-element:empty:before {
+  content: "\200b";
+}
+
+.input-actions > span {
+  cursor: pointer;
+  position: relative;
+  color: var(--color-primary)
+}
+
+.input > input,
+.input > .input-element {
+  grid-area: i / i / d / d;
+  font-size: var(--f-3);
+  box-sizing: border-box;
+  border-radius: var(--radius-1-rel);
+  border: solid rgba(var(--color-grey-rgb), var(--alpha-3)) 2px;
+  background: transparent;
+  padding: 0.8em 1.4em;
+  min-width: 7em;
+  appearance: none;
+  transition: border-color 160ms ease-out;
+  margin-top: calc(var(--input-label-height) - var(--f-2));
+  margin-bottom: calc(var(--input-message-height) - var(--f-1));
+}
+
+.input > .input-loading-bar {
+  grid-area: i / i / d / d;
+  overflow: hidden;
+  pointer-events: none;
+  place-self: end center;
+  margin-bottom: calc(var(--input-message-height) - var(--f-1));
+  width: calc(100% - var(--radius-1-rel) * 2) !important;
+  mask-image: linear-gradient(to right, transparent, rgba(0, 0, 0, 1.0), transparent);
+}
+
+.input[data-input="with-icon"] .input,
+.input[data-input="with-icon"] .input-element {
+  padding-right: 3.2em;
+}
+
+.input > .input-icon {
+  grid-area: d;
+  color: rgba(var(--color-grey-rgb), var(--alpha-6));
+  pointer-events: none;
+  place-self: center;
+  padding-right: 0.9em;
+  transform: scale(1.3);
+  transform-origin: right;
+}
+
+.input > .input-actions > span,
+.input span.input-label,
+.input span.input-message {
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  margin-left: 0.4em;
+  margin-right: 0.4em;
+}
+
+.input > input:focus {
+  border-color: rgba(var(--color-grey-rgb), var(--alpha-5));
+}
+
+.input.completed > input {
+  border-color: hsla(var(--color-success-hsl), var(--alpha-7));
+}
+
+.input.invalid > input,
+.input:invalid > input {
+  border-color: hsla(var(--color-error-hsl), var(--alpha-7));
+}
+
+.input.invalid > input:focus,
+.input:invalid > input:focus {
+  border-color: hsl(var(--color-error-hsl));
+}
+
+.input.invalid > .input-message,
+.input:invalid > .input-message {
+  color: var(--color-error);
+}
+

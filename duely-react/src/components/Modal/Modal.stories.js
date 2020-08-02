@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import useModal from 'hooks/useModal';
-import TextField from 'components/TextField';
+import TextInput from 'components/TextInput';
 import Button from 'components/Button';
 
 export default {
@@ -8,7 +8,7 @@ export default {
 };
 
 export const Default = () => {
-  const [text, setText] = useState();
+  const [text, setValue] = useState();
   const hideModalRef = useRef();
   const showModal = useModal(
     <div className="panel">
@@ -19,7 +19,7 @@ export const Default = () => {
         <span>Could be any content here</span>
       </div>
       <div className="panel-row">
-        <TextField label="Label" text={ text } setText={ setText } />
+        <TextInput label="Label" defaultValue={ text } setValue={ setValue } />
       </div>
       <div className="panel-row center-h">
         <Button onClick={ () => hideModalRef.current() }>Click me</Button>
