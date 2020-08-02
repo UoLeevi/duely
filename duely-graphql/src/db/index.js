@@ -82,13 +82,13 @@ async function withConnection(context, callback = async withSession => {}) {
       await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
 
       try {
-        return callback(client);
+        return await callback(client);
       } finally {
         await client.query('SELECT operation_.end_session_()');
       }
     }
 
-    return callback(withSession);
+    return await callback(withSession);
 
   }
   finally {
