@@ -27,13 +27,13 @@ const Form = React.forwardRef(({ handleSubmit, className, children, loading, com
       const ref = element?.ref;
 
       if (ref) {
-        const { isValid, name, value } = validate(ref) ?? {};
+        const { isValid, name, value, loading } = validate(ref) ?? {};
 
         if (name === undefined) {
           continue;
         }
 
-        if (!isValid) {
+        if (!isValid || loading) {
           return;
         }
 
@@ -57,7 +57,7 @@ const Form = React.forwardRef(({ handleSubmit, className, children, loading, com
         { children }
       </form>
       { error && <div className="form-error" style={ messageStyle }>{ isValidElement(error) ? error : <span className="f-2 f-b error">{ error }</span> }</div> }
-      { loading && (isValidElement(loading) ? loading : <LoadingSpinner data-choose="fit" />) }
+      { loading && (isValidElement(loading) ? loading : <LoadingSpinner size="4rem" />) }
       { completed && <div className="form-completed" style={ messageStyle }>{ isValidElement(completed) ? completed : <span className="f-2 f-b success">{ completed }</span> }</div> }
       { <div style={ areaStyle }></div> }
     </Choose>

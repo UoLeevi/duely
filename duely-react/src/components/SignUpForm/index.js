@@ -26,7 +26,7 @@ const SignUpForm = React.forwardRef(({ ...props }, ref) => {
   }
 
   return (
-    <Form className="w-panel" handleSubmit={ handleSubmit } autoComplete="new-password" 
+    <Form className="w-form" handleSubmit={ handleSubmit } autoComplete="new-password" 
       completed={ state.matches('visitor.startSignUpCompleted') && (
         <div className="flex column center gap-5">
           <span className="f-4 f-b">Please check your inbox</span>

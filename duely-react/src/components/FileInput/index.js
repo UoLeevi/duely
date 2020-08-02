@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Input from 'components/Input';
 import { BsImage, BsFileEarmark } from 'react-icons/bs';
 import './FileInput.css';
+import { estimateImageColor } from 'utils'; 
 
 const FileInput = React.forwardRef(({ type = 'file', icon, accept, onChange, decoder, className, rules, required, previewAspectRatio, ...props }, ref) => {
   const [state, setState] = useState({
@@ -59,12 +60,20 @@ const FileInput = React.forwardRef(({ type = 'file', icon, accept, onChange, dec
     try {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => {
-        ref.current.style.setProperty('--url-image', `url('${reader.result}')`);
+      reader.onload = async () => {
+        const dataUrl = reader.result;
+        const color = await estimateImageColor(dataUrl)
+
+        ref.current.style.setProperty('--url-image', `url('${dataUrl}')`);
+
+        if (color) {
+          ref.current.style.setProperty('--color-image', color);
+        }
 
         setState(state => ({
           ...state,
-          data: decoder ? decoder(reader.result) : reader.result,
+          data: decoder ? decoder(dataUrl) : dataUrl,
+          color,
           loading: false,
           error: undefined
         }));

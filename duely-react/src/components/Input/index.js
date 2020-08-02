@@ -5,7 +5,7 @@ import './Input.css';
 
 const requiredMessage = 'Required';
 
-const Input = React.forwardRef(({ name, label, type, subtype, hint, onChange, onBlur, getValue, setValue = () => {}, rules = [], completed = rules, loading, actions, className, icon, children, ...props }, ref) => {
+const Input = React.forwardRef(({ name, label, type, subtype, hint, onChange, onBlur, getValue, setValue = () => {}, rules = [], completed = rules, loading, forceHint, actions, className, icon, children, options, ...props }, ref) => {
   const inputRef = useRef();
   const defaultRef = useRef();
   ref = ref ?? defaultRef;
@@ -104,6 +104,13 @@ const Input = React.forwardRef(({ name, label, type, subtype, hint, onChange, on
   icon = icon && React.cloneElement(icon, { className: (icon.props.className ?? '') + ' input-icon' });
   const view = icon ? 'with-icon' : 'default';
 
+  if (type === 'select') {
+    options = options?.map(option => {
+      const { value, element } = typeof option === 'object' ? option : { value: option };
+      return <option key={ value } value={ value }>{ element ?? value }</option>;
+    }) ?? [];
+  }
+
   return (
     <label htmlFor={ `input-${name}` } className={ className } data-input={ view } ref={ ref }>
       <span className="input-label">{ label }</span>
@@ -112,7 +119,10 @@ const Input = React.forwardRef(({ name, label, type, subtype, hint, onChange, on
           <span key={ text } onClick={ onClick }>{ text }</span>
         )}
       </div>
-      <input name={ name } id={ `input-${name}` } hidden={ element !== undefined } type={ type } onBlur={ e => { validate(e.target.value); if (onBlur) onBlur(e); }} onChange={ processInput } spellCheck="false" autoComplete="off" { ...props } ref={ inputRef } />
+      { type === 'select'
+        ? <select name={ name } id={ `input-${name}` } className="input-control" hidden={ element !== undefined } onBlur={ e => { validate(e.target.value); if (onBlur) onBlur(e); }} onChange={ processInput } spellCheck="false" autoComplete="off" children={ options } { ...props } ref={ inputRef } />
+        : <input name={ name } id={ `input-${name}` } className="input-control" hidden={ element !== undefined } type={ type } onBlur={ e => { validate(e.target.value); if (onBlur) onBlur(e); }} onChange={ processInput } spellCheck="false" autoComplete="off" { ...props } ref={ inputRef } />
+      }
       <div className="input-loading-bar">
         <LoadingBar loading={ loading } />
       </div>

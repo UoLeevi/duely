@@ -234,6 +234,11 @@ textarea { white-space: pre-wrap; }
   -webkit-tap-highlight-color: transparent !important;
 }
 
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
 /* #endregion */
 
 /* #region Font faces */

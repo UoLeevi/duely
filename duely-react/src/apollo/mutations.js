@@ -85,4 +85,18 @@ export default {
     `,
     result: d => d['createAgency']
   },
+  editImage: {
+    mutation: gql`
+      mutation($agencyUuid: ID!, $imageName: String!, $imageData: String!, $imageColor: String!) {
+        editImage(agencyUuid: $agencyUuid, imageName: $imageName, imageData: $imageData, imageColor: $imageColor) {
+          success
+          message
+          image {
+            uuid
+          }
+        }
+      }
+    `,
+    result: d => d['editImage']
+  },
 };

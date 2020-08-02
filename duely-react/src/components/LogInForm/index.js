@@ -15,7 +15,7 @@ const LogInForm = React.forwardRef(({ redirectUrl, ...props }, ref) => {
   const showModal = useModal(<StartPasswordResetForm emailAddress={ emailAddress } />);
 
   return (
-    <Form className="w-panel" handleSubmit={ data => send({ type: 'LOG_IN', ...data }) }
+    <Form className="w-form" handleSubmit={ data => send({ type: 'LOG_IN', ...data }) }
       completed={ state.matches('loggedIn') && (
         <div className="flex column center gap-5">
           <span className="f-4 f-b">You are logged in</span>

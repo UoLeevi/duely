@@ -16,7 +16,7 @@ const StartPasswordResetForm = React.forwardRef(({ emailAddress: defaultEmailAdd
   }
 
   return (
-    <Form className="w-panel" handleSubmit={ handleSubmit } autoComplete="new-password" 
+    <Form className="w-form" handleSubmit={ handleSubmit } autoComplete="new-password" 
       completed={ state.matches('visitor.startPasswordResetCompleted') &&
         <div className="flex column center gap-5">
           <span className="f-4 f-b">Please check your inbox</span>

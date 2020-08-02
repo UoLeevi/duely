@@ -61,7 +61,7 @@
   color: var(--color-primary)
 }
 
-.input > input,
+.input > .input-control,
 .input > .input-element {
   grid-area: i / i / d / d;
   font-size: var(--f-3);
@@ -87,7 +87,7 @@
   mask-image: linear-gradient(to right, transparent, rgba(0, 0, 0, 1.0), transparent);
 }
 
-.input[data-input="with-icon"] .input,
+.input[data-input="with-icon"] .input-control,
 .input[data-input="with-icon"] .input-element {
   padding-right: 3.2em;
 }
@@ -111,22 +111,22 @@
   margin-right: 0.4em;
 }
 
-.input > input:focus {
+.input > .input-control:focus {
   border-color: var(--color-background-s1n)
 }
 
-.input.completed > input {
+.input.completed > .input-control {
   border-color: hsla(var(--color-success-hsl), var(--alpha-7));
 }
 
-.input.invalid > input,
-.input:invalid > input {
+.input.invalid > .input-control,
+.input:invalid > .input-control {
   opacity: 1;
   border-color: hsla(var(--color-error-hsl), var(--alpha-7));
 }
 
-.input.invalid > input:focus,
-.input:invalid > input:focus {
+.input.invalid > .input-control:focus,
+.input:invalid > .input-control:focus {
   border-color: hsl(var(--color-error-hsl));
 }
 

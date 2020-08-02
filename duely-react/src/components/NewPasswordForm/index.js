@@ -10,7 +10,7 @@ const NewPasswordForm = React.forwardRef(({ verificationCode, completedButton, .
   const { message } = state.event?.data ?? {};
 
   return (
-    <Form className="w-panel" handleSubmit={ data => send({ type: 'VERIFY_PASSWORD_RESET', verificationCode, ...data }) } autoComplete="new-password" 
+    <Form className="w-form" handleSubmit={ data => send({ type: 'VERIFY_PASSWORD_RESET', verificationCode, ...data }) } autoComplete="new-password" 
       completed={ state.matches('loggedIn') &&
         <div className="flex column center gap-5">
           <span className="f-4 f-b">Password changed successfully</span>

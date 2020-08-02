@@ -14,6 +14,14 @@ export default {
     `,
     result: d => d?.me
   },
+  countryCodes: {
+    query: gql`
+      query {
+        countryCodes
+      }
+    `,
+    result: d => d?.countryCodes
+  },
   agencies: {
     query: gql`
       query {
