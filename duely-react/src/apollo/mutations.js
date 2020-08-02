@@ -69,5 +69,20 @@ export default {
       }
     `,
     result: d => d['startSignUp']
-  }
+  },
+  createAgency: {
+    mutation: gql`
+      mutation($name: String!, $subdomain: String!, $countryCode: String!, $returnUrl: String!) {
+        createAgency(name: $name, subdomain: $subdomain, countryCode: $countryCode, returnUrl: $returnUrl) {
+          success
+          message
+          agency {
+            uuid
+          }
+          stripeVerificationUrl
+        }
+      }
+    `,
+    result: d => d['createAgency']
+  },
 };

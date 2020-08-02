@@ -304,12 +304,26 @@ textarea { white-space: pre-wrap; }
 
 /* #endregion */
 
+/* #region Line height variables */
+
+:root {
+  --lh-p: 1.75em;
+}
+
+/* #endregion */
+
 /* #region Container size variables */
 
 :root {
   --panel-min-width: min(360px, 100%, 100vw - var(--spacing-5));
   --panel-width: max-content;
-  --panel-max-width: min(1280px, 100%, 100vw - var(--spacing-5));
+  --panel-max-width: min(80ch, 100%, 100vw - var(--spacing-5));
+}
+
+:root {
+  --form-min-width: min(360px, 100%, 100vw - var(--spacing-5));
+  --form-width: max-content;
+  --form-max-width: min(60ch, 100%, 100vw - var(--spacing-5));
 }
 
 /* #endregion */
@@ -388,6 +402,14 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* #endregion */
+
+/* #region Line height variables */
+
+#root .lh-p {
+  line-height: var(--lh-p);
 }
 
 /* #endregion */
@@ -906,6 +928,13 @@ body {
   box-sizing: border-box;
 }
 
+#root .w-form {
+  min-width: var(--form-min-width);
+  max-width: var(--form-max-width);
+  width: var(--form-width);
+  box-sizing: border-box;
+}
+
 #root .w-100 {
   width: 100%;
   box-sizing: border-box;
@@ -981,6 +1010,9 @@ h1 {
   font-size: var(--f-7);
 }
 
+p {
+  line-height: var(--lh-p);
+}
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
@@ -1196,4 +1228,3 @@ body {
 }
 
 /* #endregion */
-

@@ -5,7 +5,7 @@ import './Input.css';
 
 const requiredMessage = 'Required';
 
-const Input = React.forwardRef(({ name, label, type, hint, onChange, onBlur, getValue, setValue = () => {}, rules = [], completed = rules, loading, actions, className, icon, children, ...props }, ref) => {
+const Input = React.forwardRef(({ name, label, type, subtype, hint, onChange, onBlur, getValue, setValue = () => {}, rules = [], completed = rules, loading, actions, className, icon, children, ...props }, ref) => {
   const inputRef = useRef();
   const defaultRef = useRef();
   ref = ref ?? defaultRef;

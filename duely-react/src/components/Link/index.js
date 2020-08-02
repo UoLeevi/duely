@@ -5,6 +5,17 @@ import useAppState from 'hooks/useAppState';
 function useLinkProps(to, props) {
   const [, send] = useAppState();
 
+  if (to === undefined) {
+    const onClick = e => {
+      e.preventDefault();
+
+      if (props.onClick) {
+        props.onClick(e);
+      }
+    };
+    return { ...props, onClick, href: '#' }
+  }
+
   if (typeof to === 'object') {
     to = createPath(to);
   }
@@ -40,6 +51,10 @@ function useLinkProps(to, props) {
     e.preventDefault();
     const location = parsePath(to);
     send({ type: 'NAVIGATION_REQUESTED', location });
+
+    if (props.onClick) {
+      props.onClick(e);
+    }
   };
 
   return { ...props, href: to, onClick };

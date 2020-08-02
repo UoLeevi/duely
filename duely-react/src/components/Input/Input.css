@@ -25,6 +25,7 @@
     "l a a" auto
     "i i d" auto
     "m m m" auto
+    "p p p" auto
     / 1fr auto auto;
   align-items: baseline;
 }
@@ -40,11 +41,13 @@
 }
 
 .input > span.input-message {
+  opacity: 0;
   grid-area: m;
   font-size: var(--f-1);
   font-weight: normal;
-  color: rgb(var(--color-grey-rgb));
-  transition: color 160ms ease-out;
+  letter-spacing: 0.04em;
+  color: var(--color-background-s1nl1n);
+  transition: color 160ms ease-out, opacity 160ms ease;
 }
 
 .input > span.input-message:empty:before,
@@ -64,7 +67,7 @@
   font-size: var(--f-3);
   box-sizing: border-box;
   border-radius: var(--radius-1-rel);
-  border: solid rgba(var(--color-grey-rgb), var(--alpha-3)) 2px;
+  border: solid var(--color-background-s1nl2) 2px;
   background: transparent;
   padding: 0.8em 1.4em;
   min-width: 7em;
@@ -91,7 +94,7 @@
 
 .input > .input-icon {
   grid-area: d;
-  color: rgba(var(--color-grey-rgb), var(--alpha-6));
+  color: var(--color-background-s1n);
   pointer-events: none;
   place-self: center;
   padding-right: 0.9em;
@@ -100,8 +103,8 @@
 }
 
 .input > .input-actions > span,
-.input span.input-label,
-.input span.input-message {
+.input > span.input-label,
+.input > span.input-message {
   font-weight: bold;
   letter-spacing: 0.04em;
   margin-left: 0.4em;
@@ -109,7 +112,7 @@
 }
 
 .input > input:focus {
-  border-color: rgba(var(--color-grey-rgb), var(--alpha-5));
+  border-color: var(--color-background-s1n)
 }
 
 .input.completed > input {
@@ -118,6 +121,7 @@
 
 .input.invalid > input,
 .input:invalid > input {
+  opacity: 1;
   border-color: hsla(var(--color-error-hsl), var(--alpha-7));
 }
 
@@ -128,6 +132,11 @@
 
 .input.invalid > .input-message,
 .input:invalid > .input-message {
+  opacity: 1;
   color: var(--color-error);
+}
+
+.input:focus-within > .input-message {
+  opacity: 1;
 }
 

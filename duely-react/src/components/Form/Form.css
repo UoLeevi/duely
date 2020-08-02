@@ -4,6 +4,10 @@
   gap: var(--spacing-2);
 }
 
+.form-container.choose {
+  overflow-y: auto;
+}
+
 .form-container.choose div.form-completed,
 .form-container.choose div.form-error {
   display: grid;
