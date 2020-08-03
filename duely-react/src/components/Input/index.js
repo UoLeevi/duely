@@ -5,32 +5,15 @@ import './Input.css';
 
 const requiredMessage = 'Required';
 
-const Input = React.forwardRef(({ name, label, type, subtype, hint, onChange, onBlur, getValue, setValue = () => {}, rules = [], completed = rules, loading, forceHint, actions, className, icon, children, options, ...props }, ref) => {
+const Input = React.forwardRef(({ name, label, type, subtype, hint, onChange, onBlur, getValue: _getValue, setValue = () => {}, rules = [], completed = rules, loading, forceHint, actions, className, icon, children, options, ...props }, ref) => {
   const inputRef = useRef();
   const defaultRef = useRef();
   ref = ref ?? defaultRef;
 
-  loading = !!loading;
+  const getValue = useCallback(() => _getValue ? _getValue(inputRef.current.value) : inputRef.current.value, [inputRef, _getValue]);
+  const clear = useCallback(() => ref.current.classList.remove('invalid', 'completed'), [ref]);
 
-  const [message, setMessage] = useState(hint);
-
-  function processInput(e) {
-    ref.current.classList.remove('invalid');
-    ref.current.classList.remove('completed');
-
-    if (message !== hint) {
-      setMessage(hint);
-    }
-
-    if (onChange) {
-      onChange(e)
-    } else {
-      e.preventDefault();
-      setValue(e.target.value);
-    }
-  }
-
-  const validate = useCallback((value) => {
+  const validateValue = useCallback((value) => {
     if (typeof value !== 'string' || value.length > 0) {
       for (const rule of rules) {
         const message = rule(value);
@@ -61,43 +44,61 @@ const Input = React.forwardRef(({ name, label, type, subtype, hint, onChange, on
     return true;
   }, [ref, rules, completed]);
 
-  const { registerValidation } = useContext(FormContext);
+  const validate = useCallback(() => {
+    const value = getValue();
 
-  useEffect(() => {
-    if (name === undefined) {
-      return;
+    if (typeof value !== 'string' || value.length > 0) {
+      const isValid = validateValue(value);
+
+      if (!isValid && !inputRef.current.hidden) {
+        inputRef.current.focus();
+      }
+
+      return { isValid, loading, name, value };
     }
 
-    registerValidation(ref, () => {
-      const value = getValue ? getValue(inputRef.current.value) : inputRef.current.value;
+    if (inputRef.current.required) {
+      ref.current.classList.add('invalid');
 
-      if (typeof value !== 'string' || value.length > 0) {
-        const isValid = validate(value);
-
-        if (!isValid && !inputRef.current.hidden) {
-          inputRef.current.focus();
-        }
-
-        return { isValid, loading, name, value };
+      if (requiredMessage !== hint) {
+        setMessage(requiredMessage);
       }
 
-      if (inputRef.current.required) {
-        ref.current.classList.add('invalid');
-
-        if (requiredMessage !== hint) {
-          setMessage(requiredMessage);
-        }
-
-        if (!inputRef.current.hidden) {
-          inputRef.current.focus();
-        }
-
-        return { isValid: false, loading, name, value };
+      if (!inputRef.current.hidden) {
+        inputRef.current.focus();
       }
 
-      return { isValid: true, loading, name, value };
-    });
-  }, [ref, inputRef, name, hint, getValue, loading, registerValidation, validate]);
+      return { isValid: false, loading, name, value };
+    }
+
+    return { isValid: true, loading, name, value };
+  }, [ref, inputRef, name, hint, getValue, loading, validateValue]);
+
+  loading = !!loading;
+
+  const [message, setMessage] = useState(hint);
+
+  function processInput(e) {
+    clear();
+
+    if (message !== hint) {
+      setMessage(hint);
+    }
+
+    if (onChange) {
+      onChange(e)
+    } else {
+      e.preventDefault();
+      setValue(e.target.value);
+    }
+  }
+
+  const { registerControl } = useContext(FormContext);
+
+  useEffect(() => {
+    if (name === undefined) return;
+    registerControl(ref, { getValue, validate, clear });
+  }, [ref, name, getValue, validate, clear, registerControl]);
 
   className = Array.from(new Set(((className ?? '') + ' input').split(' '))).join(' ');
   const element = children && React.cloneElement(children, { className: (children.props.className ?? '') + ' input-element' });
@@ -107,7 +108,6 @@ const Input = React.forwardRef(({ name, label, type, subtype, hint, onChange, on
   if (type === 'select') {
     options = options?.map(option => {
       const { value, element } = typeof option === 'object' ? option : { value: option };
-      debugger;
       return <option key={ value } value={ value }>{ element ?? value }</option>;
     }) ?? [];
   }
@@ -121,8 +121,8 @@ const Input = React.forwardRef(({ name, label, type, subtype, hint, onChange, on
         )}
       </div>
       { type === 'select'
-        ? <select name={ name } id={ `input-${name}` } className="input-control" hidden={ element !== undefined } onBlur={ e => { validate(e.target.value); if (onBlur) onBlur(e); }} onChange={ processInput } spellCheck="false" autoComplete="off" children={ options } { ...props } ref={ inputRef } />
-        : <input name={ name } id={ `input-${name}` } className="input-control" hidden={ element !== undefined } type={ type } onBlur={ e => { validate(e.target.value); if (onBlur) onBlur(e); }} onChange={ processInput } spellCheck="false" autoComplete="off" { ...props } ref={ inputRef } />
+        ? <select name={ name } id={ `input-${name}` } className="input-control" hidden={ element !== undefined } onBlur={ e => { validateValue(e.target.value); if (onBlur) onBlur(e); }} onChange={ processInput } spellCheck="false" autoComplete="off" children={ options } { ...props } ref={ inputRef } />
+        : <input name={ name } id={ `input-${name}` } className="input-control" hidden={ element !== undefined } type={ type } onBlur={ e => { validateValue(e.target.value); if (onBlur) onBlur(e); }} onChange={ processInput } spellCheck="false" autoComplete="off" { ...props } ref={ inputRef } />
       }
       <div className="input-loading-bar">
         <LoadingBar loading={ loading } />

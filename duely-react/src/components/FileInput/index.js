@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useFormControl from 'hooks/useFormControl';
 import Input from 'components/Input';
 import { BsImage, BsFileEarmark } from 'react-icons/bs';
 import './FileInput.css';
@@ -30,7 +31,15 @@ const FileInput = React.forwardRef(({ type = 'file', icon, accept, onChange, dec
     : undefined
   );
 
+  const { clear, validate, getValue } = useFormControl(ref);
+  useEffect(() => {
+    if (state.data !== undefined && validate) {
+      validate();
+    }
+  }, [getValue, validate, state.data]);
+
   const processInput = e => {
+    if (clear) clear();
     processFile(e.target.files?.[0]);
     if (onChange) onChange(e);
   };

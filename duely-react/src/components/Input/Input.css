@@ -111,22 +111,25 @@
   margin-right: 0.4em;
 }
 
-.input > .input-control:focus {
+.input:focus-within > .input-control {
   border-color: var(--color-background-s1n)
 }
 
-.input.completed > .input-control {
+.input.completed > .input-control,
+.input.completed > .input-element {
   border-color: hsla(var(--color-success-hsl), var(--alpha-7));
 }
 
 .input.invalid > .input-control,
+.input.invalid > .input-element,
 .input:invalid > .input-control {
   opacity: 1;
   border-color: hsla(var(--color-error-hsl), var(--alpha-7));
 }
 
-.input.invalid > .input-control:focus,
-.input:invalid > .input-control:focus {
+.input:focus-within.invalid > .input-control,
+.input:focus-within.invalid > .input-element,
+.input:focus-within:invalid > .input-control {
   border-color: hsl(var(--color-error-hsl));
 }
 

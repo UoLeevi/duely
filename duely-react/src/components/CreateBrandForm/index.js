@@ -78,8 +78,8 @@ const CreateBrandForm = React.forwardRef(({ className, ...props }, ref) => {
       <h2 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Create brand</h2>
       <TextInput name="name" label="Brand name" type="text" autoFocus required rules={[v => (v && v.length <= 70) || 'Brand name must be at most 70 characters']} />
       <TextInput name="subdomain" hint="Your agency will have a subdomain for duely.app" { ...subdomainFieldProps } />
-      <SelectInput name="countryCode" label="Country" icon={ <BsGeo /> } options={ countryCodes } loading={ countryCodesQuery.loading } required />
-      <FileInput name="imageLogo" label="Logo image" type="image" hint="For logo, use image with aspect ratio 1:1. Prefer .svg format." required />
+      <SelectInput name="countryCode" label="Country" icon={ <BsGeo /> } options={ countryCodes } loading={ countryCodesQuery.loading } required rules={[ v => v?.length === 2 || 'Invalid country' ]} />
+      <FileInput name="imageLogo" label="Logo image" type="image" hint="For logo, use image with aspect ratio 1:1. Prefer .svg format." required rules={[ s => s?.file.size <= 1000000 || 'Maximum image size is 1 MB' ]} />
       <p className="f-2 background color-l1n color-s1n mt-label-text">
         By creating an agency on duely, you agree to our <Link className="f-b" onClick={ showTosModal }>Services Agreement</Link> and the <Link className="f-b" target="_blank" rel="noopener noreferrer" to="https://stripe.com/connect-account/legal">Stripe Connected Account Agreement</Link>.
       </p>

@@ -3,19 +3,33 @@ import React, { createContext, useRef } from 'react';
 export const FormContext = createContext();
 
 const FormContextProvider = (props) => {
-  const validationsRef = useRef(new WeakMap());
+  const controlsRef = useRef(new WeakMap());
+
+  function getControl(ref) {
+    return controlsRef.current.get(ref) ?? {};
+  }
 
   function validate(ref) {
-    const validate = validationsRef.current.get(ref);
+    const { validate } = getControl(ref);
     return validate ? validate() : undefined;
   }
 
-  function registerValidation(ref, validation) {
-    validationsRef.current.set(ref, validation);
+  function clear(ref) {
+    const { clear } = getControl(ref);
+    return clear ? clear() : undefined;
+  }
+
+  function getValue(ref) {
+    const { getValue } = getControl(ref);
+    return getValue ? getValue() : undefined;
+  }
+
+  function registerControl(ref, control) {
+    controlsRef.current.set(ref, control);
   }
 
   return (
-    <FormContext.Provider value={{ registerValidation, validate }}>
+    <FormContext.Provider value={{ registerControl, validate, clear, getValue, getControl }}>
       { props.children }
     </FormContext.Provider>
   );
