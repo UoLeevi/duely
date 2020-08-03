@@ -1,3 +1,5 @@
+import React from 'react';
+
 export const passwordFieldProps = {
   label: 'Password',
   type: 'password',
@@ -13,9 +15,10 @@ export const emailFieldProps = {
 };
 
 export const subdomainFieldProps = {
-  label: 'Subdomain',
+  label: 'Subdomain name',
   type: 'text',
   required: true,
+  icon: <span className="f-b f-1">.duely.app</span>,
   rules: [
     v => !v.includes('.') || 'Subdomain should not include a "."',
     v => !['duely', 'api', 'test', 'example', 'admin'].includes(v.toLowerCase()) || 'Not allowed as a subdomain',

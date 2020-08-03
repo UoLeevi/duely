@@ -3,7 +3,7 @@ import { useRef, useEffect } from 'react';
 export default function useResizeObserver(targetRef, callback, options = {}) {
   const ref = useRef(() => undefined);
   useEffect(() => {
-    if (!targetRef.current) {
+    if (!targetRef?.current) {
       return () => undefined;
     }
 

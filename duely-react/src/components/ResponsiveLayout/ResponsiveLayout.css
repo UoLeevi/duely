@@ -12,13 +12,21 @@
     "n" auto;
 }
 
+/* Utility: .pt-topbar */
+.responsive-layout[data-view~="topbar-floating"] > .body .pt-topbar {
+  padding-top: calc(1px * var(--topbar-h)) !important;
+}
+
 .responsive-layout > [data-layout|="topbar"] {
   grid-area: t;
   z-index: 2;
 }
 
 .responsive-layout > [data-layout|="topbar"][data-layout~="floating"] {
+  position: relative;
   grid-area: tf;
+  backdrop-filter: blur(6px);
+  mask-image: linear-gradient(to bottom, #ffff,#ffff 75%, #fff0);
 }
 
 .responsive-layout > [data-layout|="nav"] {

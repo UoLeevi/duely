@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import './ResponsiveLayout.css';
 import useBreakpoints from 'hooks/useBreakpoints';
+import useCssRect from 'hooks/useCssRect';
 
 // # layout section modifiers
 // ## topbar
@@ -13,25 +14,42 @@ function layoutModifiersFor(element, section, breakpoints) {
     modifiers.push(`orientation:${ breakpoints.md ? 'vertical' : 'horizontal' }`);
   }
 
-  return modifiers.length === 0 ? '' : '- ' + modifiers.join(' ');
+  return modifiers;
 }
 
-function createLayoutElement(element, section, breakpoints) {
-  return element && React.cloneElement(element, { 'data-layout': section + layoutModifiersFor(element, section, breakpoints) });
+function useLayoutElement(element, section, modifiers) {
+  const breakpoints = useBreakpoints();
+  const defaultRef = useRef();
+  const ref = element?.ref ?? defaultRef;
+  const sectionModifiers = layoutModifiersFor(element, section, breakpoints);
+  const modifierString = sectionModifiers.length === 0 ? '' : '- ' + sectionModifiers.join(' ');
+  modifiers.push(...sectionModifiers.map(m => `${section}-${m}`));
+  return element && React.cloneElement(element, { 'data-layout': section + modifierString, ref });
 }
 
 const ResponsiveLayout = React.forwardRef(({ topbar, nav, aside, header, main, footer, ...props }, ref) => {
-  const breakpoints = useBreakpoints();
+  const defaultRef = useRef();
+  ref = ref ?? defaultRef;
+
+  const modifiers = [];
+  topbar = useLayoutElement(topbar, 'topbar', modifiers);
+  useCssRect(topbar?.ref, ref, 'topbar-');
+
+  nav = useLayoutElement(nav, 'nav', modifiers);
+  aside = useLayoutElement(aside, 'aside', modifiers);
+  header = useLayoutElement(header, 'header', modifiers);
+  main = useLayoutElement(main, 'main', modifiers);
+  footer = useLayoutElement(footer, 'footer', modifiers);
 
   return (
-    <div className="responsive-layout" ref={ ref } { ...props }>
-      { createLayoutElement(topbar, 'topbar', breakpoints) }
-      { createLayoutElement(nav, 'nav', breakpoints) }
-      { createLayoutElement(aside, 'aside', breakpoints) }
+    <div className="responsive-layout" ref={ ref } { ...props } data-view={ modifiers.join(' ') }>
+      { topbar }
+      { nav }
+      { aside }
       <div className="body">
-        { createLayoutElement(header, 'header', breakpoints) }
-        { createLayoutElement(main, 'main', breakpoints) }
-        { createLayoutElement(footer, 'footer', breakpoints) }
+        { header }
+        { main }
+        { footer }
       </div>
     </div>
   );
