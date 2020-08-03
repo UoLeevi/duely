@@ -18,8 +18,9 @@ const CreateBrandForm = React.forwardRef(({ className, ...props }, ref) => {
   const countryCodesQuery = useQuery(queries.countryCodes.query);
   const countryCodes = queries.countryCodes
     .result(countryCodesQuery.data)
-    ?.map(c => ({ value: c, element: countryByCode(c)?.name }))
-    .sort((a, b) => (a.element ?? a.value).localeCompare(b.element ?? b.value));
+    ?.map(countryByCode)
+    .sort((a, b) => (a.name).localeCompare(b.name))
+    .map(c => ({ value: c.alpha2code, element: c.name ? `${c.name} ${c.flag}` : c.alpha2code }));
 
   const hideTosRef = useRef();
   const showTosModal = useModal(

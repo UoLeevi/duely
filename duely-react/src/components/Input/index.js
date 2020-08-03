@@ -107,6 +107,7 @@ const Input = React.forwardRef(({ name, label, type, subtype, hint, onChange, on
   if (type === 'select') {
     options = options?.map(option => {
       const { value, element } = typeof option === 'object' ? option : { value: option };
+      debugger;
       return <option key={ value } value={ value }>{ element ?? value }</option>;
     }) ?? [];
   }

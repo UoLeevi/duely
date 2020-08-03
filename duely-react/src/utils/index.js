@@ -250,9 +250,20 @@ const countries = {
   AX: { name: "Åland Islands", alpha3code: 'ALA', numeric: '248' }
 };
 
+function toFlagEmoji(alpha2Code) {
+  const [c1, c2] = alpha2Code;
+  return String.fromCodePoint(
+  c1.codePointAt(0) + 0x1F1E6 - 0x41,
+  c2.codePointAt(0) + 0x1F1E6 - 0x41);
+  }
+
 export function countryByCode(alpha2code) {
   // https://www.iban.com/country-codes
-  return countries[alpha2code];
+  return {
+    alpha2code,
+    flag: toFlagEmoji(alpha2code),
+    ...countries[alpha2code]
+  };
 }
 
 export function estimateImageColor(dataUrl) {
