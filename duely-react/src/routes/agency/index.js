@@ -9,7 +9,7 @@ import AgencyRoot from 'components/AgencyRoot';
 export default [
   {
     path: '/',
-    element: <AgencyRoot />,
+    element: <AgencyRoot data-bg="l4 boundary" />,
     children: [
       ...home,
       ...portal,

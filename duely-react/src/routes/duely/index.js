@@ -6,7 +6,7 @@ import VerifyAuth from 'components/VerifyAuth';
 export default [
   {
     path: '/',
-    element: <VerifyAuth />,
+    element: <VerifyAuth data-bg="l4" />,
     children: [
       ...home,
       ...profile

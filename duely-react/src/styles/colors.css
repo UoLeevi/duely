@@ -1,4 +1,4 @@
-/* #region Color variables */
+/* #region Color palette variables */
 
 :root {
 
@@ -226,6 +226,18 @@
   --alpha-7: 0.56;
   --alpha-8: 0.72;
   --alpha-9: 0.88;
+}
+
+/* #endregion */
+
+/* #region UI Color variable defaults */
+
+:root {
+  --background-color-h: var(--color-background-h);
+  --background-color-s: var(--color-background-s);
+  --background-color-l: var(--color-background-l);
+  --background-color-a: 1;
+  --background-color: hsla(var(--background-color-h), var(--background-color-s), var(--background-color-l), var(--background-color-a));
 }
 
 /* #endregion */
@@ -1080,5 +1092,38 @@
   color: rgba(var(--color-grey-rgb), 0.25);
   fill: rgba(var(--color-grey-rgb), 0.25);
 } */
+
+/* #endregion */
+
+/* #region UI Color utilities */
+
+[data-bg~="l4"] {
+  --background-color-l: calc(.9 * (100% - var(--color-background-l)) + var(--color-background-l));
+}
+[data-bg~="l3"] {
+  --background-color-l: calc(.75 * (100% - var(--color-background-l)) + var(--color-background-l));
+}
+[data-bg~="l2"] {
+  --background-color-l: calc(.5 * (100% - var(--color-background-l)) + var(--color-background-l));
+}
+[data-bg~="l1"] {
+  --background-color-l: calc(.25 * (100% - var(--color-background-l)) + var(--color-background-l));
+}
+[data-bg~="l1n"] {
+  --background-color-l: calc(.75 * var(--color-background-l));
+}
+[data-bg~="l2n"] {
+  --background-color-l: calc(.5 * var(--color-background-l));
+}
+[data-bg~="l3n"] {
+  --background-color-l: calc(.3 * var(--color-background-l));
+}
+[data-bg~="l4n"] {
+  --background-color-l: calc(.15 * var(--color-background-l));
+}
+[data-bg] {
+  --background-color: hsla(var(--background-color-h), var(--background-color-s), var(--background-color-l), var(--background-color-a));
+  background-color: var(--background-color);
+}
 
 /* #endregion */
