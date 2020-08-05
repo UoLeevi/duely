@@ -2,6 +2,31 @@
   "name": "duely-react",
   "version": "0.9.3",
   "private": true,
+  "scripts": {
+    "build": "react-scripts build",
+    "build-storybook": "build-storybook -s public",
+    "eject": "react-scripts eject",
+    "start": "react-scripts start",
+    "storybook": "start-storybook -p 9009 -s public",
+    "test": "react-scripts test"
+  },
+  "browserslist": {
+    "production": [
+      "> 5%"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "duely"
+    ],
+    "rules": {}
+  },
   "dependencies": {
     "@apollo/client": "^3.1.2",
     "@apollo/link-context": "^2.0.0-beta.3",
@@ -23,28 +48,8 @@
     "subscriptions-transport-ws": "^0.9.17",
     "xstate": "^4.11.0"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "storybook": "start-storybook -p 9009 -s public",
-    "build-storybook": "build-storybook -s public"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      "> 5%"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
   "devDependencies": {
+    "@duely/eslint-plugin": "0.0.1",
     "@storybook/addon-actions": "^6.0.0-rc.24",
     "@storybook/addon-controls": "^6.0.0-rc.24",
     "@storybook/addon-docs": "^6.0.0-rc.24",

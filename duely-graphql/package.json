@@ -1,16 +1,24 @@
 {
   "name": "duely-graphql",
   "version": "0.84.0",
+  "keywords": [],
   "repository": "github:uoleevi/duely",
+  "license": "ISC",
+  "author": "",
   "main": "src/index.js",
   "scripts": {
     "build": "./node_modules/.bin/babel src -d dist --source-maps --copy-files --no-copy-ignored",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "babel": {
+    "plugins": [
+      "@babel/plugin-transform-runtime"
+    ],
+    "presets": [
+      "@babel/preset-env"
+    ]
+  },
   "dependencies": {
     "@babel/runtime": "^7.11.0",
     "apollo-server-express": "^2.16.1",
