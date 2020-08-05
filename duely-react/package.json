@@ -22,10 +22,14 @@
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "duely"
+      "react-app"
     ],
-    "rules": {}
+    "plugins": [
+      "@duely"
+    ],
+    "rules": {
+      
+    }
   },
   "dependencies": {
     "@apollo/client": "^3.1.2",
@@ -49,13 +53,13 @@
     "xstate": "^4.11.0"
   },
   "devDependencies": {
-    "@duely/eslint-plugin": "0.0.1",
-    "@storybook/addon-actions": "^6.0.0-rc.24",
-    "@storybook/addon-controls": "^6.0.0-rc.24",
-    "@storybook/addon-docs": "^6.0.0-rc.24",
-    "@storybook/addon-links": "^6.0.0-rc.24",
-    "@storybook/addons": "^6.0.0-rc.24",
+    "@duely/eslint-plugin": "^0.0.2",
+    "@storybook/addon-actions": "^6.0.0-rc.27",
+    "@storybook/addon-controls": "^6.0.0-rc.27",
+    "@storybook/addon-docs": "^6.0.0-rc.27",
+    "@storybook/addon-links": "^6.0.0-rc.27",
+    "@storybook/addons": "^6.0.0-rc.27",
     "@storybook/preset-create-react-app": "^3.1.4",
-    "@storybook/react": "^6.0.0-rc.24"
+    "@storybook/react": "^6.0.0-rc.27"
   }
 }

@@ -1,4 +1,4 @@
-import { IncludeComponentTypeComment } from 'rules/include-component-type-comment';
+import { IncludeComponentTypeComment } from './rules/include-component-type-comment';
 
 export default {
   rules: {

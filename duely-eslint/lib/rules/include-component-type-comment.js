@@ -16,7 +16,11 @@ var _default = {
     ]
   },
   create: function create(context) {
-    return {// give me methods
+    return {
+      ImportDefaultSpecifier: function ImportDefaultSpecifier(node) {
+        // at a ReturnStatement node while going down
+        return;
+      }
     };
   }
 };
