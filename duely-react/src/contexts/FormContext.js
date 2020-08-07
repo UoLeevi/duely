@@ -2,7 +2,7 @@ import React, { createContext, useRef } from 'react';
 
 export const FormContext = createContext();
 
-const FormContextProvider = (props) => {
+const FormContextProvider = ({ children, ...props }) => {
   const controlsRef = useRef(new WeakMap());
 
   function getControl(ref) {
@@ -30,7 +30,7 @@ const FormContextProvider = (props) => {
 
   return (
     <FormContext.Provider value={{ registerControl, validate, clear, getValue, getControl }}>
-      { props.children }
+      { children }
     </FormContext.Provider>
   );
 }

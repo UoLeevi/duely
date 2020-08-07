@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { RouteContext } from 'contexts/RouteContext';
 
-const Route = props => {
+const Route = React.forwardRef((props, ref) => {
   let { active, data } = useContext(RouteContext);
   
   if (!active) {
@@ -9,7 +9,7 @@ const Route = props => {
   }
 
   const { route, path, params } = active ?? {};
-  const element = route?.element && React.cloneElement(route.element, props);
+  const element = route?.element && React.cloneElement(route.element, { ...props, ref });
 
   do {
     active = active.ref.state.context.active;
@@ -17,6 +17,6 @@ const Route = props => {
   } while (active && !active.route.element);
 
   return <RouteContext.Provider value={{ active, route, path, params, data }} children={ element } />;
-};
+});
 
 export default Route;

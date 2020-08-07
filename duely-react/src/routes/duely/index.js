@@ -1,12 +1,12 @@
 import React from 'react';
 import home from './home';
 import profile from './profile';
-import VerifyAuth from 'components/VerifyAuth';
+import DuelyRoot from 'components/DuelyRoot';
 
 export default [
   {
     path: '/',
-    element: <VerifyAuth data-bg="l4" />,
+    element: <DuelyRoot />,
     children: [
       ...home,
       ...profile

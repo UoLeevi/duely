@@ -28,7 +28,7 @@
 
 .nav > div.nav-menu {
   grid-area: m;
-  background-color: var(--color-background-l4);
+  background-color: var(--color-background-l8);
   z-index: 2;
 }
 

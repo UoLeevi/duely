@@ -6,7 +6,7 @@ import useAuthState from 'hooks/useAuthState';
 import Button from 'components/Button';
 import NewPasswordForm from 'components/NewPasswordForm';
 
-const VerifyAuth = props => {
+const VerifyAuth = React.forwardRef((props, ref) => {
   const [state, send] = useAppState();
   const { history } = state.context;
   const searchParams = new URLSearchParams(history.location.search);
@@ -47,8 +47,8 @@ const VerifyAuth = props => {
   }, [searchParams, verify, verificationCode, showNewPasswordModal, send, sendAuth])
 
   return (
-    <Route { ...props } />
+    <Route { ...props } ref={ ref } />
   );
-};
+});
 
 export default VerifyAuth;

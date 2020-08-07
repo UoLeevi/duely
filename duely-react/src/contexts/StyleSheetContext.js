@@ -2,7 +2,7 @@ import React, { createContext, useRef, useEffect } from 'react';
 
 export const StyleSheetContext = createContext();
 
-const StyleSheetContextProvider = (props) => {
+const StyleSheetContextProvider = ({ children, ...props }) => {
   const ref = useRef();
 
   useEffect(() => {
@@ -17,7 +17,7 @@ const StyleSheetContextProvider = (props) => {
 
   return (
     <StyleSheetContext.Provider value={{ insertRule }}>
-      { props.children }
+      { children }
     </StyleSheetContext.Provider>
   );
 }

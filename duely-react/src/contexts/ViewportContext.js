@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect } from 'react';
 
 export const ViewportContext = createContext();
 
-const ViewportContextProvider = (props) => {
+const ViewportContextProvider = ({ children, ...props }) => {
 
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
@@ -19,7 +19,7 @@ const ViewportContextProvider = (props) => {
 
   return (
     <ViewportContext.Provider value={{ width, height }}>
-      { props.children }
+      { children }
     </ViewportContext.Provider>
   );
 }
