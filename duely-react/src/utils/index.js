@@ -352,9 +352,39 @@ export function rgb2hsl(r, g, b, a) {
   return [60 * (h < 0 ? h + 6 : h), f ? n / f : 0, (m + m - n) / 2, a];
 }
 
-export function setThemeHexColor(colorKey, hex) {
+export function setThemeHexColor(style, colorKey, hex) {
   const [h, s, l] = hex2hsl(hex);
-  document.documentElement.style.setProperty(`--color-${colorKey}-h`, h.toFixed(2));
-  document.documentElement.style.setProperty(`--color-${colorKey}-s`, (s * 100).toFixed(2) + '%');
-  document.documentElement.style.setProperty(`--color-${colorKey}-l`, (l * 100).toFixed(2) + '%');
+
+  if ('setProperty' in style) {
+    style.setProperty(`--color-${colorKey}-h`, h.toFixed(2));
+    style.setProperty(`--color-${colorKey}-s`, (s * 100).toFixed(2) + '%');
+    style.setProperty(`--color-${colorKey}-l`, (l * 100).toFixed(2) + '%');
+  } else {
+    style[`--color-${colorKey}-h`] = h.toFixed(2);
+    style[`--color-${colorKey}-s`] = (s * 100).toFixed(2) + '%';
+    style[`--color-${colorKey}-l`] = (l * 100).toFixed(2) + '%';
+  }
+}
+
+export function joinPathParts(...parts) {
+  let [base, path, ...tail] = parts;
+  base = base ?? '';
+  path = path ?? '';
+  path = base + '/' + path;
+  path = path.replace(/\/\/+/g, '/');
+
+  if (path.length > 1 && path[path.length - 1] === '/') {
+    path = path.substr(0, path.length - 1);
+  }
+
+  return tail.length === 0 ? path : joinPathParts(path, ...tail);
+}
+
+export function createClassName(...classNames) {
+  return Array.from(
+    new Set(classNames
+      .flatMap(c => c?.split(' '))
+      .filter(c => !!c))
+    )
+    .join(' ');
 }

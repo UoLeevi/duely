@@ -6,7 +6,7 @@ const ProfileCreateBrand = React.forwardRef(({ ...props }, ref) => {
   return (
     <SplitLayout
       left={ <CreateBrandForm className="pt-topbar pb-5" data-layout="center 5fr" /> }
-      right={ <div className="background-bg bg-l3" data-layout="collapse-sm 4fr" ></div> }
+      right={ <div className="background-bg bg-l3" data-layout="collapse-md 4fr" ></div> }
       { ...props }
       ref={ ref }
     />

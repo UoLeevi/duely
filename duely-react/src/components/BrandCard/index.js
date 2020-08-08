@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'components/Link';
 import Theme from 'components/Theme';
 import Chip from 'components/Chip';
+import { createClassName } from 'utils';
 import './BrandCard.css';
 
 function createUrl(agency) {
@@ -25,7 +26,7 @@ const roleColors = {
 };
 
 const BrandCard = ({ agency, className, ...props }) => {
-  className = Array.from(new Set(((className ?? '') + ' brand-card').split(' '))).join(' ');
+  className = createClassName(className, 'brand-card');
 
   return (
     <Theme theme={ agency.theme }>

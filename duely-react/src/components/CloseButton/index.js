@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { createClassName } from 'utils';
 import './CloseButton.css';
 
 const CloseButton = ({ onClick, size = '1rem', svgAnimation, pathAnimation, bottom, left, className, ...props }) => {
@@ -20,7 +21,7 @@ const CloseButton = ({ onClick, size = '1rem', svgAnimation, pathAnimation, bott
     transition: { duration: 0.3, ease: 'easeInOut' }
   };
 
-  className = Array.from(new Set(((className ?? '') + ` close-button ${ bottom ? 'bottom' : 'top' } ${ left ? 'left' : 'right'}`).split(' '))).join(' ');
+  className = createClassName(className, 'close-button', bottom ? 'bottom' : 'top', left ? 'left' : 'right');
 
   return (
     <button className={ className } onClick={ onClick } tabIndex="0" { ...props }>

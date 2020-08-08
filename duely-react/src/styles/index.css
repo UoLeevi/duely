@@ -952,21 +952,10 @@ body {
 
 /* #endregion */
 
-/* #region Box shadows */
-
-:root {
-  --box-glow: 0px 0px 0px 0.2rem rgb(var(--color-background-rgb)),
-    0px 0px 1rem 0.2rem rgba(var(--color-background-rgb), var(--alpha-6)), 
-    0px 0px 1rem 0.2rem rgb(var(--color-background-rgb));
-  --box-shadow: 0px 0px var(--spacing-6) var(--spacing-1) rgba(0, 0, 0, var(--alpha-2));
-}
-
-/* #endregion */
-
 /* #region Scrollbar */
 
 :root {
-  --scrollbar-color-thumb: rgba(var(--color-grey-rgb), var(--alpha-3));
+  --scrollbar-color-thumb: rgba(var(--color-grey-rgb), var(--color-d7));
   --scrollbar-color-track: rgba(0, 0, 0, 0);
   --scrollbar-width: 11px;
 }

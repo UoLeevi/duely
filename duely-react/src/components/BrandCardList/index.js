@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@apollo/client';
 import queries from 'apollo/queries';
+import { createClassName } from 'utils';
 import BrandCard from 'components/BrandCard';
 import CreateBrandCard from 'components/CreateBrandCard';
 import './BrandCardList.css';
@@ -12,7 +13,7 @@ const BrandCardList = ({ className, ...props }) => {
   // const invites = queries.invites.result(invitesQuery.data);
   // console.log(agencies, invites);
 
-  className = Array.from(new Set(((className ?? '') + ' brand-card-list').split(' '))).join(' ');
+  className = createClassName(className, 'brand-card-list');
 
   const view = ['no-brands', 'one-brand', 'two-brands'][agencies.length] ?? 'many-brands';
 

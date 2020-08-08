@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { createClassName } from 'utils';
 import './Choose.css';
 
 const Choose = React.forwardRef(({ children, index, placeItems = 'center', className, ...props }, ref) => {
@@ -39,7 +40,7 @@ const Choose = React.forwardRef(({ children, index, placeItems = 'center', class
   });
 
   childrenRef.current = renderedChildren;
-  className = Array.from(new Set(((className ?? '') + ' choose').split(' '))).join(' ');
+  className = createClassName(className, 'choose');
 
   return (
     <div className={ className } style={{ placeItems }} { ...props } ref={ ref }>

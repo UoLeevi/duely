@@ -7,10 +7,10 @@ import Link from 'components/Link';
 import Topbar from 'components/Topbar';
 import DuelyLogo from 'components/DuelyLogo';
 
-const ProfileRoot = ({ ...props }) => {
+const ProfileRoot = React.forwardRef(({ ...props }, ref) => {
   const [state] = useAuthState();
   return (
-    <ResponsiveLayout
+    <ResponsiveLayout ref={ ref }
       topbar={
         <Topbar className="pa-4" data-layout="floating">
         <Link className="flex row center-v" to="/">
@@ -26,6 +26,6 @@ const ProfileRoot = ({ ...props }) => {
       }
     />
   );
-};
+});
 
 export default ProfileRoot;

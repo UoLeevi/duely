@@ -1,5 +1,6 @@
 import { Machine, assign, spawn, send, sendParent, actions } from 'xstate';
-import { matchPath, joinPathParts } from 'routes';
+import { joinPathParts } from 'utils';
+import { matchPath } from 'routes';
 const { pure } = actions;
 
 export const routeCallbacks = {

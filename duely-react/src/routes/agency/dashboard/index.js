@@ -1,8 +1,10 @@
 import React from 'react';
 import { BsHouse, BsBriefcase, BsKanban, BsCreditCard, BsPeople, BsLayoutTextWindowReverse } from 'react-icons/bs';
+import DashboardRoot from 'components/DashboardRoot';
 import ResponsiveLayout from 'components/ResponsiveLayout';
 import Nav from 'components/Nav';
 import HeaderWithActions from 'components/HeaderWithActions';
+import DashboardOverviewMain from 'components/DashboardOverviewMain';
 
 const nav = (
   <Nav items={[
@@ -85,83 +87,90 @@ const nav = (
 export default [
   {
     path: 'dashboard',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Overview" /> }
-      />
-    )
-  },
-  {
-    path: 'dashboard/projects',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Projects" /> }
-      />
-    )
-  },
-  {
-    path: 'dashboard/services',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Services" /> }
-      />
-    )
-  },
-  {
-    path: 'dashboard/users',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Users" /> }
-      />
-    )
-  },
-  {
-    path: 'dashboard/users/agency',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Users" subtitle="Agency" /> }
-      />
-    )
-  },
-  {
-    path: 'dashboard/users/clients',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Users" subtitle="Clients" /> }
-      />
-    )
-  },
-  {
-    path: 'dashboard/site',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Site" /> }
-      />
-    )
-  },
-  {
-    path: 'dashboard/site/theme',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Site" subtitle="Theme" /> }
-      />
-    )
-  },
-  {
-    path: 'dashboard/payments',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Payments" /> }
-      />
-    )
+    element: <DashboardRoot />,
+    children: [
+      {
+        path: '/',
+        element: (
+          <ResponsiveLayout
+            nav={nav}
+            header={<HeaderWithActions title="Overview" />}
+            main={<DashboardOverviewMain />}
+          />
+        )
+      },
+      {
+        path: 'projects',
+        element: (
+          <ResponsiveLayout
+            nav={nav}
+            header={<HeaderWithActions title="Projects" />}
+          />
+        )
+      },
+      {
+        path: 'services',
+        element: (
+          <ResponsiveLayout
+            nav={nav}
+            header={<HeaderWithActions title="Services" />}
+          />
+        )
+      },
+      {
+        path: 'users',
+        element: (
+          <ResponsiveLayout
+            nav={nav}
+            header={<HeaderWithActions title="Users" />}
+          />
+        )
+      },
+      {
+        path: 'users/agency',
+        element: (
+          <ResponsiveLayout
+            nav={nav}
+            header={<HeaderWithActions title="Users" subtitle="Agency" />}
+          />
+        )
+      },
+      {
+        path: 'users/clients',
+        element: (
+          <ResponsiveLayout
+            nav={nav}
+            header={<HeaderWithActions title="Users" subtitle="Clients" />}
+          />
+        )
+      },
+      {
+        path: 'site',
+        element: (
+          <ResponsiveLayout
+            nav={nav}
+            header={<HeaderWithActions title="Site" />}
+          />
+        )
+      },
+      {
+        path: 'site/theme',
+        element: (
+          <ResponsiveLayout
+            nav={nav}
+            header={<HeaderWithActions title="Site" subtitle="Theme" />}
+          />
+        )
+      },
+      {
+        path: 'payments',
+        element: (
+          <ResponsiveLayout
+            nav={nav}
+            header={<HeaderWithActions title="Payments" />}
+          />
+        )
+      }
+    ]
   }
 ];

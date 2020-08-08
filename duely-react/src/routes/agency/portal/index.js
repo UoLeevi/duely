@@ -1,5 +1,6 @@
 import React from 'react';
 import { BsHouse, BsBriefcase, BsFolder, BsKanban, BsCreditCard } from 'react-icons/bs';
+import PortalRoot from 'components/PortalRoot';
 import ResponsiveLayout from 'components/ResponsiveLayout';
 import Nav from 'components/Nav';
 import HeaderWithActions from 'components/HeaderWithActions';
@@ -52,47 +53,53 @@ const nav = (
 export default [
   {
     path: 'portal',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Overview" /> }
-      />
-    )
-  },
-  {
-    path: 'portal/projects',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Projects" /> }
-      />
-    )
-  },
-  {
-    path: 'portal/files',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Files" /> }
-      />
-    )
-  },
-  {
-    path: 'portal/billing',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Billing" /> }
-      />
-    )
-  },
-  {
-    path: 'portal/services',
-    element: (
-      <ResponsiveLayout 
-        nav={ nav }
-        header={ <HeaderWithActions title="Services" /> }
-      />
-    )
+    element: <PortalRoot />,
+    children: [
+      {
+        path: '/',
+        element: (
+          <ResponsiveLayout 
+            nav={ nav }
+            header={ <HeaderWithActions title="Overview" /> }
+          />
+        )
+      },
+      {
+        path: 'projects',
+        element: (
+          <ResponsiveLayout 
+            nav={ nav }
+            header={ <HeaderWithActions title="Projects" /> }
+          />
+        )
+      },
+      {
+        path: 'files',
+        element: (
+          <ResponsiveLayout 
+            nav={ nav }
+            header={ <HeaderWithActions title="Files" /> }
+          />
+        )
+      },
+      {
+        path: 'billing',
+        element: (
+          <ResponsiveLayout 
+            nav={ nav }
+            header={ <HeaderWithActions title="Billing" /> }
+          />
+        )
+      },
+      {
+        path: 'services',
+        element: (
+          <ResponsiveLayout 
+            nav={ nav }
+            header={ <HeaderWithActions title="Services" /> }
+          />
+        )
+      }
+    ]
   }
 ];

@@ -1,4 +1,5 @@
 import React, { useRef, useLayoutEffect } from 'react';
+import { createClassName } from 'utils';
 import useResizeObserver from 'hooks/useResizeObserver';
 import './Background.css';
 
@@ -42,7 +43,7 @@ const Background = React.forwardRef(({ children, scale = 1.0, placeItems = 'star
     background.style.transform = `scale(${ s })`;
   }, [ref, scale, contain]);
 
-  className = Array.from(new Set(((className ?? '') + ' background-component').split(' '))).join(' ');
+  className = createClassName(className, 'background-component');
 
   return (
     <div className={ className } style={{ placeItems }} { ...props } ref={ ref }>

@@ -36,7 +36,7 @@ const Message = ({ children, dismissable, hideMessage, autoHideMs, ...props }) =
   return (
     <AnimatePresence exitBeforeEnter>
       { children && (
-        <motion.div className="message-box"
+        <motion.div className="message-box" data-bg="l9"
           variants={ messageAnimations }
           initial="initial"
           animate="animate"

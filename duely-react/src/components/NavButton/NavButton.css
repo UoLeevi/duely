@@ -45,17 +45,17 @@
 }
 
 .nav-button[data-active="true"] .nav-button-icon {
-  border-color: hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-6));
-  box-shadow: 0px 0px var(--spacing-4) var(--spacing-1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-3));
+  border-color: hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--color-d4));
+  box-shadow: 0px 0px var(--spacing-4) var(--spacing-1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--color-d3));
 }
 
 .nav-button:focus-within[data-active="false"] .nav-button-icon {
-  border-color: hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-6));
+  border-color: hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--color-d4));
 }
 
 .nav-button[data-active="false"]:active .nav-button-icon,
 .nav-button[data-active="false"]:hover .nav-button-icon {
-  box-shadow: 0px 0px var(--spacing-3) var(--spacing-1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--alpha-4));
+  box-shadow: 0px 0px var(--spacing-3) var(--spacing-1) hsla(var(--color-surface-h), var(--color-surface-s), var(--color-surface-l), var(--color-d3));
 }
 
 /* TODO: notification icon */

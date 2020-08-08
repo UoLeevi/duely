@@ -1,11 +1,12 @@
 import React from 'react';
 import Link from 'components/Link';
 import Button from 'components/Button';
+import { createClassName } from 'utils';
 import './CreateBrandCard.css';
 
 
 const CreateBrandCard = ({ className, ...props }) => {
-  className = Array.from(new Set(((className ?? '') + ' create-brand-card').split(' '))).join(' ');
+  className = createClassName(className, 'create-brand-card');
 
   return (
     <Link className={ className } { ...props } to={ '/profile/create-brand' }>

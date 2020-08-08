@@ -117,14 +117,14 @@
 
 .input.completed > .input-control,
 .input.completed > .input-element {
-  border-color: hsla(var(--color-success-hsl), var(--alpha-7));
+  border-color: hsla(var(--color-success-hsl), var(--color-d3));
 }
 
 .input.invalid > .input-control,
 .input.invalid > .input-element,
 .input:invalid > .input-control {
   opacity: 1;
-  border-color: hsla(var(--color-error-hsl), var(--alpha-7));
+  border-color: hsla(var(--color-error-hsl), var(--color-d3));
 }
 
 .input:focus-within.invalid > .input-control,

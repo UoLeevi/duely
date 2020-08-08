@@ -25,7 +25,7 @@
 }
 
 .close-button > svg > path {
-  stroke: rgba(var(--color-grey-rgb), var(--alpha-7));
+  stroke: rgba(var(--color-grey-rgb), var(--color-d3));
   transition: stroke 200ms ease;
 }
 

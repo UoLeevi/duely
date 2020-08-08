@@ -13,14 +13,14 @@ export const Default = () => {
   return (
     <SplitLayout 
       left={
-        <div className="background-bg bg-l3" data-layout="collapse-sm 3fr">
+        <div className="background-bg bg-l3" data-layout="collapse-md 3fr">
           <div className="panel">
             <div className="panel-row">
               <h2>Left</h2>
             </div>
             <div className="panel-row">
               <p>
-                some content with <code>data-layout="collapse-sm 3fr"</code>
+                some content with <code>data-layout="collapse-md 3fr"</code>
               </p>
             </div>
           </div>

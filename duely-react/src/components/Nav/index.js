@@ -1,6 +1,7 @@
 import React from 'react';
 import useAppState from 'hooks/useAppState';
 import { matchPath } from 'routes';
+import { createClassName } from 'utils';
 import NavButton from 'components/NavButton';
 import NavTextButton from 'components/NavTextButton';
 import AnimatedTransition from 'components/AnimatedTransition';
@@ -25,7 +26,7 @@ const SubmenuList = ({ submenu, sizeString, ...props }) => {
   );
 };
 
-const Nav = React.forwardRef(({ items = [], 'data-layout': layout, ...props }, ref) => {
+const Nav = React.forwardRef(({ items = [], 'data-layout': layout, className, ...props }, ref) => {
   const [state, ] = useAppState();
   const { pathname } = state.context.history.location;
   const submenu = items.find(({ link: { to: path, end } = {} }) => matchPath({ path, end }, pathname) !== false);
@@ -47,29 +48,16 @@ const Nav = React.forwardRef(({ items = [], 'data-layout': layout, ...props }, r
     )
   );
 
-  let className = 'nav';
-
-  switch (orientation) {
-    case 'horizontal':
-      className += ' h';
-      break;
-
-    case 'vertical':
-      className += ' v';
-      break;
-
-    default:
-      break;
-  }
+  className = createClassName(className, 'nav', orientation?.[0]);
 
   return (
-    <nav className={ className } data-layout={ layout } data-expanded={ expanded } { ...props } ref={ ref }>
-      <div className="nav-menu">
+    <nav className={ className } data-layout={ layout } data-expanded={ expanded } data-bg-base { ...props } ref={ ref }>
+      <div className="nav-menu" data-bg>
         <ul>
           { menuItems }
         </ul>
       </div>
-      <div className="nav-submenu" tag="div">
+      <div className="nav-submenu" data-bg="l5">
         <SubmenuList submenu={ submenu } sizeString={ sizeString } />
       </div>
     </nav>

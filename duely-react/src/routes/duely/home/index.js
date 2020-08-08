@@ -50,8 +50,8 @@ export default [
         }
         main={
           <SplitLayout
-            left={ <LogInForm className="g-2" data-layout="center 5fr" /> }
-            right={ <div className="background-bg bg-l3" data-layout="collapse-sm 4fr" ></div> }
+            left={ <LogInForm className="g-2 pt-topbar" data-layout="center 5fr" /> }
+            right={ <div data-layout="collapse-md 4fr" data-bg="l5n" ></div> }
           />
         }
       />
@@ -71,8 +71,8 @@ export default [
         }
         main={
           <SplitLayout
-            left={ <SignUpForm className="g-2" data-layout="center 5fr" /> }
-            right={ <div className="background-bg bg-l3" data-layout="collapse-sm 4fr" ></div> }
+            left={ <SignUpForm className="g-2 pt-topbar" data-layout="center 5fr" /> }
+            right={ <div data-layout="collapse-md 4fr" data-bg="l5n" ></div> }
           />
         }
       />

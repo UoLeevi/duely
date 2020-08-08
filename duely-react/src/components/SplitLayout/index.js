@@ -3,7 +3,7 @@ import useBreakpoints from 'hooks/useBreakpoints';
 import './SplitLayout.css';
 
 // # layout section modifiers
-// - collapse-sm:     hides section on smaller screens
+// - collapse-md:     hides section on smaller screens
 // - center:          centers content horizontally and vertically
 // - [integer][unit]: column width (default is 1fr)
 
@@ -14,10 +14,10 @@ function layoutModifiersFor(element, section) {
 }
 
 function createLayoutElement(element, section, breakpoints) {
-  if (!breakpoints.md) {
+  if (!breakpoints.lg) {
     const modifiers = element?.props?.['data-layout']?.split(' ') ?? [];
     
-    if (modifiers.includes('collapse-sm')) {
+    if (modifiers.includes('collapse-md')) {
       return null;
     }
   }

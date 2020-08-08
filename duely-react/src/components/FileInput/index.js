@@ -3,7 +3,7 @@ import useFormControl from 'hooks/useFormControl';
 import Input from 'components/Input';
 import { BsImage, BsFileEarmark } from 'react-icons/bs';
 import './FileInput.css';
-import { estimateImageColor } from 'utils'; 
+import { estimateImageColor, createClassName } from 'utils'; 
 
 const FileInput = React.forwardRef(({ type = 'file', icon, accept, onChange, decoder, className, rules, required, previewAspectRatio, ...props }, ref) => {
   const [state, setState] = useState({
@@ -111,7 +111,7 @@ const FileInput = React.forwardRef(({ type = 'file', icon, accept, onChange, dec
     }
   }, [ref, type, previewAspectRatio]);
 
-  className = Array.from(new Set(((className ?? '') + ' file-input' + (type === 'image' ? ' image-input' : '') + (state.data ? ' file-uploaded' : '')).split(' '))).join(' ');
+  className = createClassName(className, 'file-input', type === 'image' && 'image-input', state.data && 'file-uploaded');
 
   return (
     <Input type="file" className={ className } accept={ accept } getValue={ () => state } rules={ rules } onChange={ processInput } { ...props } ref={ ref } icon={ icon } loading={ state.loading }>

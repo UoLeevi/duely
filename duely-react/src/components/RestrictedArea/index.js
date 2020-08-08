@@ -31,7 +31,7 @@ const RestrictedArea = React.forwardRef(({ children, loading, restrict, message,
     }
   }
 
-  return React.cloneElement(children, props);
+  return React.cloneElement(children, { ...props, ref });
 });
 
 export default RestrictedArea;

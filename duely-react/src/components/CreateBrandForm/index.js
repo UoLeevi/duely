@@ -11,7 +11,7 @@ import Button from 'components/Button';
 import Link from 'components/Link';
 import Form from 'components/Form';
 import useModal from 'hooks/useModal';
-import { countryByCode } from 'utils';
+import { countryByCode, createClassName } from 'utils';
 
 const CreateBrandForm = React.forwardRef(({ className, ...props }, ref) => {
   const [state, setState] = useState({ completed: undefined, error: undefined, loading: undefined });
@@ -71,7 +71,7 @@ const CreateBrandForm = React.forwardRef(({ className, ...props }, ref) => {
     }
   }
 
-  className = Array.from(new Set(((className ?? '') + ' w-form').split(' '))).join(' ');
+  className = createClassName(className, 'w-form');
 
   return (
     <Form className={ className } handleSubmit={ handleSubmit } areaWidth="60ch" completed={ state.completed } { ...props } ref={ ref }>

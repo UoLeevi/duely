@@ -1,5 +1,6 @@
 .nav {
   display: grid;
+  overflow: hidden;
 }
 
 .nav.v {
@@ -28,13 +29,11 @@
 
 .nav > div.nav-menu {
   grid-area: m;
-  background-color: var(--color-background-l8);
   z-index: 2;
 }
 
 .nav > div.nav-submenu {
   grid-area: s;
-  background-color: var(--color-background-l3);
   z-index: 1;
   overflow: hidden;
 }

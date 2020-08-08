@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { createClassName } from 'utils';
 import './Flip.css';
 
 const Flip = React.forwardRef(({ children, placeItems = 'center', transitionKey, className, ...props }, ref) => {
@@ -62,7 +63,7 @@ const Flip = React.forwardRef(({ children, placeItems = 'center', transitionKey,
 
       return () => cancelAnimationFrame(requestId);
     }
-  }, [fromRef.current, ref.current, resetRefs]);
+  }, [ref, resetRefs]);
 
   useEffect(() => {
     if (shouldFlip) {
@@ -70,9 +71,9 @@ const Flip = React.forwardRef(({ children, placeItems = 'center', transitionKey,
       fromRef.current = ref.current.firstElementChild.getBoundingClientRect();
       setRenderedElement(element);
     }
-  }, [shouldFlip, element]);
+  }, [ref, shouldFlip, element]);
 
-  className = Array.from(new Set(((className ?? '') + ' flip grid').split(' '))).join(' ');
+  className = createClassName(className, 'flip grid');
 
   return (
     <div className={ className } style={{ placeItems }} { ...props } ref={ ref }>

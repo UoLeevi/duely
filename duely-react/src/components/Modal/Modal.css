@@ -9,12 +9,12 @@
   justify-content: center;
   align-items: center;
   background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(2px);
 }
 
 .modal {
   position: relative;
   border-radius: var(--radius-3);
   padding: var(--spacing-6);
-  background-color: var(--color-background-l8);
   box-shadow: var(--box-shadow);
 }

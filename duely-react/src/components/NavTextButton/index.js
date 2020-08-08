@@ -2,9 +2,10 @@ import React from 'react';
 import Link from 'components/Link';
 import useAppState from 'hooks/useAppState';
 import { matchPath } from 'routes';
+import { createClassName } from 'utils';
 import './NavTextButton.css';
 
-const NavTextButton = ({ link, text, tag = 'button', className = '', ...props }) => {
+const NavTextButton = ({ link, text, tag = 'button', className, ...props }) => {
   const [state, ] = useAppState();
   const { pathname } = state.context.history.location;
   const { to: path, end } = link ?? {};
@@ -14,7 +15,7 @@ const NavTextButton = ({ link, text, tag = 'button', className = '', ...props })
     ? ({ children }) => (<Link { ...link }>{ children }</Link>)
     : null;
 
-  className = Array.from(new Set(((className ?? '') + ' nav-text-button surface color-s1n color-l1').split(' '))).join(' ');
+  className = createClassName(className, 'nav-text-button surface color-s1n color-l1');
 
   return (
     <Element className={ className } data-active={ active } { ...props }>

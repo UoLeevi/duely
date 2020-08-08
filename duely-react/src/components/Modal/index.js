@@ -56,7 +56,7 @@ const Modal = ({ children, dismissable, hideModal, ...props }) => {
           { ...props }
         >
           <AnimatePresence exitBeforeEnter>
-            <motion.div className="modal panel" variants={ panelAnimations }>
+            <motion.div className="modal panel" data-bg="l9" variants={ panelAnimations }>
               { dismissable && <CloseButton onClick={ hideModal } /> }
               { children }
             </motion.div>

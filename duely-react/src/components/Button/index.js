@@ -2,6 +2,7 @@ import React, { isValidElement, useRef } from 'react';
 import Link from 'components/Link';
 import Choose from 'components/Choose';
 import LoadingSpinner from 'components/LoadingSpinner';
+import { createClassName } from 'utils';
 import './Button.css';
 
 function getColorClassNames(modifiers, color) {
@@ -50,7 +51,7 @@ const Button = React.forwardRef(({ element, link, dense, prominent, filled, outl
     .filter(([, v]) => v)
     .map(([k,]) => k)];
 
-  className = Array.from(new Set(((className ?? '') + ' button' + getColorClassNames(modifiers, color)).split(' '))).join(' ');
+  className = createClassName(className, 'button', getColorClassNames(modifiers, color));
   props = { className, 'data-button': modifiers.join(' '), ...props };
 
   element = element 
