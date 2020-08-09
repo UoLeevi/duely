@@ -36,6 +36,8 @@ export default {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
+        if (!source.invite_uuid_) return null;
+
         return await withConnection(context, async withSession => {
           return await withSession(async client => {
             try {
@@ -50,6 +52,8 @@ export default {
       async subject(source, args, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
+
+        if (!source.subject_uuid_) return null;
 
         return await withConnection(context, async withSession => {
           return await withSession(async client => {

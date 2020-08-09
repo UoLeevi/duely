@@ -7,7 +7,9 @@ import Chip from 'components/Chip';
 import Table from 'components/Table';
 
 const statusColors = {
-  active: 'success'
+  'active': 'success',
+  'invited': 'primary',
+  'not invited': 'accent'
 };
 
 const ClientsOverviewList = React.forwardRef(({ agencyUuid, className, ...props }, ref) => {
@@ -22,6 +24,12 @@ const ClientsOverviewList = React.forwardRef(({ agencyUuid, className, ...props 
   ];
 
   const rows = clients && clients.map(client => {
+    const status = client.subject
+      ? 'active'
+      : client.invite
+        ? 'invited'
+        : 'not invited';
+
     return {
       key: client.uuid,
       name: (
@@ -30,7 +38,7 @@ const ClientsOverviewList = React.forwardRef(({ agencyUuid, className, ...props 
           <span className="f-1 f-b background color-s1n color-l2n">{ client.emailAddress }</span>
         </div>
       ),
-      status: <Chip color={ statusColors[client.status] }>{ client.status }</Chip>,
+      status: <Chip color={ statusColors[status] }>{ status }</Chip>,
       menu: <BsThreeDotsVertical className="background color-s1n color-l1n" />
     };
   });
