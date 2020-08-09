@@ -10,12 +10,11 @@ export default async function createClient(obj, { agencyUuid, name }, context, i
       try {
         // create client on database
         const res = await client.query('SELECT uuid_ FROM operation_.create_client_($1::uuid, $2::text, $2::text)', [agencyUuid, name, emailAddress]);
-        const client = res.rows[0];
 
         // success
         return {
           success: true,
-          client,
+          client: res.rows[0],
           type: 'CreateClientResult'
         };
 
