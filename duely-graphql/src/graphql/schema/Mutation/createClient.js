@@ -1,7 +1,7 @@
 import { withConnection } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 
-export default async function createClient(obj, { agencyUuid, name }, context, info) {
+export default async function createClient(obj, { agencyUuid, name, emailAddress }, context, info) {
   if (!context.jwt)
     throw new AuthenticationError('Unauthorized');
 
