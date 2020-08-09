@@ -331,31 +331,22 @@ export default {
         agency(uuid: $agencyUuid) {
           uuid
           name
-          subjectsConnection {
+          clientsConnection {
             edges {
               cursor
-              roles
               node {
                 uuid
                 name
                 emailAddress
-              }
-            }
-          }
-          invitesConnection {
-            edges {
-              cursor
-              node {
-                uuid
-                status
-                inviteeEmailAddress
-                agency {
+                subject {
                   uuid
                   name
-                  subdomain {
-                    uuid
-                    name
-                  }
+                  emailAddress
+                }
+                invite {
+                  uuid
+                  status
+                  inviteeEmailAddress
                 }
               }
             }
@@ -363,18 +354,7 @@ export default {
         }
       }
     `,
-    result: d => {
-      const users = d?.agency.subjectsConnection.edges
-        .filter(edge => edge.roles.includes('client'))
-        .map(edge => edge.node)
-        .map(user => ({ ...user, status: 'active' }));
-
-      const invited = d?.agency.invitesConnection.edges
-        .map(edge => edge.node)
-        .filter(invite => invite.status === null)
-        .map(invite => ({ name: invite.inviteeEmailAddress, emailAddress: invite.inviteeEmailAddress, status: 'invited' }));
-
-      return [...(users ?? []), ...(invited ?? [])];
-    }
+    result: d => d?.agency.clientsConnection.edges
+      .map(edge => edge.node)
   }
 };

@@ -1,4 +1,5 @@
 #root .table {
+  position: relative;
   border-collapse: collapse;
   table-layout: auto !important;
   width: 100%;
@@ -22,4 +23,22 @@
 #root .table > * > tr > td {
   vertical-align: middle;
   padding: var(--spacing-2);
+}
+
+#root .table > * > tr > td > div {
+  display: flex;
+}
+
+#root .table > * > tr > td > div[data-justify="center"] {
+  justify-content: center;
+}
+
+#root .table > * > tr > td > div[data-justify="right"] {
+  justify-content: flex-end;
+}
+
+.table .table-loading-bar {
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: linear-gradient(to right, transparent, rgba(0, 0, 0, 1.0), transparent);
 }

@@ -1,5 +1,6 @@
 .choose {
   position: relative;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 1fr;
 }

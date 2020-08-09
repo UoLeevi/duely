@@ -85,6 +85,32 @@ export default {
     `,
     result: d => d['createAgency']
   },
+  createClient: {
+    mutation: gql`
+      mutation($agencyUuid: ID!, $name: String!, $emailAddress: String) {
+        createClient(agencyUuid: $agencyUuid, name: $name, emailAddress: $emailAddress) {
+          success
+          message
+          client {
+            uuid
+          }
+        }
+      }
+    `,
+    result: d => d['createClient']
+  },
+  deleteClient: {
+    mutation: gql`
+      mutation($clientUuid: ID!) {
+        deleteClient(clientUuid: $clientUuid) {
+          success
+          message
+          uuid
+        }
+      }
+    `,
+    result: d => d['createAgency']
+  },
   editImage: {
     mutation: gql`
       mutation($agencyUuid: ID!, $imageName: String!, $imageData: String!, $imageColor: String!) {

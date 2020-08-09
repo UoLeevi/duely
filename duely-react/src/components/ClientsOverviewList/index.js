@@ -13,13 +13,12 @@ const statusColors = {
 const ClientsOverviewList = React.forwardRef(({ agencyUuid, className, ...props }, ref) => {
   const clientsQuery = useQuery(queries.clients.query, { variables: { agencyUuid: agencyUuid } });
   const clients = queries.clients.result(clientsQuery.data);
-
   className = createClassName(className, 'clients-overview-list');
 
   const columns = [
     { key: 'name' },
-    { key: 'status' },
-    { key: 'menu' }
+    { key: 'status', justify: 'center' },
+    { key: 'menu', justify: 'center' }
   ];
 
   const rows = clients && clients.map(client => {
@@ -37,7 +36,7 @@ const ClientsOverviewList = React.forwardRef(({ agencyUuid, className, ...props 
   });
 
   return (
-    <Table className={ className } { ...props } ref={ ref }
+    <Table className={ className } { ...props } ref={ ref } loading={ clientsQuery.loading }
       columns={ columns }
       rows={ rows }
     />
