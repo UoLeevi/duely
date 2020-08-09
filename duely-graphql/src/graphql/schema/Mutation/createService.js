@@ -9,7 +9,7 @@ export default async function createService(obj, { agencyUuid, name }, context, 
     return await withSession(async client => {
       try {
         // create service on database
-        const res = await client.query('SELECT uuid_ FROM operation_.create_service_($1::uuid, $2::text)', [agencyUuid, name]);
+        const res = await client.query('SELECT * FROM operation_.create_service_($1::uuid, $2::text)', [agencyUuid, name]);
         const service = res.rows[0];
 
         // success

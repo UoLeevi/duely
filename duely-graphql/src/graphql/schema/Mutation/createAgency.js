@@ -35,7 +35,7 @@ export default async function createAgency(obj, { name, subdomain, countryCode, 
     return await withSession(async client => {
       try {
         // create agency on database
-        const res = await client.query('SELECT uuid_ FROM operation_.create_agency_($1::text, $2::text)', [name, subdomain]);
+        const res = await client.query('SELECT * FROM operation_.create_agency_($1::text, $2::text)', [name, subdomain]);
         const agency = res.rows[0];
 
         // create stripe custom account for agency

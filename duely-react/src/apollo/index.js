@@ -147,7 +147,8 @@ client.onClearStore(() => {
 
 // just a wrapper for convenience
 export async function query(queryName, variables, ...options) {
-  const { result, ...defaultOptions } = queries[queryName];
+  const { result, variables: defaultVariables, ...defaultOptions } = queries[queryName];
+  variables = { ...defaultVariables, ...variables };
   const { data } = await client.query({
     variables,
     ...defaultOptions,
@@ -160,12 +161,19 @@ export async function query(queryName, variables, ...options) {
 
 // just a wrapper for convenience
 export async function mutate(mutationName, variables, ...options) {
-  const { result, ...defaultOptions } = mutations[mutationName];
+  const { result, after, variables: defaultVariables, ...defaultOptions } = mutations[mutationName];
+  variables = { ...defaultVariables, ...variables };
   const { data } = await client.mutate({
     variables,
     ...defaultOptions,
     ...options
   });
 
-  return result(data);
+  const res = result(data);
+
+  if (after) {
+    await after(client.cache, res, variables);
+  }
+
+  return res;
 }

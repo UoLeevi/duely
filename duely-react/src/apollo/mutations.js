@@ -1,4 +1,6 @@
 import { gql } from '@apollo/client';
+import produce from 'immer';
+import queries from 'apollo/queries';
 
 export default {
   logIn: {
@@ -93,11 +95,21 @@ export default {
           message
           client {
             uuid
+            name
+            emailAddress
           }
         }
       }
     `,
-    result: d => d['createClient']
+    result: d => d['createClient'],
+    after(client, result, { agencyUuid }) {
+      if (!result.success) return;
+      const query = queries.clients.query;
+      const data = produce(client.readQuery({ query, variables: { agencyUuid } }), data => {
+        data.agency.clientsConnection.edges.push(result.client);
+      });
+      client.writeQuery({ query, data });
+    }
   },
   deleteClient: {
     mutation: gql`
