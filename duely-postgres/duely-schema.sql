@@ -686,6 +686,49 @@ $$;
 ALTER FUNCTION operation_.create_agency_(_name text, _subdomain_name text) OWNER TO postgres;
 
 --
+-- Name: client_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.client_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    agency_uuid_ uuid NOT NULL,
+    name_ text NOT NULL,
+    email_address_ text,
+    invite_uuid_ uuid,
+    subject_uuid_ uuid,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.client_ OWNER TO postgres;
+
+--
+-- Name: create_client_(uuid, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.create_client_(_agency_uuid uuid, _name text, _email_address text DEFAULT NULL::text) RETURNS application_.client_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _client application_.client_;
+  _arg RECORD;
+BEGIN
+  SELECT _agency_uuid agency_uuid_, _name client_name_ INTO _arg; 
+  PERFORM security_.control_operation_('create_client_', _arg);
+
+  INSERT INTO application_.client_ (agency_uuid_, name_, email_address_)
+  VALUES (_agency_uuid, _name, _email_address)
+  RETURNING * INTO _client;
+
+  RETURN _client;
+END
+$$;
+
+
+ALTER FUNCTION operation_.create_client_(_agency_uuid uuid, _name text, _email_address text) OWNER TO postgres;
+
+--
 -- Name: service_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
@@ -902,6 +945,33 @@ $$;
 
 
 ALTER FUNCTION operation_.delete_agency_(_agency_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: delete_client_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.delete_client_(_client_uuid uuid) RETURNS application_.client_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _client application_.client_;
+  _arg RECORD;
+BEGIN
+  SELECT _client_uuid client_uuid_, c.agency_uuid_ INTO _arg
+  FROM application_.client_ c
+  WHERE c.uuid_ = _client_uuid; 
+  PERFORM security_.control_operation_('delete_client_', _arg);
+
+  DELETE FROM application_.client_
+  WHERE uuid_ = _client_uuid
+  RETURNING * INTO _client;
+
+  RETURN _client;
+END
+$$;
+
+
+ALTER FUNCTION operation_.delete_client_(_client_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: delete_service_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1422,6 +1492,56 @@ $$;
 
 
 ALTER FUNCTION operation_.query_agency_user_(_agency_uuid uuid, _subject_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: query_client_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_client_(_client_uuid uuid) RETURNS TABLE(uuid_ uuid, agency_uuid_ uuid, name_ text, email_address_ text, invite_uuid_ uuid, subject_uuid_ uuid)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT c.agency_uuid_, _client_uuid client_uuid_ INTO _arg
+  FROM application_.client_ c
+  WHERE c.uuid_ = _client_uuid;
+  PERFORM security_.control_operation_('query_client_', _arg);
+
+  RETURN QUERY
+  SELECT c.uuid_, c.agency_uuid_, c.name_, c.email_address_, c.invite_uuid_, c.subject_uuid_
+  FROM application_.client_ c
+  WHERE c.uuid_ = _client_uuid;
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_client_(_client_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: query_client_by_agency_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_client_by_agency_(_agency_uuid uuid) RETURNS TABLE(uuid_ uuid, agency_uuid_ uuid, name_ text, email_address_ text, invite_uuid_ uuid, subject_uuid_ uuid)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT _agency_uuid agency_uuid_ INTO _arg;
+  PERFORM security_.control_operation_('query_client_by_agency_', _arg);
+
+  RETURN QUERY
+  SELECT c.uuid_, c.agency_uuid_, c.name_, c.email_address_, c.invite_uuid_, c.subject_uuid_
+  FROM application_.client_ c
+  WHERE c.agency_uuid_ = _agency_uuid;
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_client_by_agency_(_agency_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: query_image_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -2545,6 +2665,25 @@ CREATE TABLE application__audit_.agency_ (
 ALTER TABLE application__audit_.agency_ OWNER TO postgres;
 
 --
+-- Name: client_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.client_ (
+    uuid_ uuid,
+    agency_uuid_ uuid,
+    name_ text,
+    email_address_ text,
+    invite_uuid_ uuid,
+    subject_uuid_ uuid,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.client_ OWNER TO postgres;
+
+--
 -- Name: image_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -3131,6 +3270,10 @@ ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 02:00:00+02	0000
 2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	reset_password_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 906655f2-4bbb-441a-b10b-7231da7bccad	query_user_by_email_address_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+31a284d0-b6ea-4dd4-b013-da4647a54558	query_client_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+3cefd8f7-9cd8-40bf-afce-83eed2491ff8	create_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+2bd1d873-946f-4557-905c-99b73b1d54bf	delete_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3193,6 +3336,10 @@ c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-
 60d3ee39-0f5a-40b9-941e-c606f015fb12	visitor_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 7bacfdbd-84bb-4078-bca1-aee9f6790ef0	logged_in_	906655f2-4bbb-441a-b10b-7231da7bccad	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+73da9d07-021f-43bb-ace8-e72724dc35e7	agent_in_agency_	b20e4cff-c150-4e02-af03-798cc73382f3	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+cf31f59e-bb4a-4225-86f5-1339c339ea19	agent_in_agency_	31a284d0-b6ea-4dd4-b013-da4647a54558	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+faad1e60-244a-43d8-b2b2-fb92e60bdb89	manager_in_agency_	3cefd8f7-9cd8-40bf-afce-83eed2491ff8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+20d6ec33-906e-4d7e-8dda-173f1ba1b4b4	manager_in_agency_	2bd1d873-946f-4557-905c-99b73b1d54bf	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3262,6 +3409,10 @@ ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 02:00:00+02	0000
 2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	reset_password_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 906655f2-4bbb-441a-b10b-7231da7bccad	query_user_by_email_address_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+31a284d0-b6ea-4dd4-b013-da4647a54558	query_client_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+3cefd8f7-9cd8-40bf-afce-83eed2491ff8	create_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+2bd1d873-946f-4557-905c-99b73b1d54bf	delete_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3324,6 +3475,10 @@ c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-
 60d3ee39-0f5a-40b9-941e-c606f015fb12	visitor_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 7bacfdbd-84bb-4078-bca1-aee9f6790ef0	logged_in_	906655f2-4bbb-441a-b10b-7231da7bccad	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+73da9d07-021f-43bb-ace8-e72724dc35e7	agent_in_agency_	b20e4cff-c150-4e02-af03-798cc73382f3	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+cf31f59e-bb4a-4225-86f5-1339c339ea19	agent_in_agency_	31a284d0-b6ea-4dd4-b013-da4647a54558	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+faad1e60-244a-43d8-b2b2-fb92e60bdb89	manager_in_agency_	3cefd8f7-9cd8-40bf-afce-83eed2491ff8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+20d6ec33-906e-4d7e-8dda-173f1ba1b4b4	manager_in_agency_	2bd1d873-946f-4557-905c-99b73b1d54bf	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3371,6 +3526,14 @@ ALTER TABLE ONLY application_.agency_
 
 ALTER TABLE ONLY application_.agency_
     ADD CONSTRAINT agency__subdomain_uuid__key UNIQUE (subdomain_uuid_);
+
+
+--
+-- Name: client_ client__agency_uuid__name__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.client_
+    ADD CONSTRAINT client__agency_uuid__name__key UNIQUE (agency_uuid_, name_);
 
 
 --
@@ -3753,6 +3916,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.servic
 
 
 --
+-- Name: client_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.client_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
 -- Name: agency_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -3827,6 +3997,13 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service
 --
 
 CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: client_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.client_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -3914,6 +4091,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 
 
 --
+-- Name: client_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.client_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: agency_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -3988,6 +4172,13 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service
 --
 
 CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: client_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -4075,6 +4266,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
+-- Name: client_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.client_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: agency_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -4149,6 +4347,13 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service
 --
 
 CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: client_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -4233,6 +4438,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: client_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.client_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -4528,6 +4740,30 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.email_ad
 
 ALTER TABLE ONLY application_.agency_
     ADD CONSTRAINT agency__subdomain_uuid__fkey FOREIGN KEY (subdomain_uuid_) REFERENCES security_.subdomain_(uuid_) ON DELETE CASCADE;
+
+
+--
+-- Name: client_ client__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.client_
+    ADD CONSTRAINT client__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+
+
+--
+-- Name: client_ client__invite_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.client_
+    ADD CONSTRAINT client__invite_uuid__fkey FOREIGN KEY (invite_uuid_) REFERENCES application_.user_invite_(uuid_);
+
+
+--
+-- Name: client_ client__subject_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.client_
+    ADD CONSTRAINT client__subject_uuid__fkey FOREIGN KEY (subject_uuid_) REFERENCES security_.user_(uuid_);
 
 
 --

@@ -149,6 +149,28 @@ BEGIN
 
   PERFORM operation_.begin_session_(_user_jwt);
 
+  SELECT * INTO _record_1 FROM operation_.create_client_(_record_0.uuid_, 'test client');
+  --RAISE NOTICE E'create_client_:\n%', _record_1;
+  SELECT * INTO _record_1 FROM operation_.query_client_(_record_1.uuid_);
+  --RAISE NOTICE E'query_client_:\n%', _record_1;
+
+  IF _record_1 IS NULL THEN
+    RAISE EXCEPTION 'A client should have been returned';
+  END IF;
+
+  SELECT * INTO _record_1 FROM operation_.delete_client_(_record_1.uuid_);
+  --RAISE NOTICE E'delete_client_:\n%', _record_1;
+  BEGIN
+    SELECT * INTO _record_1 FROM operation_.query_client_(_record_1.uuid_);
+    RAISE EXCEPTION 'A client should have been deleted';
+  EXCEPTION WHEN SQLSTATE '42501' THEN
+  END;
+
+  PERFORM operation_.end_session_();
+
+
+  PERFORM operation_.begin_session_(_user_jwt);
+
   SELECT * INTO _record_2 FROM operation_.query_user_by_email_address_('test@example.com');
 
   IF _record_2 IS NULL THEN
