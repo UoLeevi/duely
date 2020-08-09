@@ -13,8 +13,8 @@ export default async function deleteAgency(obj, { agencyUuid }, context, info) {
         // success
         return {
           success: true,
-          agencyUuid: res.rows[0].uuid_,
-          type: 'DeleteAgencyResult'
+          uuid: res.rows[0].uuid_,
+          type: 'DeleteResult'
         };
 
       } catch (error) {
@@ -22,7 +22,7 @@ export default async function deleteAgency(obj, { agencyUuid }, context, info) {
           // error
           success: false,
           message: error.message,
-          type: 'DeleteAgencyResult'
+          type: 'DeleteResult'
         };
       }
     });

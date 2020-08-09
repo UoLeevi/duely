@@ -1,9 +1,9 @@
 export default {
   typeDef: `
-    type DeleteServiceStepResult implements MutationResult {
+    type DeleteResult implements MutationResult {
       success: Boolean!
       message: String
-      serviceStepUuid: ID
+      uuid: ID
     }
   `,
   resolvers: {

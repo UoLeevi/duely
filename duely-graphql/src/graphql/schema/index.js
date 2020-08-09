@@ -1,6 +1,8 @@
 import { makeExecutableSchema } from 'graphql-tools';
 import AcceptInviteResult from './AcceptInviteResult';
 import Agency from './Agency';
+import AgencyClientsConnection from './AgencyClientsConnection';
+import AgencyClientsEdge from './AgencyClientsEdge';
 import AgencyInvitesConnection from './AgencyInvitesConnection';
 import AgencyInvitesEdge from './AgencyInvitesEdge';
 import AgencyServicesConnection from './AgencyServicesConnection';
@@ -9,14 +11,14 @@ import AgencySubjectsConnection from './AgencySubjectsConnection';
 import AgencySubjectsEdge from './AgencySubjectsEdge';
 import BeginVisitResult from './BeginVisitResult';
 import Connection from './Connection';
+import Client from './Client';
 import CreateAgencyResult from './CreateAgencyResult';
+import CreateClientResult from './CreateClientResult';
 import CreateServiceResult from './CreateServiceResult';
 import CreateServiceStepResult from './CreateServiceStepResult';
 import Date from './Date';
 import DeclineInviteResult from './DeclineInviteResult';
-import DeleteAgencyResult from './DeleteAgencyResult';
-import DeleteServiceResult from './DeleteServiceResult';
-import DeleteServiceStepResult from './DeleteServiceStepResult';
+import DeleteResult from './DeleteResult';
 import Edge from './Edge';
 import EditAgencyThemeResult from './EditAgencyThemeResult';
 import EditImageResult from './EditImageResult';
@@ -48,6 +50,8 @@ import Subscription from './Subscription';
 export default makeExecutableSchema([
   AcceptInviteResult,
   Agency,
+  AgencyClientsConnection,
+  AgencyClientsEdge,
   AgencyInvitesConnection,
   AgencyInvitesEdge,
   AgencyServicesConnection,
@@ -56,14 +60,14 @@ export default makeExecutableSchema([
   AgencySubjectsEdge,
   BeginVisitResult,
   Connection,
+  Client,
   CreateAgencyResult,
+  CreateClientResult,
   CreateServiceResult,
   CreateServiceStepResult,
   Date,
   DeclineInviteResult,
-  DeleteAgencyResult,
-  DeleteServiceResult,
-  DeleteServiceStepResult,
+  DeleteResult,
   Edge,
   EditAgencyThemeResult,
   EditImageResult,

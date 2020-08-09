@@ -1,12 +1,11 @@
 export default {
   typeDef: `
-    type DeleteAgencyResult implements MutationResult {
+    type CreateClientResult implements MutationResult {
       success: Boolean!
       message: String
-      agencyUuid: ID
+      client: Client
     }
   `,
   resolvers: {
-
   }
 };

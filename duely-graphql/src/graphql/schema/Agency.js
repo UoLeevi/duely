@@ -10,6 +10,7 @@ export default {
       theme: Theme
       subjectsConnection: AgencySubjectsConnection!
       invitesConnection: AgencyInvitesConnection!
+      clientsConnection: AgencyClientsConnection!
       servicesConnection: AgencyServicesConnection!
     }
   `,
@@ -57,6 +58,12 @@ export default {
         return { 
           agencyUuid: agency.uuid_,
           type: 'AgencyInvitesConnection'
+        };
+      },
+      clientsConnection(agency, args, context, info) {
+        return { 
+          agencyUuid: agency.uuid_,
+          type: 'AgencyClientsConnection'
         };
       },
       servicesConnection(agency, args, context, info) {

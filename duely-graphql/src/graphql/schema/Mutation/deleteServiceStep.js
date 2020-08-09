@@ -13,8 +13,8 @@ export default async function deleteServiceStep(obj, { serviceStepUuid }, contex
         // success
         return {
           success: true,
-          serviceStepUuid: res.rows[0].uuid_,
-          type: 'DeleteServiceStepResult'
+          uuid: res.rows[0].uuid_,
+          type: 'DeleteResult'
         };
 
       } catch (error) {
@@ -22,7 +22,7 @@ export default async function deleteServiceStep(obj, { serviceStepUuid }, contex
           // error
           success: false,
           message: error.message,
-          type: 'DeleteServiceStepResult'
+          type: 'DeleteResult'
         };
       }
     });

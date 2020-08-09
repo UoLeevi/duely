@@ -10,6 +10,7 @@ import verifySignUp from './verifySignUp';
 import logIn from './logIn';
 import logOut from './logOut';
 import createAgency from './createAgency';
+import createClient from './createClient';
 import createService from './createService';
 import createServiceStep from './createServiceStep';
 import editAgencyTheme from './editAgencyTheme';
@@ -18,6 +19,7 @@ import editService from './editService';
 import publishService from './publishService';
 import unpublishService from './unpublishService';
 import deleteAgency from './deleteAgency';
+import deleteClient from './deleteClient';
 import deleteService from './deleteService';
 import deleteServiceStep from './deleteServiceStep';
 
@@ -36,6 +38,7 @@ export default {
       logIn(emailAddress: String!, password: String!): LogInResult!
       logOut: LogOutResult!
       createAgency(name: String!, subdomain: String!, countryCode: String!, returnUrl: String!): CreateAgencyResult!
+      createClient(agencyUuid: ID!, name: String!, emailAddress: String): CreateClientResult!
       createService(agencyUuid: ID!, name: String!): CreateServiceResult!
       createServiceStep(serviceUuid: ID!, name: String!, type: ServiceStepType!, previousServiceStepUuid: ID): CreateServiceStepResult!
       editAgencyTheme(agencyUuid: ID!, imageLogoUuid: ID, imageHeroUuid: ID, colorPrimary: String!, colorSecondary: String!, colorAccent: String!, colorBackground: String!, colorSurface: String!, colorError: String!, colorSuccess: String!): EditAgencyThemeResult!
@@ -43,9 +46,10 @@ export default {
       editService(serviceUuid: ID!, name: String!, description: String, duration: String, price: Int, currency: String, imageLogoUuid: ID, imageHeroUuid: ID): EditServiceResult!
       publishService(serviceUuid: ID!): SimpleResult!
       unpublishService(serviceUuid: ID!): SimpleResult!
-      deleteAgency(agencyUuid: ID!): DeleteAgencyResult!
-      deleteService(serviceUuid: ID!): DeleteServiceResult!
-      deleteServiceStep(serviceStepUuid: ID!): DeleteServiceStepResult!
+      deleteAgency(agencyUuid: ID!): DeleteResult!
+      deleteClient(clientUuid: ID!): DeleteResult!
+      deleteService(serviceUuid: ID!): DeleteResult!
+      deleteServiceStep(serviceStepUuid: ID!): DeleteResult!
     }
   `,
   resolvers: {
@@ -62,6 +66,7 @@ export default {
       logIn,
       logOut,
       createAgency,
+      createClient,
       createServiceStep,
       createService,
       editAgencyTheme,
@@ -70,6 +75,7 @@ export default {
       publishService,
       unpublishService,
       deleteAgency,
+      deleteClient,
       deleteService,
       deleteServiceStep
     }

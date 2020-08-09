@@ -1,14 +1,14 @@
 import { withConnection } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 
-export default async function deleteService(obj, { serviceUuid }, context, info) {
+export default async function deleteClient(obj, { clientUuid }, context, info) {
   if (!context.jwt)
     throw new AuthenticationError('Unauthorized');
 
   return await withConnection(context, async withSession => {
     return await withSession(async client => {
       try {
-        const res = await client.query('SELECT uuid_ FROM operation_.delete_service_($1::uuid)', [serviceUuid]);
+        const res = await client.query('SELECT uuid_ FROM operation_.delete_client_($1::uuid)', [clientUuid]);
 
         // success
         return {
