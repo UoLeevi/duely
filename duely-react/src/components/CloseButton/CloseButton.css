@@ -25,13 +25,13 @@
 }
 
 .close-button > svg > path {
-  stroke: rgba(var(--color-grey-rgb), var(--color-d3));
+  stroke: hsla(var(--background-color-h), var(--background-color-s), calc(var(--background-color-l) * var(--color-d6)), var(--color-d10));
   transition: stroke 200ms ease;
 }
 
 .close-button:hover > svg > path,
 .close-button:active > svg > path {
-  stroke: #000000; 
+  stroke: hsla(var(--background-color-h), var(--background-color-s), calc(var(--background-color-l) * var(--color-d5)), var(--color-d10));
 }
 
 .close-button:focus > svg > path {

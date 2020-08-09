@@ -21,18 +21,18 @@
   --color-primary-s: 100%;
   --color-primary-l: 68%;
   --color-primary-hs: var(--color-primary-h), var(--color-primary-s);
-  --color-primary-hsl: var(--color-primary-hs), var(--color-primary-l);
+  --color-primary-hsl: var(--color-primary-h), var(--color-primary-s), var(--color-primary-l);
   --primary-s1n: calc(0.3 * var(--color-primary-s));
 
-  --color-primary-l4: hsl(var(--color-primary-hs), calc(var(--color-primary-l) + .9 * (100% - var(--color-primary-l))));
-  --color-primary-l3: hsl(var(--color-primary-hs), calc(var(--color-primary-l) + .75 * (100% - var(--color-primary-l))));
-  --color-primary-l2: hsl(var(--color-primary-hs), calc(var(--color-primary-l) + .5 * (100% - var(--color-primary-l))));
-  --color-primary-l1: hsl(var(--color-primary-hs), calc(var(--color-primary-l) + .25 * (100% - var(--color-primary-l))));
+  --color-primary-l4: hsl(var(--color-primary-h), var(--color-primary-s), calc(var(--color-primary-l) + .9 * (100% - var(--color-primary-l))));
+  --color-primary-l3: hsl(var(--color-primary-h), var(--color-primary-s), calc(var(--color-primary-l) + .75 * (100% - var(--color-primary-l))));
+  --color-primary-l2: hsl(var(--color-primary-h), var(--color-primary-s), calc(var(--color-primary-l) + .5 * (100% - var(--color-primary-l))));
+  --color-primary-l1: hsl(var(--color-primary-h), var(--color-primary-s), calc(var(--color-primary-l) + .25 * (100% - var(--color-primary-l))));
   --color-primary: hsl(var(--color-primary-hsl));
-  --color-primary-l1n: hsl(var(--color-primary-hs), calc(.75 * var(--color-primary-l)));
-  --color-primary-l2n: hsl(var(--color-primary-hs), calc(.5 * var(--color-primary-l)));
-  --color-primary-l3n: hsl(var(--color-primary-hs), calc(.3 * var(--color-primary-l)));
-  --color-primary-l4n: hsl(var(--color-primary-hs), calc(.15 * var(--color-primary-l)));
+  --color-primary-l1n: hsl(var(--color-primary-h), var(--color-primary-s), calc(.75 * var(--color-primary-l)));
+  --color-primary-l2n: hsl(var(--color-primary-h), var(--color-primary-s), calc(.5 * var(--color-primary-l)));
+  --color-primary-l3n: hsl(var(--color-primary-h), var(--color-primary-s), calc(.3 * var(--color-primary-l)));
+  --color-primary-l4n: hsl(var(--color-primary-h), var(--color-primary-s), calc(.15 * var(--color-primary-l)));
 
   --color-primary-s1nl4: hsl(var(--color-primary-h), var(--primary-s1n), calc(var(--color-primary-l) + .9 * (100% - var(--color-primary-l))));
   --color-primary-s1nl3: hsl(var(--color-primary-h), var(--primary-s1n), calc(var(--color-primary-l) + .75 * (100% - var(--color-primary-l))));
@@ -50,18 +50,18 @@
   --color-secondary-s: 100%;
   --color-secondary-l: 70%;
   --color-secondary-hs: var(--color-secondary-h), var(--color-secondary-s);
-  --color-secondary-hsl: var(--color-secondary-hs), var(--color-secondary-l);
+  --color-secondary-hsl: var(--color-secondary-h), var(--color-secondary-s), var(--color-secondary-l);
   --secondary-s1n: calc(0.3 * var(--color-secondary-s));
 
-  --color-secondary-l4: hsl(var(--color-secondary-hs), calc(var(--color-secondary-l) + .9 * (100% - var(--color-secondary-l))));
-  --color-secondary-l3: hsl(var(--color-secondary-hs), calc(var(--color-secondary-l) + .75 * (100% - var(--color-secondary-l))));
-  --color-secondary-l2: hsl(var(--color-secondary-hs), calc(var(--color-secondary-l) + .5 * (100% - var(--color-secondary-l))));
-  --color-secondary-l1: hsl(var(--color-secondary-hs), calc(var(--color-secondary-l) + .25 * (100% - var(--color-secondary-l))));
+  --color-secondary-l4: hsl(var(--color-secondary-h), var(--color-secondary-s), calc(var(--color-secondary-l) + .9 * (100% - var(--color-secondary-l))));
+  --color-secondary-l3: hsl(var(--color-secondary-h), var(--color-secondary-s), calc(var(--color-secondary-l) + .75 * (100% - var(--color-secondary-l))));
+  --color-secondary-l2: hsl(var(--color-secondary-h), var(--color-secondary-s), calc(var(--color-secondary-l) + .5 * (100% - var(--color-secondary-l))));
+  --color-secondary-l1: hsl(var(--color-secondary-h), var(--color-secondary-s), calc(var(--color-secondary-l) + .25 * (100% - var(--color-secondary-l))));
   --color-secondary: hsl(var(--color-secondary-hsl));
-  --color-secondary-l1n: hsl(var(--color-secondary-hs), calc(.75 * var(--color-secondary-l)));
-  --color-secondary-l2n: hsl(var(--color-secondary-hs), calc(.5 * var(--color-secondary-l)));
-  --color-secondary-l3n: hsl(var(--color-secondary-hs), calc(.3 * var(--color-secondary-l)));
-  --color-secondary-l4n: hsl(var(--color-secondary-hs), calc(.15 * var(--color-secondary-l)));
+  --color-secondary-l1n: hsl(var(--color-secondary-h), var(--color-secondary-s), calc(.75 * var(--color-secondary-l)));
+  --color-secondary-l2n: hsl(var(--color-secondary-h), var(--color-secondary-s), calc(.5 * var(--color-secondary-l)));
+  --color-secondary-l3n: hsl(var(--color-secondary-h), var(--color-secondary-s), calc(.3 * var(--color-secondary-l)));
+  --color-secondary-l4n: hsl(var(--color-secondary-h), var(--color-secondary-s), calc(.15 * var(--color-secondary-l)));
 
   --color-secondary-s1nl4: hsl(var(--color-secondary-h), var(--secondary-s1n), calc(var(--color-secondary-l) + .9 * (100% - var(--color-secondary-l))));
   --color-secondary-s1nl3: hsl(var(--color-secondary-h), var(--secondary-s1n), calc(var(--color-secondary-l) + .75 * (100% - var(--color-secondary-l))));
@@ -79,18 +79,18 @@
   --color-accent-s: 100%;
   --color-accent-l: 70%;
   --color-accent-hs: var(--color-accent-h), var(--color-accent-s);
-  --color-accent-hsl: var(--color-accent-hs), var(--color-accent-l);
+  --color-accent-hsl: var(--color-accent-h), var(--color-accent-s), var(--color-accent-l);
   --accent-s1n: calc(0.3 * var(--color-accent-s));
 
-  --color-accent-l4: hsl(var(--color-accent-hs), calc(var(--color-accent-l) + .9 * (100% - var(--color-accent-l))));
-  --color-accent-l3: hsl(var(--color-accent-hs), calc(var(--color-accent-l) + .75 * (100% - var(--color-accent-l))));
-  --color-accent-l2: hsl(var(--color-accent-hs), calc(var(--color-accent-l) + .5 * (100% - var(--color-accent-l))));
-  --color-accent-l1: hsl(var(--color-accent-hs), calc(var(--color-accent-l) + .25 * (100% - var(--color-accent-l))));
+  --color-accent-l4: hsl(var(--color-accent-h), var(--color-accent-s), calc(var(--color-accent-l) + .9 * (100% - var(--color-accent-l))));
+  --color-accent-l3: hsl(var(--color-accent-h), var(--color-accent-s), calc(var(--color-accent-l) + .75 * (100% - var(--color-accent-l))));
+  --color-accent-l2: hsl(var(--color-accent-h), var(--color-accent-s), calc(var(--color-accent-l) + .5 * (100% - var(--color-accent-l))));
+  --color-accent-l1: hsl(var(--color-accent-h), var(--color-accent-s), calc(var(--color-accent-l) + .25 * (100% - var(--color-accent-l))));
   --color-accent: hsl(var(--color-accent-hsl));
-  --color-accent-l1n: hsl(var(--color-accent-hs), calc(.75 * var(--color-accent-l)));
-  --color-accent-l2n: hsl(var(--color-accent-hs), calc(.5 * var(--color-accent-l)));
-  --color-accent-l3n: hsl(var(--color-accent-hs), calc(.3 * var(--color-accent-l)));
-  --color-accent-l4n: hsl(var(--color-accent-hs), calc(.15 * var(--color-accent-l)));
+  --color-accent-l1n: hsl(var(--color-accent-h), var(--color-accent-s), calc(.75 * var(--color-accent-l)));
+  --color-accent-l2n: hsl(var(--color-accent-h), var(--color-accent-s), calc(.5 * var(--color-accent-l)));
+  --color-accent-l3n: hsl(var(--color-accent-h), var(--color-accent-s), calc(.3 * var(--color-accent-l)));
+  --color-accent-l4n: hsl(var(--color-accent-h), var(--color-accent-s), calc(.15 * var(--color-accent-l)));
 
   --color-accent-s1nl4: hsl(var(--color-accent-h), var(--accent-s1n), calc(var(--color-accent-l) + .9 * (100% - var(--color-accent-l))));
   --color-accent-s1nl3: hsl(var(--color-accent-h), var(--accent-s1n), calc(var(--color-accent-l) + .75 * (100% - var(--color-accent-l))));
@@ -108,28 +108,28 @@
   --color-background-s: 17%;
   --color-background-l: 86%;
   --color-background-hs: var(--color-background-h), var(--color-background-s);
-  --color-background-hsl: var(--color-background-hs), var(--color-background-l);
+  --color-background-hsl: var(--color-background-h), var(--color-background-s), var(--color-background-l);
   --background-s1n: calc(0.3 * var(--color-background-s));
 
-  --color-background-l9: hsl(var(--color-background-hs), calc(var(--color-background-l) + var(--color-d9) * (100% - var(--color-background-l))));
-  --color-background-l8: hsl(var(--color-background-hs), calc(var(--color-background-l) + var(--color-d8) * (100% - var(--color-background-l))));
-  --color-background-l7: hsl(var(--color-background-hs), calc(var(--color-background-l) + var(--color-d7) * (100% - var(--color-background-l))));
-  --color-background-l6: hsl(var(--color-background-hs), calc(var(--color-background-l) + var(--color-d6) * (100% - var(--color-background-l))));
-  --color-background-l5: hsl(var(--color-background-hs), calc(var(--color-background-l) + var(--color-d5) * (100% - var(--color-background-l))));
-  --color-background-l4: hsl(var(--color-background-hs), calc(var(--color-background-l) + var(--color-d4) * (100% - var(--color-background-l))));
-  --color-background-l3: hsl(var(--color-background-hs), calc(var(--color-background-l) + var(--color-d3) * (100% - var(--color-background-l))));
-  --color-background-l2: hsl(var(--color-background-hs), calc(var(--color-background-l) + var(--color-d2) * (100% - var(--color-background-l))));
-  --color-background-l1: hsl(var(--color-background-hs), calc(var(--color-background-l) + var(--color-d1) * (100% - var(--color-background-l))));
+  --color-background-l9: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-background-l) + var(--color-d9) * (100% - var(--color-background-l))));
+  --color-background-l8: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-background-l) + var(--color-d8) * (100% - var(--color-background-l))));
+  --color-background-l7: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-background-l) + var(--color-d7) * (100% - var(--color-background-l))));
+  --color-background-l6: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-background-l) + var(--color-d6) * (100% - var(--color-background-l))));
+  --color-background-l5: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-background-l) + var(--color-d5) * (100% - var(--color-background-l))));
+  --color-background-l4: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-background-l) + var(--color-d4) * (100% - var(--color-background-l))));
+  --color-background-l3: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-background-l) + var(--color-d3) * (100% - var(--color-background-l))));
+  --color-background-l2: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-background-l) + var(--color-d2) * (100% - var(--color-background-l))));
+  --color-background-l1: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-background-l) + var(--color-d1) * (100% - var(--color-background-l))));
   --color-background: hsl(var(--color-background-hsl));
-  --color-background-l1n: hsl(var(--color-background-hs), calc(var(--color-d9) * var(--color-background-l)));
-  --color-background-l2n: hsl(var(--color-background-hs), calc(var(--color-d8) * var(--color-background-l)));
-  --color-background-l3n: hsl(var(--color-background-hs), calc(var(--color-d7) * var(--color-background-l)));
-  --color-background-l4n: hsl(var(--color-background-hs), calc(var(--color-d6) * var(--color-background-l)));
-  --color-background-l5n: hsl(var(--color-background-hs), calc(var(--color-d5) * var(--color-background-l)));
-  --color-background-l6n: hsl(var(--color-background-hs), calc(var(--color-d4) * var(--color-background-l)));
-  --color-background-l7n: hsl(var(--color-background-hs), calc(var(--color-d3) * var(--color-background-l)));
-  --color-background-l8n: hsl(var(--color-background-hs), calc(var(--color-d2) * var(--color-background-l)));
-  --color-background-l9n: hsl(var(--color-background-hs), calc(var(--color-d1) * var(--color-background-l)));
+  --color-background-l1n: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-d9) * var(--color-background-l)));
+  --color-background-l2n: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-d8) * var(--color-background-l)));
+  --color-background-l3n: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-d7) * var(--color-background-l)));
+  --color-background-l4n: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-d6) * var(--color-background-l)));
+  --color-background-l5n: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-d5) * var(--color-background-l)));
+  --color-background-l6n: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-d4) * var(--color-background-l)));
+  --color-background-l7n: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-d3) * var(--color-background-l)));
+  --color-background-l8n: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-d2) * var(--color-background-l)));
+  --color-background-l9n: hsl(var(--color-background-h), var(--color-background-s), calc(var(--color-d1) * var(--color-background-l)));
 
   --color-background-s1nl9: hsl(var(--color-background-h), var(--background-s1n), calc(var(--color-background-l) + var(--color-d9) * (100% - var(--color-background-l))));
   --color-background-s1nl8: hsl(var(--color-background-h), var(--background-s1n), calc(var(--color-background-l) + var(--color-d8) * (100% - var(--color-background-l))));
@@ -157,18 +157,18 @@
   --color-surface-s: 28%;
   --color-surface-l: 31%;
   --color-surface-hs: var(--color-surface-h), var(--color-surface-s);
-  --color-surface-hsl: var(--color-surface-hs), var(--color-surface-l);
+  --color-surface-hsl: var(--color-surface-h), var(--color-surface-s), var(--color-surface-l);
   --surface-s1n: calc(0.3 * var(--color-surface-s));
 
-  --color-surface-l4: hsl(var(--color-surface-hs), calc(var(--color-surface-l) + .9 * (100% - var(--color-surface-l))));
-  --color-surface-l3: hsl(var(--color-surface-hs), calc(var(--color-surface-l) + .75 * (100% - var(--color-surface-l))));
-  --color-surface-l2: hsl(var(--color-surface-hs), calc(var(--color-surface-l) + .5 * (100% - var(--color-surface-l))));
-  --color-surface-l1: hsl(var(--color-surface-hs), calc(var(--color-surface-l) + .25 * (100% - var(--color-surface-l))));
+  --color-surface-l4: hsl(var(--color-surface-h), var(--color-surface-s), calc(var(--color-surface-l) + .9 * (100% - var(--color-surface-l))));
+  --color-surface-l3: hsl(var(--color-surface-h), var(--color-surface-s), calc(var(--color-surface-l) + .75 * (100% - var(--color-surface-l))));
+  --color-surface-l2: hsl(var(--color-surface-h), var(--color-surface-s), calc(var(--color-surface-l) + .5 * (100% - var(--color-surface-l))));
+  --color-surface-l1: hsl(var(--color-surface-h), var(--color-surface-s), calc(var(--color-surface-l) + .25 * (100% - var(--color-surface-l))));
   --color-surface: hsl(var(--color-surface-hsl));
-  --color-surface-l1n: hsl(var(--color-surface-hs), calc(.75 * var(--color-surface-l)));
-  --color-surface-l2n: hsl(var(--color-surface-hs), calc(.5 * var(--color-surface-l)));
-  --color-surface-l3n: hsl(var(--color-surface-hs), calc(.3 * var(--color-surface-l)));
-  --color-surface-l4n: hsl(var(--color-surface-hs), calc(.15 * var(--color-surface-l)));
+  --color-surface-l1n: hsl(var(--color-surface-h), var(--color-surface-s), calc(.75 * var(--color-surface-l)));
+  --color-surface-l2n: hsl(var(--color-surface-h), var(--color-surface-s), calc(.5 * var(--color-surface-l)));
+  --color-surface-l3n: hsl(var(--color-surface-h), var(--color-surface-s), calc(.3 * var(--color-surface-l)));
+  --color-surface-l4n: hsl(var(--color-surface-h), var(--color-surface-s), calc(.15 * var(--color-surface-l)));
 
   --color-surface-s1nl4: hsl(var(--color-surface-h), var(--surface-s1n), calc(var(--color-surface-l) + .9 * (100% - var(--color-surface-l))));
   --color-surface-s1nl3: hsl(var(--color-surface-h), var(--surface-s1n), calc(var(--color-surface-l) + .75 * (100% - var(--color-surface-l))));
@@ -186,18 +186,18 @@
   --color-error-s: 100%;
   --color-error-l: 70%;
   --color-error-hs: var(--color-error-h), var(--color-error-s);
-  --color-error-hsl: var(--color-error-hs), var(--color-error-l);
+  --color-error-hsl: var(--color-error-h), var(--color-error-s), var(--color-error-l);
   --error-s1n: calc(0.3 * var(--color-error-s));
 
-  --color-error-l4: hsl(var(--color-error-hs), calc(var(--color-error-l) + .9 * (100% - var(--color-error-l))));
-  --color-error-l3: hsl(var(--color-error-hs), calc(var(--color-error-l) + .75 * (100% - var(--color-error-l))));
-  --color-error-l2: hsl(var(--color-error-hs), calc(var(--color-error-l) + .5 * (100% - var(--color-error-l))));
-  --color-error-l1: hsl(var(--color-error-hs), calc(var(--color-error-l) + .25 * (100% - var(--color-error-l))));
+  --color-error-l4: hsl(var(--color-error-h), var(--color-error-s), calc(var(--color-error-l) + .9 * (100% - var(--color-error-l))));
+  --color-error-l3: hsl(var(--color-error-h), var(--color-error-s), calc(var(--color-error-l) + .75 * (100% - var(--color-error-l))));
+  --color-error-l2: hsl(var(--color-error-h), var(--color-error-s), calc(var(--color-error-l) + .5 * (100% - var(--color-error-l))));
+  --color-error-l1: hsl(var(--color-error-h), var(--color-error-s), calc(var(--color-error-l) + .25 * (100% - var(--color-error-l))));
   --color-error: hsl(var(--color-error-hsl));
-  --color-error-l1n: hsl(var(--color-error-hs), calc(.75 * var(--color-error-l)));
-  --color-error-l2n: hsl(var(--color-error-hs), calc(.5 * var(--color-error-l)));
-  --color-error-l3n: hsl(var(--color-error-hs), calc(.3 * var(--color-error-l)));
-  --color-error-l4n: hsl(var(--color-error-hs), calc(.15 * var(--color-error-l)));
+  --color-error-l1n: hsl(var(--color-error-h), var(--color-error-s), calc(.75 * var(--color-error-l)));
+  --color-error-l2n: hsl(var(--color-error-h), var(--color-error-s), calc(.5 * var(--color-error-l)));
+  --color-error-l3n: hsl(var(--color-error-h), var(--color-error-s), calc(.3 * var(--color-error-l)));
+  --color-error-l4n: hsl(var(--color-error-h), var(--color-error-s), calc(.15 * var(--color-error-l)));
 
   --color-error-s1nl4: hsl(var(--color-error-h), var(--error-s1n), calc(var(--color-error-l) + .9 * (100% - var(--color-error-l))));
   --color-error-s1nl3: hsl(var(--color-error-h), var(--error-s1n), calc(var(--color-error-l) + .75 * (100% - var(--color-error-l))));
@@ -215,18 +215,18 @@
   --color-success-s: 100%;
   --color-success-l: 37%;
   --color-success-hs: var(--color-success-h), var(--color-success-s);
-  --color-success-hsl: var(--color-success-hs), var(--color-success-l);
+  --color-success-hsl: var(--color-success-h), var(--color-success-s), var(--color-success-l);
   --success-s1n: calc(0.3 * var(--color-success-s));
 
-  --color-success-l4: hsl(var(--color-success-hs), calc(var(--color-success-l) + .9 * (100% - var(--color-success-l))));
-  --color-success-l3: hsl(var(--color-success-hs), calc(var(--color-success-l) + .75 * (100% - var(--color-success-l))));
-  --color-success-l2: hsl(var(--color-success-hs), calc(var(--color-success-l) + .5 * (100% - var(--color-success-l))));
-  --color-success-l1: hsl(var(--color-success-hs), calc(var(--color-success-l) + .25 * (100% - var(--color-success-l))));
+  --color-success-l4: hsl(var(--color-success-h), var(--color-success-s), calc(var(--color-success-l) + .9 * (100% - var(--color-success-l))));
+  --color-success-l3: hsl(var(--color-success-h), var(--color-success-s), calc(var(--color-success-l) + .75 * (100% - var(--color-success-l))));
+  --color-success-l2: hsl(var(--color-success-h), var(--color-success-s), calc(var(--color-success-l) + .5 * (100% - var(--color-success-l))));
+  --color-success-l1: hsl(var(--color-success-h), var(--color-success-s), calc(var(--color-success-l) + .25 * (100% - var(--color-success-l))));
   --color-success: hsl(var(--color-success-hsl));
-  --color-success-l1n: hsl(var(--color-success-hs), calc(.75 * var(--color-success-l)));
-  --color-success-l2n: hsl(var(--color-success-hs), calc(.5 * var(--color-success-l)));
-  --color-success-l3n: hsl(var(--color-success-hs), calc(.3 * var(--color-success-l)));
-  --color-success-l4n: hsl(var(--color-success-hs), calc(.15 * var(--color-success-l)));
+  --color-success-l1n: hsl(var(--color-success-h), var(--color-success-s), calc(.75 * var(--color-success-l)));
+  --color-success-l2n: hsl(var(--color-success-h), var(--color-success-s), calc(.5 * var(--color-success-l)));
+  --color-success-l3n: hsl(var(--color-success-h), var(--color-success-s), calc(.3 * var(--color-success-l)));
+  --color-success-l4n: hsl(var(--color-success-h), var(--color-success-s), calc(.15 * var(--color-success-l)));
 
   --color-success-s1nl4: hsl(var(--color-success-h), var(--success-s1n), calc(var(--color-success-l) + .9 * (100% - var(--color-success-l))));
   --color-success-s1nl3: hsl(var(--color-success-h), var(--success-s1n), calc(var(--color-success-l) + .75 * (100% - var(--color-success-l))));
@@ -572,10 +572,8 @@
 #root .success.color-s1n.color-l3n { color: var(--color-success-s1nl3n); }
 #root .success.color-s1n.color-l4n { color: var(--color-success-s1nl4n); }
 
-#root .white { color: #ffffff;
-}
-#root .black { color: #000000;
-}
+#root .white { color: #ffffff; }
+#root .black { color: #000000; }
 
 
 

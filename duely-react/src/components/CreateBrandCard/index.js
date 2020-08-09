@@ -6,7 +6,7 @@ import './CreateBrandCard.css';
 
 
 const CreateBrandCard = ({ className, ...props }) => {
-  className = createClassName(className, 'create-brand-card');
+  className = createClassName(className, 'create-brand-card shadow');
 
   return (
     <Link className={ className } { ...props } to={ '/profile/create-brand' }>

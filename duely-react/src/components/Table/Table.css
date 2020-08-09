@@ -1,0 +1,25 @@
+#root .table {
+  border-collapse: collapse;
+  table-layout: auto !important;
+  width: 100%;
+}
+
+#root .table > * > tr {
+  border-bottom: 1px solid hsla(var(--background-color-h), var(--background-color-s), calc(var(--background-color-l) * var(--color-d5)), var(--color-d3));
+}
+
+#root .table > tbody > tr {
+  background-color: hsla(var(--background-color-h), var(--background-color-s), calc(var(--background-color-l) * var(--color-d6)), var(--color-d0));
+  transition-property: background-color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+}
+
+#root .table > tbody > tr:hover {
+  background-color: hsla(var(--background-color-h), var(--background-color-s), calc(var(--background-color-l) * var(--color-d6)), var(--color-d2));
+}
+
+#root .table > * > tr > td {
+  vertical-align: middle;
+  padding: var(--spacing-2);
+}

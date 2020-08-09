@@ -8,7 +8,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: hsla(var(--background-color-h), var(--background-color-s), calc(var(--background-color-l) * var(--color-d10)), var(--color-d8));
   backdrop-filter: blur(2px);
 }
 
@@ -16,5 +16,5 @@
   position: relative;
   border-radius: var(--radius-3);
   padding: var(--spacing-6);
-  box-shadow: var(--box-shadow);
+  box-shadow: var(--box-shadow-l1);
 }

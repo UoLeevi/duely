@@ -2,6 +2,6 @@
   line-height: 2em;
   min-width: 10ch;
   border-radius: var(--radius-1-rel);
-  display: inline-block;
-  text-align: center;
+  display: grid;
+  place-items: center;
 }

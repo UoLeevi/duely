@@ -39,8 +39,7 @@ export default function useBackgroundColor(ref, mod) {
     if (!ref?.current) return;
     if (backgroundMods.has(ref)) return;
 
-    const root = document.getElementById('root');
-    const bg = ref.current.closest('[data-bg-base]') ?? root;
+    const bg = ref.current.closest('[data-bg-base]') ?? document.documentElement;
     const owner = backgroundOwners.get(bg);
 
     if (owner?.current && owner !== ref && ref.current.contains(owner.current)) return;
@@ -48,11 +47,11 @@ export default function useBackgroundColor(ref, mod) {
     backgroundOwners.set(bg, ref);
     backgroundMods.set(ref, mod);
 
-    const base = bg === root ? document.documentElement : (bg.closest('[data-bg-base]') ?? root);
+    const base = bg.closest('[data-bg-base]') ?? document.documentElement;
     const style = window.getComputedStyle(base);
     // const h = style.getPropertyValue('--background-color-h');
     // const s = style.getPropertyValue('--background-color-s');
-    const l = style.getPropertyValue('--background-color-l');
+    const l = style.getPropertyValue(base === document.documentElement ? '--color-background-l' : '--background-color-l');
     // const a = style.getPropertyValue('--background-color-a');
 
     bg.style.setProperty('--background-color-l', computeLightness(mod, l));

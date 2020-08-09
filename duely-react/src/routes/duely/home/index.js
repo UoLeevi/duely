@@ -51,7 +51,7 @@ export default [
         main={
           <SplitLayout
             left={ <LogInForm className="g-2 pt-topbar" data-layout="center 5fr" /> }
-            right={ <div data-layout="collapse-md 4fr" data-bg="l5n" ></div> }
+            right={ <div data-layout="collapse-md 4fr" data-bg="l3n" ></div> }
           />
         }
       />
@@ -72,7 +72,7 @@ export default [
         main={
           <SplitLayout
             left={ <SignUpForm className="g-2 pt-topbar" data-layout="center 5fr" /> }
-            right={ <div data-layout="collapse-md 4fr" data-bg="l5n" ></div> }
+            right={ <div data-layout="collapse-md 4fr" data-bg="l3n" ></div> }
           />
         }
       />

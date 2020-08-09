@@ -8,7 +8,6 @@
   transition-property: transform;
   transition-duration: 200ms;
   box-sizing: border-box;
-  box-shadow: var(--box-shadow);
 }
 
 .create-brand-card:hover {
