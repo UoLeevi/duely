@@ -737,12 +737,7 @@ CREATE TABLE application_.service_ (
     agency_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
     status_ text DEFAULT 'draft'::text NOT NULL,
-    description_ text,
-    duration_ text,
-    price_ integer,
-    currency_ text,
-    image_logo_uuid_ uuid,
-    image_hero_uuid_ uuid,
+    default_variant_uuid_ uuid,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -1596,7 +1591,7 @@ ALTER FUNCTION operation_.query_role_(_role_uuid uuid) OWNER TO postgres;
 -- Name: query_service_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_service_(_service_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
+CREATE FUNCTION operation_.query_service_(_service_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text, default_variant_uuid_ uuid, default_variant_name_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -1608,8 +1603,9 @@ BEGIN
   PERFORM security_.control_operation_('query_service_', _arg);
 
   RETURN QUERY
-  SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_, s.description_, s.duration_, s.price_, s.currency_, s.image_logo_uuid_, s.image_hero_uuid_
+  SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_, s.default_variant_uuid_, v.name_ default_variant_uuid_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
   FROM application_.service_ s
+  LEFT JOIN application_.service_variant_ v ON s.default_variant_uuid_ = v.uuid_
   WHERE s.uuid_ = _service_uuid;
 
 END
@@ -1622,7 +1618,7 @@ ALTER FUNCTION operation_.query_service_(_service_uuid uuid) OWNER TO postgres;
 -- Name: query_service_by_agency_(uuid, text[]); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_service_by_agency_(_agency_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
+CREATE FUNCTION operation_.query_service_by_agency_(_agency_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text, default_variant_uuid_ uuid, default_variant_name_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -1632,8 +1628,9 @@ BEGIN
   PERFORM security_.control_operation_('query_service_by_agency_', _arg);
 
   RETURN QUERY
-  SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_, s.description_, s.duration_, s.price_, s.currency_, s.image_logo_uuid_, s.image_hero_uuid_
+  SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_, s.default_variant_uuid_, v.name_ default_variant_uuid_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
   FROM application_.service_ s
+  LEFT JOIN application_.service_variant_ v ON s.default_variant_uuid_ = v.uuid_
   WHERE s.agency_uuid_ = _agency_uuid
     AND (_status IS NULL 
      OR s.status_ = ANY (COALESCE(_status, '{}'::text[])));
@@ -1704,6 +1701,61 @@ $$;
 
 
 ALTER FUNCTION operation_.query_service_step_by_service_(_service_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: query_service_variant_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_service_variant_(_service_variant_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, service_uuid_ uuid, status_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT _service_variant_uuid service_variant_uuid_, s.service_uuid_, s.agency_uuid_, s.status_ service_status_, v.status_ service_variant_status_ INTO _arg
+  FROM application_.service_variant_ v
+  JOIN application_.service_ s ON s.uuid_ = v.service_uuid_
+  WHERE v.uuid_ = _service_variant_uuid;
+  PERFORM security_.control_operation_('query_service_variant_', _arg);
+
+  RETURN QUERY
+  SELECT v.uuid_, v.name_, v.service_uuid_, v.status_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
+  FROM application_.service_variant_ v
+  WHERE v.uuid_ = _service_variant_uuid;
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_service_variant_(_service_variant_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: query_service_variant_by_service_(uuid, text[]); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_service_variant_by_service_(_service_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, name_ text, service_uuid_ uuid, status_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT s.uuid_ service_uuid_, s.agency_uuid_, s.status_ service_status_, _status service_variant_status_ INTO _arg
+  FROM  application_.service_ s
+  WHERE s.uuid_ = _service_uuid;
+  PERFORM security_.control_operation_('query_service_variant_by_service_', _arg);
+
+  RETURN QUERY
+  SELECT v.uuid_, v.name_, v.service_uuid_, v.status_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
+  FROM application_.service_variant_ v
+  WHERE v.service_uuid_ = _service_uuid
+    AND (_status IS NULL 
+     OR v.status_ = ANY (COALESCE(_status, '{}'::text[])));
+
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_service_variant_by_service_(_service_uuid uuid, _status text[]) OWNER TO postgres;
 
 --
 -- Name: query_shared_agency_(uuid, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -2326,6 +2378,23 @@ END
 ALTER FUNCTION policy_.service_status_is_live_(_arg anyelement) OWNER TO postgres;
 
 --
+-- Name: service_variant_status_contains_only_live_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.service_variant_status_contains_only_live_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$   
+BEGIN
+  RETURN (
+    SELECT _arg.service_variant_status_ IS NOT NULL AND 'live' = ALL (_arg.service_variant_status_) AND 'live' = ANY (_arg.service_variant_status_)
+  );
+END
+ $$;
+
+
+ALTER FUNCTION policy_.service_variant_status_contains_only_live_(_arg anyelement) OWNER TO postgres;
+
+--
 -- Name: subject_is_active_user_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -2649,6 +2718,28 @@ CREATE TABLE application_.service_step_payment_ (
 ALTER TABLE application_.service_step_payment_ OWNER TO postgres;
 
 --
+-- Name: service_variant_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.service_variant_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    service_uuid_ uuid NOT NULL,
+    name_ text NOT NULL,
+    status_ text DEFAULT 'draft'::text NOT NULL,
+    description_ text,
+    duration_ text,
+    price_ integer,
+    currency_ text,
+    image_logo_uuid_ uuid,
+    image_hero_uuid_ uuid,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.service_variant_ OWNER TO postgres;
+
+--
 -- Name: agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -2710,12 +2801,7 @@ CREATE TABLE application__audit_.service_ (
     agency_uuid_ uuid,
     name_ text,
     status_ text,
-    description_ text,
-    duration_ text,
-    price_ integer,
-    currency_ text,
-    image_logo_uuid_ uuid,
-    image_hero_uuid_ uuid,
+    default_variant_uuid_ uuid,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -2814,6 +2900,29 @@ CREATE TABLE application__audit_.service_step_payment_ (
 
 
 ALTER TABLE application__audit_.service_step_payment_ OWNER TO postgres;
+
+--
+-- Name: service_variant_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.service_variant_ (
+    uuid_ uuid,
+    service_uuid_ uuid,
+    name_ text,
+    status_ text,
+    description_ text,
+    duration_ text,
+    price_ integer,
+    currency_ text,
+    image_logo_uuid_ uuid,
+    image_hero_uuid_ uuid,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.service_variant_ OWNER TO postgres;
 
 --
 -- Name: stripe_account_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -3274,6 +3383,8 @@ b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 02:00:
 31a284d0-b6ea-4dd4-b013-da4647a54558	query_client_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 3cefd8f7-9cd8-40bf-afce-83eed2491ff8	create_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 2bd1d873-946f-4557-905c-99b73b1d54bf	delete_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	query_service_variant_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+176dee67-37d8-4fd7-aa1d-44d8f204b270	query_service_variant_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3340,6 +3451,9 @@ a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5
 cf31f59e-bb4a-4225-86f5-1339c339ea19	agent_in_agency_	31a284d0-b6ea-4dd4-b013-da4647a54558	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 faad1e60-244a-43d8-b2b2-fb92e60bdb89	manager_in_agency_	3cefd8f7-9cd8-40bf-afce-83eed2491ff8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 20d6ec33-906e-4d7e-8dda-173f1ba1b4b4	manager_in_agency_	2bd1d873-946f-4557-905c-99b73b1d54bf	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+f7d66dad-12e8-49c3-aa7c-92fb9ebe0935	agent_in_agency_	624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+8b98629f-ec03-4dc9-8f28-a88f1c15a065	agent_in_agency_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+3bb39814-e628-4169-841f-b8c23311167e	service_variant_status_contains_only_live_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3413,6 +3527,8 @@ b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 02:00:
 31a284d0-b6ea-4dd4-b013-da4647a54558	query_client_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 3cefd8f7-9cd8-40bf-afce-83eed2491ff8	create_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 2bd1d873-946f-4557-905c-99b73b1d54bf	delete_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	query_service_variant_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+176dee67-37d8-4fd7-aa1d-44d8f204b270	query_service_variant_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3479,6 +3595,9 @@ a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5
 cf31f59e-bb4a-4225-86f5-1339c339ea19	agent_in_agency_	31a284d0-b6ea-4dd4-b013-da4647a54558	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 faad1e60-244a-43d8-b2b2-fb92e60bdb89	manager_in_agency_	3cefd8f7-9cd8-40bf-afce-83eed2491ff8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 20d6ec33-906e-4d7e-8dda-173f1ba1b4b4	manager_in_agency_	2bd1d873-946f-4557-905c-99b73b1d54bf	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+f7d66dad-12e8-49c3-aa7c-92fb9ebe0935	agent_in_agency_	624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+8b98629f-ec03-4dc9-8f28-a88f1c15a065	agent_in_agency_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+3bb39814-e628-4169-841f-b8c23311167e	service_variant_status_contains_only_live_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3534,6 +3653,14 @@ ALTER TABLE ONLY application_.agency_
 
 ALTER TABLE ONLY application_.client_
     ADD CONSTRAINT client__agency_uuid__name__key UNIQUE (agency_uuid_, name_);
+
+
+--
+-- Name: client_ client__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.client_
+    ADD CONSTRAINT client__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -3614,6 +3741,22 @@ ALTER TABLE ONLY application_.service_step_form_
 
 ALTER TABLE ONLY application_.service_step_payment_
     ADD CONSTRAINT service_step_payment__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: service_variant_ service_variant__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_variant_
+    ADD CONSTRAINT service_variant__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: service_variant_ service_variant__service_uuid__name__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_variant_
+    ADD CONSTRAINT service_variant__service_uuid__name__key UNIQUE (service_uuid_, name_);
 
 
 --
@@ -3909,13 +4052,6 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.user_i
 
 
 --
--- Name: service_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: client_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -3923,17 +4059,24 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.client
 
 
 --
+-- Name: service_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: service_variant_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_variant_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
 -- Name: agency_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -4004,6 +4147,20 @@ CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service
 --
 
 CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.client_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_variant_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_variant_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -4084,13 +4241,6 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 
 
 --
--- Name: service_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: client_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -4098,17 +4248,24 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 
 
 --
+-- Name: service_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_variant_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_variant_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: agency_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -4179,6 +4336,20 @@ CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service
 --
 
 CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_variant_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_variant_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -4259,13 +4430,6 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
--- Name: service_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: client_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -4273,17 +4437,24 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
+-- Name: service_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_variant_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_variant_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: agency_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -4354,6 +4525,20 @@ CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service
 --
 
 CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+
+
+--
+-- Name: service_variant_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_variant_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
 
 
 --
@@ -4434,6 +4619,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_
 
 
 --
+-- Name: client_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.client_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
 -- Name: service_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -4441,10 +4633,10 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.servi
 
 
 --
--- Name: client_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_variant_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.client_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_variant_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -4783,19 +4975,11 @@ ALTER TABLE ONLY application_.service_
 
 
 --
--- Name: service_ service__image_hero_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+-- Name: service_ service__default_variant_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
 ALTER TABLE ONLY application_.service_
-    ADD CONSTRAINT service__image_hero_uuid__fkey FOREIGN KEY (image_hero_uuid_) REFERENCES application_.image_(uuid_);
-
-
---
--- Name: service_ service__image_logo_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.service_
-    ADD CONSTRAINT service__image_logo_uuid__fkey FOREIGN KEY (image_logo_uuid_) REFERENCES application_.image_(uuid_);
+    ADD CONSTRAINT service__default_variant_uuid__fkey FOREIGN KEY (default_variant_uuid_) REFERENCES application_.service_variant_(uuid_);
 
 
 --
@@ -4852,6 +5036,30 @@ ALTER TABLE ONLY application_.service_step_form_
 
 ALTER TABLE ONLY application_.service_step_payment_
     ADD CONSTRAINT service_step_payment__uuid__fkey FOREIGN KEY (uuid_) REFERENCES application_.service_step_(uuid_);
+
+
+--
+-- Name: service_variant_ service_variant__image_hero_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_variant_
+    ADD CONSTRAINT service_variant__image_hero_uuid__fkey FOREIGN KEY (image_hero_uuid_) REFERENCES application_.image_(uuid_);
+
+
+--
+-- Name: service_variant_ service_variant__image_logo_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_variant_
+    ADD CONSTRAINT service_variant__image_logo_uuid__fkey FOREIGN KEY (image_logo_uuid_) REFERENCES application_.image_(uuid_);
+
+
+--
+-- Name: service_variant_ service_variant__service_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_variant_
+    ADD CONSTRAINT service_variant__service_uuid__fkey FOREIGN KEY (service_uuid_) REFERENCES application_.service_(uuid_);
 
 
 --

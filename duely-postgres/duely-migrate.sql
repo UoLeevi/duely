@@ -14,75 +14,139 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-ALTER TABLE application_.client_ ALTER COLUMN invite_uuid_ DROP NOT NULL;
-ALTER TABLE application_.client_ ALTER COLUMN subject_uuid_ DROP NOT NULL;
+CALL internal_.drop_notifications_('application_.service_');
+CALL internal_.drop_auditing_('application_.service_');
 
-CREATE FUNCTION operation_.query_client_(_client_uuid uuid) RETURNS TABLE(uuid_ uuid, agency_uuid_ uuid, name_ text, email_address_ text, invite_uuid_ uuid, subject_uuid_ uuid)
+ALTER TABLE ONLY application_.client_
+    ADD CONSTRAINT client__pkey PRIMARY KEY (uuid_);
+
+ALTER TABLE application_.service_ DROP COLUMN price_;
+ALTER TABLE application_.service_ DROP COLUMN description_;
+ALTER TABLE application_.service_ DROP COLUMN duration_;
+ALTER TABLE application_.service_ DROP COLUMN currency_;
+ALTER TABLE application_.service_ DROP COLUMN image_logo_uuid_;
+ALTER TABLE application_.service_ DROP COLUMN image_hero_uuid_;
+
+CREATE TABLE application_.service_variant_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() PRIMARY KEY,
+    service_uuid_ uuid NOT NULL REFERENCES application_.service_ (uuid_),
+    name_ text NOT NULL,
+    status_ text DEFAULT 'draft'::text NOT NULL,
+    description_ text,
+    duration_ text,
+    price_ integer,
+    currency_ text,
+    image_logo_uuid_ uuid REFERENCES application_.image_(uuid_),
+    image_hero_uuid_ uuid REFERENCES application_.image_(uuid_),
+    UNIQUE (service_uuid_, name_)
+);
+
+ALTER TABLE application_.service_ ADD COLUMN default_variant_uuid_ uuid REFERENCES application_.service_variant_ (uuid_);
+
+
+CALL internal_.setup_notifications_('application_.service_');
+CALL internal_.setup_auditing_('application_.service_');
+CALL internal_.setup_notifications_('application_.service_variant_');
+CALL internal_.setup_auditing_('application_.service_variant_');
+
+
+CREATE FUNCTION operation_.query_service_variant_(_service_variant_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, service_uuid_ uuid, status_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
   _arg RECORD;
 BEGIN
-  SELECT c.agency_uuid_, _client_uuid client_uuid_ INTO _arg
-  FROM application_.client_ c
-  WHERE c.uuid_ = _client_uuid;
-  PERFORM security_.control_operation_('query_client_', _arg);
+  SELECT _service_variant_uuid service_variant_uuid_, s.service_uuid_, s.agency_uuid_, s.status_ service_status_, v.status_ service_variant_status_ INTO _arg
+  FROM application_.service_variant_ v
+  JOIN application_.service_ s ON s.uuid_ = v.service_uuid_
+  WHERE v.uuid_ = _service_variant_uuid;
+  PERFORM security_.control_operation_('query_service_variant_', _arg);
 
   RETURN QUERY
-  SELECT c.uuid_, c.agency_uuid_, c.name_, c.email_address_, c.invite_uuid_, c.subject_uuid_
-  FROM application_.client_ c
-  WHERE c.uuid_ = _client_uuid;
+  SELECT v.uuid_, v.name_, v.service_uuid_, v.status_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
+  FROM application_.service_variant_ v
+  WHERE v.uuid_ = _service_variant_uuid;
 
 END
 $$;
 
-CREATE FUNCTION operation_.create_client_(_agency_uuid uuid, _name text, _email_address text DEFAULT NULL::text) RETURNS application_.client_
+CREATE FUNCTION operation_.query_service_variant_by_service_(_service_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, name_ text, service_uuid_ uuid, status_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _client application_.client_;
   _arg RECORD;
 BEGIN
-  SELECT _agency_uuid agency_uuid_, _name client_name_ INTO _arg; 
-  PERFORM security_.control_operation_('create_client_', _arg);
+  SELECT s.uuid_ service_uuid_, s.agency_uuid_, s.status_ service_status_, _status service_variant_status_ INTO _arg
+  FROM  application_.service_ s
+  WHERE s.uuid_ = _service_uuid;
+  PERFORM security_.control_operation_('query_service_variant_by_service_', _arg);
 
-  INSERT INTO application_.client_ (agency_uuid_, name_, email_address_)
-  VALUES (_agency_uuid, _name, _email_address)
-  RETURNING * INTO _client;
+  RETURN QUERY
+  SELECT v.uuid_, v.name_, v.service_uuid_, v.status_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
+  FROM application_.service_variant_ v
+  WHERE v.service_uuid_ = _service_uuid
+    AND (_status IS NULL 
+     OR v.status_ = ANY (COALESCE(_status, '{}'::text[])));
 
-  RETURN _client;
 END
 $$;
 
-CREATE FUNCTION operation_.delete_client_(_client_uuid uuid) RETURNS application_.client_
+DROP FUNCTION operation_.query_service_by_agency_;
+
+CREATE FUNCTION operation_.query_service_by_agency_(_agency_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text, default_variant_uuid_ uuid, default_variant_name_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _client application_.client_;
   _arg RECORD;
 BEGIN
-  SELECT _client_uuid client_uuid_, c.agency_uuid_ INTO _arg
-  FROM application_.client_ c
-  WHERE c.uuid_ = _client_uuid; 
-  PERFORM security_.control_operation_('delete_client_', _arg);
+  SELECT _agency_uuid agency_uuid_, _status service_status_ INTO _arg; 
+  PERFORM security_.control_operation_('query_service_by_agency_', _arg);
 
-  DELETE FROM application_.client_
-  WHERE uuid_ = _client_uuid
-  RETURNING * INTO _client;
+  RETURN QUERY
+  SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_, s.default_variant_uuid_, v.name_ default_variant_uuid_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
+  FROM application_.service_ s
+  LEFT JOIN application_.service_variant_ v ON s.default_variant_uuid_ = v.uuid_
+  WHERE s.agency_uuid_ = _agency_uuid
+    AND (_status IS NULL 
+     OR s.status_ = ANY (COALESCE(_status, '{}'::text[])));
 
-  RETURN _client;
 END
 $$;
 
-INSERT INTO security_.operation_(name_, log_events_) VALUES ('query_client_by_agency_', 'f');
-INSERT INTO security_.operation_(name_, log_events_) VALUES ('query_client_', 'f');
-INSERT INTO security_.operation_(name_, log_events_) VALUES ('create_client_', 't');
-INSERT INTO security_.operation_(name_, log_events_) VALUES ('delete_client_', 't');
+DROP FUNCTION operation_.query_service_;
 
-PERFORM security_.implement_policy_allow_('query_client_by_agency_', 'agent_in_agency_');
-PERFORM security_.implement_policy_allow_('query_client_', 'agent_in_agency_');
-PERFORM security_.implement_policy_allow_('create_client_', 'manager_in_agency_');
-PERFORM security_.implement_policy_allow_('delete_client_', 'manager_in_agency_');
+CREATE FUNCTION operation_.query_service_(_service_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text, default_variant_uuid_ uuid, default_variant_name_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _arg RECORD;
+BEGIN
+  SELECT _service_uuid service_uuid_, s.agency_uuid_, s.status_ service_status_ INTO _arg
+  FROM application_.service_ s
+  WHERE s.uuid_ = _service_uuid;
+  PERFORM security_.control_operation_('query_service_', _arg);
+
+  RETURN QUERY
+  SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_, s.default_variant_uuid_, v.name_ default_variant_uuid_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
+  FROM application_.service_ s
+  LEFT JOIN application_.service_variant_ v ON s.default_variant_uuid_ = v.uuid_
+  WHERE s.uuid_ = _service_uuid;
+
+END
+$$;
+
+INSERT INTO security_.operation_(name_, log_events_) VALUES ('query_service_variant_', 'f');
+INSERT INTO security_.operation_(name_, log_events_) VALUES ('query_service_variant_by_service_', 'f');
+
+PERFORM security_.implement_policy_allow_('query_service_variant_', 'agent_in_agency_');
+PERFORM security_.implement_policy_allow_('query_service_variant_by_service_', 'agent_in_agency_');
+PERFORM security_.implement_policy_allow_('query_service_variant_by_service_', 'service_variant_status_contains_only_live_',$$  
+BEGIN
+  RETURN (
+    SELECT _arg.service_variant_status_ IS NOT NULL AND 'live' = ALL (_arg.service_variant_status_) AND 'live' = ANY (_arg.service_variant_status_)
+  );
+END
+$$);
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN

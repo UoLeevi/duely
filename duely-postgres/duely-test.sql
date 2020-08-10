@@ -241,6 +241,7 @@ BEGIN
   SELECT * INTO _record_0 FROM operation_.query_agency_by_subdomain_name_('test');
   SELECT * INTO _record_1 FROM operation_.query_service_by_agency_(_record_0.uuid_) WHERE name_ = 'test service 2';
   SELECT * INTO _record_1 FROM operation_.query_service_(_record_1.uuid_);
+  SELECT * INTO _record_2 FROM operation_.query_service_variant_by_service_(_record_1.uuid_);
   PERFORM operation_.delete_service_(_record_1.uuid_);
 
   PERFORM operation_.end_session_();
