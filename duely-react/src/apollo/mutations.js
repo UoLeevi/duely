@@ -123,6 +123,42 @@ export default {
     `,
     result: d => d['createAgency']
   },
+  createService: {
+    mutation: gql`
+      mutation($agencyUuid: ID!, $name: String!) {
+        createService(agencyUuid: $agencyUuid, name: $name) {
+          success
+          message
+          service {
+            uuid
+            name
+            status
+          }
+        }
+      }
+    `,
+    result: d => d['createService'],
+    after(client, result, { agencyUuid }) {
+      if (!result.success) return;
+      const query = queries.services.query;
+      const data = produce(client.readQuery({ query, variables: { agencyUuid } }), data => {
+        data.agency.servicesConnection.edges.push(result.service);
+      });
+      client.writeQuery({ query, data });
+    }
+  },
+  deleteService: {
+    mutation: gql`
+      mutation($serviceUuid: ID!) {
+        deleteService(serviceUuid: $serviceUuid) {
+          success
+          message
+          uuid
+        }
+      }
+    `,
+    result: d => d['createAgency']
+  },
   editImage: {
     mutation: gql`
       mutation($agencyUuid: ID!, $imageName: String!, $imageData: String!, $imageColor: String!) {

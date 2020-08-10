@@ -356,5 +356,32 @@ export default {
     `,
     result: d => d?.agency.clientsConnection.edges
       .map(edge => edge.node)
+  },
+  services: {
+    query: gql`
+      query($agencyUuid: ID!) {
+        agency(uuid: $agencyUuid) {
+          uuid
+          name
+          servicesConnection {
+            edges {
+              cursor
+              node {
+                uuid
+                name
+                status
+                steps {
+                  uuid
+                  name
+                  type
+                }
+              }
+            }
+          }
+        }
+      }
+    `,
+    result: d => d?.agency.servicesConnection.edges
+      .map(edge => edge.node)
   }
 };
