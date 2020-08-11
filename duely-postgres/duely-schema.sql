@@ -70,6 +70,15 @@ CREATE SCHEMA policy_;
 ALTER SCHEMA policy_ OWNER TO postgres;
 
 --
+-- Name: resource_; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA resource_;
+
+
+ALTER SCHEMA resource_ OWNER TO postgres;
+
+--
 -- Name: security_; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
@@ -286,6 +295,33 @@ $_$;
 ALTER PROCEDURE internal_.drop_notifications_(_table regclass) OWNER TO postgres;
 
 --
+-- Name: drop_resource_(regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
+--
+
+CREATE PROCEDURE internal_.drop_resource_(_table regclass)
+    LANGUAGE plpgsql
+    AS $_X$
+DECLARE
+  _table_name name;
+  _table_schema name;
+BEGIN
+  SELECT c.relname, ns.nspname INTO _table_name, _table_schema
+  FROM pg_catalog.pg_class AS c
+  JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
+  WHERE c.oid = _table;
+
+  EXECUTE format($__$
+    DROP TRIGGER tr_after_insert_resource_insert_ ON %1$I.%2$I;
+    DROP FUNCTION resource_.%2$I();
+  $__$,
+  _table_schema, _table_name);
+END
+$_X$;
+
+
+ALTER PROCEDURE internal_.drop_resource_(_table regclass) OWNER TO postgres;
+
+--
 -- Name: jwt_sign_hs256_(json, bytea); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -414,6 +450,53 @@ $_$;
 
 
 ALTER PROCEDURE internal_.setup_notifications_(_table regclass) OWNER TO postgres;
+
+--
+-- Name: setup_resource_(regclass, regproc, text); Type: PROCEDURE; Schema: internal_; Owner: postgres
+--
+
+CREATE PROCEDURE internal_.setup_resource_(_table regclass, _query regproc, _prefix text)
+    LANGUAGE plpgsql
+    AS $_X$
+DECLARE
+  _table_name name;
+  _table_schema name;
+BEGIN
+  SELECT c.relname, ns.nspname INTO _table_name, _table_schema
+  FROM pg_catalog.pg_class AS c
+  JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
+  WHERE c.oid = _table;
+
+  EXECUTE format($__$
+    CREATE FUNCTION resource_.%2$I() RETURNS trigger
+      LANGUAGE plpgsql SECURITY DEFINER
+      AS $$
+    DECLARE
+      _id_len int := 6;
+    BEGIN
+      LOOP
+        BEGIN
+          INSERT INTO application_.resource_ (uuid_, table_, query_, id_)
+          SELECT t.uuid_, %3$L::regclass, %4$L::regproc, %5$L || '_' || substring(replace(t.uuid_::text, '-', '' ) FOR _id_len)
+          FROM _new_table t;
+          EXIT;
+        EXCEPTION WHEN unique_violation THEN
+          _id_len := _id_len + 2;
+        END;
+      END LOOP;
+      RETURN NULL;
+    END;
+    $$;
+
+    ALTER FUNCTION resource_.%2$I() OWNER TO postgres;
+    CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON %1$I.%2$I REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION resource_.%2$I();
+  $__$,
+  _table_schema, _table_name, _table, _query, _prefix);
+END
+$_X$;
+
+
+ALTER PROCEDURE internal_.setup_resource_(_table regclass, _query regproc, _prefix text) OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -1564,6 +1647,64 @@ $$;
 ALTER FUNCTION operation_.query_image_(_image_uuid uuid) OWNER TO postgres;
 
 --
+-- Name: resource_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.resource_ (
+    uuid_ uuid NOT NULL,
+    id_ text NOT NULL,
+    table_ regclass NOT NULL,
+    query_ regproc NOT NULL
+);
+
+
+ALTER TABLE application_.resource_ OWNER TO postgres;
+
+--
+-- Name: query_resource_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_resource_(_resource_id text) RETURNS application_.resource_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _resource application_.resource_;
+BEGIN
+  SELECT * INTO _resource
+  WHERE id_ = _resource_id;
+
+  PERFORM security_.control_operation_('query_resource_', _resource);
+
+  RETURN resource_;
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_resource_(_resource_id text) OWNER TO postgres;
+
+--
+-- Name: query_resource_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_resource_(_resource_uuid uuid) RETURNS application_.resource_
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _resource application_.resource_;
+BEGIN
+  SELECT * INTO _resource
+  WHERE uuid_ = _resource_uuid;
+
+  PERFORM security_.control_operation_('query_resource_', _resource);
+
+  RETURN resource_;
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_resource_(_resource_uuid uuid) OWNER TO postgres;
+
+--
 -- Name: query_role_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -2563,7 +2704,15 @@ CREATE FUNCTION security_.implement_policy_allow_(_operation_name text, _policy_
 DECLARE
   _policy_assignment security_.policy_assignment_;
 BEGIN
-  PERFORM format('operation_.%1$I', _operation_name)::regproc;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc p 
+    JOIN pg_namespace n ON p.pronamespace = n.oid
+    WHERE p.proname = _operation_name
+      AND n.nspname = 'operation_'
+  ) THEN
+    RAISE 'Operation does not exist.' USING ERRCODE = '20000';
+  END IF;
 
   IF _policy_function_body IS NOT NULL THEN
     EXECUTE format($__$
@@ -2611,7 +2760,15 @@ CREATE FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_n
 DECLARE
   _policy_assignment security_.policy_assignment_;
 BEGIN
-  PERFORM format('operation_.%1$I', _operation_name)::regproc;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc p 
+    JOIN pg_namespace n ON p.pronamespace = n.oid
+    WHERE p.proname = _operation_name
+      AND n.nspname = 'operation_'
+  ) THEN
+    RAISE 'Operation does not exist.' USING ERRCODE = '20000';
+  END IF;
 
   IF _policy_function_body IS NOT NULL THEN
     EXECUTE format($__$
@@ -3385,6 +3542,7 @@ b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 02:00:
 2bd1d873-946f-4557-905c-99b73b1d54bf	delete_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	query_service_variant_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 176dee67-37d8-4fd7-aa1d-44d8f204b270	query_service_variant_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3454,6 +3612,8 @@ faad1e60-244a-43d8-b2b2-fb92e60bdb89	manager_in_agency_	3cefd8f7-9cd8-40bf-afce-
 f7d66dad-12e8-49c3-aa7c-92fb9ebe0935	agent_in_agency_	624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 8b98629f-ec03-4dc9-8f28-a88f1c15a065	agent_in_agency_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 3bb39814-e628-4169-841f-b8c23311167e	service_variant_status_contains_only_live_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+9c17e5e7-3043-4cc3-b2ca-5e635883b121	logged_in_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+df7169dc-3ef6-4e89-b749-9d96216f37f4	visitor_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3529,6 +3689,7 @@ b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 02:00:
 2bd1d873-946f-4557-905c-99b73b1d54bf	delete_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	query_service_variant_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 176dee67-37d8-4fd7-aa1d-44d8f204b270	query_service_variant_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3598,6 +3759,8 @@ faad1e60-244a-43d8-b2b2-fb92e60bdb89	manager_in_agency_	3cefd8f7-9cd8-40bf-afce-
 f7d66dad-12e8-49c3-aa7c-92fb9ebe0935	agent_in_agency_	624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 8b98629f-ec03-4dc9-8f28-a88f1c15a065	agent_in_agency_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 3bb39814-e628-4169-841f-b8c23311167e	service_variant_status_contains_only_live_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+9c17e5e7-3043-4cc3-b2ca-5e635883b121	logged_in_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+df7169dc-3ef6-4e89-b749-9d96216f37f4	visitor_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3677,6 +3840,22 @@ ALTER TABLE ONLY application_.image_
 
 ALTER TABLE ONLY application_.image_
     ADD CONSTRAINT image__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: resource_ resource__id__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.resource_
+    ADD CONSTRAINT resource__id__key UNIQUE (id_);
+
+
+--
+-- Name: resource_ resource__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.resource_
+    ADD CONSTRAINT resource__pkey PRIMARY KEY (uuid_);
 
 
 --

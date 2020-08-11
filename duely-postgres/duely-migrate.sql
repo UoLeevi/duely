@@ -14,139 +14,233 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CALL internal_.drop_notifications_('application_.service_');
-CALL internal_.drop_auditing_('application_.service_');
+CREATE OR REPLACE FUNCTION security_.implement_policy_allow_(_operation_name text, _policy_name text, _policy_function_body text DEFAULT NULL::text) RETURNS security_.policy_assignment_
+    LANGUAGE plpgsql
+    AS $_X$
+DECLARE
+  _policy_assignment security_.policy_assignment_;
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc p 
+    JOIN pg_namespace n ON p.pronamespace = n.oid
+    WHERE p.proname = _operation_name
+      AND n.nspname = 'operation_'
+  ) THEN
+    RAISE 'Operation does not exist.' USING ERRCODE = '20000';
+  END IF;
 
-ALTER TABLE ONLY application_.client_
-    ADD CONSTRAINT client__pkey PRIMARY KEY (uuid_);
+  IF _policy_function_body IS NOT NULL THEN
+    EXECUTE format($__$
 
-ALTER TABLE application_.service_ DROP COLUMN price_;
-ALTER TABLE application_.service_ DROP COLUMN description_;
-ALTER TABLE application_.service_ DROP COLUMN duration_;
-ALTER TABLE application_.service_ DROP COLUMN currency_;
-ALTER TABLE application_.service_ DROP COLUMN image_logo_uuid_;
-ALTER TABLE application_.service_ DROP COLUMN image_hero_uuid_;
+      CREATE FUNCTION policy_.%1$I(_arg anyelement DEFAULT NULL::text) RETURNS boolean
+        LANGUAGE plpgsql SECURITY DEFINER
+        AS $$ %2$s $$;
 
-CREATE TABLE application_.service_variant_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() PRIMARY KEY,
-    service_uuid_ uuid NOT NULL REFERENCES application_.service_ (uuid_),
-    name_ text NOT NULL,
-    status_ text DEFAULT 'draft'::text NOT NULL,
-    description_ text,
-    duration_ text,
-    price_ integer,
-    currency_ text,
-    image_logo_uuid_ uuid REFERENCES application_.image_(uuid_),
-    image_hero_uuid_ uuid REFERENCES application_.image_(uuid_),
-    UNIQUE (service_uuid_, name_)
+      ALTER FUNCTION policy_.%1$I(_arg anyelement) OWNER TO postgres;
+
+      $__$,
+      _policy_name, _policy_function_body);
+  END IF;
+
+  PERFORM format('policy_.%1$I', _policy_name)::regproc;
+
+  INSERT INTO security_.policy_assignment_ (policy_name_, operation_uuid_, type_)
+  SELECT _policy_name, o.uuid_, 'allow'
+  FROM security_.operation_ o
+  WHERE o.name_ = _operation_name
+  ON CONFLICT (policy_name_, operation_uuid_) DO UPDATE
+  SET
+    type_ = 'allow';
+
+  SELECT p.* INTO _policy_assignment
+    FROM security_.policy_assignment_ p
+    JOIN security_.operation_ o ON o.uuid_ = p.operation_uuid_
+    WHERE p.policy_name_ = _policy_name
+      AND o.name_ = _operation_name;
+
+  RETURN _policy_assignment;
+END
+$_X$;
+
+
+CREATE OR REPLACE FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_name text, _policy_function_body text DEFAULT NULL::text) RETURNS security_.policy_assignment_
+    LANGUAGE plpgsql
+    AS $_X$
+DECLARE
+  _policy_assignment security_.policy_assignment_;
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc p 
+    JOIN pg_namespace n ON p.pronamespace = n.oid
+    WHERE p.proname = _operation_name
+      AND n.nspname = 'operation_'
+  ) THEN
+    RAISE 'Operation does not exist.' USING ERRCODE = '20000';
+  END IF;
+
+  IF _policy_function_body IS NOT NULL THEN
+    EXECUTE format($__$
+
+      CREATE FUNCTION policy_.%1$I(_arg anyelement DEFAULT NULL::text) RETURNS boolean
+        LANGUAGE plpgsql SECURITY DEFINER
+        AS $$ %2$s $$;
+
+      ALTER FUNCTION policy_.%1$I(_arg anyelement) OWNER TO postgres;
+
+      $__$,
+      _policy_name, _policy_function_body, _policy_function_arg_name, _policy_function_arg_type, _policy_function_arg_default);
+  END IF;
+
+  PERFORM format('policy_.%1$I', _policy_name)::regproc;
+
+  INSERT INTO security_.policy_assignment_ (policy_name_, operation_uuid_, type_)
+  SELECT _policy_name, o.uuid_, 'deny'
+  FROM security_.operation_ o
+  WHERE o.name_ = _operation_name
+  ON CONFLICT (policy_name_, operation_uuid_) DO UPDATE
+  SET
+    type_ = 'deny';
+
+  SELECT p.* INTO _policy_assignment
+    FROM security_.policy_assignment_ p
+    JOIN security_.operation_ o ON o.uuid_ = p.operation_uuid_
+    WHERE p.policy_name_ = _policy_name
+      AND o.name_ = _operation_name;
+
+  RETURN _policy_assignment;
+END
+$_X$;
+
+CREATE SCHEMA resource_;
+
+CREATE TABLE application_.resource_ (
+    uuid_ uuid PRIMARY KEY,
+    id_ text NOT NULL UNIQUE,
+    table_ regclass NOT NULL,
+    query_ regproc NOT NULL
 );
 
-ALTER TABLE application_.service_ ADD COLUMN default_variant_uuid_ uuid REFERENCES application_.service_variant_ (uuid_);
-
-
-CALL internal_.setup_notifications_('application_.service_');
-CALL internal_.setup_auditing_('application_.service_');
-CALL internal_.setup_notifications_('application_.service_variant_');
-CALL internal_.setup_auditing_('application_.service_variant_');
-
-
-CREATE FUNCTION operation_.query_service_variant_(_service_variant_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, service_uuid_ uuid, status_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
+CREATE PROCEDURE internal_.setup_resource_(_table regclass, _query regproc, _prefix text)
+    LANGUAGE plpgsql
+    AS $_X$
 DECLARE
-  _arg RECORD;
+  _table_name name;
+  _table_schema name;
 BEGIN
-  SELECT _service_variant_uuid service_variant_uuid_, s.service_uuid_, s.agency_uuid_, s.status_ service_status_, v.status_ service_variant_status_ INTO _arg
-  FROM application_.service_variant_ v
-  JOIN application_.service_ s ON s.uuid_ = v.service_uuid_
-  WHERE v.uuid_ = _service_variant_uuid;
-  PERFORM security_.control_operation_('query_service_variant_', _arg);
+  SELECT c.relname, ns.nspname INTO _table_name, _table_schema
+  FROM pg_catalog.pg_class AS c
+  JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
+  WHERE c.oid = _table;
 
-  RETURN QUERY
-  SELECT v.uuid_, v.name_, v.service_uuid_, v.status_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
-  FROM application_.service_variant_ v
-  WHERE v.uuid_ = _service_variant_uuid;
+  EXECUTE format($__$
+    CREATE FUNCTION resource_.%2$I() RETURNS trigger
+      LANGUAGE plpgsql SECURITY DEFINER
+      AS $$
+    DECLARE
+      _id_len int := 6;
+    BEGIN
+      LOOP
+        BEGIN
+          INSERT INTO application_.resource_ (uuid_, table_, query_, id_)
+          SELECT t.uuid_, %3$L::regclass, %4$L::regproc, %5$L || '_' || substring(replace(t.uuid_::text, '-', '' ) FOR _id_len)
+          FROM _new_table t;
+          EXIT;
+        EXCEPTION WHEN unique_violation THEN
+          _id_len := _id_len + 2;
+        END;
+      END LOOP;
+      RETURN NULL;
+    END;
+    $$;
 
+    ALTER FUNCTION resource_.%2$I() OWNER TO postgres;
+    CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON %1$I.%2$I REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION resource_.%2$I();
+  $__$,
+  _table_schema, _table_name, _table, _query, _prefix);
 END
-$$;
+$_X$;
 
-CREATE FUNCTION operation_.query_service_variant_by_service_(_service_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, name_ text, service_uuid_ uuid, status_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
+CREATE PROCEDURE internal_.drop_resource_(_table regclass)
+    LANGUAGE plpgsql
+    AS $_X$
 DECLARE
-  _arg RECORD;
+  _table_name name;
+  _table_schema name;
 BEGIN
-  SELECT s.uuid_ service_uuid_, s.agency_uuid_, s.status_ service_status_, _status service_variant_status_ INTO _arg
-  FROM  application_.service_ s
-  WHERE s.uuid_ = _service_uuid;
-  PERFORM security_.control_operation_('query_service_variant_by_service_', _arg);
+  SELECT c.relname, ns.nspname INTO _table_name, _table_schema
+  FROM pg_catalog.pg_class AS c
+  JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
+  WHERE c.oid = _table;
 
-  RETURN QUERY
-  SELECT v.uuid_, v.name_, v.service_uuid_, v.status_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
-  FROM application_.service_variant_ v
-  WHERE v.service_uuid_ = _service_uuid
-    AND (_status IS NULL 
-     OR v.status_ = ANY (COALESCE(_status, '{}'::text[])));
-
+  EXECUTE format($__$
+    DROP TRIGGER tr_after_insert_resource_insert_ ON %1$I.%2$I;
+    DROP FUNCTION resource_.%2$I();
+  $__$,
+  _table_schema, _table_name);
 END
-$$;
+$_X$;
 
-DROP FUNCTION operation_.query_service_by_agency_;
-
-CREATE FUNCTION operation_.query_service_by_agency_(_agency_uuid uuid, _status text[] DEFAULT NULL::text[]) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text, default_variant_uuid_ uuid, default_variant_name_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
+CREATE FUNCTION operation_.query_resource_(_resource_uuid uuid) RETURNS application_.resource_
     LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
+    AS $__$
 DECLARE
-  _arg RECORD;
+  _resource application_.resource_;
 BEGIN
-  SELECT _agency_uuid agency_uuid_, _status service_status_ INTO _arg; 
-  PERFORM security_.control_operation_('query_service_by_agency_', _arg);
+  SELECT * INTO _resource
+  WHERE uuid_ = _resource_uuid;
 
-  RETURN QUERY
-  SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_, s.default_variant_uuid_, v.name_ default_variant_uuid_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
-  FROM application_.service_ s
-  LEFT JOIN application_.service_variant_ v ON s.default_variant_uuid_ = v.uuid_
-  WHERE s.agency_uuid_ = _agency_uuid
-    AND (_status IS NULL 
-     OR s.status_ = ANY (COALESCE(_status, '{}'::text[])));
+  PERFORM security_.control_operation_('query_resource_', _resource);
 
+  RETURN resource_;
 END
-$$;
+$__$;
 
-DROP FUNCTION operation_.query_service_;
-
-CREATE FUNCTION operation_.query_service_(_service_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text, agency_uuid_ uuid, status_ text, default_variant_uuid_ uuid, default_variant_name_ text, description_ text, duration_ text, price_ integer, currency_ text, image_logo_uuid_ uuid, image_hero_uuid_ uuid)
+CREATE FUNCTION operation_.query_resource_(_resource_id text) RETURNS application_.resource_
     LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
+    AS $__$
 DECLARE
-  _arg RECORD;
+  _resource application_.resource_;
 BEGIN
-  SELECT _service_uuid service_uuid_, s.agency_uuid_, s.status_ service_status_ INTO _arg
-  FROM application_.service_ s
-  WHERE s.uuid_ = _service_uuid;
-  PERFORM security_.control_operation_('query_service_', _arg);
+  SELECT * INTO _resource
+  WHERE id_ = _resource_id;
 
-  RETURN QUERY
-  SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_, s.default_variant_uuid_, v.name_ default_variant_uuid_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
-  FROM application_.service_ s
-  LEFT JOIN application_.service_variant_ v ON s.default_variant_uuid_ = v.uuid_
-  WHERE s.uuid_ = _service_uuid;
+  PERFORM security_.control_operation_('query_resource_', _resource);
 
+  RETURN resource_;
 END
-$$;
+$__$;
 
-INSERT INTO security_.operation_(name_, log_events_) VALUES ('query_service_variant_', 'f');
-INSERT INTO security_.operation_(name_, log_events_) VALUES ('query_service_variant_by_service_', 'f');
+INSERT INTO security_.operation_(name_, log_events_) VALUES ('query_resource_', 'f');
 
-PERFORM security_.implement_policy_allow_('query_service_variant_', 'agent_in_agency_');
-PERFORM security_.implement_policy_allow_('query_service_variant_by_service_', 'agent_in_agency_');
-PERFORM security_.implement_policy_allow_('query_service_variant_by_service_', 'service_variant_status_contains_only_live_',$$  
-BEGIN
-  RETURN (
-    SELECT _arg.service_variant_status_ IS NOT NULL AND 'live' = ALL (_arg.service_variant_status_) AND 'live' = ANY (_arg.service_variant_status_)
-  );
-END
-$$);
+PERFORM security_.implement_policy_allow_('query_resource_', 'logged_in_');
+PERFORM security_.implement_policy_allow_('query_resource_', 'visitor_');
+
+
+-- CREATE FUNCTION operation_.update_resource_(_uuid uuid, _values json) RETURNS anyelement
+--     LANGUAGE plpgsql SECURITY DEFINER
+--     AS $$
+-- DECLARE
+--   _arg RECORD;
+-- BEGIN
+--   SELECT _service_uuid service_uuid_, s.agency_uuid_, s.status_ service_status_ INTO _arg
+--   FROM application_.service_ s
+--   WHERE s.uuid_ = _service_uuid;
+--   PERFORM security_.control_operation_('update_resource_', _arg);
+
+--   RETURN QUERY
+--   SELECT s.uuid_, s.name_, s.agency_uuid_, s.status_, s.default_variant_uuid_, v.name_ default_variant_uuid_, v.description_, v.duration_, v.price_, v.currency_, v.image_logo_uuid_, v.image_hero_uuid_
+--   FROM application_.service_ s
+--   LEFT JOIN application_.service_variant_ v ON s.default_variant_uuid_ = v.uuid_
+--   WHERE s.uuid_ = _service_uuid;
+
+-- END
+-- $$;
+
+-- INSERT INTO security_.operation_(name_, log_events_) VALUES ('query_service_variant_by_service_', 'f');
+
+-- PERFORM security_.implement_policy_allow_('query_service_variant_', 'agent_in_agency_');
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
