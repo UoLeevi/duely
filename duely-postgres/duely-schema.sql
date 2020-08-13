@@ -70,15 +70,6 @@ CREATE SCHEMA policy_;
 ALTER SCHEMA policy_ OWNER TO postgres;
 
 --
--- Name: resource_; Type: SCHEMA; Schema: -; Owner: postgres
---
-
-CREATE SCHEMA resource_;
-
-
-ALTER SCHEMA resource_ OWNER TO postgres;
-
---
 -- Name: security_; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
@@ -300,23 +291,21 @@ ALTER PROCEDURE internal_.drop_notifications_(_table regclass) OWNER TO postgres
 
 CREATE PROCEDURE internal_.drop_resource_(_table regclass)
     LANGUAGE plpgsql
-    AS $_X$
+    AS $$
 DECLARE
   _table_name name;
   _table_schema name;
 BEGIN
-  SELECT c.relname, ns.nspname INTO _table_name, _table_schema
-  FROM pg_catalog.pg_class AS c
-  JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
-  WHERE c.oid = _table;
+  DELETE FROM security_.resource_definition_
+  WHERE table_ = _table;
 
-  EXECUTE format($__$
-    DROP TRIGGER tr_after_insert_resource_insert_ ON %1$I.%2$I;
-    DROP FUNCTION resource_.%2$I();
-  $__$,
-  _table_schema, _table_name);
+  EXECUTE '
+    DROP TRIGGER tr_after_insert_resource_insert_ ON ' || _table || ';
+    DROP TRIGGER tr_after_insert_resource_insert_ ON ' || _table || ';
+    DROP TRIGGER tr_after_delete_resource_delete_ ON ' || _table || ';
+  ';
 END
-$_X$;
+$$;
 
 
 ALTER PROCEDURE internal_.drop_resource_(_table regclass) OWNER TO postgres;
@@ -376,6 +365,150 @@ $$;
 
 
 ALTER FUNCTION internal_.notify_json_() OWNER TO postgres;
+
+--
+-- Name: resource_delete_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_delete_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  DELETE FROM application_.resource_ r
+  USING _old_table t
+  WHERE r.uuid_ = t.uuid_;
+
+  RETURN NULL;
+END
+$$;
+
+
+ALTER FUNCTION internal_.resource_delete_() OWNER TO postgres;
+
+--
+-- Name: resource_insert_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_insert_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  _resource_definition security_.resource_definition_;
+  _owner_resource_definition security_.resource_definition_;
+  _owner_table_name name;
+  _uuid uuid;
+  _owner_uuid uuid;
+  _search text;
+  _id_len int := 6;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE name_ = TG_TABLE_NAME;
+
+  SELECT * INTO _owner_resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource_definition.uuid_;
+
+  SELECT c.relname INTO _owner_table_name
+  FROM pg_catalog.pg_class c
+  WHERE c.oid = _owner_resource_definition.table_;
+
+  EXECUTE format($$
+    SELECT uuid_, %1$I owner_uuid_
+    FROM _new_table
+  $$,
+  _owner_table_name || 'uuid_')
+  INTO _uuid, _owner_uuid;
+
+  IF _resource_definition.search_ IS NOT NULL THEN
+    EXECUTE format($$
+      SELECT %1$I($1);
+    $$,
+    _resource_definition.search_)
+    INTO _search
+    USING _uuid;
+  ELSE
+    SELECT name_ INTO _search
+    FROM _new_table;
+  END IF;
+
+  LOOP
+    BEGIN
+      INSERT INTO application_.resource_ (uuid_, search_, owner_uuid_, definition_uuid_, id_)
+      SELECT _uuid, _search, _owner_uuid, _resource_definition.uuid_, _resource_definition.id_prefix_ || '_' || substring(replace(_uuid::text, '-', '' ) FOR _id_len);
+      EXIT;
+    EXCEPTION WHEN unique_violation THEN
+      _id_len := _id_len + 2;
+    END;
+  END LOOP;
+
+  RETURN NULL;
+END
+$_$;
+
+
+ALTER FUNCTION internal_.resource_insert_() OWNER TO postgres;
+
+--
+-- Name: resource_update_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_update_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  _resource_definition security_.resource_definition_;
+  _owner_resource_definition security_.resource_definition_;
+  _owner_table_name name;
+  _uuid uuid;
+  _owner_uuid uuid;
+  _search text;
+  _id_len int := 6;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE name_ = TG_TABLE_NAME;
+
+  SELECT * INTO _owner_resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource_definition.uuid_;
+
+  SELECT c.relname INTO _owner_table_name
+  FROM pg_catalog.pg_class c
+  WHERE c.oid = _owner_resource_definition.table_;
+
+  EXECUTE format($$
+    SELECT uuid_, %1$I owner_uuid_
+    FROM _new_table
+  $$,
+  _owner_table_name || 'uuid_')
+  INTO _uuid, _owner_uuid;
+
+  IF _resource_definition.search_ IS NOT NULL THEN
+    EXECUTE format($$
+      SELECT %1$I($1);
+    $$,
+    _resource_definition.search_)
+    INTO _search
+    USING _uuid;
+  ELSE
+    SELECT name_ INTO _search
+    FROM _new_table;
+  END IF;
+
+  UPDATE security_.resource_
+  SET
+    search_ = _search,
+    owner_uuid_ = _owner_uuid
+  FROM security_.resource_
+  WHERE uuid_ = _uuid;
+
+  RETURN NULL;
+END
+$_$;
+
+
+ALTER FUNCTION internal_.resource_update_() OWNER TO postgres;
 
 --
 -- Name: setup_auditing_(regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
@@ -452,51 +585,94 @@ $_$;
 ALTER PROCEDURE internal_.setup_notifications_(_table regclass) OWNER TO postgres;
 
 --
--- Name: setup_resource_(regclass, regproc, text); Type: PROCEDURE; Schema: internal_; Owner: postgres
+-- Name: setup_resource_(text, text, regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
 --
 
-CREATE PROCEDURE internal_.setup_resource_(_table regclass, _query regproc, _prefix text)
+CREATE PROCEDURE internal_.setup_resource_(_name text, _id_prefix text, _table regclass)
     LANGUAGE plpgsql
-    AS $_X$
+    AS $_$
 DECLARE
+  _resource_definition security_.resource_definition_;
   _table_name name;
   _table_schema name;
+  _query regprocedure;
+  _create regprocedure;
+  _update regprocedure;
+  _delete regprocedure;
+  _search regprocedure;
 BEGIN
   SELECT c.relname, ns.nspname INTO _table_name, _table_schema
-  FROM pg_catalog.pg_class AS c
-  JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
+  FROM pg_catalog.pg_class c
+  JOIN pg_catalog.pg_namespace ns ON c.relnamespace = ns.oid
   WHERE c.oid = _table;
 
-  EXECUTE format($__$
-    CREATE FUNCTION resource_.%2$I() RETURNS trigger
-      LANGUAGE plpgsql SECURITY DEFINER
-      AS $$
-    DECLARE
-      _id_len int := 6;
-    BEGIN
-      LOOP
-        BEGIN
-          INSERT INTO application_.resource_ (uuid_, table_, query_, id_)
-          SELECT t.uuid_, %3$L::regclass, %4$L::regproc, %5$L || '_' || substring(replace(t.uuid_::text, '-', '' ) FOR _id_len)
-          FROM _new_table t;
-          EXIT;
-        EXCEPTION WHEN unique_violation THEN
-          _id_len := _id_len + 2;
-        END;
-      END LOOP;
-      RETURN NULL;
-    END;
-    $$;
+  BEGIN
+    SELECT format('operation_.%1$I(uuid)', 'query_' || _table_name)::regprocedure INTO _query;
+  EXCEPTION
+    WHEN OTHERS THEN
+      -- NOT EXIST
+      NULL;
+  END;
 
-    ALTER FUNCTION resource_.%2$I() OWNER TO postgres;
-    CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON %1$I.%2$I REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION resource_.%2$I();
-  $__$,
-  _table_schema, _table_name, _table, _query, _prefix);
+  BEGIN
+    SELECT format('operation_.%1$I(json)', 'create_' || _table_name)::regprocedure INTO _create;
+  EXCEPTION
+    WHEN OTHERS THEN
+      -- NOT EXIST
+      NULL;
+  END;
+
+  BEGIN
+    SELECT format('operation_.%1$I(uuid, json)', 'update_' || _table_name)::regprocedure INTO _update;
+  EXCEPTION
+    WHEN OTHERS THEN
+      -- NOT EXIST
+      NULL;
+  END;
+
+  BEGIN
+    SELECT format('operation_.%1$I(uuid)', 'delete_' || _table_name)::regprocedure INTO _delete;
+  EXCEPTION
+    WHEN OTHERS THEN
+      -- NOT EXIST
+      NULL;
+  END;
+
+  BEGIN
+    SELECT format('operation_.%1$I(uuid)', 'search_' || _table_name)::regprocedure INTO _search;
+  EXCEPTION
+    WHEN OTHERS THEN
+      -- NOT EXIST
+      NULL;
+  END;
+
+  INSERT INTO security_.resource_definition_ (id_prefix_, name_, table_, query_, create_, update_, delete_, search_)
+  VALUES (_id_prefix, _name, _table, _query, _create, _update, _delete, _search)
+  ON CONFLICT (table_) DO UPDATE
+  SET 
+    id_prefix_ = _id_prefix,
+    name_ = _name,
+    table_ = _table,
+    query_ = _query,
+    create_ = _create,
+    update_ = _update,
+    delete_ = _delete,
+    search_ = _search
+  RETURNING * INTO _resource_definition;
+
+  EXECUTE '
+    DROP TRIGGER IF EXISTS tr_after_insert_resource_insert_ ON ' || _table || ';
+    CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert();
+    DROP TRIGGER IF EXISTS tr_after_insert_resource_insert_ ON ' || _table || ';
+    CREATE TRIGGER tr_after_insert_resource_insert_ AFTER UPDATE ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update();
+    DROP TRIGGER IF EXISTS tr_after_delete_resource_delete_ ON ' || _table || ';
+    CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON ' || _table || ' REFERENCING NEW TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete();
+  ';
 END
-$_X$;
+$_$;
 
 
-ALTER PROCEDURE internal_.setup_resource_(_table regclass, _query regproc, _prefix text) OWNER TO postgres;
+ALTER PROCEDURE internal_.setup_resource_(_name text, _id_prefix text, _table regclass) OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -1653,8 +1829,11 @@ ALTER FUNCTION operation_.query_image_(_image_uuid uuid) OWNER TO postgres;
 CREATE TABLE application_.resource_ (
     uuid_ uuid NOT NULL,
     id_ text NOT NULL,
-    table_ regclass NOT NULL,
-    query_ regproc NOT NULL
+    search_ text,
+    owner_uuid_ uuid,
+    definition_uuid_ uuid NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -1683,26 +1862,47 @@ $$;
 ALTER FUNCTION operation_.query_resource_(_resource_id text) OWNER TO postgres;
 
 --
--- Name: query_resource_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: resource_definition_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_resource_(_resource_uuid uuid) RETURNS application_.resource_
+CREATE TABLE security_.resource_definition_ (
+    uuid_ uuid NOT NULL,
+    id_prefix_ text NOT NULL,
+    name_ text NOT NULL,
+    table_ regclass NOT NULL,
+    owner_uuid_ uuid,
+    query_ regprocedure,
+    create_ regprocedure,
+    update_ regprocedure,
+    delete_ regprocedure,
+    search_ regprocedure
+);
+
+
+ALTER TABLE security_.resource_definition_ OWNER TO postgres;
+
+--
+-- Name: query_resource_definition_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_resource_definition_(_resource_definition_uuid uuid) RETURNS security_.resource_definition_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _resource application_.resource_;
+  _resource_definition security_.resource_definition_;
 BEGIN
-  SELECT * INTO _resource
-  WHERE uuid_ = _resource_uuid;
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource_definition_uuid;
 
-  PERFORM security_.control_operation_('query_resource_', _resource);
+  PERFORM security_.control_operation_('query_resource_definition_', _resource_definition);
 
-  RETURN resource_;
+  RETURN _resource_definition;
 END
 $$;
 
 
-ALTER FUNCTION operation_.query_resource_(_resource_uuid uuid) OWNER TO postgres;
+ALTER FUNCTION operation_.query_resource_definition_(_resource_definition_uuid uuid) OWNER TO postgres;
 
 --
 -- Name: query_role_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -2950,6 +3150,24 @@ CREATE TABLE application__audit_.image_ (
 ALTER TABLE application__audit_.image_ OWNER TO postgres;
 
 --
+-- Name: resource_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.resource_ (
+    uuid_ uuid,
+    id_ text,
+    search_ text,
+    owner_uuid_ uuid,
+    definition_uuid_ uuid,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.resource_ OWNER TO postgres;
+
+--
 -- Name: service_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -3543,6 +3761,7 @@ b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 02:00:
 624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	query_service_variant_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 176dee67-37d8-4fd7-aa1d-44d8f204b270	query_service_variant_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -3614,6 +3833,16 @@ f7d66dad-12e8-49c3-aa7c-92fb9ebe0935	agent_in_agency_	624fefb6-75d8-4ed8-8e9b-05
 3bb39814-e628-4169-841f-b8c23311167e	service_variant_status_contains_only_live_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 9c17e5e7-3043-4cc3-b2ca-5e635883b121	logged_in_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 df7169dc-3ef6-4e89-b749-9d96216f37f4	visitor_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+a8c86986-75c9-4f7a-b4ea-e18280bb56c6	logged_in_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+\.
+
+
+--
+-- Data for Name: resource_definition_; Type: TABLE DATA; Schema: security_; Owner: postgres
+--
+
+COPY security_.resource_definition_ (uuid_, id_prefix_, name_, table_, owner_uuid_, query_, create_, update_, delete_, search_) FROM stdin;
 \.
 
 
@@ -3690,6 +3919,7 @@ b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 02:00:
 624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	query_service_variant_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 176dee67-37d8-4fd7-aa1d-44d8f204b270	query_service_variant_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -3761,6 +3991,8 @@ f7d66dad-12e8-49c3-aa7c-92fb9ebe0935	agent_in_agency_	624fefb6-75d8-4ed8-8e9b-05
 3bb39814-e628-4169-841f-b8c23311167e	service_variant_status_contains_only_live_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 9c17e5e7-3043-4cc3-b2ca-5e635883b121	logged_in_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 df7169dc-3ef6-4e89-b749-9d96216f37f4	visitor_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+a8c86986-75c9-4f7a-b4ea-e18280bb56c6	logged_in_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -4043,6 +4275,38 @@ ALTER TABLE ONLY security_.policy_assignment_
 
 
 --
+-- Name: resource_definition_ resource_definition__id_prefix__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.resource_definition_
+    ADD CONSTRAINT resource_definition__id_prefix__key UNIQUE (id_prefix_);
+
+
+--
+-- Name: resource_definition_ resource_definition__name__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.resource_definition_
+    ADD CONSTRAINT resource_definition__name__key UNIQUE (name_);
+
+
+--
+-- Name: resource_definition_ resource_definition__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.resource_definition_
+    ADD CONSTRAINT resource_definition__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: resource_definition_ resource_definition__table__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.resource_definition_
+    ADD CONSTRAINT resource_definition__table__key UNIQUE (table_);
+
+
+--
 -- Name: role_ role__name__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
 --
 
@@ -4252,6 +4516,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.servic
 
 
 --
+-- Name: resource_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.resource_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
 -- Name: agency_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -4438,6 +4709,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_variant_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: resource_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.resource_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -4630,6 +4908,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
+-- Name: resource_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.resource_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: agency_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -4816,6 +5101,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.servi
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_variant_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: resource_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.resource_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -5146,6 +5438,22 @@ ALTER TABLE ONLY application_.image_
 
 
 --
+-- Name: resource_ resource__definition_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.resource_
+    ADD CONSTRAINT resource__definition_uuid__fkey FOREIGN KEY (definition_uuid_) REFERENCES security_.resource_definition_(uuid_);
+
+
+--
+-- Name: resource_ resource__owner_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.resource_
+    ADD CONSTRAINT resource__owner_uuid__fkey FOREIGN KEY (owner_uuid_) REFERENCES application_.resource_(uuid_);
+
+
+--
 -- Name: service_ service__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -5319,6 +5627,14 @@ ALTER TABLE ONLY security_.event_
 
 ALTER TABLE ONLY security_.policy_assignment_
     ADD CONSTRAINT policy_assignment__operation_uuid__fkey FOREIGN KEY (operation_uuid_) REFERENCES security_.operation_(uuid_);
+
+
+--
+-- Name: resource_definition_ resource_definition__owner_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.resource_definition_
+    ADD CONSTRAINT resource_definition__owner_uuid__fkey FOREIGN KEY (owner_uuid_) REFERENCES security_.resource_definition_(uuid_);
 
 
 --
