@@ -223,6 +223,50 @@ $$;
 ALTER FUNCTION internal_.base64url_encode_(_data bytea) OWNER TO postgres;
 
 --
+-- Name: convert_from_internal_format_(jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.convert_from_internal_format_(_data jsonb) RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    AS $$
+  WITH
+    _uuid_fields AS (
+      SELECT k, LEFT(k, length(k) - 5) || 'id_' f, r.id_
+      FROM jsonb_object_keys(_data) k
+      LEFT JOIN application_.resource_ r ON r.uuid_ = (_data->>k)::uuid
+      WHERE k LIKE '%uuid_'
+    )
+  SELECT jsonb_object_agg(rtrim(COALESCE(i.f, d.key), '_'), COALESCE(to_jsonb(i.id_), d.value)) data_
+  FROM jsonb_each(_data) d
+  LEFT JOIN _uuid_fields i ON i.k = d.key;
+$$;
+
+
+ALTER FUNCTION internal_.convert_from_internal_format_(_data jsonb) OWNER TO postgres;
+
+--
+-- Name: convert_to_internal_format_(jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.convert_to_internal_format_(_data jsonb) RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    AS $$
+  WITH
+    _id_fields AS (
+      SELECT k, LEFT(k, length(k) - 2) || 'uuid' f, r.uuid_
+      FROM jsonb_object_keys(_data) k
+      LEFT JOIN application_.resource_ r ON r.id_ = _data->>k
+      WHERE k LIKE '%id'
+    )
+  SELECT jsonb_object_agg(COALESCE(i.f, d.key) || '_', COALESCE(to_jsonb(i.uuid_), d.value)) data_
+  FROM jsonb_each(_data) d
+  LEFT JOIN _id_fields i ON i.k = d.key;
+$$;
+
+
+ALTER FUNCTION internal_.convert_to_internal_format_(_data jsonb) OWNER TO postgres;
+
+--
 -- Name: drop_auditing_(regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
 --
 
@@ -274,9 +318,9 @@ BEGIN
 
   EXECUTE format(
     $$
-    DROP TRIGGER tr_after_insert_notify_json_ ON %1$I.%2$I;
-    DROP TRIGGER tr_after_update_notify_json_ ON %1$I.%2$I;
-    DROP TRIGGER tr_after_delete_notify_json_ ON %1$I.%2$I;
+    DROP TRIGGER tr_after_insert_notify_jsonb_ ON %1$I.%2$I;
+    DROP TRIGGER tr_after_update_notify_jsonb_ ON %1$I.%2$I;
+    DROP TRIGGER tr_after_delete_notify_jsonb_ ON %1$I.%2$I;
     $$,
     _table_schema, _table_name);
 END
@@ -311,10 +355,10 @@ $$;
 ALTER PROCEDURE internal_.drop_resource_(_table regclass) OWNER TO postgres;
 
 --
--- Name: jwt_sign_hs256_(json, bytea); Type: FUNCTION; Schema: internal_; Owner: postgres
+-- Name: jwt_sign_hs256_(jsonb, bytea); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
-CREATE FUNCTION internal_.jwt_sign_hs256_(_payload json, _secret bytea) RETURNS text
+CREATE FUNCTION internal_.jwt_sign_hs256_(_payload jsonb, _secret bytea) RETURNS text
     LANGUAGE sql IMMUTABLE
     AS $$
   WITH
@@ -325,13 +369,13 @@ CREATE FUNCTION internal_.jwt_sign_hs256_(_payload json, _secret bytea) RETURNS 
 $$;
 
 
-ALTER FUNCTION internal_.jwt_sign_hs256_(_payload json, _secret bytea) OWNER TO postgres;
+ALTER FUNCTION internal_.jwt_sign_hs256_(_payload jsonb, _secret bytea) OWNER TO postgres;
 
 --
 -- Name: jwt_verify_hs256_(text, bytea); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
-CREATE FUNCTION internal_.jwt_verify_hs256_(_jwt text, _secret bytea) RETURNS json
+CREATE FUNCTION internal_.jwt_verify_hs256_(_jwt text, _secret bytea) RETURNS jsonb
     LANGUAGE sql IMMUTABLE
     AS $$
   WITH
@@ -340,7 +384,7 @@ CREATE FUNCTION internal_.jwt_verify_hs256_(_jwt text, _secret bytea) RETURNS js
     )
     SELECT 
       CASE WHEN _base64.signature_ = internal_.base64url_encode_(pgcrypto_.hmac((_base64.header_ || '.' || _base64.payload_)::bytea, _secret, 'sha256')) 
-        THEN convert_from(internal_.base64url_decode_(_base64.payload_), 'UTF-8')::json
+        THEN convert_from(internal_.base64url_decode_(_base64.payload_), 'UTF-8')::jsonb
         ELSE NULL 
       END payload_
     FROM _base64;
@@ -350,21 +394,21 @@ $$;
 ALTER FUNCTION internal_.jwt_verify_hs256_(_jwt text, _secret bytea) OWNER TO postgres;
 
 --
--- Name: notify_json_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+-- Name: notify_jsonb_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
-CREATE FUNCTION internal_.notify_json_() RETURNS trigger
+CREATE FUNCTION internal_.notify_jsonb_() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  PERFORM pg_notify(TG_TABLE_SCHEMA::text || '.' || TG_TABLE_NAME::text, json_build_object('op', LEFT(TG_OP, 1), 'uuid_', t.uuid_::text)::text)
+  PERFORM pg_notify(TG_TABLE_SCHEMA::text || '.' || TG_TABLE_NAME::text, jsonb_build_object('op', LEFT(TG_OP, 1), 'uuid_', t.uuid_::text)::text)
   FROM _transition_table t;
   RETURN NULL;
 END;
 $$;
 
 
-ALTER FUNCTION internal_.notify_json_() OWNER TO postgres;
+ALTER FUNCTION internal_.notify_jsonb_() OWNER TO postgres;
 
 --
 -- Name: resource_delete_(); Type: FUNCTION; Schema: internal_; Owner: postgres
@@ -562,20 +606,20 @@ BEGIN
 
   EXECUTE format(
     $$
-    CREATE TRIGGER tr_after_insert_notify_json_
+    CREATE TRIGGER tr_after_insert_notify_jsonb_
     AFTER INSERT ON %1$I.%2$I
     REFERENCING NEW TABLE AS _transition_table
-    FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_json_();
+    FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
-    CREATE TRIGGER tr_after_update_notify_json_
+    CREATE TRIGGER tr_after_update_notify_jsonb_
     AFTER UPDATE ON %1$I.%2$I
     REFERENCING NEW TABLE AS _transition_table
-    FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_json_();
+    FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
-    CREATE TRIGGER tr_after_delete_notify_json_
+    CREATE TRIGGER tr_after_delete_notify_jsonb_
     AFTER DELETE ON %1$I.%2$I
     REFERENCING OLD TABLE AS _transition_table
-    FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_json_();
+    FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
     $$,
     _table_schema, _table_name);
 END
@@ -585,20 +629,17 @@ $_$;
 ALTER PROCEDURE internal_.setup_notifications_(_table regclass) OWNER TO postgres;
 
 --
--- Name: setup_resource_(text, text, regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
+-- Name: setup_resource_(regclass, text, text, regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
 --
 
-CREATE PROCEDURE internal_.setup_resource_(_name text, _id_prefix text, _table regclass)
+CREATE PROCEDURE internal_.setup_resource_(_table regclass, _name text, _id_prefix text, _owner_table regclass DEFAULT NULL::regclass)
     LANGUAGE plpgsql
     AS $_$
 DECLARE
   _resource_definition security_.resource_definition_;
+  _owner_resource_definition_uuid uuid;
   _table_name name;
   _table_schema name;
-  _query regprocedure;
-  _create regprocedure;
-  _update regprocedure;
-  _delete regprocedure;
   _search regprocedure;
 BEGIN
   SELECT c.relname, ns.nspname INTO _table_name, _table_schema
@@ -606,37 +647,9 @@ BEGIN
   JOIN pg_catalog.pg_namespace ns ON c.relnamespace = ns.oid
   WHERE c.oid = _table;
 
-  BEGIN
-    SELECT format('operation_.%1$I(uuid)', 'query_' || _table_name)::regprocedure INTO _query;
-  EXCEPTION
-    WHEN OTHERS THEN
-      -- NOT EXIST
-      NULL;
-  END;
-
-  BEGIN
-    SELECT format('operation_.%1$I(json)', 'create_' || _table_name)::regprocedure INTO _create;
-  EXCEPTION
-    WHEN OTHERS THEN
-      -- NOT EXIST
-      NULL;
-  END;
-
-  BEGIN
-    SELECT format('operation_.%1$I(uuid, json)', 'update_' || _table_name)::regprocedure INTO _update;
-  EXCEPTION
-    WHEN OTHERS THEN
-      -- NOT EXIST
-      NULL;
-  END;
-
-  BEGIN
-    SELECT format('operation_.%1$I(uuid)', 'delete_' || _table_name)::regprocedure INTO _delete;
-  EXCEPTION
-    WHEN OTHERS THEN
-      -- NOT EXIST
-      NULL;
-  END;
+  SELECT uuid_ INTO _owner_resource_definition_uuid
+  FROM security_.resource_definition_
+  WHERE table_ = _owner_table;
 
   BEGIN
     SELECT format('operation_.%1$I(uuid)', 'search_' || _table_name)::regprocedure INTO _search;
@@ -646,33 +659,30 @@ BEGIN
       NULL;
   END;
 
-  INSERT INTO security_.resource_definition_ (id_prefix_, name_, table_, query_, create_, update_, delete_, search_)
-  VALUES (_id_prefix, _name, _table, _query, _create, _update, _delete, _search)
+  INSERT INTO security_.resource_definition_ (id_prefix_, name_, table_, owner_uuid_, search_)
+  VALUES (_id_prefix, _name, _table, _owner_resource_definition_uuid, _search)
   ON CONFLICT (table_) DO UPDATE
   SET 
     id_prefix_ = _id_prefix,
     name_ = _name,
     table_ = _table,
-    query_ = _query,
-    create_ = _create,
-    update_ = _update,
-    delete_ = _delete,
+    owner_uuid_ = _owner_resource_definition_uuid,
     search_ = _search
   RETURNING * INTO _resource_definition;
 
   EXECUTE '
     DROP TRIGGER IF EXISTS tr_after_insert_resource_insert_ ON ' || _table || ';
-    CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert();
+    CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
     DROP TRIGGER IF EXISTS tr_after_insert_resource_insert_ ON ' || _table || ';
-    CREATE TRIGGER tr_after_insert_resource_insert_ AFTER UPDATE ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update();
+    CREATE TRIGGER tr_after_insert_resource_insert_ AFTER UPDATE ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
     DROP TRIGGER IF EXISTS tr_after_delete_resource_delete_ ON ' || _table || ';
-    CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON ' || _table || ' REFERENCING NEW TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete();
+    CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON ' || _table || ' REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
   ';
 END
 $_$;
 
 
-ALTER PROCEDURE internal_.setup_resource_(_name text, _id_prefix text, _table regclass) OWNER TO postgres;
+ALTER PROCEDURE internal_.setup_resource_(_table regclass, _name text, _id_prefix text, _owner_table regclass) OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -764,7 +774,7 @@ CREATE FUNCTION operation_.begin_session_(_jwt text, _tag text DEFAULT NULL::tex
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _claims json;
+  _claims jsonb;
   _token_uuid uuid;
   _subject_uuid uuid;
   _session security_.session_;
@@ -842,7 +852,7 @@ BEGIN
 
   RETURN 
     internal_.jwt_sign_hs256_(
-      json_build_object(
+      jsonb_build_object(
         'iss', 'duely.app',
         'sub', _subject_uuid,
         'jti', _uuid,
@@ -986,6 +996,53 @@ $$;
 
 
 ALTER FUNCTION operation_.create_client_(_agency_uuid uuid, _name text, _email_address text) OWNER TO postgres;
+
+--
+-- Name: create_resource_(jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.create_resource_(_data jsonb) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $_$
+DECLARE
+  _resource application_.resource_;
+  _resource_definition security_.resource_definition_;
+  _column_list text;
+  _select_list text;
+  _uuid uuid;
+  _id text;
+BEGIN
+  SELECT * INTO _data
+  FROM internal_.convert_to_internal_format_(_data);
+
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource.definition_uuid_;
+
+  PERFORM security_.control_create_(_resource_definition, _data);
+
+  SELECT string_agg(format('%1$I', k), ','), string_agg(format('d.%1$I', k), ',') INTO _column_list, _select_list
+  FROM jsonb_object_keys(_data) k;
+
+  EXECUTE '
+    INSERT INTO ' || _resource_definition.table_ || ' (' || _column_list || ')
+    SELECT ' || _select_list || '
+    FROM json_populate_record(NULL::' || _resource_definition.table_ || ', $1) d
+    RETURNING uuid_;
+  '
+  INTO _uuid
+  USING _data, _resource.uuid_;
+
+  SELECT id_ INTO _id
+  FROM application_.resource_
+  WHERE uuid_ = _uuid;
+
+  RETURN operation_.query_resource_(_id);
+END
+$_$;
+
+
+ALTER FUNCTION operation_.create_resource_(_data jsonb) OWNER TO postgres;
 
 --
 -- Name: service_; Type: TABLE; Schema: application_; Owner: postgres
@@ -1226,6 +1283,44 @@ $$;
 
 
 ALTER FUNCTION operation_.delete_client_(_client_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: delete_resource_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.delete_resource_(_id text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $_$
+DECLARE
+  _resource application_.resource_;
+  _resource_definition security_.resource_definition_;
+  _data jsonb;
+BEGIN
+
+  SELECT * INTO _resource
+  FROM application_.resource_
+  WHERE id_ = _id;
+
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource.definition_uuid_;
+
+  PERFORM security_.control_delete_(_resource_definition, _resource);
+
+  SELECT * INTO _data FROM operation_.query_resource_(_id);
+
+  EXECUTE '
+    DELETE FROM ' || _resource_definition.table_ || '
+    WHERE uuid_ = $1;
+  '
+  USING _resource.uuid_;
+
+  RETURN _data;
+END
+$_$;
+
+
+ALTER FUNCTION operation_.delete_resource_(_id text) OWNER TO postgres;
 
 --
 -- Name: delete_service_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -1598,7 +1693,7 @@ BEGIN
 
   RETURN 
     internal_.jwt_sign_hs256_(
-      json_build_object(
+      jsonb_build_object(
         'iss', 'duely.app',
         'sub', _subject_uuid,
         'jti', _uuid,
@@ -1823,58 +1918,69 @@ $$;
 ALTER FUNCTION operation_.query_image_(_image_uuid uuid) OWNER TO postgres;
 
 --
--- Name: resource_; Type: TABLE; Schema: application_; Owner: postgres
---
-
-CREATE TABLE application_.resource_ (
-    uuid_ uuid NOT NULL,
-    id_ text NOT NULL,
-    search_ text,
-    owner_uuid_ uuid,
-    definition_uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE application_.resource_ OWNER TO postgres;
-
---
 -- Name: query_resource_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_resource_(_resource_id text) RETURNS application_.resource_
+CREATE FUNCTION operation_.query_resource_(_id text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
+    AS $_$
 DECLARE
   _resource application_.resource_;
+  _resource_definition security_.resource_definition_;
+  _keys text[];
+  _select_list text;
+  _data jsonb;
 BEGIN
+  SELECT * INTO _data
+  FROM internal_.convert_to_internal_format_(_data);
+
   SELECT * INTO _resource
-  WHERE id_ = _resource_id;
+  FROM application_.resource_
+  WHERE id_ = _id;
 
-  PERFORM security_.control_operation_('query_resource_', _resource);
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource.definition_uuid_;
 
-  RETURN resource_;
+  SELECT * INTO _keys FROM security_.control_query_(_resource_definition, _resource);
+
+  IF array_length(_keys, 1) = 0 THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT string_agg(format('%1$I', k), ',') INTO _select_list
+  FROM unnest(_keys) k;
+
+  EXECUTE '
+    WITH
+      r AS (
+        SELECT ' || _select_list || '
+        FROM ' || _resource_definition.table_ || '
+        WHERE uuid_ = $1
+      )
+    SELECT to_jsonb(r)
+    FROM r;
+  '
+  INTO _data
+  USING _resource.uuid_;
+
+  RETURN internal_.convert_from_internal_format_(_data);
 END
-$$;
+$_$;
 
 
-ALTER FUNCTION operation_.query_resource_(_resource_id text) OWNER TO postgres;
+ALTER FUNCTION operation_.query_resource_(_id text) OWNER TO postgres;
 
 --
 -- Name: resource_definition_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
 CREATE TABLE security_.resource_definition_ (
-    uuid_ uuid NOT NULL,
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     id_prefix_ text NOT NULL,
     name_ text NOT NULL,
     table_ regclass NOT NULL,
     owner_uuid_ uuid,
-    query_ regprocedure,
-    create_ regprocedure,
-    update_ regprocedure,
-    delete_ regprocedure,
     search_ regprocedure
 );
 
@@ -2434,7 +2540,7 @@ CREATE FUNCTION operation_.sign_up_user_(_verification_uuid uuid) RETURNS text
 DECLARE
   _user security_.user_;
   _email_address text;
-  _data json;
+  _data jsonb;
   _password text;
   _name text;
 BEGIN
@@ -2484,7 +2590,7 @@ CREATE TABLE security_.email_address_verification_ (
     started_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     status_ text,
     status_at_ timestamp with time zone,
-    data_ json,
+    data_ jsonb,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -2493,10 +2599,10 @@ CREATE TABLE security_.email_address_verification_ (
 ALTER TABLE security_.email_address_verification_ OWNER TO postgres;
 
 --
--- Name: start_email_address_verification_(text, boolean, json); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: start_email_address_verification_(text, boolean, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.start_email_address_verification_(_email_address text, _is_existing_user boolean, _data json DEFAULT NULL::json) RETURNS security_.email_address_verification_
+CREATE FUNCTION operation_.start_email_address_verification_(_email_address text, _is_existing_user boolean, _data jsonb DEFAULT NULL::jsonb) RETURNS security_.email_address_verification_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
@@ -2537,7 +2643,50 @@ END
 $$;
 
 
-ALTER FUNCTION operation_.start_email_address_verification_(_email_address text, _is_existing_user boolean, _data json) OWNER TO postgres;
+ALTER FUNCTION operation_.start_email_address_verification_(_email_address text, _is_existing_user boolean, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: update_resource_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.update_resource_(_id text, _data jsonb) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $_$
+DECLARE
+  _resource application_.resource_;
+  _resource_definition security_.resource_definition_;
+  _update_list text;
+BEGIN
+  SELECT * INTO _data
+  FROM internal_.convert_to_internal_format_(_data);
+
+  SELECT * INTO _resource
+  FROM application_.resource_
+  WHERE id_ = _id;
+
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource.definition_uuid_;
+
+  PERFORM security_.control_update_(_resource_definition, _resource, _data);
+
+  SELECT string_agg(format('%1$I = d.%1$I', k), ',') INTO _update_list
+  FROM jsonb_object_keys(_data) k;
+
+  EXECUTE '
+    UPDATE ' || _resource_definition.table_ || ' r
+    SET ' || _update_list || '
+    FROM json_populate_record(NULL::' || _resource_definition.table_ || ', $1) d
+    WHERE r.uuid_ = $2;
+  '
+  USING _data, _resource.uuid_;
+
+  RETURN operation_.query_resource_(_id);
+END
+$_$;
+
+
+ALTER FUNCTION operation_.update_resource_(_id text, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: agent_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -2798,6 +2947,61 @@ END;
 ALTER FUNCTION policy_.visitor_(_arg anyelement) OWNER TO postgres;
 
 --
+-- Name: control_create_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: security_; Owner: postgres
+--
+
+CREATE FUNCTION security_.control_create_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'No active session.' USING ERRCODE = '20000';
+  END IF;
+
+  RAISE EXCEPTION 'NOT IMPLEMENTED';
+END
+$$;
+
+
+ALTER FUNCTION security_.control_create_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: resource_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.resource_ (
+    uuid_ uuid NOT NULL,
+    id_ text NOT NULL,
+    search_ text,
+    owner_uuid_ uuid,
+    definition_uuid_ uuid NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.resource_ OWNER TO postgres;
+
+--
+-- Name: control_delete_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: security_; Owner: postgres
+--
+
+CREATE FUNCTION security_.control_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'No active session.' USING ERRCODE = '20000';
+  END IF;
+
+  RAISE EXCEPTION 'NOT IMPLEMENTED';
+END
+$$;
+
+
+ALTER FUNCTION security_.control_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: event_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
@@ -2877,6 +3081,44 @@ $_$;
 
 
 ALTER FUNCTION security_.control_operation_(_operation_name text, _arg anyelement) OWNER TO postgres;
+
+--
+-- Name: control_query_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: security_; Owner: postgres
+--
+
+CREATE FUNCTION security_.control_query_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'No active session.' USING ERRCODE = '20000';
+  END IF;
+
+  RAISE EXCEPTION 'NOT IMPLEMENTED';
+END
+$$;
+
+
+ALTER FUNCTION security_.control_query_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: control_update_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: security_; Owner: postgres
+--
+
+CREATE FUNCTION security_.control_update_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'No active session.' USING ERRCODE = '20000';
+  END IF;
+
+  RAISE EXCEPTION 'NOT IMPLEMENTED';
+END
+$$;
+
+
+ALTER FUNCTION security_.control_update_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: policy_assignment_; Type: TABLE; Schema: security_; Owner: postgres
@@ -3581,7 +3823,7 @@ CREATE TABLE security__audit_.email_address_verification_ (
     started_at_ timestamp with time zone,
     status_ text,
     status_at_ timestamp with time zone,
-    data_ json,
+    data_ jsonb,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -3842,7 +4084,9 @@ ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b
 -- Data for Name: resource_definition_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.resource_definition_ (uuid_, id_prefix_, name_, table_, owner_uuid_, query_, create_, update_, delete_, search_) FROM stdin;
+COPY security_.resource_definition_ (uuid_, id_prefix_, name_, table_, owner_uuid_, search_) FROM stdin;
+957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	\N	\N
+d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
 \.
 
 
@@ -4523,94 +4767,108 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.resour
 
 
 --
--- Name: agency_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: agency_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: user_invite_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: image_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: user_invite_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.image_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: theme_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_step_document_delivery_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: image_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_document_delivery_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_step_document_submission_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_document_submission_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.image_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_step_confirmation_by_agency_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: theme_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_confirmation_by_agency_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_step_form_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_form_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_step_payment_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_document_delivery_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_payment_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_step_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_step_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_document_delivery_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: client_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_document_submission_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.client_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_document_submission_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_variant_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON application_.service_variant_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_confirmation_by_agency_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_form_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_form_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_payment_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_payment_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: client_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.client_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_variant_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_variant_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: agency_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
+
+
+--
+-- Name: service_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
 
 
 --
@@ -4719,94 +4977,108 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 
 
 --
--- Name: agency_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: agency_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: user_invite_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: image_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: user_invite_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.image_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: theme_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_step_document_delivery_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: image_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_step_document_submission_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.image_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_step_confirmation_by_agency_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: theme_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_step_form_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_form_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_step_payment_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_document_delivery_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_payment_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_step_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_step_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: client_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_document_submission_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_variant_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON application_.service_variant_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_form_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_form_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_payment_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_payment_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: client_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_variant_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_variant_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: agency_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+
+
+--
+-- Name: service_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
 
 
 --
@@ -4915,94 +5187,94 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
--- Name: agency_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: agency_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: user_invite_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: image_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: user_invite_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.image_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: theme_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_step_document_delivery_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: image_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_step_document_submission_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.image_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_step_confirmation_by_agency_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: theme_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_step_form_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_form_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_step_payment_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_document_delivery_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_payment_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_step_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_step_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: client_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_document_submission_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: service_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: service_variant_ tr_after_update_notify_json_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_step_confirmation_by_agency_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON application_.service_variant_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_form_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_form_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_payment_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_payment_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: client_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: service_variant_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_variant_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
@@ -5167,24 +5439,24 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.email_add
 
 
 --
--- Name: subject_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: subject_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON security_.subject_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: subdomain_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON security_.subject_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: user_ tr_after_delete_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: subdomain_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_json_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: user_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
@@ -5244,24 +5516,24 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 
 
 --
--- Name: subject_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: subject_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON security_.subject_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: subdomain_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON security_.subject_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: user_ tr_after_insert_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: subdomain_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_json_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: user_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
@@ -5321,24 +5593,24 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 
 
 --
--- Name: subject_ tr_after_update_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: subject_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON security_.subject_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
-
-
---
--- Name: subdomain_ tr_after_update_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.subject_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --
--- Name: user_ tr_after_update_notify_json_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: subdomain_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_json_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_json_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: user_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
 
 
 --

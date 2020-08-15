@@ -30,3 +30,7 @@ jobs:
       - run: kubectl cp ./duely-postgres/duely-migrate.sql duely-postgres-master-statefulset-0:duely-migrate.sql
       - run: kubectl exec duely-postgres-master-statefulset-0 -- psql -U postgres -d duely -f duely-migrate.sql
       - run: kubectl exec duely-postgres-master-statefulset-0 -- rm duely-migrate.sql
+      - run: kubectl cp ./duely-postgres/tests duely-postgres-master-statefulset-0:tests
+      - run: kubectl cp ./duely-postgres/duely-test.sql duely-postgres-master-statefulset-0:duely-test.sql
+      - run: kubectl exec duely-postgres-master-statefulset-0 -- psql -U duely -d duely -f duely-test.sql
+      - run: kubectl exec duely-postgres-master-statefulset-0 -- rm -r duely-test.sql tests

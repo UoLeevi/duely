@@ -1,4 +1,9 @@
+-- psql -U duely -d duely -f 01-duely-test.sql
+
 \echo 'TEST 01 STARTED'
+\set ON_ERROR_STOP true
+\set QUIET true
+
 DO
 LANGUAGE plpgsql
 $$
@@ -22,7 +27,7 @@ BEGIN
 
   -- TEST INVALID CREATE OPERATION
   BEGIN
-    PERFORM operation_.create_service_('{ "name_": "Test service" }'::json);
+    PERFORM operation_.create_service_('{ "name_": "name" }'::json);
     RAISE EXCEPTION 'Should not be able to create resource using these arguments.';
   EXCEPTION WHEN SQLSTATE '20000' THEN
     -- EXPECTED ERROR
@@ -30,7 +35,7 @@ BEGIN
 
 
   -- TEST VALID CREATE OPERATION
-  SELECT * INTO _record_0 FROM operation_.create_service_('{ "name_": "Test service" }'::json);
+  SELECT * INTO _record_0 FROM operation_.create_service_('{ "name_": "name" }'::json);
   --RAISE NOTICE E'create_service_(json):\n%', _record_0;
 
 
@@ -50,7 +55,7 @@ BEGIN
 
   -- TEST INVALID UPDATE OPERATION
   BEGIN
-    PERFORM operation_.update_service_(_record_0.uuid_, '{ "name_": "Test service" }'::json);
+    PERFORM operation_.update_service_(_record_0.uuid_, '{ "name_": "name" }'::json);
     RAISE EXCEPTION 'Should not be able to update resource using these arguments.';
   EXCEPTION WHEN SQLSTATE '20000' THEN
     -- EXPECTED ERROR
@@ -58,7 +63,7 @@ BEGIN
 
 
   -- TEST VALID UPDATE OPERATION
-  SELECT * INTO _record_0 FROM operation_.update_service_(_record_0.uuid_, '{ "name_": "Test service" }'::json);
+  SELECT * INTO _record_0 FROM operation_.update_service_(_record_0.uuid_, '{ "name_": "name" }'::json);
   --RAISE NOTICE E'update_service_(uuid, json):\n%', _record_0;
 
 
@@ -80,12 +85,16 @@ BEGIN
   PERFORM operation_.end_session_();
 
 
-  ROLLBACK;
+  RAISE EXCEPTION 'TEST 01 PASSED' USING errcode = '40000'; -- transaction_rollback
 
-EXCEPTION WHEN OTHERS THEN
+EXCEPTION
+  WHEN transaction_rollback THEN
+    -- TEST 00 PASSED
+    NULL;
 
-  RAISE NOTICE 'TEST 01 FAILED';
-  RAISE;
+  WHEN OTHERS THEN
+    RAISE NOTICE 'TEST 01 FAILED';
+    RAISE;
 
 END;
 $$;

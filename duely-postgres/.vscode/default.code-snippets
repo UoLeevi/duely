@@ -4,7 +4,12 @@
     "prefix": "test",
     "description": "Boilerplate for database test.",
     "body": [
+      "-- psql -U duely -d duely -f ${TM_FILENAME}",
+      "",
       "\\echo 'TEST ${1:00} STARTED'",
+      "\\set ON_ERROR_STOP true",
+      "\\set QUIET true",
+      "",
       "DO",
       "LANGUAGE plpgsql",
       "$$",
@@ -86,17 +91,22 @@
       "  PERFORM operation_.end_session_();",
       "",
       "",
-      "  ROLLBACK;",
+      "  RAISE EXCEPTION 'TEST ${1:00} PASSED' USING errcode = '40000'; -- transaction_rollback",
       "",
-      "EXCEPTION WHEN OTHERS THEN",
+      "EXCEPTION",
+      "  WHEN transaction_rollback THEN",
+      "    -- TEST 00 PASSED",
+      "    NULL;",
       "",
-      "  RAISE NOTICE 'TEST ${1:00} FAILED';",
-      "  RAISE;",
+      "  WHEN OTHERS THEN",
+      "    RAISE NOTICE 'TEST ${1:00} FAILED';",
+      "    RAISE;",
       "",
       "END;",
       "$$;",
       "",
-      "\\echo 'TEST ${1:00} PASSED'"
+      "\\echo 'TEST ${1:00} PASSED'",
+      ""
     ]
   }
 }
