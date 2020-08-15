@@ -18,4 +18,6 @@ CREATE DATABASE duely;
 \c duely
 \i duely-schema.sql
 \i duely-prepare.sql
+\c duely duely
+\i duely-seed.sql
 \echo 'DATABASE RESET COMPLETED'

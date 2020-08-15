@@ -1,5 +1,6 @@
 -- psql -U duely -d duely -f 00-duely-test.sql
 
+\c
 \echo 'TEST 00 STARTED'
 \set ON_ERROR_STOP true
 \set QUIET true
