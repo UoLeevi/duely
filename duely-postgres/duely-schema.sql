@@ -102,6 +102,20 @@ COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
 
 --
+-- Name: operation_type_; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.operation_type_ AS ENUM (
+    'query',
+    'create',
+    'update',
+    'delete'
+);
+
+
+ALTER TYPE public.operation_type_ OWNER TO postgres;
+
+--
 -- Name: audit_delete_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -233,7 +247,7 @@ CREATE FUNCTION internal_.convert_from_internal_format_(_data jsonb) RETURNS jso
     _uuid_fields AS (
       SELECT k, LEFT(k, length(k) - 5) || 'id_' f, r.id_
       FROM jsonb_object_keys(_data) k
-      LEFT JOIN application_.resource_ r ON r.uuid_ = (_data->>k)::uuid
+      JOIN application_.resource_ r ON r.uuid_ = (_data->>k)::uuid
       WHERE k LIKE '%uuid_'
     )
   SELECT jsonb_object_agg(rtrim(COALESCE(i.f, d.key), '_'), COALESCE(to_jsonb(i.id_), d.value)) data_
@@ -255,7 +269,7 @@ CREATE FUNCTION internal_.convert_to_internal_format_(_data jsonb) RETURNS jsonb
     _id_fields AS (
       SELECT k, LEFT(k, length(k) - 2) || 'uuid' f, r.uuid_
       FROM jsonb_object_keys(_data) k
-      LEFT JOIN application_.resource_ r ON r.id_ = _data->>k
+      JOIN application_.resource_ r ON r.id_ = _data->>k
       WHERE k LIKE '%id'
     )
   SELECT jsonb_object_agg(COALESCE(i.f, d.key) || '_', COALESCE(to_jsonb(i.uuid_), d.value)) data_
@@ -910,7 +924,7 @@ ALTER FUNCTION operation_.cancel_user_invite_(_invite_uuid uuid) OWNER TO postgr
 
 CREATE TABLE application_.agency_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    subdomain_uuid_ uuid NOT NULL,
+    subdomain_uuid_ uuid,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
@@ -998,14 +1012,13 @@ $$;
 ALTER FUNCTION operation_.create_client_(_agency_uuid uuid, _name text, _email_address text) OWNER TO postgres;
 
 --
--- Name: create_resource_(jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: create_resource_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.create_resource_(_data jsonb) RETURNS jsonb
+CREATE FUNCTION operation_.create_resource_(_resource_name text, _data jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     AS $_$
 DECLARE
-  _resource application_.resource_;
   _resource_definition security_.resource_definition_;
   _column_list text;
   _select_list text;
@@ -1017,7 +1030,7 @@ BEGIN
 
   SELECT * INTO _resource_definition
   FROM security_.resource_definition_
-  WHERE uuid_ = _resource.definition_uuid_;
+  WHERE name_ = _resource_name;
 
   PERFORM security_.control_create_(_resource_definition, _data);
 
@@ -1031,7 +1044,7 @@ BEGIN
     RETURNING uuid_;
   '
   INTO _uuid
-  USING _data, _resource.uuid_;
+  USING _data;
 
   SELECT id_ INTO _id
   FROM application_.resource_
@@ -1042,7 +1055,7 @@ END
 $_$;
 
 
-ALTER FUNCTION operation_.create_resource_(_data jsonb) OWNER TO postgres;
+ALTER FUNCTION operation_.create_resource_(_resource_name text, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: service_; Type: TABLE; Schema: application_; Owner: postgres
@@ -1944,10 +1957,6 @@ BEGIN
 
   SELECT * INTO _keys FROM security_.control_query_(_resource_definition, _resource);
 
-  IF array_length(_keys, 1) = 0 THEN
-    RAISE 'Unauthorized.' USING ERRCODE = '42501';
-  END IF;
-
   SELECT string_agg(format('%1$I', k), ',') INTO _select_list
   FROM unnest(_keys) k;
 
@@ -2812,6 +2821,48 @@ END
 ALTER FUNCTION policy_.owner_can_invite_(_arg anyelement) OWNER TO postgres;
 
 --
+-- Name: resource_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.resource_ (
+    uuid_ uuid NOT NULL,
+    id_ text NOT NULL,
+    search_ text,
+    owner_uuid_ uuid,
+    definition_uuid_ uuid NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.resource_ OWNER TO postgres;
+
+--
+-- Name: owner_can_query_all_agency_fields_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_query_all_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.active_role_ r
+    JOIN application_.agency_ a ON a.subdomain_uuid_ = r.subdomain_uuid_
+    WHERE r.name_ = 'owner'
+      AND a.uuid_ = _arg.agency_uuid_
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, subdomain_uuid_, name_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_query_all_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: owner_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -2952,35 +3003,53 @@ ALTER FUNCTION policy_.visitor_(_arg anyelement) OWNER TO postgres;
 
 CREATE FUNCTION security_.control_create_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS void
     LANGUAGE plpgsql
-    AS $$
+    AS $_$
+DECLARE
+  _policy_uuid uuid;
+  _policy_function regprocedure;
+  _keys text[] := '{}';
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
     RAISE 'No active session.' USING ERRCODE = '20000';
   END IF;
 
-  RAISE EXCEPTION 'NOT IMPLEMENTED';
+  IF _data IS NULL OR _data = '{}'::jsonb THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+
+  LOOP
+    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    FROM security_.policy_
+    WHERE resource_definition_uuid_ = _resource_definition.uuid_
+      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
+      AND operation_type_ = 'create';
+
+    IF _policy_function IS NULL THEN
+      EXIT;
+    END IF;
+
+    EXECUTE '
+      SELECT ' || _policy_function || '($1, $2, $3);
+    '
+    INTO _keys
+    USING _resource_definition, _data, _keys;
+  END LOOP;
+
+  IF EXISTS (
+      SELECT jsonb_object_keys(_data)
+    EXCEPT
+      SELECT unnest(_keys)
+  ) THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+
+  INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, data_)
+  VALUES ('create', _resource_definition.uuid_, _data);
 END
-$$;
+$_$;
 
 
 ALTER FUNCTION security_.control_create_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
-
---
--- Name: resource_; Type: TABLE; Schema: application_; Owner: postgres
---
-
-CREATE TABLE application_.resource_ (
-    uuid_ uuid NOT NULL,
-    id_ text NOT NULL,
-    search_ text,
-    owner_uuid_ uuid,
-    definition_uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE application_.resource_ OWNER TO postgres;
 
 --
 -- Name: control_delete_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: security_; Owner: postgres
@@ -2988,15 +3057,36 @@ ALTER TABLE application_.resource_ OWNER TO postgres;
 
 CREATE FUNCTION security_.control_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
     LANGUAGE plpgsql
-    AS $$
+    AS $_$
+DECLARE
+  _policy_uuid uuid;
+  _policy_function regprocedure;
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
     RAISE 'No active session.' USING ERRCODE = '20000';
   END IF;
 
-  RAISE EXCEPTION 'NOT IMPLEMENTED';
+  LOOP
+    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    FROM security_.policy_
+    WHERE resource_definition_uuid_ = _resource_definition.uuid_
+      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
+      AND operation_type_ = 'update';
+
+    IF _policy_function IS NULL THEN
+      EXIT;
+    END IF;
+
+    EXECUTE '
+      SELECT ' || _policy_function || '($1, $2, $3, $4);
+    '
+    USING _resource_definition, _resource;
+  END LOOP;
+
+  INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_)
+  VALUES ('delete', _resource_definition.uuid_, _resource.uuid_);
 END
-$$;
+$_$;
 
 
 ALTER FUNCTION security_.control_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
@@ -3088,15 +3178,44 @@ ALTER FUNCTION security_.control_operation_(_operation_name text, _arg anyelemen
 
 CREATE FUNCTION security_.control_query_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE plpgsql
-    AS $$
+    AS $_$
+DECLARE
+  _policy_uuid uuid;
+  _policy_function regprocedure;
+  _keys text[] := '{}';
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
     RAISE 'No active session.' USING ERRCODE = '20000';
   END IF;
 
-  RAISE EXCEPTION 'NOT IMPLEMENTED';
+  LOOP
+    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    FROM security_.policy_
+    WHERE resource_definition_uuid_ = _resource_definition.uuid_
+      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
+      AND operation_type_ = 'query';
+
+    IF _policy_function IS NULL THEN
+      EXIT;
+    END IF;
+
+    EXECUTE '
+      SELECT ' || _policy_function || '($1, $2, $3);
+    '
+    INTO _keys
+    USING _resource_definition, _resource, _keys;
+  END LOOP;
+
+  IF array_length(_keys, 1) = 0 THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT array_agg(DISTINCT k)
+  FROM unnest(_keys) k;
+
+  RETURN _keys;
 END
-$$;
+$_$;
 
 
 ALTER FUNCTION security_.control_query_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
@@ -3107,15 +3226,50 @@ ALTER FUNCTION security_.control_query_(_resource_definition security_.resource_
 
 CREATE FUNCTION security_.control_update_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS void
     LANGUAGE plpgsql
-    AS $$
+    AS $_$
+DECLARE
+  _policy_uuid uuid;
+  _policy_function regprocedure;
+  _keys text[] := '{}';
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
     RAISE 'No active session.' USING ERRCODE = '20000';
   END IF;
 
-  RAISE EXCEPTION 'NOT IMPLEMENTED';
+  IF _data IS NULL OR _data = '{}'::jsonb THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+
+  LOOP
+    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    FROM security_.policy_
+    WHERE resource_definition_uuid_ = _resource_definition.uuid_
+      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
+      AND operation_type_ = 'update';
+
+    IF _policy_function IS NULL THEN
+      EXIT;
+    END IF;
+
+    EXECUTE '
+      SELECT ' || _policy_function || '($1, $2, $3, $4);
+    '
+    INTO _keys
+    USING _resource_definition, _resource, _data, _keys;
+  END LOOP;
+
+  IF EXISTS (
+      SELECT jsonb_object_keys(_data)
+    EXCEPT
+      SELECT unnest(_keys)
+  ) THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+
+  INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_, data_)
+  VALUES ('update', _resource_definition.uuid_, _resource.uuid_, _data);
 END
-$$;
+$_$;
 
 
 ALTER FUNCTION security_.control_update_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
@@ -3247,6 +3401,79 @@ $_X$;
 
 
 ALTER FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_name text, _policy_function_body text) OWNER TO postgres;
+
+--
+-- Name: policy_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.policy_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    resource_definition_uuid_ uuid NOT NULL,
+    function_ regprocedure NOT NULL,
+    operation_type_ public.operation_type_ NOT NULL,
+    after_uuid_ uuid
+);
+
+
+ALTER TABLE security_.policy_ OWNER TO postgres;
+
+--
+-- Name: register_policy_(regclass, public.operation_type_, regproc, regproc); Type: FUNCTION; Schema: security_; Owner: postgres
+--
+
+CREATE FUNCTION security_.register_policy_(_table regclass, _operation_type public.operation_type_, _policy_function regproc, _after_policy_function regproc DEFAULT NULL::regproc) RETURNS security_.policy_
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _policy security_.policy_;
+  _function regprocedure;
+  _after_uuid uuid;
+  _before_uuid uuid;
+BEGIN
+  SELECT CASE _operation_type
+    WHEN 'query' THEN (_policy_function || '(security_.resource_definition_, application_.resource_, text[])')::regprocedure
+    WHEN 'create' THEN (_policy_function || '(security_.resource_definition_, jsonb, text[])')::regprocedure
+    WHEN 'update' THEN (_policy_function || '(security_.resource_definition_, application_.resource_, jsonb, text[])')::regprocedure
+    WHEN 'delete' THEN (_policy_function || '(security_.resource_definition_, application_.resource_)')::regprocedure
+  END INTO _function;
+
+  IF _after_policy_function IS NOT NULL THEN
+    SELECT uuid_ INTO _after_uuid
+    FROM security_.policy_
+    WHERE CASE _operation_type
+      WHEN 'query' THEN (_policy_function || '(security_.resource_definition_, application_.resource_, text[])')::regprocedure
+      WHEN 'create' THEN (_policy_function || '(security_.resource_definition_, jsonb, text[])')::regprocedure
+      WHEN 'update' THEN (_policy_function || '(security_.resource_definition_, application_.resource_, jsonb, text[])')::regprocedure
+      WHEN 'delete' THEN (_policy_function || '(security_.resource_definition_, application_.resource_)')::regprocedure
+    END = function_;
+
+    IF _after_uuid IS NULL THEN
+      RAISE 'Previous policy was not found.' USING ERRCODE = '20000';
+    END IF;
+  END IF;
+
+  SELECT uuid_ INTO _before_uuid
+  FROM security_.policy_
+  WHERE after_uuid_ IS NOT DISTINCT FROM _after_uuid;
+
+  INSERT INTO security_.policy_ (function_, after_uuid_, resource_definition_uuid_, operation_type_)
+  SELECT _function, _after_uuid, d.uuid_, _operation_type
+  FROM security_.resource_definition_ d
+  WHERE d.table_ = _table
+  RETURNING * INTO _policy;
+
+  IF _before_uuid IS NOT NULL THEN
+    UPDATE security_.policy_
+    SET after_uuid_ = policy_.uuid_
+    WHERE uuid_ = _before_uuid;
+  END IF;
+
+  RETURN _policy;
+END
+$$;
+
+
+ALTER FUNCTION security_.register_policy_(_table regclass, _operation_type public.operation_type_, _policy_function regproc, _after_policy_function regproc) OWNER TO postgres;
 
 --
 -- Name: service_step_confirmation_by_agency_; Type: TABLE; Schema: application_; Owner: postgres
@@ -3770,6 +3997,23 @@ CREATE VIEW security_.active_user_ AS
 ALTER TABLE security_.active_user_ OWNER TO postgres;
 
 --
+-- Name: event_log_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.event_log_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    operation_type_ public.operation_type_ NOT NULL,
+    resource_definition_uuid_ uuid,
+    resource_uuid_ uuid,
+    data_ jsonb,
+    session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL,
+    event_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE security_.event_log_ OWNER TO postgres;
+
+--
 -- Name: operation_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
@@ -3953,6 +4197,14 @@ COPY public._session (uuid_, begin_at_, end_at_, token_uuid_, tag_, nesting_) FR
 
 
 --
+-- Data for Name: event_log_; Type: TABLE DATA; Schema: security_; Owner: postgres
+--
+
+COPY security_.event_log_ (uuid_, operation_type_, resource_definition_uuid_, resource_uuid_, data_, session_uuid_, event_at_) FROM stdin;
+\.
+
+
+--
 -- Data for Name: operation_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
@@ -4004,6 +4256,15 @@ b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 02:00:
 176dee67-37d8-4fd7-aa1d-44d8f204b270	query_service_variant_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+\.
+
+
+--
+-- Data for Name: policy_; Type: TABLE DATA; Schema: security_; Owner: postgres
+--
+
+COPY security_.policy_ (uuid_, resource_definition_uuid_, function_, operation_type_, after_uuid_) FROM stdin;
+95ea2078-c677-409e-8515-f76aa0b83d84	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_query_all_agency_fields_(security_.resource_definition_,application_.resource_,text[])	query	\N
 \.
 
 
@@ -4487,6 +4748,14 @@ ALTER TABLE ONLY security_.event_
 
 
 --
+-- Name: event_log_ event_log__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.event_log_
+    ADD CONSTRAINT event_log__pkey PRIMARY KEY (uuid_);
+
+
+--
 -- Name: operation_ operation__name__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
 --
 
@@ -4500,6 +4769,30 @@ ALTER TABLE ONLY security_.operation_
 
 ALTER TABLE ONLY security_.operation_
     ADD CONSTRAINT operation__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: policy_ policy__after_uuid__resource_definition_uuid__operation_typ_key; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.policy_
+    ADD CONSTRAINT policy__after_uuid__resource_definition_uuid__operation_typ_key UNIQUE (after_uuid_, resource_definition_uuid_, operation_type_) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: policy_ policy__function__resource_definition_uuid__operation_type__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.policy_
+    ADD CONSTRAINT policy__function__resource_definition_uuid__operation_type__key UNIQUE (function_, resource_definition_uuid_, operation_type_);
+
+
+--
+-- Name: policy_ policy__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.policy_
+    ADD CONSTRAINT policy__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -5891,6 +6184,22 @@ ALTER TABLE ONLY security_.event_
 
 ALTER TABLE ONLY security_.event_
     ADD CONSTRAINT event__session_uuid__fkey FOREIGN KEY (session_uuid_) REFERENCES security_.session_(uuid_);
+
+
+--
+-- Name: policy_ policy__after_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.policy_
+    ADD CONSTRAINT policy__after_uuid__fkey FOREIGN KEY (after_uuid_) REFERENCES security_.policy_(uuid_);
+
+
+--
+-- Name: policy_ policy__resource_definition_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.policy_
+    ADD CONSTRAINT policy__resource_definition_uuid__fkey FOREIGN KEY (resource_definition_uuid_) REFERENCES security_.resource_definition_(uuid_);
 
 
 --
