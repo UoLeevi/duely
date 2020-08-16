@@ -11,7 +11,8 @@ $$
 DECLARE
   _resource_name text;
   _data jsonb;
-  _result jsonb;
+  _result_0 jsonb;
+  _result_1 jsonb;
   _visitor_jwt text;
   _user_jwt text;
   _record_0 RECORD;
@@ -47,8 +48,8 @@ BEGIN
       "name": "Test Agency"
     }
   }';
-  SELECT * INTO _result FROM operation_.create_resource_(_resource_name, _data);
-  -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result;
+  SELECT * INTO _result_0 FROM operation_.create_resource_(_resource_name, _data);
+  -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
 
 
   -- TEST INVALID QUERY OPERATION
@@ -61,14 +62,14 @@ BEGIN
 
 
   -- TEST VALID QUERY OPERATION
-  SELECT * INTO _result FROM operation_.query_resource_(_result->>'id');
-  -- RAISE NOTICE E'query_resource_(text):\n%', _result;
+  SELECT * INTO _result_1 FROM operation_.query_resource_(_result_0->>'id');
+  -- RAISE NOTICE E'query_resource_(text):\n%', _result_1;
 
 
   -- TEST INVALID UPDATE OPERATION
   _data := '{"not existing key": "test"}';
   BEGIN
-    PERFORM operation_.update_resource_(_result->>'id', _data);
+    PERFORM operation_.update_resource_(_result_1->>'id', _data);
     RAISE EXCEPTION 'Should not be able to update resource using these arguments.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -77,8 +78,8 @@ BEGIN
 
   -- TEST VALID UPDATE OPERATION
   _data := '{"name": "test-123"}';
-  SELECT * INTO _result FROM operation_.update_resource_(_result->>'id', _data);
-  --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result;
+  SELECT * INTO _result_1 FROM operation_.update_resource_(_result_1->>'id', _data);
+  --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result_1;
 
 
   -- TEST INVALID DELETE OPERATION
@@ -91,8 +92,9 @@ BEGIN
 
 
   -- TEST VALID DELETE OPERATION
-  SELECT * INTO _result FROM operation_.delete_resource_(_result->>'id');
-  --RAISE NOTICE E'delete_resource_(text):\n%', _result;
+  SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_0->'agency'->>'id');
+  SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_0->>'id');
+  --RAISE NOTICE E'delete_resource_(text):\n%', _result_1;
 
 
   PERFORM operation_.log_out_user_();

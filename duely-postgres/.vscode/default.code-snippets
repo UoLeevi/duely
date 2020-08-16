@@ -6,6 +6,7 @@
     "body": [
       "-- psql -U duely -d duely -f tests/${TM_FILENAME}",
       "",
+      "\\c",
       "\\echo 'TEST ${1:00} STARTED'",
       "\\set ON_ERROR_STOP true",
       "\\set QUIET true",

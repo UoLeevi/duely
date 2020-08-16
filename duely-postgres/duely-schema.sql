@@ -681,6 +681,38 @@ $$;
 ALTER FUNCTION internal_.notify_jsonb_() OWNER TO postgres;
 
 --
+-- Name: query_owner_resource_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.query_owner_resource_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS TABLE(resource_definition_ security_.resource_definition_, resource_ application_.resource_)
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    AS $_$
+DECLARE
+  _owner_resource_definition security_.resource_definition_;
+  _owner_resource application_.resource_;
+BEGIN
+  SELECT * INTO _owner_resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource_definition.owner_uuid_;
+
+  EXECUTE format($$
+    SELECT *
+    FROM application_.resource_
+    WHERE uuid_ = ($1->>'%1$I')::uuid
+  $$,
+  _owner_resource_definition.name_ || '_uuid_')
+  INTO _owner_resource
+  USING _data;
+
+  RETURN QUERY
+    SELECT _owner_resource_definition resource_definition_, _owner_resource resource_;
+END
+$_$;
+
+
+ALTER FUNCTION internal_.query_owner_resource_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: resource_delete_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -722,7 +754,7 @@ BEGIN
   FROM security_.resource_definition_
   WHERE uuid_ = _resource_definition.owner_uuid_;
 
-  IF _owner_resource_definition IS NOT NULL THEN
+  IF _owner_resource_definition.uuid_ IS NOT NULL THEN
     EXECUTE format($$
       SELECT %1$I
       FROM _new_table;
@@ -784,7 +816,7 @@ BEGIN
   FROM security_.resource_definition_
   WHERE uuid_ = _resource_definition.owner_uuid_;
 
-  IF _owner_resource_definition IS NOT NULL THEN
+  IF _owner_resource_definition.uuid_ IS NOT NULL THEN
     EXECUTE format($$
       SELECT %1$I
       FROM _new_table;
@@ -3031,6 +3063,29 @@ $$;
 ALTER FUNCTION policy_.logged_in_user_can_query_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
+-- Name: logged_in_user_can_query_theme_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.logged_in_user_can_query_theme_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.active_subject_
+    WHERE type_ = 'user'
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, name_, image_logo_uuid_, image_hero_uuid_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_, color_error_, color_success_, agency_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.logged_in_user_can_query_theme_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: manager_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3089,6 +3144,25 @@ $$;
 ALTER FUNCTION policy_.owner_can_change_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_theme_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_theme_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN array_cat(_keys, '{image_logo_uuid_, image_hero_uuid_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_, color_error_, color_success_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_theme_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: owner_can_create_agency_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3111,6 +3185,28 @@ $$;
 
 
 ALTER FUNCTION policy_.owner_can_create_agency_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: owner_can_create_theme_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_theme_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)  
+  ) THEN
+    RETURN array_cat(_keys, '{name_, image_logo_uuid_, image_hero_uuid_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_, color_error_, color_success_, agency_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_theme_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: owner_can_invite_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4559,6 +4655,10 @@ e84918a7-9e8e-4522-b400-4d258d8e1346	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy
 cdc2d6a0-b00e-4763-bad3-d2b43bf0c3c0	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 72066618-a466-4b71-965f-891edcb33c6f	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 69d40b30-226f-4dbf-8e86-564022464cc7	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+21a0e344-7b24-4f76-b267-363419f490d3	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.logged_in_user_can_query_theme_(security_.resource_definition_,application_.resource_,text[])	query	\N
+7fe3d163-1f55-4916-9f1f-f345c01e7773	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_create_theme_(security_.resource_definition_,jsonb,text[])	create	\N
+95c5b9d6-3df7-4ace-961a-b817262783e4	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_change_theme_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+781a2064-6530-4452-83d6-04347be6c845	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
@@ -4643,6 +4743,7 @@ COPY security_.resource_definition_ (uuid_, id_prefix_, name_, table_, owner_uui
 e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	\N
 957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	\N
 d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
+88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
 \.
 
 
@@ -5460,6 +5561,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.ser
 
 
 --
+-- Name: theme_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
+
+
+--
 -- Name: stripe_account_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -5670,6 +5778,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.ser
 
 
 --
+-- Name: theme_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
+
+
+--
 -- Name: stripe_account_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -5877,6 +5992,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.age
 --
 
 CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+
+
+--
+-- Name: theme_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
 
 
 --
