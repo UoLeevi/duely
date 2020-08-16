@@ -369,6 +369,124 @@ $$;
 ALTER PROCEDURE internal_.drop_resource_(_table regclass) OWNER TO postgres;
 
 --
+-- Name: dynamic_delete_(regclass, uuid); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.dynamic_delete_(_table regclass, _uuid uuid) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $_$
+BEGIN
+  EXECUTE '
+    DELETE FROM ' || _table || '
+    WHERE uuid_ = $1
+    RETURINING uuid_;
+  '
+  INTO _uuid
+  USING _uuid;
+
+  RETURN _uuid;
+END
+$_$;
+
+
+ALTER FUNCTION internal_.dynamic_delete_(_table regclass, _uuid uuid) OWNER TO postgres;
+
+--
+-- Name: dynamic_insert_(regclass, jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.dynamic_insert_(_table regclass, _data jsonb) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $_$
+DECLARE
+  _column_list text;
+  _select_list text;
+  _uuid uuid;
+BEGIN
+  SELECT string_agg(format('%1$I', k), ','), string_agg(format('d.%1$I', k), ',') INTO _column_list, _select_list
+  FROM jsonb_object_keys(_data) k;
+
+  EXECUTE '
+    INSERT INTO ' || _table || ' (' || _column_list || ')
+    SELECT ' || _select_list || '
+    FROM json_populate_record(NULL::' || _table || ', $1) d
+    RETURNING uuid_;
+  '
+  INTO _uuid
+  USING _data;
+
+  RETURN _data;
+END
+$_$;
+
+
+ALTER FUNCTION internal_.dynamic_insert_(_table regclass, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: dynamic_select_(regclass, uuid, text[]); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.dynamic_select_(_table regclass, _uuid uuid, _keys text[]) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $_$
+DECLARE
+  _select_list text;
+  _data jsonb;
+BEGIN
+  SELECT string_agg(format('%1$I', k), ',') INTO _select_list
+  FROM unnest(_keys) k;
+
+  EXECUTE '
+    WITH
+      r AS (
+        SELECT ' || _select_list || '
+        FROM ' || _table || '
+        WHERE uuid_ = $1
+      )
+    SELECT to_jsonb(r)
+    FROM r;
+  '
+  INTO _data
+  USING _uuid;
+
+  RETURN _data;
+END
+$_$;
+
+
+ALTER FUNCTION internal_.dynamic_select_(_table regclass, _uuid uuid, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: dynamic_update_(regclass, uuid, jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.dynamic_update_(_table regclass, _uuid uuid, _data jsonb) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $_$
+DECLARE
+  _update_list text;
+BEGIN
+  SELECT string_agg(format('%1$I = d.%1$I', k), ',') INTO _update_list
+  FROM jsonb_object_keys(_data) k;
+
+  EXECUTE '
+    UPDATE ' || _table || ' r
+    SET ' || _update_list || '
+    FROM json_populate_record(NULL::' || _table || ', $1) d
+    WHERE r.uuid_ = $2
+    RETURINING uuid_;
+  '
+  INTO _uuid
+  USING _data, _uuid;
+
+  RETURN _uuid;
+END
+$_$;
+
+
+ALTER FUNCTION internal_.dynamic_update_(_table regclass, _uuid uuid, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: jwt_sign_hs256_(jsonb, bytea); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -1017,7 +1135,7 @@ ALTER FUNCTION operation_.create_client_(_agency_uuid uuid, _name text, _email_a
 
 CREATE FUNCTION operation_.create_resource_(_resource_name text, _data jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
-    AS $_$
+    AS $$
 DECLARE
   _resource_definition security_.resource_definition_;
   _column_list text;
@@ -1034,17 +1152,7 @@ BEGIN
 
   PERFORM security_.control_create_(_resource_definition, _data);
 
-  SELECT string_agg(format('%1$I', k), ','), string_agg(format('d.%1$I', k), ',') INTO _column_list, _select_list
-  FROM jsonb_object_keys(_data) k;
-
-  EXECUTE '
-    INSERT INTO ' || _resource_definition.table_ || ' (' || _column_list || ')
-    SELECT ' || _select_list || '
-    FROM json_populate_record(NULL::' || _resource_definition.table_ || ', $1) d
-    RETURNING uuid_;
-  '
-  INTO _uuid
-  USING _data;
+  SELECT * INTO _uuid FROM internal_.dynamic_insert_(_resource_definition.table_, _data);
 
   SELECT id_ INTO _id
   FROM application_.resource_
@@ -1052,7 +1160,7 @@ BEGIN
 
   RETURN operation_.query_resource_(_id);
 END
-$_$;
+$$;
 
 
 ALTER FUNCTION operation_.create_resource_(_resource_name text, _data jsonb) OWNER TO postgres;
@@ -1303,7 +1411,7 @@ ALTER FUNCTION operation_.delete_client_(_client_uuid uuid) OWNER TO postgres;
 
 CREATE FUNCTION operation_.delete_resource_(_id text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
-    AS $_$
+    AS $$
 DECLARE
   _resource application_.resource_;
   _resource_definition security_.resource_definition_;
@@ -1322,15 +1430,11 @@ BEGIN
 
   SELECT * INTO _data FROM operation_.query_resource_(_id);
 
-  EXECUTE '
-    DELETE FROM ' || _resource_definition.table_ || '
-    WHERE uuid_ = $1;
-  '
-  USING _resource.uuid_;
+  PERFORM internal_.dynamic_delete_(_resource_definition.table_, _resource.uuid_);
 
   RETURN _data;
 END
-$_$;
+$$;
 
 
 ALTER FUNCTION operation_.delete_resource_(_id text) OWNER TO postgres;
@@ -1936,7 +2040,7 @@ ALTER FUNCTION operation_.query_image_(_image_uuid uuid) OWNER TO postgres;
 
 CREATE FUNCTION operation_.query_resource_(_id text) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
-    AS $_$
+    AS $$
 DECLARE
   _resource application_.resource_;
   _resource_definition security_.resource_definition_;
@@ -1957,25 +2061,11 @@ BEGIN
 
   SELECT * INTO _keys FROM security_.control_query_(_resource_definition, _resource);
 
-  SELECT string_agg(format('%1$I', k), ',') INTO _select_list
-  FROM unnest(_keys) k;
-
-  EXECUTE '
-    WITH
-      r AS (
-        SELECT ' || _select_list || '
-        FROM ' || _resource_definition.table_ || '
-        WHERE uuid_ = $1
-      )
-    SELECT to_jsonb(r)
-    FROM r;
-  '
-  INTO _data
-  USING _resource.uuid_;
+  SELECT *  INTO _data FROM internal_.dynamic_select_(_resource_definition.table_, _resource.uuid_, _keys);
 
   RETURN internal_.convert_from_internal_format_(_data);
 END
-$_$;
+$$;
 
 
 ALTER FUNCTION operation_.query_resource_(_id text) OWNER TO postgres;
@@ -2660,7 +2750,7 @@ ALTER FUNCTION operation_.start_email_address_verification_(_email_address text,
 
 CREATE FUNCTION operation_.update_resource_(_id text, _data jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
-    AS $_$
+    AS $$
 DECLARE
   _resource application_.resource_;
   _resource_definition security_.resource_definition_;
@@ -2679,20 +2769,11 @@ BEGIN
 
   PERFORM security_.control_update_(_resource_definition, _resource, _data);
 
-  SELECT string_agg(format('%1$I = d.%1$I', k), ',') INTO _update_list
-  FROM jsonb_object_keys(_data) k;
-
-  EXECUTE '
-    UPDATE ' || _resource_definition.table_ || ' r
-    SET ' || _update_list || '
-    FROM json_populate_record(NULL::' || _resource_definition.table_ || ', $1) d
-    WHERE r.uuid_ = $2;
-  '
-  USING _data, _resource.uuid_;
+  PERFORM internal_.dynamic_update_(_resource_definition.table_, _resource.uuid_, _data); 
 
   RETURN operation_.query_resource_(_id);
 END
-$_$;
+$$;
 
 
 ALTER FUNCTION operation_.update_resource_(_id text, _data jsonb) OWNER TO postgres;
