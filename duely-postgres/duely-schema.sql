@@ -116,6 +116,27 @@ CREATE TYPE public.operation_type_ AS ENUM (
 ALTER TYPE public.operation_type_ OWNER TO postgres;
 
 --
+-- Name: assign_subdomain_owner_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.assign_subdomain_owner_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  INSERT INTO security_.subject_assignment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
+  SELECT r.uuid_, _subdomain.uuid_, current_setting('security_.token_.subject_uuid_'::text, false)::uuid
+  FROM security_.role_ r
+  CROSS JOIN _subdomain
+  WHERE r.name_ = 'owner';
+
+  RETURN NULL;
+END
+$$;
+
+
+ALTER FUNCTION internal_.assign_subdomain_owner_() OWNER TO postgres;
+
+--
 -- Name: audit_delete_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -281,20 +302,23 @@ $$;
 ALTER FUNCTION internal_.convert_to_internal_format_(_data jsonb) OWNER TO postgres;
 
 --
--- Name: create_or_update_owned_resource_(text, text, text, text, jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
+-- Name: create_or_update_owned_resource_(text, text, text, jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
-CREATE FUNCTION internal_.create_or_update_owned_resource_(_owner_resource_name text, _owner_id text, _resource_name text, _id text, _data jsonb) RETURNS jsonb
+CREATE FUNCTION internal_.create_or_update_owned_resource_(_owner_resource_name text, _owner_id text, _resource_name text, _data jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
+DECLARE
+  _id text;
 BEGIN
   _data := _data || jsonb_build_object(_owner_resource_name || '_id', _owner_id);
+  _id := _data->>'id';
 
   IF _id IS NULL THEN
     _data := operation_.create_resource_(_resource_name, _data);
   ELSE
     _data := _data - 'id';
-    _data := operation_.update_resource_(_resource.id_, _data);
+    _data := operation_.update_resource_(id_, _data);
   END IF;
 
   RETURN _data;
@@ -302,7 +326,7 @@ END
 $$;
 
 
-ALTER FUNCTION internal_.create_or_update_owned_resource_(_owner_resource_name text, _owner_id text, _resource_name text, _id text, _data jsonb) OWNER TO postgres;
+ALTER FUNCTION internal_.create_or_update_owned_resource_(_owner_resource_name text, _owner_id text, _resource_name text, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: drop_auditing_(regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
@@ -433,13 +457,13 @@ BEGIN
   EXECUTE '
     INSERT INTO ' || _table || ' (' || _column_list || ')
     SELECT ' || _select_list || '
-    FROM json_populate_record(NULL::' || _table || ', $1) d
+    FROM jsonb_populate_record(NULL::' || _table || ', $1) d
     RETURNING uuid_;
   '
   INTO _uuid
   USING _data;
 
-  RETURN _data;
+  RETURN _uuid;
 END
 $_$;
 
@@ -496,7 +520,7 @@ BEGIN
   EXECUTE '
     UPDATE ' || _table || ' r
     SET ' || _update_list || '
-    FROM json_populate_record(NULL::' || _table || ', $1) d
+    FROM jsonb_populate_record(NULL::' || _table || ', $1) d
     WHERE r.uuid_ = $2
     RETURINING uuid_;
   '
@@ -617,7 +641,6 @@ CREATE FUNCTION internal_.resource_insert_() RETURNS trigger
 DECLARE
   _resource_definition security_.resource_definition_;
   _owner_resource_definition security_.resource_definition_;
-  _owner_table_name name;
   _uuid uuid;
   _owner_uuid uuid;
   _search text;
@@ -625,30 +648,28 @@ DECLARE
 BEGIN
   SELECT * INTO _resource_definition
   FROM security_.resource_definition_
-  WHERE name_ = TG_TABLE_NAME;
+  WHERE table_ = format('%1$I.%2I', TG_TABLE_SCHEMA, TG_TABLE_NAME)::regclass;
 
   SELECT * INTO _owner_resource_definition
   FROM security_.resource_definition_
-  WHERE uuid_ = _resource_definition.uuid_;
+  WHERE uuid_ = _resource_definition.owner_uuid_;
 
-  SELECT c.relname INTO _owner_table_name
-  FROM pg_catalog.pg_class c
-  WHERE c.oid = _owner_resource_definition.table_;
-
-  EXECUTE format($$
-    SELECT uuid_, %1$I owner_uuid_
-    FROM _new_table
-  $$,
-  _owner_table_name || 'uuid_')
-  INTO _uuid, _owner_uuid;
+  IF _owner_resource_definition IS NOT NULL THEN
+    EXECUTE format($$
+      SELECT %1$I
+      FROM _new_table;
+    $$,
+    _owner_resource_definition.name_ || '_uuid_')
+    INTO _owner_uuid;
+  END IF;
 
   IF _resource_definition.search_ IS NOT NULL THEN
     EXECUTE format($$
-      SELECT %1$I($1);
+      SELECT %1$I(uuid_)
+      FROM _new_table;
     $$,
     _resource_definition.search_)
-    INTO _search
-    USING _uuid;
+    INTO _search;
   ELSE
     SELECT name_ INTO _search
     FROM _new_table;
@@ -657,7 +678,8 @@ BEGIN
   LOOP
     BEGIN
       INSERT INTO application_.resource_ (uuid_, search_, owner_uuid_, definition_uuid_, id_)
-      SELECT _uuid, _search, _owner_uuid, _resource_definition.uuid_, _resource_definition.id_prefix_ || '_' || substring(replace(_uuid::text, '-', '' ) FOR _id_len);
+      SELECT uuid_, _search, _owner_uuid, _resource_definition.uuid_, _resource_definition.id_prefix_ || '_' || substring(replace(uuid_::text, '-', '' ) FOR _id_len)
+      FROM _new_table;
       EXIT;
     EXCEPTION WHEN unique_violation THEN
       _id_len := _id_len + 2;
@@ -681,7 +703,6 @@ CREATE FUNCTION internal_.resource_update_() RETURNS trigger
 DECLARE
   _resource_definition security_.resource_definition_;
   _owner_resource_definition security_.resource_definition_;
-  _owner_table_name name;
   _uuid uuid;
   _owner_uuid uuid;
   _search text;
@@ -689,21 +710,17 @@ DECLARE
 BEGIN
   SELECT * INTO _resource_definition
   FROM security_.resource_definition_
-  WHERE name_ = TG_TABLE_NAME;
+  WHERE table_ = format('%1$I.%2I', TG_TABLE_SCHEMA, TG_TABLE_NAME)::regclass;
 
   SELECT * INTO _owner_resource_definition
   FROM security_.resource_definition_
-  WHERE uuid_ = _resource_definition.uuid_;
-
-  SELECT c.relname INTO _owner_table_name
-  FROM pg_catalog.pg_class c
-  WHERE c.oid = _owner_resource_definition.table_;
+  WHERE uuid_ = _resource_definition.owner_uuid_;
 
   EXECUTE format($$
     SELECT uuid_, %1$I owner_uuid_
     FROM _new_table
   $$,
-  _owner_table_name || 'uuid_')
+  _owner_resource_definition.name_ || '_uuid_')
   INTO _uuid, _owner_uuid;
 
   IF _resource_definition.search_ IS NOT NULL THEN
@@ -722,8 +739,8 @@ BEGIN
   SET
     search_ = _search,
     owner_uuid_ = _owner_uuid
-  FROM security_.resource_
-  WHERE uuid_ = _uuid;
+  FROM _new_table t
+  WHERE uuid_ = t.uuid_;
 
   RETURN NULL;
 END
@@ -851,8 +868,8 @@ BEGIN
   EXECUTE '
     DROP TRIGGER IF EXISTS tr_after_insert_resource_insert_ ON ' || _table || ';
     CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
-    DROP TRIGGER IF EXISTS tr_after_insert_resource_insert_ ON ' || _table || ';
-    CREATE TRIGGER tr_after_insert_resource_insert_ AFTER UPDATE ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+    DROP TRIGGER IF EXISTS tr_after_update_resource_update_ ON ' || _table || ';
+    CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
     DROP TRIGGER IF EXISTS tr_after_delete_resource_delete_ ON ' || _table || ';
     CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON ' || _table || ' REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
   ';
@@ -1088,7 +1105,7 @@ ALTER FUNCTION operation_.cancel_user_invite_(_invite_uuid uuid) OWNER TO postgr
 
 CREATE TABLE application_.agency_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    subdomain_uuid_ uuid,
+    subdomain_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
@@ -1109,6 +1126,8 @@ DECLARE
   _agency application_.agency_;
   _arg RECORD;
 BEGIN
+  -- DEPRECATED: Use create_resource_ instead.
+
   SELECT _name agency_name_, _subdomain_name subdomain_name_ INTO _arg; 
   PERFORM security_.control_operation_('create_agency_', _arg);
 
@@ -1119,11 +1138,6 @@ BEGIN
   INSERT INTO application_.agency_ (subdomain_uuid_, name_)
   VALUES (_subdomain_uuid, _name)
   RETURNING * INTO _agency;
-
-  INSERT INTO security_.subject_assignment_ (role_uuid_, subdomain_uuid_, subject_uuid_)
-  SELECT r.uuid_, _subdomain_uuid, current_setting('security_.token_.subject_uuid_'::text, false)::uuid
-  FROM security_.role_ r
-  WHERE r.name_ = 'owner';
 
   RETURN _agency;
 END
@@ -2851,6 +2865,36 @@ END
 ALTER FUNCTION policy_.agent_in_agency_(_arg anyelement) OWNER TO postgres;
 
 --
+-- Name: resource_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.resource_ (
+    uuid_ uuid NOT NULL,
+    id_ text NOT NULL,
+    search_ text,
+    owner_uuid_ uuid,
+    definition_uuid_ uuid NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.resource_ OWNER TO postgres;
+
+--
+-- Name: anyone_can_query_basic_agency_fields_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_query_basic_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE sql STABLE SECURITY DEFINER
+    AS $$
+  SELECT array_cat(_keys, '{uuid_, subdomain_uuid_, name_}');
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_query_basic_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: argument_is_not_null_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -2908,6 +2952,52 @@ END;
 ALTER FUNCTION policy_.logged_in_(_arg anyelement) OWNER TO postgres;
 
 --
+-- Name: logged_in_user_can_create_subdomain_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.logged_in_user_can_create_subdomain_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+SELECT 1
+    FROM security_.active_subject_
+    WHERE type_ = 'user'
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, name_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.logged_in_user_can_create_subdomain_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: logged_in_user_can_query_name_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.logged_in_user_can_query_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+SELECT 1
+    FROM security_.active_subject_
+    WHERE type_ = 'user'
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, name_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.logged_in_user_can_query_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: manager_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -2930,6 +3020,30 @@ END
 ALTER FUNCTION policy_.manager_in_agency_(_arg anyelement) OWNER TO postgres;
 
 --
+-- Name: owner_can_create_agency_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_agency_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.active_role_
+    WHERE name_ = 'owner'
+      AND subdomain_uuid_ = (_data->>'subdomain_uuid_')::uuid
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, subdomain_uuid_, name_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_agency_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: owner_can_invite_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -2950,48 +3064,6 @@ END
 
 
 ALTER FUNCTION policy_.owner_can_invite_(_arg anyelement) OWNER TO postgres;
-
---
--- Name: resource_; Type: TABLE; Schema: application_; Owner: postgres
---
-
-CREATE TABLE application_.resource_ (
-    uuid_ uuid NOT NULL,
-    id_ text NOT NULL,
-    search_ text,
-    owner_uuid_ uuid,
-    definition_uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE application_.resource_ OWNER TO postgres;
-
---
--- Name: owner_can_query_all_agency_fields_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
---
-
-CREATE FUNCTION policy_.owner_can_query_all_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM security_.active_role_ r
-    JOIN application_.agency_ a ON a.subdomain_uuid_ = r.subdomain_uuid_
-    WHERE r.name_ = 'owner'
-      AND a.uuid_ = _arg.agency_uuid_
-  ) THEN
-    RETURN array_cat(_keys, '{uuid_, subdomain_uuid_, name_}');
-  ELSE
-    RETURN _keys;
-  END IF;
-END
-$$;
-
-
-ALTER FUNCTION policy_.owner_can_query_all_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: owner_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3160,7 +3232,7 @@ BEGIN
     END IF;
 
     EXECUTE '
-      SELECT ' || _policy_function || '($1, $2, $3);
+      SELECT ' || _policy_function::regproc || '($1, $2, $3);
     '
     INTO _keys
     USING _resource_definition, _data, _keys;
@@ -3209,7 +3281,7 @@ BEGIN
     END IF;
 
     EXECUTE '
-      SELECT ' || _policy_function || '($1, $2, $3, $4);
+      SELECT ' || _policy_function::regproc || '($1, $2, $3, $4);
     '
     USING _resource_definition, _resource;
   END LOOP;
@@ -3331,7 +3403,7 @@ BEGIN
     END IF;
 
     EXECUTE '
-      SELECT ' || _policy_function || '($1, $2, $3);
+      SELECT ' || _policy_function::regproc || '($1, $2, $3);
     '
     INTO _keys
     USING _resource_definition, _resource, _keys;
@@ -3341,7 +3413,7 @@ BEGIN
     RAISE 'Unauthorized.' USING ERRCODE = '42501';
   END IF;
 
-  SELECT array_agg(DISTINCT k)
+  SELECT array_agg(DISTINCT k) INTO _keys
   FROM unnest(_keys) k;
 
   RETURN _keys;
@@ -3383,7 +3455,7 @@ BEGIN
     END IF;
 
     EXECUTE '
-      SELECT ' || _policy_function || '($1, $2, $3, $4);
+      SELECT ' || _policy_function::regproc || '($1, $2, $3, $4);
     '
     INTO _keys
     USING _resource_definition, _resource, _data, _keys;
@@ -3556,6 +3628,7 @@ CREATE FUNCTION security_.register_policy_(_table regclass, _operation_type publ
     LANGUAGE plpgsql
     AS $$
 DECLARE
+  _resource_definition_uuid uuid;
   _policy security_.policy_;
   _function regprocedure;
   _after_uuid uuid;
@@ -3568,10 +3641,15 @@ BEGIN
     WHEN 'delete' THEN (_policy_function || '(security_.resource_definition_, application_.resource_)')::regprocedure
   END INTO _function;
 
+  SELECT uuid_ INTO _resource_definition_uuid
+  FROM security_.resource_definition_
+  WHERE table_ = _table;
+
   IF _after_policy_function IS NOT NULL THEN
     SELECT uuid_ INTO _after_uuid
     FROM security_.policy_
-    WHERE CASE _operation_type
+    WHERE resource_definition_uuid_ = _resource_definition_uuid
+      AND CASE _operation_type
       WHEN 'query' THEN (_policy_function || '(security_.resource_definition_, application_.resource_, text[])')::regprocedure
       WHEN 'create' THEN (_policy_function || '(security_.resource_definition_, jsonb, text[])')::regprocedure
       WHEN 'update' THEN (_policy_function || '(security_.resource_definition_, application_.resource_, jsonb, text[])')::regprocedure
@@ -3585,12 +3663,12 @@ BEGIN
 
   SELECT uuid_ INTO _before_uuid
   FROM security_.policy_
-  WHERE after_uuid_ IS NOT DISTINCT FROM _after_uuid;
+  WHERE after_uuid_ IS NOT DISTINCT FROM _after_uuid
+    AND resource_definition_uuid_ = _resource_definition_uuid
+    AND operation_type_ = _operation_type;
 
   INSERT INTO security_.policy_ (function_, after_uuid_, resource_definition_uuid_, operation_type_)
-  SELECT _function, _after_uuid, d.uuid_, _operation_type
-  FROM security_.resource_definition_ d
-  WHERE d.table_ = _table
+  VALUES (_function, _after_uuid, _resource_definition_uuid, _operation_type)
   RETURNING * INTO _policy;
 
   IF _before_uuid IS NOT NULL THEN
@@ -4395,7 +4473,10 @@ a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 02:
 --
 
 COPY security_.policy_ (uuid_, resource_definition_uuid_, function_, operation_type_, after_uuid_) FROM stdin;
-95ea2078-c677-409e-8515-f76aa0b83d84	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_query_all_agency_fields_(security_.resource_definition_,application_.resource_,text[])	query	\N
+3bd8acaf-e137-4d29-ac84-6c9ab020184e	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_query_name_(security_.resource_definition_,application_.resource_,text[])	query	\N
+4834193b-9666-4dbe-89d7-980fd4bab17a	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_create_subdomain_(security_.resource_definition_,jsonb,text[])	create	\N
+5285f600-fb00-4861-8485-7b198c5a90c6	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_create_agency_(security_.resource_definition_,jsonb,text[])	create	\N
+1eea3d78-a0e3-48b1-86b0-b09249dab127	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.anyone_can_query_basic_agency_fields_(security_.resource_definition_,application_.resource_,text[])	query	\N
 \.
 
 
@@ -4477,7 +4558,8 @@ ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b
 --
 
 COPY security_.resource_definition_ (uuid_, id_prefix_, name_, table_, owner_uuid_, search_) FROM stdin;
-957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	\N	\N
+e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	\N
+957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	\N
 d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
 \.
 
@@ -5495,14 +5577,14 @@ CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.servic
 -- Name: agency_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_resource_insert_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
 
 
 --
 -- Name: service_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_resource_insert_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
 
 
 --
@@ -5702,6 +5784,20 @@ CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.servic
 
 
 --
+-- Name: agency_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+
+
+--
+-- Name: service_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+
+
+--
 -- Name: stripe_account_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -5884,6 +5980,20 @@ CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON security_.user_ REF
 
 
 --
+-- Name: subdomain_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
+
+
+--
+-- Name: subdomain_ tr_after_insert_assign_subdomain_owner_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_assign_subdomain_owner_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _subdomain FOR EACH STATEMENT EXECUTE PROCEDURE internal_.assign_subdomain_owner_();
+
+
+--
 -- Name: operation_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -5961,6 +6071,13 @@ CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON security_.user_ REF
 
 
 --
+-- Name: subdomain_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
+
+
+--
 -- Name: operation_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -6035,6 +6152,13 @@ CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.subdomain
 --
 
 CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+
+
+--
+-- Name: subdomain_ tr_after_update_resource_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
 
 
 --

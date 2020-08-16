@@ -1,4 +1,4 @@
--- psql -U duely -d duely -f 00-duely-test.sql
+-- psql -U duely -d duely -f tests/00-duely-test.sql
 
 \c
 \echo 'TEST 00 STARTED'
