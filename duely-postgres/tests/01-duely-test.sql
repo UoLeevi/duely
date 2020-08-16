@@ -48,7 +48,7 @@ BEGIN
     }
   }';
   SELECT * INTO _result FROM operation_.create_resource_(_resource_name, _data);
-  RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result;
+  -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result;
 
 
   -- TEST INVALID QUERY OPERATION
@@ -62,7 +62,7 @@ BEGIN
 
   -- TEST VALID QUERY OPERATION
   SELECT * INTO _result FROM operation_.query_resource_(_result->>'id');
-  --RAISE NOTICE E'query_resource_(text):\n%', _result;
+  -- RAISE NOTICE E'query_resource_(text):\n%', _result;
 
 
   -- TEST INVALID UPDATE OPERATION
@@ -75,24 +75,24 @@ BEGIN
   END;
 
 
-  -- TEST VALID UPDATE OPERATION
-  _data := '{"name": "test-123"}';
-  SELECT * INTO _result FROM operation_.update_resource_(_result->>'id', _data);
-  --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result;
+  -- -- TEST VALID UPDATE OPERATION
+  -- _data := '{"name": "test-123"}';
+  -- SELECT * INTO _result FROM operation_.update_resource_(_result->>'id', _data);
+  -- --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result;
 
 
-  -- TEST INVALID DELETE OPERATION
-  BEGIN
-    PERFORM operation_.delete_resource_('sub_0');
-    RAISE EXCEPTION 'Exception should be raised if no record is deleted.';
-  EXCEPTION WHEN OTHERS THEN
-    -- EXPECTED ERROR
-  END;
+  -- -- TEST INVALID DELETE OPERATION
+  -- BEGIN
+  --   PERFORM operation_.delete_resource_('sub_0');
+  --   RAISE EXCEPTION 'Exception should be raised if no record is deleted.';
+  -- EXCEPTION WHEN OTHERS THEN
+  --   -- EXPECTED ERROR
+  -- END;
 
 
-  -- TEST VALID DELETE OPERATION
-  SELECT * INTO _result FROM operation_.delete_resource_(_result->>'id');
-  --RAISE NOTICE E'delete_resource_(text):\n%', _result;
+  -- -- TEST VALID DELETE OPERATION
+  -- SELECT * INTO _result FROM operation_.delete_resource_(_result->>'id');
+  -- --RAISE NOTICE E'delete_resource_(text):\n%', _result;
 
 
   PERFORM operation_.log_out_user_();
