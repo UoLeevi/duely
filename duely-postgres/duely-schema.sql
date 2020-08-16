@@ -257,6 +257,74 @@ $$;
 
 ALTER FUNCTION internal_.base64url_encode_(_data bytea) OWNER TO postgres;
 
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: resource_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.resource_ (
+    uuid_ uuid NOT NULL,
+    id_ text NOT NULL,
+    search_ text,
+    owner_uuid_ uuid,
+    definition_uuid_ uuid NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.resource_ OWNER TO postgres;
+
+--
+-- Name: resource_definition_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.resource_definition_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    id_prefix_ text NOT NULL,
+    name_ text NOT NULL,
+    table_ regclass NOT NULL,
+    owner_uuid_ uuid,
+    search_ regprocedure
+);
+
+
+ALTER TABLE security_.resource_definition_ OWNER TO postgres;
+
+--
+-- Name: check_resource_role_(security_.resource_definition_, application_.resource_, text); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.check_resource_role_(_resource_definition security_.resource_definition_, _resource application_.resource_, _role_name text) RETURNS boolean
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    AS $$
+BEGIN
+  IF _resource_definition.name_ = 'subdomain' THEN
+    RETURN EXISTS (
+      SELECT 1
+      FROM security_.active_role_ r
+      JOIN security_.subdomain_ d ON d.uuid_ = _resource.uuid_ AND r.subdomain_uuid_ = d.uuid_
+      WHERE r.name_ = _role_name
+    );
+  ELSEIF _resource.owner_uuid_ IS NOT NULL THEN
+    RETURN (
+      SELECT internal_.check_resource_role_(d, r, _role_name)
+      FROM application_.resource_ r
+      JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+      WHERE r.uuid_ = _resource.owner_uuid_
+    );
+  ELSE
+    RETURN 'f';
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION internal_.check_resource_role_(_resource_definition security_.resource_definition_, _resource application_.resource_, _role_name text) OWNER TO postgres;
+
 --
 -- Name: convert_from_internal_format_(jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
@@ -312,13 +380,13 @@ DECLARE
   _id text;
 BEGIN
   _data := _data || jsonb_build_object(_owner_resource_name || '_id', _owner_id);
-  _id := _data->>'id';
 
-  IF _id IS NULL THEN
-    _data := operation_.create_resource_(_resource_name, _data);
-  ELSE
+  IF _data ? 'id' THEN
+    _id := _data->>'id';
     _data := _data - 'id';
     _data := operation_.update_resource_(id_, _data);
+  ELSE
+    _data := operation_.create_resource_(_resource_name, _data);
   END IF;
 
   RETURN _data;
@@ -427,7 +495,7 @@ BEGIN
   EXECUTE '
     DELETE FROM ' || _table || '
     WHERE uuid_ = $1
-    RETURINING uuid_;
+    RETURNING uuid_;
   '
   INTO _uuid
   USING _uuid;
@@ -522,7 +590,7 @@ BEGIN
     SET ' || _update_list || '
     FROM jsonb_populate_record(NULL::' || _table || ', $1) d
     WHERE r.uuid_ = $2
-    RETURINING uuid_;
+    RETURNING r.uuid_;
   '
   INTO _uuid
   USING _data, _uuid;
@@ -716,31 +784,33 @@ BEGIN
   FROM security_.resource_definition_
   WHERE uuid_ = _resource_definition.owner_uuid_;
 
-  EXECUTE format($$
-    SELECT uuid_, %1$I owner_uuid_
-    FROM _new_table
-  $$,
-  _owner_resource_definition.name_ || '_uuid_')
-  INTO _uuid, _owner_uuid;
+  IF _owner_resource_definition IS NOT NULL THEN
+    EXECUTE format($$
+      SELECT %1$I
+      FROM _new_table;
+    $$,
+    _owner_resource_definition.name_ || '_uuid_')
+    INTO _owner_uuid;
+  END IF;
 
   IF _resource_definition.search_ IS NOT NULL THEN
     EXECUTE format($$
-      SELECT %1$I($1);
+      SELECT %1$I(uuid_)
+      FROM _new_table;
     $$,
     _resource_definition.search_)
-    INTO _search
-    USING _uuid;
+    INTO _search;
   ELSE
     SELECT name_ INTO _search
     FROM _new_table;
   END IF;
 
-  UPDATE security_.resource_
+  UPDATE application_.resource_ r
   SET
     search_ = _search,
     owner_uuid_ = _owner_uuid
   FROM _new_table t
-  WHERE uuid_ = t.uuid_;
+  WHERE r.uuid_ = t.uuid_;
 
   RETURN NULL;
 END
@@ -878,10 +948,6 @@ $_$;
 
 
 ALTER PROCEDURE internal_.setup_resource_(_table regclass, _name text, _id_prefix text, _owner_table regclass) OWNER TO postgres;
-
-SET default_tablespace = '';
-
-SET default_with_oids = false;
 
 --
 -- Name: user_invite_; Type: TABLE; Schema: application_; Owner: postgres
@@ -1223,7 +1289,7 @@ BEGIN
   SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.name_, _id, r.key, r.value)) INTO _owned_resources_data
   FROM jsonb_each(_owned_resources_data) r;
 
-  RETURN _data || _owned_resources_data;
+  RETURN _data || COALESCE(_owned_resources_data, '{}'::jsonb);
 END
 $$;
 
@@ -2130,22 +2196,6 @@ $$;
 ALTER FUNCTION operation_.query_resource_(_id text) OWNER TO postgres;
 
 --
--- Name: resource_definition_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.resource_definition_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    id_prefix_ text NOT NULL,
-    name_ text NOT NULL,
-    table_ regclass NOT NULL,
-    owner_uuid_ uuid,
-    search_ regprocedure
-);
-
-
-ALTER TABLE security_.resource_definition_ OWNER TO postgres;
-
---
 -- Name: query_resource_definition_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -2835,7 +2885,7 @@ BEGIN
   SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.name_, _id, r.key, r.value)) INTO _owned_resources_data
   FROM jsonb_each(_owned_resources_data) r;
 
-  RETURN _data || _owned_resources_data;
+  RETURN _data || COALESCE(_owned_resources_data, '{}'::jsonb);
 END
 $$;
 
@@ -2863,23 +2913,6 @@ END
 
 
 ALTER FUNCTION policy_.agent_in_agency_(_arg anyelement) OWNER TO postgres;
-
---
--- Name: resource_; Type: TABLE; Schema: application_; Owner: postgres
---
-
-CREATE TABLE application_.resource_ (
-    uuid_ uuid NOT NULL,
-    id_ text NOT NULL,
-    search_ text,
-    owner_uuid_ uuid,
-    definition_uuid_ uuid NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE application_.resource_ OWNER TO postgres;
 
 --
 -- Name: anyone_can_query_basic_agency_fields_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3018,6 +3051,42 @@ END
 
 
 ALTER FUNCTION policy_.manager_in_agency_(_arg anyelement) OWNER TO postgres;
+
+--
+-- Name: only_owner_can_delete_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.only_owner_can_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF NOT internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.only_owner_can_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: owner_can_change_name_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN array_cat(_keys, '{name_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: owner_can_create_agency_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3269,19 +3338,28 @@ BEGIN
     RAISE 'No active session.' USING ERRCODE = '20000';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1
+    FROM security_.policy_
+    WHERE resource_definition_uuid_ = _resource_definition.uuid_
+      AND operation_type_ = 'delete'
+  ) THEN
+    RAISE 'Unauthorized. No access policies defined.' USING ERRCODE = '42501';
+  END IF;
+
   LOOP
     SELECT uuid_, function_ INTO _policy_uuid, _policy_function
     FROM security_.policy_
     WHERE resource_definition_uuid_ = _resource_definition.uuid_
       AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
-      AND operation_type_ = 'update';
+      AND operation_type_ = 'delete';
 
     IF _policy_function IS NULL THEN
       EXIT;
     END IF;
 
     EXECUTE '
-      SELECT ' || _policy_function::regproc || '($1, $2, $3, $4);
+      SELECT ' || _policy_function::regproc || '($1, $2);
     '
     USING _resource_definition, _resource;
   END LOOP;
@@ -4477,6 +4555,10 @@ COPY security_.policy_ (uuid_, resource_definition_uuid_, function_, operation_t
 4834193b-9666-4dbe-89d7-980fd4bab17a	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_create_subdomain_(security_.resource_definition_,jsonb,text[])	create	\N
 5285f600-fb00-4861-8485-7b198c5a90c6	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_create_agency_(security_.resource_definition_,jsonb,text[])	create	\N
 1eea3d78-a0e3-48b1-86b0-b09249dab127	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.anyone_can_query_basic_agency_fields_(security_.resource_definition_,application_.resource_,text[])	query	\N
+e84918a7-9e8e-4522-b400-4d258d8e1346	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+cdc2d6a0-b00e-4763-bad3-d2b43bf0c3c0	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+72066618-a466-4b71-965f-891edcb33c6f	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+69d40b30-226f-4dbf-8e86-564022464cc7	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
