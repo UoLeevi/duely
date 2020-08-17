@@ -625,6 +625,25 @@ $$;
 ALTER FUNCTION internal_.extract_referenced_resources_jsonb_(_resource_definition_uuid uuid, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: insert_subject_for_user_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.insert_subject_for_user_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  INSERT INTO security_.subject_ (uuid_, type_)
+  SELECT u.uuid_, 'user'
+  FROM _user u;
+
+  RETURN NULL;
+END
+$$;
+
+
+ALTER FUNCTION internal_.insert_subject_for_user_() OWNER TO postgres;
+
+--
 -- Name: jwt_sign_hs256_(jsonb, bytea); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -2024,7 +2043,7 @@ BEGIN
   PERFORM security_.control_operation_('query_active_subject_');
 
   RETURN QUERY
-  SELECT s.uuid_, s.name_, s.type_, u.email_address_
+  SELECT s.uuid_, COALESCE(u.name_, 'visitor') name_, s.type_, u.email_address_
   FROM security_.active_subject_ s
   LEFT JOIN security_.user_ u ON s.uuid_ = u.uuid_;
 
@@ -2801,14 +2820,8 @@ BEGIN
     RAISE 'Invalid data.' USING ERRCODE = '20000';
   END IF;
 
-  WITH _subject AS (
-    INSERT INTO security_.subject_ (name_, type_)
-    VALUES (_name, 'user')
-    RETURNING uuid_
-  )
-  INSERT INTO security_.user_ (uuid_, email_address_, password_hash_)
-  SELECT s.uuid_, _email_address, pgcrypto_.crypt(_password, pgcrypto_.gen_salt('md5'))
-  FROM _subject s
+  INSERT INTO security_.user_ (name_, email_address_, password_hash_)
+  SELECT _name, _email_address, pgcrypto_.crypt(_password, pgcrypto_.gen_salt('md5'))
   RETURNING * INTO _user;
 
   RETURN (SELECT operation_.log_in_user_(_email_address, _password));
@@ -3384,6 +3397,76 @@ END
 
 
 ALTER FUNCTION policy_.subject_is_active_user_(_arg anyelement) OWNER TO postgres;
+
+--
+-- Name: user_can_change_name_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.user_can_change_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.active_subject_ s
+    JOIN _resource r ON s.uuid_ = s.uuid_
+    WHERE s.type_ = 'user'
+  ) THEN
+    RETURN array_cat(_keys, '{name_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.user_can_change_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: user_can_delete_only_themselves_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.user_can_delete_only_themselves_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM security_.active_subject_ s
+    JOIN _resource r ON s.uuid_ = s.uuid_
+    WHERE s.type_ = 'user'
+  ) THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.user_can_delete_only_themselves_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: user_can_query_themselves_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.user_can_query_themselves_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.active_subject_ s
+    JOIN _resource r ON s.uuid_ = s.uuid_
+    WHERE s.type_ = 'user'
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, name_, email_address_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.user_can_query_themselves_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: users_can_remove_themselves_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4279,10 +4362,8 @@ ALTER TABLE public._session OWNER TO postgres;
 
 CREATE TABLE security_.subject_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    name_ text NOT NULL,
-    type_ text NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    name_ text,
+    type_ text NOT NULL
 );
 
 
@@ -4293,9 +4374,12 @@ ALTER TABLE security_.subject_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.user_ (
-    uuid_ uuid NOT NULL,
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     email_address_ text,
-    password_hash_ text
+    password_hash_ text,
+    name_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -4599,20 +4683,21 @@ CREATE TABLE security__audit_.subdomain_ (
 ALTER TABLE security__audit_.subdomain_ OWNER TO postgres;
 
 --
--- Name: subject_; Type: TABLE; Schema: security__audit_; Owner: postgres
+-- Name: user_; Type: TABLE; Schema: security__audit_; Owner: postgres
 --
 
-CREATE TABLE security__audit_.subject_ (
+CREATE TABLE security__audit_.user_ (
     uuid_ uuid,
+    email_address_ text,
+    password_hash_ text,
     name_ text,
-    type_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
 );
 
 
-ALTER TABLE security__audit_.subject_ OWNER TO postgres;
+ALTER TABLE security__audit_.user_ OWNER TO postgres;
 
 --
 -- Data for Name: _session; Type: TABLE DATA; Schema: public; Owner: postgres
@@ -4707,6 +4792,9 @@ d29e82dd-1151-4951-bac5-38051474a9b1	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy
 e96b9766-d1d1-427a-9144-258e77ad6047	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.owner_can_create_image_(security_.resource_definition_,jsonb,text[])	create	\N
 b8bb1737-fb4f-4d40-afba-b8d29a3ebb05	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.owner_can_change_image_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 fce05ef3-4cd5-4b5e-a011-55e20f683556	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+5eafba24-946e-42b5-b82f-b0ff99629965	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_query_themselves_(security_.resource_definition_,application_.resource_,text[])	query	\N
+8c6d2f03-850b-428f-8304-6b9e667c1689	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_change_name_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+a8598fdb-0010-4a1b-9ad9-cfafc3f9e573	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_delete_only_themselves_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
@@ -4793,6 +4881,7 @@ e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	\N
 d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
 88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
 2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	img	image	application_.image_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
+f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	\N
 \.
 
 
@@ -6184,13 +6273,6 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subdomain
 
 
 --
--- Name: subject_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subject_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: policy_assignment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -6202,6 +6284,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.policy_as
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.email_address_verification_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
+-- Name: user_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
 
 
 --
@@ -6230,6 +6319,13 @@ CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON security_.user_ REF
 --
 
 CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
+
+
+--
+-- Name: user_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
 
 
 --
@@ -6275,13 +6371,6 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 
 
 --
--- Name: subject_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: policy_assignment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -6293,6 +6382,20 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.email_address_verification_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: user_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: user_ tr_after_insert_insert_subject_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_insert_subject_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _user FOR EACH STATEMENT EXECUTE PROCEDURE internal_.insert_subject_for_user_();
 
 
 --
@@ -6321,6 +6424,13 @@ CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON security_.user_ REF
 --
 
 CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
+
+
+--
+-- Name: user_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
 
 
 --
@@ -6359,13 +6469,6 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 
 
 --
--- Name: subject_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subject_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: policy_assignment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -6377,6 +6480,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.email_address_verification_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
+-- Name: user_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -6405,6 +6515,13 @@ CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.user_ REF
 --
 
 CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+
+
+--
+-- Name: user_ tr_after_update_resource_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
 
 
 --
@@ -6443,13 +6560,6 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subdomai
 
 
 --
--- Name: subject_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subject_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
 -- Name: policy_assignment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -6461,6 +6571,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.policy_a
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.email_address_verification_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: user_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.user_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -6780,7 +6897,7 @@ ALTER TABLE ONLY security_.token_
 --
 
 ALTER TABLE ONLY security_.user_
-    ADD CONSTRAINT user__uuid__fkey FOREIGN KEY (uuid_) REFERENCES security_.subject_(uuid_) ON DELETE CASCADE;
+    ADD CONSTRAINT user__uuid__fkey FOREIGN KEY (uuid_) REFERENCES security_.subject_(uuid_) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 
 --
