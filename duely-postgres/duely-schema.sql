@@ -1732,9 +1732,7 @@ CREATE TABLE application_.image_ (
     name_ text NOT NULL,
     data_ text NOT NULL,
     color_ text NOT NULL,
-    agency_uuid_ uuid,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    agency_uuid_ uuid NOT NULL
 );
 
 
@@ -3040,6 +3038,29 @@ $$;
 ALTER FUNCTION policy_.logged_in_user_can_create_subdomain_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
+-- Name: logged_in_user_can_query_image_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.logged_in_user_can_query_image_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.active_subject_
+    WHERE type_ = 'user'
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, name_, data_, color_, agency_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.logged_in_user_can_query_image_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: logged_in_user_can_query_name_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3125,6 +3146,25 @@ $$;
 ALTER FUNCTION policy_.only_owner_can_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_image_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_image_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN array_cat(_keys, '{name_, data_, color_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_image_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: owner_can_change_name_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3185,6 +3225,28 @@ $$;
 
 
 ALTER FUNCTION policy_.owner_can_create_agency_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: owner_can_create_image_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_image_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)  
+  ) THEN
+    RETURN array_cat(_keys, '{name_, data_, color_, agency_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_image_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: owner_can_create_theme_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3984,24 +4046,6 @@ CREATE TABLE application__audit_.client_ (
 ALTER TABLE application__audit_.client_ OWNER TO postgres;
 
 --
--- Name: image_; Type: TABLE; Schema: application__audit_; Owner: postgres
---
-
-CREATE TABLE application__audit_.image_ (
-    uuid_ uuid,
-    name_ text,
-    data_ text,
-    color_ text,
-    agency_uuid_ uuid,
-    audit_at_ timestamp with time zone,
-    audit_session_uuid_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE application__audit_.image_ OWNER TO postgres;
-
---
 -- Name: resource_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -4659,6 +4703,10 @@ cdc2d6a0-b00e-4763-bad3-d2b43bf0c3c0	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy
 7fe3d163-1f55-4916-9f1f-f345c01e7773	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_create_theme_(security_.resource_definition_,jsonb,text[])	create	\N
 95c5b9d6-3df7-4ace-961a-b817262783e4	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_change_theme_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 781a2064-6530-4452-83d6-04347be6c845	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+d29e82dd-1151-4951-bac5-38051474a9b1	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.logged_in_user_can_query_image_(security_.resource_definition_,application_.resource_,text[])	query	\N
+e96b9766-d1d1-427a-9144-258e77ad6047	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.owner_can_create_image_(security_.resource_definition_,jsonb,text[])	create	\N
+b8bb1737-fb4f-4d40-afba-b8d29a3ebb05	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.owner_can_change_image_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+fce05ef3-4cd5-4b5e-a011-55e20f683556	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
@@ -4744,6 +4792,7 @@ e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	\N
 957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	\N
 d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
 88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
+2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	img	image	application_.image_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
 \.
 
 
@@ -5372,13 +5421,6 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.theme_
 
 
 --
--- Name: image_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.image_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: service_step_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -5568,6 +5610,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.the
 
 
 --
+-- Name: image_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.image_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
+
+
+--
 -- Name: stripe_account_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -5586,13 +5635,6 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: image_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.image_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -5785,6 +5827,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.the
 
 
 --
+-- Name: image_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.image_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
+
+
+--
 -- Name: stripe_account_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -5803,13 +5852,6 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: image_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.image_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -6002,6 +6044,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.the
 
 
 --
+-- Name: image_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.image_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+
+
+--
 -- Name: stripe_account_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -6020,13 +6069,6 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agenc
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.theme_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: image_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.image_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --

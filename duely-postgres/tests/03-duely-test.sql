@@ -1,7 +1,7 @@
--- psql -U duely -d duely -f tests/02-duely-test.sql
+-- psql -U duely -d duely -f tests/03-duely-test.sql
 
 \c
-\echo 'TEST 02 STARTED'
+\echo 'TEST 03 STARTED'
 \set ON_ERROR_STOP true
 \set QUIET true
 
@@ -39,20 +39,10 @@ BEGIN
   SELECT * INTO _result_0 FROM operation_.create_resource_('subdomain', _data);
   -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_0;
 
-  _resource_name := 'theme';
+  _resource_name := 'image';
 
   -- TEST INVALID CREATE OPERATION
-  _data := '{
-    "name": "missing agency",
-    "color_primary": "#000000",
-    "color_secondary": "#000000",
-    "color_accent": "#000000",
-    "color_background": "#000000",
-    "color_surface": "#000000",
-    "color_error": "#000000",
-    "color_success": "#000000",
-    "agency_id": "agcy_0"
-  }';
+  _data := '{}';
   BEGIN
     PERFORM operation_.create_resource_(_resource_name, _data);
     RAISE EXCEPTION 'Should not be able to create resource using these arguments.';
@@ -62,15 +52,19 @@ BEGIN
 
 
   -- TEST VALID CREATE OPERATION
-  _data := _data || '{ "name": "all black" }';
+  _data := '{
+    "name": "Test Image",
+    "data": "asdasd",
+    "color": "#123456"
+  }';
   _data := jsonb_set(_data, '{agency_id}', _result_0->'agency'->'id');
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
-  -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
+  --RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
 
 
   -- TEST INVALID QUERY OPERATION
   BEGIN
-    PERFORM operation_.query_resource_('theme_0');
+    PERFORM operation_.query_resource_('img_0');
     RAISE EXCEPTION 'Exception should be raised if no matching record was found.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -79,12 +73,12 @@ BEGIN
 
   -- TEST VALID QUERY OPERATION
   SELECT * INTO _result_1 FROM operation_.query_resource_(_result_1->>'id');
-  -- RAISE NOTICE E'query_resource_(text):\n%', _result_1;
+  --RAISE NOTICE E'query_resource_(text):\n%', _result_1;
 
 
   -- TEST INVALID UPDATE OPERATION
   _data := '{
-    "agency_id": "agcy_0"
+    "agency_id": "agcy_123123"
   }';
   BEGIN
     PERFORM operation_.update_resource_(_result_1->>'id', _data);
@@ -96,7 +90,7 @@ BEGIN
 
   -- TEST VALID UPDATE OPERATION
   _data := '{
-    "color_primary": "#ffffff"
+    "color": "#000000"
   }';
   SELECT * INTO _result_1 FROM operation_.update_resource_(_result_1->>'id', _data);
   --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result_1;
@@ -104,7 +98,7 @@ BEGIN
 
   -- TEST INVALID DELETE OPERATION
   BEGIN
-    PERFORM operation_.delete_resource_('theme_0');
+    PERFORM operation_.delete_resource_('img_0');
     RAISE EXCEPTION 'Exception should be raised if no record is deleted.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -120,18 +114,18 @@ BEGIN
   PERFORM operation_.end_session_();
 
 
-  RAISE EXCEPTION 'TEST 02 PASSED' USING errcode = '40000'; -- transaction_rollback
+  RAISE EXCEPTION 'TEST 03 PASSED' USING errcode = '40000'; -- transaction_rollback
 
 EXCEPTION
   WHEN transaction_rollback THEN
-    -- TEST 02 PASSED
+    -- TEST 03 PASSED
     NULL;
 
   WHEN OTHERS THEN
-    RAISE NOTICE 'TEST 02 FAILED';
+    RAISE NOTICE 'TEST 03 FAILED';
     RAISE;
 
 END;
 $$;
 
-\echo 'TEST 02 PASSED'
+\echo 'TEST 03 PASSED'
