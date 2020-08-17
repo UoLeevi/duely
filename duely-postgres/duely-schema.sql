@@ -271,6 +271,7 @@ CREATE TABLE application_.resource_ (
     search_ text,
     owner_uuid_ uuid,
     definition_uuid_ uuid NOT NULL,
+    data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -1147,8 +1148,8 @@ BEGIN
     RAISE 'Active session already exists.' USING ERRCODE = '20000';
   END IF;
 
-  INSERT INTO security_.subject_ (name_, type_)
-  VALUES ('', 'visitor')
+  INSERT INTO security_.subject_ (type_)
+  VALUES ('visitor')
   RETURNING uuid_ INTO _subject_uuid;
 
   SELECT x.value_ INTO _secret
@@ -2582,9 +2583,8 @@ BEGIN
   PERFORM security_.control_operation_('query_user_by_email_address_', _arg);
 
   RETURN QUERY
-  SELECT s.uuid_, s.name_, u.email_address_
-  FROM security_.subject_ s
-  JOIN security_.user_ u ON s.uuid_ = u.uuid_
+  SELECT u.uuid_, u.name_, u.email_address_
+  FROM security_.user_ u
   WHERE u.email_address_ = lower(_email_address);
 
 END
@@ -4138,6 +4138,7 @@ CREATE TABLE application__audit_.resource_ (
     search_ text,
     owner_uuid_ uuid,
     definition_uuid_ uuid,
+    data_ jsonb,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -4362,7 +4363,6 @@ ALTER TABLE public._session OWNER TO postgres;
 
 CREATE TABLE security_.subject_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    name_ text,
     type_ text NOT NULL
 );
 
@@ -4370,32 +4370,13 @@ CREATE TABLE security_.subject_ (
 ALTER TABLE security_.subject_ OWNER TO postgres;
 
 --
--- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.user_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    email_address_ text,
-    password_hash_ text,
-    name_ text NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE security_.user_ OWNER TO postgres;
-
---
 -- Name: active_subject_; Type: VIEW; Schema: security_; Owner: postgres
 --
 
 CREATE VIEW security_.active_subject_ AS
  SELECT s.uuid_,
-    s.name_,
-    s.type_,
-    u.email_address_
-   FROM (security_.subject_ s
-     LEFT JOIN security_.user_ u ON ((s.uuid_ = u.uuid_)))
+    s.type_
+   FROM security_.subject_ s
   WHERE (s.uuid_ = (current_setting('security_.token_.subject_uuid_'::text, true))::uuid);
 
 
@@ -4494,15 +4475,31 @@ CREATE VIEW security_.active_role_ AS
 ALTER TABLE security_.active_role_ OWNER TO postgres;
 
 --
+-- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.user_ (
+    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    email_address_ text,
+    password_hash_ text,
+    name_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE security_.user_ OWNER TO postgres;
+
+--
 -- Name: active_user_; Type: VIEW; Schema: security_; Owner: postgres
 --
 
 CREATE VIEW security_.active_user_ AS
- SELECT s.uuid_,
-    s.name_,
-    u.email_address_
-   FROM (security_.active_subject_ s
-     JOIN security_.user_ u ON ((s.uuid_ = u.uuid_)));
+ SELECT user_.uuid_,
+    user_.name_,
+    user_.email_address_
+   FROM security_.user_
+  WHERE (user_.uuid_ = (current_setting('security_.token_.subject_uuid_'::text, true))::uuid);
 
 
 ALTER TABLE security_.active_user_ OWNER TO postgres;
