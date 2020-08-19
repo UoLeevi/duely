@@ -50,7 +50,7 @@ BEGIN
   }';
   SELECT * INTO _result_0 FROM operation_.create_resource_(_resource_name, _data);
   -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
-
+  ASSERT _result_0 ?& '{ id, name, agency }';
 
   -- TEST INVALID QUERY OPERATION
   BEGIN
@@ -62,8 +62,15 @@ BEGIN
 
 
   -- TEST VALID QUERY OPERATION
+
   SELECT * INTO _result_1 FROM operation_.query_resource_(_result_0->>'id');
   -- RAISE NOTICE E'query_resource_(text):\n%', _result_1;
+  ASSERT _result_1 ?& '{ id, name }';
+
+
+  SELECT * INTO _result_1 FROM operation_.query_resource_all_('subdomain', '{ "name": "test" }');
+  --RAISE NOTICE E'query_resource_all_(text):\n%', _result_1;
+  ASSERT _result_1 ?& '{ id, name }';
 
 
   -- TEST INVALID UPDATE OPERATION
@@ -80,6 +87,7 @@ BEGIN
   _data := '{"name": "test-123"}';
   SELECT * INTO _result_1 FROM operation_.update_resource_(_result_1->>'id', _data);
   --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result_1;
+  ASSERT _result_1 ?& '{ id, name }';
 
 
   -- TEST INVALID DELETE OPERATION

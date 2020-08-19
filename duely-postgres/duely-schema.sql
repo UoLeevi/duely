@@ -268,12 +268,10 @@ SET default_with_oids = false;
 CREATE TABLE application_.resource_ (
     uuid_ uuid NOT NULL,
     id_ text NOT NULL,
-    search_ text,
     owner_uuid_ uuid,
     definition_uuid_ uuid NOT NULL,
     data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    search_ jsonb DEFAULT '{}'::jsonb NOT NULL
 );
 
 
@@ -289,7 +287,7 @@ CREATE TABLE security_.resource_definition_ (
     name_ text NOT NULL,
     table_ regclass NOT NULL,
     owner_uuid_ uuid,
-    search_ regprocedure
+    search_ text[] DEFAULT '{uuid_,name_}'::text[] NOT NULL
 );
 
 
@@ -763,7 +761,8 @@ DECLARE
   _owner_resource_definition security_.resource_definition_;
   _uuid uuid;
   _owner_uuid uuid;
-  _search text;
+  _select_list text;
+  _search jsonb;
   _id_len int := 6;
 BEGIN
   SELECT * INTO _resource_definition
@@ -775,25 +774,27 @@ BEGIN
   WHERE uuid_ = _resource_definition.owner_uuid_;
 
   IF _owner_resource_definition.uuid_ IS NOT NULL THEN
-    EXECUTE format($$
+    EXECUTE format('
       SELECT %1$I
       FROM _new_table;
-    $$,
+    ',
     _owner_resource_definition.name_ || '_uuid_')
     INTO _owner_uuid;
   END IF;
 
-  IF _resource_definition.search_ IS NOT NULL THEN
-    EXECUTE format($$
-      SELECT %1$I(uuid_)
-      FROM _new_table;
-    $$,
-    _resource_definition.search_)
-    INTO _search;
-  ELSE
-    SELECT name_ INTO _search
-    FROM _new_table;
-  END IF;
+  SELECT string_agg(format('%1$I', k), ',') INTO _select_list
+  FROM unnest(_resource_definition.search_) k;
+
+  EXECUTE '
+    WITH
+      r AS (
+        SELECT ' || _select_list || '
+        FROM _new_table
+      )
+    SELECT to_jsonb(r)
+    FROM r;
+  '
+  INTO _search;
 
   LOOP
     BEGIN
@@ -825,7 +826,8 @@ DECLARE
   _owner_resource_definition security_.resource_definition_;
   _uuid uuid;
   _owner_uuid uuid;
-  _search text;
+  _select_list text;
+  _search jsonb;
   _id_len int := 6;
 BEGIN
   SELECT * INTO _resource_definition
@@ -837,25 +839,27 @@ BEGIN
   WHERE uuid_ = _resource_definition.owner_uuid_;
 
   IF _owner_resource_definition.uuid_ IS NOT NULL THEN
-    EXECUTE format($$
+    EXECUTE format('
       SELECT %1$I
       FROM _new_table;
-    $$,
+    ',
     _owner_resource_definition.name_ || '_uuid_')
     INTO _owner_uuid;
   END IF;
 
-  IF _resource_definition.search_ IS NOT NULL THEN
-    EXECUTE format($$
-      SELECT %1$I(uuid_)
-      FROM _new_table;
-    $$,
-    _resource_definition.search_)
-    INTO _search;
-  ELSE
-    SELECT name_ INTO _search
-    FROM _new_table;
-  END IF;
+  SELECT string_agg(format('%1$I', k), ',') INTO _select_list
+  FROM unnest(_resource_definition.search_) k;
+
+  EXECUTE '
+    WITH
+      r AS (
+        SELECT ' || _select_list || '
+        FROM _new_table
+      )
+    SELECT to_jsonb(r)
+    FROM r;
+  '
+  INTO _search;
 
   UPDATE application_.resource_ r
   SET
@@ -946,18 +950,16 @@ $_$;
 ALTER PROCEDURE internal_.setup_notifications_(_table regclass) OWNER TO postgres;
 
 --
--- Name: setup_resource_(regclass, text, text, regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
+-- Name: setup_resource_(regclass, text, text, text[], regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
 --
 
-CREATE PROCEDURE internal_.setup_resource_(_table regclass, _name text, _id_prefix text, _owner_table regclass DEFAULT NULL::regclass)
+CREATE PROCEDURE internal_.setup_resource_(_table regclass, _name text, _id_prefix text, _search text[] DEFAULT '{uuid_,name_}'::text[], _owner_table regclass DEFAULT NULL::regclass)
     LANGUAGE plpgsql
-    AS $_$
+    AS $$
 DECLARE
-  _resource_definition security_.resource_definition_;
   _owner_resource_definition_uuid uuid;
   _table_name name;
   _table_schema name;
-  _search regprocedure;
 BEGIN
   SELECT c.relname, ns.nspname INTO _table_name, _table_schema
   FROM pg_catalog.pg_class c
@@ -968,14 +970,6 @@ BEGIN
   FROM security_.resource_definition_
   WHERE table_ = _owner_table;
 
-  BEGIN
-    SELECT format('operation_.%1$I(uuid)', 'search_' || _table_name)::regprocedure INTO _search;
-  EXCEPTION
-    WHEN OTHERS THEN
-      -- NOT EXIST
-      NULL;
-  END;
-
   INSERT INTO security_.resource_definition_ (id_prefix_, name_, table_, owner_uuid_, search_)
   VALUES (_id_prefix, _name, _table, _owner_resource_definition_uuid, _search)
   ON CONFLICT (table_) DO UPDATE
@@ -983,9 +977,8 @@ BEGIN
     id_prefix_ = _id_prefix,
     name_ = _name,
     table_ = _table,
-    owner_uuid_ = _owner_resource_definition_uuid,
-    search_ = _search
-  RETURNING * INTO _resource_definition;
+    search_ = _search,
+    owner_uuid_ = _owner_resource_definition_uuid;
 
   EXECUTE '
     DROP TRIGGER IF EXISTS tr_after_insert_resource_insert_ ON ' || _table || ';
@@ -996,10 +989,10 @@ BEGIN
     CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON ' || _table || ' REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
   ';
 END
-$_$;
+$$;
 
 
-ALTER PROCEDURE internal_.setup_resource_(_table regclass, _name text, _id_prefix text, _owner_table regclass) OWNER TO postgres;
+ALTER PROCEDURE internal_.setup_resource_(_table regclass, _name text, _id_prefix text, _search text[], _owner_table regclass) OWNER TO postgres;
 
 --
 -- Name: user_invite_; Type: TABLE; Schema: application_; Owner: postgres
@@ -2217,33 +2210,57 @@ ALTER FUNCTION operation_.query_image_(_image_uuid uuid) OWNER TO postgres;
 --
 
 CREATE FUNCTION operation_.query_resource_(_id text) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE sql SECURITY DEFINER
     AS $$
-DECLARE
-  _resource application_.resource_;
-  _resource_definition security_.resource_definition_;
-  _keys text[];
-  _select_list text;
-  _data jsonb;
-BEGIN
-  _data := internal_.convert_to_internal_format_(_data);
-
-  SELECT * INTO _resource
-  FROM application_.resource_ WHERE id_ = _id;
-
-  SELECT * INTO _resource_definition
-  FROM security_.resource_definition_ WHERE uuid_ = _resource.definition_uuid_;
-
-  _keys := security_.control_query_(_resource_definition, _resource);
-  _data := internal_.dynamic_select_(_resource_definition.table_, _resource.uuid_, _keys);
-  _data := internal_.convert_from_internal_format_(_data);
-
-  RETURN _data;
-END
+  SELECT internal_.convert_from_internal_format_(
+    internal_.dynamic_select_(d.table_, r.uuid_, keys_)
+  ) data_
+  FROM application_.resource_ r
+  JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+  CROSS JOIN security_.control_query_(d, r) keys_
+  WHERE r.id_ = _id
 $$;
 
 
 ALTER FUNCTION operation_.query_resource_(_id text) OWNER TO postgres;
+
+--
+-- Name: query_resource_all_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_resource_all_(_resource_name text, _containing jsonb) RETURNS SETOF jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF _containing = '{}'::jsonb THEN
+    RETURN;
+  END IF;
+
+  IF _containing - 'id' = '{}'::jsonb THEN
+    RETURN QUERY
+      SELECT operation_.query_resource_(_containing->>'id');
+  END IF;
+
+  _containing := internal_.convert_to_internal_format_(_containing);
+
+  RETURN QUERY
+    WITH
+      all_ AS (
+        SELECT internal_.dynamic_select_(d.table_, r.uuid_, keys_) data_
+        FROM application_.resource_ r
+        JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+        CROSS JOIN security_.control_query_(d, r) keys_
+        WHERE d.name_ = _resource_name
+          AND r.search_ @> _containing
+      )
+    SELECT internal_.convert_from_internal_format_(all_.data_) query_resource_all_
+    FROM all_
+    WHERE all_.data_ @> _containing;
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_resource_all_(_resource_name text, _containing jsonb) OWNER TO postgres;
 
 --
 -- Name: query_resource_definition_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -4129,25 +4146,6 @@ CREATE TABLE application__audit_.client_ (
 ALTER TABLE application__audit_.client_ OWNER TO postgres;
 
 --
--- Name: resource_; Type: TABLE; Schema: application__audit_; Owner: postgres
---
-
-CREATE TABLE application__audit_.resource_ (
-    uuid_ uuid,
-    id_ text,
-    search_ text,
-    owner_uuid_ uuid,
-    definition_uuid_ uuid,
-    data_ jsonb,
-    audit_at_ timestamp with time zone,
-    audit_session_uuid_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE application__audit_.resource_ OWNER TO postgres;
-
---
 -- Name: service_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -4873,12 +4871,12 @@ ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b
 --
 
 COPY security_.resource_definition_ (uuid_, id_prefix_, name_, table_, owner_uuid_, search_) FROM stdin;
-e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	\N
-957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	\N
-d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
-88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
-2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	img	image	application_.image_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	\N
-f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	\N
+e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	{uuid_,name_}
+957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,name_,subdomain_uuid_}
+d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}
+88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}
+2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	img	image	application_.image_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_}
+f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,email_address_}
 \.
 
 
@@ -5577,13 +5575,6 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.servic
 
 
 --
--- Name: resource_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.resource_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: agency_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -5791,13 +5782,6 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_variant_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: resource_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.resource_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
 
 
 --
@@ -6011,13 +5995,6 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
--- Name: resource_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.resource_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
 -- Name: agency_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -6225,13 +6202,6 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.servi
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_variant_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: resource_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.resource_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --

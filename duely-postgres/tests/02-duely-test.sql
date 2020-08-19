@@ -38,6 +38,7 @@ BEGIN
   }';
   SELECT * INTO _result_0 FROM operation_.create_resource_('subdomain', _data);
   -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_0;
+  ASSERT _result_0 ?& '{ id, name, agency }';
 
   _resource_name := 'theme';
 
@@ -66,6 +67,7 @@ BEGIN
   _data := jsonb_set(_data, '{agency_id}', _result_0->'agency'->'id');
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
   -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
+  ASSERT _result_1 ?& '{ id, name, color_primary, color_secondary, color_accent, color_background, color_surface, color_error, color_success, agency_id }';
 
 
   -- TEST INVALID QUERY OPERATION
@@ -80,6 +82,7 @@ BEGIN
   -- TEST VALID QUERY OPERATION
   SELECT * INTO _result_1 FROM operation_.query_resource_(_result_1->>'id');
   -- RAISE NOTICE E'query_resource_(text):\n%', _result_1;
+  ASSERT _result_1 ?& '{ id, name, color_primary, color_secondary, color_accent, color_background, color_surface, color_error, color_success, agency_id }';
 
 
   -- TEST INVALID UPDATE OPERATION
@@ -100,6 +103,7 @@ BEGIN
   }';
   SELECT * INTO _result_1 FROM operation_.update_resource_(_result_1->>'id', _data);
   --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result_1;
+  ASSERT _result_1 ?& '{ id, name, color_primary, color_secondary, color_accent, color_background, color_surface, color_error, color_success, agency_id }';
 
 
   -- TEST INVALID DELETE OPERATION
@@ -114,6 +118,7 @@ BEGIN
   -- TEST VALID DELETE OPERATION
   SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_1->>'id');
   --RAISE NOTICE E'delete_resource_(text):\n%', _result_1;
+  ASSERT _result_1 ?& '{ id, name, color_primary, color_secondary, color_accent, color_background, color_surface, color_error, color_success, agency_id }';
 
 
   PERFORM operation_.log_out_user_();
