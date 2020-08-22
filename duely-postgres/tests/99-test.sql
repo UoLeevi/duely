@@ -1,9 +1,9 @@
--- psql -U duely -d duely -f tests/00-duely-test.sql
+-- psql -U duely -d duely -f tests/99-test.sql
 
-\c
-\echo 'TEST 00 STARTED'
+\echo 'TEST 99 STARTED'
 \set ON_ERROR_STOP true
 \set QUIET true
+\c duely duely
 
 DO
 LANGUAGE plpgsql
@@ -265,18 +265,18 @@ BEGIN
   PERFORM operation_.end_session_();
 
 
-  RAISE EXCEPTION 'TEST 00 PASSED' USING errcode = '40000'; -- transaction_rollback
+  RAISE EXCEPTION 'TEST 99 PASSED' USING errcode = '40000'; -- transaction_rollback
 
 EXCEPTION
   WHEN transaction_rollback THEN
-    -- TEST 00 PASSED
+    -- TEST 99 PASSED
     NULL;
 
   WHEN OTHERS THEN
-    RAISE NOTICE 'TEST 00 FAILED';
+    RAISE NOTICE 'TEST 99 FAILED';
     RAISE;
 
 END;
 $$;
 
-\echo 'TEST 00 PASSED'
+\echo 'TEST 99 PASSED'

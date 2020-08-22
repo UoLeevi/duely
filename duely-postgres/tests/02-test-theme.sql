@@ -1,9 +1,9 @@
--- psql -U duely -d duely -f tests/03-duely-test.sql
+-- psql -U duely -d duely -f tests/02-test-theme.sql
 
-\c
-\echo 'TEST 03 STARTED'
+\echo 'TEST 02 STARTED'
 \set ON_ERROR_STOP true
 \set QUIET true
+\c duely duely
 
 DO
 LANGUAGE plpgsql
@@ -40,10 +40,20 @@ BEGIN
   -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_0;
   ASSERT _result_0 ?& '{ id, name, agency }';
 
-  _resource_name := 'image';
+  _resource_name := 'theme';
 
   -- TEST INVALID CREATE OPERATION
-  _data := '{}';
+  _data := '{
+    "name": "missing agency",
+    "color_primary": "#000000",
+    "color_secondary": "#000000",
+    "color_accent": "#000000",
+    "color_background": "#000000",
+    "color_surface": "#000000",
+    "color_error": "#000000",
+    "color_success": "#000000",
+    "agency_id": "agcy_0"
+  }';
   BEGIN
     PERFORM operation_.create_resource_(_resource_name, _data);
     RAISE EXCEPTION 'Should not be able to create resource using these arguments.';
@@ -53,20 +63,16 @@ BEGIN
 
 
   -- TEST VALID CREATE OPERATION
-  _data := '{
-    "name": "Test Image",
-    "data": "asdasd",
-    "color": "#123456"
-  }';
+  _data := _data || '{ "name": "all black" }';
   _data := jsonb_set(_data, '{agency_id}', _result_0->'agency'->'id');
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
-  --RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
-  ASSERT _result_1 ?& '{ id, name, data, color }';
+  -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
+  ASSERT _result_1 ?& '{ id, name, color_primary, color_secondary, color_accent, color_background, color_surface, color_error, color_success, agency_id }';
 
 
   -- TEST INVALID QUERY OPERATION
   BEGIN
-    PERFORM operation_.query_resource_('img_0');
+    PERFORM operation_.query_resource_('theme_0');
     RAISE EXCEPTION 'Exception should be raised if no matching record was found.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -75,13 +81,13 @@ BEGIN
 
   -- TEST VALID QUERY OPERATION
   SELECT * INTO _result_1 FROM operation_.query_resource_(_result_1->>'id');
-  --RAISE NOTICE E'query_resource_(text):\n%', _result_1;
-  ASSERT _result_1 ?& '{ id, name, data, color }';
+  -- RAISE NOTICE E'query_resource_(text):\n%', _result_1;
+  ASSERT _result_1 ?& '{ id, name, color_primary, color_secondary, color_accent, color_background, color_surface, color_error, color_success, agency_id }';
 
 
   -- TEST INVALID UPDATE OPERATION
   _data := '{
-    "agency_id": "agcy_123123"
+    "agency_id": "agcy_0"
   }';
   BEGIN
     PERFORM operation_.update_resource_(_result_1->>'id', _data);
@@ -93,16 +99,16 @@ BEGIN
 
   -- TEST VALID UPDATE OPERATION
   _data := '{
-    "color": "#000000"
+    "color_primary": "#ffffff"
   }';
   SELECT * INTO _result_1 FROM operation_.update_resource_(_result_1->>'id', _data);
   --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result_1;
-  ASSERT _result_1 ?& '{ id, name, data, color }';
+  ASSERT _result_1 ?& '{ id, name, color_primary, color_secondary, color_accent, color_background, color_surface, color_error, color_success, agency_id }';
 
 
   -- TEST INVALID DELETE OPERATION
   BEGIN
-    PERFORM operation_.delete_resource_('img_0');
+    PERFORM operation_.delete_resource_('theme_0');
     RAISE EXCEPTION 'Exception should be raised if no record is deleted.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -112,25 +118,25 @@ BEGIN
   -- TEST VALID DELETE OPERATION
   SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_1->>'id');
   --RAISE NOTICE E'delete_resource_(text):\n%', _result_1;
-  ASSERT _result_1 ?& '{ id, name, data, color }';
+  ASSERT _result_1 ?& '{ id, name, color_primary, color_secondary, color_accent, color_background, color_surface, color_error, color_success, agency_id }';
 
 
   PERFORM operation_.log_out_user_();
   PERFORM operation_.end_session_();
 
 
-  RAISE EXCEPTION 'TEST 03 PASSED' USING errcode = '40000'; -- transaction_rollback
+  RAISE EXCEPTION 'TEST 02 PASSED' USING errcode = '40000'; -- transaction_rollback
 
 EXCEPTION
   WHEN transaction_rollback THEN
-    -- TEST 03 PASSED
+    -- TEST 02 PASSED
     NULL;
 
   WHEN OTHERS THEN
-    RAISE NOTICE 'TEST 03 FAILED';
+    RAISE NOTICE 'TEST 02 FAILED';
     RAISE;
 
 END;
 $$;
 
-\echo 'TEST 03 PASSED'
+\echo 'TEST 02 PASSED'
