@@ -185,6 +185,7 @@ ALTER TABLE security_.sign_up_ ALTER COLUMN data_ SET DEFAULT '{}'::jsonb;
 ALTER TABLE security_.sign_up_ ALTER COLUMN uuid_ DROP DEFAULT;
 ALTER TABLE application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT pgcrypto_.gen_random_uuid();
 
+
 CREATE OR REPLACE FUNCTION internal_.resource_insert_(_resource_definition security_.resource_definition_, _record jsonb) RETURNS application_.resource_
     LANGUAGE plpgsql
     AS $_$
