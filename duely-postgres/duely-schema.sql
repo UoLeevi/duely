@@ -1206,7 +1206,11 @@ BEGIN
   INSERT INTO security_.sign_up_(uuid_, email_address_, name_, data_, password_hash_)
   SELECT NEW.uuid_, NEW.email_address_, NEW.name_, COALESCE(NEW.data_, '{}'::jsonb), pgcrypto_.crypt(NEW.password_, pgcrypto_.gen_salt('md5'));
 
+<<<<<<< HEAD
   RETURN NEW;
+=======
+  RETURN NULL;
+>>>>>>> 7e35e2e31d3f3339a2b95953f69639d8932703dd
 END
 $$;
 
