@@ -116,6 +116,20 @@ CREATE TYPE public.operation_type_ AS ENUM (
 ALTER TYPE public.operation_type_ OWNER TO postgres;
 
 --
+-- Name: verification_status_; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.verification_status_ AS ENUM (
+    'started',
+    'verified',
+    'cancelled',
+    'expired'
+);
+
+
+ALTER TYPE public.verification_status_ OWNER TO postgres;
+
+--
 -- Name: assign_subdomain_owner_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -369,16 +383,21 @@ $$;
 ALTER FUNCTION internal_.convert_to_internal_format_(_data jsonb) OWNER TO postgres;
 
 --
--- Name: create_or_update_owned_resource_(text, text, text, jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
+-- Name: create_or_update_owned_resource_(regclass, text, text, jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
-CREATE FUNCTION internal_.create_or_update_owned_resource_(_owner_resource_name text, _owner_id text, _resource_name text, _data jsonb) RETURNS jsonb
+CREATE FUNCTION internal_.create_or_update_owned_resource_(_owner_table regclass, _owner_id text, _resource_name text, _data jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
   _id text;
+  _owner_column text;
 BEGIN
-  _data := _data || jsonb_build_object(_owner_resource_name || '_id', _owner_id);
+  SELECT relname || 'id' INTO _owner_column
+  FROM pg_class 
+  WHERE oid = _owner_table;
+
+  _data := _data || jsonb_build_object(_owner_column, _owner_id);
 
   IF _data ? 'id' THEN
     _id := _data->>'id';
@@ -393,7 +412,20 @@ END
 $$;
 
 
-ALTER FUNCTION internal_.create_or_update_owned_resource_(_owner_resource_name text, _owner_id text, _resource_name text, _data jsonb) OWNER TO postgres;
+ALTER FUNCTION internal_.create_or_update_owned_resource_(_owner_table regclass, _owner_id text, _resource_name text, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: current_subject_uuid_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.current_subject_uuid_() RETURNS uuid
+    LANGUAGE sql STABLE
+    AS $$
+  SELECT COALESCE(current_setting('security_.token_.subject_uuid_'::text, true)::uuid, '00000000-0000-0000-0000-000000000000'::uuid);
+$$;
+
+
+ALTER FUNCTION internal_.current_subject_uuid_() OWNER TO postgres;
 
 --
 -- Name: drop_auditing_(regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
@@ -530,6 +562,8 @@ BEGIN
   INTO _uuid
   USING _data;
 
+  ASSERT _uuid IS NOT NULL, 'internal_.dynamic_insert_ returned NULL';
+
   RETURN _uuid;
 END
 $_$;
@@ -594,6 +628,8 @@ BEGIN
   INTO _uuid
   USING _data, _uuid;
 
+  ASSERT _uuid IS NOT NULL, 'internal_.dynamic_update_ returned NULL';
+
   RETURN _uuid;
 END
 $_$;
@@ -613,7 +649,8 @@ CREATE FUNCTION internal_.extract_referenced_resources_jsonb_(_resource_definiti
     _owned AS (
       SELECT jsonb_object_agg(r.key, r.value) data_
       FROM jsonb_each(_data) r
-      JOIN security_.resource_definition_ d ON r.key = d.name_
+      JOIN pg_class c ON c.relname = r.key || '_'
+      JOIN security_.resource_definition_ d ON d.table_ = c.oid
       WHERE d.owner_uuid_ = _resource_definition_uuid
     )
   SELECT _data - ARRAY(SELECT jsonb_object_keys(_owned.data_)) owner_, _owned.data_ owned_
@@ -750,6 +787,29 @@ $$;
 ALTER FUNCTION internal_.resource_delete_() OWNER TO postgres;
 
 --
+-- Name: resource_delete_sign_up_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_delete_sign_up_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _resource_definition security_.resource_definition_;
+BEGIN
+
+  DELETE FROM application_.resource_ r
+  USING _old_table d
+  WHERE d.uuid_ = r.uuid_;
+
+  RETURN NULL;
+
+END;
+$$;
+
+
+ALTER FUNCTION internal_.resource_delete_sign_up_() OWNER TO postgres;
+
+--
 -- Name: resource_insert_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -758,54 +818,13 @@ CREATE FUNCTION internal_.resource_insert_() RETURNS trigger
     AS $_$
 DECLARE
   _resource_definition security_.resource_definition_;
-  _owner_resource_definition security_.resource_definition_;
-  _uuid uuid;
-  _owner_uuid uuid;
-  _select_list text;
-  _search jsonb;
-  _id_len int := 6;
 BEGIN
   SELECT * INTO _resource_definition
   FROM security_.resource_definition_
   WHERE table_ = format('%1$I.%2I', TG_TABLE_SCHEMA, TG_TABLE_NAME)::regclass;
 
-  SELECT * INTO _owner_resource_definition
-  FROM security_.resource_definition_
-  WHERE uuid_ = _resource_definition.owner_uuid_;
-
-  IF _owner_resource_definition.uuid_ IS NOT NULL THEN
-    EXECUTE format('
-      SELECT %1$I
-      FROM _new_table;
-    ',
-    _owner_resource_definition.name_ || '_uuid_')
-    INTO _owner_uuid;
-  END IF;
-
-  SELECT string_agg(format('%1$I', k), ',') INTO _select_list
-  FROM unnest(_resource_definition.search_) k;
-
-  EXECUTE '
-    WITH
-      r AS (
-        SELECT ' || _select_list || '
-        FROM _new_table
-      )
-    SELECT to_jsonb(r)
-    FROM r;
-  '
-  INTO _search;
-
-  LOOP
-    BEGIN
-      INSERT INTO application_.resource_ (uuid_, search_, owner_uuid_, definition_uuid_, id_)
-      SELECT uuid_, _search, _owner_uuid, _resource_definition.uuid_, _resource_definition.id_prefix_ || '_' || substring(replace(uuid_::text, '-', '' ) FOR _id_len)
-      FROM _new_table;
-      EXIT;
-    EXCEPTION WHEN unique_violation THEN
-      _id_len := _id_len + 2;
-    END;
-  END LOOP;
+  PERFORM internal_.resource_insert_(_resource_definition, to_jsonb(r))
+  FROM _new_table r;
 
   RETURN NULL;
 END
@@ -813,6 +832,96 @@ $_$;
 
 
 ALTER FUNCTION internal_.resource_insert_() OWNER TO postgres;
+
+--
+-- Name: resource_insert_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_insert_(_resource_definition security_.resource_definition_, _record jsonb) RETURNS application_.resource_
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  _resource application_.resource_;
+  _owner_resource_definition security_.resource_definition_;
+  _uuid uuid;
+  _owner_uuid uuid;
+  _select_list text;
+  _search jsonb DEFAULT '{}'::jsonb;
+  _id_len int := 6;
+BEGIN
+  SELECT * INTO _owner_resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource_definition.owner_uuid_;
+
+  IF _owner_resource_definition.uuid_ IS NOT NULL THEN
+    EXECUTE format('
+      SELECT ($1->>%1$L)::uuid;
+    ',
+    _owner_resource_definition.name_ || '_uuid_')
+    INTO _owner_uuid
+    USING _record;
+  END IF;
+
+  IF _resource_definition.search_ <> '{}'::text[] THEN
+    SELECT string_agg(format('
+      $1->%1$L %1$I
+    ', k), ',') INTO _select_list
+    FROM unnest(_resource_definition.search_) k;
+
+    EXECUTE '
+      WITH
+        r AS (
+          SELECT ' || _select_list || '
+        )
+      SELECT to_jsonb(r)
+      FROM r;
+    '
+    INTO _search
+    USING _record;
+  END IF;
+
+  LOOP
+    BEGIN
+      INSERT INTO application_.resource_ (uuid_, search_, owner_uuid_, definition_uuid_, id_)
+      SELECT (_record->>'uuid_')::uuid, _search, _owner_uuid, _resource_definition.uuid_, _resource_definition.id_prefix_ || '_' || substring(replace(_record->>'uuid_', '-', '' ) FOR _id_len)
+      RETURNING * INTO _resource;
+      EXIT;
+    EXCEPTION WHEN unique_violation THEN
+      _id_len := _id_len + 2;
+    END;
+  END LOOP;
+
+  RETURN _resource;
+END
+$_$;
+
+
+ALTER FUNCTION internal_.resource_insert_(_resource_definition security_.resource_definition_, _record jsonb) OWNER TO postgres;
+
+--
+-- Name: resource_insert_sign_up_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_insert_sign_up_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _resource_definition security_.resource_definition_;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE name_ = 'sign up';
+
+  PERFORM internal_.resource_insert_(_resource_definition, to_jsonb(r))
+  FROM _new_table r;
+
+  RETURN NULL;
+
+END;
+$$;
+
+
+ALTER FUNCTION internal_.resource_insert_sign_up_() OWNER TO postgres;
 
 --
 -- Name: resource_update_(); Type: FUNCTION; Schema: internal_; Owner: postgres
@@ -823,50 +932,13 @@ CREATE FUNCTION internal_.resource_update_() RETURNS trigger
     AS $_$
 DECLARE
   _resource_definition security_.resource_definition_;
-  _owner_resource_definition security_.resource_definition_;
-  _uuid uuid;
-  _owner_uuid uuid;
-  _select_list text;
-  _search jsonb;
-  _id_len int := 6;
 BEGIN
   SELECT * INTO _resource_definition
   FROM security_.resource_definition_
   WHERE table_ = format('%1$I.%2I', TG_TABLE_SCHEMA, TG_TABLE_NAME)::regclass;
 
-  SELECT * INTO _owner_resource_definition
-  FROM security_.resource_definition_
-  WHERE uuid_ = _resource_definition.owner_uuid_;
-
-  IF _owner_resource_definition.uuid_ IS NOT NULL THEN
-    EXECUTE format('
-      SELECT %1$I
-      FROM _new_table;
-    ',
-    _owner_resource_definition.name_ || '_uuid_')
-    INTO _owner_uuid;
-  END IF;
-
-  SELECT string_agg(format('%1$I', k), ',') INTO _select_list
-  FROM unnest(_resource_definition.search_) k;
-
-  EXECUTE '
-    WITH
-      r AS (
-        SELECT ' || _select_list || '
-        FROM _new_table
-      )
-    SELECT to_jsonb(r)
-    FROM r;
-  '
-  INTO _search;
-
-  UPDATE application_.resource_ r
-  SET
-    search_ = _search,
-    owner_uuid_ = _owner_uuid
-  FROM _new_table t
-  WHERE r.uuid_ = t.uuid_;
+  PERFORM internal_.resource_update_(_resource_definition, to_jsonb(r))
+  FROM _new_table r;
 
   RETURN NULL;
 END
@@ -874,6 +946,91 @@ $_$;
 
 
 ALTER FUNCTION internal_.resource_update_() OWNER TO postgres;
+
+--
+-- Name: resource_update_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_update_(_resource_definition security_.resource_definition_, _record jsonb) RETURNS application_.resource_
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  _resource application_.resource_;
+  _owner_resource_definition security_.resource_definition_;
+  _uuid uuid;
+  _owner_uuid uuid;
+  _select_list text;
+  _search jsonb DEFAULT '{}'::jsonb;
+BEGIN
+  SELECT * INTO _owner_resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource_definition.owner_uuid_;
+
+  IF _owner_resource_definition.uuid_ IS NOT NULL THEN
+    EXECUTE format('
+      SELECT ($1->>%1$L)::uuid;
+    ',
+    _owner_resource_definition.name_ || '_uuid_')
+    INTO _owner_uuid
+    USING _record;
+  END IF;
+
+  IF _resource_definition.search_ <> '{}'::text[] THEN
+    SELECT string_agg(format('
+      $1->%1$L %1$I
+    ', k), ',') INTO _select_list
+    FROM unnest(_resource_definition.search_) k;
+
+    EXECUTE '
+      WITH
+        r AS (
+          SELECT ' || _select_list || '
+        )
+      SELECT to_jsonb(r)
+      FROM r;
+    '
+    INTO _search
+    USING _record;
+  END IF;
+
+  UPDATE application_.resource_ r
+  SET
+    search_ = _search,
+    owner_uuid_ = _owner_uuid
+  WHERE r.uuid_ = (_record->>'uuid_')::uuid
+  RETURNING * INTO _resource;
+
+  RETURN _resource;
+END
+$_$;
+
+
+ALTER FUNCTION internal_.resource_update_(_resource_definition security_.resource_definition_, _record jsonb) OWNER TO postgres;
+
+--
+-- Name: resource_update_sign_up_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_update_sign_up_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _resource_definition security_.resource_definition_;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE name_ = 'sign up';
+
+  PERFORM internal_.resource_update_(_resource_definition, to_jsonb(r))
+  FROM _new_table r;
+
+  RETURN NULL;
+
+END;
+$$;
+
+
+ALTER FUNCTION internal_.resource_update_sign_up_() OWNER TO postgres;
 
 --
 -- Name: setup_auditing_(regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
@@ -980,19 +1137,122 @@ BEGIN
     search_ = _search,
     owner_uuid_ = _owner_resource_definition_uuid;
 
-  EXECUTE '
-    DROP TRIGGER IF EXISTS tr_after_insert_resource_insert_ ON ' || _table || ';
-    CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
-    DROP TRIGGER IF EXISTS tr_after_update_resource_update_ ON ' || _table || ';
-    CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
-    DROP TRIGGER IF EXISTS tr_after_delete_resource_delete_ ON ' || _table || ';
-    CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON ' || _table || ' REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
-  ';
+  IF EXISTS (
+    SELECT 1
+    FROM pg_class
+    WHERE oid = _table AND relkind = 'r'
+  ) THEN
+    EXECUTE '
+      DROP TRIGGER IF EXISTS tr_after_insert_resource_insert_ ON ' || _table || ';
+      CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+      DROP TRIGGER IF EXISTS tr_after_update_resource_update_ ON ' || _table || ';
+      CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON ' || _table || ' REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+      DROP TRIGGER IF EXISTS tr_after_delete_resource_delete_ ON ' || _table || ';
+      CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON ' || _table || ' REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+    ';
+  ELSEIF EXISTS (
+    SELECT 1
+    FROM pg_class
+    WHERE oid = _table AND relkind = 'v'
+  ) THEN
+    -- No triggers for views. Resource need to be updated manually with AFTER TRIGGERS on the base tables;
+    NULL;
+  ELSE
+    RAISE 'Resource is not table or view.' USING ERRCODE = '20000';
+  END IF;
 END
 $$;
 
 
 ALTER PROCEDURE internal_.setup_resource_(_table regclass, _name text, _id_prefix text, _search text[], _owner_table regclass) OWNER TO postgres;
+
+--
+-- Name: try_cancel_signup_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.try_cancel_signup_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _uuid uuid;
+BEGIN
+  UPDATE security_.sign_up_
+  SET 
+    status_ = 'cancelled',
+    started_at_ = CURRENT_TIMESTAMP
+  WHERE uuid_ = OLD.uuid_
+    AND status_ IN ('started', 'cancelled')
+  RETURNING uuid_ INTO _uuid;
+
+  IF uuid_ IS NULL THEN
+    RETURN NULL;
+  ELSE
+    RETURN NEW;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION internal_.try_cancel_signup_() OWNER TO postgres;
+
+--
+-- Name: try_start_signup_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.try_start_signup_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  INSERT INTO security_.sign_up_(uuid_, email_address_, name_, data_, password_hash_)
+  SELECT NEW.uuid_, NEW.email_address_, NEW.name_, COALESCE(NEW.data_, '{}'::jsonb), pgcrypto_.crypt(NEW.password_, pgcrypto_.gen_salt('md5'));
+
+  RETURN NEW;
+END
+$$;
+
+
+ALTER FUNCTION internal_.try_start_signup_() OWNER TO postgres;
+
+--
+-- Name: try_verify_signup_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.try_verify_signup_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _uuid uuid;
+  _sign_up security_.sign_up_;
+  _user_uuid uuid;
+BEGIN
+  SELECT * INTO _sign_up
+  FROM security_.sign_up_
+  WHERE uuid_ = NEW.uuid_
+    AND status_ = 'started'
+  FOR UPDATE;
+
+  INSERT INTO security_.user_ (email_address_, name_, password_hash_)
+  SELECT _sign_up.email_address_, _sign_up.name_, _sign_up.password_hash_
+  RETURNING uuid_ INTO _user_uuid;
+
+  UPDATE security_.sign_up_
+  SET 
+    status_ = 'verified',
+    started_at_ = CURRENT_TIMESTAMP,
+    user_uuid_ = _user_uuid
+  WHERE uuid_ = _sign_up.uuid_
+  RETURNING uuid_ INTO _uuid;
+
+  IF uuid_ IS NULL THEN
+    RETURN NULL;
+  ELSE
+    RETURN NEW;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION internal_.try_verify_signup_() OWNER TO postgres;
 
 --
 -- Name: user_invite_; Type: TABLE; Schema: application_; Owner: postgres
@@ -1331,7 +1591,7 @@ BEGIN
 
   _data := operation_.query_resource_(_id);
 
-  SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.name_, _id, r.key, r.value)) INTO _owned_resources_data
+  SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.table_, _id, r.key, r.value)) INTO _owned_resources_data
   FROM jsonb_each(_owned_resources_data) r;
 
   RETURN _data || COALESCE(_owned_resources_data, '{}'::jsonb);
@@ -2942,7 +3202,7 @@ BEGIN
 
   _data := operation_.query_resource_(_id);
 
-  SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.name_, _id, r.key, r.value)) INTO _owned_resources_data
+  SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.table_, _id, r.key, r.value)) INTO _owned_resources_data
   FROM jsonb_each(_owned_resources_data) r;
 
   RETURN _data || COALESCE(_owned_resources_data, '{}'::jsonb);
@@ -2975,6 +3235,36 @@ END
 ALTER FUNCTION policy_.agent_in_agency_(_arg anyelement) OWNER TO postgres;
 
 --
+-- Name: anyone_can_cancel_signup_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_cancel_signup_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  NULL;
+END
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_cancel_signup_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: anyone_can_create_sign_up_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_create_sign_up_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  RETURN array_cat(_keys, '{email_address_, name_, data_, password_}');
+END
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_create_sign_up_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: anyone_can_query_basic_agency_fields_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -2986,6 +3276,25 @@ $$;
 
 
 ALTER FUNCTION policy_.anyone_can_query_basic_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: anyone_can_verify_signup_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_verify_signup_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN array_cat(_keys, '{verified_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_verify_signup_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: argument_is_not_null_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3394,6 +3703,30 @@ END
 
 
 ALTER FUNCTION policy_.service_variant_status_contains_only_live_(_arg anyelement) OWNER TO postgres;
+
+--
+-- Name: sign_up_can_be_queried_by_initiator_subject_uuid_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.sign_up_can_be_queried_by_initiator_subject_uuid_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.sign_up_
+    WHERE initiator_subject_uuid_ = internal_.current_subject_uuid_()
+      AND uuid_ = _resource.uuid_
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, user_uuid_, data_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.sign_up_can_be_queried_by_initiator_subject_uuid_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: subject_is_active_user_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4111,6 +4444,50 @@ CREATE TABLE application_.service_variant_ (
 ALTER TABLE application_.service_variant_ OWNER TO postgres;
 
 --
+-- Name: sign_up_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.sign_up_ (
+    uuid_ uuid NOT NULL,
+    user_uuid_ uuid,
+    email_address_ text NOT NULL,
+    name_ text NOT NULL,
+    password_hash_ text NOT NULL,
+    data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
+    started_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    expires_at_ timestamp with time zone DEFAULT (CURRENT_TIMESTAMP + '01:00:00'::interval) NOT NULL,
+    status_ public.verification_status_ DEFAULT 'started'::public.verification_status_ NOT NULL,
+    status_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    initiator_subject_uuid_ uuid DEFAULT internal_.current_subject_uuid_() NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE security_.sign_up_ OWNER TO postgres;
+
+--
+-- Name: sign_up_; Type: VIEW; Schema: application_; Owner: postgres
+--
+
+CREATE VIEW application_.sign_up_ AS
+ SELECT s.uuid_,
+    s.user_uuid_,
+    s.email_address_,
+    s.name_,
+    s.data_,
+    NULL::text AS password_,
+        CASE s.status_
+            WHEN 'verified'::public.verification_status_ THEN true
+            ELSE false
+        END AS verified_
+   FROM security_.sign_up_ s
+  WHERE ((s.status_ = 'verified'::public.verification_status_) OR ((CURRENT_TIMESTAMP >= s.started_at_) AND (CURRENT_TIMESTAMP <= s.expires_at_)));
+
+
+ALTER TABLE application_.sign_up_ OWNER TO postgres;
+
+--
 -- Name: agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -4663,6 +5040,30 @@ CREATE TABLE security__audit_.secret_ (
 ALTER TABLE security__audit_.secret_ OWNER TO postgres;
 
 --
+-- Name: sign_up_; Type: TABLE; Schema: security__audit_; Owner: postgres
+--
+
+CREATE TABLE security__audit_.sign_up_ (
+    uuid_ uuid,
+    user_uuid_ uuid,
+    email_address_ text,
+    name_ text,
+    password_hash_ text,
+    data_ jsonb,
+    started_at_ timestamp with time zone,
+    expires_at_ timestamp with time zone,
+    status_ public.verification_status_,
+    status_at_ timestamp with time zone,
+    initiator_subject_uuid_ uuid,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE security__audit_.sign_up_ OWNER TO postgres;
+
+--
 -- Name: subdomain_; Type: TABLE; Schema: security__audit_; Owner: postgres
 --
 
@@ -4693,6 +5094,13 @@ CREATE TABLE security__audit_.user_ (
 
 
 ALTER TABLE security__audit_.user_ OWNER TO postgres;
+
+--
+-- Name: sign_up_ uuid_; Type: DEFAULT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT pgcrypto_.gen_random_uuid();
+
 
 --
 -- Data for Name: _session; Type: TABLE DATA; Schema: public; Owner: postgres
@@ -4790,6 +5198,10 @@ fce05ef3-4cd5-4b5e-a011-55e20f683556	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy
 5eafba24-946e-42b5-b82f-b0ff99629965	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_query_themselves_(security_.resource_definition_,application_.resource_,text[])	query	\N
 8c6d2f03-850b-428f-8304-6b9e667c1689	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_change_name_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 a8598fdb-0010-4a1b-9ad9-cfafc3f9e573	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_delete_only_themselves_(security_.resource_definition_,application_.resource_)	delete	\N
+96be86e8-c8b4-430f-befa-1045f9ced98a	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.sign_up_can_be_queried_by_initiator_subject_uuid_(security_.resource_definition_,application_.resource_,text[])	query	\N
+cdeef182-edc7-4120-a301-c174a5e6a837	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_create_sign_up_(security_.resource_definition_,jsonb,text[])	create	\N
+937cbfad-1ad2-4219-a11d-268ff9839fdc	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_verify_signup_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+cb4cdf3a-a99b-44df-8027-8352de2333b9	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_cancel_signup_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
@@ -4877,6 +5289,7 @@ d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-
 88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}
 2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	img	image	application_.image_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_}
 f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,email_address_}
+3b56d171-3e69-41ca-9a98-d1a3abc9170b	su	sign up	application_.sign_up_	\N	{}
 \.
 
 
@@ -4899,6 +5312,14 @@ e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-000
 COPY security_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_session_uuid_) FROM stdin;
 64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
 040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+\.
+
+
+--
+-- Data for Name: sign_up_; Type: TABLE DATA; Schema: security_; Owner: postgres
+--
+
+COPY security_.sign_up_ (uuid_, user_uuid_, email_address_, name_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, audit_at_, audit_session_uuid_) FROM stdin;
 \.
 
 
@@ -5049,6 +5470,14 @@ e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-000
 COPY security__audit_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
 040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+\.
+
+
+--
+-- Data for Name: sign_up_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
+--
+
+COPY security__audit_.sign_up_ (uuid_, user_uuid_, email_address_, name_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 \.
 
 
@@ -5421,6 +5850,14 @@ ALTER TABLE ONLY security_.session_
 
 
 --
+-- Name: sign_up_ sign_up__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.sign_up_
+    ADD CONSTRAINT sign_up__pkey PRIMARY KEY (uuid_);
+
+
+--
 -- Name: subdomain_ subdomain__name__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
 --
 
@@ -5481,6 +5918,13 @@ ALTER TABLE ONLY security_.user_
 --
 
 CREATE UNIQUE INDEX email_address_verification__email_address__idx ON security_.email_address_verification_ USING btree (email_address_) WHERE (status_ IS NULL);
+
+
+--
+-- Name: sign_up__email_address__idx; Type: INDEX; Schema: security_; Owner: postgres
+--
+
+CREATE UNIQUE INDEX sign_up__email_address__idx ON security_.sign_up_ USING btree (email_address_) WHERE (status_ = 'started'::public.verification_status_);
 
 
 --
@@ -6205,6 +6649,27 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.servi
 
 
 --
+-- Name: sign_up_ tr_instead_of_delete_try_cancel_signup_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_instead_of_delete_try_cancel_signup_ INSTEAD OF DELETE ON application_.sign_up_ FOR EACH ROW EXECUTE PROCEDURE internal_.try_cancel_signup_();
+
+
+--
+-- Name: sign_up_ tr_instead_of_insert_try_start_signup_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_instead_of_insert_try_start_signup_ INSTEAD OF INSERT ON application_.sign_up_ FOR EACH ROW EXECUTE PROCEDURE internal_.try_start_signup_();
+
+
+--
+-- Name: sign_up_ tr_instead_of_update_try_verify_signup_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_instead_of_update_try_verify_signup_ INSTEAD OF UPDATE ON application_.sign_up_ FOR EACH ROW EXECUTE PROCEDURE internal_.try_verify_signup_();
+
+
+--
 -- Name: operation_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -6261,6 +6726,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.user_ REF
 
 
 --
+-- Name: sign_up_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.sign_up_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+
+
+--
 -- Name: subject_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -6293,6 +6765,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON security_.subdom
 --
 
 CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
+
+
+--
+-- Name: sign_up_ tr_after_delete_resource_delete_sign_up_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_sign_up_ AFTER DELETE ON security_.sign_up_ REFERENCING OLD TABLE AS _old_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_delete_sign_up_();
 
 
 --
@@ -6359,6 +6838,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 
 
 --
+-- Name: sign_up_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: user_ tr_after_insert_insert_subject_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -6398,6 +6884,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON security_.subdom
 --
 
 CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
+
+
+--
+-- Name: sign_up_ tr_after_insert_resource_insert_sign_up_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_sign_up_ AFTER INSERT ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_sign_up_();
 
 
 --
@@ -6457,6 +6950,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_
 
 
 --
+-- Name: sign_up_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+
+
+--
 -- Name: subject_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -6489,6 +6989,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON security_.subdom
 --
 
 CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+
+
+--
+-- Name: sign_up_ tr_after_update_resource_update_sign_up_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_sign_up_ AFTER UPDATE ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_sign_up_();
 
 
 --
@@ -6545,6 +7052,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.email_ad
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.user_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+
+
+--
+-- Name: sign_up_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.sign_up_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
 
 
 --
@@ -6825,6 +7339,22 @@ ALTER TABLE ONLY security_.role_hierarchy_
 
 ALTER TABLE ONLY security_.session_
     ADD CONSTRAINT session__token_uuid__fkey FOREIGN KEY (token_uuid_) REFERENCES security_.token_(uuid_);
+
+
+--
+-- Name: sign_up_ sign_up__initiator_subject_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.sign_up_
+    ADD CONSTRAINT sign_up__initiator_subject_uuid__fkey FOREIGN KEY (initiator_subject_uuid_) REFERENCES security_.subject_(uuid_);
+
+
+--
+-- Name: sign_up_ sign_up__user_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.sign_up_
+    ADD CONSTRAINT sign_up__user_uuid__fkey FOREIGN KEY (user_uuid_) REFERENCES security_.user_(uuid_);
 
 
 --

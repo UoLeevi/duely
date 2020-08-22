@@ -1,9 +1,9 @@
--- psql -U duely -d duely -f tests/01-duely-test.sql
+-- psql -U duely -d duely -f tests/01-test-subdomain.sql
 
-\c
 \echo 'TEST 01 STARTED'
 \set ON_ERROR_STOP true
 \set QUIET true
+\c duely duely
 
 DO
 LANGUAGE plpgsql
