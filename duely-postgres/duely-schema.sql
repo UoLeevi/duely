@@ -588,7 +588,7 @@ BEGIN
   EXECUTE '
     WITH
       r AS (
-        SELECT ' || _select_list || '
+        SELECT ' || COALESCE(_select_list, 'uuid_') || '
         FROM ' || _table || '
         WHERE uuid_ = $1
       )
@@ -1184,7 +1184,7 @@ BEGIN
     AND status_ IN ('started', 'cancelled')
   RETURNING uuid_ INTO _uuid;
 
-  IF uuid_ IS NULL THEN
+  IF _uuid IS NULL THEN
     RETURN NULL;
   ELSE
     RETURN NEW;
@@ -1206,11 +1206,7 @@ BEGIN
   INSERT INTO security_.sign_up_(uuid_, email_address_, name_, data_, password_hash_)
   SELECT NEW.uuid_, NEW.email_address_, NEW.name_, COALESCE(NEW.data_, '{}'::jsonb), pgcrypto_.crypt(NEW.password_, pgcrypto_.gen_salt('md5'));
 
-<<<<<<< HEAD
   RETURN NEW;
-=======
-  RETURN NULL;
->>>>>>> 7e35e2e31d3f3339a2b95953f69639d8932703dd
 END
 $$;
 
@@ -1244,10 +1240,11 @@ BEGIN
     status_ = 'verified',
     started_at_ = CURRENT_TIMESTAMP,
     user_uuid_ = _user_uuid
-  WHERE uuid_ = _sign_up.uuid_
+  WHERE uuid_ = NEW.uuid_
+    AND NEW.verified_ = true
   RETURNING uuid_ INTO _uuid;
 
-  IF uuid_ IS NULL THEN
+  IF _uuid IS NULL THEN
     RETURN NULL;
   ELSE
     RETURN NEW;
@@ -3289,11 +3286,8 @@ CREATE FUNCTION policy_.anyone_can_verify_signup_(_resource_definition security_
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN array_cat(_keys, '{verified_}');
-  ELSE
-    RETURN _keys;
-  END IF;
+  -- NOTE: Currently, anyone who has the sign_up_id can verify the sign up.
+  RETURN array_cat(_keys, '{verified_}');
 END
 $$;
 
@@ -3709,10 +3703,10 @@ END
 ALTER FUNCTION policy_.service_variant_status_contains_only_live_(_arg anyelement) OWNER TO postgres;
 
 --
--- Name: sign_up_can_be_queried_by_initiator_subject_uuid_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+-- Name: sign_up_can_be_queried_by_initiator_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
-CREATE FUNCTION policy_.sign_up_can_be_queried_by_initiator_subject_uuid_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+CREATE FUNCTION policy_.sign_up_can_be_queried_by_initiator_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -3730,7 +3724,7 @@ END
 $$;
 
 
-ALTER FUNCTION policy_.sign_up_can_be_queried_by_initiator_subject_uuid_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+ALTER FUNCTION policy_.sign_up_can_be_queried_by_initiator_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: subject_is_active_user_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3763,8 +3757,8 @@ BEGIN
   IF EXISTS (
     SELECT 1
     FROM security_.active_subject_ s
-    JOIN _resource r ON s.uuid_ = s.uuid_
     WHERE s.type_ = 'user'
+      AND s.uuid_ = _resource.uuid_
   ) THEN
     RETURN array_cat(_keys, '{name_}');
   ELSE
@@ -3787,8 +3781,8 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1
     FROM security_.active_subject_ s
-    JOIN _resource r ON s.uuid_ = s.uuid_
     WHERE s.type_ = 'user'
+      AND s.uuid_ = _resource.uuid_
   ) THEN
     RAISE 'Unauthorized.' USING ERRCODE = '42501';
   END IF;
@@ -3809,8 +3803,8 @@ BEGIN
   IF EXISTS (
     SELECT 1
     FROM security_.active_subject_ s
-    JOIN _resource r ON s.uuid_ = s.uuid_
     WHERE s.type_ = 'user'
+      AND s.uuid_ = _resource.uuid_
   ) THEN
     RETURN array_cat(_keys, '{uuid_, name_, email_address_}');
   ELSE
@@ -5202,10 +5196,10 @@ fce05ef3-4cd5-4b5e-a011-55e20f683556	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy
 5eafba24-946e-42b5-b82f-b0ff99629965	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_query_themselves_(security_.resource_definition_,application_.resource_,text[])	query	\N
 8c6d2f03-850b-428f-8304-6b9e667c1689	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_change_name_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 a8598fdb-0010-4a1b-9ad9-cfafc3f9e573	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_delete_only_themselves_(security_.resource_definition_,application_.resource_)	delete	\N
-96be86e8-c8b4-430f-befa-1045f9ced98a	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.sign_up_can_be_queried_by_initiator_subject_uuid_(security_.resource_definition_,application_.resource_,text[])	query	\N
 cdeef182-edc7-4120-a301-c174a5e6a837	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_create_sign_up_(security_.resource_definition_,jsonb,text[])	create	\N
 937cbfad-1ad2-4219-a11d-268ff9839fdc	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_verify_signup_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 cb4cdf3a-a99b-44df-8027-8352de2333b9	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_cancel_signup_(security_.resource_definition_,application_.resource_)	delete	\N
+96be86e8-c8b4-430f-befa-1045f9ced98a	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.sign_up_can_be_queried_by_initiator_(security_.resource_definition_,application_.resource_,text[])	query	\N
 \.
 
 
@@ -5915,6 +5909,13 @@ ALTER TABLE ONLY security_.user_
 
 ALTER TABLE ONLY security_.user_
     ADD CONSTRAINT user__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: resource__search__idx; Type: INDEX; Schema: application_; Owner: postgres
+--
+
+CREATE INDEX resource__search__idx ON application_.resource_ USING gin (search_);
 
 
 --
