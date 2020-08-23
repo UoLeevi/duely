@@ -1,6 +1,6 @@
--- psql -U duely -d duely -f tests/04-test-sign_up.sql
+-- psql -U duely -d duely -f tests/05-test-password_reset.sql
 
-\echo 'TEST 04 STARTED'
+\echo 'TEST 05 STARTED'
 \set ON_ERROR_STOP true
 \set QUIET true
 \c duely duely
@@ -24,11 +24,10 @@ BEGIN
   SELECT * INTO _visitor_jwt FROM operation_.begin_visit_();
   PERFORM operation_.begin_session_(_visitor_jwt);
 
-  _resource_name := 'sign up';
+  _resource_name := 'password reset';
 
   -- TEST INVALID CREATE OPERATION
   _data := '{
-    "name": "test",
     "email_address": "a@a"
   }';
   BEGIN
@@ -41,23 +40,13 @@ BEGIN
 
   -- TEST VALID CREATE OPERATION
   _data := '{
-    "name": "test",
-    "email_address": "a@a",
+    "email_address": "test@duely.app",
     "password": "asdf"
   }';
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
   -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
 
   ASSERT _result_1 ?& '{ id }';
-
-
-  -- TEST INVALID QUERY OPERATION
-  BEGIN
-    PERFORM operation_.query_resource_('null_0');
-    RAISE EXCEPTION 'Exception should be raised if no matching record was found.';
-  EXCEPTION WHEN OTHERS THEN
-    -- EXPECTED ERROR
-  END;
 
 
   -- TEST VALID QUERY OPERATION
@@ -69,7 +58,8 @@ BEGIN
 
   -- TEST INVALID UPDATE OPERATION
   _data := '{
-    "email_address": "b@b"
+    "email_address": "b@b",
+    "vefified": true
   }';
   BEGIN
     PERFORM operation_.update_resource_(_result_1->>'id', _data);
@@ -86,69 +76,46 @@ BEGIN
   SELECT * INTO _result_1 FROM operation_.update_resource_(_result_1->>'id', _data);
   --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result_1;
 
-  ASSERT _result_1 ?& '{ id, user_id }';
+  ASSERT _result_1 ?& '{ id }';
 
 
   -- TEST VALID DELETE OPERATION
   _data := '{
-    "name": "test",
-    "email_address": "b@b",
-    "password": "asdf"
+    "email_address": "test@duely.app",
+    "password": "moi"
   }';
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
   SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_1->>'id');
   --RAISE NOTICE E'delete_resource_(text):\n%', _result_1;
 
 
-  SELECT * INTO _result_1 FROM operation_.query_resource_all_('user', '{ "email_address": "a@a" }');
+  SELECT * INTO _result_1 FROM operation_.query_resource_all_('user', '{ "email_address": "test@duely.app" }');
   --RAISE NOTICE E'query_resource_all_(text, jsonb):\n%', _result_1;
 
   ASSERT _result_1 IS NULL;
 
 
-  SELECT * INTO _user_jwt FROM operation_.log_in_user_('test@duely.app', 'password');
+  SELECT * INTO _user_jwt FROM operation_.log_in_user_('test@duely.app', 'asdf');
   PERFORM operation_.end_visit_();
   PERFORM operation_.end_session_();
 
   PERFORM operation_.begin_session_(_user_jwt);
 
-  SELECT * INTO _result_1 FROM operation_.query_resource_all_('user', '{ "email_address": "a@a" }');
-  --RAISE NOTICE E'query_resource_all_(text, jsonb):\n%', _result_1;
-
-  ASSERT _result_1 IS NULL;
-
   PERFORM operation_.log_out_user_();
   PERFORM operation_.end_session_();
 
-  SELECT * INTO _visitor_jwt FROM operation_.begin_visit_();
-  PERFORM operation_.begin_session_(_visitor_jwt);
-  SELECT * INTO _user_jwt FROM operation_.log_in_user_('a@a', 'asdf');
-  PERFORM operation_.end_visit_();
-  PERFORM operation_.end_session_();
-
-  PERFORM operation_.begin_session_(_user_jwt);
-
-  SELECT * INTO _result_1 FROM operation_.query_resource_all_('user', '{ "email_address": "a@a" }');
-  -- RAISE NOTICE E'query_resource_all_(text, jsonb):\n%', _result_1;
-
-  ASSERT _result_1 ?& '{ id, name, email_address }';
-
-  PERFORM operation_.log_out_user_();
-  PERFORM operation_.end_session_();
-
-
-  RAISE EXCEPTION 'TEST 04 PASSED' USING errcode = '40000'; -- transaction_rollback
+  RAISE EXCEPTION 'TEST 05 PASSED' USING errcode = '40000'; -- transaction_rollback
 
 EXCEPTION
   WHEN transaction_rollback THEN
-    -- TEST 04 PASSED
+    -- TEST 05 PASSED
     NULL;
 
   WHEN OTHERS THEN
-    RAISE NOTICE 'TEST 04 FAILED';
+    RAISE NOTICE 'TEST 05 FAILED';
     RAISE;
 
 END;
 $$;
 
-\echo 'TEST 04 PASSED'
+\echo 'TEST 05 PASSED'
