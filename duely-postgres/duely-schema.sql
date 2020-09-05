@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 11.2
--- Dumped by pg_dump version 11.2
+-- Dumped from database version 12.4 (Debian 12.4-1.pgdg100+1)
+-- Dumped by pg_dump version 12.4 (Debian 12.4-1.pgdg90+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -12,6 +12,7 @@ SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
+SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
@@ -88,7 +89,7 @@ CREATE SCHEMA security__audit_;
 ALTER SCHEMA security__audit_ OWNER TO postgres;
 
 --
--- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: 
+-- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
 --
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA pgcrypto_;
@@ -273,7 +274,7 @@ ALTER FUNCTION internal_.base64url_encode_(_data bytea) OWNER TO postgres;
 
 SET default_tablespace = '';
 
-SET default_with_oids = false;
+SET default_table_access_method = heap;
 
 --
 -- Name: resource_; Type: TABLE; Schema: application_; Owner: postgres
@@ -3471,36 +3472,23 @@ $$;
 ALTER FUNCTION policy_.anyone_can_query_basic_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
--- Name: anyone_can_verify_password_reset_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+-- Name: anyone_with_verification_code_can_verify_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
-CREATE FUNCTION policy_.anyone_can_verify_password_reset_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+CREATE FUNCTION policy_.anyone_with_verification_code_can_verify_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  -- NOTE: Currently, anyone who has the password_reset_id can verify the password reset.
-  RETURN array_cat(_keys, '{verified_}');
+  IF _resource.search_->>'verification_code_' = _data->>'verification_code_' THEN
+    RETURN array_cat(_keys, '{verified_, verification_code_}');
+  ELSE
+    RETURN _keys;
+  END IF;
 END
 $$;
 
 
-ALTER FUNCTION policy_.anyone_can_verify_password_reset_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
-
---
--- Name: anyone_can_verify_sign_up_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
---
-
-CREATE FUNCTION policy_.anyone_can_verify_sign_up_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  -- NOTE: Currently, anyone who has the sign_up_id can verify the sign up.
-  RETURN array_cat(_keys, '{verified_}');
-END
-$$;
-
-
-ALTER FUNCTION policy_.anyone_can_verify_sign_up_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
+ALTER FUNCTION policy_.anyone_with_verification_code_can_verify_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: argument_is_not_null_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3873,7 +3861,7 @@ BEGIN
     WHERE initiator_subject_uuid_ = internal_.current_subject_uuid_()
       AND uuid_ = _resource.uuid_
   ) THEN
-    RETURN array_cat(_keys, '{uuid_, user_uuid_, data_}');
+    RETURN array_cat(_keys, '{uuid_, user_uuid_, data_, verification_code_}');
   ELSE
     RETURN _keys;
   END IF;
@@ -3948,7 +3936,7 @@ BEGIN
     WHERE initiator_subject_uuid_ = internal_.current_subject_uuid_()
       AND uuid_ = _resource.uuid_
   ) THEN
-    RETURN array_cat(_keys, '{uuid_, user_uuid_, data_}');
+    RETURN array_cat(_keys, '{uuid_, user_uuid_, data_, verification_code_}');
   ELSE
     RETURN _keys;
   END IF;
@@ -4584,6 +4572,40 @@ $$;
 ALTER FUNCTION security_.register_policy_(_table regclass, _operation_type public.operation_type_, _policy_function regproc, _after_policy_function regproc) OWNER TO postgres;
 
 --
+-- Name: unregister_policy_(regclass, public.operation_type_, regproc); Type: FUNCTION; Schema: security_; Owner: postgres
+--
+
+CREATE FUNCTION security_.unregister_policy_(_table regclass, _operation_type public.operation_type_, _policy_function regproc) RETURNS security_.policy_
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _resource_definition_uuid uuid;
+  _policy security_.policy_;
+BEGIN
+  SELECT uuid_ INTO _resource_definition_uuid
+  FROM security_.resource_definition_
+  WHERE table_ = _table;
+
+  DELETE FROM security_.policy_
+  WHERE resource_definition_uuid_ = _resource_definition_uuid
+    AND operation_type_ = _operation_type
+    AND function_::regproc = _policy_function
+  RETURNING * INTO _policy;
+
+  IF _policy.after_uuid_ IS NOT NULL THEN
+    UPDATE security_.policy_
+    SET after_uuid_ = policy_.after_uuid_
+    WHERE after_uuid_ = policy_.uuid_;
+  END IF;
+
+  RETURN _policy;
+END
+$$;
+
+
+ALTER FUNCTION security_.unregister_policy_(_table regclass, _operation_type public.operation_type_, _policy_function regproc) OWNER TO postgres;
+
+--
 -- Name: password_reset_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
@@ -4597,6 +4619,7 @@ CREATE TABLE security_.password_reset_ (
     status_ public.verification_status_ DEFAULT 'started'::public.verification_status_ NOT NULL,
     status_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     initiator_subject_uuid_ uuid DEFAULT internal_.current_subject_uuid_() NOT NULL,
+    verification_code_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -4633,7 +4656,8 @@ CREATE VIEW application_.password_reset_ AS
         CASE p.status_
             WHEN 'verified'::public.verification_status_ THEN true
             ELSE false
-        END AS verified_
+        END AS verified_,
+    p.verification_code_
    FROM (security_.password_reset_ p
      JOIN security_.user_ u ON ((u.uuid_ = p.user_uuid_)))
   WHERE ((p.status_ = 'verified'::public.verification_status_) OR ((CURRENT_TIMESTAMP >= p.started_at_) AND (CURRENT_TIMESTAMP <= p.expires_at_)));
@@ -4747,6 +4771,7 @@ CREATE TABLE security_.sign_up_ (
     status_ public.verification_status_ DEFAULT 'started'::public.verification_status_ NOT NULL,
     status_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     initiator_subject_uuid_ uuid DEFAULT internal_.current_subject_uuid_() NOT NULL,
+    verification_code_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -4768,7 +4793,8 @@ CREATE VIEW application_.sign_up_ AS
         CASE s.status_
             WHEN 'verified'::public.verification_status_ THEN true
             ELSE false
-        END AS verified_
+        END AS verified_,
+    s.verification_code_
    FROM security_.sign_up_ s
   WHERE ((s.status_ = 'verified'::public.verification_status_) OR ((CURRENT_TIMESTAMP >= s.started_at_) AND (CURRENT_TIMESTAMP <= s.expires_at_)));
 
@@ -5261,6 +5287,7 @@ CREATE TABLE security__audit_.password_reset_ (
     status_ public.verification_status_,
     status_at_ timestamp with time zone,
     initiator_subject_uuid_ uuid,
+    verification_code_ uuid,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -5349,6 +5376,7 @@ CREATE TABLE security__audit_.sign_up_ (
     status_ public.verification_status_,
     status_at_ timestamp with time zone,
     initiator_subject_uuid_ uuid,
+    verification_code_ uuid,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -5408,7 +5436,7 @@ ALTER TABLE ONLY application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT pgcrypto_.
 --
 
 COPY public._session (uuid_, begin_at_, end_at_, token_uuid_, tag_, nesting_) FROM stdin;
-15cdb1b6-6ee9-4d41-9983-5b301004dffe	2020-07-29 11:38:01.641507+03	\N	c1ae203b-addb-4171-922b-6fdd9448eefc	\N	0
+15cdb1b6-6ee9-4d41-9983-5b301004dffe	2020-07-29 08:38:01.641507+00	\N	c1ae203b-addb-4171-922b-6fdd9448eefc	\N	0
 \.
 
 
@@ -5425,53 +5453,53 @@ COPY security_.event_log_ (uuid_, operation_type_, resource_definition_uuid_, re
 --
 
 COPY security_.operation_ (uuid_, name_, log_events_, audit_at_, audit_session_uuid_) FROM stdin;
-12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-44836e4b-ecd5-4184-a177-498b412ff251	query_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-3ae8d981-be1f-4843-bc41-df24bc904e5d	query_agency_by_subdomain_name_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-384605a6-0fb2-4d9c-aacc-3e5a33be8c36	create_stripe_account_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-373f84a0-350e-41e9-b714-705d21a79135	query_theme_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-8a08d468-c946-47d7-bcc1-f45819625d63	edit_image_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-9b80cc60-7109-4849-ac2f-fc4df653bd2f	create_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-08f449e7-8215-484a-a40a-b6bdb9b16b4d	query_service_step_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-1c41ed54-3140-4a9e-8f9e-81f02b185708	delete_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-774d34d3-cd48-45ca-8f70-2f54010f5b48	cancel_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	reset_password_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-906655f2-4bbb-441a-b10b-7231da7bccad	query_user_by_email_address_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-31a284d0-b6ea-4dd4-b013-da4647a54558	query_client_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-3cefd8f7-9cd8-40bf-afce-83eed2491ff8	create_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-2bd1d873-946f-4557-905c-99b73b1d54bf	delete_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	query_service_variant_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-176dee67-37d8-4fd7-aa1d-44d8f204b270	query_service_variant_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+44836e4b-ecd5-4184-a177-498b412ff251	query_user_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+3ae8d981-be1f-4843-bc41-df24bc904e5d	query_agency_by_subdomain_name_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+384605a6-0fb2-4d9c-aacc-3e5a33be8c36	create_stripe_account_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+373f84a0-350e-41e9-b714-705d21a79135	query_theme_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+8a08d468-c946-47d7-bcc1-f45819625d63	edit_image_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+9b80cc60-7109-4849-ac2f-fc4df653bd2f	create_service_step_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+08f449e7-8215-484a-a40a-b6bdb9b16b4d	query_service_step_by_service_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+1c41ed54-3140-4a9e-8f9e-81f02b185708	delete_service_step_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+774d34d3-cd48-45ca-8f70-2f54010f5b48	cancel_user_invite_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	reset_password_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+906655f2-4bbb-441a-b10b-7231da7bccad	query_user_by_email_address_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+31a284d0-b6ea-4dd4-b013-da4647a54558	query_client_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+3cefd8f7-9cd8-40bf-afce-83eed2491ff8	create_client_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+2bd1d873-946f-4557-905c-99b73b1d54bf	delete_client_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	query_service_variant_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+176dee67-37d8-4fd7-aa1d-44d8f204b270	query_service_variant_by_service_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -5479,7 +5507,7 @@ a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 02:
 -- Data for Name: password_reset_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.password_reset_ (uuid_, user_uuid_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, audit_at_, audit_session_uuid_) FROM stdin;
+COPY security_.password_reset_ (uuid_, user_uuid_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, verification_code_, audit_at_, audit_session_uuid_) FROM stdin;
 \.
 
 
@@ -5508,13 +5536,13 @@ fce05ef3-4cd5-4b5e-a011-55e20f683556	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy
 8c6d2f03-850b-428f-8304-6b9e667c1689	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_change_name_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 a8598fdb-0010-4a1b-9ad9-cfafc3f9e573	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_delete_only_themselves_(security_.resource_definition_,application_.resource_)	delete	\N
 cdeef182-edc7-4120-a301-c174a5e6a837	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_create_sign_up_(security_.resource_definition_,jsonb,text[])	create	\N
-937cbfad-1ad2-4219-a11d-268ff9839fdc	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_verify_sign_up_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 cb4cdf3a-a99b-44df-8027-8352de2333b9	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_cancel_sign_up_(security_.resource_definition_,application_.resource_)	delete	\N
 96be86e8-c8b4-430f-befa-1045f9ced98a	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.sign_up_can_be_queried_by_initiator_(security_.resource_definition_,application_.resource_,text[])	query	\N
 aab7c301-7434-489a-bb03-5c91edfba106	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.password_reset_can_be_queried_by_initiator_(security_.resource_definition_,application_.resource_,text[])	query	\N
 128a36c5-97fb-45f6-9e31-d804058cef95	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_can_create_password_reset_(security_.resource_definition_,jsonb,text[])	create	\N
-92033ff4-6461-4465-a83a-de13bbbe870b	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_can_verify_password_reset_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 d1a5960c-3f37-4c3f-864b-8807bf5a13c6	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_can_cancel_password_reset_(security_.resource_definition_,application_.resource_)	delete	\N
+1946993a-7a51-40f2-9e89-91199bdbf9bb	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+acba9324-3aff-4951-a46d-51cd7eaa2691	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 \.
 
 
@@ -5523,71 +5551,71 @@ d1a5960c-3f37-4c3f-864b-8807bf5a13c6	edc5f82c-c991-494c-90f0-cf6163902f40	policy
 --
 
 COPY security_.policy_assignment_ (uuid_, policy_name_, operation_uuid_, type_, audit_at_, audit_session_uuid_) FROM stdin;
-fb6da025-643a-4806-a64b-4a0e5042ba98	owner_in_agency_	c865b482-975b-49b3-845f-dfa39f46a7f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-685c3913-3fff-4345-865c-d3e4026321ed	visitor_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-3aef50bd-85e6-4beb-8bd4-9a252052200d	visitor_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c291d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-914f28e8-076c-45cb-8042-f827bc6e59e2	logged_in_	a5acd829-bced-4d98-8c5c-8f29e14c8116	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-7488a3fd-0f68-4369-95c2-9293e3a4f80e	manager_in_agency_	fa4b4c5f-160f-413b-b77a-beee70108f0a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-2d1cde8a-54e7-4aa5-87ef-3f733cf3dde0	logged_in_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-12543ad5-113a-4b09-8174-774119fd999e	owner_in_agency_	89071731-bd21-4505-aab9-fd699c5fd12f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-991b0ec1-11b6-492e-a872-5b8aede7e5c3	owner_in_agency_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-1b902618-8a68-4c0d-b05e-6bda782c5f30	agent_in_agency_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-75294233-ed0a-4b6a-8903-f206daf0af67	logged_in_	3f020478-e3a3-4674-932d-8b922c17b91b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc41-df24bc904e5d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-571601fd-1c3c-4d04-b37d-da9a66447025	argument_is_not_null_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-4ec948d5-45ea-4cdb-8cf9-aab00b10dfdd	owner_in_agency_	384605a6-0fb2-4d9c-aacc-3e5a33be8c36	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-6d532fe7-ad14-4d6d-9861-c0813b407fbc	manager_in_agency_	d21b8f48-a57a-45b3-9341-926d735dffb6	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-2a0d6fa5-76c1-4440-9421-53f57185c5df	visitor_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-229bf29f-1dd3-45a2-b845-9c271771a4ab	logged_in_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-126aa154-9a2b-4e9e-9473-58b90d917a17	manager_in_agency_	8a08d468-c946-47d7-bcc1-f45819625d63	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-4ab56a45-937f-4aa3-bfab-6a3ec95e14d6	visitor_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-8030c009-6c74-4a8a-9762-82c8d414e6cd	manager_in_agency_	45cf7669-6e10-4c99-bf14-af25985a7f0f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-120c7413-19c3-4bc7-969a-1d701e6e6aa1	agent_in_agency_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-45794325-c9e9-4f3c-a805-13d013205a8f	service_status_contains_only_live_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-05cacc42-807b-4f51-b9f5-927983b26950	manager_in_agency_	9b80cc60-7109-4849-ac2f-fc4df653bd2f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-832c874c-3b8b-4d51-8704-7ee2ec8ff18c	service_status_is_live_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-7275e0a3-249c-4e32-a26f-4a399d724207	agent_in_agency_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-88f38e52-c66d-4f38-9f9e-518fae934d67	service_status_is_live_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-1f6eee50-721b-4716-8f08-42acdb0ce264	manager_in_agency_	1c41ed54-3140-4a9e-8f9e-81f02b185708	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-8f74e764-531d-4ee0-9501-799a93249f8e	service_status_is_live_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-5ce796c9-2770-477e-ac8f-7b1c2d9b3af6	agent_in_agency_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-24598e65-5bd4-4a68-9799-4235bddcacc9	agent_in_agency_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-7845ed18-8f5f-438c-9dd1-5ded43bffe6e	invitee_of_user_invite_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_of_user_invite_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-74931d78-6bd6-48c4-a853-1c714b68211e	logged_in_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f54010f5b48	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-3a2d166a-ec77-4e20-a0b0-97113c4ac3f9	logged_in_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-7352ec5f-f88e-457b-b7b2-9825da15895a	logged_in_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-2e761c06-11f7-4cb0-914c-267df87a55d5	subject_is_active_user_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-ac7fd563-dbb7-44ad-ab12-ccb314704c31	manager_in_agency_	ddcffba4-934c-46ce-bc8b-6ae23b19dce1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-199f58032ff5	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-60d3ee39-0f5a-40b9-941e-c606f015fb12	visitor_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-7bacfdbd-84bb-4078-bca1-aee9f6790ef0	logged_in_	906655f2-4bbb-441a-b10b-7231da7bccad	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-73da9d07-021f-43bb-ace8-e72724dc35e7	agent_in_agency_	b20e4cff-c150-4e02-af03-798cc73382f3	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-cf31f59e-bb4a-4225-86f5-1339c339ea19	agent_in_agency_	31a284d0-b6ea-4dd4-b013-da4647a54558	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-faad1e60-244a-43d8-b2b2-fb92e60bdb89	manager_in_agency_	3cefd8f7-9cd8-40bf-afce-83eed2491ff8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-20d6ec33-906e-4d7e-8dda-173f1ba1b4b4	manager_in_agency_	2bd1d873-946f-4557-905c-99b73b1d54bf	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-f7d66dad-12e8-49c3-aa7c-92fb9ebe0935	agent_in_agency_	624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-8b98629f-ec03-4dc9-8f28-a88f1c15a065	agent_in_agency_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-3bb39814-e628-4169-841f-b8c23311167e	service_variant_status_contains_only_live_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-9c17e5e7-3043-4cc3-b2ca-5e635883b121	logged_in_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-df7169dc-3ef6-4e89-b749-9d96216f37f4	visitor_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-a8c86986-75c9-4f7a-b4ea-e18280bb56c6	logged_in_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+fb6da025-643a-4806-a64b-4a0e5042ba98	owner_in_agency_	c865b482-975b-49b3-845f-dfa39f46a7f1	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+685c3913-3fff-4345-865c-d3e4026321ed	visitor_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+3aef50bd-85e6-4beb-8bd4-9a252052200d	visitor_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c291d	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+914f28e8-076c-45cb-8042-f827bc6e59e2	logged_in_	a5acd829-bced-4d98-8c5c-8f29e14c8116	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+7488a3fd-0f68-4369-95c2-9293e3a4f80e	manager_in_agency_	fa4b4c5f-160f-413b-b77a-beee70108f0a	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+2d1cde8a-54e7-4aa5-87ef-3f733cf3dde0	logged_in_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+12543ad5-113a-4b09-8174-774119fd999e	owner_in_agency_	89071731-bd21-4505-aab9-fd699c5fd12f	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+991b0ec1-11b6-492e-a872-5b8aede7e5c3	owner_in_agency_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+1b902618-8a68-4c0d-b05e-6bda782c5f30	agent_in_agency_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+75294233-ed0a-4b6a-8903-f206daf0af67	logged_in_	3f020478-e3a3-4674-932d-8b922c17b91b	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc41-df24bc904e5d	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+571601fd-1c3c-4d04-b37d-da9a66447025	argument_is_not_null_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+4ec948d5-45ea-4cdb-8cf9-aab00b10dfdd	owner_in_agency_	384605a6-0fb2-4d9c-aacc-3e5a33be8c36	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+6d532fe7-ad14-4d6d-9861-c0813b407fbc	manager_in_agency_	d21b8f48-a57a-45b3-9341-926d735dffb6	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+2a0d6fa5-76c1-4440-9421-53f57185c5df	visitor_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+229bf29f-1dd3-45a2-b845-9c271771a4ab	logged_in_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+126aa154-9a2b-4e9e-9473-58b90d917a17	manager_in_agency_	8a08d468-c946-47d7-bcc1-f45819625d63	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+4ab56a45-937f-4aa3-bfab-6a3ec95e14d6	visitor_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+8030c009-6c74-4a8a-9762-82c8d414e6cd	manager_in_agency_	45cf7669-6e10-4c99-bf14-af25985a7f0f	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+120c7413-19c3-4bc7-969a-1d701e6e6aa1	agent_in_agency_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+45794325-c9e9-4f3c-a805-13d013205a8f	service_status_contains_only_live_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+05cacc42-807b-4f51-b9f5-927983b26950	manager_in_agency_	9b80cc60-7109-4849-ac2f-fc4df653bd2f	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+832c874c-3b8b-4d51-8704-7ee2ec8ff18c	service_status_is_live_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+7275e0a3-249c-4e32-a26f-4a399d724207	agent_in_agency_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+88f38e52-c66d-4f38-9f9e-518fae934d67	service_status_is_live_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+1f6eee50-721b-4716-8f08-42acdb0ce264	manager_in_agency_	1c41ed54-3140-4a9e-8f9e-81f02b185708	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+8f74e764-531d-4ee0-9501-799a93249f8e	service_status_is_live_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+5ce796c9-2770-477e-ac8f-7b1c2d9b3af6	agent_in_agency_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+24598e65-5bd4-4a68-9799-4235bddcacc9	agent_in_agency_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+7845ed18-8f5f-438c-9dd1-5ded43bffe6e	invitee_of_user_invite_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_of_user_invite_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+74931d78-6bd6-48c4-a853-1c714b68211e	logged_in_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f54010f5b48	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+3a2d166a-ec77-4e20-a0b0-97113c4ac3f9	logged_in_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+7352ec5f-f88e-457b-b7b2-9825da15895a	logged_in_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+2e761c06-11f7-4cb0-914c-267df87a55d5	subject_is_active_user_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+ac7fd563-dbb7-44ad-ab12-ccb314704c31	manager_in_agency_	ddcffba4-934c-46ce-bc8b-6ae23b19dce1	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-199f58032ff5	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+60d3ee39-0f5a-40b9-941e-c606f015fb12	visitor_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+7bacfdbd-84bb-4078-bca1-aee9f6790ef0	logged_in_	906655f2-4bbb-441a-b10b-7231da7bccad	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+73da9d07-021f-43bb-ace8-e72724dc35e7	agent_in_agency_	b20e4cff-c150-4e02-af03-798cc73382f3	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+cf31f59e-bb4a-4225-86f5-1339c339ea19	agent_in_agency_	31a284d0-b6ea-4dd4-b013-da4647a54558	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+faad1e60-244a-43d8-b2b2-fb92e60bdb89	manager_in_agency_	3cefd8f7-9cd8-40bf-afce-83eed2491ff8	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+20d6ec33-906e-4d7e-8dda-173f1ba1b4b4	manager_in_agency_	2bd1d873-946f-4557-905c-99b73b1d54bf	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+f7d66dad-12e8-49c3-aa7c-92fb9ebe0935	agent_in_agency_	624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+8b98629f-ec03-4dc9-8f28-a88f1c15a065	agent_in_agency_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+3bb39814-e628-4169-841f-b8c23311167e	service_variant_status_contains_only_live_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+9c17e5e7-3043-4cc3-b2ca-5e635883b121	logged_in_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+df7169dc-3ef6-4e89-b749-9d96216f37f4	visitor_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+a8c86986-75c9-4f7a-b4ea-e18280bb56c6	logged_in_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -5602,8 +5630,8 @@ d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-
 88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}
 2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	img	image	application_.image_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_}
 f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,email_address_}
-3b56d171-3e69-41ca-9a98-d1a3abc9170b	su	sign up	application_.sign_up_	\N	{}
-edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_reset_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{}
+3b56d171-3e69-41ca-9a98-d1a3abc9170b	su	sign up	application_.sign_up_	\N	{verification_code_}
+edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_reset_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{verification_code_}
 \.
 
 
@@ -5612,10 +5640,10 @@ edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_re
 --
 
 COPY security_.role_ (uuid_, name_, audit_at_, audit_session_uuid_) FROM stdin;
-be9432a6-2c74-4030-b59e-d657662a4f92	owner	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-566af82a-e5cf-4aad-aada-4341edb3e088	agent	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-9a9b149f-f57f-482d-bb5e-2692e3fee48c	client	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+be9432a6-2c74-4030-b59e-d657662a4f92	owner	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+566af82a-e5cf-4aad-aada-4341edb3e088	agent	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+9a9b149f-f57f-482d-bb5e-2692e3fee48c	client	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -5624,8 +5652,8 @@ e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-000
 --
 
 COPY security_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_session_uuid_) FROM stdin;
-64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
-040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000
+64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
+040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -5633,7 +5661,7 @@ COPY security_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, aud
 -- Data for Name: sign_up_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.sign_up_ (uuid_, user_uuid_, email_address_, name_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, audit_at_, audit_session_uuid_) FROM stdin;
+COPY security_.sign_up_ (uuid_, user_uuid_, email_address_, name_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, verification_code_, audit_at_, audit_session_uuid_) FROM stdin;
 \.
 
 
@@ -5642,53 +5670,53 @@ COPY security_.sign_up_ (uuid_, user_uuid_, email_address_, name_, password_hash
 --
 
 COPY security__audit_.operation_ (uuid_, name_, log_events_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
-12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-44836e4b-ecd5-4184-a177-498b412ff251	query_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-3ae8d981-be1f-4843-bc41-df24bc904e5d	query_agency_by_subdomain_name_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-384605a6-0fb2-4d9c-aacc-3e5a33be8c36	create_stripe_account_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-373f84a0-350e-41e9-b714-705d21a79135	query_theme_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-8a08d468-c946-47d7-bcc1-f45819625d63	edit_image_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-9b80cc60-7109-4849-ac2f-fc4df653bd2f	create_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-08f449e7-8215-484a-a40a-b6bdb9b16b4d	query_service_step_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-1c41ed54-3140-4a9e-8f9e-81f02b185708	delete_service_step_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-774d34d3-cd48-45ca-8f70-2f54010f5b48	cancel_user_invite_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	reset_password_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-906655f2-4bbb-441a-b10b-7231da7bccad	query_user_by_email_address_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-31a284d0-b6ea-4dd4-b013-da4647a54558	query_client_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-3cefd8f7-9cd8-40bf-afce-83eed2491ff8	create_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-2bd1d873-946f-4557-905c-99b73b1d54bf	delete_client_	t	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	query_service_variant_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-176dee67-37d8-4fd7-aa1d-44d8f204b270	query_service_variant_by_service_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+a5acd829-bced-4d98-8c5c-8f29e14c8116	create_agency_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+c865b482-975b-49b3-845f-dfa39f46a7f1	delete_agency_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+45cf7669-6e10-4c99-bf14-af25985a7f0f	delete_service_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+fa4b4c5f-160f-413b-b77a-beee70108f0a	create_service_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+93fe889a-e329-4701-9222-3caba3028f23	sign_up_user_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	start_email_address_verification_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+fb9268f3-c318-4034-b785-7cc67a755f14	query_subdomain_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+616938d8-f0b0-4ce5-82f6-ebf1d97668ff	query_service_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+44836e4b-ecd5-4184-a177-498b412ff251	query_user_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+44286eaf-723f-4a0b-b2b4-dd18404f948a	query_agency_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+89071731-bd21-4505-aab9-fd699c5fd12f	invite_user_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+8e119375-3f63-4a07-8239-6a4250094e93	remove_user_from_agency_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+04fc5530-96ee-469b-9e6d-f228392b81e9	accept_user_invite_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+a7a73077-da99-4acd-af2a-1f2dba998889	query_agency_user_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+3f020478-e3a3-4674-932d-8b922c17b91b	query_shared_agency_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+3ae8d981-be1f-4843-bc41-df24bc904e5d	query_agency_by_subdomain_name_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+384605a6-0fb2-4d9c-aacc-3e5a33be8c36	create_stripe_account_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+d21b8f48-a57a-45b3-9341-926d735dffb6	edit_agency_theme_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+373f84a0-350e-41e9-b714-705d21a79135	query_theme_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+8a08d468-c946-47d7-bcc1-f45819625d63	edit_image_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+a1db5356-28de-40ad-8059-630894876852	query_image_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+fca05330-a0b0-4d0e-b2e9-ff5125a9895e	query_service_by_agency_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+9b80cc60-7109-4849-ac2f-fc4df653bd2f	create_service_step_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+08f449e7-8215-484a-a40a-b6bdb9b16b4d	query_service_step_by_service_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+1c41ed54-3140-4a9e-8f9e-81f02b185708	delete_service_step_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+48929e2e-93c6-47a1-be0d-5b41ca8f2728	query_service_step_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+d8c38111-8742-4ee1-8adb-eedffb10198b	decline_user_invite_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+27849d3f-541f-4689-aad6-999dc14e0ce7	query_user_invite_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+59b6fdfa-8d4e-4069-88af-49634fa92a23	query_user_invite_by_agency_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+774d34d3-cd48-45ca-8f70-2f54010f5b48	cancel_user_invite_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	query_user_invite_by_subject_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+ddcffba4-934c-46ce-bc8b-6ae23b19dce1	edit_service_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+2fbee7e1-2b10-444b-aa98-199f58032ff5	set_service_status_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	reset_password_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+906655f2-4bbb-441a-b10b-7231da7bccad	query_user_by_email_address_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+31a284d0-b6ea-4dd4-b013-da4647a54558	query_client_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+3cefd8f7-9cd8-40bf-afce-83eed2491ff8	create_client_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+2bd1d873-946f-4557-905c-99b73b1d54bf	delete_client_	t	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	query_service_variant_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+176dee67-37d8-4fd7-aa1d-44d8f204b270	query_service_variant_by_service_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -5696,7 +5724,7 @@ a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 02:
 -- Data for Name: password_reset_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
-COPY security__audit_.password_reset_ (uuid_, user_uuid_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+COPY security__audit_.password_reset_ (uuid_, user_uuid_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, verification_code_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 \.
 
 
@@ -5705,71 +5733,71 @@ COPY security__audit_.password_reset_ (uuid_, user_uuid_, password_hash_, data_,
 --
 
 COPY security__audit_.policy_assignment_ (uuid_, policy_name_, operation_uuid_, type_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
-fb6da025-643a-4806-a64b-4a0e5042ba98	owner_in_agency_	c865b482-975b-49b3-845f-dfa39f46a7f1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-685c3913-3fff-4345-865c-d3e4026321ed	visitor_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-3aef50bd-85e6-4beb-8bd4-9a252052200d	visitor_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c291d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-914f28e8-076c-45cb-8042-f827bc6e59e2	logged_in_	a5acd829-bced-4d98-8c5c-8f29e14c8116	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-7488a3fd-0f68-4369-95c2-9293e3a4f80e	manager_in_agency_	fa4b4c5f-160f-413b-b77a-beee70108f0a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-2d1cde8a-54e7-4aa5-87ef-3f733cf3dde0	logged_in_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-12543ad5-113a-4b09-8174-774119fd999e	owner_in_agency_	89071731-bd21-4505-aab9-fd699c5fd12f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-991b0ec1-11b6-492e-a872-5b8aede7e5c3	owner_in_agency_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-1b902618-8a68-4c0d-b05e-6bda782c5f30	agent_in_agency_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-75294233-ed0a-4b6a-8903-f206daf0af67	logged_in_	3f020478-e3a3-4674-932d-8b922c17b91b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc41-df24bc904e5d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-571601fd-1c3c-4d04-b37d-da9a66447025	argument_is_not_null_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-4ec948d5-45ea-4cdb-8cf9-aab00b10dfdd	owner_in_agency_	384605a6-0fb2-4d9c-aacc-3e5a33be8c36	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-6d532fe7-ad14-4d6d-9861-c0813b407fbc	manager_in_agency_	d21b8f48-a57a-45b3-9341-926d735dffb6	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-2a0d6fa5-76c1-4440-9421-53f57185c5df	visitor_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-229bf29f-1dd3-45a2-b845-9c271771a4ab	logged_in_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-126aa154-9a2b-4e9e-9473-58b90d917a17	manager_in_agency_	8a08d468-c946-47d7-bcc1-f45819625d63	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-4ab56a45-937f-4aa3-bfab-6a3ec95e14d6	visitor_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-8030c009-6c74-4a8a-9762-82c8d414e6cd	manager_in_agency_	45cf7669-6e10-4c99-bf14-af25985a7f0f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-120c7413-19c3-4bc7-969a-1d701e6e6aa1	agent_in_agency_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-45794325-c9e9-4f3c-a805-13d013205a8f	service_status_contains_only_live_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-05cacc42-807b-4f51-b9f5-927983b26950	manager_in_agency_	9b80cc60-7109-4849-ac2f-fc4df653bd2f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-832c874c-3b8b-4d51-8704-7ee2ec8ff18c	service_status_is_live_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-7275e0a3-249c-4e32-a26f-4a399d724207	agent_in_agency_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-88f38e52-c66d-4f38-9f9e-518fae934d67	service_status_is_live_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-1f6eee50-721b-4716-8f08-42acdb0ce264	manager_in_agency_	1c41ed54-3140-4a9e-8f9e-81f02b185708	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-8f74e764-531d-4ee0-9501-799a93249f8e	service_status_is_live_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-5ce796c9-2770-477e-ac8f-7b1c2d9b3af6	agent_in_agency_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-24598e65-5bd4-4a68-9799-4235bddcacc9	agent_in_agency_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-7845ed18-8f5f-438c-9dd1-5ded43bffe6e	invitee_of_user_invite_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_of_user_invite_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-74931d78-6bd6-48c4-a853-1c714b68211e	logged_in_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f54010f5b48	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-3a2d166a-ec77-4e20-a0b0-97113c4ac3f9	logged_in_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-7352ec5f-f88e-457b-b7b2-9825da15895a	logged_in_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-2e761c06-11f7-4cb0-914c-267df87a55d5	subject_is_active_user_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-ac7fd563-dbb7-44ad-ab12-ccb314704c31	manager_in_agency_	ddcffba4-934c-46ce-bc8b-6ae23b19dce1	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-199f58032ff5	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-60d3ee39-0f5a-40b9-941e-c606f015fb12	visitor_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-7bacfdbd-84bb-4078-bca1-aee9f6790ef0	logged_in_	906655f2-4bbb-441a-b10b-7231da7bccad	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-73da9d07-021f-43bb-ace8-e72724dc35e7	agent_in_agency_	b20e4cff-c150-4e02-af03-798cc73382f3	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-cf31f59e-bb4a-4225-86f5-1339c339ea19	agent_in_agency_	31a284d0-b6ea-4dd4-b013-da4647a54558	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-faad1e60-244a-43d8-b2b2-fb92e60bdb89	manager_in_agency_	3cefd8f7-9cd8-40bf-afce-83eed2491ff8	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-20d6ec33-906e-4d7e-8dda-173f1ba1b4b4	manager_in_agency_	2bd1d873-946f-4557-905c-99b73b1d54bf	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-f7d66dad-12e8-49c3-aa7c-92fb9ebe0935	agent_in_agency_	624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-8b98629f-ec03-4dc9-8f28-a88f1c15a065	agent_in_agency_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-3bb39814-e628-4169-841f-b8c23311167e	service_variant_status_contains_only_live_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-9c17e5e7-3043-4cc3-b2ca-5e635883b121	logged_in_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-df7169dc-3ef6-4e89-b749-9d96216f37f4	visitor_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-a8c86986-75c9-4f7a-b4ea-e18280bb56c6	logged_in_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+fb6da025-643a-4806-a64b-4a0e5042ba98	owner_in_agency_	c865b482-975b-49b3-845f-dfa39f46a7f1	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+e8992bc3-0f79-4797-81aa-bddef2193d97	visitor_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+685c3913-3fff-4345-865c-d3e4026321ed	visitor_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+3aef50bd-85e6-4beb-8bd4-9a252052200d	visitor_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c291d	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+914f28e8-076c-45cb-8042-f827bc6e59e2	logged_in_	a5acd829-bced-4d98-8c5c-8f29e14c8116	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+7488a3fd-0f68-4369-95c2-9293e3a4f80e	manager_in_agency_	fa4b4c5f-160f-413b-b77a-beee70108f0a	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+7f09a849-5162-4cbb-9fbc-f42529ef0088	logged_in_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+d6067404-d2ba-46a5-9b50-ff027c661aae	argument_is_not_null_	44286eaf-723f-4a0b-b2b4-dd18404f948a	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+2d1cde8a-54e7-4aa5-87ef-3f733cf3dde0	logged_in_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+12543ad5-113a-4b09-8174-774119fd999e	owner_in_agency_	89071731-bd21-4505-aab9-fd699c5fd12f	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+991b0ec1-11b6-492e-a872-5b8aede7e5c3	owner_in_agency_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+fdcffd77-fcb5-4ff8-9bb3-6bd8d06cfbd5	users_can_remove_themselves_	8e119375-3f63-4a07-8239-6a4250094e93	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+1b902618-8a68-4c0d-b05e-6bda782c5f30	agent_in_agency_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+75294233-ed0a-4b6a-8903-f206daf0af67	logged_in_	3f020478-e3a3-4674-932d-8b922c17b91b	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+b096a480-e5f0-4c34-a4f5-8bc75c2fb71b	argument_is_not_null_	3ae8d981-be1f-4843-bc41-df24bc904e5d	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+571601fd-1c3c-4d04-b37d-da9a66447025	argument_is_not_null_	fb9268f3-c318-4034-b785-7cc67a755f14	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+ea149d92-8577-4d3d-aa59-64713833b8fb	agent_in_agency_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+4ec948d5-45ea-4cdb-8cf9-aab00b10dfdd	owner_in_agency_	384605a6-0fb2-4d9c-aacc-3e5a33be8c36	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+6d532fe7-ad14-4d6d-9861-c0813b407fbc	manager_in_agency_	d21b8f48-a57a-45b3-9341-926d735dffb6	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+2a0d6fa5-76c1-4440-9421-53f57185c5df	visitor_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+229bf29f-1dd3-45a2-b845-9c271771a4ab	logged_in_	373f84a0-350e-41e9-b714-705d21a79135	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+126aa154-9a2b-4e9e-9473-58b90d917a17	manager_in_agency_	8a08d468-c946-47d7-bcc1-f45819625d63	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+4ab56a45-937f-4aa3-bfab-6a3ec95e14d6	visitor_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+eb2c9034-5c48-414a-bf05-a5fd4c492053	logged_in_	a1db5356-28de-40ad-8059-630894876852	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+8030c009-6c74-4a8a-9762-82c8d414e6cd	manager_in_agency_	45cf7669-6e10-4c99-bf14-af25985a7f0f	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+120c7413-19c3-4bc7-969a-1d701e6e6aa1	agent_in_agency_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+45794325-c9e9-4f3c-a805-13d013205a8f	service_status_contains_only_live_	fca05330-a0b0-4d0e-b2e9-ff5125a9895e	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+05cacc42-807b-4f51-b9f5-927983b26950	manager_in_agency_	9b80cc60-7109-4849-ac2f-fc4df653bd2f	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+832c874c-3b8b-4d51-8704-7ee2ec8ff18c	service_status_is_live_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+7275e0a3-249c-4e32-a26f-4a399d724207	agent_in_agency_	08f449e7-8215-484a-a40a-b6bdb9b16b4d	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+88f38e52-c66d-4f38-9f9e-518fae934d67	service_status_is_live_	616938d8-f0b0-4ce5-82f6-ebf1d97668ff	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+1f6eee50-721b-4716-8f08-42acdb0ce264	manager_in_agency_	1c41ed54-3140-4a9e-8f9e-81f02b185708	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+8f74e764-531d-4ee0-9501-799a93249f8e	service_status_is_live_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+5ce796c9-2770-477e-ac8f-7b1c2d9b3af6	agent_in_agency_	48929e2e-93c6-47a1-be0d-5b41ca8f2728	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+24598e65-5bd4-4a68-9799-4235bddcacc9	agent_in_agency_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+7845ed18-8f5f-438c-9dd1-5ded43bffe6e	invitee_of_user_invite_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+630aa45a-3805-4e40-a5bd-eea62ca07939	invitee_of_user_invite_	04fc5530-96ee-469b-9e6d-f228392b81e9	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+b0d65997-6de7-4efe-98ef-180c9dbde830	invitee_of_user_invite_	d8c38111-8742-4ee1-8adb-eedffb10198b	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+74931d78-6bd6-48c4-a853-1c714b68211e	logged_in_	27849d3f-541f-4689-aad6-999dc14e0ce7	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+3b973850-7737-4aa6-a725-acc74a3c7124	agent_in_agency_	59b6fdfa-8d4e-4069-88af-49634fa92a23	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+abf4133d-e860-4328-ab54-7d440bd8470a	agent_in_agency_	774d34d3-cd48-45ca-8f70-2f54010f5b48	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+3a2d166a-ec77-4e20-a0b0-97113c4ac3f9	logged_in_	f7f9bcab-1bd2-48b8-982b-ee2f10d984d8	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+d24730d5-8b66-4bf4-9fe8-4728817a03b2	subject_is_active_user_	dbdecab4-c25b-43f4-a20a-3ef80d6be7bc	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+7352ec5f-f88e-457b-b7b2-9825da15895a	logged_in_	93fe889a-e329-4701-9222-3caba3028f23	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+2e761c06-11f7-4cb0-914c-267df87a55d5	subject_is_active_user_	a7a73077-da99-4acd-af2a-1f2dba998889	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+ac7fd563-dbb7-44ad-ab12-ccb314704c31	manager_in_agency_	ddcffba4-934c-46ce-bc8b-6ae23b19dce1	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+c0d924cb-9105-4abf-a47e-0f6a29d2e193	manager_in_agency_	2fbee7e1-2b10-444b-aa98-199f58032ff5	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+60d3ee39-0f5a-40b9-941e-c606f015fb12	visitor_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+a371e28f-33f4-411e-b94a-1ac6af64c865	logged_in_	03f23339-f79a-4f0b-8a4f-bc9ef2e5d291	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+7bacfdbd-84bb-4078-bca1-aee9f6790ef0	logged_in_	906655f2-4bbb-441a-b10b-7231da7bccad	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+73da9d07-021f-43bb-ace8-e72724dc35e7	agent_in_agency_	b20e4cff-c150-4e02-af03-798cc73382f3	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+cf31f59e-bb4a-4225-86f5-1339c339ea19	agent_in_agency_	31a284d0-b6ea-4dd4-b013-da4647a54558	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+faad1e60-244a-43d8-b2b2-fb92e60bdb89	manager_in_agency_	3cefd8f7-9cd8-40bf-afce-83eed2491ff8	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+20d6ec33-906e-4d7e-8dda-173f1ba1b4b4	manager_in_agency_	2bd1d873-946f-4557-905c-99b73b1d54bf	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+f7d66dad-12e8-49c3-aa7c-92fb9ebe0935	agent_in_agency_	624fefb6-75d8-4ed8-8e9b-05dbed2dc24f	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+8b98629f-ec03-4dc9-8f28-a88f1c15a065	agent_in_agency_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+3bb39814-e628-4169-841f-b8c23311167e	service_variant_status_contains_only_live_	176dee67-37d8-4fd7-aa1d-44d8f204b270	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+9c17e5e7-3043-4cc3-b2ca-5e635883b121	logged_in_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+df7169dc-3ef6-4e89-b749-9d96216f37f4	visitor_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+a8c86986-75c9-4f7a-b4ea-e18280bb56c6	logged_in_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -5778,10 +5806,10 @@ ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b
 --
 
 COPY security__audit_.role_ (uuid_, name_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
-be9432a6-2c74-4030-b59e-d657662a4f92	owner	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-566af82a-e5cf-4aad-aada-4341edb3e088	agent	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-9a9b149f-f57f-482d-bb5e-2692e3fee48c	client	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+be9432a6-2c74-4030-b59e-d657662a4f92	owner	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+566af82a-e5cf-4aad-aada-4341edb3e088	agent	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+9a9b149f-f57f-482d-bb5e-2692e3fee48c	client	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -5790,8 +5818,8 @@ e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 02:00:00+02	00000000-000
 --
 
 COPY security__audit_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
-64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
-040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 02:00:00+02	00000000-0000-0000-0000-000000000000	I
+64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
+040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -5799,7 +5827,7 @@ COPY security__audit_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_a
 -- Data for Name: sign_up_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
-COPY security__audit_.sign_up_ (uuid_, user_uuid_, email_address_, name_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+COPY security__audit_.sign_up_ (uuid_, user_uuid_, email_address_, name_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, verification_code_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 \.
 
 
@@ -6265,1207 +6293,1207 @@ CREATE UNIQUE INDEX sign_up__email_address__idx ON security_.sign_up_ USING btre
 
 
 --
--- Name: stripe_account_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.stripe_account_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
 -- Name: agency_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: theme_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: service_step_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: service_step_payment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_payment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: service_step_form_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_form_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: service_step_confirmation_by_agency_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_confirmation_by_agency_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: service_step_document_submission_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_document_submission_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: service_step_document_delivery_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_document_delivery_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: user_invite_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
 
 
 --
 -- Name: client_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.client_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.client_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
 
 
 --
 -- Name: service_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: service_step_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: service_step_confirmation_by_agency_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_confirmation_by_agency_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_document_delivery_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_document_submission_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: service_step_form_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_form_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: service_step_payment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_payment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
 
 
 --
 -- Name: service_variant_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_variant_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_variant_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: stripe_account_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.stripe_account_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: theme_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: user_invite_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
 
 
 --
 -- Name: agency_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: user_invite_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: image_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.image_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: theme_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_document_delivery_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_document_delivery_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_document_submission_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_document_submission_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_confirmation_by_agency_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_confirmation_by_agency_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_form_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_form_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_payment_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_payment_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: client_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.client_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.client_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: image_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.image_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: service_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_confirmation_by_agency_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_confirmation_by_agency_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_document_delivery_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_document_submission_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_form_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_form_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_payment_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_step_payment_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: service_variant_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_variant_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.service_variant_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: theme_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: user_invite_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: agency_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
-
-
---
--- Name: service_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
-
-
---
--- Name: theme_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.agency_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
 
 
 --
 -- Name: image_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.image_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.image_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
 
 
 --
--- Name: stripe_account_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.service_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
+-- Name: theme_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.theme_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
 
 
 --
 -- Name: agency_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: theme_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_payment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_payment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_form_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_form_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_confirmation_by_agency_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_document_submission_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_document_delivery_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: user_invite_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: client_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.client_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.client_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: service_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_confirmation_by_agency_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_form_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_form_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_payment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_payment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: service_variant_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_variant_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_variant_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: stripe_account_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: theme_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: user_invite_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: agency_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: user_invite_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: image_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.image_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: theme_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_document_delivery_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_document_submission_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_confirmation_by_agency_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_form_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_form_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_payment_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_payment_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: client_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: image_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.image_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: service_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_confirmation_by_agency_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_form_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_form_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_payment_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_step_payment_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: service_variant_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_variant_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.service_variant_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: theme_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: user_invite_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: agency_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
-
-
---
--- Name: service_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
-
-
---
--- Name: theme_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
 
 
 --
 -- Name: image_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.image_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.image_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
 
 
 --
--- Name: stripe_account_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
+-- Name: theme_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
 
 
 --
 -- Name: agency_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: theme_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_payment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_payment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_form_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_form_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_confirmation_by_agency_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_document_submission_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: service_step_document_delivery_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: user_invite_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: client_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.client_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.client_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: service_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_confirmation_by_agency_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_form_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_form_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_step_payment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_payment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: service_variant_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_variant_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_variant_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: stripe_account_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: theme_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: user_invite_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: agency_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: user_invite_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: image_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.image_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: theme_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_document_delivery_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_document_submission_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_confirmation_by_agency_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_form_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_form_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_payment_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_payment_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
-
-
---
--- Name: service_step_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: client_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.client_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: image_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.image_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: service_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_confirmation_by_agency_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_confirmation_by_agency_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_document_delivery_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_document_submission_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_document_submission_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_form_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_form_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: service_step_payment_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_step_payment_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: service_variant_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_variant_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.service_variant_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: theme_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: user_invite_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: agency_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
-
-
---
--- Name: service_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
-
-
---
--- Name: theme_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
 -- Name: image_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.image_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.image_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
--- Name: stripe_account_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+-- Name: service_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.stripe_account_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
+-- Name: theme_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.theme_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
 -- Name: agency_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agency_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: theme_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.theme_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: service_step_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: service_step_payment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_payment_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: service_step_form_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_form_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: service_step_confirmation_by_agency_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_confirmation_by_agency_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: service_step_document_submission_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_document_submission_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: service_step_document_delivery_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_document_delivery_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: user_invite_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_invite_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agency_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
 -- Name: client_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.client_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.client_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
 -- Name: service_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_confirmation_by_agency_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_confirmation_by_agency_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_document_delivery_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_document_delivery_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_document_submission_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_document_submission_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_form_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_form_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: service_step_payment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_payment_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
 -- Name: service_variant_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_variant_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_variant_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: stripe_account_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.stripe_account_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: theme_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.theme_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: user_invite_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_invite_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
 -- Name: password_reset_ tr_instead_of_delete_try_cancel_password_reset; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_instead_of_delete_try_cancel_password_reset INSTEAD OF DELETE ON application_.password_reset_ FOR EACH ROW EXECUTE PROCEDURE internal_.try_cancel_password_reset_();
+CREATE TRIGGER tr_instead_of_delete_try_cancel_password_reset INSTEAD OF DELETE ON application_.password_reset_ FOR EACH ROW EXECUTE FUNCTION internal_.try_cancel_password_reset_();
 
 
 --
 -- Name: sign_up_ tr_instead_of_delete_try_cancel_sign_up_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_instead_of_delete_try_cancel_sign_up_ INSTEAD OF DELETE ON application_.sign_up_ FOR EACH ROW EXECUTE PROCEDURE internal_.try_cancel_sign_up_();
+CREATE TRIGGER tr_instead_of_delete_try_cancel_sign_up_ INSTEAD OF DELETE ON application_.sign_up_ FOR EACH ROW EXECUTE FUNCTION internal_.try_cancel_sign_up_();
 
 
 --
 -- Name: password_reset_ tr_instead_of_insert_try_start_password_reset; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_instead_of_insert_try_start_password_reset INSTEAD OF INSERT ON application_.password_reset_ FOR EACH ROW EXECUTE PROCEDURE internal_.try_start_password_reset_();
+CREATE TRIGGER tr_instead_of_insert_try_start_password_reset INSTEAD OF INSERT ON application_.password_reset_ FOR EACH ROW EXECUTE FUNCTION internal_.try_start_password_reset_();
 
 
 --
 -- Name: sign_up_ tr_instead_of_insert_try_start_sign_up_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_instead_of_insert_try_start_sign_up_ INSTEAD OF INSERT ON application_.sign_up_ FOR EACH ROW EXECUTE PROCEDURE internal_.try_start_sign_up_();
+CREATE TRIGGER tr_instead_of_insert_try_start_sign_up_ INSTEAD OF INSERT ON application_.sign_up_ FOR EACH ROW EXECUTE FUNCTION internal_.try_start_sign_up_();
 
 
 --
 -- Name: password_reset_ tr_instead_of_update_try_verify_password_reset; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_instead_of_update_try_verify_password_reset INSTEAD OF UPDATE ON application_.password_reset_ FOR EACH ROW EXECUTE PROCEDURE internal_.try_verify_password_reset_();
+CREATE TRIGGER tr_instead_of_update_try_verify_password_reset INSTEAD OF UPDATE ON application_.password_reset_ FOR EACH ROW EXECUTE FUNCTION internal_.try_verify_password_reset_();
 
 
 --
 -- Name: sign_up_ tr_instead_of_update_try_verify_sign_up_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
-CREATE TRIGGER tr_instead_of_update_try_verify_sign_up_ INSTEAD OF UPDATE ON application_.sign_up_ FOR EACH ROW EXECUTE PROCEDURE internal_.try_verify_sign_up_();
-
-
---
--- Name: operation_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.operation_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: role_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: role_hierarchy_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_hierarchy_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: secret_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.secret_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: subdomain_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: policy_assignment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.policy_assignment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_instead_of_update_try_verify_sign_up_ INSTEAD OF UPDATE ON application_.sign_up_ FOR EACH ROW EXECUTE FUNCTION internal_.try_verify_sign_up_();
 
 
 --
 -- Name: email_address_verification_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.email_address_verification_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.email_address_verification_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
 
 
 --
--- Name: user_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: operation_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
-
-
---
--- Name: sign_up_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.sign_up_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.operation_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
 
 
 --
 -- Name: password_reset_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.password_reset_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_delete_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.password_reset_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
 
 
 --
--- Name: subject_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: policy_assignment_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON security_.subject_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.policy_assignment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: role_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: role_hierarchy_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.role_hierarchy_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: secret_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.secret_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: sign_up_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.sign_up_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: subdomain_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: user_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
 
 
 --
 -- Name: subdomain_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: subject_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON security_.subject_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: user_ tr_after_delete_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_delete_notify_jsonb_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: subdomain_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON security_.subdomain_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
 
 
 --
 -- Name: user_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_();
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON security_.user_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
 
 
 --
 -- Name: password_reset_ tr_after_delete_resource_delete_password_reset; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_resource_delete_password_reset AFTER DELETE ON security_.password_reset_ REFERENCING OLD TABLE AS _old_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_delete_password_reset_();
+CREATE TRIGGER tr_after_delete_resource_delete_password_reset AFTER DELETE ON security_.password_reset_ REFERENCING OLD TABLE AS _old_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_delete_password_reset_();
 
 
 --
 -- Name: sign_up_ tr_after_delete_resource_delete_sign_up_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_delete_resource_delete_sign_up_ AFTER DELETE ON security_.sign_up_ REFERENCING OLD TABLE AS _old_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_delete_sign_up_();
+CREATE TRIGGER tr_after_delete_resource_delete_sign_up_ AFTER DELETE ON security_.sign_up_ REFERENCING OLD TABLE AS _old_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_delete_sign_up_();
 
 
 --
 -- Name: subdomain_ tr_after_insert_assign_subdomain_owner_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_assign_subdomain_owner_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _subdomain FOR EACH STATEMENT EXECUTE PROCEDURE internal_.assign_subdomain_owner_();
-
-
---
--- Name: operation_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: role_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.role_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: role_hierarchy_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.role_hierarchy_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: secret_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.secret_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: subdomain_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: policy_assignment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.policy_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_assign_subdomain_owner_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _subdomain FOR EACH STATEMENT EXECUTE FUNCTION internal_.assign_subdomain_owner_();
 
 
 --
 -- Name: email_address_verification_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.email_address_verification_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.email_address_verification_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
--- Name: user_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: operation_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: sign_up_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: password_reset_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.password_reset_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.password_reset_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: policy_assignment_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.policy_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: role_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.role_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: role_hierarchy_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.role_hierarchy_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: secret_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.secret_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: sign_up_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: subdomain_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: user_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: user_ tr_after_insert_insert_subject_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_insert_subject_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _user FOR EACH STATEMENT EXECUTE PROCEDURE internal_.insert_subject_for_user_();
-
-
---
--- Name: subject_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON security_.subject_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_insert_insert_subject_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _user FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_subject_for_user_();
 
 
 --
 -- Name: subdomain_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: subject_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON security_.subject_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: user_ tr_after_insert_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_insert_notify_jsonb_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: subdomain_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
 
 
 --
 -- Name: user_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_();
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
 
 
 --
 -- Name: password_reset_ tr_after_insert_resource_insert_password_reset; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_resource_insert_password_reset AFTER INSERT ON security_.password_reset_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_password_reset_();
+CREATE TRIGGER tr_after_insert_resource_insert_password_reset AFTER INSERT ON security_.password_reset_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_password_reset_();
 
 
 --
 -- Name: sign_up_ tr_after_insert_resource_insert_sign_up_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_insert_resource_insert_sign_up_ AFTER INSERT ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_insert_sign_up_();
-
-
---
--- Name: operation_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: role_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.role_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: role_hierarchy_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.role_hierarchy_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: secret_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.secret_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: subdomain_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: policy_assignment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.policy_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_insert_resource_insert_sign_up_ AFTER INSERT ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_sign_up_();
 
 
 --
 -- Name: email_address_verification_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.email_address_verification_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.email_address_verification_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
--- Name: user_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: operation_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
-
-
---
--- Name: sign_up_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.operation_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: password_reset_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.password_reset_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.audit_insert_or_update_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.password_reset_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
--- Name: subject_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: policy_assignment_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.subject_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.policy_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: role_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.role_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: role_hierarchy_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.role_hierarchy_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: secret_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.secret_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: sign_up_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: subdomain_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: user_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
 -- Name: subdomain_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
+
+
+--
+-- Name: subject_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.subject_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: user_ tr_after_update_notify_jsonb_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.notify_jsonb_();
+CREATE TRIGGER tr_after_update_notify_jsonb_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _transition_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.notify_jsonb_();
 
 
 --
 -- Name: subdomain_ tr_after_update_resource_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON security_.subdomain_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
 -- Name: user_ tr_after_update_resource_update_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_();
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
 -- Name: password_reset_ tr_after_update_resource_update_password_reset; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_resource_update_password_reset AFTER UPDATE ON security_.password_reset_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_password_reset_();
+CREATE TRIGGER tr_after_update_resource_update_password_reset AFTER UPDATE ON security_.password_reset_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_password_reset_();
 
 
 --
 -- Name: sign_up_ tr_after_update_resource_update_sign_up_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_after_update_resource_update_sign_up_ AFTER UPDATE ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE PROCEDURE internal_.resource_update_sign_up_();
-
-
---
--- Name: operation_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.operation_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: role_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: role_hierarchy_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_hierarchy_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: secret_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.secret_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: subdomain_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subdomain_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: policy_assignment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.policy_assignment_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_after_update_resource_update_sign_up_ AFTER UPDATE ON security_.sign_up_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_sign_up_();
 
 
 --
 -- Name: email_address_verification_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.email_address_verification_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.email_address_verification_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
--- Name: user_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+-- Name: operation_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.user_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
-
-
---
--- Name: sign_up_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.sign_up_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.operation_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
 -- Name: password_reset_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.password_reset_ FOR EACH ROW EXECUTE PROCEDURE internal_.audit_stamp_();
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.password_reset_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: policy_assignment_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.policy_assignment_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: role_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: role_hierarchy_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.role_hierarchy_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: secret_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.secret_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: sign_up_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.sign_up_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: subdomain_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.subdomain_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: user_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON security_.user_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --

@@ -46,7 +46,7 @@ BEGIN
     "password": "asdf"
   }';
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
-  -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
+  --RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
 
   ASSERT _result_1 ?& '{ id }';
 
@@ -83,6 +83,7 @@ BEGIN
   _data := '{
     "verified": true
   }';
+  _data := _data || jsonb_build_object('verification_code', _result_1->>'verification_code');
   SELECT * INTO _result_1 FROM operation_.update_resource_(_result_1->>'id', _data);
   --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result_1;
 
