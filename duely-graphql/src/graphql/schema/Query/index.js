@@ -2,7 +2,6 @@ import me from './me';
 import agency from './agency';
 import countryCodes from './countryCodes';
 import service from './service';
-import user from './user';
 
 export default {
   typeDef: `
@@ -11,7 +10,6 @@ export default {
       agency(uuid: ID, subdomainName: String): Agency
       countryCodes: [String!]!
       service(uuid: ID!): Service
-      user(emailAddress: String!): Subject
     }
   `,
   resolvers: {
@@ -19,8 +17,7 @@ export default {
       me,
       agency,
       countryCodes,
-      service,
-      user
+      service
     }
   }
 };

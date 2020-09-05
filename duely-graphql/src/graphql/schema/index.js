@@ -47,7 +47,10 @@ import VerifyPasswordResetResult from './VerifyPasswordResetResult';
 import VerifySignUpResult from './VerifySignUpResult';
 import Subscription from './Subscription';
 
-export default makeExecutableSchema([
+import { User } from './User';
+
+const types = [
+  User,
   AcceptInviteResult,
   Agency,
   AgencyClientsConnection,
@@ -95,13 +98,18 @@ export default makeExecutableSchema([
   VerifyPasswordResetResult,
   VerifySignUpResult,
   Subscription
-].reduce((schema, type) => ({
-  typeDefs: schema.typeDefs.concat(type.typeDef),
-  resolvers: {
-    ...schema.resolvers,
-    ...type.resolvers
-  }
-}), {
-    typeDefs: '',
-    resolvers: {}
-  }));
+];
+
+const schema = {
+  typeDefs: types.map(t => t.typeDef ?? '').join(''),
+  resolvers: {}
+};
+
+for (const [t, resolvers] of types.flatMap(t => Object.entries(t.resolvers))) {
+  schema.resolvers[t] = {
+    ...schema.resolvers[t],
+    ...resolvers
+  };
+}
+
+export default makeExecutableSchema(schema);
