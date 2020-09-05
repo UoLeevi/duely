@@ -1,0 +1,117 @@
+// https://code.visualstudio.com/docs/editor/userdefinedsnippets#_create-your-own-snippets
+{
+  "React component": {
+    "prefix": "rcomp",
+    "description": "Boilerplate for React component.",
+    "body": [
+      "import React from 'react';$0",
+      "",
+      "const ${TM_DIRECTORY/^.+\\\\(.*)$/$1/} = React.forwardRef(({ $1...props }, ref) => {",
+      "  return (",
+      "    <$2 { ...props } ref={ ref }>",
+      "      $3",
+      "    </$2>",
+      "  );",
+      "});",
+      "",
+      "export default ${TM_DIRECTORY/^.+\\\\(.*)$/$1/};",
+      ""
+    ]
+  },
+  "React HOC": {
+    "prefix": "rhoc",
+    "description": "Boilerplate for React HOC.",
+    "body": [
+      "import React from 'react';$0",
+      "",
+      "const ${TM_FILENAME_BASE} = Component => ({ $1...props }) => {",
+      "  return (",
+      "    <Component { ...props } />",
+      "  );",
+      "};",
+      "",
+      "export default ${TM_FILENAME_BASE};",
+      ""
+    ]
+  },
+  "Import utility": {
+    "prefix": "iutil",
+    "description": "Import utility",
+    "body": [
+      "import { ${1:util} } from 'utils';"
+    ]
+  },
+  "Import component": {
+    "prefix": "icomp",
+    "description": "Import component",
+    "body": [
+      "import ${1:Component} from 'components/${1:Component}';"
+    ]
+  },
+  "Import hook": {
+    "prefix": "ihook",
+    "description": "Import hook",
+    "body": [
+      "import use${1:Hook} from 'hooks/use${1:Hook}';"
+    ]
+  },
+  "Import HOC": {
+    "prefix": "ihoc",
+    "description": "Import HOC",
+    "body": [
+      "import with${1:Hoc} from 'hoc/with${1:Hoc}';"
+    ]
+  },
+  "Import current component css": {
+    "prefix": "icss",
+    "description": "Import current component css",
+    "body": [
+      "import './${TM_DIRECTORY/^.+\\\\(.*)$/$1/}.css';"
+    ]
+  },
+  "HSLA background color": {
+    "prefix": "hsla-bg",
+    "description": "Import current component css",
+    "body": [
+      "hsla(var(--background-color-h), var(--background-color-s), calc(var(--background-color-l) * var(--color-d10)), var(--color-d0))"
+    ]
+  },
+  "Story": {
+    "prefix": "story",
+    "description": "Boilerplate for story.",
+    "body": [
+      "import React from 'react';",
+      "import ${TM_DIRECTORY/^.+\\\\(.*)$/$1/} from '../${TM_DIRECTORY/^.+\\\\(.*)$/$1/}';$0",
+      "",
+      "export default {",
+      "  title: '${TM_DIRECTORY/^.+\\\\(.*)$/$1/}',",
+      "  component: ${TM_DIRECTORY/^.+\\\\(.*)$/$1/},",
+      "};",
+      "",
+      "export const ${1:Default} = () => {",
+      "  return (",
+      "    ${2:<${TM_DIRECTORY/^.+\\\\(.*)$/$1/} />}",
+      "  );",
+      "};",
+      ""
+    ]
+  },
+  "Wrap in panel": {
+    "prefix": "wpanel",
+    "description": "Wrap current selection in panel",
+    "body": [
+      "<div className=\"panel$1\">",
+      "  $CLIPBOARD$0",
+      "</div>"
+    ]
+  },
+  "Wrap in panel row": {
+    "prefix": "wprow",
+    "description": "Wrap current selection in panel row",
+    "body": [
+      "<div className=\"panel-row$1\">",
+      "  $CLIPBOARD$0",
+      "</div>"
+    ]
+  },
+}
