@@ -5,7 +5,7 @@ services:
     # See https://aka.ms/vscode-remote/containers/non-root for details.
     # user: node
 
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
       args:
@@ -22,19 +22,25 @@ services:
 
     volumes:
       - ..:/workspace:cached
-      
+
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
 
     links:
-      - db
+      - duely-postgres
 
-    environment: 
-      - PGHOST=db
+    environment:
+      PORT: 8080
+      PGPORT: 5432
+      PGHOST: duely-postgres
+      PGUSER: duely
+      PGDATABASE: duely
+      PGPASSFILE: /workspace/duely-secret/.pgpass
+      GSERVICEACCOUNTFILE: /workspace/duely-secret/duely-gserviceaccount.json
 
-  # Note: The PostgreSQL host name is "db", not "localhost"
-  db:
-    image: postgres
+  # Note: The PostgreSQL host name is "duely-postgres", not "localhost"
+  duely-postgres:
+    image: postgres:13
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: LocalPassword
@@ -42,5 +48,5 @@ services:
       POSTGRES_DB: postgres
     
     # Uncomment to allow access to PostgreSQL from external tools
-    # ports: 
+    # ports:
     #  - 5432:5432

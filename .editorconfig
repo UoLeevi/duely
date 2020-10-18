@@ -3,13 +3,10 @@
 # top-most EditorConfig file
 root = true
 
-# Unix-style newlines with a newline ending every file
+# Defaults
 [*]
 end_of_line = lf
 insert_final_newline = true
-
-# Indentation
-[**.yaml]
 indent_style = space
 indent_size = 2
 charset = utf-8

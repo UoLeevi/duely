@@ -43,7 +43,10 @@ BEGIN
   _data := '{
     "name": "test",
     "email_address": "a@a",
-    "password": "asdf"
+    "password": "asdf",
+    "data": {
+      "redirect_url": "https://example.com"
+    }
   }';
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
   --RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
@@ -69,8 +72,9 @@ BEGIN
 
   -- TEST INVALID UPDATE OPERATION
   _data := '{
-    "email_address": "b@b"
-  }';
+    "verified": true,
+    "verification_code": "6000acfe-6f6d-45df-a497-35e0fb3cdafe"
+  }'; -- Uses incorrect verification code
   BEGIN
     PERFORM operation_.update_resource_(_result_1->>'id', _data);
     RAISE EXCEPTION 'Should not be able to update resource using these arguments.';

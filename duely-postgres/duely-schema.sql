@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.4 (Debian 12.4-1.pgdg100+1)
--- Dumped by pg_dump version 12.4 (Debian 12.4-1.pgdg90+1)
+-- Dumped from database version 13.0 (Debian 13.0-1.pgdg100+1)
+-- Dumped by pg_dump version 13.0 (Debian 13.0-1.pgdg90+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -5031,22 +5031,6 @@ CREATE TABLE application__audit_.user_invite_ (
 ALTER TABLE application__audit_.user_invite_ OWNER TO postgres;
 
 --
--- Name: _session; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public._session (
-    uuid_ uuid,
-    begin_at_ timestamp with time zone,
-    end_at_ timestamp with time zone,
-    token_uuid_ uuid,
-    tag_ text,
-    nesting_ integer
-);
-
-
-ALTER TABLE public._session OWNER TO postgres;
-
---
 -- Name: subject_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
@@ -5432,23 +5416,6 @@ ALTER TABLE ONLY application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT pgcrypto_.
 
 
 --
--- Data for Name: _session; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public._session (uuid_, begin_at_, end_at_, token_uuid_, tag_, nesting_) FROM stdin;
-15cdb1b6-6ee9-4d41-9983-5b301004dffe	2020-07-29 08:38:01.641507+00	\N	c1ae203b-addb-4171-922b-6fdd9448eefc	\N	0
-\.
-
-
---
--- Data for Name: event_log_; Type: TABLE DATA; Schema: security_; Owner: postgres
---
-
-COPY security_.event_log_ (uuid_, operation_type_, resource_definition_uuid_, resource_uuid_, data_, session_uuid_, event_at_) FROM stdin;
-\.
-
-
---
 -- Data for Name: operation_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
@@ -5658,14 +5625,6 @@ COPY security_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, aud
 
 
 --
--- Data for Name: sign_up_; Type: TABLE DATA; Schema: security_; Owner: postgres
---
-
-COPY security_.sign_up_ (uuid_, user_uuid_, email_address_, name_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, verification_code_, audit_at_, audit_session_uuid_) FROM stdin;
-\.
-
-
---
 -- Data for Name: operation_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
@@ -5820,14 +5779,6 @@ e2370fd9-0389-48e6-a9c0-1b1c0b078a75	manager	1970-01-01 00:00:00+00	00000000-000
 COPY security__audit_.role_hierarchy_ (uuid_, role_uuid_, subrole_uuid_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 64cef996-c748-4ea1-b2a2-0ffc0f4f16ec	be9432a6-2c74-4030-b59e-d657662a4f92	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
 040f5548-7b4e-420e-a852-4c4d3cc011c4	e2370fd9-0389-48e6-a9c0-1b1c0b078a75	566af82a-e5cf-4aad-aada-4341edb3e088	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
-\.
-
-
---
--- Data for Name: sign_up_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
---
-
-COPY security__audit_.sign_up_ (uuid_, user_uuid_, email_address_, name_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, verification_code_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 \.
 
 

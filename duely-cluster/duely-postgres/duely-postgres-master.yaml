@@ -37,7 +37,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: postgres-master
-          image: postgres:11
+          image: postgres:13
           resources:
             requests:
               memory: 128Mi

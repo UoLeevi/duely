@@ -37,7 +37,7 @@ spec:
       terminationGracePeriodSeconds: 10
       initContainers:
         - name: postgres-replica-setup
-          image: postgres:11
+          image: postgres:13
           env:
             - name: PGPASSWORD
               valueFrom:
@@ -61,7 +61,7 @@ spec:
               mountPath: /var/lib/postgresql/data/pgdata
       containers:
         - name: postgres-replica
-          image: postgres:11
+          image: postgres:13
           resources:
             requests:
               memory: 128Mi

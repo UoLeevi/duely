@@ -12,13 +12,13 @@
   // Add the IDs of extensions you want installed when the container is created.
   "extensions": [
     "dbaeumer.vscode-eslint"
-  ]
+  ],
   // Uncomment the line below if you want to keep your containers running after VS Code shuts down.
   // "shutdownAction": "none",
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [3000],
+  "forwardPorts": [8080],
   // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "yarn install",
+  "postCreateCommand": "chmod 600 /workspace/duely-secret/.pgpass",
   // Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
   // "remoteUser": "node"
 }
