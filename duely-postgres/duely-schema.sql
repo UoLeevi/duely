@@ -1324,6 +1324,12 @@ CREATE FUNCTION internal_.try_start_sign_up_() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
+  UPDATE security_.sign_up_
+  SET
+    status_ = 'cancelled'
+  WHERE email_address_ = NEW.email_address_
+    AND status_ = 'started';
+
   INSERT INTO security_.sign_up_(uuid_, email_address_, name_, data_, password_hash_)
   SELECT NEW.uuid_, NEW.email_address_, NEW.name_, COALESCE(NEW.data_, '{}'::jsonb), pgcrypto_.crypt(NEW.password_, pgcrypto_.gen_salt('md5'));
 
@@ -6240,7 +6246,7 @@ CREATE UNIQUE INDEX email_address_verification__email_address__idx ON security_.
 -- Name: sign_up__email_address__idx; Type: INDEX; Schema: security_; Owner: postgres
 --
 
-CREATE UNIQUE INDEX sign_up__email_address__idx ON security_.sign_up_ USING btree (email_address_) WHERE (status_ = 'started'::public.verification_status_);
+CREATE UNIQUE INDEX sign_up__email_address__idx ON security_.sign_up_ USING btree (email_address_) WHERE (status_ <> 'cancelled'::public.verification_status_);
 
 
 --

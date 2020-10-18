@@ -67,6 +67,12 @@ BEGIN
   SELECT * INTO _result_1 FROM operation_.query_resource_(_result_1->>'id');
   --RAISE NOTICE E'query_resource_(text):\n%', _result_1;
 
+  ASSERT _result_1 ?& '{ id, verification_code }';
+
+  _data := jsonb_build_object('verification_code', _result_1->>'verification_code');
+  SELECT * INTO _result_1 FROM operation_.query_resource_all_(_resource_name, _data);
+  --RAISE NOTICE E'query_resource_(text):\n%', _result_1;
+
   ASSERT _result_1 ?& '{ id }';
 
 
