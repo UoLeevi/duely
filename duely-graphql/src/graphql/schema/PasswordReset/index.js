@@ -9,13 +9,13 @@ const resource_name = 'password reset';
 export const PasswordReset = {
   typeDef: `
     extend type Mutation {
-      startPasswordReset(email_address: String!, redirect_url: String): SimpleResult!
-      verifyPasswordReset(verification_code: String!, password: String!): SimpleResult!
+      start_password_reset(email_address: String!, redirect_url: String): SimpleResult!
+      verify_password_reset(verification_code: String!, password: String!): SimpleResult!
     }
   `,
   resolvers: {
     Mutation: {
-      async startPasswordReset(obj, { email_address, redirect_url }, context, info) {
+      async start_password_reset(obj, { email_address, redirect_url }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
@@ -108,7 +108,7 @@ export const PasswordReset = {
           type: 'SimpleResult'
         };
       },
-      async verifyPasswordReset(obj, { verification_code, password }, context, info) {
+      async verify_password_reset(obj, { verification_code, password }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 

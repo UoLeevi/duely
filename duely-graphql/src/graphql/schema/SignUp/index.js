@@ -9,13 +9,13 @@ const resource_name = 'sign up';
 export const SignUp = {
   typeDef: `
     extend type Mutation {
-      startSignUp(email_address: String!, password: String!, name: String!, redirect_url: String): SimpleResult!
-      verifySignUp(verification_code: String!): SimpleResult!
+      start_sign_up(email_address: String!, password: String!, name: String!, redirect_url: String): SimpleResult!
+      verify_sign_up(verification_code: String!): SimpleResult!
     }
   `,
   resolvers: {
     Mutation: {
-      async startSignUp(obj, { email_address, password, name, redirect_url }, context, info) {
+      async start_sign_up(obj, { email_address, password, name, redirect_url }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
@@ -108,7 +108,7 @@ export const SignUp = {
           type: 'SimpleResult'
         };
       },
-      async verifySignUp(obj, { verification_code }, context, info) {
+      async verify_sign_up(obj, { verification_code }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 

@@ -4,8 +4,8 @@ import { AuthenticationError } from 'apollo-server-core';
 export const LogIn = {
   typeDef: `
     extend type Mutation {
-      logIn(email_address: String!, password: String!): LogInResult!
-      logOut: SimpleResult!
+      log_in(email_address: String!, password: String!): LogInResult!
+      log_out: SimpleResult!
     }
 
     type LogInResult implements MutationResult {
@@ -16,7 +16,7 @@ export const LogIn = {
   `,
   resolvers: {
     Mutation: {
-      async logIn(obj, { email_address, password }, context, info) {
+      async log_in(obj, { email_address, password }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
@@ -39,7 +39,7 @@ export const LogIn = {
           });
         });
       },
-      async logOut(obj, args, context, info) {
+      async log_out(obj, args, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
