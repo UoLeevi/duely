@@ -1304,8 +1304,16 @@ CREATE FUNCTION internal_.try_start_password_reset_() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  INSERT INTO security_.password_reset_(uuid_, user_uuid_, data_, password_hash_)
-  SELECT NEW.uuid_, u.uuid_, COALESCE(NEW.data_, '{}'::jsonb), pgcrypto_.crypt(NEW.password_, pgcrypto_.gen_salt('md5'))
+  UPDATE security_.password_reset_ p
+  SET
+    status_ = 'cancelled'
+  FROM security_.user_ u
+  WHERE u.uuid_ = p.user_uuid_
+    AND u.email_address_ = NEW.email_address_
+    AND p.status_ = 'started';
+
+  INSERT INTO security_.password_reset_(uuid_, user_uuid_, data_)
+  SELECT NEW.uuid_, u.uuid_, COALESCE(NEW.data_, '{}'::jsonb)
   FROM security_.user_ u
   WHERE u.email_address_ = NEW.email_address_;
 
@@ -1365,7 +1373,7 @@ BEGIN
 
   UPDATE security_.user_
   SET
-    password_hash_ = _password_reset.password_hash_
+    password_hash_ = pgcrypto_.crypt(NEW.password_, pgcrypto_.gen_salt('md5'))
   WHERE uuid_ = _password_reset.user_uuid_
   RETURNING uuid_ INTO _user_uuid;
 
@@ -3442,7 +3450,7 @@ CREATE FUNCTION policy_.anyone_can_create_password_reset_(_resource_definition s
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  RETURN array_cat(_keys, '{email_address_, data_, password_}');
+  RETURN array_cat(_keys, '{email_address_, data_}');
 END
 $$;
 
@@ -3495,6 +3503,25 @@ $$;
 
 
 ALTER FUNCTION policy_.anyone_with_verification_code_can_verify_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: anyone_with_verification_code_can_verify_password_reset_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_with_verification_code_can_verify_password_reset_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF _resource.search_->>'verification_code_' = _data->>'verification_code_' THEN
+    RETURN array_cat(_keys, '{password_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.anyone_with_verification_code_can_verify_password_reset_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: argument_is_not_null_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4566,7 +4593,7 @@ BEGIN
 
   IF _before_uuid IS NOT NULL THEN
     UPDATE security_.policy_
-    SET after_uuid_ = policy_.uuid_
+    SET after_uuid_ = _policy.uuid_
     WHERE uuid_ = _before_uuid;
   END IF;
 
@@ -4618,7 +4645,6 @@ ALTER FUNCTION security_.unregister_policy_(_table regclass, _operation_type pub
 CREATE TABLE security_.password_reset_ (
     uuid_ uuid NOT NULL,
     user_uuid_ uuid NOT NULL,
-    password_hash_ text NOT NULL,
     data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
     started_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     expires_at_ timestamp with time zone DEFAULT (CURRENT_TIMESTAMP + '1 day'::interval) NOT NULL,
@@ -5270,7 +5296,6 @@ ALTER TABLE security__audit_.operation_ OWNER TO postgres;
 CREATE TABLE security__audit_.password_reset_ (
     uuid_ uuid,
     user_uuid_ uuid,
-    password_hash_ text,
     data_ jsonb,
     started_at_ timestamp with time zone,
     expires_at_ timestamp with time zone,
@@ -5480,7 +5505,7 @@ a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 00:
 -- Data for Name: password_reset_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.password_reset_ (uuid_, user_uuid_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, verification_code_, audit_at_, audit_session_uuid_) FROM stdin;
+COPY security_.password_reset_ (uuid_, user_uuid_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, verification_code_, audit_at_, audit_session_uuid_) FROM stdin;
 \.
 
 
@@ -5514,8 +5539,9 @@ cb4cdf3a-a99b-44df-8027-8352de2333b9	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy
 aab7c301-7434-489a-bb03-5c91edfba106	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.password_reset_can_be_queried_by_initiator_(security_.resource_definition_,application_.resource_,text[])	query	\N
 128a36c5-97fb-45f6-9e31-d804058cef95	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_can_create_password_reset_(security_.resource_definition_,jsonb,text[])	create	\N
 d1a5960c-3f37-4c3f-864b-8807bf5a13c6	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_can_cancel_password_reset_(security_.resource_definition_,application_.resource_)	delete	\N
-1946993a-7a51-40f2-9e89-91199bdbf9bb	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 acba9324-3aff-4951-a46d-51cd7eaa2691	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+b2257097-cb6d-4edc-a2b3-997e185dc415	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_password_reset_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+1946993a-7a51-40f2-9e89-91199bdbf9bb	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	b2257097-cb6d-4edc-a2b3-997e185dc415
 \.
 
 
@@ -5689,7 +5715,7 @@ a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 00:
 -- Data for Name: password_reset_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
-COPY security__audit_.password_reset_ (uuid_, user_uuid_, password_hash_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, verification_code_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+COPY security__audit_.password_reset_ (uuid_, user_uuid_, data_, started_at_, expires_at_, status_, status_at_, initiator_subject_uuid_, verification_code_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 \.
 
 
@@ -6240,6 +6266,13 @@ CREATE INDEX resource__search__idx ON application_.resource_ USING gin (search_)
 --
 
 CREATE UNIQUE INDEX email_address_verification__email_address__idx ON security_.email_address_verification_ USING btree (email_address_) WHERE (status_ IS NULL);
+
+
+--
+-- Name: password_reset__user_uuid__idx; Type: INDEX; Schema: security_; Owner: postgres
+--
+
+CREATE UNIQUE INDEX password_reset__user_uuid__idx ON security_.password_reset_ USING btree (user_uuid_) WHERE (status_ = 'started'::public.verification_status_);
 
 
 --

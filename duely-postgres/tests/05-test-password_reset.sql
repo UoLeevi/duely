@@ -40,8 +40,7 @@ BEGIN
 
   -- TEST VALID CREATE OPERATION
   _data := '{
-    "email_address": "test@duely.app",
-    "password": "asdf"
+    "email_address": "test@duely.app"
   }';
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
   -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
@@ -59,7 +58,8 @@ BEGIN
   -- TEST INVALID UPDATE OPERATION
   _data := '{
     "email_address": "b@b",
-    "vefified": true
+    "vefified": true,
+    "password": "asdf"
   }';
   BEGIN
     PERFORM operation_.update_resource_(_result_1->>'id', _data);
@@ -71,7 +71,8 @@ BEGIN
 
   -- TEST VALID UPDATE OPERATION
   _data := '{
-    "verified": true
+    "verified": true,
+    "password": "asdf"
   }';
   _data := _data || jsonb_build_object('verification_code', _result_1->>'verification_code');
   SELECT * INTO _result_1 FROM operation_.update_resource_(_result_1->>'id', _data);
@@ -82,8 +83,7 @@ BEGIN
 
   -- TEST VALID DELETE OPERATION
   _data := '{
-    "email_address": "test@duely.app",
-    "password": "moi"
+    "email_address": "test@duely.app"
   }';
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
   SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_1->>'id');
