@@ -745,18 +745,23 @@ CREATE FUNCTION internal_.query_owner_resource_(_resource_definition security_.r
     AS $_$
 DECLARE
   _owner_resource_definition security_.resource_definition_;
+  _owner_resource_table_name name;
   _owner_resource application_.resource_;
 BEGIN
   SELECT * INTO _owner_resource_definition
   FROM security_.resource_definition_
   WHERE uuid_ = _resource_definition.owner_uuid_;
 
+  SELECT c.relname INTO _owner_resource_table_name
+  FROM pg_catalog.pg_class AS c
+  WHERE c.oid = _owner_resource_definition.table_;
+
   EXECUTE format($$
     SELECT *
     FROM application_.resource_
     WHERE uuid_ = ($1->>'%1$I')::uuid
   $$,
-  _owner_resource_definition.name_ || '_uuid_')
+  _owner_resource_table_name || 'uuid_')
   INTO _owner_resource
   USING _data;
 
@@ -867,6 +872,7 @@ CREATE FUNCTION internal_.resource_insert_(_resource_definition security_.resour
 DECLARE
   _resource application_.resource_;
   _owner_resource_definition security_.resource_definition_;
+  _owner_resource_table_name name;
   _uuid uuid;
   _owner_uuid uuid;
   _select_list text;
@@ -877,11 +883,15 @@ BEGIN
   FROM security_.resource_definition_
   WHERE uuid_ = _resource_definition.owner_uuid_;
 
+  SELECT c.relname INTO _owner_resource_table_name
+  FROM pg_catalog.pg_class AS c
+  WHERE c.oid = _owner_resource_definition.table_;
+
   IF _owner_resource_definition.uuid_ IS NOT NULL THEN
     EXECUTE format('
       SELECT ($1->>%1$L)::uuid;
     ',
-    _owner_resource_definition.name_ || '_uuid_')
+    _owner_resource_table_name || 'uuid_')
     INTO _owner_uuid
     USING _record;
   END IF;
@@ -1006,6 +1016,7 @@ CREATE FUNCTION internal_.resource_update_(_resource_definition security_.resour
 DECLARE
   _resource application_.resource_;
   _owner_resource_definition security_.resource_definition_;
+  _owner_resource_table_name name;
   _uuid uuid;
   _owner_uuid uuid;
   _select_list text;
@@ -1015,11 +1026,15 @@ BEGIN
   FROM security_.resource_definition_
   WHERE uuid_ = _resource_definition.owner_uuid_;
 
+  SELECT c.relname INTO _owner_resource_table_name
+  FROM pg_catalog.pg_class AS c
+  WHERE c.oid = _owner_resource_definition.table_;
+
   IF _owner_resource_definition.uuid_ IS NOT NULL THEN
     EXECUTE format('
       SELECT ($1->>%1$L)::uuid;
     ',
-    _owner_resource_definition.name_ || '_uuid_')
+    _owner_resource_table_name || 'uuid_')
     INTO _owner_uuid
     USING _record;
   END IF;
@@ -1893,8 +1908,8 @@ ALTER FUNCTION operation_.create_service_step_(_service_uuid uuid, _name text, _
 
 CREATE TABLE application_.stripe_account_ (
     uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    stripe_id_ text NOT NULL,
     agency_uuid_ uuid NOT NULL,
+    stripe_id_ext_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -3750,6 +3765,25 @@ $$;
 ALTER FUNCTION policy_.owner_can_change_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_stripe_account_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_stripe_account_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN array_cat(_keys, '{}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_stripe_account_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: owner_can_change_theme_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3815,6 +3849,28 @@ $$;
 ALTER FUNCTION policy_.owner_can_create_image_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
+-- Name: owner_can_create_stripe_account_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_stripe_account_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
+    RETURN array_cat(_keys, '{agency_uuid_, stripe_id_ext_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_stripe_account_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: owner_can_create_theme_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3857,6 +3913,25 @@ END
 
 
 ALTER FUNCTION policy_.owner_can_invite_(_arg anyelement) OWNER TO postgres;
+
+--
+-- Name: owner_can_query_stripe_account_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_query_stripe_account_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN array_cat(_keys, '{uuid_, agency_uuid_, stripe_id_ext_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_query_stripe_account_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: owner_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5006,8 +5081,8 @@ ALTER TABLE application__audit_.service_variant_ OWNER TO postgres;
 
 CREATE TABLE application__audit_.stripe_account_ (
     uuid_ uuid,
-    stripe_id_ text,
     agency_uuid_ uuid,
+    stripe_id_ext_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -5542,6 +5617,10 @@ d1a5960c-3f37-4c3f-864b-8807bf5a13c6	edc5f82c-c991-494c-90f0-cf6163902f40	policy
 acba9324-3aff-4951-a46d-51cd7eaa2691	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 b2257097-cb6d-4edc-a2b3-997e185dc415	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_password_reset_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 1946993a-7a51-40f2-9e89-91199bdbf9bb	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	b2257097-cb6d-4edc-a2b3-997e185dc415
+98bbbedc-73b8-469b-bc84-797378745075	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_query_stripe_account_(security_.resource_definition_,application_.resource_,text[])	query	\N
+ffbdd939-d23b-4703-b0a3-78baa975133f	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_create_stripe_account_(security_.resource_definition_,jsonb,text[])	create	\N
+be2e2434-7bb8-4b17-87bc-5a7bd97fdd13	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_change_stripe_account_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+1526bb13-417f-481f-981c-913d5f93dd0e	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
@@ -5631,6 +5710,7 @@ d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-
 f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,email_address_}
 3b56d171-3e69-41ca-9a98-d1a3abc9170b	su	sign up	application_.sign_up_	\N	{verification_code_}
 edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_reset_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{verification_code_}
+3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_}
 \.
 
 
@@ -5983,11 +6063,11 @@ ALTER TABLE ONLY application_.stripe_account_
 
 
 --
--- Name: stripe_account_ stripe_account__stripe_id__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+-- Name: stripe_account_ stripe_account__stripe_id_ext__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
 ALTER TABLE ONLY application_.stripe_account_
-    ADD CONSTRAINT stripe_account__stripe_id__key UNIQUE (stripe_id_);
+    ADD CONSTRAINT stripe_account__stripe_id_ext__key UNIQUE (stripe_id_ext_);
 
 
 --
@@ -6486,6 +6566,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.ser
 
 
 --
+-- Name: stripe_account_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.stripe_account_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: theme_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -6696,6 +6783,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.ser
 
 
 --
+-- Name: stripe_account_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: theme_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -6903,6 +6997,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.ima
 --
 
 CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
+-- Name: stripe_account_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.stripe_account_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --

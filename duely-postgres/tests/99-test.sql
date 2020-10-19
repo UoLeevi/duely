@@ -125,7 +125,7 @@ BEGIN
 
   PERFORM operation_.begin_session_(_user_jwt);
 
-  PERFORM operation_.create_stripe_account_(_record_0.uuid_, 'acct_test');
+--   PERFORM operation_.create_stripe_account_(_record_0.uuid_, 'acct_test');
 
   PERFORM operation_.end_session_();
 

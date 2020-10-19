@@ -14,39 +14,34 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CALL internal_.drop_auditing_('application_.stripe_account_');
-ALTER TABLE application_.stripe_account_ DROP COLUMN stripe_id_;
-ALTER TABLE application_.stripe_account_ ADD COLUMN stripe_id_ext_ text UNIQUE NOT NULL;
-CALL internal_.setup_auditing_('application_.stripe_account_');
-
 -- CALL internal_.setup_resource_('application_.stripe_account_', 'stripe account', 'stripe', '{uuid_, agency_uuid_}', 'application_.agency_');
 
-CREATE OR REPLACE FUNCTION policy_.owner_can_query_stripe_account_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN array_cat(_keys, '{uuid_, agency_uuid_, stripe_id_ext_}');
-  ELSE
-    RETURN _keys;
-  END IF;
-END
-$$;
+-- CREATE OR REPLACE FUNCTION policy_.owner_can_query_stripe_account_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+--     LANGUAGE plpgsql SECURITY DEFINER
+--     AS $$
+-- BEGIN
+--   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+--     RETURN array_cat(_keys, '{uuid_, agency_uuid_, stripe_id_ext_}');
+--   ELSE
+--     RETURN _keys;
+--   END IF;
+-- END
+-- $$;
 
-CREATE OR REPLACE FUNCTION policy_.owner_can_create_stripe_account_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $_$
-BEGIN
-  IF (
-    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
-    FROM internal_.query_owner_resource_(_resource_definition, _data)
-  ) THEN
-    RETURN array_cat(_keys, '{uuid_, agency_uuid_, stripe_id_ext_}');
-  ELSE
-    RETURN _keys;
-  END IF;
-END
-$_$;
+-- CREATE OR REPLACE FUNCTION policy_.owner_can_create_stripe_account_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+--     LANGUAGE plpgsql SECURITY DEFINER
+--     AS $_$
+-- BEGIN
+--   IF (
+--     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+--     FROM internal_.query_owner_resource_(_resource_definition, _data)
+--   ) THEN
+--     RETURN array_cat(_keys, '{agency_uuid_, stripe_id_ext_}');
+--   ELSE
+--     RETURN _keys;
+--   END IF;
+-- END
+-- $_$;
 
 -- CREATE OR REPLACE FUNCTION policy_.owner_can_change_stripe_account_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
 --     LANGUAGE plpgsql SECURITY DEFINER

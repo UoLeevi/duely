@@ -7,4 +7,5 @@
 \i tests/03-test-image.sql
 \i tests/04-test-sign_up.sql
 \i tests/05-test-password_reset.sql
+\i tests/06-test-stripe_account.sql
 \i tests/99-test.sql
