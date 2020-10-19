@@ -6,6 +6,7 @@ const resource_name = 'user';
 export const User = {
   typeDef: `
     extend type Query {
+      current_user: User
       user(id: ID!): User
       users(filter: UserFilter!): [User!]
     }
@@ -23,6 +24,21 @@ export const User = {
   `,
   resolvers: {
     Query: {
+      async current_user(source, args, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        return await withConnection(context, async withSession => {
+          return await withSession(async client => {
+            try {
+              const res = await client.query('SELECT * FROM operation_.query_current_user_()');
+              return res.rows[0].query_current_user_
+            } catch (error) {
+              throw new Error(error.message);
+            }
+          });
+        });
+      },
       async user(source, args, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
