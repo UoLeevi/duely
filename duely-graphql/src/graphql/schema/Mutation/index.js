@@ -3,12 +3,6 @@ import endVisit from './endVisit';
 import inviteUser from './inviteUser';
 import acceptInvite from './acceptInvite';
 import declineInvite from './declineInvite';
-import startPasswordReset from './startPasswordReset';
-import verifyPasswordReset from './verifyPasswordReset';
-import startSignUp from './startSignUp';
-import verifySignUp from './verifySignUp';
-import logIn from './logIn';
-import logOut from './logOut';
 import createAgency from './createAgency';
 import createClient from './createClient';
 import createService from './createService';
@@ -31,12 +25,6 @@ export default {
       inviteUser(agencyUuid: ID!, emailAddress: String!, role: String!, message: String): InviteUserResult!
       acceptInvite(inviteUuid: ID!): AcceptInviteResult!
       declineInvite(inviteUuid: ID!): DeclineInviteResult!
-      startPasswordReset(emailAddress: String!, redirectUrl: String): SimpleResult!
-      verifyPasswordReset(verificationCode: String!, password: String!): VerifyPasswordResetResult!
-      startSignUp(emailAddress: String!, password: String!, name: String!, redirectUrl: String): SimpleResult!
-      verifySignUp(verificationCode: String!): VerifySignUpResult!
-      logIn(emailAddress: String!, password: String!): LogInResult!
-      logOut: LogOutResult!
       createAgency(name: String!, subdomain: String!, countryCode: String!, returnUrl: String!): CreateAgencyResult!
       createClient(agencyUuid: ID!, name: String!, emailAddress: String): CreateClientResult!
       createService(agencyUuid: ID!, name: String!): CreateServiceResult!
@@ -59,12 +47,6 @@ export default {
       inviteUser,
       acceptInvite,
       declineInvite,
-      startPasswordReset,
-      verifyPasswordReset,
-      startSignUp,
-      verifySignUp,
-      logIn,
-      logOut,
       createAgency,
       createClient,
       createServiceStep,

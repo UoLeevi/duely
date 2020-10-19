@@ -27,8 +27,6 @@ import EndVisitResult from './EndVisitResult';
 import Image from './Image';
 import Invite from './Invite';
 import InviteUserResult from './InviteUserResult';
-import LogInResult from './LogInResult';
-import LogOutResult from './LogOutResult';
 import Mutation from './Mutation';
 import MutationResult from './MutationResult';
 import Node from './Node';
@@ -43,14 +41,19 @@ import SubjectAgenciesEdge from './SubjectAgenciesEdge';
 import SubjectInvitesConnection from './SubjectInvitesConnection';
 import SubjectInvitesEdge from './SubjectInvitesEdge';
 import Theme from './Theme';
-import VerifyPasswordResetResult from './VerifyPasswordResetResult';
-import VerifySignUpResult from './VerifySignUpResult';
 import Subscription from './Subscription';
 
+import { LogIn } from './LogIn';
+import { SignUp } from './SignUp';
+import { PasswordReset } from './PasswordReset';
 import { User } from './User';
 
 const types = [
+  LogIn,
+  SignUp,
+  PasswordReset,
   User,
+
   AcceptInviteResult,
   Agency,
   AgencyClientsConnection,
@@ -79,8 +82,6 @@ const types = [
   Image,
   Invite,
   InviteUserResult,
-  LogInResult,
-  LogOutResult,
   Mutation,
   MutationResult,
   Node,
@@ -95,8 +96,6 @@ const types = [
   SubjectInvitesConnection,
   SubjectInvitesEdge,
   Theme,
-  VerifyPasswordResetResult,
-  VerifySignUpResult,
   Subscription
 ];
 

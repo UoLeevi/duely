@@ -96,8 +96,44 @@ async function withConnection(context, callback = async withSession => {}) {
   }
 }
 
+async function queryResource(client, id_or_resource_name, filter) {
+  if (filter) {
+    const resources = await queryResourceAll(client, id_or_resource_name, filter);
+    return resources[0];
+  }
+
+  const id = id_or_resource_name;
+  const res = await client.query('SELECT * FROM operation_.query_resource_($1::text)', [id]);
+  return res.rows[0].query_resource_;
+}
+
+async function queryResourceAll(client, resource_name, filter) {
+  const res = await client.query('SELECT * FROM operation_.query_resource_all_($1::text, $2::jsonb)', [resource_name, filter]);
+  return res.rows.map(r => r.query_resource_all_);
+}
+
+async function createResource(client, resource_name, data) {
+  const res = await client.query('SELECT * FROM operation_.create_resource_($1::text, $2::jsonb)', [resource_name, data]);
+  return res.rows[0].create_resource_;
+}
+
+async function updateResource(client, id, data) {
+  const res = await client.query('SELECT * FROM operation_.update_resource_($1::text, $2::jsonb)', [id, data]);
+  return res.rows[0].update_resource_;
+}
+
+async function deleteResource(client, id) {
+  const res = await client.query('SELECT * FROM operation_.delete_resource_($1::text)', [id]);
+  return res.rows[0].delete_resource_;
+}
+
 export {
   pool,
   addBackgroundJob,
-  withConnection
+  withConnection,
+  queryResource,
+  queryResourceAll,
+  createResource,
+  updateResource,
+  deleteResource
 };
