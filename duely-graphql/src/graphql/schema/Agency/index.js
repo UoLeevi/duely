@@ -45,16 +45,15 @@ export const Agency = {
           throw new AuthenticationError('Unauthorized');
 
         try {
-          const stripe_account = await withConnection(context, async withSession => {
+          return await withConnection(context, async withSession => {
             return await withSession(async ({ queryResource }) => {
-              return await queryResource('stripe account', { agency_id: source.id });
+              const stripe_account = await queryResource('stripe account', { agency_id: source.id });
+              return stripe_account.stripe_id_ext;
             });
           });
         } catch (error) {
           throw new Error(error.message);
         }
-
-        return stripe_account.stripe_id_ext;
       },
       async subdomain(source, args, context, info) {
         if (!context.jwt)

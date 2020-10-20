@@ -39,7 +39,7 @@ export const SignUp = {
           redirect_url = new URL(redirect_url);
 
           if (redirect_url.protocol === 'https:') {
-            if (!/^(?:[^\.]+\.)?duely\.app$/.test(redirect_url.hostname)) {
+            if (!/^(?:[^.]+\.)?duely\.app$/.test(redirect_url.hostname)) {
               // TODO: check if external domain is known by duely
 
               return {

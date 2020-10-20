@@ -80,7 +80,7 @@ export const Service = {
             return await withSession(async ({ createResource, updateResource }) => {
               // create service resource
               const serviceCreationOptionalArgs = {};
-              if (args.hasOwnProperty('status')) serviceCreationOptionalArgs.status = args.status;
+              if (Object.prototype.hasOwnProperty.call(args,'status')) serviceCreationOptionalArgs.status = args.status;
               const service = await createResource('service', { name, agency_id, ...serviceCreationOptionalArgs });
               // create service variant resource
               const service_variant = await createResource('service variant', { name, service_id: service.id, ...args });
@@ -111,11 +111,11 @@ export const Service = {
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ updateResource }) => {
+            return await withSession(async ({ queryResource, updateResource }) => {
               // updata service resource
               const serviceUpdates = {};
-              if (args.hasOwnProperty('name')) serviceUpdates.name = args.name;
-              if (args.hasOwnProperty('status')) serviceUpdates.status = args.status;
+              if (Object.prototype.hasOwnProperty.call(args,'name')) serviceUpdates.name = args.name;
+              if (Object.prototype.hasOwnProperty.call(args, 'status')) serviceUpdates.status = args.status;
 
               const service = await (Object.keys(serviceUpdates).length > 0
                 ? updateResource(service_id, serviceUpdates)
