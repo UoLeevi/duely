@@ -1,6 +1,7 @@
 import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource } from '../../utils';
 import { AuthenticationError } from 'apollo-server-core';
+import validator from 'validator';
 
 const resource = {
   name: 'service'
@@ -11,6 +12,7 @@ export const Service = {
     type Service implements Node {
       id: ID!
       name: String!
+      url_name: String!
       status: String!
       agency: Agency!
       default_variant: ServiceVariant!
@@ -18,6 +20,8 @@ export const Service = {
 
     input ServiceFilter {
       name: String
+      agency_id: ID
+      url_name: String
     }
 
     extend type Query {
@@ -26,8 +30,8 @@ export const Service = {
     }
 
     extend type Mutation {
-      create_service(agency_id: ID!, name: String!, description: String, duration: String, price: Int, currency: String, status: String): ServiceMutationResult!
-      update_service(service_id: ID!, name: String, description: String, duration: String, price: Int, currency: String, status: String): ServiceMutationResult!
+      create_service(agency_id: ID!, name: String!, url_name: String!, description: String, duration: String, price: Int, currency: String, status: String): ServiceMutationResult!
+      update_service(service_id: ID!, name: String, url_name: String, description: String, duration: String, price: Int, currency: String, status: String): ServiceMutationResult!
     }
 
     type ServiceMutationResult implements MutationResult {
@@ -71,17 +75,24 @@ export const Service = {
       ...createDefaultQueryResolversForResource(resource)
     },
     Mutation: {
-      async create_service(obj, { agency_id, name, ...args }, context, info) {
+      async create_service(obj, { agency_id, name, url_name, ...args }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
+
+        if (!validator.isSlug(url_name))
+          return {
+            success: false,
+            message: `URL name format '${url_name}' is invalid.`,
+            type: 'ServiceMutationResult'
+          };
 
         try {
           return await withConnection(context, async withSession => {
             return await withSession(async ({ createResource, updateResource }) => {
               // create service resource
               const serviceCreationOptionalArgs = {};
-              if (Object.prototype.hasOwnProperty.call(args,'status')) serviceCreationOptionalArgs.status = args.status;
-              const service = await createResource('service', { name, agency_id, ...serviceCreationOptionalArgs });
+              if (Object.prototype.hasOwnProperty.call(args, 'status')) serviceCreationOptionalArgs.status = args.status;
+              const service = await createResource('service', { name, url_name, agency_id, ...serviceCreationOptionalArgs });
               // create service variant resource
               const service_variant = await createResource('service variant', { name, service_id: service.id, ...args });
               // set service variant as default
@@ -105,16 +116,24 @@ export const Service = {
           };
         }
       },
-      async update_service(obj, { service_id, ...args }, context, info) {
+      async update_service(obj, { service_id, url_name, ...args }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
+
+        if (url_name != null && !validator.isSlug(url_name))
+          return {
+            success: false,
+            message: `URL name format '${url_name}' is invalid.`,
+            type: 'ServiceMutationResult'
+          };
 
         try {
           return await withConnection(context, async withSession => {
             return await withSession(async ({ queryResource, updateResource }) => {
               // updata service resource
               const serviceUpdates = {};
-              if (Object.prototype.hasOwnProperty.call(args,'name')) serviceUpdates.name = args.name;
+              if (url_name != null) serviceUpdates.url_name = url_name;
+              if (Object.prototype.hasOwnProperty.call(args, 'name')) serviceUpdates.name = args.name;
               if (Object.prototype.hasOwnProperty.call(args, 'status')) serviceUpdates.status = args.status;
 
               const service = await (Object.keys(serviceUpdates).length > 0
