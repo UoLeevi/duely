@@ -31,7 +31,7 @@ BEGIN
 CREATE OR REPLACE FUNCTION policy_.anyone_can_query_stripe_account_for_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
-  SELECT array_cat(_keys, '{uuid_, agency_uuid_}');
+  SELECT array_cat(_keys, '{uuid_, agency_uuid_, stripe_id_ext_}');
 $$;
 
 -- CREATE OR REPLACE FUNCTION policy_.owner_can_create_service_variant_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
@@ -72,7 +72,7 @@ $$;
 -- $$;
 
 -- PERFORM security_.register_policy_('application_.service_variant_', 'query', 'policy_.agent_can_query_service_variant_');
-PERFORM security_.register_policy_('application_.stripe_account_', 'query', 'policy_.anyone_can_query_stripe_account_for_agency_');
+-- PERFORM security_.register_policy_('application_.stripe_account_', 'query', 'policy_.anyone_can_query_stripe_account_for_agency_');
 -- PERFORM security_.register_policy_('application_.service_variant_', 'create', 'policy_.owner_can_create_service_variant_');
 -- PERFORM security_.register_policy_('application_.service_variant_', 'update', 'policy_.owner_can_change_service_variant_');
 -- PERFORM security_.register_policy_('application_.service_variant_', 'delete', 'policy_.only_owner_can_delete_');

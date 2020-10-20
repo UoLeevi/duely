@@ -3600,6 +3600,19 @@ $$;
 ALTER FUNCTION policy_.anyone_can_query_live_service_variant_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
+-- Name: anyone_can_query_stripe_account_for_agency_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_query_stripe_account_for_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE sql STABLE SECURITY DEFINER
+    AS $$
+  SELECT array_cat(_keys, '{uuid_, agency_uuid_, stripe_id_ext_}');
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_query_stripe_account_for_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: anyone_with_verification_code_can_verify_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -5799,7 +5812,6 @@ d1a5960c-3f37-4c3f-864b-8807bf5a13c6	edc5f82c-c991-494c-90f0-cf6163902f40	policy
 acba9324-3aff-4951-a46d-51cd7eaa2691	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 b2257097-cb6d-4edc-a2b3-997e185dc415	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_password_reset_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 1946993a-7a51-40f2-9e89-91199bdbf9bb	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	b2257097-cb6d-4edc-a2b3-997e185dc415
-98bbbedc-73b8-469b-bc84-797378745075	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_query_stripe_account_(security_.resource_definition_,application_.resource_,text[])	query	\N
 ffbdd939-d23b-4703-b0a3-78baa975133f	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_create_stripe_account_(security_.resource_definition_,jsonb,text[])	create	\N
 be2e2434-7bb8-4b17-87bc-5a7bd97fdd13	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_change_stripe_account_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 1526bb13-417f-481f-981c-913d5f93dd0e	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
@@ -5813,6 +5825,8 @@ ab3fa4a3-413f-449b-bfb5-ed4981ba1de2	7f589215-bdc7-4664-99c6-b7745349c352	policy
 0be43a88-13df-4bb2-8794-159800b90670	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_create_service_variant_(security_.resource_definition_,jsonb,text[])	create	\N
 37978625-4f1f-4c1a-a9da-0571a3e91fd4	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_change_service_variant_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 b2cab51a-ad53-4ee2-9113-1566989be9dc	7f589215-bdc7-4664-99c6-b7745349c352	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+956aea4b-98b1-4d4c-ae50-31ec931fd7f0	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.anyone_can_query_stripe_account_for_agency_(security_.resource_definition_,application_.resource_,text[])	query	\N
+98bbbedc-73b8-469b-bc84-797378745075	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_query_stripe_account_(security_.resource_definition_,application_.resource_,text[])	query	956aea4b-98b1-4d4c-ae50-31ec931fd7f0
 \.
 
 
