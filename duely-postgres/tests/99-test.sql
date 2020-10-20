@@ -190,70 +190,70 @@ BEGIN
   PERFORM operation_.end_session_();
 
 
-  PERFORM operation_.begin_session_(_user_jwt);
+--   PERFORM operation_.begin_session_(_user_jwt);
 
-  PERFORM operation_.create_service_(_record_0.uuid_, 'test service 1');
-  PERFORM operation_.create_service_(_record_0.uuid_, 'test service 2');
+--   PERFORM operation_.create_service_(_record_0.uuid_, 'test service 1');
+--   PERFORM operation_.create_service_(_record_0.uuid_, 'test service 2');
 
-  PERFORM operation_.end_session_();
-
-
-  PERFORM operation_.begin_session_(_user_jwt);
-
-  SELECT * INTO _record_0 FROM operation_.query_agency_(_record_0.uuid_);
-  --RAISE NOTICE E'query_agency_:\n%', _record_0;
-
-  PERFORM operation_.end_session_();
+--   PERFORM operation_.end_session_();
 
 
-  PERFORM operation_.begin_session_(_user_jwt);
+--   PERFORM operation_.begin_session_(_user_jwt);
 
-  OPEN _cursor FOR SELECT * FROM operation_.query_service_by_agency_(_record_0.uuid_);
-  LOOP
-    FETCH FROM _cursor INTO _record_0;
-    EXIT WHEN NOT FOUND;
-    --RAISE NOTICE E'query_service_by_agency_:\n%', _record_0;
-  END LOOP;
-  CLOSE _cursor;
+--   SELECT * INTO _record_0 FROM operation_.query_agency_(_record_0.uuid_);
+--   --RAISE NOTICE E'query_agency_:\n%', _record_0;
 
-  PERFORM operation_.end_session_();
+--   PERFORM operation_.end_session_();
 
 
-  PERFORM operation_.begin_session_(_user_jwt);
+--   PERFORM operation_.begin_session_(_user_jwt);
 
-  SELECT * INTO _record_0 FROM operation_.query_agency_by_subdomain_name_('test');
-  SELECT * INTO _record_1 FROM operation_.query_service_by_agency_(_record_0.uuid_) WHERE name_ = 'test service 2';
-  SELECT * INTO _record_1 FROM operation_.query_service_(_record_1.uuid_);
-  SELECT * INTO _record_2 FROM operation_.query_service_variant_by_service_(_record_1.uuid_);
-  PERFORM operation_.delete_service_(_record_1.uuid_);
+--   OPEN _cursor FOR SELECT * FROM operation_.query_service_by_agency_(_record_0.uuid_);
+--   LOOP
+--     FETCH FROM _cursor INTO _record_0;
+--     EXIT WHEN NOT FOUND;
+--     --RAISE NOTICE E'query_service_by_agency_:\n%', _record_0;
+--   END LOOP;
+--   CLOSE _cursor;
 
-  PERFORM operation_.end_session_();
-
-
-  PERFORM operation_.begin_session_(_user_jwt);
-
-  SELECT * INTO _record_0 FROM operation_.query_service_by_agency_(_record_0.uuid_) WHERE name_ = 'test service 1';
-  SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 2', 'form');
-  SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 3', 'confirmation_by_agency', _record_1.uuid_);
-  SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 4', 'document_delivery', _record_1.uuid_);
-  SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 1', 'payment');
-  SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step del', 'payment', _record_1.uuid_);
-  SELECT * INTO _record_1 FROM operation_.delete_service_step_(_record_1.uuid_);
-
-  PERFORM operation_.end_session_();
+--   PERFORM operation_.end_session_();
 
 
-  PERFORM operation_.begin_session_(_user_jwt);
+--   PERFORM operation_.begin_session_(_user_jwt);
 
-  OPEN _cursor FOR SELECT * FROM operation_.query_service_step_by_service_(_record_0.uuid_);
-  LOOP
-    FETCH FROM _cursor INTO _record_1;
-    EXIT WHEN NOT FOUND;
-    --RAISE NOTICE E'query_service_step_by_service_:\n%', _record_1;
-  END LOOP;
-  CLOSE _cursor;
+--   SELECT * INTO _record_0 FROM operation_.query_agency_by_subdomain_name_('test');
+--   SELECT * INTO _record_1 FROM operation_.query_service_by_agency_(_record_0.uuid_) WHERE name_ = 'test service 2';
+--   SELECT * INTO _record_1 FROM operation_.query_service_(_record_1.uuid_);
+--   SELECT * INTO _record_2 FROM operation_.query_service_variant_by_service_(_record_1.uuid_);
+--   PERFORM operation_.delete_service_(_record_1.uuid_);
 
-  PERFORM operation_.end_session_();
+--   PERFORM operation_.end_session_();
+
+
+--   PERFORM operation_.begin_session_(_user_jwt);
+
+--   SELECT * INTO _record_0 FROM operation_.query_service_by_agency_(_record_0.uuid_) WHERE name_ = 'test service 1';
+--   SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 2', 'form');
+--   SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 3', 'confirmation_by_agency', _record_1.uuid_);
+--   SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 4', 'document_delivery', _record_1.uuid_);
+--   SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step 1', 'payment');
+--   SELECT * INTO _record_1 FROM operation_.create_service_step_(_record_0.uuid_, 'test service step del', 'payment', _record_1.uuid_);
+--   SELECT * INTO _record_1 FROM operation_.delete_service_step_(_record_1.uuid_);
+
+--   PERFORM operation_.end_session_();
+
+
+--   PERFORM operation_.begin_session_(_user_jwt);
+
+--   OPEN _cursor FOR SELECT * FROM operation_.query_service_step_by_service_(_record_0.uuid_);
+--   LOOP
+--     FETCH FROM _cursor INTO _record_1;
+--     EXIT WHEN NOT FOUND;
+--     --RAISE NOTICE E'query_service_step_by_service_:\n%', _record_1;
+--   END LOOP;
+--   CLOSE _cursor;
+
+--   PERFORM operation_.end_session_();
 
 
   PERFORM operation_.begin_session_(_user_jwt);

@@ -1804,6 +1804,7 @@ CREATE TABLE application_.service_ (
     name_ text NOT NULL,
     status_ text DEFAULT 'draft'::text NOT NULL,
     default_variant_uuid_ uuid,
+    url_name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -3429,7 +3430,7 @@ CREATE FUNCTION policy_.agent_can_query_service_(_resource_definition security_.
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN array_cat(_keys, '{uuid_, agency_uuid_, name_, status_, default_variant_uuid_}');
+    RETURN array_cat(_keys, '{uuid_, agency_uuid_, name_, url_name_, status_, default_variant_uuid_}');
   ELSE
     RETURN _keys;
   END IF;
@@ -3566,7 +3567,7 @@ BEGIN
     FROM application_.service_
     WHERE uuid_ = _resource.uuid_
   ) THEN
-    RETURN array_cat(_keys, '{uuid_, agency_uuid_, name_, status_, default_variant_uuid_}');
+    RETURN array_cat(_keys, '{uuid_, agency_uuid_, name_, url_name_, status_, default_variant_uuid_}');
   ELSE
     RETURN _keys;
   END IF;
@@ -3885,7 +3886,7 @@ CREATE FUNCTION policy_.owner_can_change_service_(_resource_definition security_
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN array_cat(_keys, '{uuid_, name_, status_, default_variant_uuid_}');
+    RETURN array_cat(_keys, '{uuid_, name_, url_name_, status_, default_variant_uuid_}');
   ELSE
     RETURN _keys;
   END IF;
@@ -4010,7 +4011,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN array_cat(_keys, '{agency_uuid_, name_, status_, default_variant_uuid_}');
+    RETURN array_cat(_keys, '{agency_uuid_, name_, url_name_, status_, default_variant_uuid_}');
   ELSE
     RETURN _keys;
   END IF;
@@ -5147,6 +5148,7 @@ CREATE TABLE application__audit_.service_ (
     name_ text,
     status_ text,
     default_variant_uuid_ uuid,
+    url_name_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -6184,6 +6186,14 @@ ALTER TABLE ONLY application_.resource_
 
 ALTER TABLE ONLY application_.service_
     ADD CONSTRAINT service__agency_uuid__name__key UNIQUE (agency_uuid_, name_);
+
+
+--
+-- Name: service_ service__agency_uuid__url_name__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_
+    ADD CONSTRAINT service__agency_uuid__url_name__key UNIQUE (agency_uuid_, url_name_);
 
 
 --
