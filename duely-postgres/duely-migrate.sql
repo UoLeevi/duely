@@ -14,6 +14,19 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
+CREATE FUNCTION operation_.query_current_user_() RETURNS jsonb
+    LANGUAGE sql SECURITY DEFINER
+    AS $$
+  SELECT operation_.query_resource_(r.id_)
+  FROM application_.resource_ r
+  WHERE r.uuid_ = internal_.current_subject_uuid_()
+$$;
+
+INSERT INTO security_.operation_(name_, log_events_) VALUES ('query_current_user_', 'f');
+
+PERFORM security_.implement_policy_allow_('query_current_user_', 'logged_in_');
+PERFORM security_.implement_policy_allow_('query_current_user_', 'visitor_');
+
 -- CALL internal_.setup_resource_('application_.stripe_account_', 'stripe account', 'stripe', '{uuid_, agency_uuid_}', 'application_.agency_');
 
 -- CREATE OR REPLACE FUNCTION policy_.owner_can_query_stripe_account_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
