@@ -5914,7 +5914,6 @@ da286841-dd4c-4a92-a772-253bce497514	visitor_	9506e0e9-ee4a-4442-968a-76d9de05d2
 COPY security_.resource_definition_ (uuid_, id_prefix_, name_, table_, owner_uuid_, search_) FROM stdin;
 e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	{uuid_,name_}
 957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,name_,subdomain_uuid_}
-d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}
 88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}
 2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	img	image	application_.image_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_}
 f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,email_address_}
@@ -5922,6 +5921,7 @@ f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,e
 edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_reset_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{verification_code_}
 3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_}
 7f589215-bdc7-4664-99c6-b7745349c352	svcvar	service variant	application_.service_variant_	d50773b3-5779-4333-8bc3-6ef32d488d72	{uuid_,service_uuid_}
+d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,url_name_,agency_uuid_}
 \.
 
 
