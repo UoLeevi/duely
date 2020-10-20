@@ -3440,6 +3440,25 @@ $$;
 ALTER FUNCTION policy_.agent_can_query_service_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
+-- Name: agent_can_query_service_variant_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.agent_can_query_service_variant_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
+    RETURN array_cat(_keys, '{uuid_, service_uuid_, name_, status_, description_, duration_, price_, currency_, image_logo_uuid_, image_hero_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.agent_can_query_service_variant_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: agent_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3556,6 +3575,29 @@ $$;
 
 
 ALTER FUNCTION policy_.anyone_can_query_live_service_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: anyone_can_query_live_service_variant_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_query_live_service_variant_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT status_ = 'live'
+    FROM application_.service_variant_
+    WHERE uuid_ = _resource.uuid_
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, service_uuid_, name_, status_, description_, duration_, price_, currency_, image_logo_uuid_, image_hero_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_query_live_service_variant_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: anyone_with_verification_code_can_verify_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3841,6 +3883,25 @@ $$;
 ALTER FUNCTION policy_.owner_can_change_service_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_service_variant_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_service_variant_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN array_cat(_keys, '{name_, status_, description_, duration_, price_, currency_, image_logo_uuid_, image_hero_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_service_variant_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: owner_can_change_stripe_account_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3945,6 +4006,28 @@ $$;
 
 
 ALTER FUNCTION policy_.owner_can_create_service_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: owner_can_create_service_variant_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_service_variant_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
+    RETURN array_cat(_keys, '{service_uuid_, name_, status_, description_, duration_, price_, currency_, image_logo_uuid_, image_hero_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_service_variant_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: owner_can_create_stripe_account_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5725,6 +5808,11 @@ c688ebf8-ac72-4f0f-8c19-6bf57b4f4d2a	d50773b3-5779-4333-8bc3-6ef32d488d72	policy
 c7e51b91-eb2d-436c-a2eb-c1cbe6f163cd	d50773b3-5779-4333-8bc3-6ef32d488d72	policy_.owner_can_create_service_(security_.resource_definition_,jsonb,text[])	create	\N
 f68d7638-0e2e-4e57-9605-e4438c17524e	d50773b3-5779-4333-8bc3-6ef32d488d72	policy_.owner_can_change_service_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 9bf91e52-e6ad-4daa-bb2a-d22dc966d62e	d50773b3-5779-4333-8bc3-6ef32d488d72	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+95c81a39-4ede-4ebd-9485-502ba1ad9a68	7f589215-bdc7-4664-99c6-b7745349c352	policy_.anyone_can_query_live_service_variant_(security_.resource_definition_,application_.resource_,text[])	query	\N
+ab3fa4a3-413f-449b-bfb5-ed4981ba1de2	7f589215-bdc7-4664-99c6-b7745349c352	policy_.agent_can_query_service_variant_(security_.resource_definition_,application_.resource_,text[])	query	95c81a39-4ede-4ebd-9485-502ba1ad9a68
+0be43a88-13df-4bb2-8794-159800b90670	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_create_service_variant_(security_.resource_definition_,jsonb,text[])	create	\N
+37978625-4f1f-4c1a-a9da-0571a3e91fd4	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_change_service_variant_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+b2cab51a-ad53-4ee2-9113-1566989be9dc	7f589215-bdc7-4664-99c6-b7745349c352	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
@@ -5817,6 +5905,7 @@ f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,e
 3b56d171-3e69-41ca-9a98-d1a3abc9170b	su	sign up	application_.sign_up_	\N	{verification_code_}
 edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_reset_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{verification_code_}
 3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_}
+7f589215-bdc7-4664-99c6-b7745349c352	svcvar	service variant	application_.service_variant_	d50773b3-5779-4333-8bc3-6ef32d488d72	{uuid_,service_uuid_}
 \.
 
 
@@ -6675,6 +6764,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.ser
 
 
 --
+-- Name: service_variant_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.service_variant_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: stripe_account_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -6892,6 +6988,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.ser
 
 
 --
+-- Name: service_variant_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.service_variant_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: stripe_account_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7106,6 +7209,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.ima
 --
 
 CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
+-- Name: service_variant_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.service_variant_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
