@@ -3421,6 +3421,25 @@ $$;
 ALTER FUNCTION operation_.update_resource_(_id text, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: agent_can_query_service_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.agent_can_query_service_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
+    RETURN array_cat(_keys, '{uuid_, agency_uuid_, name_, status_, default_variant_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.agent_can_query_service_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: agent_in_agency_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3514,6 +3533,29 @@ $$;
 
 
 ALTER FUNCTION policy_.anyone_can_query_basic_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: anyone_can_query_live_service_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_query_live_service_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT status_ = 'live'
+    FROM application_.service_
+    WHERE uuid_ = _resource.uuid_
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, agency_uuid_, name_, status_, default_variant_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_query_live_service_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: anyone_with_verification_code_can_verify_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3780,6 +3822,25 @@ $$;
 ALTER FUNCTION policy_.owner_can_change_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_service_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_service_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN array_cat(_keys, '{uuid_, name_, status_, default_variant_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_service_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
 -- Name: owner_can_change_stripe_account_(security_.resource_definition_, application_.resource_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3862,6 +3923,28 @@ $$;
 
 
 ALTER FUNCTION policy_.owner_can_create_image_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: owner_can_create_service_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_service_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
+    RETURN array_cat(_keys, '{agency_uuid_, name_, status_, default_variant_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_service_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: owner_can_create_stripe_account_(security_.resource_definition_, jsonb, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5637,6 +5720,11 @@ b2257097-cb6d-4edc-a2b3-997e185dc415	edc5f82c-c991-494c-90f0-cf6163902f40	policy
 ffbdd939-d23b-4703-b0a3-78baa975133f	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_create_stripe_account_(security_.resource_definition_,jsonb,text[])	create	\N
 be2e2434-7bb8-4b17-87bc-5a7bd97fdd13	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_change_stripe_account_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 1526bb13-417f-481f-981c-913d5f93dd0e	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+2e070b30-cde4-4173-9020-c9b3b6104a64	d50773b3-5779-4333-8bc3-6ef32d488d72	policy_.anyone_can_query_live_service_(security_.resource_definition_,application_.resource_,text[])	query	\N
+c688ebf8-ac72-4f0f-8c19-6bf57b4f4d2a	d50773b3-5779-4333-8bc3-6ef32d488d72	policy_.agent_can_query_service_(security_.resource_definition_,application_.resource_,text[])	query	2e070b30-cde4-4173-9020-c9b3b6104a64
+c7e51b91-eb2d-436c-a2eb-c1cbe6f163cd	d50773b3-5779-4333-8bc3-6ef32d488d72	policy_.owner_can_create_service_(security_.resource_definition_,jsonb,text[])	create	\N
+f68d7638-0e2e-4e57-9605-e4438c17524e	d50773b3-5779-4333-8bc3-6ef32d488d72	policy_.owner_can_change_service_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
+9bf91e52-e6ad-4daa-bb2a-d22dc966d62e	d50773b3-5779-4333-8bc3-6ef32d488d72	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
