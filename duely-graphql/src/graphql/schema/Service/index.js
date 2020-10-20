@@ -141,7 +141,9 @@ export const Service = {
                 : queryResource(service_id));
 
               // update service variant resource
-              const service_variant = await updateResource(service.default_variant_id, args);
+              if (Object.keys(args).length > 0) {
+                await updateResource(service.default_variant_id, args);
+              }
 
               // success
               return {
