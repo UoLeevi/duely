@@ -1,4 +1,4 @@
-import { withConnection, queryResource, queryResourceAll, createResource, updateResource, deleteResource } from '../../../db';
+import { withConnection } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
@@ -15,7 +15,7 @@ export const SignUp = {
   `,
   resolvers: {
     Mutation: {
-      async start_sign_up(obj, { email_address, password, name, redirect_url }, context, info) {
+      async start_sign_up(source, { email_address, password, name, redirect_url }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
@@ -61,8 +61,8 @@ export const SignUp = {
 
         try {
           sign_up = await withConnection(context, async withSession => {
-            return await withSession(async client => {
-              return await createResource(client, resource_name, { name, password, email_address, data: { redirect_url: redirect_url.href } });
+            return await withSession(async ({ createResource }) => {
+              return await createResource(resource_name, { name, password, email_address, data: { redirect_url: redirect_url.href } });
             });
           });
         } catch (error) {
@@ -108,14 +108,14 @@ export const SignUp = {
           type: 'SimpleResult'
         };
       },
-      async verify_sign_up(obj, { verification_code }, context, info) {
+      async verify_sign_up(source, { verification_code }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-        return await withConnection(context, async withSession => {
-          return await withSession(async client => {
-            try {
-              let sign_up = await queryResource(client, resource_name, { verification_code });
+        try {
+          return await withConnection(context, async withSession => {
+            return await withSession(async ({ queryResource, updateResource }) => {
+              let sign_up = await queryResource(resource_name, { verification_code });
 
               if (!sign_up?.id) {
                 return {
@@ -125,21 +125,21 @@ export const SignUp = {
                 };
               }
 
-              sign_up = await updateResource(client, sign_up.id, { verification_code, verified: true });
+              sign_up = await updateResource(sign_up.id, { verification_code, verified: true });
 
               return {
                 success: true,
                 type: 'SimpleResult'
               };
-            } catch (error) {
-              return {
-                success: false,
-                message: error.message, // `Unable to complete sign up an account for '${emailAddress}'. It might be that the verification code was incorrect.`,
-                type: 'SimpleResult'
-              };
-            }
+            });
           });
-        });
+        } catch (error) {
+          return {
+            success: false,
+            message: error.message, // `Unable to complete sign up an account for '${emailAddress}'. It might be that the verification code was incorrect.`,
+            type: 'SimpleResult'
+          };
+        }
       }
     }
   }

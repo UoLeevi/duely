@@ -5,7 +5,7 @@ const RECONNECTION_TIMEOUT = 30000;
 const RECONNECTION_RETRY_COUNT = 3;
 let retryCounter = RECONNECTION_RETRY_COUNT;
 
-const pool = new Pool(config);
+export const pool = new Pool(config);
 pool.on('error', error => {
   console.error('error on idle postgres client.', error.stack);
 });
@@ -60,7 +60,7 @@ sharedClient.connect(error => {
   backgroundJobs.forEach(async callback => await callback(sharedClient));
 });
 
-async function addBackgroundJob(callback = async client => {}, execute = true) {
+export async function addBackgroundJob(callback = async client => { }, execute = true) {
   function removeBackgroundJob() {
     const index = backgroundJobs.indexOf(callback);
     backgroundJobs.splice(index, 1);
@@ -68,72 +68,77 @@ async function addBackgroundJob(callback = async client => {}, execute = true) {
 
   backgroundJobs.push(callback);
 
-  if (isSharedClientConnected && execute)
+  if (isSharedClientConnected && execute) {
     await callback(sharedClient);
+  }
 
   return removeBackgroundJob;
 }
 
-async function withConnection(context, callback = async withSession => {}) {
+export async function withConnection(context, callback = async withSession => { }) {
   const client = await pool.connect();
+  async function withSession(callback = async client => { }) {
+    const functions = useFunctions(client);
+    await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
+    try {
+      await client.query('BEGIN');
+      const res = await callback(functions);
+      await client.query('COMMIT');
+      return res;
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      await client.query('SELECT operation_.end_session_()');
+    }
+  }
 
   try {
-    async function withSession(callback = async client => {}) {
-      await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [context.jwt, context.ip]);
-
-      try {
-        return await callback(client);
-      } finally {
-        await client.query('SELECT operation_.end_session_()');
-      }
-    }
-
     return await callback(withSession);
-
-  }
-  finally {
+  } finally {
     client.release();
   }
 }
 
-async function queryResource(client, id_or_resource_name, filter) {
-  if (filter) {
-    const resources = await queryResourceAll(client, id_or_resource_name, filter);
-    return resources[0];
-  }
+function useFunctions(client) {
+  const functions = { client };
 
-  const id = id_or_resource_name;
-  const res = await client.query('SELECT * FROM operation_.query_resource_($1::text)', [id]);
-  return res.rows[0].query_resource_;
+  functions.queryAll = async function (sql, ...parameters) {
+    const res = await functions.client.query(sql, parameters.length > 0 ? parameters : undefined);
+    const resultFieldName = res.fields[0].name;
+    return res.rows.map(r => r[resultFieldName]);
+  };
+
+  functions.query = async function (sql, ...parameters) {
+    const res = await functions.queryAll(sql, ...parameters);
+    return res[0];
+  };
+
+  functions.queryResource = async function (id_or_resource_name, filter) {
+    if (filter) {
+      const resources = await functions.queryResourceAll(id_or_resource_name, filter);
+      return resources[0];
+    }
+
+    const id = id_or_resource_name;
+    return await functions.query('SELECT * FROM operation_.query_resource_($1::text)', id);
+  };
+
+  functions.queryResourceAll = async function (resource_name, filter) {
+    return await functions.queryAll('SELECT * FROM operation_.query_resource_all_($1::text, $2::jsonb)', resource_name, filter);
+  };
+
+  functions.createResource = async function (resource_name, data) {
+    return await functions.query('SELECT * FROM operation_.create_resource_($1::text, $2::jsonb)', resource_name, data);
+  };
+
+  functions.updateResource = async function (id, data) {
+    return await functions.query('SELECT * FROM operation_.update_resource_($1::text, $2::jsonb)', id, data);
+  };
+
+  functions.deleteResource = async function (id) {
+    return await functions.query('SELECT * FROM operation_.delete_resource_($1::text)', id);
+  };
+
+  return functions;
 }
-
-async function queryResourceAll(client, resource_name, filter) {
-  const res = await client.query('SELECT * FROM operation_.query_resource_all_($1::text, $2::jsonb)', [resource_name, filter]);
-  return res.rows.map(r => r.query_resource_all_);
-}
-
-async function createResource(client, resource_name, data) {
-  const res = await client.query('SELECT * FROM operation_.create_resource_($1::text, $2::jsonb)', [resource_name, data]);
-  return res.rows[0].create_resource_;
-}
-
-async function updateResource(client, id, data) {
-  const res = await client.query('SELECT * FROM operation_.update_resource_($1::text, $2::jsonb)', [id, data]);
-  return res.rows[0].update_resource_;
-}
-
-async function deleteResource(client, id) {
-  const res = await client.query('SELECT * FROM operation_.delete_resource_($1::text)', [id]);
-  return res.rows[0].delete_resource_;
-}
-
-export {
-  pool,
-  addBackgroundJob,
-  withConnection,
-  queryResource,
-  queryResourceAll,
-  createResource,
-  updateResource,
-  deleteResource
-};

@@ -1,47 +1,46 @@
 import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource } from '../../utils';
-import { AuthenticationError } from 'apollo-server-core';
 
 const resource = {
-  table_name: 'user',
-  name: 'user'
+  table_name: 'subdomain',
+  name: 'subdomain'
 };
 
-export const User = {
+export const Subdomain = {
   typeDef: `
-    type User implements Node {
+    type Subdomain implements Node {
       id: ID!
       name: String!
-      email_address: String!
+      agency: Agency!
     }
 
-    input UserFilter {
+    input SubdomainFilter {
       name: String
-      email_address: String
     }
 
     extend type Query {
-      current_user: User
-      user(id: ID!): User
-      users(filter: UserFilter!): [User!]
+      subdomain(id: ID!): Subdomain
+      subdomains(filter: SubdomainFilter!): [Subdomain!]
     }
   `,
   resolvers: {
-    Query: {
-      async current_user(source, args, context, info) {
+    Subdomain: {
+      async agency(source, args, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ query }) => {
-              return await query('SELECT * FROM operation_.query_current_user_()');
+            return await withSession(async ({ queryResource }) => {
+              return await queryResource('agency', { subdomain_id: source.id });
             });
           });
         } catch (error) {
           throw new Error(error.message);
         }
-      },
+      }
+    },
+    Query: {
       ...createDefaultQueryResolversForResource(resource)
     }
   }

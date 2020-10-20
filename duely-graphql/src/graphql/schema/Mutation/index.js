@@ -3,7 +3,6 @@ import endVisit from './endVisit';
 import inviteUser from './inviteUser';
 import acceptInvite from './acceptInvite';
 import declineInvite from './declineInvite';
-import createAgency from './createAgency';
 import createClient from './createClient';
 import createService from './createService';
 import createServiceStep from './createServiceStep';
@@ -25,7 +24,6 @@ export default {
       inviteUser(agencyUuid: ID!, emailAddress: String!, role: String!, message: String): InviteUserResult!
       acceptInvite(inviteUuid: ID!): AcceptInviteResult!
       declineInvite(inviteUuid: ID!): DeclineInviteResult!
-      createAgency(name: String!, subdomain: String!, countryCode: String!, returnUrl: String!): CreateAgencyResult!
       createClient(agencyUuid: ID!, name: String!, emailAddress: String): CreateClientResult!
       createService(agencyUuid: ID!, name: String!): CreateServiceResult!
       createServiceStep(serviceUuid: ID!, name: String!, type: ServiceStepType!, previousServiceStepUuid: ID): CreateServiceStepResult!
@@ -47,7 +45,6 @@ export default {
       inviteUser,
       acceptInvite,
       declineInvite,
-      createAgency,
       createClient,
       createServiceStep,
       createService,

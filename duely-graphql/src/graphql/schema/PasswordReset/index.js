@@ -1,4 +1,4 @@
-import { withConnection, queryResource, queryResourceAll, createResource, updateResource, deleteResource } from '../../../db';
+import { withConnection } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
@@ -15,7 +15,7 @@ export const PasswordReset = {
   `,
   resolvers: {
     Mutation: {
-      async start_password_reset(obj, { email_address, redirect_url }, context, info) {
+      async start_password_reset(source, { email_address, redirect_url }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
@@ -61,8 +61,8 @@ export const PasswordReset = {
 
         try {
           password_reset = await withConnection(context, async withSession => {
-            return await withSession(async client => {
-              return await createResource(client, resource_name, { email_address, data: { redirect_url: redirect_url.href } });
+            return await withSession(async ({ createResource }) => {
+              return await createResource(resource_name, { email_address, data: { redirect_url: redirect_url.href } });
             });
           });
         } catch (error) {
@@ -108,14 +108,14 @@ export const PasswordReset = {
           type: 'SimpleResult'
         };
       },
-      async verify_password_reset(obj, { verification_code, password }, context, info) {
+      async verify_password_reset(source, { verification_code, password }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-        return await withConnection(context, async withSession => {
-          return await withSession(async client => {
-            try {
-              let password_reset = await queryResource(client, resource_name, { verification_code });
+        try {
+          return await withConnection(context, async withSession => {
+            return await withSession(async ({ queryResource, updateResource }) => {
+              let password_reset = await queryResource(resource_name, { verification_code });
 
               if (!password_reset?.id) {
                 return {
@@ -125,21 +125,21 @@ export const PasswordReset = {
                 };
               }
 
-              password_reset = await updateResource(client, password_reset.id, { verification_code, password, verified: true });
+              password_reset = await updateResource(password_reset.id, { verification_code, password, verified: true });
 
               return {
                 success: true,
                 type: 'SimpleResult'
               };
-            } catch (error) {
-              return {
-                success: false,
-                message: error.message, // `Unable to complete password reset an account for '${emailAddress}'. It might be that the verification code was incorrect.`,
-                type: 'SimpleResult'
-              };
-            }
+            });
           });
-        });
+        } catch (error) {
+          return {
+            success: false,
+            message: error.message, // `Unable to complete password reset an account for '${emailAddress}'. It might be that the verification code was incorrect.`,
+            type: 'SimpleResult'
+          };
+        }
       }
     }
   }

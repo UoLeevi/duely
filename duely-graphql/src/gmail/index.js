@@ -3,7 +3,7 @@ import { readFile } from 'fs';
 import https from 'https';
 import base64url from 'base64url';
 
-const templatesPath = 'dist/gmail/templates'
+const templatesPath = 'dist/gmail/templates';
 
 let accountInfo;
 const templates = {};
@@ -93,7 +93,7 @@ export default {
         await loadTemplate('default');
       }
 
-      body = templates.default.replace('<!-- \{BODY\} -->', body);
+      body = templates.default.replace('<!-- {BODY} -->', body);
 
       const message = [
         `To: <${to}>`,
