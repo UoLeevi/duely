@@ -14,7 +14,7 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-UPDATE security_.resource_definition_ SET search_ = '{uuid_,name_,url_name_,agency_uuid_}' WHERE name_ = 'service';
+-- UPDATE security_.resource_definition_ SET search_ = '{uuid_,name_,url_name_,agency_uuid_}' WHERE name_ = 'service';
 
 -- CALL internal_.setup_resource_('application_.service_variant_', 'service variant', 'svcvar', '{uuid_, service_uuid_}', 'application_.service_');
 
@@ -30,11 +30,11 @@ UPDATE security_.resource_definition_ SET search_ = '{uuid_,name_,url_name_,agen
 -- END
 -- $$;
 
--- CREATE OR REPLACE FUNCTION policy_.anyone_can_query_stripe_account_for_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
---     LANGUAGE sql STABLE SECURITY DEFINER
---     AS $$
---   SELECT array_cat(_keys, '{uuid_, agency_uuid_, stripe_id_ext_}');
--- $$;
+CREATE OR REPLACE FUNCTION policy_.anyone_can_query_subdomain_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE sql STABLE SECURITY DEFINER
+    AS $$
+  SELECT array_cat(_keys, '{uuid_, name_}');
+$$;
 
 -- CREATE OR REPLACE FUNCTION policy_.owner_can_create_service_variant_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
 --     LANGUAGE plpgsql SECURITY DEFINER
@@ -73,7 +73,7 @@ UPDATE security_.resource_definition_ SET search_ = '{uuid_,name_,url_name_,agen
 -- END
 -- $$;
 
--- PERFORM security_.register_policy_('application_.service_variant_', 'query', 'policy_.agent_can_query_service_variant_');
+PERFORM security_.register_policy_('security_.subdomain_', 'query', 'policy_.anyone_can_query_subdomain_');
 -- PERFORM security_.register_policy_('application_.stripe_account_', 'query', 'policy_.anyone_can_query_stripe_account_for_agency_');
 -- PERFORM security_.register_policy_('application_.service_variant_', 'create', 'policy_.owner_can_create_service_variant_');
 -- PERFORM security_.register_policy_('application_.service_variant_', 'update', 'policy_.owner_can_change_service_variant_');
