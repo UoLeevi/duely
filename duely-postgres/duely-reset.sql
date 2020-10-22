@@ -1,4 +1,4 @@
--- psql -U postgres -d postgres -f duely-reset.sql
+-- psql -v service_account_password="'$DUELY_SERVICE_ACCOUNT_PASSWORD'" -U postgres -d postgres -f duely-reset.sql
 
 \echo 'DATABASE RESET STARTED'
 \o /dev/null
