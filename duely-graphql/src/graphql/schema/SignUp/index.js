@@ -75,6 +75,7 @@ export const SignUp = {
 
         if (redirect_url) {
           redirect_url.searchParams.set('verification_code', sign_up.verification_code);
+          redirect_url.searchParams.set('verify', 'sign_up');
         }
 
         const messages = await gmail.sendEmailAsAdminDuely({

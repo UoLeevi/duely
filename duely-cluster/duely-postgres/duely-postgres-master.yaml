@@ -65,6 +65,11 @@ spec:
                 secretKeyRef:
                   name: duely-postgres-secret
                   key: replication-password
+            - name: DUELY_SERVICE_ACCOUNT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: duely-postgres-secret
+                  key: duely-serviceaccount-password
             - name: POD_IP
               valueFrom:
                 fieldRef:

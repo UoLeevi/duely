@@ -39,7 +39,7 @@ export const PasswordReset = {
           redirect_url = new URL(redirect_url);
 
           if (redirect_url.protocol === 'https:') {
-            if (!/^(?:[^\.]+\.)?duely\.app$/.test(redirect_url.hostname)) {
+            if (!/^(?:[^.]+\.)?duely\.app$/.test(redirect_url.hostname)) {
               // TODO: check if external domain is known by duely
 
               return {
@@ -75,6 +75,7 @@ export const PasswordReset = {
 
         if (redirect_url) {
           redirect_url.searchParams.set('verification_code', password_reset.verification_code);
+          redirect_url.searchParams.set('verify', 'password_reset');
         }
 
         const messages = await gmail.sendEmailAsAdminDuely({
