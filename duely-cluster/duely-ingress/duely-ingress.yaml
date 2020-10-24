@@ -61,15 +61,3 @@ spec:
       - backend:
           serviceName: duely-react-service
           servicePort: 8080
-  - host: '*.duely.app'
-    http:
-      paths:
-      - backend:
-          serviceName: duely-react-service
-          servicePort: 8080
-  - host: '*.duely.app'
-    http:
-      paths:
-      - backend:
-          serviceName: duely-react-service
-          servicePort: 8080
