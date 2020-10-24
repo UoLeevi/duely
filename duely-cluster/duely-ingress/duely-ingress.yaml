@@ -21,22 +21,6 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: duely-ingress-default
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-spec:
-  tls:
-  - hosts:
-    - duely.app
-    - '*.duely.app'
-    secretName: duely-secret-tls
-  backend:
-    serviceName: duely-ui-home-service
-    servicePort: 3000
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
   name: duely-ingress-rules
   annotations:
     kubernetes.io/ingress.class: "nginx"
@@ -49,6 +33,12 @@ spec:
     - '*.duely.app'
     secretName: duely-secret-tls
   rules:
+  - host: 'duely.app'
+    http:
+      paths:
+      - backend:
+          serviceName: duely-ui-home-service
+          servicePort: 3000
   - host: 'api.duely.app'
     http:
       paths:
