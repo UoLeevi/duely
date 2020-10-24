@@ -18,7 +18,7 @@
 ## 4. To check if the ingress controller pods have started, run the following command:
 # kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx --watch
 
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: duely-ingress-default
@@ -31,10 +31,10 @@ spec:
     - '*.duely.app'
     secretName: duely-secret-tls
   backend:
-    serviceName: duely-react-service
-    servicePort: 8080
+    serviceName: duely-ui-home-service
+    servicePort: 3000
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: duely-ingress-rules
@@ -49,9 +49,15 @@ spec:
     - '*.duely.app'
     secretName: duely-secret-tls
   rules:
-  - host: api.duely.app
+  - host: 'api.duely.app'
     http:
       paths:
       - backend:
           serviceName: duely-graphql-service
+          servicePort: 8080
+  - host: '*.duely.app'
+    http:
+      paths:
+      - backend:
+          serviceName: duely-react-service
           servicePort: 8080

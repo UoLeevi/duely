@@ -11,19 +11,19 @@ const VerifyAuth = React.forwardRef((props, ref) => {
   const { history } = state.context;
   const searchParams = new URLSearchParams(history.location.search);
   const verify = searchParams.get('verify');
-  const verificationCode = searchParams.get('verification_code');
+  const verification_code = searchParams.get('verification_code');
   const hideModalRef = useRef();
   const [, sendAuth] = useAuthState();
   const showNewPasswordModal = useModal(
     <NewPasswordForm 
-      verificationCode={ verificationCode }
+      verification_code={ verification_code }
       completedButton={ <Button type="button" onClick={ hideModalRef.current } filled color="primary">Continue</Button> }
     />, 
     { hideModalRef, dismissable: false }
   );
 
   useEffect(() => {
-    if (verify && verificationCode) {
+    if (verify && verification_code) {
       const newSearchParams = new URLSearchParams(searchParams.toString());
       newSearchParams.delete('verify');
       newSearchParams.delete('verification_code');
@@ -33,7 +33,7 @@ const VerifyAuth = React.forwardRef((props, ref) => {
       switch (verify) {
 
         case 'sign-up':
-          sendAuth({ type: 'VERIFY_SIGN_UP', verificationCode });
+          sendAuth({ type: 'VERIFY_SIGN_UP', verification_code });
           break;
 
         case 'password-reset':
@@ -44,7 +44,7 @@ const VerifyAuth = React.forwardRef((props, ref) => {
           throw new Error();
       }
     }
-  }, [searchParams, verify, verificationCode, showNewPasswordModal, send, sendAuth])
+  }, [searchParams, verify, verification_code, showNewPasswordModal, send, sendAuth])
 
   return (
     <Route { ...props } ref={ ref } />

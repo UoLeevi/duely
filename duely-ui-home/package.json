@@ -1,0 +1,56 @@
+{
+  "name": "duely-ui-home",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "postcss styles/tailwind.css -o public/styles/index.css && next dev",
+    "dev-debug": "NODE_OPTIONS='--inspect' next dev",
+    "build": "NODE_ENV='production' postcss styles/tailwind.css -o public/styles/index.css && next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.2.5",
+    "@headlessui/react": "^0.2.0",
+    "graphql": "^15.3.0",
+    "immer": "^7.0.14",
+    "next": "^9.5.5",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "react-hook-form": "^6.9.6",
+    "react-icons": "^3.11.0",
+    "recoil": "0.0.13",
+    "subscriptions-transport-ws": "^0.9.18",
+    "tailwindcss": "^1.9.6"
+  },
+  "devDependencies": {
+    "autoprefixer": "^9.8.6",
+    "eslint": "^7.12.0",
+    "eslint-plugin-react": "^7.21.5",
+    "postcss-cli": "^8.1.0"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "node": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:react/recommended"
+    ],
+    "rules": {
+      "react/react-in-jsx-scope": "off",
+      "react/prop-types": "off"
+    },
+    "globals": {
+      "React": "writable"
+    },
+    "parserOptions": {
+      "ecmaVersion": 11,
+      "sourceType": "module",
+      "ecmaFeatures": {
+        "jsx": true,
+        "modules": true
+      }
+    }
+  }
+}

@@ -3,74 +3,72 @@ import produce from 'immer';
 import queries from 'apollo/queries';
 
 export default {
-  logIn: {
+  log_in: {
     mutation: gql`
-      mutation($emailAddress: String!, $password: String!) {
-        logIn(emailAddress: $emailAddress, password: $password) {
+      mutation($email_address: String!, $password: String!) {
+        log_in(email_address: $email_address, password: $password) {
           success
           message
           jwt
         }
       }
     `, 
-    result: d => d['logIn']
+    result: d => d['log_in']
   },
-  logOut: {
+  log_out: {
     mutation: gql`
       mutation {
-        logOut {
+        log_out {
           success
           message
         }
       }
     `, 
-    result: d => d['logOut']
+    result: d => d['log_out']
   },
-  verifyPasswordReset: {
+  verify_password_reset: {
     mutation: gql`
-      mutation($verificationCode: String!, $password: String!) {
-        verifyPasswordReset(verificationCode: $verificationCode, password: $password) {
+      mutation($verification_code: String!, $password: String!) {
+        verify_password_reset(verification_code: $verification_code, password: $password) {
           success
           message
-          jwt
         }
       }
     `, 
-    result: d => d['verifyPasswordReset']
+    result: d => d['verify_password_reset']
   },
-  verifySignUp: {
+  verify_sign_up: {
     mutation: gql`
-      mutation($verificationCode: String!) {
-        verifySignUp(verificationCode: $verificationCode) {
+      mutation($verification_code: String!) {
+        verify_sign_up(verification_code: $verification_code) {
           success
           message
-          jwt
         }
       }
     `, 
-    result: d => d['verifySignUp']
+    result: d => d['verify_sign_up']
   },
-  startPasswordReset: {
+  start_password_reset: {
     mutation: gql`
-      mutation($emailAddress: String!, $redirectUrl: String) {
-        startPasswordReset(emailAddress: $emailAddress, redirectUrl: $redirectUrl) {
+      mutation($email_address: String!, $redirect_url: String) {
+        start_password_reset(email_address: $email_address, redirect_url: $redirect_url) {
           success
           message
         }
       }
     `,
-    result: d => d['startPasswordReset']
+    result: d => d['start_password_reset']
   },
-  startSignUp: {
+  start_sign_up: {
     mutation: gql`
-      mutation($emailAddress: String!, $password: String!, $name: String!, $redirectUrl: String) {
-        startSignUp(emailAddress: $emailAddress, password: $password, name: $name, redirectUrl: $redirectUrl) {
+      mutation($email_address: String!, $password: String!, $name: String!, $redirect_url: String) {
+        start_sign_up(email_address: $email_address, password: $password, name: $name, redirect_url: $redirect_url) {
           success
           message
         }
       }
     `,
-    result: d => d['startSignUp']
+    result: d => d['start_sign_up']
   },
   createAgency: {
     mutation: gql`

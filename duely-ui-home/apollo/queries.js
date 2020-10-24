@@ -1,19 +1,7 @@
 import { gql } from '@apollo/client';
+import { client } from './client';
 
-export default {
-  me: {
-    query: gql`
-      query {
-        me {
-          uuid
-          name
-          emailAddress
-          type
-        }
-      }
-    `,
-    result: d => d?.me
-  },
+export const queries = {
   current_user: {
     query: gql`
       query {
@@ -397,3 +385,16 @@ export default {
       .map(edge => edge.node)
   }
 };
+
+// just a wrapper for convenience
+export async function query(queryName, variables, ...options) {
+  const { result, variables: defaultVariables, ...defaultOptions } = queries[queryName];
+  variables = { ...defaultVariables, ...variables };
+  const { data } = await client.query({
+    variables,
+    ...defaultOptions,
+    ...options
+  });
+
+  return result(data);
+}

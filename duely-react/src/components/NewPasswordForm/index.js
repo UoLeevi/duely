@@ -5,12 +5,12 @@ import { passwordFieldProps } from 'components/TextInput/presets';
 import Button from 'components/Button';
 import Form from 'components/Form';
 
-const NewPasswordForm = React.forwardRef(({ verificationCode, completedButton, ...props }, ref) => {
+const NewPasswordForm = React.forwardRef(({ verification_code, completedButton, ...props }, ref) => {
   const [state, send] = useAuthState();
   const { message } = state.event?.data ?? {};
 
   return (
-    <Form className="w-form" handleSubmit={ data => send({ type: 'VERIFY_PASSWORD_RESET', verificationCode, ...data }) } autoComplete="new-password" 
+    <Form className="w-form" handleSubmit={ data => send({ type: 'VERIFY_PASSWORD_RESET', verification_code, ...data }) } autoComplete="new-password" 
       completed={ state.matches('loggedIn') &&
         <div className="flex column center gap-5">
           <span className="f-4 f-b">Password changed successfully</span>

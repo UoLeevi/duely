@@ -10,7 +10,7 @@ export const authMachine = Machine({
   states: {
     loadingUser: {
       invoke: {
-        src: 'queryMe',
+        src: 'queryCurrentUser',
         onDone: [
           { target: 'loggedIn', cond: 'isUser', actions: ['updateUser', 'notifyUserUpdated'] },
           { target: 'visitor', cond: 'isVisitor', actions: ['updateUser', 'notifyUserUpdated'] }
@@ -109,12 +109,20 @@ export const authMachine = Machine({
           invoke: {
             src: 'verifyPasswordReset',
             onDone: [
-              { target: '#auth.updateAccessToken', cond: 'isMutationSuccessful' },
+              { target: 'verifyPasswordResetCompleted', cond: 'isMutationSuccessful' },
               { target: 'verifyPasswordResetFailed' }
             ],
             onError: {
               target: 'verifyPasswordResetFailed'
             }
+          }
+        },
+        verifyPasswordResetCompleted: {
+          after: {
+            60000: 'idle'
+          },
+          on: {
+            CONTINUE: 'idle'
           }
         },
         verifyPasswordResetFailed: {
@@ -129,12 +137,20 @@ export const authMachine = Machine({
           invoke: {
             src: 'verifySignUp',
             onDone: [
-              { target: '#auth.updateAccessToken', cond: 'isMutationSuccessful' },
+              { target: 'verifySignUpCompleted', cond: 'isMutationSuccessful' },
               { target: 'verifySignUpFailed' }
             ],
             onError: {
               target: 'verifySignUpFailed'
             }
+          }
+        },
+        verifySignUpCompleted: {
+          after: {
+            60000: 'idle'
+          },
+          on: {
+            CONTINUE: 'idle'
           }
         },
         verifySignUpFailed: {
@@ -191,13 +207,13 @@ export const authMachine = Machine({
     notifyUserUpdated: sendParent((context, event) => ({ ...context, type: 'USER_UPDATED' }))
   },
   services: {
-    queryMe: async () => query('me'),
-    logIn: async (context, { emailAddress, password }) => await mutate('logIn', { emailAddress, password }),
-    logOut: async () => await mutate('logOut'),
-    startPasswordReset: async (context, { emailAddress, redirectUrl }) => await mutate('startPasswordReset', { emailAddress, redirectUrl }),
-    startSignUp: async (context, { emailAddress, name, password, redirectUrl }) => await mutate('startSignUp', { emailAddress, name, password, redirectUrl }),
-    verifyPasswordReset: async (context, { verificationCode, password }) => await mutate('verifyPasswordReset', { verificationCode, password }),
-    verifySignUp: async (context, { verificationCode }) => await mutate('verifySignUp', { verificationCode }),
+    queryCurrentUser: async () => query('current_user'),
+    logIn: async (context, { email_address, password }) => await mutate('log_in', { email_address, password }),
+    logOut: async () => await mutate('log_out'),
+    startPasswordReset: async (context, { email_address, redirect_url }) => await mutate('start_password_reset', { email_address, redirect_url }),
+    startSignUp: async (context, { email_address, name, password, redirect_url }) => await mutate('start_sign_up', { email_address, name, password, redirect_url }),
+    verifyPasswordReset: async (context, { verification_code, password }) => await mutate('verify_password_reset', { verification_code, password }),
+    verifySignUp: async (context, { verification_code }) => await mutate('verify_sign_up', { verification_code }),
     updateAccessToken: async (context, { data }) => {
       if (data?.jwt) {
         localStorage.setItem('user-jwt', data.jwt);
@@ -210,7 +226,7 @@ export const authMachine = Machine({
   },
   guards: {
     isMutationSuccessful: (context, { data }) => data.success,
-    isUser: (context, { data }) => data.type === 'user',
-    isVisitor: (context, { data }) => data.type === 'visitor'
+    isUser: (context, { data }) => data?.id != null,
+    isVisitor: (context, { data }) => data?.id == null
   }
 });

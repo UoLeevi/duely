@@ -6,7 +6,7 @@ import Button from 'components/Button';
 import Form from 'components/Form';
 
 const SignUpForm = React.forwardRef(({ ...props }, ref) => {
-  const [emailAddress, setEmailAddress] = useState();
+  const [email_address, setEmailAddress] = useState();
   const [state, send] = useAuthState();
 
   if (state.matches('loggedIn')) {
@@ -21,8 +21,8 @@ const SignUpForm = React.forwardRef(({ ...props }, ref) => {
   const { message } = state.event?.data ?? {};
 
   const handleSubmit = async (data) => {
-    setEmailAddress(data.emailAddress);
-    send({ type: 'START_SIGN_UP', redirectUrl: `${window.location.origin}/profile?verify=sign-up`, ...data });
+    setEmailAddress(data.email_address);
+    send({ type: 'START_SIGN_UP', redirect_url: `${window.location.origin}/profile?verify=sign-up`, ...data });
   }
 
   return (
@@ -30,7 +30,7 @@ const SignUpForm = React.forwardRef(({ ...props }, ref) => {
       completed={ state.matches('visitor.startSignUpCompleted') && (
         <div className="flex column center gap-5">
           <span className="f-4 f-b">Please check your inbox</span>
-          <span className="f-2 f-b">We've sent an email to { emailAddress } for confirmation.</span>
+          <span className="f-2 f-b">We've sent an email to { email_address } for confirmation.</span>
           <span>If that's not your email address please try again:</span>
           <Button type="button" onClick={ () => send('CONTINUE') }>Enter another email</Button>
         </div>
@@ -38,7 +38,7 @@ const SignUpForm = React.forwardRef(({ ...props }, ref) => {
     >
       <h2 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Sign up</h2>
       <TextInput name="name" label="Name" type="text" autoFocus required />
-      <TextInput name="emailAddress" { ...emailFieldProps } completed={ null } />
+      <TextInput name="email_address" { ...emailFieldProps } completed={ null } />
       <TextInput name="password" { ...passwordFieldProps } completed={ null } />
       <Button className="my-2" areaWidth="40ch"
         loading={ state.matches('visitor.startSignUpLoading') } 

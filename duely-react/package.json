@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "react-scripts build",
+    "build-css": "tailwindcss build tailwind.styles.css -o src/styles/styles.css",
     "build-storybook": "build-storybook -s public",
     "eject": "react-scripts eject",
     "start": "react-scripts start",

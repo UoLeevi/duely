@@ -8,7 +8,7 @@ spec:
     app: duely-ui-home
   ports:
   - protocol: TCP
-    port: 8080
+    port: 3000
     targetPort: 80
 ---
 apiVersion: apps/v1

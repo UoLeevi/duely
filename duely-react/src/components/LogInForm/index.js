@@ -8,11 +8,11 @@ import Form from 'components/Form';
 import StartPasswordResetForm from 'components/StartPasswordResetForm';
 
 const LogInForm = React.forwardRef(({ redirectUrl, ...props }, ref) => {
-  const [emailAddress, setSetEmailAddress] = useState(null);
+  const [email_address, setSetEmailAddress] = useState(null);
   const [state, send] = useAuthState();
   const { message } = state.event?.data ?? {};
 
-  const showModal = useModal(<StartPasswordResetForm emailAddress={ emailAddress } />);
+  const showModal = useModal(<StartPasswordResetForm email_address={ email_address } />);
 
   return (
     <Form className="w-form" handleSubmit={ data => send({ type: 'LOG_IN', ...data }) }
@@ -24,7 +24,7 @@ const LogInForm = React.forwardRef(({ redirectUrl, ...props }, ref) => {
       )} { ...props } ref={ ref }
     >
       <h3 className="default f-b mb-2" style={{ alignSelf: 'center' }}>Log in</h3>
-      <TextInput name="emailAddress" setValue={ setSetEmailAddress } { ...emailFieldProps } autoFocus completed={ null } />
+      <TextInput name="email_address" setValue={ setSetEmailAddress } { ...emailFieldProps } autoFocus completed={ null } />
       <TextInput name="password" { ...passwordFieldProps } completed={ null } actions={{ 'Reset password': showModal }} />
       <Button className="my-2" areaWidth="40ch" 
         loading={ state.matches('visitor.logInLoading') }
