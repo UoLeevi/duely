@@ -8,8 +8,8 @@ spec:
     app: duely-ui-home
   ports:
   - protocol: TCP
-    port: 3000
-    targetPort: 3000
+    port: 8080
+    targetPort: 80
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -26,22 +26,12 @@ spec:
         app: duely-ui-home
     spec:
       terminationGracePeriodSeconds: 30
-      volumes:
-        - name: duely-ui-home-secret
-          secret:
-            secretName: duely-ui-home-secret
       containers:
       - name: duely-ui-home
-        image: uoleevi/duely-ui-home:v0.1.0
+        image: uoleevi/duely-ui-home:v0.2.0
         resources:
           requests:
             memory: 32Mi
             cpu: 20m
         ports:
-        - containerPort: 3000
-        env:
-        - name: DUELY_SERVICE_ACCOUNT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: duely-ui-home-secret
-              key: duely-serviceaccount-password
+        - containerPort: 30

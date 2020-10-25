@@ -38,7 +38,7 @@ spec:
       paths:
       - backend:
           serviceName: duely-ui-home-service
-          servicePort: 3000
+          servicePort: 8080
   - host: 'api.duely.app'
     http:
       paths:

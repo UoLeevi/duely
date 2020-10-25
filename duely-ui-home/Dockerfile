@@ -4,11 +4,7 @@ WORKDIR /src
 COPY . .
 RUN npm ci
 RUN npm run build
-RUN npm prune --production
 
-FROM node:14-alpine
-EXPOSE 3000
-WORKDIR /usr/src/app
-COPY --from=build /src .
-USER node
-CMD ["npm", "start"]
+FROM nginx
+COPY --from=build /src/nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /src/build /usr/share/nginx/html
