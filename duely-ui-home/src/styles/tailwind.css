@@ -4,3 +4,25 @@
 /* purgecss end ignore */
 
 @tailwind utilities;
+
+@layer components {
+  .page-container {
+    @apply relative min-h-screen box-border h-full bg-white pt-12 md:pt-16 flex flex-col;
+  }
+
+  .form-container {
+    @apply w-full max-w-xs sm:max-w-sm mx-auto flex flex-col space-y-4 py-4;
+  }
+
+  .text-input-base {
+    @apply appearance-none outline-none border border-gray-300 rounded-md px-3 py-2 focus:shadow-outline shadow-sm;
+  }
+
+  .text-label {
+    @apply text-gray-700 font-medium text-sm leading-6;
+  }
+
+  .text-form-title {
+    @apply font-semibold text-xl text-gray-700 self-center;
+  }
+}
