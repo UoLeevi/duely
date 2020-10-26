@@ -7,7 +7,7 @@ export default function NewBrand() {
   return (
     <div className="page-container">
       <TopBar />
-      <div className="container box-content h-full px-3 md:px-4 mx-auto flex flex-col flex-1 space-y-6">
+      <div className="page-body-container">
         <main className="flex flex-col justify-around flex-grow flex-shrink-0 py-6">
           <div className="form-container">
             <h2 className="text-form-title">Create brand</h2>

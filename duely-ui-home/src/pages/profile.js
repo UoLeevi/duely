@@ -5,7 +5,7 @@ export default function Profile() {
   return (
     <div className="page-container">
       <TopBar />
-      <div className="container box-border h-full px-3 md:px-4 mx-auto flex flex-col flex-1 space-y-6">
+      <div className="page-body-container">
         <main className="flex flex-col justify-around flex-grow flex-shrink-0 py-6">
           <div className="flex flex-col items-center">
             <Link to="/new-brand">

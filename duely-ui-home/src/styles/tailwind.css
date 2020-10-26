@@ -5,16 +5,26 @@
 
 @tailwind utilities;
 
+@layer base {
+  html, body, #root {
+    @apply h-full;
+  }
+}
+
 @layer components {
   .page-container {
-    @apply relative min-h-screen box-border h-full bg-white pt-12 md:pt-16 flex flex-col;
+    @apply relative box-border h-full bg-white flex flex-col;
+  }
+
+  .page-body-container {
+    @apply container box-border h-full px-3 md:px-4 mx-auto flex flex-col flex-1 space-y-6 top-0 inset-x-0 py-12 md:py-16;
   }
 
   .form-container {
     @apply w-full max-w-xs sm:max-w-sm mx-auto flex flex-col space-y-4 py-4;
   }
 
-  .text-input-base {
+  .input-text-base {
     @apply appearance-none outline-none border border-gray-300 rounded-md px-3 py-2 focus:shadow-outline shadow-sm;
   }
 

@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 import { atom, useAtom } from 'jotai';
 import { useForm } from 'react-hook-form';
 import { produce } from 'immer';
-import { mutate } from 'apollo';
+import { mutate, query } from 'apollo';
 import FormField from 'components/form-fields/FormField';
-
+import { countryByCode } from 'utils';
 
 const createBrandFormAtom = atom({
   loading: false,
@@ -12,10 +12,21 @@ const createBrandFormAtom = atom({
   completed: false
 });
 
+const countriesAtom = atom(
+  async () => {
+    const countryCodes = await query('country_codes');
+    return countryCodes
+      .map(countryByCode)
+      .sort((a, b) => (a.name).localeCompare(b.name))
+      .map(c => ({ value: c.alpha2code, element: c.shortName || c.name ? `${c.shortName || c.name} ${c.flag}` : c.alpha2code }));
+  }
+);
+
 export default function CreateBrandForm() {
   const form = useForm();
   const { register, errors, watch } = form;
-  const [CreateBrandForm, setCreateBrandFormState] = useAtom(createBrandFormAtom);
+  const [createBrandForm, setCreateBrandFormState] = useAtom(createBrandFormAtom);
+  const [countries] = useAtom(countriesAtom);
 
   const image_logo_file = watch('image_logo_file');
   console.log(image_logo_file);
@@ -43,18 +54,13 @@ export default function CreateBrandForm() {
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-2">
       <FormField form={form} label="Brand name" name="name" type="text" validateRule={{ required: true }} />
       <FormField form={form} label="Subdomain name" name="subdomain_name" type="text" validateRule={{ required: true }} />
-      <div className="flex flex-col">
-        <label className="text-label" htmlFor="country_code">
-          Country
-        </label>
-        <input name="country_code" ref={register({ required: true })} type="text" className="text-input-base" />
-        <p className="text-red-500 text-xs italic h-4">{ errors.country_code && <span>Please choose a country code.</span> }</p>
-      </div>
+      <FormField form={form} label="Country" name="country_code" type="select" options={countries} validateRule={{ required: true }} />
+
       <div className="flex flex-col">
         <label className="text-label" htmlFor="image_logo_file">
           Logo image
         </label>
-        <input name="image_logo_file" ref={register({ required: true })} type="file" className="text-input-base" accept="image/*" />
+        <input name="image_logo_file" ref={register({ required: true })} type="file" className="input-text-base" accept="image/*" />
         <p className="text-red-500 text-xs italic h-4">{ errors.image_logo_file && <span>Please choose a logo image.</span> }</p>
       </div>
       <div className="flex flex-col">
@@ -63,7 +69,7 @@ export default function CreateBrandForm() {
         </p>
       </div>
       <div className="flex flex-col pt-4 items-center">
-        { !CreateBrandForm.loading && !CreateBrandForm.completed && (
+        { !createBrandForm.loading && !createBrandForm.completed && (
         <button type="submit" className="bg-indigo-500 px-8 py-3 rounded-md text-md font-medium leading-5 text-white transition duration-150 ease-in-out border border-gray-300 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50" >
           Continue
         </button> )}

@@ -579,6 +579,10 @@ video {
   height: auto;
 }
 
+html, body, #root {
+  height: 100%;
+}
+
 .container {
   width: 100%;
 }
@@ -615,14 +619,66 @@ video {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 100vh;
-  padding-top: 3rem;
   position: relative;
 }
 
+.page-body-container {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .page-body-container {
+    max-width: 640px;
+  }
+}
+
 @media (min-width: 768px) {
-  .page-container {
+  .page-body-container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-body-container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .page-body-container {
+    max-width: 1280px;
+  }
+}
+
+.page-body-container > :not(template) ~ :not(template) {
+  --space-y-reverse: 0;
+  margin-top: calc(1.5rem * calc(1 - var(--space-y-reverse)));
+  margin-bottom: calc(1.5rem * var(--space-y-reverse));
+}
+
+.page-body-container {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  height: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+  right: 0;
+  left: 0;
+  top: 0;
+}
+
+@media (min-width: 768px) {
+  .page-body-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
     padding-top: 4rem;
+    padding-bottom: 4rem;
   }
 }
 
@@ -649,7 +705,7 @@ video {
   }
 }
 
-.text-input-base {
+.input-text-base {
   -webkit-appearance: none;
           appearance: none;
   --border-opacity: 1;
@@ -666,7 +722,7 @@ video {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-.text-input-base:focus {
+.input-text-base:focus {
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
 }
 

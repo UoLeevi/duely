@@ -12,7 +12,7 @@ export default function NavMenu() {
         <Link to="/log-in" className="font-semibold text-sm text-indigo-500">
           Log in
         </Link>
-        <Link to="/sign-up" className="border border-indigo-500 px-3 py-1 rounded font-semibold text-sm text-indigo-500">
+        <Link to="/sign-up" className="border border-indigo-300 px-3 py-1 rounded font-semibold text-sm text-indigo-500 shadow-sm">
           Sign up
         </Link>
       </div>

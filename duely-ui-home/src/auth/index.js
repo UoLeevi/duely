@@ -1,9 +1,7 @@
 import { atom } from 'jotai';
 import { query } from 'apollo';
 
-const isServerSide = typeof window === 'undefined';
-
-const currentUserQueryAtom = atom(isServerSide ? null : query('current_user'));
+const currentUserQueryAtom = atom(query('current_user'));
 
 export const currentUserAtom = atom(
   (get) => get(currentUserQueryAtom),

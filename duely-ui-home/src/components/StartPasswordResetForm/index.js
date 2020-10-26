@@ -34,7 +34,7 @@ export default function StartPasswordResetForm() {
       <FormField form={form} label="Email address" name="email_address" type="email" validateRule={{ required: true }} />
       <div className="flex flex-col pt-4 items-center">
         {!startPasswordResetForm.loading && !startPasswordResetForm.completed && (
-          <button type="submit" className="bg-indigo-500 px-6 py-3 rounded text-md font-medium leading-5 text-white transition duration-150 ease-in-out bg-white border border-gray-300 rounded-md focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50" >
+          <button type="submit" className="bg-indigo-500 px-6 py-3 rounded-md text-md font-medium leading-5 text-white transition duration-150 ease-in-out border border-gray-300 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50" >
             Send me a verification link
           </button>)}
       </div>
