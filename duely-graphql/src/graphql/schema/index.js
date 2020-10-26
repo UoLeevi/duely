@@ -1,47 +1,47 @@
 import { makeExecutableSchema } from 'graphql-tools';
-import AcceptInviteResult from './AcceptInviteResult';
+// import AcceptInviteResult from './AcceptInviteResult';
 // import Agency from './Agency';
-import AgencyClientsConnection from './AgencyClientsConnection';
-import AgencyClientsEdge from './AgencyClientsEdge';
-import AgencyInvitesConnection from './AgencyInvitesConnection';
-import AgencyInvitesEdge from './AgencyInvitesEdge';
-import AgencyServicesConnection from './AgencyServicesConnection';
-import AgencyServicesEdge from './AgencyServicesEdge';
-import AgencySubjectsConnection from './AgencySubjectsConnection';
-import AgencySubjectsEdge from './AgencySubjectsEdge';
-import BeginVisitResult from './BeginVisitResult';
-import Connection from './Connection';
-import Client from './Client';
+// import AgencyClientsConnection from './AgencyClientsConnection';
+// import AgencyClientsEdge from './AgencyClientsEdge';
+// import AgencyInvitesConnection from './AgencyInvitesConnection';
+// import AgencyInvitesEdge from './AgencyInvitesEdge';
+// import AgencyServicesConnection from './AgencyServicesConnection';
+// import AgencyServicesEdge from './AgencyServicesEdge';
+// import AgencySubjectsConnection from './AgencySubjectsConnection';
+// import AgencySubjectsEdge from './AgencySubjectsEdge';
+// import BeginVisitResult from './BeginVisitResult';
+// import Connection from './Connection';
+// import Client from './Client';
 // import CreateAgencyResult from './CreateAgencyResult';
-import CreateClientResult from './CreateClientResult';
-import CreateServiceResult from './CreateServiceResult';
-import CreateServiceStepResult from './CreateServiceStepResult';
-import Date from './Date';
-import DeclineInviteResult from './DeclineInviteResult';
-import DeleteResult from './DeleteResult';
-import Edge from './Edge';
-import EditAgencyThemeResult from './EditAgencyThemeResult';
-import EditImageResult from './EditImageResult';
-import EditServiceResult from './EditServiceResult';
-import EndVisitResult from './EndVisitResult';
-import Image from './Image';
-import Invite from './Invite';
-import InviteUserResult from './InviteUserResult';
-import Mutation from './Mutation';
-import MutationResult from './MutationResult';
-import Node from './Node';
-import Query from './Query';
+// import CreateClientResult from './CreateClientResult';
+// import CreateServiceResult from './CreateServiceResult';
+// import CreateServiceStepResult from './CreateServiceStepResult';
+// import Date from './Date';
+// import DeclineInviteResult from './DeclineInviteResult';
+// import DeleteResult from './DeleteResult';
+// import Edge from './Edge';
+// import EditAgencyThemeResult from './EditAgencyThemeResult';
+// import EditImageResult from './EditImageResult';
+// import EditServiceResult from './EditServiceResult';
+// import EndVisitResult from './EndVisitResult';
+// import Image from './Image';
+// import Invite from './Invite';
+// import InviteUserResult from './InviteUserResult';
+// import Mutation from './Mutation';
+// import MutationResult from './MutationResult';
+// import Node from './Node';
+// import Query from './Query';
 // import Service from './Service';
-import ServiceStep from './ServiceStep';
-import SimpleResult from './SimpleResult';
+// import ServiceStep from './ServiceStep';
+// import SimpleResult from './SimpleResult';
 // import Subdomain from './Subdomain';
-import Subject from './Subject';
-import SubjectAgenciesConnection from './SubjectAgenciesConnection';
-import SubjectAgenciesEdge from './SubjectAgenciesEdge';
-import SubjectInvitesConnection from './SubjectInvitesConnection';
-import SubjectInvitesEdge from './SubjectInvitesEdge';
-import Theme from './Theme';
-import Subscription from './Subscription';
+// import Subject from './Subject';
+// import SubjectAgenciesConnection from './SubjectAgenciesConnection';
+// import SubjectAgenciesEdge from './SubjectAgenciesEdge';
+// import SubjectInvitesConnection from './SubjectInvitesConnection';
+// import SubjectInvitesEdge from './SubjectInvitesEdge';
+// import Theme from './Theme';
+// import Subscription from './Subscription';
 
 import { interfaces } from './interfaces';
 import { Visit } from './Visit';
@@ -53,6 +53,7 @@ import { Agency } from './Agency';
 import { Service } from './Service';
 import { ServiceVariant } from './ServiceVariant';
 import { Subdomain } from './Subdomain';
+import { Country } from './Country';
 
 const types = [
   {
@@ -71,6 +72,7 @@ const types = [
   LogIn,
   SignUp,
   PasswordReset,
+  Country,
   User,
   Agency,
   Service,
@@ -112,7 +114,7 @@ const types = [
   // Service,
   // ServiceStep,
   // SimpleResult,
-  // // Subdomain,
+  // Subdomain,
   // Subject,
   // SubjectAgenciesConnection,
   // SubjectAgenciesEdge,
