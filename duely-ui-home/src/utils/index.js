@@ -1504,11 +1504,42 @@ export function countryByCode(alpha2code) {
   };
 }
 
-export function estimateImageColor(dataUrl) {
+export async function processImageFile(file) {
+  const imageFile = processFile(file);
+  const color = await estimateImageColor(imageFile.url);
+  return {
+    ...imageFile,
+    color
+  };
+}
+
+export async function processFile(file, decoder) {
+
+  if (!file) return null;
+
+  return new Promise((resolve, reject) => {
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onerror = reject;
+      reader.onload = async () => {
+        const url = reader.result;
+        resolve({
+          url,
+          data: decoder ? decoder(url) : url
+        });
+      };
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+export function estimateImageColor(url) {
   return new Promise(resolve => {
     const context = document.createElement('canvas').getContext('2d');
     const img = new Image();
-    img.src = dataUrl;
+    img.src = url;
     img.onload = function () {
       context.drawImage(img, 0, 0, 1, 1);
       let [r, g, b] = context.getImageData(0, 0, 1, 1).data.slice(0, 3);

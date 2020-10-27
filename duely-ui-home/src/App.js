@@ -1,33 +1,23 @@
-import { Provider } from 'jotai';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-import AuthManager from 'components/AuthManager';
-import { routes } from 'pages';
 import { Suspense } from 'react';
-
-function RouteWithSubRoutes(route) {
-  return (
-    <Route
-      path={route.path}
-      render={props => (
-        // pass the sub-routes down to keep nesting
-        <route.component {...props} routes={route.routes} />
-      )}
-    />
-  );
-}
+import { BrowserRouter as Router } from 'react-router-dom';
+import { Provider } from 'jotai';
+import MessageContextProvider from 'contexts/MessageContext';
+import ModalContextProvider from 'contexts/ModalContext';
+import AuthManager from 'components/AuthManager';
+import Pages from 'pages';
 
 export default function App() {
   return (
     <Provider>
       <Router>
-        <Suspense fallback={ null }>
-          <AuthManager />
-        </Suspense>
-        <Switch>
-          { routes.map((route, i) => (
-            <RouteWithSubRoutes key={i} {...route} />
-          ))}
-        </Switch>
+        <MessageContextProvider>
+          <ModalContextProvider>
+            <Suspense fallback={null}>
+              <AuthManager />
+            </Suspense>
+            <Pages />
+          </ModalContextProvider>
+        </MessageContextProvider>
       </Router>
     </Provider>
   );

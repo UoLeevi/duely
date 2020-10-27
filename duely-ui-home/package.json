@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-home",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "scripts": {
     "build": "NODE_ENV='production' postcss src/styles/tailwind.css -o public/styles/index.css && react-scripts build",
@@ -30,10 +30,11 @@
   "dependencies": {
     "@apollo/client": "^3.2.5",
     "@headlessui/react": "^0.2.0",
+    "@tailwindcss/typography": "^0.2.0",
     "@testing-library/jest-dom": "^5.11.5",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
-    "graphql": "^15.3.0",
+    "graphql": "^15.4.0",
     "immer": "^7.0.14",
     "jotai": "^0.10.1",
     "react": "0.0.0-experimental-4ead6b530",

@@ -1,7 +1,16 @@
 import { Link } from 'react-router-dom';
 import TopBar from 'components/TopBar';
+import useMessage from 'hooks/useMessage';
+import { BsExclamationDiamond } from 'react-icons/bs';
 
 export default function Home() {
+  useMessage(
+    <div className="flex flex-row items-center font-semibold space-x-4">
+      <BsExclamationDiamond className="text-orange-600" />
+      <span className="text-sm">Duely is still in development</span>
+    </div>
+  , { autoHideMs: 6000, show: true });
+
   return (
     <div className="page-container">
       <TopBar />

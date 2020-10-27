@@ -36,3 +36,9 @@
     @apply font-semibold text-xl text-gray-700 self-center;
   }
 }
+
+@layer utilities {
+  .bg-blur {
+    backdrop-filter: blur(2px);
+  }
+}
