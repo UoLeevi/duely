@@ -14,28 +14,80 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE TABLE application_.markdown_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
-    name_ text NOT NULL,
-    data_ text NOT NULL,
-    agency_uuid_ uuid NULL,
-    UNIQUE (name_, agency_uuid_)
-);
-CALL internal_.setup_auditing_('application_.markdown_');
+CREATE OR REPLACE FUNCTION operation_.create_resource_(_resource_name text, _data jsonb) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _resource_definition security_.resource_definition_;
+  _column_list text;
+  _select_list text;
+  _uuid uuid;
+  _id text;
+  _owned_resources_data jsonb;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_ WHERE name_ = _resource_name;
 
+  _data := jsonb_strip_nulls(_data);
 
--- CALL internal_.drop_auditing_('application_.image_');
-ALTER TABLE application_.image_ ALTER COLUMN agency_uuid_ DROP NOT NULL;
-CALL internal_.setup_auditing_('application_.image_');
+  SELECT owner_, owned_ INTO _data, _owned_resources_data
+  FROM internal_.extract_referenced_resources_jsonb_(_resource_definition.uuid_, _data);
 
+  _data := internal_.convert_to_internal_format_(_data);
 
-CALL internal_.setup_resource_('application_.markdown_', 'markdown', 'md', '{uuid_, name_, agency_uuid_}', 'application_.agency_');
+  PERFORM security_.control_create_(_resource_definition, _data);
 
-CREATE OR REPLACE FUNCTION policy_.owner_can_query_markdown_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+  _uuid := internal_.dynamic_insert_(_resource_definition.table_, _data);
+
+  SELECT id_ INTO _id FROM application_.resource_ WHERE uuid_ = _uuid;
+
+  _data := operation_.query_resource_(_id);
+
+  SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.table_, _id, r.key, r.value)) INTO _owned_resources_data
+  FROM jsonb_each(_owned_resources_data) r;
+
+  RETURN _data || COALESCE(_owned_resources_data, '{}'::jsonb);
+END
+$$;
+
+CALL internal_.drop_auditing_('application_.markdown_');
+CALL internal_.drop_auditing_('application_.image_');
+
+CREATE FUNCTION internal_.check_current_user_is_serviceaccount_() RETURNS boolean
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.security_data_ s
+    JOIN security_.user_ u ON s.key_ = 'email_address:' || u.email_address_
+    WHERE u.uuid_ = internal_.current_subject_uuid_()
+      AND (s.data_->>'is_service_account')::boolean
+  ) THEN
+    RETURN 't';
+  ELSE
+    RETURN 'f';
+  END IF;
+END
+$$;
+
+CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_query_stripe_account_for_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN array_cat(_keys, '{uuid_, agency_uuid_, stripe_id_ext_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_query_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF _resource.owner_uuid_ IS NULL AND internal_.check_current_user_is_serviceaccount_() THEN
     RETURN array_cat(_keys, '{uuid_, name_, data_, agency_uuid_}');
   ELSE
     RETURN _keys;
@@ -43,12 +95,12 @@ BEGIN
 END
 $$;
 
-CREATE OR REPLACE FUNCTION policy_.owner_can_create_markdown_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
     LANGUAGE plpgsql SECURITY DEFINER
     AS $_$
 BEGIN
   IF (
-    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    SELECT (_data ? 'agency_uuid_') = false AND internal_.check_current_user_is_serviceaccount_()
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
     RETURN array_cat(_keys, '{name_, data_, agency_uuid_}');
@@ -58,12 +110,53 @@ BEGIN
 END
 $_$;
 
+CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_change_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF _resource.owner_uuid_ IS NULL AND internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN array_cat(_keys, '{name_, data_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+-- CALL internal_.setup_resource_('application_.markdown_', 'markdown', 'md', '{uuid_, name_, agency_uuid_}', 'application_.agency_');
+
+-- CREATE OR REPLACE FUNCTION policy_.owner_can_query_markdown_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+--     LANGUAGE plpgsql SECURITY DEFINER
+--     AS $$
+-- BEGIN
+--   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+--     RETURN array_cat(_keys, '{uuid_, name_, data_, agency_uuid_}');
+--   ELSE
+--     RETURN _keys;
+--   END IF;
+-- END
+-- $$;
+
+-- CREATE OR REPLACE FUNCTION policy_.owner_can_create_markdown_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+--     LANGUAGE plpgsql SECURITY DEFINER
+--     AS $_$
+-- BEGIN
+--   IF (
+--     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+--     FROM internal_.query_owner_resource_(_resource_definition, _data)
+--   ) THEN
+--     RETURN array_cat(_keys, '{name_, data_, agency_uuid_}');
+--   ELSE
+--     RETURN _keys;
+--   END IF;
+-- END
+-- $_$;
+
 CREATE OR REPLACE FUNCTION policy_.owner_can_change_markdown_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN array_cat(_keys, '{name_, data_, agency_uuid_}');
+    RETURN array_cat(_keys, '{name_, data_}');
   ELSE
     RETURN _keys;
   END IF;
@@ -81,10 +174,10 @@ $$;
 -- $$;
 
 -- PERFORM security_.register_policy_('application_.markdown_', 'query', 'policy_.anyone_can_query_subdomain_');
-PERFORM security_.register_policy_('application_.markdown_', 'query', 'policy_.owner_can_query_markdown_');
-PERFORM security_.register_policy_('application_.markdown_', 'create', 'policy_.owner_can_create_markdown_');
-PERFORM security_.register_policy_('application_.markdown_', 'update', 'policy_.owner_can_change_markdown_');
-PERFORM security_.register_policy_('application_.markdown_', 'delete', 'policy_.only_owner_can_delete_');
+PERFORM security_.register_policy_('application_.markdown_', 'query', 'policy_.serviceaccount_can_query_markdown_without_agency_');
+PERFORM security_.register_policy_('application_.markdown_', 'create', 'policy_.serviceaccount_can_create_markdown_without_agency_');
+PERFORM security_.register_policy_('application_.markdown_', 'update', 'policy_.serviceaccount_can_change_markdown_without_agency_');
+-- PERFORM security_.register_policy_('application_.markdown_', 'delete', 'policy_.only_owner_can_delete_');
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN

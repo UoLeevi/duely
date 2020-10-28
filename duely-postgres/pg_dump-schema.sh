@@ -12,4 +12,5 @@ pg_dump -U postgres -d duely -f duely-schema.sql \
   --exclude-table-data=security_*.event_ \
   --exclude-table-data=security_*.event_log_ \
   --exclude-table-data=security_*.sign_up_ \
+  --exclude-table-data=security_*.security_data_ \
   --exclude-table-data=application_*.*
