@@ -375,8 +375,8 @@ CREATE FUNCTION internal_.convert_from_internal_format_(_data jsonb) RETURNS jso
     _uuid_fields AS (
       SELECT k, LEFT(k, length(k) - 5) || 'id_' f, r.id_
       FROM jsonb_object_keys(_data) k
-      JOIN application_.resource_ r ON r.uuid_ = (_data->>k)::uuid
-      WHERE k LIKE '%uuid_'
+      LEFT JOIN application_.resource_ r ON r.uuid_ = (_data->>k)::uuid
+      WHERE k LIKE '%uuid\_'
     )
   SELECT jsonb_object_agg(rtrim(COALESCE(i.f, d.key), '_'), COALESCE(to_jsonb(i.id_), d.value)) data_
   FROM jsonb_each(_data) d
@@ -397,7 +397,7 @@ CREATE FUNCTION internal_.convert_to_internal_format_(_data jsonb) RETURNS jsonb
     _id_fields AS (
       SELECT k, LEFT(k, length(k) - 2) || 'uuid' f, r.uuid_
       FROM jsonb_object_keys(_data) k
-      JOIN application_.resource_ r ON r.id_ = _data->>k
+      LEFT JOIN application_.resource_ r ON r.id_ = _data->>k
       WHERE k LIKE '%id'
     )
   SELECT jsonb_object_agg(COALESCE(i.f, d.key) || '_', COALESCE(to_jsonb(i.uuid_), d.value)) data_
@@ -4320,7 +4320,7 @@ CREATE FUNCTION policy_.serviceaccount_can_change_markdown_without_agency_(_reso
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF _resource.owner_uuid_ IS NULL AND internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+  IF _resource.owner_uuid_ IS NULL AND internal_.check_current_user_is_serviceaccount_() THEN
     RETURN array_cat(_keys, '{name_, data_}');
   ELSE
     RETURN _keys;
@@ -4340,7 +4340,7 @@ CREATE FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_reso
     AS $$
 BEGIN
   IF (
-    SELECT _data ? 'agency_uuid_' = false AND internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    SELECT (_data ? 'agency_uuid_') = false AND internal_.check_current_user_is_serviceaccount_()
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
     RETURN array_cat(_keys, '{name_, data_, agency_uuid_}');
