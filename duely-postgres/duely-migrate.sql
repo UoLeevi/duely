@@ -14,6 +14,100 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
+CREATE OR REPLACE FUNCTION security_.control_create_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS void
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  _policy_uuid uuid;
+  _policy_function regprocedure;
+  _keys text[] := '{}';
+  _unauthorized_data jsonb;
+BEGIN
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'No active session.' USING ERRCODE = '20000';
+  END IF;
+
+  IF _data IS NULL OR _data = '{}'::jsonb THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+
+  LOOP
+    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    FROM security_.policy_
+    WHERE resource_definition_uuid_ = _resource_definition.uuid_
+      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
+      AND operation_type_ = 'create';
+
+    IF _policy_function IS NULL THEN
+      EXIT;
+    END IF;
+
+    EXECUTE '
+      SELECT ' || _policy_function::regproc || '($1, $2, $3);
+    '
+    INTO _keys
+    USING _resource_definition, _data, _keys;
+  END LOOP;
+
+  _unauthorized_data := _data - _keys;
+
+  IF _unauthorized_data <> '{}'::jsonb THEN
+    _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
+    RAISE 'Unauthorized. Not allowed to set fields: %', _unauthorized_data USING ERRCODE = '42501';
+  END IF;
+
+  INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, data_)
+  VALUES ('create', _resource_definition.uuid_, _data);
+END
+$_$;
+
+CREATE OR REPLACE FUNCTION security_.control_update_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS void
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  _policy_uuid uuid;
+  _policy_function regprocedure;
+  _keys text[] := '{}';
+  _unauthorized_data jsonb;
+BEGIN
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'No active session.' USING ERRCODE = '20000';
+  END IF;
+
+  IF _data IS NULL OR _data = '{}'::jsonb THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+
+  LOOP
+    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    FROM security_.policy_
+    WHERE resource_definition_uuid_ = _resource_definition.uuid_
+      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
+      AND operation_type_ = 'update';
+
+    IF _policy_function IS NULL THEN
+      EXIT;
+    END IF;
+
+    EXECUTE '
+      SELECT ' || _policy_function::regproc || '($1, $2, $3, $4);
+    '
+    INTO _keys
+    USING _resource_definition, _resource, _data, _keys;
+  END LOOP;
+
+  _unauthorized_data := _data - _keys;
+
+  IF _unauthorized_data <> '{}'::jsonb THEN
+    _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
+    RAISE 'Unauthorized. Not allowed to set fields: %', _unauthorized_data USING ERRCODE = '42501';
+  END IF;
+
+  INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_, data_)
+  VALUES ('update', _resource_definition.uuid_, _resource.uuid_, _data);
+END
+$_$;
+
 -- CREATE OR REPLACE FUNCTION operation_.create_resource_(_resource_name text, _data jsonb) RETURNS jsonb
 --     LANGUAGE plpgsql SECURITY DEFINER
 --     AS $$
@@ -115,32 +209,32 @@ BEGIN
 -- END
 -- $$;
 
-CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $_$
-BEGIN
-  IF (
-    SELECT (_data ? 'agency_uuid_') = false AND internal_.check_current_user_is_serviceaccount_()
-    FROM internal_.query_owner_resource_(_resource_definition, _data)
-  ) THEN
-    RETURN array_cat(_keys, '{name_, data_, agency_uuid_, access_}');
-  ELSE
-    RETURN _keys;
-  END IF;
-END
-$_$;
+-- CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+--     LANGUAGE plpgsql SECURITY DEFINER
+--     AS $_$
+-- BEGIN
+--   IF (
+--     SELECT (_data ? 'agency_uuid_') = false AND internal_.check_current_user_is_serviceaccount_()
+--     FROM internal_.query_owner_resource_(_resource_definition, _data)
+--   ) THEN
+--     RETURN array_cat(_keys, '{name_, data_, agency_uuid_, access_}');
+--   ELSE
+--     RETURN _keys;
+--   END IF;
+-- END
+-- $_$;
 
-CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_change_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF _resource.owner_uuid_ IS NULL AND internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN array_cat(_keys, '{name_, data_, access_}');
-  ELSE
-    RETURN _keys;
-  END IF;
-END
-$$;
+-- CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_change_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+--     LANGUAGE plpgsql SECURITY DEFINER
+--     AS $$
+-- BEGIN
+--   IF _resource.owner_uuid_ IS NULL AND internal_.check_current_user_is_serviceaccount_() THEN
+--     RETURN array_cat(_keys, '{name_, data_, access_}');
+--   ELSE
+--     RETURN _keys;
+--   END IF;
+-- END
+-- $$;
 
 -- CALL internal_.setup_resource_('application_.markdown_', 'markdown', 'md', '{uuid_, name_, agency_uuid_}', 'application_.agency_');
 
@@ -156,32 +250,32 @@ $$;
 -- END
 -- $$;
 
-CREATE OR REPLACE FUNCTION policy_.owner_can_create_markdown_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $_$
-BEGIN
-  IF (
-    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
-    FROM internal_.query_owner_resource_(_resource_definition, _data)
-  ) THEN
-    RETURN array_cat(_keys, '{name_, data_, agency_uuid_, access_}');
-  ELSE
-    RETURN _keys;
-  END IF;
-END
-$_$;
+-- CREATE OR REPLACE FUNCTION policy_.owner_can_create_markdown_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+--     LANGUAGE plpgsql SECURITY DEFINER
+--     AS $_$
+-- BEGIN
+--   IF (
+--     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+--     FROM internal_.query_owner_resource_(_resource_definition, _data)
+--   ) THEN
+--     RETURN array_cat(_keys, '{name_, data_, agency_uuid_, access_}');
+--   ELSE
+--     RETURN _keys;
+--   END IF;
+-- END
+-- $_$;
 
-CREATE OR REPLACE FUNCTION policy_.owner_can_change_markdown_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN array_cat(_keys, '{name_, data_, access_}');
-  ELSE
-    RETURN _keys;
-  END IF;
-END
-$$;
+-- CREATE OR REPLACE FUNCTION policy_.owner_can_change_markdown_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+--     LANGUAGE plpgsql SECURITY DEFINER
+--     AS $$
+-- BEGIN
+--   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+--     RETURN array_cat(_keys, '{name_, data_, access_}');
+--   ELSE
+--     RETURN _keys;
+--   END IF;
+-- END
+-- $$;
 
 -- CREATE OR REPLACE FUNCTION policy_.only_owner_can_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
 --     LANGUAGE plpgsql SECURITY DEFINER
