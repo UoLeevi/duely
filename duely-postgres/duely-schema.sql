@@ -3984,7 +3984,7 @@ CREATE FUNCTION policy_.owner_can_change_markdown_(_resource_definition security
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN array_cat(_keys, '{name_, data_}');
+    RETURN array_cat(_keys, '{name_, data_, access_}');
   ELSE
     RETURN _keys;
   END IF;
@@ -4147,7 +4147,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN array_cat(_keys, '{name_, data_, agency_uuid_}');
+    RETURN array_cat(_keys, '{name_, data_, agency_uuid_, access_}');
   ELSE
     RETURN _keys;
   END IF;
@@ -4411,7 +4411,7 @@ CREATE FUNCTION policy_.serviceaccount_can_change_markdown_without_agency_(_reso
     AS $$
 BEGIN
   IF _resource.owner_uuid_ IS NULL AND internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN array_cat(_keys, '{name_, data_}');
+    RETURN array_cat(_keys, '{name_, data_, access_}');
   ELSE
     RETURN _keys;
   END IF;
@@ -4433,7 +4433,7 @@ BEGIN
     SELECT (_data ? 'agency_uuid_') = false AND internal_.check_current_user_is_serviceaccount_()
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN array_cat(_keys, '{name_, data_, agency_uuid_}');
+    RETURN array_cat(_keys, '{name_, data_, agency_uuid_, access_}');
   ELSE
     RETURN _keys;
   END IF;

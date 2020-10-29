@@ -14,38 +14,6 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE TYPE public.access_level_ AS ENUM (
-    'owner',
-    'manager',
-    'agent',
-    'client',
-    'public'
-);
-
-ALTER TABLE application_.markdown_ ADD COLUMN access_ access_level_ NOT NULL DEFAULT 'owner';
-ALTER TABLE application_.image_ ADD COLUMN access_ access_level_ NOT NULL DEFAULT 'owner';
-
-CREATE FUNCTION internal_.check_resource_access_(_resource_definition security_.resource_definition_, _resource application_.resource_, _access access_level_) RETURNS boolean
-    LANGUAGE plpgsql STABLE SECURITY DEFINER
-    AS $$
-BEGIN
-  IF _access = 'public' THEN
-    RETURN 't';
-  ELSEIF _access = 'owner' THEN
-    RETURN internal_.check_resource_role_(_resource_definition, _resource, 'owner');
-  ELSEIF _access = 'manager' THEN
-    RETURN internal_.check_resource_role_(_resource_definition, _resource, 'manager');
-  ELSEIF _access = 'agent' THEN
-    RETURN internal_.check_resource_role_(_resource_definition, _resource, 'agent');
-  ELSEIF _access = 'client' THEN
-    RETURN internal_.check_resource_role_(_resource_definition, _resource, 'agent')
-        OR internal_.check_resource_role_(_resource_definition, _resource, 'client');
-  ELSE
-    RETURN 'f';
-  END IF;
-END
-$$;
-
 -- CREATE OR REPLACE FUNCTION operation_.create_resource_(_resource_name text, _data jsonb) RETURNS jsonb
 --     LANGUAGE plpgsql SECURITY DEFINER
 --     AS $$
@@ -115,64 +83,64 @@ $$;
 -- END
 -- $$;
 
-CREATE OR REPLACE FUNCTION policy_.can_query_markdown_based_on_access_level_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF (
-    SELECT internal_.check_resource_access_(_resource_definition, _resource, access_)
-    FROM application_.markdown_
-    WHERE uuid_ = _resource.uuid_
-  ) THEN
-    RETURN array_cat(_keys, '{uuid_, name_, data_, access_, agency_uuid_}');
-  ELSE
-    RETURN _keys;
-  END IF;
-END
-$$;
-
-CREATE OR REPLACE FUNCTION policy_.can_query_image_based_on_access_level_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF (
-    SELECT internal_.check_resource_access_(_resource_definition, _resource, access_)
-    FROM application_.image_
-    WHERE uuid_ = _resource.uuid_
-  ) THEN
-    RETURN array_cat(_keys, '{uuid_, name_, data_, access_, color_, agency_uuid_}');
-  ELSE
-    RETURN _keys;
-  END IF;
-END
-$$;
-
--- CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $_$
--- BEGIN
---   IF (
---     SELECT (_data ? 'agency_uuid_') = false AND internal_.check_current_user_is_serviceaccount_()
---     FROM internal_.query_owner_resource_(_resource_definition, _data)
---   ) THEN
---     RETURN array_cat(_keys, '{name_, data_, agency_uuid_}');
---   ELSE
---     RETURN _keys;
---   END IF;
--- END
--- $_$;
-
--- CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_change_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+-- CREATE OR REPLACE FUNCTION policy_.can_query_markdown_based_on_access_level_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
 --     LANGUAGE plpgsql SECURITY DEFINER
 --     AS $$
 -- BEGIN
---   IF _resource.owner_uuid_ IS NULL AND internal_.check_current_user_is_serviceaccount_() THEN
---     RETURN array_cat(_keys, '{name_, data_}');
+--   IF (
+--     SELECT internal_.check_resource_access_(_resource_definition, _resource, access_)
+--     FROM application_.markdown_
+--     WHERE uuid_ = _resource.uuid_
+--   ) THEN
+--     RETURN array_cat(_keys, '{uuid_, name_, data_, access_, agency_uuid_}');
 --   ELSE
 --     RETURN _keys;
 --   END IF;
 -- END
 -- $$;
+
+-- CREATE OR REPLACE FUNCTION policy_.can_query_image_based_on_access_level_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+--     LANGUAGE plpgsql SECURITY DEFINER
+--     AS $$
+-- BEGIN
+--   IF (
+--     SELECT internal_.check_resource_access_(_resource_definition, _resource, access_)
+--     FROM application_.image_
+--     WHERE uuid_ = _resource.uuid_
+--   ) THEN
+--     RETURN array_cat(_keys, '{uuid_, name_, data_, access_, color_, agency_uuid_}');
+--   ELSE
+--     RETURN _keys;
+--   END IF;
+-- END
+-- $$;
+
+CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $_$
+BEGIN
+  IF (
+    SELECT (_data ? 'agency_uuid_') = false AND internal_.check_current_user_is_serviceaccount_()
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
+    RETURN array_cat(_keys, '{name_, data_, agency_uuid_, access_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$_$;
+
+CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_change_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF _resource.owner_uuid_ IS NULL AND internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN array_cat(_keys, '{name_, data_, access_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
 
 -- CALL internal_.setup_resource_('application_.markdown_', 'markdown', 'md', '{uuid_, name_, agency_uuid_}', 'application_.agency_');
 
@@ -188,32 +156,32 @@ $$;
 -- END
 -- $$;
 
--- CREATE OR REPLACE FUNCTION policy_.owner_can_create_markdown_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $_$
--- BEGIN
---   IF (
---     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
---     FROM internal_.query_owner_resource_(_resource_definition, _data)
---   ) THEN
---     RETURN array_cat(_keys, '{name_, data_, agency_uuid_}');
---   ELSE
---     RETURN _keys;
---   END IF;
--- END
--- $_$;
+CREATE OR REPLACE FUNCTION policy_.owner_can_create_markdown_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $_$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
+    RETURN array_cat(_keys, '{name_, data_, agency_uuid_, access_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$_$;
 
--- CREATE OR REPLACE FUNCTION policy_.owner_can_change_markdown_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
---     RETURN array_cat(_keys, '{name_, data_}');
---   ELSE
---     RETURN _keys;
---   END IF;
--- END
--- $$;
+CREATE OR REPLACE FUNCTION policy_.owner_can_change_markdown_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN array_cat(_keys, '{name_, data_, access_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
 
 -- CREATE OR REPLACE FUNCTION policy_.only_owner_can_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
 --     LANGUAGE plpgsql SECURITY DEFINER
@@ -226,8 +194,8 @@ $$;
 -- $$;
 
 -- PERFORM security_.register_policy_('application_.markdown_', 'query', 'policy_.anyone_can_query_subdomain_');
-PERFORM security_.register_policy_('application_.markdown_', 'query', 'policy_.can_query_markdown_based_on_access_level_');
-PERFORM security_.register_policy_('application_.image_', 'query', 'policy_.can_query_image_based_on_access_level_');
+-- PERFORM security_.register_policy_('application_.markdown_', 'query', 'policy_.can_query_markdown_based_on_access_level_');
+-- PERFORM security_.register_policy_('application_.image_', 'query', 'policy_.can_query_image_based_on_access_level_');
 -- PERFORM security_.register_policy_('application_.markdown_', 'create', 'policy_.serviceaccount_can_create_markdown_without_agency_');
 -- PERFORM security_.register_policy_('application_.markdown_', 'update', 'policy_.serviceaccount_can_change_markdown_without_agency_');
 -- PERFORM security_.register_policy_('application_.markdown_', 'delete', 'policy_.only_owner_can_delete_');
