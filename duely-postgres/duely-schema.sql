@@ -103,6 +103,21 @@ COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
 
 --
+-- Name: access_level_; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.access_level_ AS ENUM (
+    'owner',
+    'manager',
+    'agent',
+    'client',
+    'public'
+);
+
+
+ALTER TYPE public.access_level_ OWNER TO postgres;
+
+--
 -- Name: operation_type_; Type: TYPE; Schema: public; Owner: postgres
 --
 
@@ -322,7 +337,7 @@ ALTER TABLE application_.resource_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.resource_definition_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     id_prefix_ text NOT NULL,
     name_ text NOT NULL,
     table_ regclass NOT NULL,
@@ -332,6 +347,34 @@ CREATE TABLE security_.resource_definition_ (
 
 
 ALTER TABLE security_.resource_definition_ OWNER TO postgres;
+
+--
+-- Name: check_resource_access_(security_.resource_definition_, application_.resource_, public.access_level_); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.check_resource_access_(_resource_definition security_.resource_definition_, _resource application_.resource_, _access public.access_level_) RETURNS boolean
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    AS $$
+BEGIN
+  IF _access = 'public' THEN
+    RETURN 't';
+  ELSEIF _access = 'owner' THEN
+    RETURN internal_.check_resource_role_(_resource_definition, _resource, 'owner');
+  ELSEIF _access = 'manager' THEN
+    RETURN internal_.check_resource_role_(_resource_definition, _resource, 'manager');
+  ELSEIF _access = 'agent' THEN
+    RETURN internal_.check_resource_role_(_resource_definition, _resource, 'agent');
+  ELSEIF _access = 'client' THEN
+    RETURN internal_.check_resource_role_(_resource_definition, _resource, 'agent')
+        OR internal_.check_resource_role_(_resource_definition, _resource, 'client');
+  ELSE
+    RETURN 'f';
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION internal_.check_resource_access_(_resource_definition security_.resource_definition_, _resource application_.resource_, _access public.access_level_) OWNER TO postgres;
 
 --
 -- Name: check_resource_role_(security_.resource_definition_, application_.resource_, text); Type: FUNCTION; Schema: internal_; Owner: postgres
@@ -1477,7 +1520,7 @@ ALTER FUNCTION internal_.try_verify_sign_up_() OWNER TO postgres;
 --
 
 CREATE TABLE application_.user_invite_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     agency_uuid_ uuid NOT NULL,
     inviter_uuid_ uuid NOT NULL,
     invitee_email_address_ text NOT NULL,
@@ -1539,7 +1582,7 @@ ALTER FUNCTION operation_.accept_user_invite_(_invite_uuid uuid) OWNER TO postgr
 --
 
 CREATE TABLE security_.session_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     begin_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     end_at_ timestamp with time zone,
     token_uuid_ uuid NOT NULL,
@@ -1610,7 +1653,7 @@ CREATE FUNCTION operation_.begin_visit_() RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _uuid uuid := pgcrypto_.gen_random_uuid();
+  _uuid uuid := gen_random_uuid();
   _iat bigint := FLOOR(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP));
   _subject_uuid uuid;
   _secret bytea;
@@ -1693,7 +1736,7 @@ ALTER FUNCTION operation_.cancel_user_invite_(_invite_uuid uuid) OWNER TO postgr
 --
 
 CREATE TABLE application_.agency_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     subdomain_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -1740,7 +1783,7 @@ ALTER FUNCTION operation_.create_agency_(_name text, _subdomain_name text) OWNER
 --
 
 CREATE TABLE application_.client_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     agency_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
     email_address_ text,
@@ -1826,7 +1869,7 @@ ALTER FUNCTION operation_.create_resource_(_resource_name text, _data jsonb) OWN
 --
 
 CREATE TABLE application_.service_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     agency_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
     status_ text DEFAULT 'draft'::text NOT NULL,
@@ -1869,7 +1912,7 @@ ALTER FUNCTION operation_.create_service_(_agency_uuid uuid, _name text) OWNER T
 --
 
 CREATE TABLE application_.service_step_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     service_uuid_ uuid,
     previous_service_step_uuid_ uuid,
     name_ text NOT NULL,
@@ -1935,7 +1978,7 @@ ALTER FUNCTION operation_.create_service_step_(_service_uuid uuid, _name text, _
 --
 
 CREATE TABLE application_.stripe_account_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     agency_uuid_ uuid NOT NULL,
     stripe_id_ext_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -2161,7 +2204,7 @@ ALTER FUNCTION operation_.delete_service_step_(_service_step_uuid uuid) OWNER TO
 --
 
 CREATE TABLE application_.theme_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     image_logo_uuid_ uuid,
     image_hero_uuid_ uuid,
@@ -2222,11 +2265,12 @@ ALTER FUNCTION operation_.edit_agency_theme_(_agency_uuid uuid, _image_logo_uuid
 --
 
 CREATE TABLE application_.image_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     data_ text NOT NULL,
     color_ text NOT NULL,
-    agency_uuid_ uuid
+    agency_uuid_ uuid,
+    access_ public.access_level_ DEFAULT 'owner'::public.access_level_ NOT NULL
 );
 
 
@@ -2431,7 +2475,7 @@ CREATE FUNCTION operation_.log_in_user_(_email_address text, _password text) RET
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _uuid uuid := pgcrypto_.gen_random_uuid();
+  _uuid uuid := gen_random_uuid();
   _iat bigint := FLOOR(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP));
   _subject_uuid uuid;
   _secret bytea;
@@ -3349,7 +3393,7 @@ ALTER FUNCTION operation_.sign_up_user_(_verification_uuid uuid) OWNER TO postgr
 --
 
 CREATE TABLE security_.email_address_verification_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     email_address_ text NOT NULL,
     started_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     status_ text,
@@ -3694,6 +3738,52 @@ END
 
 
 ALTER FUNCTION policy_.argument_is_not_null_(_arg anyelement) OWNER TO postgres;
+
+--
+-- Name: can_query_image_based_on_access_level_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.can_query_image_based_on_access_level_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_access_(_resource_definition, _resource, access_)
+    FROM application_.image_
+    WHERE uuid_ = _resource.uuid_
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, name_, data_, access_, color_, agency_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.can_query_image_based_on_access_level_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
+
+--
+-- Name: can_query_markdown_based_on_access_level_(security_.resource_definition_, application_.resource_, text[]); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.can_query_markdown_based_on_access_level_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_access_(_resource_definition, _resource, access_)
+    FROM application_.markdown_
+    WHERE uuid_ = _resource.uuid_
+  ) THEN
+    RETURN array_cat(_keys, '{uuid_, name_, data_, access_, agency_uuid_}');
+  ELSE
+    RETURN _keys;
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.can_query_markdown_based_on_access_level_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) OWNER TO postgres;
 
 --
 -- Name: invitee_of_user_invite_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4655,7 +4745,7 @@ ALTER FUNCTION security_.control_delete_(_resource_definition security_.resource
 --
 
 CREATE TABLE security_.event_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     operation_uuid_ uuid NOT NULL,
     session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL,
     arg_ text,
@@ -4838,7 +4928,7 @@ ALTER FUNCTION security_.control_update_(_resource_definition security_.resource
 --
 
 CREATE TABLE security_.policy_assignment_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     policy_name_ text NOT NULL,
     operation_uuid_ uuid NOT NULL,
     type_ text NOT NULL,
@@ -4966,7 +5056,7 @@ ALTER FUNCTION security_.implement_policy_deny_(_operation_name text, _policy_na
 --
 
 CREATE TABLE security_.policy_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     resource_definition_uuid_ uuid NOT NULL,
     function_ regprocedure NOT NULL,
     operation_type_ public.operation_type_ NOT NULL,
@@ -5079,10 +5169,11 @@ ALTER FUNCTION security_.unregister_policy_(_table regclass, _operation_type pub
 --
 
 CREATE TABLE application_.markdown_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     data_ text NOT NULL,
-    agency_uuid_ uuid
+    agency_uuid_ uuid,
+    access_ public.access_level_ DEFAULT 'owner'::public.access_level_ NOT NULL
 );
 
 
@@ -5101,7 +5192,7 @@ CREATE TABLE security_.password_reset_ (
     status_ public.verification_status_ DEFAULT 'started'::public.verification_status_ NOT NULL,
     status_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     initiator_subject_uuid_ uuid DEFAULT internal_.current_subject_uuid_() NOT NULL,
-    verification_code_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    verification_code_ uuid DEFAULT gen_random_uuid() NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -5114,7 +5205,7 @@ ALTER TABLE security_.password_reset_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.user_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     email_address_ text,
     password_hash_ text,
     name_ text NOT NULL,
@@ -5220,7 +5311,7 @@ ALTER TABLE application_.service_step_payment_ OWNER TO postgres;
 --
 
 CREATE TABLE application_.service_variant_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     service_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
     status_ text DEFAULT 'draft'::text NOT NULL,
@@ -5253,7 +5344,7 @@ CREATE TABLE security_.sign_up_ (
     status_ public.verification_status_ DEFAULT 'started'::public.verification_status_ NOT NULL,
     status_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     initiator_subject_uuid_ uuid DEFAULT internal_.current_subject_uuid_() NOT NULL,
-    verification_code_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    verification_code_ uuid DEFAULT gen_random_uuid() NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -5518,7 +5609,7 @@ ALTER TABLE application__audit_.user_invite_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.subject_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     type_ text NOT NULL
 );
 
@@ -5543,7 +5634,7 @@ ALTER TABLE security_.active_subject_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.role_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
@@ -5557,7 +5648,7 @@ ALTER TABLE security_.role_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.role_hierarchy_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     role_uuid_ uuid NOT NULL,
     subrole_uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -5572,7 +5663,7 @@ ALTER TABLE security_.role_hierarchy_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.subject_assignment_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     role_uuid_ uuid NOT NULL,
     subdomain_uuid_ uuid NOT NULL,
     subject_uuid_ uuid NOT NULL
@@ -5649,7 +5740,7 @@ ALTER TABLE security_.active_user_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.event_log_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     operation_type_ public.operation_type_ NOT NULL,
     resource_definition_uuid_ uuid,
     resource_uuid_ uuid,
@@ -5666,7 +5757,7 @@ ALTER TABLE security_.event_log_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.operation_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     log_events_ boolean DEFAULT true NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -5681,7 +5772,7 @@ ALTER TABLE security_.operation_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.secret_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     value_ bytea NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -5696,7 +5787,7 @@ ALTER TABLE security_.secret_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.security_data_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     key_ text NOT NULL,
     data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -5711,7 +5802,7 @@ ALTER TABLE security_.security_data_ OWNER TO postgres;
 --
 
 CREATE TABLE security_.subdomain_ (
-    uuid_ uuid DEFAULT pgcrypto_.gen_random_uuid() NOT NULL,
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
@@ -5918,14 +6009,14 @@ ALTER TABLE security__audit_.user_ OWNER TO postgres;
 -- Name: password_reset_ uuid_; Type: DEFAULT; Schema: application_; Owner: postgres
 --
 
-ALTER TABLE ONLY application_.password_reset_ ALTER COLUMN uuid_ SET DEFAULT pgcrypto_.gen_random_uuid();
+ALTER TABLE ONLY application_.password_reset_ ALTER COLUMN uuid_ SET DEFAULT gen_random_uuid();
 
 
 --
 -- Name: sign_up_ uuid_; Type: DEFAULT; Schema: application_; Owner: postgres
 --
 
-ALTER TABLE ONLY application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT pgcrypto_.gen_random_uuid();
+ALTER TABLE ONLY application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT gen_random_uuid();
 
 
 --
@@ -6009,7 +6100,6 @@ cdc2d6a0-b00e-4763-bad3-d2b43bf0c3c0	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy
 7fe3d163-1f55-4916-9f1f-f345c01e7773	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_create_theme_(security_.resource_definition_,jsonb,text[])	create	\N
 95c5b9d6-3df7-4ace-961a-b817262783e4	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_change_theme_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 781a2064-6530-4452-83d6-04347be6c845	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-d29e82dd-1151-4951-bac5-38051474a9b1	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.logged_in_user_can_query_image_(security_.resource_definition_,application_.resource_,text[])	query	\N
 e96b9766-d1d1-427a-9144-258e77ad6047	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.owner_can_create_image_(security_.resource_definition_,jsonb,text[])	create	\N
 b8bb1737-fb4f-4d40-afba-b8d29a3ebb05	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.owner_can_change_image_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 fce05ef3-4cd5-4b5e-a011-55e20f683556	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
@@ -6041,12 +6131,15 @@ b2cab51a-ad53-4ee2-9113-1566989be9dc	7f589215-bdc7-4664-99c6-b7745349c352	policy
 4bea3784-2dd2-46dc-9548-c55b4613f4b4	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.serviceaccount_can_query_stripe_account_for_agency_(security_.resource_definition_,application_.resource_,text[])	query	\N
 98bbbedc-73b8-469b-bc84-797378745075	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_query_stripe_account_(security_.resource_definition_,application_.resource_,text[])	query	4bea3784-2dd2-46dc-9548-c55b4613f4b4
 607ca062-c61b-461f-83bf-b2a5b56cd1d0	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-79cd2981-cf2c-4a6b-831c-873a8d140e2d	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.serviceaccount_can_query_markdown_without_agency_(security_.resource_definition_,application_.resource_,text[])	query	\N
 ae810fbb-9426-4580-96bc-f124a0d2ca9d	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.owner_can_query_markdown_(security_.resource_definition_,application_.resource_,text[])	query	79cd2981-cf2c-4a6b-831c-873a8d140e2d
 5c87a82e-d302-45dd-adb8-7afdcac18236	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.serviceaccount_can_create_markdown_without_agency_(security_.resource_definition_,jsonb,text[])	create	\N
 b20974c1-ea3c-4c62-86ba-7cbe533e4300	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.owner_can_create_markdown_(security_.resource_definition_,jsonb,text[])	create	5c87a82e-d302-45dd-adb8-7afdcac18236
 feb75892-7dff-459c-87f7-afec68d96c17	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.serviceaccount_can_change_markdown_without_agency_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	\N
 154a632f-7102-4d53-9c0c-91b3fac16d94	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.owner_can_change_markdown_(security_.resource_definition_,application_.resource_,jsonb,text[])	update	feb75892-7dff-459c-87f7-afec68d96c17
+5b4d9b4f-822b-4d54-bd4a-c1709c449349	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.can_query_markdown_based_on_access_level_(security_.resource_definition_,application_.resource_,text[])	query	\N
+79cd2981-cf2c-4a6b-831c-873a8d140e2d	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.serviceaccount_can_query_markdown_without_agency_(security_.resource_definition_,application_.resource_,text[])	query	5b4d9b4f-822b-4d54-bd4a-c1709c449349
+32268460-a5bf-4807-a3d0-9ef69c23b1d7	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.can_query_image_based_on_access_level_(security_.resource_definition_,application_.resource_,text[])	query	\N
+d29e82dd-1151-4951-bac5-38051474a9b1	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.logged_in_user_can_query_image_(security_.resource_definition_,application_.resource_,text[])	query	32268460-a5bf-4807-a3d0-9ef69c23b1d7
 \.
 
 
