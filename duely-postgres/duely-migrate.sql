@@ -14,6 +14,122 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
+CREATE OR REPLACE FUNCTION security_.control_create_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS void
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  _policy_uuid uuid;
+  _policy_function regprocedure;
+  _keys text[];
+  _unauthorized_data jsonb;
+  _fields_list text;
+BEGIN
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'No active session.' USING ERRCODE = '20000';
+  END IF;
+
+  IF _data IS NULL OR _data = '{}'::jsonb THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+
+  _unauthorized_data := internal_.jsonb_strip_values_(_data);
+
+  LOOP
+    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    FROM security_.policy_
+    WHERE resource_definition_uuid_ = _resource_definition.uuid_
+      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
+      AND operation_type_ = 'create';
+
+    IF _policy_function IS NULL THEN
+      EXIT;
+    END IF;
+
+    EXECUTE '
+      SELECT ' || _policy_function::regproc || '($1, $2);
+    '
+    INTO _keys
+    USING _resource_definition, _data;
+
+    _unauthorized_data := _unauthorized_data - COALESCE(_keys, '{}');
+
+    IF _unauthorized_data = '{}'::jsonb THEN
+      -- Result: authorized
+      INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, data_)
+      VALUES ('create', _resource_definition.uuid_, _data);
+      RETURN;
+    END IF;
+  END LOOP;
+
+  -- Result: not authorized
+
+  _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
+
+  SELECT string_agg(k, ', ') INTO _fields_list
+  FROM jsonb_object_keys(_unauthorized_data) k;
+
+  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = '42501';
+END
+$_$;
+
+CREATE OR REPLACE FUNCTION security_.control_update_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS void
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  _policy_uuid uuid;
+  _policy_function regprocedure;
+  _keys text[];
+  _unauthorized_data jsonb;
+  _fields_list text;
+BEGIN
+  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
+    RAISE 'No active session.' USING ERRCODE = '20000';
+  END IF;
+
+  IF _data IS NULL OR _data = '{}'::jsonb THEN
+    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  END IF;
+
+  _unauthorized_data := internal_.jsonb_strip_values_(_data);
+
+  LOOP
+    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    FROM security_.policy_
+    WHERE resource_definition_uuid_ = _resource_definition.uuid_
+      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
+      AND operation_type_ = 'update';
+
+    IF _policy_function IS NULL THEN
+      EXIT;
+    END IF;
+
+    EXECUTE '
+      SELECT ' || _policy_function::regproc || '($1, $2, $3);
+    '
+    INTO _keys
+    USING _resource_definition, _resource, _data;
+
+    _unauthorized_data := _unauthorized_data - COALESCE(_keys, '{}');
+
+    IF _unauthorized_data = '{}'::jsonb THEN
+      -- Result: authorized
+      INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_, data_)
+      VALUES ('update', _resource_definition.uuid_, _resource.uuid_, _data);
+      RETURN;
+    END IF;
+  END LOOP;
+
+  -- Result: not authorized
+
+  _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
+
+  SELECT string_agg(k, ', ') INTO _fields_list
+  FROM jsonb_object_keys(_unauthorized_data) k;
+
+  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = '42501';
+END
+$_$;
+
 -- CREATE OR REPLACE FUNCTION operation_.create_resource_(_resource_name text, _data jsonb) RETURNS jsonb
 --     LANGUAGE plpgsql SECURITY DEFINER
 --     AS $$
