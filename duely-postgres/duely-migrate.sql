@@ -14,6 +14,13 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
+CREATE OR REPLACE FUNCTION internal_.jsonb_strip_values_(_data jsonb) RETURNS jsonb
+    LANGUAGE sql IMMUTABLE SECURITY DEFINER
+    AS $$
+  SELECT COALESCE(jsonb_object_agg(k, NULL), '{}'::jsonb)
+  FROM jsonb_object_keys(_data) k;
+$$;
+
 CREATE OR REPLACE FUNCTION security_.control_create_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS void
     LANGUAGE plpgsql
     AS $_$
@@ -31,6 +38,8 @@ BEGIN
     RAISE 'Unauthorized.' USING ERRCODE = '42501';
   END IF;
 
+  _unauthorized_data := internal_.jsonb_strip_values_(_data);
+
   LOOP
     SELECT uuid_, function_ INTO _policy_uuid, _policy_function
     FROM security_.policy_
@@ -47,17 +56,25 @@ BEGIN
     '
     INTO _keys
     USING _resource_definition, _data, _keys;
+
+    _unauthorized_data := _unauthorized_data - _keys;
+
+    IF _unauthorized_data = '{}'::jsonb THEN
+      -- Result: authorized
+      INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, data_)
+      VALUES ('create', _resource_definition.uuid_, _data);
+      RETURN;
+    END IF;
   END LOOP;
 
-  _unauthorized_data := _data - _keys;
+  -- Result: not authorized
 
-  IF _unauthorized_data <> '{}'::jsonb THEN
-    _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
-    RAISE 'Unauthorized. Not allowed to set fields: %', _unauthorized_data USING ERRCODE = '42501';
-  END IF;
+  _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
 
-  INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, data_)
-  VALUES ('create', _resource_definition.uuid_, _data);
+  SELECT string_agg(k, ', ') INTO _keys
+  FROM jsonb_object_keys(_unauthorized_data) k;
+
+  RAISE 'Unauthorized. Not allowed to set fields: %', _keys USING ERRCODE = '42501';
 END
 $_$;
 
@@ -78,6 +95,8 @@ BEGIN
     RAISE 'Unauthorized.' USING ERRCODE = '42501';
   END IF;
 
+  _unauthorized_data := internal_.jsonb_strip_values_(_data);
+
   LOOP
     SELECT uuid_, function_ INTO _policy_uuid, _policy_function
     FROM security_.policy_
@@ -94,17 +113,25 @@ BEGIN
     '
     INTO _keys
     USING _resource_definition, _resource, _data, _keys;
+
+    _unauthorized_data := _unauthorized_data - _keys;
+
+    IF _unauthorized_data = '{}'::jsonb THEN
+      -- Result: authorized
+      INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_, data_)
+      VALUES ('update', _resource_definition.uuid_, _resource.uuid_, _data);
+      RETURN;
+    END IF;
   END LOOP;
 
-  _unauthorized_data := _data - _keys;
+  -- Result: not authorized
 
-  IF _unauthorized_data <> '{}'::jsonb THEN
-    _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
-    RAISE 'Unauthorized. Not allowed to set fields: %', _unauthorized_data USING ERRCODE = '42501';
-  END IF;
+  _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
 
-  INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_, data_)
-  VALUES ('update', _resource_definition.uuid_, _resource.uuid_, _data);
+  SELECT string_agg(k, ', ') INTO _keys
+  FROM jsonb_object_keys(_unauthorized_data) k;
+
+  RAISE 'Unauthorized. Not allowed to set fields: %', _keys USING ERRCODE = '42501';
 END
 $_$;
 

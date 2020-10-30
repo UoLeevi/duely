@@ -749,6 +749,20 @@ $$;
 ALTER FUNCTION internal_.insert_subject_for_user_() OWNER TO postgres;
 
 --
+-- Name: jsonb_strip_values_(jsonb); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.jsonb_strip_values_(_data jsonb) RETURNS jsonb
+    LANGUAGE sql IMMUTABLE SECURITY DEFINER
+    AS $$
+  SELECT COALESCE(jsonb_object_agg(k, NULL), '{}'::jsonb)
+  FROM jsonb_object_keys(_data) k;
+$$;
+
+
+ALTER FUNCTION internal_.jsonb_strip_values_(_data jsonb) OWNER TO postgres;
+
+--
 -- Name: jwt_sign_hs256_(jsonb, bytea); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -4648,6 +4662,7 @@ DECLARE
   _policy_uuid uuid;
   _policy_function regprocedure;
   _keys text[] := '{}';
+  _unauthorized_data jsonb;
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
     RAISE 'No active session.' USING ERRCODE = '20000';
@@ -4656,6 +4671,8 @@ BEGIN
   IF _data IS NULL OR _data = '{}'::jsonb THEN
     RAISE 'Unauthorized.' USING ERRCODE = '42501';
   END IF;
+
+  _unauthorized_data := internal_.jsonb_strip_values_(_data);
 
   LOOP
     SELECT uuid_, function_ INTO _policy_uuid, _policy_function
@@ -4673,18 +4690,25 @@ BEGIN
     '
     INTO _keys
     USING _resource_definition, _data, _keys;
+
+    _unauthorized_data := _unauthorized_data - _keys;
+
+    IF _unauthorized_data = '{}'::jsonb THEN
+      -- Result: authorized
+      INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, data_)
+      VALUES ('create', _resource_definition.uuid_, _data);
+      RETURN;
+    END IF;
   END LOOP;
 
-  IF EXISTS (
-      SELECT jsonb_object_keys(_data)
-    EXCEPT
-      SELECT unnest(_keys)
-  ) THEN
-    RAISE 'Unauthorized.' USING ERRCODE = '42501';
-  END IF;
+  -- Result: not authorized
 
-  INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, data_)
-  VALUES ('create', _resource_definition.uuid_, _data);
+  _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
+
+  SELECT string_agg(k, ', ') INTO _keys
+  FROM jsonb_object_keys(_unauthorized_data) k;
+
+  RAISE 'Unauthorized. Not allowed to set fields: %', _keys USING ERRCODE = '42501';
 END
 $_$;
 
@@ -4880,6 +4904,7 @@ DECLARE
   _policy_uuid uuid;
   _policy_function regprocedure;
   _keys text[] := '{}';
+  _unauthorized_data jsonb;
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
     RAISE 'No active session.' USING ERRCODE = '20000';
@@ -4888,6 +4913,8 @@ BEGIN
   IF _data IS NULL OR _data = '{}'::jsonb THEN
     RAISE 'Unauthorized.' USING ERRCODE = '42501';
   END IF;
+
+  _unauthorized_data := internal_.jsonb_strip_values_(_data);
 
   LOOP
     SELECT uuid_, function_ INTO _policy_uuid, _policy_function
@@ -4905,18 +4932,25 @@ BEGIN
     '
     INTO _keys
     USING _resource_definition, _resource, _data, _keys;
+
+    _unauthorized_data := _unauthorized_data - _keys;
+
+    IF _unauthorized_data = '{}'::jsonb THEN
+      -- Result: authorized
+      INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_, data_)
+      VALUES ('update', _resource_definition.uuid_, _resource.uuid_, _data);
+      RETURN;
+    END IF;
   END LOOP;
 
-  IF EXISTS (
-      SELECT jsonb_object_keys(_data)
-    EXCEPT
-      SELECT unnest(_keys)
-  ) THEN
-    RAISE 'Unauthorized.' USING ERRCODE = '42501';
-  END IF;
+  -- Result: not authorized
 
-  INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_, data_)
-  VALUES ('update', _resource_definition.uuid_, _resource.uuid_, _data);
+  _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
+
+  SELECT string_agg(k, ', ') INTO _keys
+  FROM jsonb_object_keys(_unauthorized_data) k;
+
+  RAISE 'Unauthorized. Not allowed to set fields: %', _keys USING ERRCODE = '42501';
 END
 $_$;
 
