@@ -4445,9 +4445,8 @@ CREATE FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_reso
 BEGIN
   IF (
     SELECT (_data ? 'agency_uuid_') = false AND internal_.check_current_user_is_serviceaccount_()
-    FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{name_, data_, agency_uuid_, access_}'::text[];
+    RETURN '{name_, data_, access_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4663,6 +4662,7 @@ DECLARE
   _policy_function regprocedure;
   _keys text[];
   _unauthorized_data jsonb;
+  _fields_list text;
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
     RAISE 'No active session.' USING ERRCODE = '20000';
@@ -4705,10 +4705,10 @@ BEGIN
 
   _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
 
-  SELECT string_agg(k, ', ') INTO _keys
+  SELECT string_agg(k, ', ') INTO _fields_list
   FROM jsonb_object_keys(_unauthorized_data) k;
 
-  RAISE 'Unauthorized. Not allowed to set fields: %', _keys USING ERRCODE = '42501';
+  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = '42501';
 END
 $_$;
 
@@ -4856,6 +4856,7 @@ DECLARE
   _policy_uuid uuid;
   _policy_function regprocedure;
   _keys text[];
+  _authorized_keys text[] := '{}'::text[];
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
     RAISE 'No active session.' USING ERRCODE = '20000';
@@ -4877,16 +4878,18 @@ BEGIN
     '
     INTO _keys
     USING _resource_definition, _resource;
+
+    _authorized_keys := array_cat(_authorized_keys, COALESCE(_keys, '{}'));
   END LOOP;
 
-  IF array_length(COALESCE(_keys, '{}'), 1) = 0 THEN
+  IF array_length(COALESCE(_authorized_keys, '{}'), 1) = 0 THEN
     RAISE 'Unauthorized.' USING ERRCODE = '42501';
   END IF;
 
-  SELECT array_agg(DISTINCT k) INTO _keys
-  FROM unnest(_keys) k;
+  SELECT array_agg(DISTINCT k) INTO _authorized_keys
+  FROM unnest(_authorized_keys) k;
 
-  RETURN _keys;
+  RETURN _authorized_keys;
 END
 $_$;
 
@@ -4905,6 +4908,7 @@ DECLARE
   _policy_function regprocedure;
   _keys text[];
   _unauthorized_data jsonb;
+  _fields_list text;
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
     RAISE 'No active session.' USING ERRCODE = '20000';
@@ -4947,10 +4951,10 @@ BEGIN
 
   _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
 
-  SELECT string_agg(k, ', ') INTO _keys
+  SELECT string_agg(k, ', ') INTO _fields_list
   FROM jsonb_object_keys(_unauthorized_data) k;
 
-  RAISE 'Unauthorized. Not allowed to set fields: %', _keys USING ERRCODE = '42501';
+  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = '42501';
 END
 $_$;
 
@@ -6924,6 +6928,20 @@ ALTER TABLE ONLY security_.user_
 
 ALTER TABLE ONLY security_.user_
     ADD CONSTRAINT user__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: image__name__key; Type: INDEX; Schema: application_; Owner: postgres
+--
+
+CREATE UNIQUE INDEX image__name__key ON application_.image_ USING btree (name_) WHERE (agency_uuid_ IS NULL);
+
+
+--
+-- Name: markdown__name__key; Type: INDEX; Schema: application_; Owner: postgres
+--
+
+CREATE UNIQUE INDEX markdown__name__key ON application_.markdown_ USING btree (name_) WHERE (agency_uuid_ IS NULL);
 
 
 --
