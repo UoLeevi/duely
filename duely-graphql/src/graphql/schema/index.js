@@ -44,6 +44,7 @@ import { makeExecutableSchema } from 'graphql-tools';
 // import Subscription from './Subscription';
 
 import { interfaces } from './interfaces';
+import { AccessLevel } from './AccessLevel';
 import { Visit } from './Visit';
 import { LogIn } from './LogIn';
 import { SignUp } from './SignUp';
@@ -70,6 +71,7 @@ const types = [
     `
   },
   interfaces,
+  AccessLevel,
   Visit,
   LogIn,
   SignUp,

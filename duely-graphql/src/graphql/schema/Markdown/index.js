@@ -15,6 +15,7 @@ export const Markdown = {
       name: String!
       data: String!
       agency: Agency
+      access: AccessLevel!
     }
 
     input MarkdownFilter {
@@ -28,8 +29,8 @@ export const Markdown = {
     }
 
     extend type Mutation {
-      create_markdown(agency_id: ID, name: String!, data: String!): MarkdownMutationResult!
-      update_markdown(markdown_id: ID!, name: String, data: String): MarkdownMutationResult!
+      create_markdown(agency_id: ID, name: String!, data: String!, access: AccessLevel): MarkdownMutationResult!
+      update_markdown(markdown_id: ID!, name: String, data: String, access: AccessLevel): MarkdownMutationResult!
     }
 
     type MarkdownMutationResult implements MutationResult {

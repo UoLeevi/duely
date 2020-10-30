@@ -15,6 +15,7 @@ export const Image = {
       data: String!
       color: String!
       agency: Agency
+      access: AccessLevel!
     }
 
     input ImageFilter {
@@ -28,8 +29,8 @@ export const Image = {
     }
 
     extend type Mutation {
-      create_image(agency_id: ID, name: String!, data: String!, color: String!): ImageMutationResult!
-      update_image(image_id: ID!, name: String, data: String, color: String): ImageMutationResult!
+      create_image(agency_id: ID, name: String!, data: String!, color: String!, access: AccessLevel): ImageMutationResult!
+      update_image(image_id: ID!, name: String, data: String, color: String, access: AccessLevel): ImageMutationResult!
     }
 
     type ImageMutationResult implements MutationResult {
