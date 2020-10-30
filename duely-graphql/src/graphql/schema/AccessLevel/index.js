@@ -7,5 +7,14 @@ export const AccessLevel = {
       CLIENT
       PUBLIC
     }
-  `
+  `,
+  resolvers: {
+    AccessLevel: {
+      OWNER: 'owner',
+      MANAGER: 'manager',
+      AGENT: 'agent',
+      CLIENT: 'client',
+      PUBLIC: 'public'
+    }
+  }
 };
