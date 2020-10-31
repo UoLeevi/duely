@@ -4,8 +4,8 @@ module.exports = {
     purgeLayersByDefault: true,
   },
   purge: [
-    './public/**/*.html',
-    './src/**/*.js'
+    './public/*.html',
+    './src/*.js'
   ],
   theme: {
     extend: {

@@ -66,7 +66,7 @@ export const queries = {
         }
       }
     `,
-    result: d => d?.current_user.memberships
+    result: d => d?.current_user?.memberships
       .map(m => ({
         name: m.subdomain.agency.name,
         subdomain_name: m.subdomain.name

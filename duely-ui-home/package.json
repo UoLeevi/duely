@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-home",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "scripts": {
     "build": "NODE_ENV='production' postcss src/styles/tailwind.css -o public/styles/index.css && react-scripts build",
@@ -11,7 +11,7 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
+      ">2%",
       "not dead",
       "not op_mini all"
     ],

@@ -11,8 +11,8 @@ export default function Profile() {
           <div className="flex flex-col space-y-5">
             <div className="flex justify-between">
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Your brands</h2>
-              <Link to="/new-brand">
-                <button className="text-sm sm:text-base bg-green-500 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md shadow">+ Create a brand</button>
+              <Link to="/new-brand" className="text-sm sm:text-base bg-green-500 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md shadow">
+                + Create a brand
               </Link>
             </div>
             <BrandList />
