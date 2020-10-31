@@ -875,6 +875,29 @@ $$;
 ALTER FUNCTION internal_.resource_delete_() OWNER TO postgres;
 
 --
+-- Name: resource_delete_membership_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_delete_membership_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _resource_definition security_.resource_definition_;
+BEGIN
+
+  DELETE FROM application_.resource_ r
+  USING _old_table d
+  WHERE d.uuid_ = r.uuid_;
+
+  RETURN NULL;
+
+END;
+$$;
+
+
+ALTER FUNCTION internal_.resource_delete_membership_() OWNER TO postgres;
+
+--
 -- Name: resource_delete_password_reset_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -1015,6 +1038,40 @@ $_$;
 ALTER FUNCTION internal_.resource_insert_(_resource_definition security_.resource_definition_, _record jsonb) OWNER TO postgres;
 
 --
+-- Name: resource_insert_membership_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_insert_membership_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _resource_definition security_.resource_definition_;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE name_ = 'membership';
+
+  PERFORM internal_.resource_insert_(_resource_definition, to_jsonb(r))
+  FROM (
+    SELECT 
+      sa.uuid_,
+      r.name_::access_level_ access_,
+      u.uuid_ user_uuid_,
+      sa.subdomain_uuid_
+    FROM _new_table sa
+    JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
+    JOIN security_.user_ u ON u.uuid_ = sa.subject_uuid_
+  ) r;
+
+  RETURN NULL;
+
+END;
+$$;
+
+
+ALTER FUNCTION internal_.resource_insert_membership_() OWNER TO postgres;
+
+--
 -- Name: resource_insert_password_reset_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -1152,6 +1209,40 @@ $_$;
 
 
 ALTER FUNCTION internal_.resource_update_(_resource_definition security_.resource_definition_, _record jsonb) OWNER TO postgres;
+
+--
+-- Name: resource_update_membership_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_update_membership_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _resource_definition security_.resource_definition_;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE name_ = 'membership';
+
+  PERFORM internal_.resource_update_(_resource_definition, to_jsonb(r))
+  FROM (
+    SELECT 
+      sa.uuid_,
+      r.name_::access_level_ access_,
+      u.uuid_ user_uuid_,
+      sa.subdomain_uuid_
+    FROM _new_table sa
+    JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
+    JOIN security_.user_ u ON u.uuid_ = sa.subject_uuid_
+  ) r;
+
+  RETURN NULL;
+
+END;
+$$;
+
+
+ALTER FUNCTION internal_.resource_update_membership_() OWNER TO postgres;
 
 --
 -- Name: resource_update_password_reset_(); Type: FUNCTION; Schema: internal_; Owner: postgres
@@ -3686,6 +3777,30 @@ $$;
 ALTER FUNCTION policy_.anyone_can_query_live_service_variant_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: anyone_can_query_own_membership_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_query_own_membership_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.subject_assignment_ sa
+    WHERE uuid_ = _resource.uuid_
+      AND subject_uuid_ = internal_.current_subject_uuid_()
+  ) THEN
+    RETURN '{uuid_, access_, user_uuid_, subdomain_uuid_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_query_own_membership_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: anyone_can_query_stripe_account_for_agency_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -5218,6 +5333,66 @@ CREATE TABLE application_.markdown_ (
 ALTER TABLE application_.markdown_ OWNER TO postgres;
 
 --
+-- Name: role_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.role_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    name_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE security_.role_ OWNER TO postgres;
+
+--
+-- Name: subject_assignment_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.subject_assignment_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    role_uuid_ uuid NOT NULL,
+    subdomain_uuid_ uuid NOT NULL,
+    subject_uuid_ uuid NOT NULL
+);
+
+
+ALTER TABLE security_.subject_assignment_ OWNER TO postgres;
+
+--
+-- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.user_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    email_address_ text,
+    password_hash_ text,
+    name_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE security_.user_ OWNER TO postgres;
+
+--
+-- Name: membership_; Type: VIEW; Schema: application_; Owner: postgres
+--
+
+CREATE VIEW application_.membership_ AS
+ SELECT sa.uuid_,
+    (r.name_)::public.access_level_ AS access_,
+    u.uuid_ AS user_uuid_,
+    sa.subdomain_uuid_
+   FROM ((security_.subject_assignment_ sa
+     JOIN security_.role_ r ON ((r.uuid_ = sa.role_uuid_)))
+     JOIN security_.user_ u ON ((u.uuid_ = sa.subject_uuid_)));
+
+
+ALTER TABLE application_.membership_ OWNER TO postgres;
+
+--
 -- Name: password_reset_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
@@ -5237,22 +5412,6 @@ CREATE TABLE security_.password_reset_ (
 
 
 ALTER TABLE security_.password_reset_ OWNER TO postgres;
-
---
--- Name: user_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.user_ (
-    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
-    email_address_ text,
-    password_hash_ text,
-    name_ text NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE security_.user_ OWNER TO postgres;
 
 --
 -- Name: password_reset_; Type: VIEW; Schema: application_; Owner: postgres
@@ -5668,20 +5827,6 @@ CREATE VIEW security_.active_subject_ AS
 ALTER TABLE security_.active_subject_ OWNER TO postgres;
 
 --
--- Name: role_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.role_ (
-    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
-    name_ text NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE security_.role_ OWNER TO postgres;
-
---
 -- Name: role_hierarchy_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
@@ -5695,20 +5840,6 @@ CREATE TABLE security_.role_hierarchy_ (
 
 
 ALTER TABLE security_.role_hierarchy_ OWNER TO postgres;
-
---
--- Name: subject_assignment_; Type: TABLE; Schema: security_; Owner: postgres
---
-
-CREATE TABLE security_.subject_assignment_ (
-    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
-    role_uuid_ uuid NOT NULL,
-    subdomain_uuid_ uuid NOT NULL,
-    subject_uuid_ uuid NOT NULL
-);
-
-
-ALTER TABLE security_.subject_assignment_ OWNER TO postgres;
 
 --
 -- Name: subject_assignment_flat_; Type: VIEW; Schema: security_; Owner: postgres
@@ -6044,6 +6175,13 @@ CREATE TABLE security__audit_.user_ (
 ALTER TABLE security__audit_.user_ OWNER TO postgres;
 
 --
+-- Name: membership_ uuid_; Type: DEFAULT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.membership_ ALTER COLUMN uuid_ SET DEFAULT gen_random_uuid();
+
+
+--
 -- Name: password_reset_ uuid_; Type: DEFAULT; Schema: application_; Owner: postgres
 --
 
@@ -6178,6 +6316,7 @@ feb75892-7dff-459c-87f7-afec68d96c17	d8f70962-229d-49eb-a99e-7c35a55719d5	policy
 79cd2981-cf2c-4a6b-831c-873a8d140e2d	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.serviceaccount_can_query_markdown_without_agency_(security_.resource_definition_,application_.resource_)	query	5b4d9b4f-822b-4d54-bd4a-c1709c449349
 32268460-a5bf-4807-a3d0-9ef69c23b1d7	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.can_query_image_based_on_access_level_(security_.resource_definition_,application_.resource_)	query	\N
 d29e82dd-1151-4951-bac5-38051474a9b1	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.logged_in_user_can_query_image_(security_.resource_definition_,application_.resource_)	query	32268460-a5bf-4807-a3d0-9ef69c23b1d7
+67c85773-8203-463c-a73e-83de271f588b	b54431c5-bbc4-47b6-9810-0a627e49cfe5	policy_.anyone_can_query_own_membership_(security_.resource_definition_,application_.resource_)	query	\N
 \.
 
 
@@ -6272,6 +6411,7 @@ edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_re
 7f589215-bdc7-4664-99c6-b7745349c352	svcvar	service variant	application_.service_variant_	d50773b3-5779-4333-8bc3-6ef32d488d72	{uuid_,service_uuid_}
 d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,url_name_,agency_uuid_}
 d8f70962-229d-49eb-a99e-7c35a55719d5	md	markdown	application_.markdown_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}
+b54431c5-bbc4-47b6-9810-0a627e49cfe5	member	membership	application_.membership_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,user_uuid_,subdomain_uuid_,access_}
 \.
 
 
@@ -7911,6 +8051,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON security_.user_ 
 
 
 --
+-- Name: subject_assignment_ tr_after_delete_resource_delete_membership; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_membership AFTER DELETE ON security_.subject_assignment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_membership_();
+
+
+--
 -- Name: password_reset_ tr_after_delete_resource_delete_password_reset; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -8051,6 +8198,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON security_.user_ 
 
 
 --
+-- Name: subject_assignment_ tr_after_insert_resource_insert_membership; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_membership AFTER INSERT ON security_.subject_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_insert_membership_();
+
+
+--
 -- Name: password_reset_ tr_after_insert_resource_insert_password_reset; Type: TRIGGER; Schema: security_; Owner: postgres
 --
 
@@ -8174,6 +8328,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON security_.subdom
 --
 
 CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
+-- Name: subject_assignment_ tr_after_update_resource_update_membership; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_membership AFTER UPDATE ON security_.subject_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_update_membership_();
 
 
 --

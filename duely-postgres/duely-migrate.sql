@@ -14,174 +14,129 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+CREATE VIEW application_.membership_ AS
+SELECT 
+  sa.uuid_,
+  r.name_::access_level_ access_,
+  u.uuid_ user_uuid_,
+  sa.subdomain_uuid_
+FROM security_.subject_assignment_ sa
+JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
+JOIN security_.user_ u ON u.uuid_ = sa.subject_uuid_;
+
+CALL internal_.setup_resource_('application_.membership_', 'membership', 'member', '{uuid_, user_uuid_, subdomain_uuid_, access_}', 'security_.subdomain_');
+
+CREATE OR REPLACE FUNCTION policy_.anyone_can_query_own_membership_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF (
-    SELECT (_data ? 'agency_uuid_') = false AND internal_.check_current_user_is_serviceaccount_()
+  IF EXISTS (
+    SELECT 1
+    FROM security_.subject_assignment_ sa
+    WHERE uuid_ = _resource.uuid_
+      AND subject_uuid_ = internal_.current_subject_uuid_()
   ) THEN
-    RETURN '{name_, data_, access_}'::text[];
+    RETURN '{uuid_, access_, user_uuid_, subdomain_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
 END
 $$;
 
-CREATE OR REPLACE FUNCTION security_.control_query_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+
+ALTER TABLE ONLY application_.membership_ ALTER COLUMN uuid_ SET DEFAULT gen_random_uuid();
+
+CREATE FUNCTION internal_.resource_delete_membership_() RETURNS trigger
     LANGUAGE plpgsql
-    AS $_$
+    AS $$
 DECLARE
-  _policy_uuid uuid;
-  _policy_function regprocedure;
-  _keys text[];
-  _authorized_keys text[] := '{}'::text[];
+  _resource_definition security_.resource_definition_;
 BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = '20000';
-  END IF;
 
-  LOOP
-    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
-    FROM security_.policy_
-    WHERE resource_definition_uuid_ = _resource_definition.uuid_
-      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
-      AND operation_type_ = 'query';
+  DELETE FROM application_.resource_ r
+  USING _old_table d
+  WHERE d.uuid_ = r.uuid_;
 
-    IF _policy_function IS NULL THEN
-      EXIT;
-    END IF;
+  RETURN NULL;
 
-    EXECUTE '
-      SELECT ' || _policy_function::regproc || '($1, $2);
-    '
-    INTO _keys
-    USING _resource_definition, _resource;
+END;
+$$;
 
-    _authorized_keys := array_cat(_authorized_keys, COALESCE(_keys, '{}'));
-  END LOOP;
+CREATE FUNCTION internal_.resource_insert_membership_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _resource_definition security_.resource_definition_;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE name_ = 'membership';
 
-  IF array_length(COALESCE(_authorized_keys, '{}'), 1) = 0 THEN
-    RAISE 'Unauthorized.' USING ERRCODE = '42501';
-  END IF;
+  PERFORM internal_.resource_insert_(_resource_definition, to_jsonb(r))
+  FROM (
+    SELECT 
+      sa.uuid_,
+      r.name_::access_level_ access_,
+      u.uuid_ user_uuid_,
+      sa.subdomain_uuid_
+    FROM _new_table sa
+    JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
+    JOIN security_.user_ u ON u.uuid_ = sa.subject_uuid_
+  ) r;
 
-  SELECT array_agg(DISTINCT k) INTO _authorized_keys
-  FROM unnest(_authorized_keys) k;
+  RETURN NULL;
 
-  RETURN _authorized_keys;
-END
-$_$;
+END;
+$$;
 
-CREATE UNIQUE INDEX markdown__name__key ON application_.markdown_ (name_) WHERE agency_uuid_ IS NULL;
-CREATE UNIQUE INDEX image__name__key ON application_.image_ (name_) WHERE agency_uuid_ IS NULL;
+CREATE FUNCTION internal_.resource_update_membership_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _resource_definition security_.resource_definition_;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE name_ = 'membership';
 
--- CALL internal_.drop_auditing_('application_.markdown_');
--- CALL internal_.drop_auditing_('application_.image_');
+  PERFORM internal_.resource_update_(_resource_definition, to_jsonb(r))
+  FROM (
+    SELECT 
+      sa.uuid_,
+      r.name_::access_level_ access_,
+      u.uuid_ user_uuid_,
+      sa.subdomain_uuid_
+    FROM _new_table sa
+    JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
+    JOIN security_.user_ u ON u.uuid_ = sa.subject_uuid_
+  ) r;
 
--- CREATE FUNCTION internal_.check_current_user_is_serviceaccount_() RETURNS boolean
---     LANGUAGE plpgsql STABLE SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF EXISTS (
---     SELECT 1
---     FROM security_.security_data_ s
---     JOIN security_.user_ u ON s.key_ = 'email_address:' || u.email_address_
---     WHERE u.uuid_ = internal_.current_subject_uuid_()
---       AND (s.data_->>'is_service_account')::boolean
---   ) THEN
---     RETURN 't';
---   ELSE
---     RETURN 'f';
---   END IF;
--- END
--- $$;
+  RETURN NULL;
 
--- CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_query_stripe_account_for_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF internal_.check_current_user_is_serviceaccount_() THEN
---     RETURN array_cat(_keys, '{uuid_, agency_uuid_, stripe_id_ext_}');
---   ELSE
---     RETURN _keys;
---   END IF;
--- END
--- $$;
+END;
+$$;
 
--- CREATE OR REPLACE FUNCTION policy_.can_query_markdown_based_on_access_level_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF (
---     SELECT internal_.check_resource_access_(_resource_definition, _resource, access_)
---     FROM application_.markdown_
---     WHERE uuid_ = _resource.uuid_
---   ) THEN
---     RETURN array_cat(_keys, '{uuid_, name_, data_, access_, agency_uuid_}');
---   ELSE
---     RETURN _keys;
---   END IF;
--- END
--- $$;
 
--- CREATE OR REPLACE FUNCTION policy_.can_query_image_based_on_access_level_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF (
---     SELECT internal_.check_resource_access_(_resource_definition, _resource, access_)
---     FROM application_.image_
---     WHERE uuid_ = _resource.uuid_
---   ) THEN
---     RETURN array_cat(_keys, '{uuid_, name_, data_, access_, color_, agency_uuid_}');
---   ELSE
---     RETURN _keys;
---   END IF;
--- END
--- $$;
+CREATE TRIGGER tr_after_delete_resource_delete_membership AFTER DELETE ON security_.subject_assignment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_delete_membership_();
+CREATE TRIGGER tr_after_insert_resource_insert_membership AFTER INSERT ON security_.subject_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_insert_membership_();
+CREATE TRIGGER tr_after_update_resource_update_membership AFTER UPDATE ON security_.subject_assignment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE PROCEDURE internal_.resource_update_membership_();
 
--- CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $_$
--- BEGIN
---   IF (
---     SELECT (_data ? 'agency_uuid_') = false AND internal_.check_current_user_is_serviceaccount_()
---     FROM internal_.query_owner_resource_(_resource_definition, _data)
---   ) THEN
---     RETURN array_cat(_keys, '{name_, data_, agency_uuid_, access_}');
---   ELSE
---     RETURN _keys;
---   END IF;
--- END
--- $_$;
+PERFORM internal_.resource_insert_(d, to_jsonb(r))
+FROM (
+  SELECT 
+    sa.uuid_,
+    r.name_::access_level_ access_,
+    u.uuid_ user_uuid_,
+    sa.subdomain_uuid_
+  FROM security_.subject_assignment_ sa
+  JOIN security_.role_ r ON r.uuid_ = sa.role_uuid_
+  JOIN security_.user_ u ON u.uuid_ = sa.subject_uuid_
+) r
+CROSS JOIN security_.resource_definition_ d
+WHERE d.name_ = 'membership';
 
--- CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_change_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF _resource.owner_uuid_ IS NULL AND internal_.check_current_user_is_serviceaccount_() THEN
---     RETURN array_cat(_keys, '{name_, data_, access_}');
---   ELSE
---     RETURN _keys;
---   END IF;
--- END
--- $$;
 
--- CALL internal_.setup_resource_('application_.markdown_', 'markdown', 'md', '{uuid_, name_, agency_uuid_}', 'application_.agency_');
-
--- CREATE OR REPLACE FUNCTION policy_.owner_can_query_markdown_(_resource_definition security_.resource_definition_, _resource application_.resource_, _keys text[]) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
---     RETURN array_cat(_keys, '{uuid_, name_, data_, agency_uuid_}');
---   ELSE
---     RETURN _keys;
---   END IF;
--- END
--- $$;
-
--- CREATE OR REPLACE FUNCTION policy_.owner_can_create_markdown_(_resource_definition security_.resource_definition_, _data jsonb, _keys text[]) RETURNS text[]
+-- CREATE OR REPLACE FUNCTION policy_.owner_can_create_markdown_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
 --     LANGUAGE plpgsql SECURITY DEFINER
 --     AS $_$
 -- BEGIN
@@ -189,21 +144,21 @@ CREATE UNIQUE INDEX image__name__key ON application_.image_ (name_) WHERE agency
 --     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
 --     FROM internal_.query_owner_resource_(_resource_definition, _data)
 --   ) THEN
---     RETURN array_cat(_keys, '{name_, data_, agency_uuid_, access_}');
+--     RETURN '{name_, data_, agency_uuid_, access_}'::text[];
 --   ELSE
---     RETURN _keys;
+--     RETURN '{}'::text[];
 --   END IF;
 -- END
 -- $_$;
 
--- CREATE OR REPLACE FUNCTION policy_.owner_can_change_markdown_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb, _keys text[]) RETURNS text[]
+-- CREATE OR REPLACE FUNCTION policy_.owner_can_change_markdown_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
 --     LANGUAGE plpgsql SECURITY DEFINER
 --     AS $$
 -- BEGIN
 --   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
---     RETURN array_cat(_keys, '{name_, data_, access_}');
+--     RETURN '{name_, data_, access_}'::text[];
 --   ELSE
---     RETURN _keys;
+--     RETURN '{}'::text[];
 --   END IF;
 -- END
 -- $$;
@@ -218,7 +173,7 @@ CREATE UNIQUE INDEX image__name__key ON application_.image_ (name_) WHERE agency
 -- END
 -- $$;
 
--- PERFORM security_.register_policy_('application_.markdown_', 'query', 'policy_.anyone_can_query_subdomain_');
+PERFORM security_.register_policy_('application_.membership_', 'query', 'policy_.anyone_can_query_own_membership_');
 -- PERFORM security_.register_policy_('application_.markdown_', 'query', 'policy_.can_query_markdown_based_on_access_level_');
 -- PERFORM security_.register_policy_('application_.image_', 'query', 'policy_.can_query_image_based_on_access_level_');
 -- PERFORM security_.register_policy_('application_.markdown_', 'create', 'policy_.serviceaccount_can_create_markdown_without_agency_');

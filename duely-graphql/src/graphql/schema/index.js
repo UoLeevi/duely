@@ -57,6 +57,7 @@ import { Subdomain } from './Subdomain';
 import { Country } from './Country';
 import { Image } from './Image';
 import { Markdown } from './Markdown';
+import { Membership } from './Membership';
 
 const types = [
   {
@@ -83,7 +84,8 @@ const types = [
   ServiceVariant,
   Subdomain,
   Image,
-  Markdown
+  Markdown,
+  Membership
   // AcceptInviteResult,
   // // Agency,
   // AgencyClientsConnection,
