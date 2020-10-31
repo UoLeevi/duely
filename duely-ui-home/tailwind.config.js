@@ -8,7 +8,17 @@ module.exports = {
     './src/**/*.js'
   ],
   theme: {
-    extend: {},
+    extend: {
+      animation: {
+        progress: 'progress 1800ms cubic-bezier(.02,.25,1,.61) infinite'
+      },
+      keyframes: {
+        progress: {
+          from: { transform: 'translateX(-100%)' },
+          to: { transform: 'translateX(110%)' },
+        }
+      }
+    },
   },
   variants: {},
   plugins: [

@@ -1,3 +1,4 @@
+import BrandList from 'components/BrandList';
 import TopBar from 'components/TopBar';
 import { Link } from 'react-router-dom';
 
@@ -6,11 +7,15 @@ export default function Profile() {
     <div className="page-container">
       <TopBar />
       <div className="page-body-container">
-        <main className="flex flex-col justify-around flex-grow flex-shrink-0 py-6">
-          <div className="flex flex-col items-center">
-            <Link to="/new-brand">
-              <button className="mt-6 bg-indigo-500 px-5 py-3 rounded-md text-md font-medium leading-5 text-white transition duration-150 ease-in-out border border-gray-300 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50">Create your brand</button>
-            </Link>
+        <main className="flex flex-col flex-grow flex-shrink-0 pt-8 pb-8 px-2 sm:px-4">
+          <div className="flex flex-col space-y-5">
+            <div className="flex justify-between">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Your brands</h2>
+              <Link to="/new-brand">
+                <button className="text-sm sm:text-base bg-green-500 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md shadow">+ Create a brand</button>
+              </Link>
+            </div>
+            <BrandList />
           </div>
         </main>
       </div>

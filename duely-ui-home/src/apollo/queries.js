@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { countryByCode } from 'utils';
 import { client } from './client';
 
 export const queries = {
@@ -22,6 +23,57 @@ export const queries = {
     `,
     result: d => d?.country_codes
   },
+  services_agreement: {
+    query: gql`
+      query {
+        markdowns(filter: { name: "Services Agreement", agency_id: null }) {
+          id
+          name
+          data
+        }
+      }
+    `,
+    result: d => d?.markdowns[0].data
+  },
+  current_user_agencies: {
+    query: gql`
+      query {
+        current_user {
+          id
+          memberships {
+            id
+            access
+            subdomain {
+              id
+              name
+              agency {
+                id
+                name
+              }
+              memberships {
+                id
+                access
+                user {
+                  id
+                  name
+                }
+              }
+            }
+            user {
+              id
+            }
+          }
+        }
+      }
+    `,
+    result: d => d?.current_user.memberships
+      .map(m => ({
+        name: m.subdomain.agency.name,
+        subdomain_name: m.subdomain.name
+      }))
+  }
+
+
   // agencies: {
   //   query: gql`
   //     query {

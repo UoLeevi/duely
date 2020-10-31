@@ -1623,7 +1623,8 @@ export function rgb2hsl(r, g, b, a) {
 export function createClassName(...classNames) {
   return Array.from(
     new Set(classNames
-      .flatMap(c => c?.split(' '))
+      .filter(c => typeof c === 'string')
+      .flatMap(c => c.split(' '))
       .filter(c => !!c))
   )
     .join(' ');

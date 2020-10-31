@@ -24,14 +24,6 @@
     @apply w-full max-w-xs sm:max-w-sm mx-auto flex flex-col space-y-4 py-4;
   }
 
-  .input-text-base {
-    @apply appearance-none outline-none border border-gray-300 rounded-md px-3 py-2 focus:shadow-outline shadow-sm;
-  }
-
-  .text-label {
-    @apply text-gray-700 font-medium text-sm leading-6;
-  }
-
   .text-form-title {
     @apply font-semibold text-xl text-gray-700 self-center;
   }
@@ -40,5 +32,9 @@
 @layer utilities {
   .bg-blur {
     backdrop-filter: blur(2px);
+  }
+
+  .bg-mask-x-transparent {
+    mask-image: linear-gradient(to right, transparent, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0), transparent);
   }
 }

@@ -38,7 +38,7 @@ export default function SignUpForm() {
       <div className="flex flex-col">
         <label className="block text-gray-500 font-bold">
           <input name="newsletter" ref={form.register} className="mr-2" type="checkbox" />
-          <span className="text-label">
+          <span className="text-gray-700 font-medium text-sm leading-6">
             Send me your newsletter!
           </span>
         </label>

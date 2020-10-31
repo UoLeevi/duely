@@ -1932,36 +1932,6 @@ html, body, #root {
   }
 }
 
-.input-text-base {
-  -webkit-appearance: none;
-          appearance: none;
-  --border-opacity: 1;
-  border-color: #e2e8f0;
-  border-color: rgba(226, 232, 240, var(--border-opacity));
-  border-radius: 0.375rem;
-  border-width: 1px;
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-.input-text-base:focus {
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
-}
-
-.text-label {
-  font-weight: 500;
-  font-size: 0.875rem;
-  line-height: 1.5rem;
-  --text-opacity: 1;
-  color: #4a5568;
-  color: rgba(74, 85, 104, var(--text-opacity));
-}
-
 .text-form-title {
   align-self: center;
   font-weight: 600;
@@ -20358,6 +20328,16 @@ html, body, #root {
   }
 }
 
+@keyframes progress {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(110%);
+  }
+}
+
 .animate-none {
   animation: none;
 }
@@ -20378,9 +20358,18 @@ html, body, #root {
   animation: bounce 1s infinite;
 }
 
+.animate-progress {
+  animation: progress 1800ms cubic-bezier(.02,.25,1,.61) infinite;
+}
+
 .bg-blur {
   -webkit-backdrop-filter: blur(2px);
           backdrop-filter: blur(2px);
+}
+
+.bg-mask-x-transparent {
+  -webkit-mask-image: linear-gradient(to right, transparent, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0), transparent);
+          mask-image: linear-gradient(to right, transparent, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0), transparent);
 }
 
 @media (min-width: 640px) {
@@ -40011,6 +40000,10 @@ html, body, #root {
 
   .sm\:animate-bounce {
     animation: bounce 1s infinite;
+  }
+
+  .sm\:animate-progress {
+    animation: progress 1800ms cubic-bezier(.02,.25,1,.61) infinite;
   }
 }
 
@@ -59643,6 +59636,10 @@ html, body, #root {
   .md\:animate-bounce {
     animation: bounce 1s infinite;
   }
+
+  .md\:animate-progress {
+    animation: progress 1800ms cubic-bezier(.02,.25,1,.61) infinite;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -79274,6 +79271,10 @@ html, body, #root {
   .lg\:animate-bounce {
     animation: bounce 1s infinite;
   }
+
+  .lg\:animate-progress {
+    animation: progress 1800ms cubic-bezier(.02,.25,1,.61) infinite;
+  }
 }
 
 @media (min-width: 1280px) {
@@ -98904,5 +98905,9 @@ html, body, #root {
 
   .xl\:animate-bounce {
     animation: bounce 1s infinite;
+  }
+
+  .xl\:animate-progress {
+    animation: progress 1800ms cubic-bezier(.02,.25,1,.61) infinite;
   }
 }
