@@ -9,14 +9,14 @@ export default function BrandList() {
         <tr className="bg-gray-100 text-gray-600">
           <th className="pl-4 pr-2 sm:pr-4 py-3 rounded-l-lg text-left tracking-wide">Brand</th>
           <th className="hidden sm:table-cell px-2 sm:px-4 py-3 text-left tracking-wide">Owner</th>
-          <th className="hidden sm:table-cell px-2 sm:px-4 py-3 text-left tracking-wide rounded-r-lg ">Revenue</th>
+          <th className="hidden sm:table-cell px-2 sm:px-4 py-3 text-left tracking-wide rounded-r-lg">Revenue</th>
           <th className="px-2 sm:px-4 py-3 text-left tracking-wide rounded-r-lg ">Account Status</th>
         </tr>
       </thead>
       <tbody className="text-sm sm:text-base">
         {loading && (
           <tr className="border-b-2">
-            <td className="border px-2 sm:px-4 py-4 border-none" colSpan="1000">
+            <td className="px-2 sm:px-4 py-4 border-none" colSpan="1000">
               <div className="flex items-center space-x-3">
                 Loading...
               </div>
@@ -26,7 +26,7 @@ export default function BrandList() {
 
         {error && (
           <tr className="border-b-2">
-            <td className="border px-2 sm:px-4 py-4 border-none" colSpan="1000">
+            <td className="px-2 sm:px-4 py-4 border-none" colSpan="1000">
               <div className="flex items-center space-x-3 text-red-600">
                 {error.message}
               </div>
@@ -36,7 +36,7 @@ export default function BrandList() {
 
         {data && data.map(agency => (
           <tr className="border-b-2">
-            <td className="border px-2 sm:px-4 py-4 border-none">
+            <td className="px-2 sm:px-4 py-4 border-none">
               <div className="flex items-center space-x-3">
                 <div className="rounded-full h-12 w-12 sm:h-16 sm:w-16 bg-yellow-300 flex"></div>
                 <div className="flex flex-col justify-center">
