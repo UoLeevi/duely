@@ -8481,7 +8481,7 @@ ALTER TABLE ONLY application_.resource_
 --
 
 ALTER TABLE ONLY application_.resource_
-    ADD CONSTRAINT resource__owner_uuid__fkey FOREIGN KEY (owner_uuid_) REFERENCES application_.resource_(uuid_);
+    ADD CONSTRAINT resource__owner_uuid__fkey FOREIGN KEY (owner_uuid_) REFERENCES application_.resource_(uuid_) ON DELETE CASCADE;
 
 
 --

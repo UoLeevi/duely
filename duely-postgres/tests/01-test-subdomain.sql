@@ -102,7 +102,7 @@ BEGIN
   -- TEST VALID DELETE OPERATION
   SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_0->'agency'->>'id');
   SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_0->>'id');
-  --RAISE NOTICE E'delete_resource_(text):\n%', _result_1;
+  -- RAISE NOTICE E'delete_resource_(text):\n%', _result_1;
 
 
   PERFORM operation_.log_out_user_();
