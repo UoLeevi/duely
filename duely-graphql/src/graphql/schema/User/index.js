@@ -13,6 +13,7 @@ export const User = {
       id: ID!
       name: String!
       email_address: String!
+      memberships: [Membership!]!
     }
 
     input UserFilter {
@@ -27,6 +28,22 @@ export const User = {
     }
   `,
   resolvers: {
+    User: {
+      async memberships(source, args, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        try {
+          return await withConnection(context, async withSession => {
+            return await withSession(async ({ queryResourceAll }) => {
+              return await queryResourceAll('membership', { user_id: source.id });
+            });
+          });
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      }
+    },
     Query: {
       async current_user(source, args, context, info) {
         if (!context.jwt)

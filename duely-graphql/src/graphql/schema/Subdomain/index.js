@@ -13,6 +13,7 @@ export const Subdomain = {
       id: ID!
       name: String!
       agency: Agency!
+      memberships: [Membership!]!
     }
 
     input SubdomainFilter {
@@ -34,6 +35,20 @@ export const Subdomain = {
           return await withConnection(context, async withSession => {
             return await withSession(async ({ queryResource }) => {
               return await queryResource('agency', { subdomain_id: source.id });
+            });
+          });
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      },
+      async memberships(source, args, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        try {
+          return await withConnection(context, async withSession => {
+            return await withSession(async ({ queryResourceAll }) => {
+              return await queryResourceAll('membership', { subdomain_id: source.id });
             });
           });
         } catch (error) {
