@@ -66,7 +66,7 @@ export const StripeAccount = {
       type: String!
       url: String!
       created: Date!
-      expires: Date!
+      expires_at: Date!
     }
   `,
   resolvers: {
@@ -93,7 +93,7 @@ export const StripeAccount = {
           // create stripe account verification url
           // see: https://stripe.com/docs/api/account_links/create
           return await stripe.accountLinks.create({
-            account: source.id_ext,
+            account: source.stripe_id_ext,
             refresh_url: return_url,
             return_url,
             type: source.details_submitted ? 'account_onboarding' : 'account_update',
@@ -107,7 +107,7 @@ export const StripeAccount = {
     },
     StripeAccountLink: {
       created: source => new Date(source.created * 1000),
-      expires: source => new Date(source.expires * 1000)
+      expires_at: source => new Date(source.expires_at * 1000)
     },
     Query: {
       async stripe_account(source, args, context, info) {
