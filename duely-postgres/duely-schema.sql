@@ -2910,9 +2910,10 @@ ALTER FUNCTION operation_.query_resource_(_id text) OWNER TO postgres;
 CREATE FUNCTION operation_.query_resource_access_(_id text) RETURNS public.access_level_
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
-SELECT name_::access_level_
+SELECT r.name_::access_level_
 FROM security_.subdomain_ d
 JOIN security_.subject_assignment_ sa ON sa.subdomain_uuid_ = d.uuid_
+JOIN security_.role_ r ON sa.role_uuid_ = r.uuid_
 WHERE d.uuid_ = internal_.query_resource_owner_uuid_(_id)
   AND sa.subject_uuid_ = internal_.current_subject_uuid_();
 $$;
