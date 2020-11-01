@@ -1504,6 +1504,18 @@ export function countryByCode(alpha2code) {
   };
 }
 
+export function slugify(text) {
+  return text == null ? '' : text
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
+}
+
 export async function processImageFile(file) {
   const imageFile = processFile(file);
   const color = await estimateImageColor(imageFile.url);

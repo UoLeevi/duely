@@ -1,6 +1,6 @@
 import LoadingBar from 'components/LoadingBar';
 
-export default function FormField({ name, label, form, type, validateRule, hint, actions, loading, options, ...props }) {
+export default function FormField({ name, label, form, type, validateRule, hint, prefix, suffix, actions, loading, options, ...props }) {
 
   const error = form.errors[name];
   let errorMessage = error && (error.message
@@ -22,6 +22,16 @@ export default function FormField({ name, label, form, type, validateRule, hint,
     }) ?? [];
   }
 
+  const inputContainer = type === 'select'
+    ? (<select name={name} ref={form.register(validateRule)} className="appearance-none outline-none border bg-white border-gray-300 rounded-md px-3 py-2 focus:shadow-outline shadow-sm" spellCheck="false" autoComplete="off" children={options} {...props} />)
+    : (
+      <div className="flex items-center px-3 outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm">
+        <span className="text-gray-500">{prefix}</span>
+        <input name={name} ref={form.register(validateRule)} type={type} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2" spellCheck="false" autoComplete="off" {...props} />
+        <span className="text-gray-500">{suffix}</span>
+      </div>
+    );
+
   return (
     <div className="flex flex-col relative">
       <div className="flex justify-between">
@@ -33,10 +43,7 @@ export default function FormField({ name, label, form, type, validateRule, hint,
         }
       </div>
 
-      {type === 'select'
-        ? <select name={name} ref={form.register(validateRule)} className="appearance-none outline-none border bg-white border-gray-300 rounded-md px-3 py-2 focus:shadow-outline shadow-sm" spellCheck="false" autoComplete="off" children={options} {...props} />
-        : <input name={name} ref={form.register(validateRule)} type={type} className="appearance-none outline-none border border-gray-300 rounded-md px-3 py-2 focus:shadow-outline shadow-sm" spellCheck="false" autoComplete="off" {...props} />
-      }
+      { inputContainer}
 
       <LoadingBar className="h-px mx-1" loading={!!loading} />
 

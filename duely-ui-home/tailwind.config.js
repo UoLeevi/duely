@@ -20,7 +20,9 @@ module.exports = {
       }
     },
   },
-  variants: {},
+  variants: {
+    boxShadow: ['responsive', 'hover', 'focus', 'focus-within']
+  },
   plugins: [
     require('@tailwindcss/typography')
   ],

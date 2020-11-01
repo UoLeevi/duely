@@ -1,8 +1,7 @@
-import React, { createContext, Suspense, useState } from 'react';
+import React, { createContext, useState } from 'react';
 import { BsX } from 'react-icons/bs';
 import { Transition } from '@headlessui/react';
 import { usePrevious } from 'hooks';
-import { AiOutlineLoading } from 'react-icons/ai';
 
 const Modal = ({ children, dismissable, hideModal, ...props }) => {
 
@@ -10,26 +9,24 @@ const Modal = ({ children, dismissable, hideModal, ...props }) => {
   const leavingChildren = usePrevious(children, { retain: true });
 
   return (
-    <Suspense fallback={<AiOutlineLoading className="animate-spin text-xl text-indigo-500" />}>
-      <Transition
-        show={show}
-        enter="transition ease-out duration-200"
-        enterFrom="transform opacity-0 scale-95"
-        enterTo="transform opacity-100 scale-100"
-        leave="transition ease-in duration-100 pointer-events-none"
-        leaveFrom="transform opacity-100 scale-100"
-        leaveTo="transform opacity-0 scale-95"
-      >
-        {ref => (
-          <div ref={ref} className="fixed left-0 top-0 w-full h-full z-30 flex items-center justify-center bg-gray-100 bg-opacity-75 bg-blur" {...props} onClick={() => dismissable && hideModal()}>
-            <div className="flex flex-col relative shadow-lg p-6 rounded-md bg-white box-border" onClick={e => e.stopPropagation()}>
-              {dismissable && <BsX onClick={hideModal} className="absolute right-0 top-0 text-2xl m-3 text-gray-600" />}
-              {children ?? leavingChildren}
-            </div>
+    <Transition
+      show={show}
+      enter="transition ease-out duration-200"
+      enterFrom="transform opacity-0 scale-95"
+      enterTo="transform opacity-100 scale-100"
+      leave="transition ease-in duration-100 pointer-events-none"
+      leaveFrom="transform opacity-100 scale-100"
+      leaveTo="transform opacity-0 scale-95"
+    >
+      {ref => (
+        <div ref={ref} className="fixed left-0 top-0 w-full h-full z-30 flex items-center justify-center bg-gray-100 bg-opacity-75 bg-blur" {...props} onClick={() => dismissable && hideModal()}>
+          <div className="flex flex-col relative shadow-lg p-6 rounded-md bg-white box-border" onClick={e => e.stopPropagation()}>
+            {dismissable && <BsX onClick={hideModal} className="absolute right-0 top-0 text-2xl m-3 text-gray-600" />}
+            {children ?? leavingChildren}
           </div>
-        )}
-      </Transition>
-    </Suspense>
+        </div>
+      )}
+    </Transition>
   );
 };
 

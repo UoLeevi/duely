@@ -1,3 +1,4 @@
+import MultiStatusIndicator, { status } from 'components/MultiStatusIndicator';
 import useQuery from 'hooks/useQuery';
 
 export default function BrandList() {
@@ -34,43 +35,48 @@ export default function BrandList() {
           </tr>
         )}
 
-        {data && data.map(agency => (
-          <tr className="border-b-2">
-            <td className="px-2 sm:px-4 py-4 border-none">
-              <div className="flex items-center space-x-3">
-                <div className="rounded-full h-12 w-12 sm:h-16 sm:w-16 bg-yellow-300 flex"></div>
-                <div className="flex flex-col justify-center">
-                  <div className="font-medium">{agency.name}</div>
-                  <a className="text-xs text-gray-600 font-medium" href={`https://${agency.subdomain_name}.duely.app/dashboard`}>{agency.subdomain_name}.duely.app</a>
+        {data && data.map(agency => {
+          const charges_enabled = agency.stripe_account.charges_enabled;
+          const payouts_enabled = agency.stripe_account.payouts_enabled;
+
+          const account_statuses = [
+            { status: charges_enabled ? status.OK : status.ACTION_REQUIRED, key: 'charges_enabled' },
+            { status: payouts_enabled ? status.OK : status.ACTION_REQUIRED, key: 'payouts_enabled' }
+          ];
+
+          return (
+            <tr className="border-b-2" key={agency.id}>
+              <td className="px-2 sm:px-4 py-4 border-none">
+                <div className="flex items-center space-x-3">
+                  <div className="rounded-full h-12 w-12 sm:h-16 sm:w-16 bg-yellow-300 flex"></div>
+                  <div className="flex flex-col justify-center">
+                    <div className="font-medium">{agency.name}</div>
+                    <a className="text-xs text-gray-600 font-medium" href={`https://${agency.subdomain_name}.duely.app/dashboard`}>{agency.subdomain_name}.duely.app</a>
+                  </div>
                 </div>
-              </div>
-            </td>
-            <td className="hidden sm:table-cell px-2 sm:px-4 py-2 border-none">
-              <div className="flex items-center space-x-reverse -space-x-3 flex-row-reverse justify-end">
-                <div className="rounded-full h-10 w-10 font-semibold bg-purple-300 text-purple-700 border-2 border-white text-sm grid place-items-center">LW</div>
-                <div className="rounded-full h-10 w-10 font-semibold bg-purple-300 text-purple-700 border-2 border-white text-sm grid place-items-center">LW</div>
-              </div>
-            </td>
-            <td className="hidden sm:table-cell px-2 sm:px-4 py-2 border-none">
-              <div className="flex flex-col justify-center px-3">
-                <div className="font-medium">$1,000</div>
-                <div className="text-xs text-gray-600 font-medium">This month</div>
-              </div>
-            </td>
-            <td className="px-2 sm:px-4 py-2 border-none relative">
-              <div className="flex flex-col justify-center px-3">
-                <div className="font-medium">Verification</div>
-                <div className="text-xs text-gray-600 font-medium">Stripe</div>
-              </div>
-              <div className="absolute bottom-0 left-0 pl-4 flex">
-                <div className="w-5 h-2 rounded-sm border border-white bg-green-400"></div>
-                <div className="w-5 h-2 rounded-sm border border-white bg-green-400"></div>
-                <div className="w-5 h-2 rounded-sm border border-white bg-blue-400"></div>
-                <div className="w-5 h-2 rounded-sm border border-white bg-gray-400"></div>
-              </div>
-            </td>
-          </tr>
-        ))}
+              </td>
+              <td className="hidden sm:table-cell px-2 sm:px-4 py-2 border-none">
+                <div className="flex items-center space-x-reverse -space-x-3 flex-row-reverse justify-end">
+                  <div className="rounded-full h-10 w-10 font-semibold bg-purple-300 text-purple-700 border-2 border-white text-sm grid place-items-center">LW</div>
+                  <div className="rounded-full h-10 w-10 font-semibold bg-purple-300 text-purple-700 border-2 border-white text-sm grid place-items-center">LW</div>
+                </div>
+              </td>
+              <td className="hidden sm:table-cell px-2 sm:px-4 py-2 border-none">
+                <div className="flex flex-col justify-center px-3">
+                  <div className="font-medium">$1,000</div>
+                  <div className="text-xs text-gray-600 font-medium">This month</div>
+                </div>
+              </td>
+              <td className="px-2 sm:px-4 py-2 border-none relative">
+                <div className="flex flex-col justify-center px-3">
+                  <div className="font-medium">Verification</div>
+                  <div className="text-xs text-gray-600 font-medium">Stripe</div>
+                </div>
+                <MultiStatusIndicator className="absolute bottom-0 left-0 pl-4" statuses={account_statuses} />
+              </td>
+            </tr>
+          );
+        })}
 
         <tr className="border-b-2">
           <td className="px-2 sm:px-4 py-4 border-none">

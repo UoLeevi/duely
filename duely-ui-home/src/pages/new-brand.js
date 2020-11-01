@@ -1,7 +1,5 @@
-import { Suspense } from 'react';
 import TopBar from 'components/TopBar';
 import CreateBrandForm from 'components/CreateBrandForm';
-import { AiOutlineLoading } from 'react-icons/ai';
 
 export default function NewBrand() {
   return (
@@ -10,10 +8,8 @@ export default function NewBrand() {
       <div className="page-body-container">
         <main className="flex flex-col justify-around flex-grow flex-shrink-0 py-6">
           <div className="form-container">
-            <h2 className="text-form-title">Create brand</h2>
-            <Suspense fallback={<AiOutlineLoading className="animate-spin text-xl text-indigo-500" />}>
-              <CreateBrandForm />
-            </Suspense>
+            <h2 className="font-semibold text-xl sm:text-2xl text-gray-700 self-center">Create your brand</h2>
+            <CreateBrandForm />
           </div>
         </main>
       </div>

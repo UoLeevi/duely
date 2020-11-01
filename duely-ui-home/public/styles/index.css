@@ -1235,15 +1235,6 @@ html, body, #root {
   }
 }
 
-.text-form-title {
-  align-self: center;
-  font-weight: 600;
-  font-size: 1.25rem;
-  --text-opacity: 1;
-  color: #4a5568;
-  color: rgba(74, 85, 104, var(--text-opacity));
-}
-
 .space-y-2 > :not(template) ~ :not(template) {
   --space-y-reverse: 0;
   margin-top: calc(0.5rem * calc(1 - var(--space-y-reverse)));
@@ -1312,6 +1303,10 @@ html, body, #root {
           background-clip: text;
 }
 
+.bg-transparent {
+  background-color: transparent;
+}
+
 .bg-white {
   --bg-opacity: 1;
   background-color: #fff;
@@ -1334,6 +1329,12 @@ html, body, #root {
   --bg-opacity: 1;
   background-color: #faf089;
   background-color: rgba(250, 240, 137, var(--bg-opacity));
+}
+
+.bg-yellow-400 {
+  --bg-opacity: 1;
+  background-color: #f6e05e;
+  background-color: rgba(246, 224, 94, var(--bg-opacity));
 }
 
 .bg-green-400 {
@@ -1550,6 +1551,10 @@ html, body, #root {
 
 .items-center {
   align-items: center;
+}
+
+.self-center {
+  align-self: center;
 }
 
 .justify-end {
@@ -1890,6 +1895,10 @@ html, body, #root {
 }
 
 .focus\:shadow-outline:focus {
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+}
+
+.focus-within\:shadow-outline:focus-within {
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
 }
 

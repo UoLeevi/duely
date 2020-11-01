@@ -1,5 +1,4 @@
 import { gql } from '@apollo/client';
-import { countryByCode } from 'utils';
 import { client } from './client';
 
 export const queries = {
@@ -13,6 +12,7 @@ export const queries = {
         }
       }
     `,
+    notifyOnNetworkStatusChange: true,
     result: d => d?.current_user
   },
   country_codes: {
@@ -49,6 +49,48 @@ export const queries = {
               agency {
                 id
                 name
+                stripe_account {
+                  id
+                  id_ext
+                  business_profile {
+                    mcc
+                    name
+                    product_description
+                    support_address
+                    support_email
+                    support_phone
+                    support_url
+                    url
+                  }
+                  business_type
+                  capabilities {
+                    card_payments
+                    transfers
+                  }
+                  requirements {
+                    current_deadline
+                    disabled_reason
+                    currently_due
+                    eventually_due
+                    past_due
+                    pending_verification
+                  }
+                  settings {
+                    branding {
+                      icon
+                      logo
+                      primary_color
+                      secondary_color
+                    }
+                  }
+                  charges_enabled
+                  country
+                  created
+                  default_currency
+                  details_submitted
+                  email
+                  payouts_enabled
+                }
               }
               memberships {
                 id
@@ -66,10 +108,13 @@ export const queries = {
         }
       }
     `,
+    notifyOnNetworkStatusChange: true,
     result: d => d?.current_user?.memberships
       .map(m => ({
+        id: m.subdomain.agency.id,
         name: m.subdomain.agency.name,
-        subdomain_name: m.subdomain.name
+        subdomain_name: m.subdomain.name,
+        stripe_account: m.subdomain.agency.stripe_account
       }))
   }
 

@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 import { client } from './client';
 // import produce from 'immer';
-import { query } from './queries';
+// import { query } from './queries';
 
 export const mutations = {
   log_in: {
@@ -22,8 +22,7 @@ export const mutations = {
         localStorage.setItem('user-jwt', result.jwt);
       }
 
-      await client.clearStore();
-      await query('current_user');
+      await client.resetStore();
     }
   },
   log_out: {
@@ -43,8 +42,7 @@ export const mutations = {
         localStorage.removeItem('user-jwt');
       }
 
-      await client.clearStore();
-      await query('current_user');
+      await client.resetStore();
     }
   },
   verify_password_reset: {

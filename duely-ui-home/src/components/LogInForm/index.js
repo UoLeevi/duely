@@ -1,29 +1,30 @@
 import { Link, useHistory } from 'react-router-dom';
 import { useAtom } from 'jotai';
-import { AiOutlineLoading } from 'react-icons/ai';
 import { useForm } from 'react-hook-form';
 import { produce } from 'immer';
 import { mutate } from 'apollo';
-import { currentUserAtom, logInFormAtom } from 'auth';
+import { logInFormAtom } from 'auth';
 import { useEffect } from 'react';
 import FormField from 'components/form-fields/FormField';
+import LoadingSpinner from 'components/LoadingSpinner';
+import useQuery from 'hooks/useQuery';
 // import { useRouter } from 'react-router-dom';
 
 export default function LogInForm() {
   // const router = useRouter();
   const form = useForm();
   const [logInForm, setLogInFormState] = useAtom(logInFormAtom);
-  const [currentUser, resetCurrentUser] = useAtom(currentUserAtom);
+  const currentUserQ = useQuery('current_user');
   const history = useHistory();
 
   useEffect(() => {
-    if (currentUser != null) {
+    if (currentUserQ.data) {
       history.replace('/profile');
     }
-  }, [currentUser, history]);
+  }, [currentUserQ.data, history]);
 
-  if (currentUser != null) {
-    return <AiOutlineLoading className="animate-spin text-xl text-indigo-500" />;
+  if (currentUserQ.loading) {
+    return <LoadingSpinner />;
   }
 
   async function onSubmit(data) {
@@ -31,7 +32,6 @@ export default function LogInForm() {
     const res = await mutate('log_in', data);
 
     if (res.success) {
-      resetCurrentUser();
       setLogInFormState(state => produce(state, state => {
         state.loading = false;
         state.errorMessage = null;

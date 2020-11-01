@@ -1,8 +1,6 @@
-import { Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import NavMenu from 'components/NavMenu';
 import DuelyLogo from 'components/DuelyLogo';
-import { AiOutlineLoading } from 'react-icons/ai';
 
 export default function TopBar() {
   return (
@@ -13,9 +11,7 @@ export default function TopBar() {
           <span className="text-2xl font-bold">Duely</span>
         </Link>
         <div className="relative inline-block">
-          <Suspense fallback={<AiOutlineLoading className="animate-spin text-xl text-indigo-500" />}>
-            <NavMenu />
-          </Suspense>
+          <NavMenu />
         </div>
       </div>
     </header>

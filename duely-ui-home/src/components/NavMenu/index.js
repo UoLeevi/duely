@@ -1,10 +1,18 @@
 import { Menu, Transition } from '@headlessui/react';
-import { useAtom } from 'jotai';
-import { currentUserAtom } from 'auth';
 import { Link } from 'react-router-dom';
+import useQuery from 'hooks/useQuery';
+import LoadingSpinner from 'components/LoadingSpinner';
 
 export default function NavMenu() {
-  const [currentUser] = useAtom(currentUserAtom);
+  const currentUserQ = useQuery('current_user');
+
+  if (currentUserQ.loading) {
+    return (
+      <LoadingSpinner />
+    );
+  }
+
+  const currentUser = currentUserQ.data;
 
   if (!currentUser) {
     return (
