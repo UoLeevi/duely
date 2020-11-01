@@ -383,21 +383,19 @@ ALTER FUNCTION internal_.check_resource_access_(_resource_definition security_.r
 CREATE FUNCTION internal_.check_resource_role_(_resource_definition security_.resource_definition_, _resource application_.resource_, _role_name text) RETURNS boolean
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     AS $$
+DECLARE
+  _subdomain_uuid uuid;
 BEGIN
-  IF _resource_definition.name_ = 'subdomain' THEN
-    RETURN EXISTS (
-      SELECT 1
-      FROM security_.active_role_ r
-      JOIN security_.subdomain_ d ON d.uuid_ = _resource.uuid_ AND r.subdomain_uuid_ = d.uuid_
-      WHERE r.name_ = _role_name
-    );
-  ELSEIF _resource.owner_uuid_ IS NOT NULL THEN
-    RETURN (
-      SELECT internal_.check_resource_role_(d, r, _role_name)
-      FROM application_.resource_ r
-      JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
-      WHERE r.uuid_ = _resource.owner_uuid_
-    );
+  _subdomain_uuid := internal_.query_resource_owner_uuid_(_resource.id_);
+
+  IF EXISTS (
+    SELECT 1
+    FROM security_.active_role_ r
+    JOIN security_.subdomain_ d ON r.subdomain_uuid_ = d.uuid_
+    WHERE d.uuid_ = _subdomain_uuid
+      AND r.name_ = _role_name
+  ) THEN
+    RETURN 't';
   ELSE
     RETURN 'f';
   END IF;
@@ -854,6 +852,42 @@ $_$;
 
 
 ALTER FUNCTION internal_.query_owner_resource_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: query_resource_owner_uuid_(text, text); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.query_resource_owner_uuid_(_id text, _owner_resource_name text DEFAULT 'subdomain'::text) RETURNS uuid
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    AS $$
+DECLARE
+  _uuid uuid;
+  _owner_uuid uuid;
+  _resource_name text;
+BEGIN
+
+  LOOP
+    SELECT o.id_, r.uuid_, r.owner_uuid_, d.name_ INTO _id, _uuid, _owner_uuid, _resource_name
+    FROM application_.resource_ r
+    JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+    LEFT JOIN application_.resource_ o ON o.uuid_ = r.owner_uuid_
+    WHERE r.id_ = _id;
+
+    IF _resource_name = _owner_resource_name THEN
+      RETURN _uuid;
+    END IF;
+
+    IF _id IS NULL THEN
+      RETURN NULL;
+    END IF;
+  END LOOP;
+
+  RETURN NULL;
+END
+$$;
+
+
+ALTER FUNCTION internal_.query_resource_owner_uuid_(_id text, _owner_resource_name text) OWNER TO postgres;
 
 --
 -- Name: resource_delete_(); Type: FUNCTION; Schema: internal_; Owner: postgres
@@ -2868,6 +2902,23 @@ $$;
 
 
 ALTER FUNCTION operation_.query_resource_(_id text) OWNER TO postgres;
+
+--
+-- Name: query_resource_access_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_resource_access_(_id text) RETURNS public.access_level_
+    LANGUAGE sql STABLE SECURITY DEFINER
+    AS $$
+SELECT name_::access_level_
+FROM security_.subdomain_ d
+JOIN security_.subject_assignment_ sa ON sa.subdomain_uuid_ = d.uuid_
+WHERE d.uuid_ = internal_.query_resource_owner_uuid_(_id)
+  AND sa.subject_uuid_ = internal_.current_subject_uuid_();
+$$;
+
+
+ALTER FUNCTION operation_.query_resource_access_(_id text) OWNER TO postgres;
 
 --
 -- Name: query_resource_all_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -6248,6 +6299,7 @@ b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 00:00:
 fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
 a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
 9506e0e9-ee4a-4442-968a-76d9de05d2b3	query_current_user_	f	2020-10-20 07:07:02.389935+00	00000000-0000-0000-0000-000000000000
+ba39b019-2291-419e-baee-ed810d004ffc	query_resource_access_	f	2020-11-01 10:56:05.733824+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -6392,6 +6444,7 @@ a8c86986-75c9-4f7a-b4ea-e18280bb56c6	logged_in_	a4337d7b-9595-40c3-89c0-77787a39
 ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000
 61729bd8-0be4-4bdc-a602-72fd08383f5f	logged_in_	9506e0e9-ee4a-4442-968a-76d9de05d2b3	allow	2020-10-20 07:07:02.389935+00	00000000-0000-0000-0000-000000000000
 da286841-dd4c-4a92-a772-253bce497514	visitor_	9506e0e9-ee4a-4442-968a-76d9de05d2b3	allow	2020-10-20 07:07:02.389935+00	00000000-0000-0000-0000-000000000000
+4682e137-bca9-4772-8b3e-dd5727add654	logged_in_	ba39b019-2291-419e-baee-ed810d004ffc	allow	2020-11-01 10:56:05.733824+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -6490,6 +6543,7 @@ b20e4cff-c150-4e02-af03-798cc73382f3	query_client_by_agency_	f	1970-01-01 00:00:
 fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
 a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
 9506e0e9-ee4a-4442-968a-76d9de05d2b3	query_current_user_	f	2020-10-20 07:07:02.389935+00	00000000-0000-0000-0000-000000000000	I
+ba39b019-2291-419e-baee-ed810d004ffc	query_resource_access_	f	2020-11-01 10:56:05.733824+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -6573,6 +6627,7 @@ a8c86986-75c9-4f7a-b4ea-e18280bb56c6	logged_in_	a4337d7b-9595-40c3-89c0-77787a39
 ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b72	allow	1970-01-01 00:00:00+00	00000000-0000-0000-0000-000000000000	I
 61729bd8-0be4-4bdc-a602-72fd08383f5f	logged_in_	9506e0e9-ee4a-4442-968a-76d9de05d2b3	allow	2020-10-20 07:07:02.389935+00	00000000-0000-0000-0000-000000000000	I
 da286841-dd4c-4a92-a772-253bce497514	visitor_	9506e0e9-ee4a-4442-968a-76d9de05d2b3	allow	2020-10-20 07:07:02.389935+00	00000000-0000-0000-0000-000000000000	I
+4682e137-bca9-4772-8b3e-dd5727add654	logged_in_	ba39b019-2291-419e-baee-ed810d004ffc	allow	2020-11-01 10:56:05.733824+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
