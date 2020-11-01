@@ -14,7 +14,7 @@ export const Agency = {
     type Agency implements Node {
       id: ID!
       name: String!
-      stripe_account_id: String!,
+      stripe_account: StripeAccount!
       subdomain: Subdomain!
     }
 
@@ -40,17 +40,19 @@ export const Agency = {
   `,
   resolvers: {
     Agency: {
-      async stripe_account_id(source, args, context, info) {
+      async stripe_account(source, args, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          const stripe_account = await withConnection(context, async withSession => {
             return await withSession(async ({ queryResource }) => {
-              const stripe_account = await queryResource('stripe account', { agency_id: source.id });
-              return stripe_account.stripe_id_ext;
+              return await queryResource('stripe account', { agency_id: source.id });
             });
           });
+
+          const { id, object, ...stripe_account_ext } = await stripe.accounts.retrieve(stripe_account.stripe_id_ext);
+          return { ...stripe_account, ...stripe_account_ext };
         } catch (error) {
           throw new Error(error.message);
         }

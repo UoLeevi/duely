@@ -51,6 +51,7 @@ import { SignUp } from './SignUp';
 import { PasswordReset } from './PasswordReset';
 import { User } from './User';
 import { Agency } from './Agency';
+import { StripeAccount } from './StripeAccount';
 import { Service } from './Service';
 import { ServiceVariant } from './ServiceVariant';
 import { Subdomain } from './Subdomain';
@@ -80,6 +81,7 @@ const types = [
   Country,
   User,
   Agency,
+  StripeAccount,
   Service,
   ServiceVariant,
   Subdomain,
