@@ -1517,7 +1517,7 @@ export function slugify(text) {
 }
 
 export async function processImageFile(file) {
-  const imageFile = processFile(file);
+  const imageFile = await processFile(file);
   const color = await estimateImageColor(imageFile.url);
   return {
     ...imageFile,

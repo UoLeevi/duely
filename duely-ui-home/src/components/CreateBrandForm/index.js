@@ -8,6 +8,8 @@ import { useModal } from 'hooks';
 import FormField from 'components/form-fields/FormField';
 import ServicesAgreement from 'components/ServicesAgreement';
 import useQuery from 'hooks/useQuery';
+import { Image } from 'components/Image';
+import useImage from 'hooks/useImage';
 
 const createBrandFormAtom = atom({
   loading: false,
@@ -20,6 +22,7 @@ export default function CreateBrandForm() {
   const { watch, setValue, formState } = form;
   const [createBrandForm, setCreateBrandFormState] = useAtom(createBrandFormAtom);
 
+  // country codes
   const countryCodesQ = useQuery('country_codes');
   const countries = useMemo(() => countryCodesQ.data
     ?.map(countryByCode)
@@ -27,9 +30,11 @@ export default function CreateBrandForm() {
     .map(c => ({ value: c.alpha2code, element: c.shortName || c.name ? `${c.shortName || c.name} ${c.flag}` : c.alpha2code })),
     [countryCodesQ.data]);
 
-  const image_logo_file = watch('image_logo_file');
-  console.log(image_logo_file);
+  // image logo
+  const image_logo_file = watch('image_logo_file')?.[0];
+  const imageLogo = useImage(image_logo_file);
 
+  // subdomain name
   if (!formState.dirtyFields.subdomain_name) {
     const defaultSubdomainName = watch('name')?.trim().toLowerCase().replace(/[^\w\d]+/g, '');
     setValue('subdomain_name', defaultSubdomainName);
@@ -65,9 +70,10 @@ export default function CreateBrandForm() {
       <FormField form={form} label="Brand name" name="name" type="text" validateRule={{ required: true }} />
       <FormField form={form} label="Subdomain URL" name="subdomain_name" prefix="https://" suffix=".duely.app" hint="Choose a subdomain for your brand" type="text" validateRule={{ required: true }} />
       <FormField form={form} label="Country" name="country_code" type="select" loading={countryCodesQ.loading} options={countries} validateRule={{ required: true }} />
-      <FormField form={form} label="Logo image" name="image_logo.file" type="file" accept="image/*" validateRule={{ required: true }} />
+      <FormField form={form} label="Logo image" name="image_logo_file" type="file" accept="image/jpeg, image/png" hint="Icons and logos must be in JPG or PNG format, less than 512kb in size, and equal to or greater than 128px by 128px." validateRule={{ required: true }} />
+      <Image className="h-32 border rounded-md shadow-sm" src={imageLogo.data} loading={imageLogo.loading} htmlFor="image_logo_file" />
 
-      <div className="flex flex-col">
+      <div className="flex flex-col pt-4">
         <p className="text-xs text-center">
           By creating an agency on Duely, you agree to our <button type="button" onClick={showTosModal} className="text-indigo-600" >Services Agreement</button> and the <a className="text-indigo-600" target="_blank" rel="noopener noreferrer" href="https://stripe.com/connect-account/legal">Stripe Connected Account Agreement</a>.
         </p>

@@ -22,15 +22,37 @@ export default function FormField({ name, label, form, type, validateRule, hint,
     }) ?? [];
   }
 
-  const inputContainer = type === 'select'
-    ? (<select name={name} ref={form.register(validateRule)} className="appearance-none outline-none border bg-white border-gray-300 rounded-md px-3 py-2 focus:shadow-outline shadow-sm" spellCheck="false" autoComplete="off" children={options} {...props} />)
-    : (
-      <div className="flex items-center px-3 outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm">
-        <span className="text-gray-500">{prefix}</span>
-        <input name={name} ref={form.register(validateRule)} type={type} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2" spellCheck="false" autoComplete="off" {...props} />
-        <span className="text-gray-500">{suffix}</span>
-      </div>
-    );
+  let element;
+
+  switch (type) {
+    case 'select':
+      element = (
+        <select id={name} name={name} ref={form.register(validateRule)} className="appearance-none outline-none border bg-white border-gray-300 rounded-md px-3 py-2 focus:shadow-outline shadow-sm" spellCheck="false" autoComplete="off" children={options} {...props} />
+      );
+      break;
+
+    case 'file':
+      const fileList = form.watch(name);
+      const filenames = fileList?.length > 0 ? Array.from(fileList).map(f => f.name).join(', ') : null;
+      element = (
+        <label className="grid px-3 outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm" htmlFor={name}>
+          {filenames 
+            ? <span className="row-span-full col-span-full w-full rounded-md bg-transparent py-2">{filenames}</span>
+            : <span className="row-span-full col-span-full w-full rounded-md bg-transparent py-2 text-gray-500">Drop a file here or click to upload</span>
+          }
+          <input id={name} name={name} ref={form.register(validateRule)} type="file" className="hidden row-span-full col-span-full w-full rounded-md bg-transparent appearance-none outline-none border-none py-2" spellCheck="false" autoComplete="off" {...props} />
+        </label>
+      );
+      break;
+
+    default:
+      element = (
+        <div className="flex items-center px-3 outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm">
+          <span className="text-gray-500">{prefix}</span>
+          <input id={name} name={name} ref={form.register(validateRule)} type={type} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2" spellCheck="false" autoComplete="off" {...props} />
+        </div>
+      );
+  }
 
   return (
     <div className="flex flex-col relative">
@@ -43,13 +65,13 @@ export default function FormField({ name, label, form, type, validateRule, hint,
         }
       </div>
 
-      { inputContainer}
+      {element}
 
       <LoadingBar className="h-px mx-1" loading={!!loading} />
 
       {longErrorMessage
-        ? <p className="text-red-500 text-xs italic h-4">{longErrorMessage}</p>
-        : <p className="text-gray-500 text-xs italic h-4">{hint}</p>
+        ? <p className="text-red-500 text-xs italic min-h-4">{longErrorMessage}</p>
+        : <p className="text-gray-500 text-xs italic min-h-4">{hint}</p>
       }
     </div>
   );
