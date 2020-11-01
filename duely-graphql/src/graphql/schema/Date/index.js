@@ -1,7 +1,7 @@
 import { GraphQLScalarType } from 'graphql';
 import { Kind } from 'graphql/language';
 
-export default {
+export const Date = {
   typeDef: `
     scalar Date
   `,
@@ -13,12 +13,12 @@ export default {
         return new Date(value);
       },
       serialize(value) {
-        return value.getTime();
+        return Number.isInteger(value) ? value : value.getTime();
       },
       parseLiteral(ast) {
         if (ast.kind === Kind.INT)
-          return new Date(ast.value);
-  
+          return parseInt(ast.value, 10);
+
         return null;
       }
     })

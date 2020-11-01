@@ -152,9 +152,9 @@ export const Agency = {
               try {
                 accountLink = await stripe.accountLinks.create({
                   account: account.id,
-                  failure_url: return_url,
-                  success_url: return_url,
-                  type: 'custom_account_verification',
+                  refresh_url: return_url,
+                  return_url,
+                  type: 'account_onboarding',
                   collect: 'eventually_due'
                 });
               } catch (error) {

@@ -59,6 +59,7 @@ import { Country } from './Country';
 import { Image } from './Image';
 import { Markdown } from './Markdown';
 import { Membership } from './Membership';
+import { Date } from './Date';
 
 const types = [
   {
@@ -87,7 +88,8 @@ const types = [
   Subdomain,
   Image,
   Markdown,
-  Membership
+  Membership,
+  Date
   // AcceptInviteResult,
   // // Agency,
   // AgencyClientsConnection,

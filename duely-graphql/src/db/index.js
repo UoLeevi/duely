@@ -114,6 +114,10 @@ function useFunctions(client) {
     return res[0];
   };
 
+  functions.queryResourceAccess = async function (id) {
+    return await functions.query('SELECT * FROM operation_.query_resource_access_($1::text)', id);
+  };
+
   functions.queryResource = async function (id_or_resource_name, filter) {
     if (filter) {
       const resources = await functions.queryResourceAll(id_or_resource_name, filter);

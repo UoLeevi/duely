@@ -7,6 +7,7 @@ export const StripeAccount = {
     type StripeAccount {
       id: ID!
       id_ext: ID!
+      account_update_url: StripeAccountLink!
       business_profile: BusinessProfile!
       business_type: String
       capabilities: StripeCapabilities!
@@ -14,7 +15,7 @@ export const StripeAccount = {
       settings: StripeSettings!
       charges_enabled: Boolean!
       country: String!
-      created: Int!
+      created: Date!
       default_currency: String
       details_submitted: Boolean!
       email: String
@@ -60,16 +61,59 @@ export const StripeAccount = {
       primary_color: String
       secondary_color: String
     }
+
+    type StripeAccountLink {
+      type: String!
+      url: String!
+      created: Date!
+      expires: Date!
+    }
   `,
   resolvers: {
     StripeAccount: {
-      id_ext: source => source.stripe_id_ext
+      id_ext: source => source.stripe_id_ext,
+      created: source => new Date(source.created * 1000),
+      async account_update_url(source, args, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        try {
+          const access = await withConnection(context, async withSession => {
+            return await withSession(async ({ queryResourceAccess }) => {
+              return await queryResourceAccess(source.id);
+            });
+          });
+
+          if (access !== 'owner') {
+            throw new Error('Only owner can access this information');
+          }
+
+          const return_url = `https://${source.business_profile.url}`;
+          
+          // create stripe account verification url
+          // see: https://stripe.com/docs/api/account_links/create
+          return await stripe.accountLinks.create({
+            account: source.id_ext,
+            refresh_url: return_url,
+            return_url,
+            type: source.details_submitted ? 'account_onboarding' : 'account_update',
+            collect: 'eventually_due'
+          });
+
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      }
+    },
+    StripeAccountLink: {
+      created: source => new Date(source.created * 1000),
+      expires: source => new Date(source.expires * 1000)
     },
     Query: {
       async stripe_account(source, args, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
-  
+
         try {
           const stripe_account = await withConnection(context, async withSession => {
             return await withSession(async ({ queryResource }) => {
