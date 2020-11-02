@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAtom } from 'jotai';
 import { useForm } from 'react-hook-form';
 import { produce } from 'immer';
-import { mutate } from 'apollo';
+import { mutate, start_sign_up_M } from '@duely/client';
 import { signUpFormAtom } from 'auth';
 import FormField from 'components/form-fields/FormField';
 
@@ -13,7 +13,7 @@ export default function SignUpForm() {
   async function onSubmit(data) {
     setSignUpFormState({ loading: true, errorMessage: null, completedMessage: null, submitted: Date.now() });
     const { newsletter, ...sign_up_args } = data;
-    const res = await mutate('start_sign_up', { ...sign_up_args, redirect_url: 'https://duely.app/profile' });
+    const res = await mutate(start_sign_up_M, { ...sign_up_args, redirect_url: 'https://duely.app/profile' });
 
     if (res.success) {
       setSignUpFormState(state => produce(state, state => {

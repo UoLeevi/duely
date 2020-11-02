@@ -1,9 +1,9 @@
 import Markdown from 'markdown-to-jsx';
-import useQuery from 'hooks/useQuery';
+import { useQuery, services_agreement_Q } from '@duely/client';
 import LoadingSpinner from 'components/LoadingSpinner';
 
 export default function ServicesAgreement({ ok }) {
-  const { data, loading, error } = useQuery('services_agreement');
+  const { data, loading, error } = useQuery(services_agreement_Q);
 
   return (
     <div className="max-w-screen-xs prose prose-sm sm:prose lg:prose-lg">

@@ -1,8 +1,6 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { useAtom } from 'jotai';
-import { mutate } from 'apollo';
-import { currentUserAtom } from 'auth';
+import { mutate, log_out_M } from '@duely/client';
 import { produce } from 'immer';
 
 export function useLogInOut() {
@@ -11,15 +9,6 @@ export function useLogInOut() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const shouldLogOut = searchParams.has('log-out');
-  const [, resetCurrentUser] = useAtom(currentUserAtom);
-
-  const logOut = useCallback(async () => {
-    const result = await mutate('log_out');
-
-    if (result.success) {
-      await resetCurrentUser();
-    }
-  }, [resetCurrentUser]);
 
   useEffect(() => {
     if (!shouldLogOut)
@@ -33,8 +22,8 @@ export function useLogInOut() {
       location.search = search === '?' ? '' : search;
     });
 
-    logOut();
+    mutate(log_out_M);
     history.replace(location);
 
-  }, [history, shouldLogOut, logOut]);
+  }, [history, shouldLogOut]);
 }

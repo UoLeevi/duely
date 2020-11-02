@@ -1,3 +1,4 @@
-export function setup(client) {
-  return { useQuery: undefined, query: undefined, mutate: undefined };
-}
+export { client } from './apollo/client';
+export { useQuery } from './hooks';
+export * from './queries';
+export * from './mutations';

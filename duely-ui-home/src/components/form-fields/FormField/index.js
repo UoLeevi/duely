@@ -50,6 +50,7 @@ export default function FormField({ name, label, form, type, validateRule, hint,
         <div className="flex items-center px-3 outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm">
           <span className="text-gray-500">{prefix}</span>
           <input id={name} name={name} ref={form.register(validateRule)} type={type} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2" spellCheck="false" autoComplete="off" {...props} />
+          <span className="text-gray-500">{suffix}</span>
         </div>
       );
   }

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAtom } from 'jotai';
 import { useForm } from 'react-hook-form';
 import { produce } from 'immer';
-import { mutate } from 'apollo';
+import { mutate, start_password_reset_M } from '@duely/client';
 import { startPasswordResetFormAtom } from 'auth';
 import FormField from 'components/form-fields/FormField';
 
@@ -12,7 +12,7 @@ export default function StartPasswordResetForm() {
 
   async function onSubmit(data) {
     setStartPasswordResetFormState({ loading: true, errorMessage: null, completedMessage: null, submitted: Date.now() });
-    const res = await mutate('start_password_reset', { ...data, redirect_url: 'https://duely.app/log-in' });
+    const res = await mutate(start_password_reset_M, { ...data, redirect_url: 'https://duely.app/log-in' });
 
     if (res.success) {
       setStartPasswordResetFormState(state => produce(state, state => {

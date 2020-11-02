@@ -6,7 +6,7 @@ import MessageContextProvider from 'contexts/MessageContext';
 import ModalContextProvider from 'contexts/ModalContext';
 import AuthManager from 'components/AuthManager';
 import Pages from 'pages';
-import { client } from 'apollo';
+import { client } from '@duely/client';
 
 export default function App() {
   return (

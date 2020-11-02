@@ -2,6 +2,8 @@ import { withConnection } from '../../../db';
 import { AuthenticationError } from 'apollo-server-core';
 import stripe from '../../../stripe';
 
+// see: https://stripe.com/docs/api/accounts/object
+
 export const StripeAccount = {
   typeDef: `
     type StripeAccount {

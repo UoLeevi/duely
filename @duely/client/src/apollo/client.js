@@ -6,18 +6,17 @@ import { getMainDefinition } from '@apollo/client/utilities';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import typePolicies from './typePolicies';
 
+const endpoint = 'api.duely.app/graphql';
+const url_http = `https://${endpoint}`;
+const url_ws = `wss://${endpoint}`;
+
 const ssrMode = typeof window === 'undefined';
 let getResolvedAccessToken = ssrMode
   ? () => null
   : () => localStorage?.getItem('user-jwt') || localStorage?.getItem('visitor-jwt');
 
-const cache = new InMemoryCache({
-  typePolicies
-});
-
-const httpLink = new HttpLink({
-  uri: 'https://api.duely.app/graphql'
-});
+const cache = new InMemoryCache({ typePolicies });
+const httpLink = new HttpLink({ uri: url_http });
 
 let getAccessTokenPromise = null;
 
@@ -93,7 +92,7 @@ const transportLink = createTransportLink();
 function createTransportLink() {
   if (ssrMode) return httpLink;
 
-  wsClient = new SubscriptionClient('wss://api.duely.app/graphql', {
+  wsClient = new SubscriptionClient(url_ws, {
     reconnect: true,
     lazy: true,
     connectionParams: async () => {

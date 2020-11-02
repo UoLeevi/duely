@@ -1,9 +1,8 @@
 import { useQuery as useApolloQuery } from '@apollo/client';
-import { queries } from 'apollo/queries';
 
-export default function useQuery(queryName, variables, options) {
-  const { query, result, variables: defaultVariables, ...defaultOptions } = queries[queryName];
-  const { data: rawData, networkStatus, loading: initialLoading, ...rest } = useApolloQuery(query, { 
+export function useQuery(queryDef, variables, options) {
+  const { query, result, variables: defaultVariables, ...defaultOptions } = queryDef;
+  const { data: rawData, networkStatus, loading: initialLoading, ...rest } = useApolloQuery(query, {
     variables: {
       ...defaultVariables,
       ...variables

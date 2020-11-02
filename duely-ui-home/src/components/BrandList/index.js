@@ -1,8 +1,8 @@
 import MultiStatusIndicator, { status } from 'components/MultiStatusIndicator';
-import useQuery from 'hooks/useQuery';
+import { useQuery, current_user_agencies_Q } from '@duely/client';
 
 export default function BrandList() {
-  const { loading, data, error } = useQuery('current_user_agencies');
+  const { loading, data, error } = useQuery(current_user_agencies_Q);
 
   return (
     <table className="table-auto w-full max-w-screen-md">

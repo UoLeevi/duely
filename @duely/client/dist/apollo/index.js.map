@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../src/apollo/index.js"],"names":[],"mappings":";;;;;;;;;;;;AAAA","sourcesContent":["export { client } from './client';\n"],"file":"index.js"}

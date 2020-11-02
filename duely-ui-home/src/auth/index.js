@@ -1,11 +1,11 @@
 import { atom } from 'jotai';
-import { query } from 'apollo';
+import { query, current_user_Q } from '@duely/client';
 
-const currentUserQueryAtom = atom(query('current_user'));
+const currentUserQueryAtom = atom(query(current_user_Q));
 
 export const currentUserAtom = atom(
   (get) => get(currentUserQueryAtom),
-  async (get, set) => set(currentUserQueryAtom, await query('current_user'))
+  async (get, set) => set(currentUserQueryAtom, await query(current_user_Q))
 );
 
 export const logInFormAtom = atom({

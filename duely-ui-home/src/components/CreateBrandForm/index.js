@@ -1,13 +1,13 @@
 import { atom, useAtom } from 'jotai';
 import { useForm } from 'react-hook-form';
 import { produce } from 'immer';
-import { mutate } from 'apollo';
+import { mutate, create_agency_M } from '@duely/client';
 import { countryByCode } from 'utils';
 import { useMemo, useRef } from 'react';
 import { useModal } from 'hooks';
 import FormField from 'components/form-fields/FormField';
 import ServicesAgreement from 'components/ServicesAgreement';
-import useQuery from 'hooks/useQuery';
+import { useQuery, country_codes_Q } from '@duely/client';
 import { Image } from 'components/Image';
 import useImage from 'hooks/useImage';
 
@@ -23,7 +23,7 @@ export default function CreateBrandForm() {
   const [createBrandForm, setCreateBrandFormState] = useAtom(createBrandFormAtom);
 
   // country codes
-  const countryCodesQ = useQuery('country_codes');
+  const countryCodesQ = useQuery(country_codes_Q);
   const countries = useMemo(() => countryCodesQ.data
     ?.map(countryByCode)
     .sort((a, b) => (a.name).localeCompare(b.name))
@@ -42,7 +42,7 @@ export default function CreateBrandForm() {
 
   async function onSubmit(data) {
     setCreateBrandFormState({ loading: true, errorMessage: null, completedMessage: null, submitted: Date.now() });
-    const res = await mutate('create_agency', { ...data, redirect_url: 'https://duely.app/profile' });
+    const res = await mutate(create_agency_M, { ...data, redirect_url: 'https://duely.app/profile' });
 
     if (res.success) {
       setCreateBrandFormState(state => produce(state, state => {

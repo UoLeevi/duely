@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-home",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "private": true,
   "scripts": {
     "build": "NODE_ENV='production' postcss src/styles/tailwind.css -o public/styles/index.css && react-scripts build",
@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.2.5",
+    "@duely/client": "^0.0.2",
     "@headlessui/react": "^0.2.0",
     "@tailwindcss/typography": "^0.2.0",
     "@testing-library/jest-dom": "^5.11.5",
@@ -40,12 +41,11 @@
     "markdown-to-jsx": "^7.0.1",
     "react": "0.0.0-experimental-4ead6b530",
     "react-dom": "0.0.0-experimental-4ead6b530",
-    "react-hook-form": "^6.10.0",
+    "react-hook-form": "^6.10.1",
     "react-icons": "^3.11.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.0",
     "scheduler": "^0.20.1",
-    "subscriptions-transport-ws": "^0.9.18",
     "tailwindcss": "^1.9.6",
     "web-vitals": "^0.2.4"
   },

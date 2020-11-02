@@ -2,19 +2,19 @@ import { Link, useHistory } from 'react-router-dom';
 import { useAtom } from 'jotai';
 import { useForm } from 'react-hook-form';
 import { produce } from 'immer';
-import { mutate } from 'apollo';
+import { mutate, log_in_M } from '@duely/client';
 import { logInFormAtom } from 'auth';
 import { useEffect } from 'react';
 import FormField from 'components/form-fields/FormField';
 import LoadingSpinner from 'components/LoadingSpinner';
-import useQuery from 'hooks/useQuery';
+import { useQuery, current_user_Q } from '@duely/client';
 // import { useRouter } from 'react-router-dom';
 
 export default function LogInForm() {
   // const router = useRouter();
   const form = useForm();
   const [logInForm, setLogInFormState] = useAtom(logInFormAtom);
-  const currentUserQ = useQuery('current_user');
+  const currentUserQ = useQuery(current_user_Q);
   const history = useHistory();
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function LogInForm() {
 
   async function onSubmit(data) {
     setLogInFormState({ loading: true, errorMessage: null, completedMessage: null, submitted: Date.now() });
-    const res = await mutate('log_in', data);
+    const res = await mutate(log_in_M, data);
 
     if (res.success) {
       setLogInFormState(state => produce(state, state => {
