@@ -36,7 +36,7 @@ export default function FormField({ name, label, form, type, validateRule, hint,
       const filenames = fileList?.length > 0 ? Array.from(fileList).map(f => f.name).join(', ') : null;
       element = (
         <label className="grid px-3 outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm" htmlFor={name}>
-          {filenames 
+          {filenames
             ? <span className="row-span-full col-span-full w-full rounded-md bg-transparent py-2">{filenames}</span>
             : <span className="row-span-full col-span-full w-full rounded-md bg-transparent py-2 text-gray-500">Drop a file here or click to upload</span>
           }
@@ -47,10 +47,10 @@ export default function FormField({ name, label, form, type, validateRule, hint,
 
     default:
       element = (
-        <div className="flex items-center px-3 outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm">
-          <span className="text-gray-500">{prefix}</span>
-          <input id={name} name={name} ref={form.register(validateRule)} type={type} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2" spellCheck="false" autoComplete="off" {...props} />
-          <span className="text-gray-500">{suffix}</span>
+        <div className="flex items-center outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm">
+          {prefix && <span className="text-gray-500 pl-3">{prefix}</span>}
+          <input id={name} name={name} ref={form.register(validateRule)} type={type} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2 first:pl-3 last:pr-3" spellCheck="false" autoComplete="off" {...props} />
+          {suffix && <span className="text-gray-500 pr-3">{suffix}</span>}
         </div>
       );
   }

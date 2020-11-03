@@ -1825,6 +1825,14 @@ html, body, #root {
   padding-right: 0.5rem;
 }
 
+.pr-3 {
+  padding-right: 0.75rem;
+}
+
+.pl-3 {
+  padding-left: 0.75rem;
+}
+
 .pt-4 {
   padding-top: 1rem;
 }
@@ -1843,6 +1851,14 @@ html, body, #root {
 
 .pr-10 {
   padding-right: 2.5rem;
+}
+
+.first\:pl-3:first-child {
+  padding-left: 0.75rem;
+}
+
+.last\:pr-3:last-child {
+  padding-right: 0.75rem;
 }
 
 .pointer-events-none {

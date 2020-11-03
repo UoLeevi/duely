@@ -1,6 +1,4 @@
-import { Suspense } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { Provider } from 'jotai';
 import { ApolloProvider } from '@apollo/client';
 import MessageContextProvider from 'contexts/MessageContext';
 import ModalContextProvider from 'contexts/ModalContext';
@@ -10,19 +8,15 @@ import { client } from '@duely/client';
 
 export default function App() {
   return (
-    <Provider>
-      <ApolloProvider client={client}>
-        <Router>
-          <MessageContextProvider>
-            <ModalContextProvider>
-              <Suspense fallback={null}>
-                <AuthManager />
-              </Suspense>
-              <Pages />
-            </ModalContextProvider>
-          </MessageContextProvider>
-        </Router>
-      </ApolloProvider>
-    </Provider>
+    <ApolloProvider client={client}>
+      <Router>
+        <MessageContextProvider>
+          <ModalContextProvider>
+            <AuthManager />
+            <Pages />
+          </ModalContextProvider>
+        </MessageContextProvider>
+      </Router>
+    </ApolloProvider>
   );
 }

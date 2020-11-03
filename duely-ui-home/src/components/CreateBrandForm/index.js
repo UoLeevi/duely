@@ -1,9 +1,7 @@
-import { atom, useAtom } from 'jotai';
 import { useForm } from 'react-hook-form';
-import { produce } from 'immer';
 import { mutate, create_agency_M } from '@duely/client';
 import { countryByCode } from 'utils';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useModal } from 'hooks';
 import FormField from 'components/form-fields/FormField';
 import ServicesAgreement from 'components/ServicesAgreement';
@@ -11,16 +9,39 @@ import { useQuery, country_codes_Q } from '@duely/client';
 import { Image } from 'components/Image';
 import useImage from 'hooks/useImage';
 
-const createBrandFormAtom = atom({
+
+const initialState = {
   loading: false,
+  completed: false,
   errorMessage: null,
-  completed: false
+  submitted: null
+};
+
+const stateOnSubmit = state => ({
+  ...state,
+  loading: true,
+  errorMessage: null,
+  submitted: Date.now()
+});
+
+const stateOnCompleted = state => ({
+  ...state,
+  completed: true,
+  loading: false,
+  errorMessage: null
+});
+
+const stateOnError = errorMessage => state => ({
+  ...state,
+  completed: false,
+  loading: false,
+  errorMessage: errorMessage
 });
 
 export default function CreateBrandForm() {
   const form = useForm();
   const { watch, setValue, formState } = form;
-  const [createBrandForm, setCreateBrandFormState] = useAtom(createBrandFormAtom);
+  const [state, setState] = useState(initialState);
 
   // country codes
   const countryCodesQ = useQuery(country_codes_Q);
@@ -41,21 +62,17 @@ export default function CreateBrandForm() {
   }
 
   async function onSubmit(data) {
-    setCreateBrandFormState({ loading: true, errorMessage: null, completedMessage: null, submitted: Date.now() });
-    const res = await mutate(create_agency_M, { ...data, redirect_url: 'https://duely.app/profile' });
+    setState(stateOnSubmit);
+    try {
+      const res = await mutate(create_agency_M, { ...data, redirect_url: 'https://duely.app/profile' });
 
-    if (res.success) {
-      setCreateBrandFormState(state => produce(state, state => {
-        state.loading = false;
-        state.errorMessage = null;
-        state.completed = true;
-      }));
-    } else {
-      setCreateBrandFormState(state => produce(state, state => {
-        state.loading = false;
-        state.errorMessage = res.message;
-        state.completed = false;
-      }));
+      if (res.success) {
+        setState(stateOnCompleted);
+      } else {
+        setState(stateOnError(res.message));
+      }
+    } catch (error) {
+      setState(stateOnError(error.message));
     }
   };
 
@@ -79,7 +96,7 @@ export default function CreateBrandForm() {
         </p>
       </div>
       <div className="flex flex-col pt-4 items-center">
-        {!createBrandForm.loading && !createBrandForm.completed && (
+        {!state.loading && !state.completed && (
           <button type="submit" className="bg-indigo-500 px-8 py-3 rounded-md text-md font-medium leading-5 text-white transition duration-150 ease-in-out border border-gray-300 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50" >
             Create a brand
           </button>)}

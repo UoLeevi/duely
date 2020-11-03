@@ -21,7 +21,8 @@ module.exports = {
     },
   },
   variants: {
-    boxShadow: ['responsive', 'hover', 'focus', 'focus-within']
+    boxShadow: ['responsive', 'hover', 'focus', 'focus-within'],
+    padding: ['responsive', 'first', 'last'],
   },
   plugins: [
     require('@tailwindcss/typography')
