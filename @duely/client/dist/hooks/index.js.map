@@ -1,1 +1,1 @@
-{"version":3,"sources":["../../src/hooks/index.js"],"names":[],"mappings":";;;;;;;;;;;;AAAA","sourcesContent":["export { useQuery } from './useQuery'\n"],"file":"index.js"}
+{"version":3,"sources":["../../src/hooks/index.js"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;AAAA;;AACA","sourcesContent":["export { useQuery } from './useQuery'\nexport { useMutation } from './useMutation'\n"],"file":"index.js"}

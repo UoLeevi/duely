@@ -1,47 +1,17 @@
 import { useForm } from 'react-hook-form';
-import { mutate, create_agency_M } from '@duely/client';
 import { countryByCode } from 'utils';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import { useModal } from 'hooks';
 import FormField from 'components/form-fields/FormField';
 import ServicesAgreement from 'components/ServicesAgreement';
-import { useQuery, country_codes_Q } from '@duely/client';
+import { useQuery, country_codes_Q, useMutation, create_agency_M } from '@duely/client';
 import { Image } from 'components/Image';
 import useImage from 'hooks/useImage';
-
-
-const initialState = {
-  loading: false,
-  completed: false,
-  errorMessage: null,
-  submitted: null
-};
-
-const stateOnSubmit = state => ({
-  ...state,
-  loading: true,
-  errorMessage: null,
-  submitted: Date.now()
-});
-
-const stateOnCompleted = state => ({
-  ...state,
-  completed: true,
-  loading: false,
-  errorMessage: null
-});
-
-const stateOnError = errorMessage => state => ({
-  ...state,
-  completed: false,
-  loading: false,
-  errorMessage: errorMessage
-});
 
 export default function CreateBrandForm() {
   const form = useForm();
   const { watch, setValue, formState } = form;
-  const [state, setState] = useState(initialState);
+  const [createAgency, state] = useMutation(create_agency_M);
 
   // country codes
   const countryCodesQ = useQuery(country_codes_Q);
@@ -62,18 +32,7 @@ export default function CreateBrandForm() {
   }
 
   async function onSubmit(data) {
-    setState(stateOnSubmit);
-    try {
-      const res = await mutate(create_agency_M, { ...data, redirect_url: 'https://duely.app/profile' });
-
-      if (res.success) {
-        setState(stateOnCompleted);
-      } else {
-        setState(stateOnError(res.message));
-      }
-    } catch (error) {
-      setState(stateOnError(error.message));
-    }
+    await createAgency(create_agency_M, { ...data, redirect_url: 'https://duely.app/profile' });
   };
 
   const hideTosRef = useRef();
@@ -96,7 +55,7 @@ export default function CreateBrandForm() {
         </p>
       </div>
       <div className="flex flex-col pt-4 items-center">
-        {!state.loading && !state.completed && (
+        {!state.loading && !state.data && (
           <button type="submit" className="bg-indigo-500 px-8 py-3 rounded-md text-md font-medium leading-5 text-white transition duration-150 ease-in-out border border-gray-300 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50" >
             Create a brand
           </button>)}

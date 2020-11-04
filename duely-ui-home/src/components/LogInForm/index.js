@@ -1,44 +1,15 @@
 import { Link, useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { mutate, log_in_M } from '@duely/client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import FormField from 'components/form-fields/FormField';
 import LoadingSpinner from 'components/LoadingSpinner';
-import { useQuery, current_user_Q } from '@duely/client';
+import { useQuery, current_user_Q, useMutation, log_in_M } from '@duely/client';
 // import { useRouter } from 'react-router-dom';
-
-const initialState = {
-  loading: false,
-  completed: false,
-  errorMessage: null,
-  submitted: null
-};
-
-const stateOnSubmit = state => ({
-  ...state,
-  loading: true,
-  errorMessage: null,
-  submitted: Date.now()
-});
-
-const stateOnCompleted = state => ({
-  ...state,
-  completed: true,
-  loading: false,
-  errorMessage: null
-});
-
-const stateOnError = errorMessage => state => ({
-  ...state,
-  completed: false,
-  loading: false,
-  errorMessage: errorMessage
-});
 
 export default function LogInForm() {
   // const router = useRouter();
   const form = useForm();
-  const [state, setState] = useState(initialState);
+  const [logIn, state] = useMutation(log_in_M);
   const currentUserQ = useQuery(current_user_Q);
   const history = useHistory();
 
@@ -53,18 +24,7 @@ export default function LogInForm() {
   }
 
   async function onSubmit(data) {
-    setState(stateOnSubmit);
-    try {
-      const res = await mutate(log_in_M, data);
-
-      if (res.success) {
-        setState(stateOnCompleted);
-      } else {
-        setState(stateOnError(res.message));
-      }
-    } catch (error) {
-      setState(stateOnError(error.message));
-    }
+    await logIn(data);
   }
 
   return (
