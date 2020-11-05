@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useMutation, start_password_reset_M } from '@duely/client';
-import FormField from 'components/form-fields/FormField';
+import { FormField } from '@duely/react';
 
 export default function StartPasswordResetForm() {
   const form = useForm();

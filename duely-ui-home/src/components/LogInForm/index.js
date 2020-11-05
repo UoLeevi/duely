@@ -1,7 +1,7 @@
 import { Link, useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
-import FormField from 'components/form-fields/FormField';
+import { FormField } from '@duely/react';
 import LoadingSpinner from 'components/LoadingSpinner';
 import { useQuery, current_user_Q, useMutation, log_in_M } from '@duely/client';
 // import { useRouter } from 'react-router-dom';

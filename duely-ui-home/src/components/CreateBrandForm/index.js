@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { countryByCode } from 'utils';
 import { useMemo, useRef } from 'react';
 import { useModal } from 'hooks';
-import FormField from 'components/form-fields/FormField';
+import { FormField } from '@duely/react';
 import ServicesAgreement from 'components/ServicesAgreement';
 import { useQuery, country_codes_Q, useMutation, create_agency_M } from '@duely/client';
 import { Image } from 'components/Image';
