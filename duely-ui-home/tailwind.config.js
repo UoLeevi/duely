@@ -5,7 +5,8 @@ module.exports = {
   },
   purge: [
     './public/*.html',
-    './src/**/*.js'
+    './src/**/*.js',
+    './node_modules/@duely/react/**/*.js'
   ],
   theme: {
     extend: {

@@ -1293,9 +1293,18 @@ html, body, #root {
   border-color: rgba(237, 242, 247, var(--divide-opacity));
 }
 
+.appearance-none {
+  -webkit-appearance: none;
+          appearance: none;
+}
+
 .bg-clip-text {
   -webkit-background-clip: text;
           background-clip: text;
+}
+
+.bg-transparent {
+  background-color: transparent;
 }
 
 .bg-white {
@@ -1616,6 +1625,10 @@ html, body, #root {
   height: 8rem;
 }
 
+.h-px {
+  height: 1px;
+}
+
 .h-full {
   height: 100%;
 }
@@ -1666,6 +1679,11 @@ html, body, #root {
 
 .m-4 {
   margin: 1rem;
+}
+
+.mx-1 {
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
 }
 
 .mx-auto {
@@ -1807,6 +1825,14 @@ html, body, #root {
   padding-right: 0.5rem;
 }
 
+.pr-3 {
+  padding-right: 0.75rem;
+}
+
+.pl-3 {
+  padding-left: 0.75rem;
+}
+
 .pt-4 {
   padding-top: 1rem;
 }
@@ -1825,6 +1851,14 @@ html, body, #root {
 
 .pr-10 {
   padding-right: 2.5rem;
+}
+
+.first\:pl-3:first-child {
+  padding-left: 0.75rem;
+}
+
+.last\:pr-3:last-child {
+  padding-right: 0.75rem;
 }
 
 .pointer-events-none {
@@ -1880,6 +1914,14 @@ html, body, #root {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
+.focus\:shadow-outline:focus {
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+}
+
+.focus-within\:shadow-outline:focus-within {
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+}
+
 .table-auto {
   table-layout: auto;
 }
@@ -1932,6 +1974,12 @@ html, body, #root {
   color: rgba(26, 32, 44, var(--text-opacity));
 }
 
+.text-red-500 {
+  --text-opacity: 1;
+  color: #f56565;
+  color: rgba(245, 101, 101, var(--text-opacity));
+}
+
 .text-red-600 {
   --text-opacity: 1;
   color: #e53e3e;
@@ -1966,6 +2014,10 @@ html, body, #root {
   --text-opacity: 1;
   color: #a0aec0;
   color: rgba(160, 174, 192, var(--text-opacity));
+}
+
+.italic {
+  font-style: italic;
 }
 
 .tracking-wide {
@@ -2012,6 +2064,14 @@ html, body, #root {
 
 .z-40 {
   z-index: 40;
+}
+
+.col-span-full {
+  grid-column: 1 / -1;
+}
+
+.row-span-full {
+  grid-row: 1 / -1;
 }
 
 .transform {
