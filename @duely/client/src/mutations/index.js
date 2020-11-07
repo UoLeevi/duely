@@ -115,8 +115,8 @@ export const start_sign_up_M = {
 
 export const create_agency_M = {
   mutation: gql`
-    mutation($name: String!, $subdomain: String!, $country_code: String!, $return_url: String!) {
-      create_agency(name: $name, subdomain_name: $subdomain, country_code: $country_code, return_url: $return_url) {
+    mutation($name: String!, $subdomain_name: String!, $country_code: String!, $return_url: String!) {
+      create_agency(name: $name, subdomain_name: $subdomain_name, country_code: $country_code, return_url: $return_url) {
         stripe_verification_url
         message
         success

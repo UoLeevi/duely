@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { Util } from '@duely/react';
+import { FormButton, FormErrorInfo, Util } from '@duely/react';
 import { useMemo, useRef } from 'react';
 import { useModal } from 'hooks';
 import { FormField } from '@duely/react';
@@ -31,8 +31,9 @@ export default function CreateBrandForm() {
     setValue('subdomain_name', defaultSubdomainName);
   }
 
-  async function onSubmit(data) {
-    await createAgency(create_agency_M, { ...data, redirect_url: 'https://duely.app/profile' });
+  async function onSubmit({ image_logo_file, ...data }) {
+    await createAgency({ ...data, return_url: 'https://duely.app/profile' });
+    // todo: save image
   };
 
   const hideTosRef = useRef();
@@ -42,11 +43,11 @@ export default function CreateBrandForm() {
   );
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-2">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-3">
       <FormField form={form} label="Brand name" name="name" type="text" validateRule={{ required: true }} />
       <FormField form={form} label="Subdomain URL" name="subdomain_name" prefix="https://" suffix=".duely.app" hint="Choose a subdomain for your brand" type="text" validateRule={{ required: true }} />
       <FormField form={form} label="Country" name="country_code" type="select" loading={countryCodesQ.loading} options={countries} validateRule={{ required: true }} />
-      <FormField form={form} label="Logo image" name="image_logo_file" type="file" accept="image/jpeg, image/png" hint="Icons and logos must be in JPG or PNG format, less than 512kb in size, and equal to or greater than 128px by 128px." validateRule={{ required: true }} />
+      <FormField form={form} label="Logo image" name="image_logo_file" type="file" accept="image/jpeg, image/png" hint="PNG, JPG up to 512kb, and minimum 128px by 128px." validateRule={{ required: true }} />
       <Image className="h-32 border rounded-md shadow-sm" src={imageLogo.data} loading={imageLogo.loading} htmlFor="image_logo_file" />
 
       <div className="flex flex-col pt-4">
@@ -55,10 +56,10 @@ export default function CreateBrandForm() {
         </p>
       </div>
       <div className="flex flex-col pt-4 items-center">
-        {!state.loading && !state.data && (
-          <button type="submit" className="bg-indigo-500 px-8 py-3 rounded-md text-md font-medium leading-5 text-white transition duration-150 ease-in-out border border-gray-300 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:bg-gray-50" >
-            Create a brand
-          </button>)}
+        <FormButton loading={state.loading}>Create a brand</FormButton>
+      </div>
+      <div className="flex flex-col pt-4 items-center h-24">
+        <FormErrorInfo error={state.error} />
       </div>
     </form>
   );
