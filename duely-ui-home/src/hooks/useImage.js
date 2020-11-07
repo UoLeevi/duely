@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { processImageFile } from 'utils';
+import { Util } from '@duely/react';
 
 export default function useImage(file) {
   const initializedRef = useRef(false);
@@ -13,7 +13,7 @@ export default function useImage(file) {
       return;
     }
 
-    processImageFile(file)
+    Util.processImageFile(file)
       .then(image => setState({ file, loading: false, error: null, ...image }))
       .catch(error => setState({ file, loading: false, error, data: null }));
 

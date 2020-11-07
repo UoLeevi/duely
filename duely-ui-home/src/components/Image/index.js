@@ -1,9 +1,9 @@
 import { BsImage } from 'react-icons/bs';
-import { createClassName } from 'utils';
+import { Util } from '@duely/react';
 
 export function Image({ className, src, alt, loading, htmlFor, ...props }) {
 
-  className = createClassName('relative grid place-items-center', className);
+  className = Util.createClassName('relative grid place-items-center', className);
   const Element = htmlFor ? 'label' : 'div';
 
   return (

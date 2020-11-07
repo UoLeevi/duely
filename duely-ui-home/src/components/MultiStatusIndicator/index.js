@@ -1,4 +1,4 @@
-import { createClassName } from 'utils';
+import { Util } from '@duely/react';
 
 export const status = {
   OK: 'ok',
@@ -15,12 +15,12 @@ const bg = {
 };
 
 export default function MultiStatusIndicator({ className, statuses }) {
-  className = createClassName(className, 'flex');
+  className = Util.createClassName(className, 'flex');
 
   return (
     <div className={className}>
       {statuses?.map(({ status, tooltip, key }, index) => {
-        const className = createClassName(bg[status], 'w-5 h-2 rounded-sm border border-white relative');
+        const className = Util.createClassName(bg[status], 'w-5 h-2 rounded-sm border border-white relative');
 
         return (
           <div className={className} key={key ?? index}>

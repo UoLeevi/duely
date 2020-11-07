@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { countryByCode } from 'utils';
+import { Util } from '@duely/react';
 import { useMemo, useRef } from 'react';
 import { useModal } from 'hooks';
 import { FormField } from '@duely/react';
@@ -16,7 +16,7 @@ export default function CreateBrandForm() {
   // country codes
   const countryCodesQ = useQuery(country_codes_Q);
   const countries = useMemo(() => countryCodesQ.data
-    ?.map(countryByCode)
+    ?.map(Util.countryByCode)
     .sort((a, b) => (a.name).localeCompare(b.name))
     .map(c => ({ value: c.alpha2code, element: c.shortName || c.name ? `${c.shortName || c.name} ${c.flag}` : c.alpha2code })),
     [countryCodesQ.data]);
