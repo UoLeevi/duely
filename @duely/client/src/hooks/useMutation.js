@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { mutate as _mutate } from '../mutations';
 
 const initialState = {
@@ -25,9 +25,20 @@ const createErrorState = error => ({
   data: undefined
 });
 
-export function useMutation(mutationDef) {
+const defaultOptions = {
+  resetErrorMs: 6000
+};
+
+export function useMutation(mutationDef, options) {
+  const timeoutRef = useRef(0);
+  const { resetErrorMs } = { ...defaultOptions, ...options };
   const [state, setState] = useState(initialState);
   const mutate = useCallback(async (variables, options) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = 0;
+    }
+
     setState(loadingState);
 
     try {
@@ -35,14 +46,22 @@ export function useMutation(mutationDef) {
 
       if (res.success === false) {
         setState(createErrorState(res));
+
+        if (resetErrorMs > 0) {
+          timeoutRef.current = setTimeout(() => setState(initialState), resetErrorMs);
+        }
       } else {
         setState(createCompletedState(res));
       }
 
     } catch (error) {
       setState(createErrorState(error));
+
+      if (resetErrorMs > 0) {
+        timeoutRef.current = setTimeout(() => setState(initialState), resetErrorMs);
+      }
     }
-  }, [mutationDef]);
+  }, [mutationDef, resetErrorMs]);
 
   return [mutate, state];
 }
