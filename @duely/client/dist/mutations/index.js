@@ -21,7 +21,7 @@ function _objectWithoutProperties(source, excluded) { if (source == null) return
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
 
 function _templateObject7() {
-  var data = _taggedTemplateLiteral(["\n    mutation($name: String!, $subdomain_name: String!, $country_code: String!, $return_url: String!) {\n      create_agency(name: $name, subdomain_name: $subdomain_name, country_code: $country_code, return_url: $return_url) {\n        stripe_verification_url\n        message\n        success\n        agency {\n          id\n        }\n      }\n    }\n  "]);
+  var data = _taggedTemplateLiteral(["\n    mutation($name: String!, $subdomain_name: String!, $country_code: String!, $image_logo: ImageInput!, $return_url: String!) {\n      create_agency(name: $name, subdomain_name: $subdomain_name, country_code: $country_code, image_logo: $image_logo, return_url: $return_url) {\n        stripe_verification_url\n        message\n        success\n        agency {\n          id\n        }\n      }\n    }\n  "]);
 
   _templateObject7 = function _templateObject7() {
     return data;

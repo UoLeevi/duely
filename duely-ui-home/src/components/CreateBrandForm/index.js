@@ -22,7 +22,7 @@ export default function CreateBrandForm() {
     [countryCodesQ.data]);
 
   // image logo
-  const image_logo_file = watch('image_logo_file')?.[0];
+  const image_logo_file = watch('image_logo_file_list')?.[0];
   const imageLogo = useImage(image_logo_file);
 
   // subdomain name
@@ -31,9 +31,16 @@ export default function CreateBrandForm() {
     setValue('subdomain_name', defaultSubdomainName);
   }
 
-  async function onSubmit({ image_logo_file, ...data }) {
-    await createAgency({ ...data, return_url: 'https://duely.app/profile' });
-    // todo: save image
+  async function onSubmit({ image_logo_file_list, ...data }) {
+    const image_logo = {
+      name: image_logo_file_list[0].name,
+      data: imageLogo.data,
+      color: imageLogo.color ?? '#FFFFFF'
+    };
+
+    debugger;
+    await createAgency({ ...data, image_logo, return_url: 'https://duely.app/profile' });
+    console.log('agency created succesfully');
   };
 
   const hideTosRef = useRef();
@@ -47,8 +54,8 @@ export default function CreateBrandForm() {
       <FormField form={form} label="Brand name" name="name" type="text" validateRule={{ required: true }} />
       <FormField form={form} label="Subdomain URL" name="subdomain_name" prefix="https://" suffix=".duely.app" hint="Choose a subdomain for your brand" type="text" validateRule={{ required: true }} />
       <FormField form={form} label="Country" name="country_code" type="select" loading={countryCodesQ.loading} options={countries} validateRule={{ required: true }} />
-      <FormField form={form} label="Logo image" name="image_logo_file" type="file" accept="image/jpeg, image/png" hint="PNG, JPG up to 512kb, and minimum 128px by 128px." validateRule={{ required: true }} />
-      <Image className="h-32 border rounded-md shadow-sm" src={imageLogo.data} loading={imageLogo.loading} htmlFor="image_logo_file" />
+      <FormField form={form} label="Logo image" name="image_logo_file_list" type="file" accept="image/jpeg, image/png" hint="PNG, JPG up to 512kb, and minimum 128px by 128px." validateRule={{ required: true }} />
+      <Image className="h-32 border rounded-md shadow-sm" src={imageLogo.data} loading={imageLogo.loading} htmlFor="image_logo_file_list" />
 
       <div className="flex flex-col pt-4">
         <p className="text-xs text-center">
