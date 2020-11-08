@@ -178,7 +178,7 @@ export const Agency = {
               const image = await createResource('image', { ...image_logo, agency_id: agency.id, access: 'public' });
 
               // create theme
-              const theme = await createResource('theme', { image_logo_id: image.id, agency_id: agency.id });
+              const theme = await createResource('theme', { name, image_logo_id: image.id, agency_id: agency.id });
 
               // upload logo image to stripe
               const logo_upload = await stripe.files.create({
