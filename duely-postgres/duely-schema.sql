@@ -2347,14 +2347,13 @@ CREATE TABLE application_.theme_ (
     name_ text NOT NULL,
     image_logo_uuid_ uuid,
     image_hero_uuid_ uuid,
-    color_primary_ text NOT NULL,
-    color_secondary_ text NOT NULL,
-    color_accent_ text NOT NULL,
-    color_background_ text NOT NULL,
-    color_surface_ text NOT NULL,
-    color_error_ text NOT NULL,
-    color_success_ text NOT NULL,
-    standard_ boolean DEFAULT false NOT NULL,
+    color_primary_ text,
+    color_secondary_ text,
+    color_accent_ text,
+    color_background_ text,
+    color_surface_ text,
+    color_error_ text,
+    color_success_ text,
     agency_uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
@@ -3866,6 +3865,19 @@ $$;
 ALTER FUNCTION policy_.anyone_can_query_stripe_account_for_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: anyone_can_query_theme_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_query_theme_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE sql SECURITY DEFINER
+    AS $$
+  SELECT '{uuid_, name_, agency_uuid_, image_logo_uuid_, image_hero_uuid_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_, color_error_, color_success_}'::text[];
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_query_theme_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: anyone_with_verification_code_can_verify_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4260,7 +4272,7 @@ CREATE FUNCTION policy_.owner_can_change_theme_(_resource_definition security_.r
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{image_logo_uuid_, image_hero_uuid_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_, color_error_, color_success_}'::text[];
+    RETURN '{name_, image_logo_uuid_, image_hero_uuid_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_, color_error_, color_success_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4414,9 +4426,9 @@ CREATE FUNCTION policy_.owner_can_create_theme_(_resource_definition security_.r
 BEGIN
   IF (
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
-    FROM internal_.query_owner_resource_(_resource_definition, _data)  
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{name_, image_logo_uuid_, image_hero_uuid_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_, color_error_, color_success_, agency_uuid_}'::text[];
+    RETURN '{name_, agency_uuid_, image_logo_uuid_, image_hero_uuid_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_, color_error_, color_success_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5823,7 +5835,6 @@ CREATE TABLE application__audit_.theme_ (
     color_surface_ text,
     color_error_ text,
     color_success_ text,
-    standard_ boolean,
     agency_uuid_ uuid,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
@@ -6325,7 +6336,6 @@ e84918a7-9e8e-4522-b400-4d258d8e1346	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy
 cdc2d6a0-b00e-4763-bad3-d2b43bf0c3c0	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 72066618-a466-4b71-965f-891edcb33c6f	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 69d40b30-226f-4dbf-8e86-564022464cc7	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-21a0e344-7b24-4f76-b267-363419f490d3	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.logged_in_user_can_query_theme_(security_.resource_definition_,application_.resource_)	query	\N
 7fe3d163-1f55-4916-9f1f-f345c01e7773	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_create_theme_(security_.resource_definition_,jsonb)	create	\N
 95c5b9d6-3df7-4ace-961a-b817262783e4	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_change_theme_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 781a2064-6530-4452-83d6-04347be6c845	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
@@ -6370,6 +6380,8 @@ feb75892-7dff-459c-87f7-afec68d96c17	d8f70962-229d-49eb-a99e-7c35a55719d5	policy
 32268460-a5bf-4807-a3d0-9ef69c23b1d7	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.can_query_image_based_on_access_level_(security_.resource_definition_,application_.resource_)	query	\N
 d29e82dd-1151-4951-bac5-38051474a9b1	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.logged_in_user_can_query_image_(security_.resource_definition_,application_.resource_)	query	32268460-a5bf-4807-a3d0-9ef69c23b1d7
 67c85773-8203-463c-a73e-83de271f588b	b54431c5-bbc4-47b6-9810-0a627e49cfe5	policy_.anyone_can_query_own_membership_(security_.resource_definition_,application_.resource_)	query	\N
+0c06c7e3-7cdf-4bb1-b956-6fe90ab46a6f	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.anyone_can_query_theme_(security_.resource_definition_,application_.resource_)	query	\N
+21a0e344-7b24-4f76-b267-363419f490d3	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.logged_in_user_can_query_theme_(security_.resource_definition_,application_.resource_)	query	0c06c7e3-7cdf-4bb1-b956-6fe90ab46a6f
 \.
 
 

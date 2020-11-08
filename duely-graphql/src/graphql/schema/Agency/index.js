@@ -16,6 +16,7 @@ export const Agency = {
       name: String!
       stripe_account: StripeAccount!
       subdomain: Subdomain!
+      theme: Theme!
     }
 
     input AgencyFilter {
@@ -28,7 +29,7 @@ export const Agency = {
     }
 
     extend type Mutation {
-      create_agency(name: String!, subdomain_name: String!, country_code: String!, return_url: String!): CreateAgencyResult!
+      create_agency(name: String!, subdomain_name: String!, country_code: String!, image_logo: ImageInput!, return_url: String!): CreateAgencyResult!
     }
 
     type CreateAgencyResult implements MutationResult {
@@ -70,13 +71,27 @@ export const Agency = {
         } catch (error) {
           throw new Error(error.message);
         }
+      },
+      async theme(source, args, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        try {
+          return await withConnection(context, async withSession => {
+            return await withSession(async ({ queryResource }) => {
+              return await queryResource('theme', { agency_id: source.id });
+            });
+          });
+        } catch (error) {
+          throw new Error(error.message);
+        }
       }
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
     },
     Mutation: {
-      async create_agency(obj, { name, subdomain_name, country_code, return_url }, context, info) {
+      async create_agency(obj, { name, subdomain_name, country_code, image_logo, return_url }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
@@ -104,6 +119,51 @@ export const Agency = {
             type: 'CreateAgencyResult'
           };
 
+        // validate logo image
+
+        if (!validator.isDataURI(image_logo.data))
+          return {
+            success: false,
+            message: `Image data should be encoded as a data URL.`,
+            type: 'CreateAgencyResult'
+          };
+
+        if (!image_logo.data.startsWith('data:image/jpeg;base64,') 
+         && !image_logo.data.startsWith('data:image/png;base64,'))
+          return {
+            success: false,
+            message: `Image should be either a JPEG or PNG`,
+            type: 'CreateAgencyResult'
+          };
+
+        if (!validator.isByteLength(image_logo.data, { max: Math.round(512000/4*3) }))
+          return {
+            success: false,
+            message: `Image max size is 512KB.`,
+            type: 'CreateAgencyResult'
+          };
+
+        let image_buffer;
+
+        try {
+          const image_base64 = image_logo.data.split(',')[1];
+          image_buffer = Buffer.from(image_base64, 'base64');
+        } catch {
+          return {
+            success: false,
+            message: `Unable to read image file.`,
+            type: 'CreateAgencyResult'
+          };
+        }
+
+        // validate country code
+        if (!validator.isISO31661Alpha2(country_code))
+          return {
+            success: false,
+            message: `Invalid country code.`,
+            type: 'CreateAgencyResult'
+          };
+
         try {
           return await withConnection(context, async withSession => {
             return await withSession(async ({ query, createResource }) => {
@@ -113,6 +173,22 @@ export const Agency = {
               // create subdomain and agency on database
               const subdomain = await createResource('subdomain', { name: subdomain_name, agency: { name } });
               const agency = subdomain.agency;
+
+              // create logo image
+              const image = await createResource('image', { ...image_logo, agency_id: agency.id, access: 'public' });
+
+              // create theme
+              const theme = await createResource('theme', { image_logo_id: image.id, agency_id: agency.id });
+
+              // upload logo image to stripe
+              const logo_upload = await stripe.files.create({
+                file: {
+                  data: image_buffer,
+                  name: image_logo.name,
+                  type: 'application/octet-stream',
+                },
+                purpose: 'business_logo',
+              });
 
               // create stripe custom account for agency
               // see: https://stripe.com/docs/api/accounts/create
@@ -134,6 +210,11 @@ export const Agency = {
                 },
                 metadata: {
                   agency_id: agency.id
+                },
+                settings: {
+                  branding: {
+                    logo: logo_upload.id
+                  }
                 }
               };
 

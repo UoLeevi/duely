@@ -18,6 +18,12 @@ export const Image = {
       access: AccessLevel!
     }
 
+    input ImageInput {
+      name: String!
+      data: String!
+      color: String!
+    }
+
     input ImageFilter {
       name: String
       agency_id: ID

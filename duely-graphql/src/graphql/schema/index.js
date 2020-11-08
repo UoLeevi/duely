@@ -60,6 +60,7 @@ import { Image } from './Image';
 import { Markdown } from './Markdown';
 import { Membership } from './Membership';
 import { Date } from './Date';
+import { Theme } from './Theme';
 
 const types = [
   {
@@ -89,6 +90,7 @@ const types = [
   Image,
   Markdown,
   Membership,
+  Theme,
   Date
   // AcceptInviteResult,
   // // Agency,
