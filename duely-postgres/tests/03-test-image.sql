@@ -56,12 +56,13 @@ BEGIN
   _data := '{
     "name": "Test Image",
     "data": "asdasd",
-    "color": "#123456"
+    "color": "#123456",
+    "access": "public"
   }';
   _data := jsonb_set(_data, '{agency_id}', _result_0->'agency'->'id');
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
   --RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
-  ASSERT _result_1 ?& '{ id, name, data, color }';
+  ASSERT _result_1 ?& '{ id, name, data, color, access }';
 
 
   -- TEST INVALID QUERY OPERATION
