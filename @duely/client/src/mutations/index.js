@@ -122,6 +122,11 @@ export const create_agency_M = {
         success
         agency {
           id
+          name
+          subdomain {
+            id
+            name
+          }
         }
       }
     }

@@ -1250,6 +1250,12 @@ html, body, #root {
   margin-left: calc(0.75rem * calc(1 - var(--space-x-reverse)));
 }
 
+.space-y-4 > :not(template) ~ :not(template) {
+  --space-y-reverse: 0;
+  margin-top: calc(1rem * calc(1 - var(--space-y-reverse)));
+  margin-bottom: calc(1rem * var(--space-y-reverse));
+}
+
 .space-x-4 > :not(template) ~ :not(template) {
   --space-x-reverse: 0;
   margin-right: calc(1rem * var(--space-x-reverse));
@@ -1332,6 +1338,12 @@ html, body, #root {
   --bg-opacity: 1;
   background-color: #f6e05e;
   background-color: rgba(246, 224, 94, var(--bg-opacity));
+}
+
+.bg-green-200 {
+  --bg-opacity: 1;
+  background-color: #c6f6d5;
+  background-color: rgba(198, 246, 213, var(--bg-opacity));
 }
 
 .bg-green-400 {
@@ -1654,6 +1666,10 @@ html, body, #root {
 
 .text-2xl {
   font-size: 1.5rem;
+}
+
+.text-3xl {
+  font-size: 1.875rem;
 }
 
 .text-4xl {
@@ -2029,6 +2045,12 @@ html, body, #root {
   color: rgba(221, 107, 32, var(--text-opacity));
 }
 
+.text-green-600 {
+  --text-opacity: 1;
+  color: #38a169;
+  color: rgba(56, 161, 105, var(--text-opacity));
+}
+
 .text-indigo-500 {
   --text-opacity: 1;
   color: #667eea;
@@ -2055,6 +2077,10 @@ html, body, #root {
 
 .tracking-wide {
   letter-spacing: 0.025em;
+}
+
+.whitespace-no-wrap {
+  white-space: nowrap;
 }
 
 .truncate {

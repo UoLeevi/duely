@@ -1,7 +1,7 @@
 {
   "name": "@duely/client",
   "type": "module",
-  "version": "0.0.11",
+  "version": "0.0.13",
   "repository": "github:uoleevi/duely",
   "description": "GraphQL client by Duely (wrapper for @apollo/client)",
   "main": "index.js",
@@ -21,7 +21,7 @@
     "@babel/cli": "^7.12.1",
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
-    "eslint": "^7.12.1"
+    "eslint": "^7.13.0"
   },
   "peerDependencies": {
     "react": "^17.0.1"
