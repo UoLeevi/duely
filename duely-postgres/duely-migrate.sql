@@ -14,32 +14,13 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE OR REPLACE FUNCTION policy_.owner_can_create_image_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF (
-    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
-    FROM internal_.query_owner_resource_(_resource_definition, _data)  
-  ) THEN
-    RETURN '{name_, data_, color_, agency_uuid_, access_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
+ALTER TABLE ONLY application_.stripe_account_
+    DROP CONSTRAINT stripe_account__agency_uuid__fkey,
+    ADD CONSTRAINT stripe_account__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
 
-CREATE OR REPLACE FUNCTION policy_.owner_can_change_image_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{name_, data_, color_, access_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
+ALTER TABLE ONLY application_.theme_
+    DROP CONSTRAINT theme__agency_uuid__fkey,
+    ADD CONSTRAINT theme__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
 
 -- CALL internal_.setup_resource_('application_.theme_', 'theme', 'theme', '{uuid_, agency_uuid_}', 'application_.agency_');
 

@@ -30,6 +30,7 @@ export const Agency = {
 
     extend type Mutation {
       create_agency(name: String!, subdomain_name: String!, country_code: String!, image_logo: ImageInput!, return_url: String!): CreateAgencyResult!
+      delete_agency(agency_id: ID!): DeleteAgencyResult!
     }
 
     type CreateAgencyResult implements MutationResult {
@@ -37,6 +38,12 @@ export const Agency = {
       message: String
       agency: Agency
       stripe_verification_url: String
+    }
+
+    type DeleteAgencyResult implements MutationResult {
+      success: Boolean!
+      message: String
+      agency: Agency
     }
   `,
   resolvers: {
@@ -263,6 +270,51 @@ export const Agency = {
             success: false,
             message: error.message,
             type: 'CreateAgencyResult'
+          };
+        }
+      },
+      async delete_agency(obj, { agency_id }, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        try {
+          return await withConnection(context, async withSession => {
+            return await withSession(async ({ queryResource, deleteResource }) => {
+              const agency = await queryResource(agency_id);
+              
+              if (agency == null) {
+                return {
+                  // error
+                  success: false,
+                  message: 'Agency not found',
+                  type: 'DeleteAgencyResult'
+                };
+              }
+
+              // query stripe account from database
+              const stripe_account = await queryResource('stripe account', { agency_id });
+
+              // delete subdomain from database, will cascade to agency, theme, subject assignment and stripe account tables
+              const subdomain = await deleteResource(agency.subdomain_id);
+
+              // delete stripe custom account for agency
+              // see: https://stripe.com/docs/api/accounts/delete
+              const deleted = await stripe.accounts.del(stripe_account.stripe_id_ext);
+
+              // success
+              return {
+                success: true,
+                agency,
+                type: 'DeleteAgencyResult'
+              };
+            });
+          });
+        } catch (error) {
+          return {
+            // error
+            success: false,
+            message: error.message,
+            type: 'DeleteAgencyResult'
           };
         }
       }
