@@ -49,5 +49,5 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: duely-react-service
+          serviceName: duely-ui-agency-service
           servicePort: 8080

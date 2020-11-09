@@ -1,4 +1,4 @@
-name: duely-react-build
+name: duely-ui-agency-build
 
 on:
   push:
@@ -14,24 +14,17 @@ jobs:
         with:
           fetch-depth: 2
       - id: detect-version-change
-        run: git diff -U0 -G'version' ${{ github.sha }}^ ${{ github.sha }} ./duely-react/package.json | sed -rn 's/^.*\+\s+"version":\s*"(.+)".*/::set-output name=version::v\1/p'
+        run: git diff -U0 -G'version' ${{ github.sha }}^ ${{ github.sha }} ./duely-ui-agency/package.json | sed -rn 's/^.*\+\s+"version":\s*"(.+)".*/::set-output name=version::v\1/p'
   build:
     needs: [check-version]
     if: needs.check-version.outputs.version != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2-beta
-        with:
-          node-version: '14'
-      - run: npm install
-        working-directory: duely-react
-      - run: npm run build
-        working-directory: duely-react
       - uses: docker/build-push-action@v1
         with:
           username: uoleevi
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: uoleevi/duely-react
+          repository: uoleevi/duely-ui-agency
           tags: ${{ needs.check-version.outputs.version }}
-          path: duely-react
+          path: duely-ui-agency

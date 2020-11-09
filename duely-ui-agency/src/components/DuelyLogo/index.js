@@ -1,0 +1,17 @@
+
+export default function DuelyLogo({ ...props }) {
+
+  return (
+    <svg viewBox="-300 -300 600 600" xmlns="http://www.w3.org/2000/svg" { ...props }>
+      <path fill="#E2E8F0" stroke="none" d="M-4.29,-59.19a100,100,0,1,0,-170.71,-70.71l0,241.4z"></path>
+      <path fill="#E2E8F0" stroke="none" d="M53.41,25.88a100,100,0,1,0,146.59,-112.48l-209.06,-120.7z"></path>
+      <path fill="#E2E8F0" stroke="none" d="M-49.12,33.31a100,100,0,1,0,24.12,183.19l209.06,-120.7z"></path>
+      <path fill="none" stroke="#ffffff" strokeWidth="60" d="M-4.29,-59.19a100,100,0,1,0,-170.71,-70.71l0,241.4z"></path>
+      <path fill="none" stroke="#ffffff" strokeWidth="60" d="M53.41,25.88a100,100,0,1,0,146.59,-112.48l-209.06,-120.7z"></path>
+      <path fill="none" stroke="#ffffff" strokeWidth="60" d="M-49.12,33.31a100,100,0,1,0,24.12,183.19l209.06,-120.7z"></path>
+      <path fill="none" stroke="#2D3748" strokeWidth="28" d="M-4.29,-59.19a100,100,0,1,0,-170.71,-70.71l0,241.4z"></path>
+      <path fill="none" stroke="#2D3748" strokeWidth="28" d="M53.41,25.88a100,100,0,1,0,146.59,-112.48l-209.06,-120.7z"></path>
+      <path fill="none" stroke="#2D3748" strokeWidth="28" d="M-49.12,33.31a100,100,0,1,0,24.12,183.19l209.06,-120.7z"></path>
+    </svg>
+  );
+};
