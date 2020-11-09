@@ -14,13 +14,9 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-ALTER TABLE ONLY application_.stripe_account_
-    DROP CONSTRAINT stripe_account__agency_uuid__fkey,
-    ADD CONSTRAINT stripe_account__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
-
-ALTER TABLE ONLY application_.theme_
-    DROP CONSTRAINT theme__agency_uuid__fkey,
-    ADD CONSTRAINT theme__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
+ALTER TABLE ONLY application_.image_
+    DROP CONSTRAINT image__agency_uuid__fkey,
+    ADD CONSTRAINT image__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
 
 -- CALL internal_.setup_resource_('application_.theme_', 'theme', 'theme', '{uuid_, agency_uuid_}', 'application_.agency_');
 
