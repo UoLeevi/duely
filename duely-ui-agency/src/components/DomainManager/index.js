@@ -14,7 +14,7 @@ export default function DomainManager({ children }) {
   }
 
   if (process.env.NODE_ENV === 'production') {
-    if (!error || data == null) {
+    if (error || data == null) {
       window.location.replace("https://duely.app");
       return null;
     }
