@@ -14,17 +14,13 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-ALTER TABLE ONLY application_.image_
-    DROP CONSTRAINT image__agency_uuid__fkey,
-    ADD CONSTRAINT image__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
-
 -- CALL internal_.setup_resource_('application_.theme_', 'theme', 'theme', '{uuid_, agency_uuid_}', 'application_.agency_');
 
--- CREATE OR REPLACE FUNCTION policy_.anyone_can_query_theme_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
---     LANGUAGE sql SECURITY DEFINER
---     AS $$
---   SELECT '{uuid_, name_, agency_uuid_, image_logo_uuid_, image_hero_uuid_, color_primary_, color_secondary_, color_accent_, color_background_, color_surface_, color_error_, color_success_}'::text[];
--- $$;
+CREATE OR REPLACE FUNCTION policy_.anyone_can_query_subdomain_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE sql SECURITY DEFINER
+    AS $$
+  SELECT '{uuid_, name_}'::text[];
+$$;
 
 
 -- CREATE OR REPLACE FUNCTION policy_.owner_can_create_theme_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
@@ -56,7 +52,7 @@ ALTER TABLE ONLY application_.image_
 
 -- PERFORM security_.register_policy_('application_.theme_', 'query', 'policy_.can_query_theme_based_on_access_level_');
 -- PERFORM security_.register_policy_('application_.image_', 'query', 'policy_.can_query_image_based_on_access_level_');
--- PERFORM security_.register_policy_('application_.theme_', 'query', 'policy_.anyone_can_query_theme_');
+PERFORM security_.register_policy_('security_.subdomain_', 'query', 'policy_.anyone_can_query_subdomain_');
 -- PERFORM security_.register_policy_('application_.theme_', 'create', 'policy_.owner_can_create_theme_');
 -- PERFORM security_.register_policy_('application_.theme_', 'update', 'policy_.owner_can_change_theme_');
 -- PERFORM security_.register_policy_('application_.theme_', 'delete', 'policy_.only_owner_can_delete_');

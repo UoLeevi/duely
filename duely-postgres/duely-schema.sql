@@ -3865,6 +3865,19 @@ $$;
 ALTER FUNCTION policy_.anyone_can_query_stripe_account_for_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: anyone_can_query_subdomain_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_query_subdomain_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE sql SECURITY DEFINER
+    AS $$
+  SELECT '{uuid_, name_}'::text[];
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_query_subdomain_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: anyone_can_query_theme_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4158,7 +4171,7 @@ CREATE FUNCTION policy_.owner_can_change_image_(_resource_definition security_.r
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{name_, data_, color_}'::text[];
+    RETURN '{name_, data_, color_, access_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4318,7 +4331,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)  
   ) THEN
-    RETURN '{name_, data_, color_, agency_uuid_}'::text[];
+    RETURN '{name_, data_, color_, agency_uuid_, access_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -6328,7 +6341,6 @@ COPY security_.password_reset_ (uuid_, user_uuid_, data_, started_at_, expires_a
 --
 
 COPY security_.policy_ (uuid_, resource_definition_uuid_, function_, operation_type_, after_uuid_) FROM stdin;
-3bd8acaf-e137-4d29-ac84-6c9ab020184e	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_query_name_(security_.resource_definition_,application_.resource_)	query	\N
 4834193b-9666-4dbe-89d7-980fd4bab17a	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_create_subdomain_(security_.resource_definition_,jsonb)	create	\N
 5285f600-fb00-4861-8485-7b198c5a90c6	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_create_agency_(security_.resource_definition_,jsonb)	create	\N
 1eea3d78-a0e3-48b1-86b0-b09249dab127	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.anyone_can_query_basic_agency_fields_(security_.resource_definition_,application_.resource_)	query	\N
@@ -6382,6 +6394,8 @@ d29e82dd-1151-4951-bac5-38051474a9b1	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy
 67c85773-8203-463c-a73e-83de271f588b	b54431c5-bbc4-47b6-9810-0a627e49cfe5	policy_.anyone_can_query_own_membership_(security_.resource_definition_,application_.resource_)	query	\N
 0c06c7e3-7cdf-4bb1-b956-6fe90ab46a6f	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.anyone_can_query_theme_(security_.resource_definition_,application_.resource_)	query	\N
 21a0e344-7b24-4f76-b267-363419f490d3	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.logged_in_user_can_query_theme_(security_.resource_definition_,application_.resource_)	query	0c06c7e3-7cdf-4bb1-b956-6fe90ab46a6f
+fd641c3d-4052-49d5-96a3-1f83dc5fe3a4	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.anyone_can_query_subdomain_(security_.resource_definition_,application_.resource_)	query	\N
+3bd8acaf-e137-4d29-ac84-6c9ab020184e	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_query_name_(security_.resource_definition_,application_.resource_)	query	fd641c3d-4052-49d5-96a3-1f83dc5fe3a4
 \.
 
 
@@ -8533,7 +8547,7 @@ ALTER TABLE ONLY application_.client_
 --
 
 ALTER TABLE ONLY application_.image_
-    ADD CONSTRAINT image__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+    ADD CONSTRAINT image__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -8653,7 +8667,7 @@ ALTER TABLE ONLY application_.service_variant_
 --
 
 ALTER TABLE ONLY application_.stripe_account_
-    ADD CONSTRAINT stripe_account__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+    ADD CONSTRAINT stripe_account__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -8661,7 +8675,7 @@ ALTER TABLE ONLY application_.stripe_account_
 --
 
 ALTER TABLE ONLY application_.theme_
-    ADD CONSTRAINT theme__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+    ADD CONSTRAINT theme__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
 
 
 --
