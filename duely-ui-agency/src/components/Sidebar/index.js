@@ -2,8 +2,12 @@ import { Link, NavLink } from 'react-router-dom';
 import DuelyLogo from 'components/DuelyLogo';
 import { BsBriefcase, BsCreditCard, BsFolder, BsGear, BsHouseDoor, BsKanban, BsPeople } from 'react-icons/bs';
 import { Util } from '@duely/react';
+import { useQuery } from '@duely/client';
+import { current_subdomain_Q } from 'queries';
 
 export default function Sidebar({ className }) {
+  const { data: current_subdomain } = useQuery(current_subdomain_Q);
+
   className = Util.createClassName(className, 'border-box z-10 w-full md:w-64 md:h-screen bg-white border-t md:border-t-none md:border-r p-2');
 
   return (
@@ -11,7 +15,7 @@ export default function Sidebar({ className }) {
       <div className="md:h-full w-full flex md:flex-col md:space-y-4 max-w-screen overflow-x-auto">
         <Link to="/" className="hidden md:flex items-center h-8 sm:h-10 md:h-12 relative space-x-2 text-gray-900 rounded p-1">
           <DuelyLogo className="h-full" />
-          <span className="text-xl sm:text-2xl font-bold">Duely</span>
+          <span className="text-xl sm:text-xl font-bold">{current_subdomain?.agency.name}</span>
         </Link>
         <nav className="flex flex-row md:flex-col flex-1 justify-center md:justify-start space-x-1 md:space-y-2 md:space-x-0">
           <NavLink to="/dashboard" exact activeClassName='bg-gray-200 text-gray-700 active' className="flex flex-row items-center space-x-3 rounded-md bg-white text-sm font-semibold text-gray-600 px-3 py-2">

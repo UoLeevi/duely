@@ -1439,8 +1439,8 @@ html, body, #root {
     font-size: 0.875rem;
   }
 
-  .sm\:text-2xl {
-    font-size: 1.5rem;
+  .sm\:text-xl {
+    font-size: 1.25rem;
   }
 
   .sm\:leading-5 {

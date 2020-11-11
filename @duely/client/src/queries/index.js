@@ -133,7 +133,28 @@ export const current_user_agencies_Q = {
     }))
 };
 
-
+export const subdomain_public_Q = {
+  query: gql`
+    query($subdomain_name: String!) {
+      subdomains(filter: { name: $subdomain_name }) {
+        id
+        name
+        agency {
+          id
+          name
+          theme {
+            id
+            image_logo {
+              id
+              data
+            }
+          }
+        }
+      }
+    }
+  `,
+  result: d => d?.subdomains[0]
+};
 
 // agencies: {
 //   query: gql`

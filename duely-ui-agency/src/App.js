@@ -2,6 +2,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { ApolloProvider } from '@apollo/client';
 import MessageContextProvider from 'contexts/MessageContext';
 import ModalContextProvider from 'contexts/ModalContext';
+import DomainManager from 'components/DomainManager';
 import AuthManager from 'components/AuthManager';
 import Pages from 'pages';
 import { client } from '@duely/client';
@@ -13,7 +14,9 @@ export default function App() {
         <MessageContextProvider>
           <ModalContextProvider>
             <AuthManager />
-            <Pages />
+            <DomainManager>
+              <Pages />
+            </DomainManager>
           </ModalContextProvider>
         </MessageContextProvider>
       </Router>
