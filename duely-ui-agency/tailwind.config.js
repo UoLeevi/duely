@@ -19,6 +19,7 @@ module.exports = {
     './node_modules/\\@duely/react/dist/**/*.js'
   ],
   variants: {
+    borderWidth: ['responsive', 'first', 'last'],
     display: ['responsive', 'router-link-active'],
   }
 }
