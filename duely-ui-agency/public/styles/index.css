@@ -955,6 +955,10 @@ html, body, #root {
   height: 3rem;
 }
 
+.h-20 {
+  height: 5rem;
+}
+
 .h-px {
   height: 1px;
 }
@@ -1162,6 +1166,10 @@ html, body, #root {
 
 .pr-10 {
   padding-right: 2.5rem;
+}
+
+.pb-20 {
+  padding-bottom: 5rem;
 }
 
 .pl-px {

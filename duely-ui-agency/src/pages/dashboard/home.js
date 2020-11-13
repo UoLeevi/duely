@@ -1,11 +1,11 @@
-import DashboardLayout from 'components/DashboardLayout';
+import { Util } from '@duely/react';
 import { BsAward, BsInfoCircle } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
-// import TopBar from 'components/TopBar';
+import { DashboardCard } from './components';
 
 function DashboardOverviewCard({ title, value, to, info }) {
   return (
-    <div className="w-full h-full flex flex-col rounded-md bg-white border border-gray-300 shadow-sm">
+    <DashboardCard className="h-full">
       <div className="flex flex-row flex-1 rounded-md-t p-4 items-center space-x-4">
         <BsAward className="text-2xl text-gray-500" />
         <div className="flex flex-col flex-1 space-y-1">
@@ -23,7 +23,7 @@ function DashboardOverviewCard({ title, value, to, info }) {
       <div className="rounded-md-b px-4 py-2 bg-gray-200">
         <Link to={to}><span className="text-sm font-semibold text-indigo-600">View all</span></Link>
       </div>
-    </div>
+    </DashboardCard>
   );
 }
 
@@ -35,9 +35,9 @@ function Cell({ children }) {
   );
 }
 
-export default function Dashboard() {
+export default function DashboardHome() {
   return (
-    <DashboardLayout>
+    <>
       <div>
         <h2 className="text-xl font-semibold  ml-2 mb-2">Overview</h2>
         <div className="flex flex-row -m-1 flex-wrap">
@@ -49,7 +49,7 @@ export default function Dashboard() {
       <div>
         <h2 className="text-xl font-semibold ml-2 mb-2">Recent activity</h2>
         <div className="p-2">
-          <div className="relative w-full table bg-white border border-gray-300 shadow-sm rounded-md">
+          <DashboardCard className="table">
             <div className="table-row-group">
               <div className="table-row bg-gray-200 text-indigo-600 font-medium text-sm">
                 <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-gray-300">Event</div>
@@ -59,22 +59,22 @@ export default function Dashboard() {
               <div className="table-row border-b">
                 <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200 font-semibold">Sale</div>
                 <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200">Lili has bought Keyword research</div>
-                <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200">{new Date(Date.now()).toISOString()}</div>
+                <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200">{Util.formatDate(new Date())}</div>
               </div>
               <div className="table-row">
                 <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200 font-semibold">Sale</div>
                 <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200">Leevi has bought Keyword research</div>
-                <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200">{new Date(Date.now()).toISOString()}</div>
+                <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200">{Util.formatDate(new Date())}</div>
               </div>
               <div className="table-row">
                 <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200 font-semibold">File upload</div>
                 <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200">Leevi has shared a file Content-brief.txt</div>
-                <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200">{new Date(Date.now()).toISOString()}</div>
+                <div className="table-cell px-4 py-2 text-sm border-r last:border-r-0 border-t border-gray-200">{Util.formatDate(new Date())}</div>
               </div>
             </div>
-          </div>
+          </DashboardCard>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

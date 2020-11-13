@@ -1,7 +1,7 @@
 {
   "name": "@duely/client",
   "type": "module",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "repository": "github:uoleevi/duely",
   "description": "GraphQL client by Duely (wrapper for @apollo/client)",
   "main": "index.js",

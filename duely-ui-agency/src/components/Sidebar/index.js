@@ -17,7 +17,7 @@ function SidebarLink({ text, icon, to }) {
 export default function Sidebar({ className }) {
   const { data: current_subdomain } = useQuery(current_subdomain_Q);
 
-  className = Util.createClassName(className, 'border-box z-10 w-full md:w-48 md:h-screen bg-white border-t md:border-t-none md:border-r p-2');
+  className = Util.createClassName(className, 'border-box z-10 w-full md:w-48 h-20 md:h-full md:h-screen bg-white border-t md:border-t-none md:border-r p-2');
 
   return (
     <aside className={className}>
