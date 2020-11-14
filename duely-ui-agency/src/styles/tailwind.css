@@ -33,4 +33,8 @@
   .bg-mask-x-transparent {
     mask-image: linear-gradient(to right, transparent, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0), transparent);
   }
+
+  .grid-cols-fill-200 {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
 }

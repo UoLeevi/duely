@@ -71,8 +71,7 @@ export default function CreateBrandForm() {
         <FormField form={form} label="Brand name" name="name" type="text" validateRule={{ required: true }} />
         <FormField form={form} label="Subdomain URL" name="subdomain_name" prefix="https://" suffix=".duely.app" hint="Choose a subdomain for your brand" type="text" validateRule={{ required: true }} />
         <FormField form={form} label="Country" name="country_code" type="select" loading={countryCodesQ.loading} options={countries} validateRule={{ required: true }} />
-        <FormField form={form} label="Logo image" name="image_logo_file_list" type="file" accept="image/jpeg, image/png" hint="PNG, JPG up to 512kb, and minimum 128px by 128px." validateRule={{ required: true }} />
-        <Image className="h-32 border rounded-md shadow-sm" src={imageLogo.data} loading={imageLogo.loading} htmlFor="image_logo_file_list" />
+        <FormField form={form} label="Logo image" name="image_logo_file_list" type="image" loading={imageLogo.loading} src={imageLogo.data} accept="image/jpeg, image/png" hint="PNG, JPG up to 512KB, and minimum 128px by 128px." validateRule={{ required: true }} />
 
         <div className="flex flex-col pt-4">
           <p className="text-xs text-center">

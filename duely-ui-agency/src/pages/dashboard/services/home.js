@@ -1,10 +1,21 @@
 import { Util } from '@duely/react';
-import { DashboardCard, DashboardSection } from './components';
+import {
+  DashboardFlexGrid,
+  DashboardCard,
+  DashboardCardGetStartedCreateServices,
+  DashboardSection
+} from '../components';
 
-export default function DashboardFiles() {
+export default function DashboardServicesHome() {
   return (
     <>
-      <DashboardSection title="Files">
+      <DashboardSection title="Get started">
+        <DashboardFlexGrid>
+          <DashboardCardGetStartedCreateServices />
+        </DashboardFlexGrid>
+      </DashboardSection>
+
+      <DashboardSection title="Services">
         <DashboardCard className="table">
           <div className="table-row-group">
             <div className="table-row bg-gray-200 text-indigo-600 font-medium text-sm">

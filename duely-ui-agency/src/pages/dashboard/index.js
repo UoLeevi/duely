@@ -5,7 +5,7 @@ import DashboardFiles from './files';
 import DashboardHome from './home';
 import DashboardPayments from './payments';
 import DashboardProjects from './projects';
-import DashboardServices from './services';
+import { routes as serviceRoutes } from './services';
 import DashboardSettings from './settings';
 
 const routes = [
@@ -13,10 +13,7 @@ const routes = [
     path: '/dashboard/projects',
     component: DashboardProjects
   },
-  {
-    path: '/dashboard/services',
-    component: DashboardServices
-  },
+  ...serviceRoutes,
   {
     path: '/dashboard/clients',
     component: DashboardClients

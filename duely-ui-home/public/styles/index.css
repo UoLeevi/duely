@@ -265,7 +265,8 @@ textarea {
  * 2. Remove the padding in IE 10.
  */
 
-[type="checkbox"] {
+[type="checkbox"],
+[type="radio"] {
   box-sizing: border-box; /* 1 */
   padding: 0; /* 2 */
 }
@@ -1232,6 +1233,12 @@ html, body, #root {
   }
 }
 
+.space-y-2 > :not(template) ~ :not(template) {
+  --space-y-reverse: 0;
+  margin-top: calc(0.5rem * calc(1 - var(--space-y-reverse)));
+  margin-bottom: calc(0.5rem * var(--space-y-reverse));
+}
+
 .space-x-2 > :not(template) ~ :not(template) {
   --space-x-reverse: 0;
   margin-right: calc(0.5rem * var(--space-x-reverse));
@@ -1454,10 +1461,22 @@ html, body, #root {
   border-color: rgba(226, 232, 240, var(--border-opacity));
 }
 
+.border-blue-400 {
+  --border-opacity: 1;
+  border-color: #63b3ed;
+  border-color: rgba(99, 179, 237, var(--border-opacity));
+}
+
 .border-indigo-300 {
   --border-opacity: 1;
   border-color: #a3bffa;
   border-color: rgba(163, 191, 250, var(--border-opacity));
+}
+
+.border-indigo-400 {
+  --border-opacity: 1;
+  border-color: #7f9cf5;
+  border-color: rgba(127, 156, 245, var(--border-opacity));
 }
 
 .focus\:border-blue-300:focus {
@@ -1492,6 +1511,10 @@ html, body, #root {
   border-bottom-left-radius: 0.5rem;
 }
 
+.border-dashed {
+  border-style: dashed;
+}
+
 .border-none {
   border-style: none;
 }
@@ -1514,6 +1537,10 @@ html, body, #root {
 
 .box-border {
   box-sizing: border-box;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 
 .cursor-not-allowed {
@@ -1588,6 +1615,10 @@ html, body, #root {
   justify-content: space-around;
 }
 
+.flex-1 {
+  flex: 1 1 0%;
+}
+
 .flex-grow {
   flex-grow: 1;
 }
@@ -1636,12 +1667,12 @@ html, body, #root {
   height: 3rem;
 }
 
-.h-24 {
-  height: 6rem;
+.h-20 {
+  height: 5rem;
 }
 
-.h-32 {
-  height: 8rem;
+.h-24 {
+  height: 6rem;
 }
 
 .h-px {
@@ -1715,6 +1746,10 @@ html, body, #root {
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
 }
 
 .mt-2 {
@@ -1850,6 +1885,11 @@ html, body, #root {
   padding-bottom: 1.5rem;
 }
 
+.px-6 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
 .px-10 {
   padding-left: 2.5rem;
   padding-right: 2.5rem;
@@ -1882,6 +1922,14 @@ html, body, #root {
 
 .pl-4 {
   padding-left: 1rem;
+}
+
+.pt-5 {
+  padding-top: 1.25rem;
+}
+
+.pb-6 {
+  padding-bottom: 1.5rem;
 }
 
 .pt-8 {
@@ -2075,6 +2123,16 @@ html, body, #root {
   color: rgba(160, 174, 192, var(--text-opacity));
 }
 
+.hover\:text-indigo-500:hover {
+  --text-opacity: 1;
+  color: #667eea;
+  color: rgba(102, 126, 234, var(--text-opacity));
+}
+
+.focus\:underline:focus {
+  text-decoration: underline;
+}
+
 .tracking-wide {
   letter-spacing: 0.025em;
 }
@@ -2123,6 +2181,11 @@ html, body, #root {
 
 .z-40 {
   z-index: 40;
+}
+
+.gap-4 {
+  grid-gap: 1rem;
+  gap: 1rem;
 }
 
 .col-span-full {
@@ -2253,6 +2316,10 @@ html, body, #root {
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .animate-progress {
