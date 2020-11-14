@@ -14,7 +14,7 @@ export function ServicePricingFormSection({ form }) {
       {payment_type === 'one_time' && (
         <>
           <div className="flex flex-col sm:flex-row -m-2">
-            <div className="sm:w-2/3 lg:w-1/3 p-2 max-w-xs">
+            <div className="sm:w-1/2 lg:w-1/3 p-2 max-w-xs">
               <FormField form={form} label="Price of service" name="unit_amount" type="text" prefix="$" validateRule={{ required: true }} />
             </div>
           </div>
@@ -24,10 +24,10 @@ export function ServicePricingFormSection({ form }) {
       {payment_type === 'payment_plan' && (
         <>
           <div className="flex flex-col sm:flex-row -m-2">
-            <div className="sm:w-1/3 p-2 max-w-xs">
+            <div className="sm:w-1/2 lg:w-1/3 p-2 max-w-xs">
               <FormField form={form} label="Amount per month" name="unit_amount" type="text" prefix="$" validateRule={{ required: true }} />
             </div>
-            <div className="sm:w-1/3 p-2 max-w-xs">
+            <div className="sm:w-1/2 lg:w-1/3 p-2 max-w-xs">
               <FormField form={form} label="Number of monthly payments" name="interval_count" type="number" validateRule={{ required: true }} />
             </div>
           </div>
@@ -37,10 +37,10 @@ export function ServicePricingFormSection({ form }) {
       {payment_type === 'subscription' && (
         <>
           <div className="flex flex-col sm:flex-row -m-2">
-            <div className="sm:w-1/3 p-2 max-w-xs">
+            <div className="sm:w-1/2 lg:w-1/3 p-2 max-w-xs">
               <FormField form={form} label="Amount" name="unit_amount" type="text" prefix="$" validateRule={{ required: true }} />
             </div>
-            <div className="sm:w-1/3 p-2 max-w-xs">
+            <div className="sm:w-1/2 lg:w-1/3 p-2 max-w-xs">
               <FormField form={form} label="Frequency" name="interval" type="select" options={[
                 { value: 'week', element: 'Every week' },
                 { value: 'month', element: 'Every month' },
