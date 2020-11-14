@@ -1335,12 +1335,6 @@ html, body, #root {
   background-color: rgba(203, 213, 224, var(--bg-opacity));
 }
 
-.bg-yellow-300 {
-  --bg-opacity: 1;
-  background-color: #faf089;
-  background-color: rgba(250, 240, 137, var(--bg-opacity));
-}
-
 .bg-yellow-400 {
   --bg-opacity: 1;
   background-color: #f6e05e;
@@ -1387,12 +1381,6 @@ html, body, #root {
   --bg-opacity: 1;
   background-color: #d6bcfa;
   background-color: rgba(214, 188, 250, var(--bg-opacity));
-}
-
-.bg-pink-300 {
-  --bg-opacity: 1;
-  background-color: #fbb6ce;
-  background-color: rgba(251, 182, 206, var(--bg-opacity));
 }
 
 .hover\:bg-green-700:hover {

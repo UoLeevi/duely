@@ -50,6 +50,22 @@ export const services_agreement_Q = {
   result: d => d?.markdowns[0].data
 };
 
+export const agency_stripe_account_update_url_Q = {
+  query: gql`
+    query($agency_id: ID!) {
+      agency(id: $agency_id ) {
+        stripe_account {
+          account_update_url {
+            url
+          }
+        }
+      }
+    }
+  `,
+  fetchPolicy: 'no-cache',
+  result: d => d?.agency?.stripe_account?.account_update_url?.url
+};
+
 export const current_user_agencies_Q = {
   query: gql`
     query {
@@ -64,6 +80,13 @@ export const current_user_agencies_Q = {
             agency {
               id
               name
+              theme {
+                id
+                image_logo {
+                  id
+                  data
+                }
+              }
               stripe_account {
                 id
                 id_ext
@@ -126,10 +149,8 @@ export const current_user_agencies_Q = {
   notifyOnNetworkStatusChange: true,
   result: d => d?.current_user?.memberships
     .map(m => ({
-      id: m.subdomain.agency.id,
-      name: m.subdomain.agency.name,
-      subdomain_name: m.subdomain.name,
-      stripe_account: m.subdomain.agency.stripe_account
+      ...m.subdomain.agency,
+      subdomain: m.subdomain
     }))
 };
 

@@ -4,11 +4,25 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.query = query;
-exports.subdomain_public_Q = exports.current_user_agencies_Q = exports.services_agreement_Q = exports.country_codes_Q = exports.current_user_Q = void 0;
+exports.subdomain_public_Q = exports.current_user_agencies_Q = exports.agency_stripe_account_update_url_Q = exports.services_agreement_Q = exports.country_codes_Q = exports.current_user_Q = void 0;
 
 var _client = require("@apollo/client");
 
 var _client2 = require("../apollo/client");
+
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+
+function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+
+function _templateObject6() {
+  var data = _taggedTemplateLiteral(["\n    query($subdomain_name: String!) {\n      subdomains(filter: { name: $subdomain_name }) {\n        id\n        name\n        agency {\n          id\n          name\n          theme {\n            id\n            image_logo {\n              id\n              data\n            }\n          }\n        }\n      }\n    }\n  "]);
+
+  _templateObject6 = function _templateObject6() {
+    return data;
+  };
+
+  return data;
+}
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -16,12 +30,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
-
-function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
-
 function _templateObject5() {
-  var data = _taggedTemplateLiteral(["\n    query($subdomain_name: String!) {\n      subdomains(filter: { name: $subdomain_name }) {\n        id\n        name\n        agency {\n          id\n          name\n          theme {\n            id\n            image_logo {\n              id\n              data\n            }\n          }\n        }\n      }\n    }\n  "]);
+  var data = _taggedTemplateLiteral(["\n    query {\n      current_user {\n        id\n        memberships {\n          id\n          access\n          subdomain {\n            id\n            name\n            agency {\n              id\n              name\n              theme {\n                id\n                image_logo {\n                  id\n                  data\n                }\n              }\n              stripe_account {\n                id\n                id_ext\n                business_profile {\n                  mcc\n                  name\n                  product_description\n                  support_address\n                  support_email\n                  support_phone\n                  support_url\n                  url\n                }\n                business_type\n                capabilities {\n                  card_payments\n                  transfers\n                }\n                requirements {\n                  current_deadline\n                  disabled_reason\n                  currently_due\n                  eventually_due\n                  past_due\n                  pending_verification\n                }\n                settings {\n                  branding {\n                    icon\n                    logo\n                    primary_color\n                    secondary_color\n                  }\n                }\n                charges_enabled\n                country\n                created\n                default_currency\n                details_submitted\n                email\n                payouts_enabled\n              }\n            }\n            memberships {\n              id\n              access\n              user {\n                id\n                name\n              }\n            }\n          }\n          user {\n            id\n          }\n        }\n      }\n    }\n  "]);
 
   _templateObject5 = function _templateObject5() {
     return data;
@@ -31,7 +41,7 @@ function _templateObject5() {
 }
 
 function _templateObject4() {
-  var data = _taggedTemplateLiteral(["\n    query {\n      current_user {\n        id\n        memberships {\n          id\n          access\n          subdomain {\n            id\n            name\n            agency {\n              id\n              name\n              stripe_account {\n                id\n                id_ext\n                business_profile {\n                  mcc\n                  name\n                  product_description\n                  support_address\n                  support_email\n                  support_phone\n                  support_url\n                  url\n                }\n                business_type\n                capabilities {\n                  card_payments\n                  transfers\n                }\n                requirements {\n                  current_deadline\n                  disabled_reason\n                  currently_due\n                  eventually_due\n                  past_due\n                  pending_verification\n                }\n                settings {\n                  branding {\n                    icon\n                    logo\n                    primary_color\n                    secondary_color\n                  }\n                }\n                charges_enabled\n                country\n                created\n                default_currency\n                details_submitted\n                email\n                payouts_enabled\n              }\n            }\n            memberships {\n              id\n              access\n              user {\n                id\n                name\n              }\n            }\n          }\n          user {\n            id\n          }\n        }\n      }\n    }\n  "]);
+  var data = _taggedTemplateLiteral(["\n    query($agency_id: ID!) {\n      agency(id: $agency_id ) {\n        stripe_account {\n          account_update_url {\n            url\n          }\n        }\n      }\n    }\n  "]);
 
   _templateObject4 = function _templateObject4() {
     return data;
@@ -146,25 +156,32 @@ var services_agreement_Q = {
   }
 };
 exports.services_agreement_Q = services_agreement_Q;
-var current_user_agencies_Q = {
+var agency_stripe_account_update_url_Q = {
   query: (0, _client.gql)(_templateObject4()),
+  fetchPolicy: 'no-cache',
+  result: function result(d) {
+    var _d$agency, _d$agency$stripe_acco, _d$agency$stripe_acco2;
+
+    return d === null || d === void 0 ? void 0 : (_d$agency = d.agency) === null || _d$agency === void 0 ? void 0 : (_d$agency$stripe_acco = _d$agency.stripe_account) === null || _d$agency$stripe_acco === void 0 ? void 0 : (_d$agency$stripe_acco2 = _d$agency$stripe_acco.account_update_url) === null || _d$agency$stripe_acco2 === void 0 ? void 0 : _d$agency$stripe_acco2.url;
+  }
+};
+exports.agency_stripe_account_update_url_Q = agency_stripe_account_update_url_Q;
+var current_user_agencies_Q = {
+  query: (0, _client.gql)(_templateObject5()),
   notifyOnNetworkStatusChange: true,
   result: function result(d) {
     var _d$current_user;
 
     return d === null || d === void 0 ? void 0 : (_d$current_user = d.current_user) === null || _d$current_user === void 0 ? void 0 : _d$current_user.memberships.map(function (m) {
-      return {
-        id: m.subdomain.agency.id,
-        name: m.subdomain.agency.name,
-        subdomain_name: m.subdomain.name,
-        stripe_account: m.subdomain.agency.stripe_account
-      };
+      return _objectSpread(_objectSpread({}, m.subdomain.agency), {}, {
+        subdomain: m.subdomain
+      });
     });
   }
 };
 exports.current_user_agencies_Q = current_user_agencies_Q;
 var subdomain_public_Q = {
-  query: (0, _client.gql)(_templateObject5()),
+  query: (0, _client.gql)(_templateObject6()),
   result: function result(d) {
     return d === null || d === void 0 ? void 0 : d.subdomains[0];
   }

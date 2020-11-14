@@ -1,8 +1,8 @@
-import BrandList from 'components/BrandList';
+import { BrandList } from './components';
 import TopBar from 'components/TopBar';
 import { Link } from 'react-router-dom';
 
-export default function Profile() {
+export default function ProfileHome() {
   return (
     <div className="page-container">
       <TopBar />

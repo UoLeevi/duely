@@ -2,10 +2,9 @@ import { useForm } from 'react-hook-form';
 import { FormButton, FormErrorInfo, Util } from '@duely/react';
 import { useMemo, useRef } from 'react';
 import { useModal } from 'hooks';
-import { FormField } from '@duely/react';
+import { FormField, useDynamicNavigation } from '@duely/react';
 import ServicesAgreement from 'components/ServicesAgreement';
 import { useQuery, country_codes_Q, useMutation, create_agency_M } from '@duely/client';
-import { Image } from 'components/Image';
 import useImage from 'hooks/useImage';
 import { BsCheck } from 'react-icons/bs';
 
@@ -48,8 +47,12 @@ export default function CreateBrandForm() {
     { hideModalRef: hideTosRef }
   );
 
+  const passAccessToken = useDynamicNavigation({ passAccessToken: true });
+
   if (state.data?.success) {
     const { agency, stripe_verification_url } = state.data;
+    const dashboard_url = `https://${agency.subdomain.name}.duely.app/dashboard`;
+
     return (
       <div className="flex flex-col space-y-4 items-center text-center">
         <div className="w-12 h-12 rounded-full bg-green-200 grid place-items-center">
@@ -59,7 +62,7 @@ export default function CreateBrandForm() {
         <p className="text-gray-600 font-medium">
           Next you can start setting up your services and <a href={stripe_verification_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600">verify your account on Stripe</a> to enable payments.
         </p>
-        <a href={`https://${agency.subdomain.name}.duely.app/dashboard`}><button className="mt-2 rounded-md bg-indigo-500 text-white px-12 py-3 font-medium">Go to dashboard</button></a>
+        <a href={dashboard_url} onClick={passAccessToken} className="mt-2 rounded-md bg-indigo-500 text-white px-12 py-3 font-medium">Go to dashboard</a>
       </div>
     );
   }

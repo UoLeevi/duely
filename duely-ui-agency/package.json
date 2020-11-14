@@ -30,8 +30,8 @@
   },
   "dependencies": {
     "@apollo/client": "^3.2.5",
-    "@duely/client": "0.0.18",
-    "@duely/react": "0.0.27",
+    "@duely/client": "0.0.23",
+    "@duely/react": "0.0.28",
     "@headlessui/react": "^0.2.0",
     "@tailwindcss/typography": "^0.2.0",
     "@testing-library/jest-dom": "^5.11.6",
