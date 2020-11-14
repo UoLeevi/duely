@@ -723,6 +723,12 @@ html, body, #root {
   margin-left: calc(1.5rem * calc(1 - var(--space-x-reverse)));
 }
 
+.space-y-8 > :not(template) ~ :not(template) {
+  --space-y-reverse: 0;
+  margin-top: calc(2rem * calc(1 - var(--space-y-reverse)));
+  margin-bottom: calc(2rem * var(--space-y-reverse));
+}
+
 .space-x-8 > :not(template) ~ :not(template) {
   --space-x-reverse: 0;
   margin-right: calc(2rem * var(--space-x-reverse));
@@ -1139,6 +1145,10 @@ html, body, #root {
   max-width: 42rem;
 }
 
+.max-w-screen-sm {
+  max-width: 640px;
+}
+
 .object-contain {
   object-fit: contain;
 }
@@ -1186,10 +1196,6 @@ html, body, #root {
   padding: 0.5rem;
 }
 
-.p-3 {
-  padding: 0.75rem;
-}
-
 .p-4 {
   padding: 1rem;
 }
@@ -1228,6 +1234,11 @@ html, body, #root {
   padding-right: 0.75rem;
 }
 
+.py-4 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
 .px-4 {
   padding-left: 1rem;
   padding-right: 1rem;
@@ -1243,9 +1254,9 @@ html, body, #root {
   padding-right: 1.5rem;
 }
 
-.px-8 {
-  padding-left: 2rem;
-  padding-right: 2rem;
+.px-10 {
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
 }
 
 .px-12 {
@@ -1682,6 +1693,20 @@ html, body, #root {
     line-height: 1.25rem;
   }
 
+  .sm\:p-2 {
+    padding: 0.5rem;
+  }
+
+  .sm\:py-6 {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .sm\:px-8 {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
   .sm\:w-1\/2 {
     width: 50%;
   }
@@ -1762,6 +1787,10 @@ html, body, #root {
     font-size: 1.5rem;
   }
 
+  .md\:p-3 {
+    padding: 0.75rem;
+  }
+
   .md\:px-3 {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
@@ -1792,6 +1821,10 @@ html, body, #root {
 }
 
 @media (min-width: 1280px) {
+  .xl\:max-w-screen-md {
+    max-width: 768px;
+  }
+
   .xl\:p-5 {
     padding: 1.25rem;
   }

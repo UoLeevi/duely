@@ -1,5 +1,5 @@
-import DashboardLayout from 'components/DashboardLayout';
 import { Route, Switch } from 'react-router-dom';
+import { DashboardLayout } from './components';
 import DashboardClients from './clients';
 import DashboardFiles from './files';
 import DashboardHome from './home';
