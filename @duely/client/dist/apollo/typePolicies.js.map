@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../src/apollo/typePolicies.js"],"names":["typePolicies"],"mappings":";;;;;;AAAA,IAAMA,YAAY,GAAG,EAArB;eAIeA,Y","sourcesContent":["const typePolicies = {\n\n};\n\nexport default typePolicies;\n"],"file":"typePolicies.js"}
