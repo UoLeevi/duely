@@ -1,0 +1,61 @@
+{
+  "name": "duely-checkout",
+  "version": "0.2.0",
+  "description": "Web server handling HTTP and javascript redirects for duely related to checkout.",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "./node_modules/.bin/babel src -d dist --source-maps --copy-files --no-copy-ignored",
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint src/**"
+  },
+  "babel": {
+    "plugins": [
+      "@babel/plugin-transform-async-to-generator",
+      "@babel/plugin-transform-regenerator",
+      [
+        "@babel/plugin-transform-runtime",
+        {
+          "helpers": true,
+          "regenerator": true
+        }
+      ]
+    ],
+    "presets": [
+      "@babel/preset-env"
+    ]
+  },
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "parserOptions": {
+      "ecmaVersion": 11,
+      "sourceType": "module"
+    },
+    "rules": {
+      "semi": "error",
+      "no-unused-vars": "off"
+    },
+    "env": {
+      "node": true,
+      "es6": true
+    }
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.12.5",
+    "apollo-server-express": "^2.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "graphql": "^15.4.0",
+    "graphql-request": "^3.3.0",
+    "validator": "^13.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.12.1",
+    "@babel/core": "^7.12.3",
+    "@babel/plugin-transform-async-to-generator": "^7.12.1",
+    "@babel/plugin-transform-regenerator": "^7.12.1",
+    "@babel/plugin-transform-runtime": "^7.12.1",
+    "@babel/preset-env": "^7.12.1",
+    "eslint": "^7.13.0"
+  }
+}
