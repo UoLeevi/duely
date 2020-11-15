@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.mutate = mutate;
-exports.create_agency_M = exports.start_sign_up_M = exports.start_password_reset_M = exports.verify_sign_up_M = exports.verify_password_reset_M = exports.log_out_M = exports.log_in_M = void 0;
+exports.create_price_M = exports.update_service_M = exports.create_service_M = exports.create_agency_M = exports.start_sign_up_M = exports.start_password_reset_M = exports.verify_sign_up_M = exports.verify_password_reset_M = exports.log_out_M = exports.log_in_M = void 0;
 
 var _client = require("@apollo/client");
 
@@ -19,6 +19,36 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
 
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+
+function _templateObject10() {
+  var data = _taggedTemplateLiteral(["\n    mutation($service_variant_id: ID!, $unit_amount: Int!, $currency: String!, $recurring_interval: String, $recurring_interval_count: Int, $status: String) {\n      create_price(service_variant_id: $service_variant_id, unit_amount: $unit_amount, currency: $currency, recurring_interval: $recurring_interval, recurring_interval_count: $recurring_interval_count, status: $status) {\n        success\n        message\n        price {\n          id\n          name\n          unit_amount\n          currency\n          type\n          recurring_interval\n          recurring_interval_count\n        }\n      }\n    }\n  "]);
+
+  _templateObject10 = function _templateObject10() {
+    return data;
+  };
+
+  return data;
+}
+
+function _templateObject9() {
+  var data = _taggedTemplateLiteral(["\n    mutation($service_id: ID!, $name: String, $description: String, $url_name: String, $duration: String, $default_price_id: ID, $status: String) {\n      update_service(service_id: $service_id, name: $name, description: $description, url_name: $url_name, duration: $duration, default_price_id: $default_price_id, status: $status) {\n        success\n        message\n        service {\n          id\n          name\n          url_name\n          default_variant {\n            id\n            name\n            description\n            duration\n            status\n            default_price {\n              id\n            }\n          }\n        }\n      }\n    }\n  "]);
+
+  _templateObject9 = function _templateObject9() {
+    return data;
+  };
+
+  return data;
+}
+
+function _templateObject8() {
+  var data = _taggedTemplateLiteral(["\n    mutation($agency_id: ID!, $name: String!, $description: String!, $url_name: String!, $duration: String, $status: String) {\n      create_service(agency_id: $agency_id, name: $name, description: $description, url_name: $url_name, duration: $duration, status: $status) {\n        success\n        message\n        service {\n          id\n          name\n          url_name\n          default_variant {\n            id\n            name\n            description\n            duration\n            status\n          }\n        }\n      }\n    }\n  "]);
+
+  _templateObject8 = function _templateObject8() {
+    return data;
+  };
+
+  return data;
+}
 
 function _templateObject7() {
   var data = _taggedTemplateLiteral(["\n    mutation($name: String!, $subdomain_name: String!, $country_code: String!, $image_logo: ImageInput!, $return_url: String!) {\n      create_agency(name: $name, subdomain_name: $subdomain_name, country_code: $country_code, image_logo: $image_logo, return_url: $return_url) {\n        stripe_verification_url\n        message\n        success\n        agency {\n          id\n          name\n          subdomain {\n            id\n            name\n          }\n        }\n      }\n    }\n  "]);
@@ -264,6 +294,27 @@ var create_agency_M = {
   result: function result(d) {
     return d['create_agency'];
   }
+};
+exports.create_agency_M = create_agency_M;
+var create_service_M = {
+  mutation: (0, _client.gql)(_templateObject8()),
+  result: function result(d) {
+    return d['create_service'];
+  }
+};
+exports.create_service_M = create_service_M;
+var update_service_M = {
+  mutation: (0, _client.gql)(_templateObject9()),
+  result: function result(d) {
+    return d['update_service'];
+  }
+};
+exports.update_service_M = update_service_M;
+var create_price_M = {
+  mutation: (0, _client.gql)(_templateObject10()),
+  result: function result(d) {
+    return d['create_price'];
+  }
 }; // createClient: {
 //   mutation: gql`
 //     mutation($agencyUuid: ID!, $name: String!, $emailAddress: String) {
@@ -352,5 +403,5 @@ var create_agency_M = {
 // },
 // };
 
-exports.create_agency_M = create_agency_M;
+exports.create_price_M = create_price_M;
 //# sourceMappingURL=index.js.map

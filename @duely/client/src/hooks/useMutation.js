@@ -54,12 +54,16 @@ export function useMutation(mutationDef, options) {
         setState(createCompletedState(res));
       }
 
+      return res;
+
     } catch (error) {
       setState(createErrorState(error));
 
       if (resetErrorMs > 0) {
         timeoutRef.current = setTimeout(() => setState(initialState), resetErrorMs);
       }
+
+      return error;
     }
   }, [mutationDef, resetErrorMs]);
 

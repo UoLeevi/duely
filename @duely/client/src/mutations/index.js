@@ -134,6 +134,78 @@ export const create_agency_M = {
   result: d => d['create_agency']
 }
 
+export const create_service_M = {
+  mutation: gql`
+    mutation($agency_id: ID!, $name: String!, $description: String!, $url_name: String!, $duration: String, $status: String) {
+      create_service(agency_id: $agency_id, name: $name, description: $description, url_name: $url_name, duration: $duration, status: $status) {
+        success
+        message
+        service {
+          id
+          name
+          url_name
+          default_variant {
+            id
+            name
+            description
+            duration
+            status
+          }
+        }
+      }
+    }
+  `,
+  result: d => d['create_service']
+}
+
+export const update_service_M = {
+  mutation: gql`
+    mutation($service_id: ID!, $name: String, $description: String, $url_name: String, $duration: String, $default_price_id: ID, $status: String) {
+      update_service(service_id: $service_id, name: $name, description: $description, url_name: $url_name, duration: $duration, default_price_id: $default_price_id, status: $status) {
+        success
+        message
+        service {
+          id
+          name
+          url_name
+          default_variant {
+            id
+            name
+            description
+            duration
+            status
+            default_price {
+              id
+            }
+          }
+        }
+      }
+    }
+  `,
+  result: d => d['update_service']
+}
+
+export const create_price_M = {
+  mutation: gql`
+    mutation($service_variant_id: ID!, $unit_amount: Int!, $currency: String!, $recurring_interval: String, $recurring_interval_count: Int, $status: String) {
+      create_price(service_variant_id: $service_variant_id, unit_amount: $unit_amount, currency: $currency, recurring_interval: $recurring_interval, recurring_interval_count: $recurring_interval_count, status: $status) {
+        success
+        message
+        price {
+          id
+          name
+          unit_amount
+          currency
+          type
+          recurring_interval
+          recurring_interval_count
+        }
+      }
+    }
+  `,
+  result: d => d['create_price']
+}
+
 // createClient: {
 //   mutation: gql`
 //     mutation($agencyUuid: ID!, $name: String!, $emailAddress: String) {

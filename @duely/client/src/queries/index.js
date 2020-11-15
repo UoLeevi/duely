@@ -177,6 +177,35 @@ export const subdomain_public_Q = {
   result: d => d?.subdomains[0]
 };
 
+export const agency_services_Q = {
+  query: gql`
+    query($agency_id: ID!) {
+      services(filter: { agency_id: $agency_id }) {
+        id
+        name
+        url_name
+        default_variant {
+          id
+          name
+          description
+          duration
+          status
+          default_price {
+            id
+            name
+            unit_amount
+            currency
+            type
+            recurring_interval
+            recurring_interval_count
+          }
+        }
+      }
+    }
+  `,
+  result: d => d?.services
+};
+
 // agencies: {
 //   query: gql`
 //     query {

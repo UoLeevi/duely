@@ -1,6 +1,6 @@
 {
   "name": "duely-checkout",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Web server handling HTTP and javascript redirects for duely related to checkout.",
   "main": "src/index.js",
   "scripts": {

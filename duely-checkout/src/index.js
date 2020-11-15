@@ -67,12 +67,20 @@ async function main() {
   const app = express();
   app.set('trust proxy', true);
   app.use(cors());
-  app.get('/checkout/:subdomain/:service_url_name', async (req, res) => {
+  app.get('/checkout/:service_url_name', async (req, res) => {
     let agency_id;
+
+    const domain = req.hostname;
+
+    if (!domain.endsWith('.duely.app')) {
+      throw new Error("Invalid reverse proxy configuration.");
+    }
+
+    const subdomain_name = domain.split('.duely.app')[0];
 
     try {
       const { subdomains } = await client.request(
-        gql_subdomain, { subdomain_name: req.params.subdomain });
+        gql_subdomain, { subdomain_name });
 
       if (subdomains.length != 1) {
         res.sendStatus(404);

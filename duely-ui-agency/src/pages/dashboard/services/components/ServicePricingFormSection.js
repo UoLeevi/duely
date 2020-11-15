@@ -15,7 +15,7 @@ export function ServicePricingFormSection({ form }) {
         <>
           <div className="flex flex-col sm:flex-row -m-2">
             <div className="sm:w-1/2 lg:w-1/3 p-2 max-w-xs">
-              <FormField form={form} label="Price of service" name="unit_amount" type="text" prefix="$" validateRule={{ required: true }} />
+              <FormField form={form} label="Price of service" name="unit_amount_hundred_cents" type="text" prefix="$" validateRule={{ required: true }} />
             </div>
           </div>
         </>
@@ -25,10 +25,10 @@ export function ServicePricingFormSection({ form }) {
         <>
           <div className="flex flex-col sm:flex-row -m-2">
             <div className="sm:w-1/2 lg:w-1/3 p-2 max-w-xs">
-              <FormField form={form} label="Amount per month" name="unit_amount" type="text" prefix="$" validateRule={{ required: true }} />
+              <FormField form={form} label="Amount per month" name="unit_amount_hundred_cents" type="text" prefix="$" validateRule={{ required: true }} />
             </div>
             <div className="sm:w-1/2 lg:w-1/3 p-2 max-w-xs">
-              <FormField form={form} label="Number of monthly payments" name="interval_count" type="number" validateRule={{ required: true }} />
+              <FormField form={form} label="Number of monthly payments" name="recurring_interval_count" type="number" validateRule={{ required: true }} />
             </div>
           </div>
         </>
@@ -38,10 +38,10 @@ export function ServicePricingFormSection({ form }) {
         <>
           <div className="flex flex-col sm:flex-row -m-2">
             <div className="sm:w-1/2 lg:w-1/3 p-2 max-w-xs">
-              <FormField form={form} label="Amount" name="unit_amount" type="text" prefix="$" validateRule={{ required: true }} />
+              <FormField form={form} label="Amount" name="unit_amount_hundred_cents" type="text" prefix="$" validateRule={{ required: true }} />
             </div>
             <div className="sm:w-1/2 lg:w-1/3 p-2 max-w-xs">
-              <FormField form={form} label="Frequency" name="interval" type="select" options={[
+              <FormField form={form} label="Frequency" name="recurring_interval" type="select" options={[
                 { value: 'week', element: 'Every week' },
                 { value: 'month', element: 'Every month' },
                 { value: 'year', element: 'Every year' }

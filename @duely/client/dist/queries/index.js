@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.query = query;
-exports.subdomain_public_Q = exports.current_user_agencies_Q = exports.agency_stripe_account_update_url_Q = exports.services_agreement_Q = exports.country_codes_Q = exports.current_user_Q = void 0;
+exports.agency_services_Q = exports.subdomain_public_Q = exports.current_user_agencies_Q = exports.agency_stripe_account_update_url_Q = exports.services_agreement_Q = exports.country_codes_Q = exports.current_user_Q = void 0;
 
 var _client = require("@apollo/client");
 
@@ -13,6 +13,16 @@ var _client2 = require("../apollo/client");
 function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
 
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+
+function _templateObject7() {
+  var data = _taggedTemplateLiteral(["\n    query($agency_id: ID!) {\n      services(filter: { agency_id: $agency_id }) {\n        id\n        name\n        url_name\n        default_variant {\n          id\n          name\n          description\n          duration\n          status\n          default_price {\n            id\n            name\n            unit_amount\n            currency\n            type\n            recurring_interval\n            recurring_interval_count\n          }\n        }\n      }\n    }\n  "]);
+
+  _templateObject7 = function _templateObject7() {
+    return data;
+  };
+
+  return data;
+}
 
 function _templateObject6() {
   var data = _taggedTemplateLiteral(["\n    query($subdomain_name: String!) {\n      subdomains(filter: { name: $subdomain_name }) {\n        id\n        name\n        agency {\n          id\n          name\n          theme {\n            id\n            image_logo {\n              id\n              data\n            }\n          }\n        }\n      }\n    }\n  "]);
@@ -184,6 +194,13 @@ var subdomain_public_Q = {
   query: (0, _client.gql)(_templateObject6()),
   result: function result(d) {
     return d === null || d === void 0 ? void 0 : d.subdomains[0];
+  }
+};
+exports.subdomain_public_Q = subdomain_public_Q;
+var agency_services_Q = {
+  query: (0, _client.gql)(_templateObject7()),
+  result: function result(d) {
+    return d === null || d === void 0 ? void 0 : d.services;
   }
 }; // agencies: {
 //   query: gql`
@@ -548,5 +565,5 @@ var subdomain_public_Q = {
 //     .map(edge => edge.node)
 // }
 
-exports.subdomain_public_Q = subdomain_public_Q;
+exports.agency_services_Q = agency_services_Q;
 //# sourceMappingURL=index.js.map
