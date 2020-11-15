@@ -8783,7 +8783,7 @@ ALTER TABLE ONLY application_.image_
 --
 
 ALTER TABLE ONLY application_.price_
-    ADD CONSTRAINT price__service_variant_uuid__fkey FOREIGN KEY (service_variant_uuid_) REFERENCES application_.service_variant_(uuid_);
+    ADD CONSTRAINT price__service_variant_uuid__fkey FOREIGN KEY (service_variant_uuid_) REFERENCES application_.service_variant_(uuid_) ON DELETE CASCADE;
 
 
 --

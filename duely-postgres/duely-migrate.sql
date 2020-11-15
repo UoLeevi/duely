@@ -14,16 +14,9 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CALL internal_.drop_auditing_('application_.service_variant_');
-ALTER TABLE application_.service_variant_ ALTER COLUMN default_price_uuid_ DROP NOT NULL;
-CALL internal_.setup_auditing_('application_.service_variant_');
-
-CREATE OR REPLACE FUNCTION application_.price_type_(_recurring_interval text) RETURNS text
-LANGUAGE sql IMMUTABLE
-AS $$
-    SELECT CASE WHEN _recurring_interval IS NULL THEN 'one_time' ELSE 'recurring' END;
-$$;
-
+ALTER TABLE ONLY application_.price_
+    DROP CONSTRAINT price__service_variant_uuid__fkey,
+    ADD CONSTRAINT price__service_variant_uuid__fkey FOREIGN KEY (service_variant_uuid_) REFERENCES application_.service_variant_(uuid_) ON DELETE CASCADE;
 
 -- CREATE OR REPLACE FUNCTION policy_.agent_can_query_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
 --     LANGUAGE plpgsql SECURITY DEFINER
