@@ -168,29 +168,18 @@ export const Service = {
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource, deleteResource }) => {
-              const service = await queryResource(service_id);
+            return await withSession(async ({ queryResourceAll, deleteResource }) => {
+              const service_variants = await queryResourceAll('service variant', { service_id });
+              const stripe_product_ids = service_variants.map(v => v.stripe_id_ext);
+              const service = await deleteResource(service_id);
 
-              if (service == null) {
-                return {
-                  // error
-                  success: false,
-                  message: 'Service not found',
-                  type: 'ServiceMutationResult'
-                };
-              }
-
-              let service_variant;
-
-              if (service.default_variant_id) {
-                service_variant = deleteResource(service.default_variant_id);
-              }
-
-              await deleteResource(service_id);
-
-              if (service.default_variant_id) {
-                // delete product from stripe
-                const deleted = await stripe.products.del(service_variant.stripe_id_ext);
+              for (const stripe_product_id of stripe_product_ids) {
+                // delete or deactivate product from stripe
+                try {
+                  await stripe.products.del(stripe_product_id);
+                } catch {
+                  await stripe.products.update(stripe_product_id, { active: false });
+                }
               }
 
               // success

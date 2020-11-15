@@ -8815,7 +8815,7 @@ ALTER TABLE ONLY application_.service_
 --
 
 ALTER TABLE ONLY application_.service_
-    ADD CONSTRAINT service__default_variant_uuid__fkey FOREIGN KEY (default_variant_uuid_) REFERENCES application_.service_variant_(uuid_);
+    ADD CONSTRAINT service__default_variant_uuid__fkey FOREIGN KEY (default_variant_uuid_) REFERENCES application_.service_variant_(uuid_) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -8879,7 +8879,7 @@ ALTER TABLE ONLY application_.service_step_payment_
 --
 
 ALTER TABLE ONLY application_.service_variant_
-    ADD CONSTRAINT service_variant__default_price_uuid__fkey FOREIGN KEY (default_price_uuid_) REFERENCES application_.price_(uuid_);
+    ADD CONSTRAINT service_variant__default_price_uuid__fkey FOREIGN KEY (default_price_uuid_) REFERENCES application_.price_(uuid_) ON DELETE SET NULL;
 
 
 --
@@ -8911,7 +8911,7 @@ ALTER TABLE ONLY application_.service_variant_
 --
 
 ALTER TABLE ONLY application_.service_variant_
-    ADD CONSTRAINT service_variant__service_uuid__fkey FOREIGN KEY (service_uuid_) REFERENCES application_.service_(uuid_);
+    ADD CONSTRAINT service_variant__service_uuid__fkey FOREIGN KEY (service_uuid_) REFERENCES application_.service_(uuid_) ON DELETE CASCADE;
 
 
 --

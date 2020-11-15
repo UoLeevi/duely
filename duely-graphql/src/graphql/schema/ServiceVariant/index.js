@@ -146,8 +146,12 @@ export const ServiceVariant = {
                 };
               }
 
-              // delete product from stripe
-              const deleted = await stripe.products.del(service_variant.stripe_id_ext);
+              // delete or deactivate product from stripe
+              try {
+                await stripe.products.del(service_variant.stripe_id_ext);
+              } catch {
+                await stripe.products.update(service_variant.stripe_id_ext, { active: false });
+              }
 
               // success
               return {

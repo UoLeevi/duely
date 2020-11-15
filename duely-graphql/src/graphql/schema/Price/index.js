@@ -156,6 +156,13 @@ export const Price = {
           return await withConnection(context, async withSession => {
             return await withSession(async ({ deleteResource }) => {
               const price = await deleteResource(price_id);
+
+              try {
+                // try deactivate price at stripe
+                await stripe.prices.update(price.stripe_id_ext, { active: false });
+              } catch {
+                // ignore error
+              }
               
               if (price == null) {
                 return {
