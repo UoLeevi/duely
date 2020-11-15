@@ -32,8 +32,8 @@ export const ServiceVariant = {
     }
 
     extend type Mutation {
-      create_service_variant(service_id: ID!, name: String!, description: String, duration: String, status: String): ServiceVariantMutationResult!
-      update_service_variant(service_variant_id: ID!, name: String, description: String, duration: String, default_price_id: ID, status: String): ServiceVariantMutationResult!
+      create_service_variant(service_id: ID!, name: String!, description: String, duration: String, markdown_description_id: ID, image_logo_id: ID, image_hero_id: ID, status: String): ServiceVariantMutationResult!
+      update_service_variant(service_variant_id: ID!, name: String, description: String, duration: String, default_price_id: ID, markdown_description_id: ID, image_logo_id: ID, image_hero_id: ID, status: String): ServiceVariantMutationResult!
       delete_service_variant(service_variant_id: ID!): ServiceVariantMutationResult!
     }
 

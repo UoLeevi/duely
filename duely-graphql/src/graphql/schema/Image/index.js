@@ -57,6 +57,43 @@ export const Image = {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
+        // validate image
+
+        if (!validator.isDataURI(args.data))
+          return {
+            success: false,
+            message: `Image data should be encoded as a data URL.`,
+            type: 'ImageMutationResult'
+          };
+
+        if (!args.data.startsWith('data:image/jpeg;base64,')
+          && !args.data.startsWith('data:image/png;base64,'))
+          return {
+            success: false,
+            message: `Image should be either a JPEG or PNG`,
+            type: 'ImageMutationResult'
+          };
+
+        if (!validator.isByteLength(args.data, { max: Math.round(512000 / 4 * 3) }))
+          return {
+            success: false,
+            message: `Image max size is 512KB.`,
+            type: 'ImageMutationResult'
+          };
+
+        let image_buffer;
+
+        try {
+          const image_base64 = args.data.split(',')[1];
+          image_buffer = Buffer.from(image_base64, 'base64');
+        } catch {
+          return {
+            success: false,
+            message: `Unable to read image file.`,
+            type: 'ImageMutationResult'
+          };
+        }
+
         try {
           return await withConnection(context, async withSession => {
             return await withSession(async ({ createResource }) => {
@@ -83,6 +120,45 @@ export const Image = {
       async update_image(obj, { image_id, ...args }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
+
+        if (args.data) {
+          // validate image
+
+          if (!validator.isDataURI(args.data))
+            return {
+              success: false,
+              message: `Image data should be encoded as a data URL.`,
+              type: 'ImageMutationResult'
+            };
+
+          if (!args.data.startsWith('data:image/jpeg;base64,')
+            && !args.data.startsWith('data:image/png;base64,'))
+            return {
+              success: false,
+              message: `Image should be either a JPEG or PNG`,
+              type: 'ImageMutationResult'
+            };
+
+          if (!validator.isByteLength(args.data, { max: Math.round(512000 / 4 * 3) }))
+            return {
+              success: false,
+              message: `Image max size is 512KB.`,
+              type: 'ImageMutationResult'
+            };
+
+          let image_buffer;
+
+          try {
+            const image_base64 = args.data.split(',')[1];
+            image_buffer = Buffer.from(image_base64, 'base64');
+          } catch {
+            return {
+              success: false,
+              message: `Unable to read image file.`,
+              type: 'ImageMutationResult'
+            };
+          }
+        }
 
         try {
           return await withConnection(context, async withSession => {

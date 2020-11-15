@@ -31,8 +31,8 @@ export const Service = {
     }
 
     extend type Mutation {
-      create_service(agency_id: ID!, name: String!, url_name: String!, description: String, duration: String, status: String): ServiceMutationResult!
-      update_service(service_id: ID!, name: String, url_name: String, description: String, duration: String, status: String): ServiceMutationResult!
+      create_service(agency_id: ID!, name: String!, url_name: String!, description: String, duration: String, markdown_description_id: ID, image_logo_id: ID, image_hero_id: ID, status: String): ServiceMutationResult!
+      update_service(service_id: ID!, name: String, url_name: String, description: String, duration: String, markdown_description_id: ID, image_logo_id: ID, image_hero_id: ID, default_price_id: ID, status: String): ServiceMutationResult!
       delete_service(service_id: ID!): ServiceMutationResult!
     }
 
