@@ -49,7 +49,7 @@ spec:
     http:
       paths:
       - path: /checkout
-        pathType: Prefix
+        # pathType: Prefix
         backend:
           serviceName: duely-checkout-service
           servicePort: 8080
