@@ -146,6 +146,19 @@ CREATE TYPE public.verification_status_ AS ENUM (
 ALTER TYPE public.verification_status_ OWNER TO postgres;
 
 --
+-- Name: price_type_(text); Type: FUNCTION; Schema: application_; Owner: postgres
+--
+
+CREATE FUNCTION application_.price_type_(_recurring_interval text) RETURNS text
+    LANGUAGE sql IMMUTABLE
+    AS $$
+    SELECT CASE _recurring_interval WHEN NULL THEN 'one_time' ELSE 'recurring' END;
+$$;
+
+
+ALTER FUNCTION application_.price_type_(_recurring_interval text) OWNER TO postgres;
+
+--
 -- Name: assign_subdomain_owner_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -3649,6 +3662,25 @@ $$;
 ALTER FUNCTION operation_.update_resource_(_id text, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: agent_can_query_price_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.agent_can_query_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
+    RETURN '{uuid_, service_variant_uuid_, stripe_id_ext_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.agent_can_query_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: agent_can_query_service_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3676,7 +3708,7 @@ CREATE FUNCTION policy_.agent_can_query_service_variant_(_resource_definition se
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, service_uuid_, name_, status_, description_, duration_, price_, currency_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, service_uuid_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3782,6 +3814,29 @@ $$;
 ALTER FUNCTION policy_.anyone_can_query_basic_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: anyone_can_query_live_price_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_query_live_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT status_ = 'live'
+    FROM application_.price_
+    WHERE uuid_ = _resource.uuid_
+  ) THEN
+    RETURN '{uuid_, service_variant_uuid_, stripe_id_ext_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_query_live_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: anyone_can_query_live_service_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3817,7 +3872,7 @@ BEGIN
     FROM application_.service_variant_
     WHERE uuid_ = _resource.uuid_
   ) THEN
-    RETURN '{uuid_, service_uuid_, name_, status_, description_, duration_, price_, currency_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, service_uuid_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4220,6 +4275,25 @@ $$;
 ALTER FUNCTION policy_.owner_can_change_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_price_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_price_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_price_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: owner_can_change_service_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4247,7 +4321,7 @@ CREATE FUNCTION policy_.owner_can_change_service_variant_(_resource_definition s
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{name_, status_, description_, duration_, price_, currency_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4364,6 +4438,28 @@ $$;
 ALTER FUNCTION policy_.owner_can_create_markdown_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: owner_can_create_price_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_price_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
+    RETURN '{service_variant_uuid_, stripe_id_ext_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_price_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: owner_can_create_service_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4397,7 +4493,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{service_uuid_, name_, status_, description_, duration_, price_, currency_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{service_uuid_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5513,6 +5609,27 @@ CREATE VIEW application_.password_reset_ AS
 ALTER TABLE application_.password_reset_ OWNER TO postgres;
 
 --
+-- Name: price_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.price_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    service_variant_uuid_ uuid NOT NULL,
+    stripe_id_ext_ text NOT NULL,
+    type_ text GENERATED ALWAYS AS (application_.price_type_(recurring_interval_)) STORED,
+    unit_amount_ integer NOT NULL,
+    currency_ text NOT NULL,
+    recurring_interval_ text,
+    recurring_interval_count_ integer,
+    status_ text DEFAULT 'draft'::text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.price_ OWNER TO postgres;
+
+--
 -- Name: service_step_confirmation_by_agency_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
@@ -5591,10 +5708,10 @@ CREATE TABLE application_.service_variant_ (
     status_ text DEFAULT 'draft'::text NOT NULL,
     description_ text,
     duration_ text,
-    price_ integer,
-    currency_ text,
     image_logo_uuid_ uuid,
     image_hero_uuid_ uuid,
+    default_price_uuid_ uuid NOT NULL,
+    markdown_description_uuid_ uuid,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -5682,6 +5799,28 @@ CREATE TABLE application__audit_.client_ (
 
 
 ALTER TABLE application__audit_.client_ OWNER TO postgres;
+
+--
+-- Name: price_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.price_ (
+    uuid_ uuid,
+    service_variant_uuid_ uuid,
+    stripe_id_ext_ text,
+    type_ text,
+    unit_amount_ integer,
+    currency_ text,
+    recurring_interval_ text,
+    recurring_interval_count_ integer,
+    status_ text,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.price_ OWNER TO postgres;
 
 --
 -- Name: service_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -5804,10 +5943,10 @@ CREATE TABLE application__audit_.service_variant_ (
     status_ text,
     description_ text,
     duration_ text,
-    price_ integer,
-    currency_ text,
     image_logo_uuid_ uuid,
     image_hero_uuid_ uuid,
+    default_price_uuid_ uuid,
+    markdown_description_uuid_ uuid,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -6396,6 +6535,11 @@ d29e82dd-1151-4951-bac5-38051474a9b1	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy
 21a0e344-7b24-4f76-b267-363419f490d3	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.logged_in_user_can_query_theme_(security_.resource_definition_,application_.resource_)	query	0c06c7e3-7cdf-4bb1-b956-6fe90ab46a6f
 fd641c3d-4052-49d5-96a3-1f83dc5fe3a4	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.anyone_can_query_subdomain_(security_.resource_definition_,application_.resource_)	query	\N
 3bd8acaf-e137-4d29-ac84-6c9ab020184e	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_query_name_(security_.resource_definition_,application_.resource_)	query	fd641c3d-4052-49d5-96a3-1f83dc5fe3a4
+badf0fcf-f502-4165-9353-197af5fde1ad	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.anyone_can_query_live_price_(security_.resource_definition_,application_.resource_)	query	\N
+7a2b81c8-1be0-47dd-b290-8be36a35e4d9	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.agent_can_query_price_(security_.resource_definition_,application_.resource_)	query	badf0fcf-f502-4165-9353-197af5fde1ad
+96a65b10-7da0-4a81-a52e-a7b8e67e0977	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.owner_can_create_price_(security_.resource_definition_,jsonb)	create	\N
+4dfc7859-04a2-450d-ad13-28617f157549	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.owner_can_change_price_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
+57510ccd-6144-477e-b572-392c8f4948c9	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
@@ -6492,6 +6636,7 @@ edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_re
 d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,url_name_,agency_uuid_}
 d8f70962-229d-49eb-a99e-7c35a55719d5	md	markdown	application_.markdown_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}
 b54431c5-bbc4-47b6-9810-0a627e49cfe5	member	membership	application_.membership_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,user_uuid_,subdomain_uuid_,access_}
+f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,service_variant_uuid_}
 \.
 
 
@@ -6742,6 +6887,30 @@ ALTER TABLE ONLY application_.image_
 
 ALTER TABLE ONLY application_.markdown_
     ADD CONSTRAINT markdown__name__agency_uuid__key UNIQUE (name_, agency_uuid_);
+
+
+--
+-- Name: markdown_ markdown__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.markdown_
+    ADD CONSTRAINT markdown__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: price_ price__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.price_
+    ADD CONSTRAINT price__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: price_ price__stripe_id_ext__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.price_
+    ADD CONSTRAINT price__stripe_id_ext__key UNIQUE (stripe_id_ext_);
 
 
 --
@@ -7209,6 +7378,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.client
 
 
 --
+-- Name: price_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.price_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
 -- Name: service_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7398,6 +7574,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.mar
 
 
 --
+-- Name: price_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.price_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: service_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7437,6 +7620,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.client_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: price_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.price_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -7629,6 +7819,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.mar
 
 
 --
+-- Name: price_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.price_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: service_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7668,6 +7865,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.client_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: price_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.price_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -7860,6 +8064,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.mar
 
 
 --
+-- Name: price_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.price_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
 -- Name: service_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7899,6 +8110,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agenc
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.client_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: price_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.price_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
@@ -8551,6 +8769,14 @@ ALTER TABLE ONLY application_.image_
 
 
 --
+-- Name: price_ price__service_variant_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.price_
+    ADD CONSTRAINT price__service_variant_uuid__fkey FOREIGN KEY (service_variant_uuid_) REFERENCES application_.service_variant_(uuid_);
+
+
+--
 -- Name: resource_ resource__definition_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -8639,6 +8865,14 @@ ALTER TABLE ONLY application_.service_step_payment_
 
 
 --
+-- Name: service_variant_ service_variant__default_price_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_variant_
+    ADD CONSTRAINT service_variant__default_price_uuid__fkey FOREIGN KEY (default_price_uuid_) REFERENCES application_.price_(uuid_);
+
+
+--
 -- Name: service_variant_ service_variant__image_hero_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -8652,6 +8886,14 @@ ALTER TABLE ONLY application_.service_variant_
 
 ALTER TABLE ONLY application_.service_variant_
     ADD CONSTRAINT service_variant__image_logo_uuid__fkey FOREIGN KEY (image_logo_uuid_) REFERENCES application_.image_(uuid_);
+
+
+--
+-- Name: service_variant_ service_variant__markdown_description_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_variant_
+    ADD CONSTRAINT service_variant__markdown_description_uuid__fkey FOREIGN KEY (markdown_description_uuid_) REFERENCES application_.markdown_(uuid_);
 
 
 --
