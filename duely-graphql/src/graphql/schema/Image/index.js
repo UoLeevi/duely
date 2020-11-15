@@ -1,5 +1,5 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../utils';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
@@ -47,20 +47,7 @@ export const Image = {
   `,
   resolvers: {
     Image: {
-      async agency(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource(source.agency_id);
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      }
+      ...createResolverForReferencedResource({ name: 'agency' }),
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

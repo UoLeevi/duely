@@ -61,6 +61,7 @@ import { Markdown } from './Markdown';
 import { Membership } from './Membership';
 import { Date } from './Date';
 import { Theme } from './Theme';
+import { Price } from './Price';
 
 const types = [
   {
@@ -83,6 +84,7 @@ const types = [
   Country,
   User,
   Agency,
+  Price,
   StripeAccount,
   Service,
   ServiceVariant,
@@ -93,7 +95,6 @@ const types = [
   Theme,
   Date
   // AcceptInviteResult,
-  // // Agency,
   // AgencyClientsConnection,
   // AgencyClientsEdge,
   // AgencyInvitesConnection,
@@ -105,11 +106,9 @@ const types = [
   // BeginVisitResult,
   // Connection,
   // Client,
-  // // CreateAgencyResult,
   // CreateClientResult,
   // CreateServiceResult,
   // CreateServiceStepResult,
-  // Date,
   // DeclineInviteResult,
   // DeleteResult,
   // Edge,
@@ -117,7 +116,6 @@ const types = [
   // EditImageResult,
   // EditServiceResult,
   // EndVisitResult,
-  // Image,
   // Invite,
   // InviteUserResult,
   // Mutation,
@@ -127,13 +125,11 @@ const types = [
   // Service,
   // ServiceStep,
   // SimpleResult,
-  // Subdomain,
   // Subject,
   // SubjectAgenciesConnection,
   // SubjectAgenciesEdge,
   // SubjectInvitesConnection,
   // SubjectInvitesEdge,
-  // Theme,
   // Subscription
 ];
 

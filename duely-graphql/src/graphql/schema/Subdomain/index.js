@@ -1,5 +1,5 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../utils';
 import { AuthenticationError } from 'apollo-server-core';
 
 const resource = {
@@ -27,34 +27,8 @@ export const Subdomain = {
   `,
   resolvers: {
     Subdomain: {
-      async agency(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource('agency', { subdomain_id: source.id });
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      },
-      async memberships(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResourceAll }) => {
-              return await queryResourceAll('membership', { subdomain_id: source.id });
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      }
+      ...createResolverForReferencedResource({ name: 'agency', reverse: true, column_name: 'subdomain_id' }),
+      ...createResolverForReferencedResourceAll({ name: 'memberships', resource_name: 'membership', column_name: 'subdomain_id' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

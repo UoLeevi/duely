@@ -152,7 +152,7 @@ ALTER TYPE public.verification_status_ OWNER TO postgres;
 CREATE FUNCTION application_.price_type_(_recurring_interval text) RETURNS text
     LANGUAGE sql IMMUTABLE
     AS $$
-    SELECT CASE _recurring_interval WHEN NULL THEN 'one_time' ELSE 'recurring' END;
+    SELECT CASE WHEN _recurring_interval IS NULL THEN 'one_time' ELSE 'recurring' END;
 $$;
 
 
@@ -5710,7 +5710,7 @@ CREATE TABLE application_.service_variant_ (
     duration_ text,
     image_logo_uuid_ uuid,
     image_hero_uuid_ uuid,
-    default_price_uuid_ uuid NOT NULL,
+    default_price_uuid_ uuid,
     markdown_description_uuid_ uuid,
     stripe_id_ext_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,

@@ -1,5 +1,5 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../utils';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 import stripe from '../../../stripe';
@@ -65,34 +65,8 @@ export const Agency = {
           throw new Error(error.message);
         }
       },
-      async subdomain(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource(source.subdomain_id);
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      },
-      async theme(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource('theme', { agency_id: source.id });
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      }
+      ...createResolverForReferencedResource({ name: 'subdomain' }),
+      ...createResolverForReferencedResource({ name: 'theme', reverse: true, column_name: 'agency_id' }),
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

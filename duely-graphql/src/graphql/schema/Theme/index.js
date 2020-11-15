@@ -1,5 +1,5 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../utils';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 import stripe from '../../../stripe';
@@ -47,48 +47,9 @@ export const Theme = {
   `,
   resolvers: {
     Theme: {
-      async agency(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource(source.agency_id);
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      },
-      async image_logo(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource(source.image_logo_id);
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      },
-      async image_hero(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource(source.image_hero_id);
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      }
+      ...createResolverForReferencedResource({ name: 'agency' }),
+      ...createResolverForReferencedResource({ name: 'image_logo' }),
+      ...createResolverForReferencedResource({ name: 'image_hero' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

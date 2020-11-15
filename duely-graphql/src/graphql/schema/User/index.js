@@ -1,5 +1,5 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResourceAll } from '../../utils';
 import { AuthenticationError } from 'apollo-server-core';
 
 const resource = {
@@ -29,20 +29,7 @@ export const User = {
   `,
   resolvers: {
     User: {
-      async memberships(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResourceAll }) => {
-              return await queryResourceAll('membership', { user_id: source.id });
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      }
+      ...createResolverForReferencedResourceAll({ name: 'memberships', resource_name: 'membership', column_name: 'user_id' }),
     },
     Query: {
       async current_user(source, args, context, info) {

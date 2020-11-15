@@ -1,7 +1,8 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../utils';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
+import stripe from '../../../stripe';
 
 const resource = {
   name: 'service'
@@ -30,8 +31,9 @@ export const Service = {
     }
 
     extend type Mutation {
-      create_service(agency_id: ID!, name: String!, url_name: String!, description: String, duration: String, price: Int, currency: String, status: String): ServiceMutationResult!
-      update_service(service_id: ID!, name: String, url_name: String, description: String, duration: String, price: Int, currency: String, status: String): ServiceMutationResult!
+      create_service(agency_id: ID!, name: String!, url_name: String!, description: String, duration: String, status: String): ServiceMutationResult!
+      update_service(service_id: ID!, name: String, url_name: String, description: String, duration: String, status: String): ServiceMutationResult!
+      delete_service(service_id: ID!): ServiceMutationResult!
     }
 
     type ServiceMutationResult implements MutationResult {
@@ -42,34 +44,8 @@ export const Service = {
   `,
   resolvers: {
     Service: {
-      async agency(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource(source.agency_id);
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      },
-      async default_variant(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource(source.default_variant_id);
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      }
+      ...createResolverForReferencedResource({ name: 'agency' }),
+      ...createResolverForReferencedResource({ name: 'default_variant' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
@@ -89,12 +65,25 @@ export const Service = {
         try {
           return await withConnection(context, async withSession => {
             return await withSession(async ({ createResource, updateResource }) => {
+              const { status, description } = args;
+
+              const stripe_product_args = {
+                name,
+                description,
+                active: status === 'live'
+              };
+
+              // create product at stripe
+              const stripe_product = await stripe.products.create(stripe_product_args);
+
               // create service resource
               const serviceCreationOptionalArgs = {};
               if (Object.prototype.hasOwnProperty.call(args, 'status')) serviceCreationOptionalArgs.status = args.status;
               const service = await createResource('service', { name, url_name, agency_id, ...serviceCreationOptionalArgs });
+
               // create service variant resource
-              const service_variant = await createResource('service variant', { name, service_id: service.id, ...args });
+              const service_variant = await createResource('service variant', { name, service_id: service.id, ...args, stripe_id_ext: stripe_product.id });
+
               // set service variant as default
               service.default_variant_id = service_variant.id;
               await updateResource(service.id, { default_variant_id: service.default_variant_id });
@@ -140,9 +129,20 @@ export const Service = {
                 ? updateResource(service_id, serviceUpdates)
                 : queryResource(service_id));
 
-              // update service variant resource
               if (Object.keys(args).length > 0) {
-                await updateResource(service.default_variant_id, args);
+                // update service variant resource
+                const service_variant = await updateResource(service.default_variant_id, args);
+
+                const { status, name, description } = service_variant;
+
+                const stripe_product_args = {
+                  name,
+                  description,
+                  active: status === 'live'
+                };
+
+                // update product at stripe
+                const stripe_product = await stripe.products.update(service_variant.stripe_id_ext, stripe_product_args);
               }
 
               // success
@@ -159,6 +159,54 @@ export const Service = {
             success: false,
             message: error.message,
             type: 'ServiceMutationResult'
+          };
+        }
+      },
+      async delete_service(obj, { service_id }, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        try {
+          return await withConnection(context, async withSession => {
+            return await withSession(async ({ queryResource, deleteResource }) => {
+              const service = await queryResource(service_id);
+
+              if (service == null) {
+                return {
+                  // error
+                  success: false,
+                  message: 'Service not found',
+                  type: 'ServiceMutationResult'
+                };
+              }
+
+              let service_variant;
+
+              if (service.default_variant_id) {
+                service_variant = deleteResource(service.default_variant_id);
+              }
+
+              await deleteResource(service_id);
+
+              if (service.default_variant_id) {
+                // delete product from stripe
+                const deleted = await stripe.products.del(service_variant.stripe_id_ext);
+              }
+
+              // success
+              return {
+                success: true,
+                service,
+                type: 'ServiceMutationResult'
+              };
+            });
+          });
+        } catch (error) {
+          return {
+            // error
+            success: false,
+            message: error.message,
+            type: 'ServiceVariantMutationResult'
           };
         }
       }

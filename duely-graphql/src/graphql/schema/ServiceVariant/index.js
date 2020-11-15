@@ -1,5 +1,5 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../utils';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 import stripe from '../../../stripe';
@@ -17,8 +17,7 @@ export const ServiceVariant = {
       status: String!
       description: String
       duration: String
-      price: Int
-      currency: String
+      default_price: Price
       service: Service!
     }
 
@@ -29,13 +28,13 @@ export const ServiceVariant = {
 
     extend type Query {
       service_variant(id: ID!): ServiceVariant
-      service_variants(filter: ServiceFilter!): [ServiceVariant!]
+      service_variants(filter: ServiceVariantFilter!): [ServiceVariant!]
     }
 
     extend type Mutation {
-      create_service_variant(service_id: ID!, name: String!, description: String, duration: String, price: Int, currency: String, status: String): ServiceVariantMutationResult!
-      update_service_variant(service_variant_id: ID!, name: String, description: String, duration: String, price: Int, currency: String, status: String): ServiceVariantMutationResult!
-      create_stripe_checkout_session(service_variant_id: ID!): CreateStripeCheckoutSessionResult!
+      create_service_variant(service_id: ID!, name: String!, description: String, duration: String, status: String): ServiceVariantMutationResult!
+      update_service_variant(service_variant_id: ID!, name: String, description: String, duration: String, default_price_id: ID, status: String): ServiceVariantMutationResult!
+      delete_service_variant(service_variant_id: ID!): ServiceVariantMutationResult!
     }
 
     type ServiceVariantMutationResult implements MutationResult {
@@ -43,43 +42,36 @@ export const ServiceVariant = {
       message: String
       service_variant: ServiceVariant
     }
-
-    type CreateStripeCheckoutSessionResult implements MutationResult {
-      success: Boolean!
-      message: String
-      checkout_session_id: String
-    }
   `,
   resolvers: {
     ServiceVariant: {
-      async service(source, args, context, info) {
-        if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource(source.service_id);
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      }
+      ...createResolverForReferencedResource({ name: 'service' }),
+      ...createResolverForReferencedResource({ name: 'default_price' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
     },
     Mutation: {
-      async create_service_variant(obj, { service_id, name, ...args }, context, info) {
+      async create_service_variant(obj, args, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {
             return await withSession(async ({ createResource }) => {
+              const { status, name, description } = args;
+
+              const stripe_product_args = {
+                name,
+                description,
+                active: status === 'live'
+              };
+
+              // create product at stripe
+              const stripe_product = await stripe.products.create(stripe_product_args);
+
               // create service variant resource
-              const service_variant = await createResource('service variant', { name, service_id, ...args });
+              const service_variant = await createResource('service variant', { ...args, stripe_id_ext: stripe_product.id });
 
               // success
               return {
@@ -108,6 +100,17 @@ export const ServiceVariant = {
               // update service variant resource
               const service_variant = await updateResource(service_variant_id, args);
 
+              const { status, name, description } = service_variant;
+
+              const stripe_product_args = {
+                name,
+                description,
+                active: status === 'live'
+              };
+
+              // update product at stripe
+              const stripe_product = await stripe.products.update(service_variant.stripe_id_ext, stripe_product_args);
+
               // success
               return {
                 success: true,
@@ -125,43 +128,31 @@ export const ServiceVariant = {
           };
         }
       },
-      async create_stripe_checkout_session(obj, { service_variant_id }, context, info) {
+      async delete_service_variant(obj, { service_variant_id }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource }) => {
-              // get resources
-              const service_variant = await queryResource(service_variant_id);
-              const service = await queryResource(service_variant.service_id);
-              const agency = await queryResource(service.agency_id);
-              const stripe_account = await queryResource('stripe account', { agency_id: agency.id });
+            return await withSession(async ({ deleteResource }) => {
+              const service_variant = await deleteResource(service_variant_id);
+              
+              if (service_variant == null) {
+                return {
+                  // error
+                  success: false,
+                  message: 'Service variant not found',
+                  type: 'ServiceVariantMutationResult'
+                };
+              }
 
-              // create stripe checkout session
-              // see: https://stripe.com/docs/connect/creating-a-payments-page
-              const checkout_session = await stripe.checkout.sessions.create({
-                payment_method_types: ['card'],
-                line_items: [{
-                  name: service_variant.name ?? service.name,
-                  amount: service_variant.price,
-                  currency: service_variant.currency,
-                  quantity: 1,
-                }],
-                payment_intent_data: {
-                  application_fee_amount: Math.round(service_variant.price * 0.045),
-                  transfer_data: {
-                    destination: stripe_account.stripe_id_ext,
-                  },
-                },
-                success_url: 'https://duely.app/success',
-                cancel_url: 'https://duely.app/failure',
-              });
+              // delete product from stripe
+              const deleted = await stripe.products.del(service_variant.stripe_id_ext);
 
               // success
               return {
                 success: true,
-                checkout_session_id: checkout_session.id,
+                service_variant,
                 type: 'ServiceVariantMutationResult'
               };
             });
