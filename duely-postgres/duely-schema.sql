@@ -3708,7 +3708,7 @@ CREATE FUNCTION policy_.agent_can_query_service_variant_(_resource_definition se
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, service_uuid_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, service_uuid_, stripe_id_ext_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3872,7 +3872,7 @@ BEGIN
     FROM application_.service_variant_
     WHERE uuid_ = _resource.uuid_
   ) THEN
-    RETURN '{uuid_, service_uuid_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, service_uuid_, stripe_id_ext_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4493,7 +4493,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{service_uuid_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{service_uuid_, stripe_id_ext_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5712,6 +5712,7 @@ CREATE TABLE application_.service_variant_ (
     image_hero_uuid_ uuid,
     default_price_uuid_ uuid NOT NULL,
     markdown_description_uuid_ uuid,
+    stripe_id_ext_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -5947,6 +5948,7 @@ CREATE TABLE application__audit_.service_variant_ (
     image_hero_uuid_ uuid,
     default_price_uuid_ uuid,
     markdown_description_uuid_ uuid,
+    stripe_id_ext_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -7015,6 +7017,14 @@ ALTER TABLE ONLY application_.service_variant_
 
 ALTER TABLE ONLY application_.service_variant_
     ADD CONSTRAINT service_variant__service_uuid__name__key UNIQUE (service_uuid_, name_);
+
+
+--
+-- Name: service_variant_ service_variant__stripe_id_ext__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_variant_
+    ADD CONSTRAINT service_variant__stripe_id_ext__key UNIQUE (stripe_id_ext_);
 
 
 --
