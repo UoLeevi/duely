@@ -48,6 +48,11 @@ spec:
   - host: '*.duely.app'
     http:
       paths:
+      - path: /checkout
+        pathType: Prefix
+        backend:
+          serviceName: duely-checkout-service
+          servicePort: 8080
       - backend:
           serviceName: duely-ui-agency-service
           servicePort: 8080
