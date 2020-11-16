@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import NavMenu from 'components/NavMenu';
-import { useQuery } from '@duely/client';
-import { current_subdomain_Q } from 'queries';
+import { useQuery, current_subdomain_Q } from '@duely/client';
 
 export default function TopBar() {
   const { data: current_subdomain } = useQuery(current_subdomain_Q);

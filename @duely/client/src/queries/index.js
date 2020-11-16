@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import { client } from '../apollo/client';
+import { stripe_account_F, theme_F, service_F, user_F, markdown_F } from '../fragments';
 
 // just a wrapper for convenience
 export async function query(queryDef, variables, ...options) {
@@ -18,11 +19,10 @@ export const current_user_Q = {
   query: gql`
     query {
       current_user {
-        id
-        name
-        email_address
+        ...user_F
       }
     }
+    ${user_F}
   `,
   notifyOnNetworkStatusChange: true,
   result: d => d?.current_user
@@ -41,11 +41,10 @@ export const services_agreement_Q = {
   query: gql`
     query {
       markdowns(filter: { name: "Services Agreement", agency_id: null }) {
-        id
-        name
-        data
+        ...markdown_F
       }
     }
+    ${markdown_F}
   `,
   result: d => d?.markdowns[0].data
 };
@@ -81,53 +80,10 @@ export const current_user_agencies_Q = {
               id
               name
               theme {
-                id
-                image_logo {
-                  id
-                  data
-                }
+                ...theme_F
               }
               stripe_account {
-                id
-                id_ext
-                business_profile {
-                  mcc
-                  name
-                  product_description
-                  support_address
-                  support_email
-                  support_phone
-                  support_url
-                  url
-                }
-                business_type
-                capabilities {
-                  card_payments
-                  transfers
-                }
-                requirements {
-                  current_deadline
-                  disabled_reason
-                  currently_due
-                  eventually_due
-                  past_due
-                  pending_verification
-                }
-                settings {
-                  branding {
-                    icon
-                    logo
-                    primary_color
-                    secondary_color
-                  }
-                }
-                charges_enabled
-                country
-                created
-                default_currency
-                details_submitted
-                email
-                payouts_enabled
+                ...stripe_account_F
               }
             }
             memberships {
@@ -145,6 +101,8 @@ export const current_user_agencies_Q = {
         }
       }
     }
+    ${stripe_account_F}
+    ${theme_F}
   `,
   notifyOnNetworkStatusChange: true,
   result: d => d?.current_user?.memberships
@@ -164,47 +122,102 @@ export const subdomain_public_Q = {
           id
           name
           theme {
-            id
-            image_logo {
-              id
-              data
+            ...theme_F
+          }
+        }
+      }
+    }
+    ${theme_F}
+  `,
+  result: d => d?.subdomains[0]
+};
+
+export const current_subdomain_Q = {
+  ...subdomain_public_Q,
+  variables: {
+    subdomain_name: resolveSubdomain()
+  }
+}
+
+function resolveSubdomain() {
+  const domain = window.location.hostname.toLowerCase();
+    let subdomain = null;
+
+    if (process.env.NODE_ENV === 'production') {
+      if (domain !== 'duely.app') {
+        if (domain.endsWith('.duely.app')) {
+          subdomain = domain.slice(0, -'.duely.app'.length);
+        } else {
+          // TODO: check from database
+          throw new Error('Not implemented.');
+        }
+      }
+    } else {
+      const url = new URL(window.location.href);
+      let name = url.searchParams.get('subdomain');
+      subdomain = name?.toLowerCase() ?? 'test';
+    }
+
+    return subdomain;
+}
+
+export const agency_services_Q = {
+  query: gql`
+    query($agency_id: ID!) {
+      services(filter: { agency_id: $agency_id }) {
+        ...service_F
+      }
+    }
+    ${service_F}
+  `,
+  result: d => d?.services
+};
+
+export const current_agency_Q = {
+  ...current_subdomain_Q,
+  query: gql`
+    query($subdomain_name: String!) {
+      subdomains(filter: { name: $subdomain_name }) {
+        id
+        name
+        agency {
+          id
+          name
+          theme {
+            ...theme_F
+          }
+          services {
+            ...service_F
+          }
+        }
+      }
+    }
+    ${theme_F}
+    ${service_F}
+  `,
+  result: d => d?.subdomains[0]?.agency
+}
+
+export const current_agency_stripe_account_update_url_Q = {
+  ...current_subdomain_Q,
+  query: gql`
+    query($subdomain_name: String!) {
+      subdomains(filter: { name: $subdomain_name }) {
+        id
+        name
+        agency {
+          stripe_account {
+            account_update_url {
+              url
             }
           }
         }
       }
     }
   `,
-  result: d => d?.subdomains[0]
-};
-
-export const agency_services_Q = {
-  query: gql`
-    query($agency_id: ID!) {
-      services(filter: { agency_id: $agency_id }) {
-        id
-        name
-        url_name
-        default_variant {
-          id
-          name
-          description
-          duration
-          status
-          default_price {
-            id
-            name
-            unit_amount
-            currency
-            type
-            recurring_interval
-            recurring_interval_count
-          }
-        }
-      }
-    }
-  `,
-  result: d => d?.services
-};
+  fetchPolicy: 'no-cache',
+  result: d => d?.subdomains[0]?.agency?.stripe_account?.account_update_url?.url
+}
 
 // agencies: {
 //   query: gql`

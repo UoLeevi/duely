@@ -62,93 +62,15 @@ const gql_create_stripe_checkout_session = gql`
 setupEnvironment();
 main();
 
+let client;
+
 async function main() {
-  const client = await createGraphQLClient();
+  client = await createGraphQLClient();
   const app = express();
   app.set('trust proxy', true);
   app.use(cors());
-  app.get('/checkout/:service_url_name', async (req, res) => {
-    let agency_id;
-
-    const domain = req.hostname;
-
-    if (!domain.endsWith('.duely.app')) {
-      throw new Error("Invalid reverse proxy configuration.");
-    }
-
-    const subdomain_name = domain.split('.duely.app')[0];
-
-    try {
-      const { subdomains } = await client.request(
-        gql_subdomain, { subdomain_name });
-
-      if (subdomains.length != 1) {
-        res.sendStatus(404);
-        return;
-      }
-
-      agency_id = subdomains[0].agency.id;
-    } catch (error) {
-      console.error(error);
-      res.sendStatus(404);
-      return;
-    }
-
-    let price_id;
-
-    try {
-      const { services } = await client.request(
-        gql_service, { agency_id, service_url_name: req.params.service_url_name });
-
-      if (services.length != 1) {
-        res.sendStatus(404);
-        return;
-      }
-
-      price_id = services[0].default_variant.default_price?.id;
-    } catch (error) {
-      console.error(error);
-      res.sendStatus(404);
-      return;
-    }
-
-    let checkout_session_id;
-
-    try {
-      const { create_stripe_checkout_session: result } = await client.request(
-        gql_create_stripe_checkout_session, { price_id });
-
-      if (!result.success) {
-        console.error(result.message);
-        res.sendStatus(404);
-        return;
-      }
-
-      checkout_session_id = validator.escape(result.checkout_session_id);
-    } catch (error) {
-      console.error(error);
-      res.sendStatus(404);
-      return;
-    }
-
-    res.send(`
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="utf-8" />
-          <title>Duely</title>
-          <script src="https://js.stripe.com/v3/"></script>
-          <script>
-            var stripe = Stripe('${process.env.STRIPE_PK_TEST}');
-            var redirect = stripe.redirectToCheckout({ sessionId: '${checkout_session_id}' });
-          </script>
-        </head>
-        <body>
-          <noscript>You need to enable JavaScript to run this app.</noscript>
-        </body>
-      </html>
-    `);
-  });
+  app.get('/checkout/:subdomain_name/services/:service_url_name', get_checkout);
+  app.get('/checkout/:service_url_name', get_checkout);
 
   app.listen({ port: process.env.PORT }, () => {
     console.log(`🚀 Server ready at http://localhost:${process.env.PORT}`);
@@ -186,4 +108,93 @@ function setupEnvironment() {
       ...process.env
     };
   }
+}
+
+async function get_checkout(req, res) {
+  let subdomain_name = req.params.subdomain_name;
+
+  if (subdomain_name == null) {
+
+    const domain = req.hostname;
+
+    if (!domain.endsWith('.duely.app')) {
+      throw new Error("Invalid reverse proxy configuration.");
+    }
+  
+    subdomain_name = req.hostname.split('.duely.app')[0];
+  }
+
+  let agency_id;
+
+  try {
+    const { subdomains } = await client.request(
+      gql_subdomain, { subdomain_name });
+
+    if (subdomains.length != 1) {
+      res.sendStatus(404);
+      return;
+    }
+
+    agency_id = subdomains[0].agency.id;
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(404);
+    return;
+  }
+
+  let price_id;
+  const service_url_name = req.params.service_url_name;
+
+  try {
+    const { services } = await client.request(
+      gql_service, { agency_id, service_url_name });
+
+    if (services.length != 1) {
+      res.sendStatus(404);
+      return;
+    }
+
+    price_id = services[0].default_variant.default_price?.id;
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(404);
+    return;
+  }
+
+  let checkout_session_id;
+
+  try {
+    const { create_stripe_checkout_session: result } = await client.request(
+      gql_create_stripe_checkout_session, { price_id });
+
+    if (!result.success) {
+      console.error(result.message);
+      res.sendStatus(404);
+      return;
+    }
+
+    checkout_session_id = validator.escape(result.checkout_session_id);
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(404);
+    return;
+  }
+
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>Duely</title>
+        <script src="https://js.stripe.com/v3/"></script>
+        <script>
+          var stripe = Stripe('${process.env.STRIPE_PK_TEST}');
+          var redirect = stripe.redirectToCheckout({ sessionId: '${checkout_session_id}' });
+        </script>
+      </head>
+      <body>
+        <noscript>You need to enable JavaScript to run this app.</noscript>
+      </body>
+    </html>
+  `);
 }

@@ -1,8 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
 import { BsBriefcase, BsCreditCard, BsFolder, BsGear, BsHouseDoor, BsKanban, BsPeople } from 'react-icons/bs';
 import { Util } from '@duely/react';
-import { useQuery } from '@duely/client';
-import { current_subdomain_Q } from 'queries';
+import { useQuery, current_subdomain_Q } from '@duely/client';
 
 function SidebarLink({ text, icon, to, exact }) {
   const Icon = icon;

@@ -1,16 +1,15 @@
-import { useQuery } from '@duely/client';
-import { current_subdomain_Q } from 'queries';
+import { useQuery, current_subdomain_Q } from '@duely/client';
 
 export default function DomainManager({ children }) {
   const { data, loading, error } = useQuery(current_subdomain_Q);
 
   if (loading) {
-    return 'Loading...';
+    return <span className="font-medium text-sm text-gray-700">Loading...</span>;
   }
 
   if (error) {
     console.error(error);
-    return 'Error';
+    return <span className="font-medium text-sm text-red-400">Error</span>;;
   }
 
   if (process.env.NODE_ENV === 'production') {

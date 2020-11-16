@@ -1,6 +1,4 @@
-import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../utils';
-import { AuthenticationError } from 'apollo-server-core';
 
 const resource = {
   table_name: 'subdomain',

@@ -1,7 +1,6 @@
 import { FormField } from '@duely/react';
-import { useQuery } from '@duely/client';
+import { useQuery, current_subdomain_Q } from '@duely/client';
 import useImage from 'hooks/useImage';
-import { current_subdomain_Q } from 'queries';
 
 export function ServiceBasicInfoFormSection({ form }) {
   const { data: current_subdomain } = useQuery(current_subdomain_Q);

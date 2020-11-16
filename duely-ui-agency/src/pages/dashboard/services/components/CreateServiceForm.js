@@ -1,12 +1,11 @@
 import { useForm } from 'react-hook-form';
 import { FormButton, FormErrorInfo } from '@duely/react';
-import { useMutation, useQuery, create_service_M, create_price_M, update_service_M } from '@duely/client';
+import { useMutation, useQuery, current_subdomain_Q, create_service_M, create_price_M, update_service_M } from '@duely/client';
 import useImage from 'hooks/useImage';
 import { BsCheck } from 'react-icons/bs';
 import { ServiceBasicInfoFormSection } from './ServiceBasicInfoFormSection';
 import { ServicePricingFormSection } from './ServicePricingFormSection';
 import { Link } from 'react-router-dom';
-import { current_subdomain_Q } from 'queries';
 
 export function CreateServiceForm() {
   const form = useForm({

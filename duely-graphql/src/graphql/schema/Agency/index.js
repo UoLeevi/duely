@@ -1,5 +1,5 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../utils';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 import stripe from '../../../stripe';
@@ -17,6 +17,7 @@ export const Agency = {
       stripe_account: StripeAccount!
       subdomain: Subdomain!
       theme: Theme!
+      services: [Service!]
     }
 
     input AgencyFilter {
@@ -67,6 +68,7 @@ export const Agency = {
       },
       ...createResolverForReferencedResource({ name: 'subdomain' }),
       ...createResolverForReferencedResource({ name: 'theme', reverse: true, column_name: 'agency_id' }),
+      ...createResolverForReferencedResourceAll({ name: 'services', resource_name: 'service', column_name: 'agency_id' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

@@ -1,5 +1,5 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../utils';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 import stripe from '../../../stripe';
@@ -17,6 +17,7 @@ export const Service = {
       status: String!
       agency: Agency!
       default_variant: ServiceVariant!
+      variants: [ServiceVariant!]
     }
 
     input ServiceFilter {
@@ -45,7 +46,8 @@ export const Service = {
   resolvers: {
     Service: {
       ...createResolverForReferencedResource({ name: 'agency' }),
-      ...createResolverForReferencedResource({ name: 'default_variant' })
+      ...createResolverForReferencedResource({ name: 'default_variant' }),
+      ...createResolverForReferencedResourceAll({ name: 'variants', resource_name: 'service variant', column_name: 'service_id' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
