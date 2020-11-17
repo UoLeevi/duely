@@ -38,7 +38,7 @@ const routes = [
 ];
 
 export default function Dashboard() {
-  const { loading, error, data: agency } = useQuery(current_agency_Q);
+  const { loading, error } = useQuery(current_agency_Q);
 
   if (loading) {
     return <span className="font-medium text-sm text-gray-700">Loading...</span>;

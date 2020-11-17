@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-agency",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "scripts": {
     "build": "NODE_ENV='production' postcss src/styles/tailwind.css -o public/styles/index.css && react-scripts build",

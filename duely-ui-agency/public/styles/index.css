@@ -774,6 +774,18 @@ html, body, #root {
   background-color: rgba(237, 242, 247, var(--bg-opacity));
 }
 
+.bg-orange-200 {
+  --bg-opacity: 1;
+  background-color: #feebc8;
+  background-color: rgba(254, 235, 200, var(--bg-opacity));
+}
+
+.bg-green-100 {
+  --bg-opacity: 1;
+  background-color: #f0fff4;
+  background-color: rgba(240, 255, 244, var(--bg-opacity));
+}
+
 .bg-green-200 {
   --bg-opacity: 1;
   background-color: #c6f6d5;
@@ -862,6 +874,14 @@ html, body, #root {
 
 .rounded-md {
   border-radius: 0.375rem;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.rounded-xl {
+  border-radius: 0.75rem;
 }
 
 .rounded-full {
@@ -988,6 +1008,14 @@ html, body, #root {
   justify-content: space-around;
 }
 
+.justify-self-end {
+  justify-self: end;
+}
+
+.justify-self-center {
+  justify-self: center;
+}
+
 .flex-1 {
   flex: 1 1 0%;
 }
@@ -1014,6 +1042,10 @@ html, body, #root {
 
 .h-1 {
   height: 0.25rem;
+}
+
+.h-4 {
+  height: 1rem;
 }
 
 .h-5 {
@@ -1064,6 +1096,10 @@ html, body, #root {
   font-size: 1.875rem;
 }
 
+.leading-4 {
+  line-height: 1rem;
+}
+
 .leading-5 {
   line-height: 1.25rem;
 }
@@ -1101,6 +1137,11 @@ html, body, #root {
   margin-right: auto;
 }
 
+.-my-2 {
+  margin-top: -0.5rem;
+  margin-bottom: -0.5rem;
+}
+
 .mt-1 {
   margin-top: 0.25rem;
 }
@@ -1123,6 +1164,10 @@ html, body, #root {
 
 .ml-3 {
   margin-left: 0.75rem;
+}
+
+.ml-4 {
+  margin-left: 1rem;
 }
 
 .-mr-1 {
@@ -1149,8 +1194,16 @@ html, body, #root {
   max-width: 640px;
 }
 
+.min-w-full {
+  min-width: 100%;
+}
+
 .object-contain {
   object-fit: contain;
+}
+
+.object-cover {
+  object-fit: cover;
 }
 
 .opacity-0 {
@@ -1268,6 +1321,10 @@ html, body, #root {
   padding-top: 0.25rem;
 }
 
+.pr-1 {
+  padding-right: 0.25rem;
+}
+
 .pb-2 {
   padding-bottom: 0.5rem;
 }
@@ -1280,8 +1337,16 @@ html, body, #root {
   padding-right: 0.75rem;
 }
 
+.pb-3 {
+  padding-bottom: 0.75rem;
+}
+
 .pl-3 {
   padding-left: 0.75rem;
+}
+
+.pt-4 {
+  padding-top: 1rem;
 }
 
 .pt-5 {
@@ -1361,6 +1426,10 @@ html, body, #root {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
+.shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
 .shadow-lg {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
@@ -1379,6 +1448,10 @@ html, body, #root {
 
 .text-center {
   text-align: center;
+}
+
+.text-right {
+  text-align: right;
 }
 
 .text-white {
@@ -1441,6 +1514,12 @@ html, body, #root {
   color: rgba(221, 107, 32, var(--text-opacity));
 }
 
+.text-orange-700 {
+  --text-opacity: 1;
+  color: #c05621;
+  color: rgba(192, 86, 33, var(--text-opacity));
+}
+
 .text-green-400 {
   --text-opacity: 1;
   color: #68d391;
@@ -1451,6 +1530,18 @@ html, body, #root {
   --text-opacity: 1;
   color: #38a169;
   color: rgba(56, 161, 105, var(--text-opacity));
+}
+
+.text-green-700 {
+  --text-opacity: 1;
+  color: #2f855a;
+  color: rgba(47, 133, 90, var(--text-opacity));
+}
+
+.text-green-800 {
+  --text-opacity: 1;
+  color: #276749;
+  color: rgba(39, 103, 73, var(--text-opacity));
 }
 
 .text-indigo-500 {
@@ -1477,8 +1568,22 @@ html, body, #root {
   color: rgba(102, 126, 234, var(--text-opacity));
 }
 
+.hover\:text-indigo-900:hover {
+  --text-opacity: 1;
+  color: #3c366b;
+  color: rgba(60, 54, 107, var(--text-opacity));
+}
+
 .focus\:underline:focus {
   text-decoration: underline;
+}
+
+.tracking-wider {
+  letter-spacing: 0.05em;
+}
+
+.align-middle {
+  vertical-align: middle;
 }
 
 .whitespace-no-wrap {
@@ -1497,6 +1602,14 @@ html, body, #root {
 
 .w-12 {
   width: 3rem;
+}
+
+.w-16 {
+  width: 4rem;
+}
+
+.w-32 {
+  width: 8rem;
 }
 
 .w-56 {
@@ -1524,8 +1637,17 @@ html, body, #root {
   gap: 1rem;
 }
 
+.gap-6 {
+  grid-gap: 1.5rem;
+  gap: 1.5rem;
+}
+
 .col-span-full {
   grid-column: 1 / -1;
+}
+
+.auto-rows-auto {
+  grid-auto-rows: auto;
 }
 
 .row-span-full {
@@ -1677,6 +1799,10 @@ html, body, #root {
 }
 
 @media (min-width: 640px) {
+  .sm\:rounded-lg {
+    border-radius: 0.5rem;
+  }
+
   .sm\:flex-row {
     flex-direction: row;
   }
@@ -1693,6 +1819,11 @@ html, body, #root {
     line-height: 1.25rem;
   }
 
+  .sm\:-mx-6 {
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+  }
+
   .sm\:p-2 {
     padding: 0.5rem;
   }
@@ -1700,6 +1831,11 @@ html, body, #root {
   .sm\:py-6 {
     padding-top: 1.5rem;
     padding-bottom: 1.5rem;
+  }
+
+  .sm\:px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 
   .sm\:px-8 {
@@ -1815,6 +1951,16 @@ html, body, #root {
 }
 
 @media (min-width: 1024px) {
+  .lg\:-mx-8 {
+    margin-left: -2rem;
+    margin-right: -2rem;
+  }
+
+  .lg\:px-8 {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
   .lg\:w-1\/3 {
     width: 33.333333%;
   }
