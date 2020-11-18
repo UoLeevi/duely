@@ -1,11 +1,62 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
 const resource = {
   name: 'image'
 };
+
+const defaultValidationOptions = {
+  allowedMimeTypes: [
+    'image/jpeg',
+    'image/png'
+  ],
+  maxSize: 512000
+};
+
+function formatFileSize(size) {
+  if (size < 1000) return `${size}B`;
+
+  size /= 1000;
+  if (size < 1000) return `${size.toPrecision(3)}KB`;
+
+  size /= 1000;
+  if (size < 1000) return `${size.toPrecision(3)}MB`;
+
+  size /= 1000;
+  if (size < 1000) return `${size.toPrecision(3)}GB`;
+}
+
+export function validateAndReadDataUrlAsBuffer(dataUrl, options) {
+  options = {
+    ...defaultValidationOptions,
+    ...options
+  };
+
+  if (typeof dataUrl != 'string') {
+    return [null, 'File should be encoded as a data URL.'];
+  }
+
+  if (!validator.isDataURI(dataUrl)) {
+    return [null, 'File data should be encoded as a data URL.'];
+  }
+
+  if (!options.allowedMimeTypes.some(type => dataUrl.startsWith(`data:${type};base64,`))) {
+    const extensions = options.allowedMimeTypes.map(t => t.split('/', 2)[1].split(/\W/, 1)[0].toUpperCase());
+    return [null, 'File type should be one of ' + extensions.join(',')];
+  }
+
+  if (!validator.isByteLength(dataUrl, { max: Math.round(options.maxSize / 4 * 3) })) {
+    return [null, `File max size is ${formatFileSize(options.maxSize)}.`];
+  }
+
+  try {
+    return [Buffer.from(dataUrl.split(',')[1], 'base64'), null];
+  } catch {
+    return [null, 'Unable to read file.'];
+  }
+}
 
 export const Image = {
   typeDef: `
@@ -57,39 +108,14 @@ export const Image = {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
-        // validate image
+        // validate and read image
 
-        if (!validator.isDataURI(args.data))
+        const [_, validationError] = validateAndReadDataUrlAsBuffer(args.data);
+
+        if (validationError) {
           return {
             success: false,
-            message: `Image data should be encoded as a data URL.`,
-            type: 'ImageMutationResult'
-          };
-
-        if (!args.data.startsWith('data:image/jpeg;base64,')
-          && !args.data.startsWith('data:image/png;base64,'))
-          return {
-            success: false,
-            message: `Image should be either a JPEG or PNG`,
-            type: 'ImageMutationResult'
-          };
-
-        if (!validator.isByteLength(args.data, { max: Math.round(512000 / 4 * 3) }))
-          return {
-            success: false,
-            message: `Image max size is 512KB.`,
-            type: 'ImageMutationResult'
-          };
-
-        let image_buffer;
-
-        try {
-          const image_base64 = args.data.split(',')[1];
-          image_buffer = Buffer.from(image_base64, 'base64');
-        } catch {
-          return {
-            success: false,
-            message: `Unable to read image file.`,
+            message: 'Image validation failed. ' + validationError,
             type: 'ImageMutationResult'
           };
         }
@@ -122,39 +148,12 @@ export const Image = {
           throw new AuthenticationError('Unauthorized');
 
         if (args.data) {
-          // validate image
+          const [_, validationError] = validateAndReadDataUrlAsBuffer(args.data);
 
-          if (!validator.isDataURI(args.data))
+          if (validationError) {
             return {
               success: false,
-              message: `Image data should be encoded as a data URL.`,
-              type: 'ImageMutationResult'
-            };
-
-          if (!args.data.startsWith('data:image/jpeg;base64,')
-            && !args.data.startsWith('data:image/png;base64,'))
-            return {
-              success: false,
-              message: `Image should be either a JPEG or PNG`,
-              type: 'ImageMutationResult'
-            };
-
-          if (!validator.isByteLength(args.data, { max: Math.round(512000 / 4 * 3) }))
-            return {
-              success: false,
-              message: `Image max size is 512KB.`,
-              type: 'ImageMutationResult'
-            };
-
-          let image_buffer;
-
-          try {
-            const image_base64 = args.data.split(',')[1];
-            image_buffer = Buffer.from(image_base64, 'base64');
-          } catch {
-            return {
-              success: false,
-              message: `Unable to read image file.`,
+              message: 'Image validation failed. ' + validationError,
               type: 'ImageMutationResult'
             };
           }

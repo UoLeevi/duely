@@ -1,8 +1,9 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../util';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 import stripe from '../../../stripe';
+import { validateAndReadDataUrlAsBuffer } from '../Image';
 
 const resource = {
   name: 'service variant',
@@ -19,7 +20,7 @@ export const ServiceVariant = {
       duration: String
       default_price: Price
       service: Service!
-      prices: [Price!]
+      prices(filter: PriceFilter): [Price!]
     }
 
     input ServiceVariantFilter {
@@ -33,8 +34,8 @@ export const ServiceVariant = {
     }
 
     extend type Mutation {
-      create_service_variant(service_id: ID!, name: String!, description: String, duration: String, markdown_description_id: ID, image_logo_id: ID, image_hero_id: ID, status: String): ServiceVariantMutationResult!
-      update_service_variant(service_variant_id: ID!, name: String, description: String, duration: String, default_price_id: ID, markdown_description_id: ID, image_logo_id: ID, image_hero_id: ID, status: String): ServiceVariantMutationResult!
+      create_service_variant(service_id: ID!, name: String!, description: String, duration: String, markdown_description_id: ID, image_logo: ImageInput, image_logo_id: ID, image_hero: ImageInput, status: String): ServiceVariantMutationResult!
+      update_service_variant(service_variant_id: ID!, name: String, description: String, duration: String, default_price_id: ID, markdown_description_id: ID, image_logo: ImageInput, image_logo_id: ID, image_hero: ImageInput, status: String): ServiceVariantMutationResult!
       delete_service_variant(service_variant_id: ID!): ServiceVariantMutationResult!
     }
 
@@ -54,13 +55,49 @@ export const ServiceVariant = {
       ...createDefaultQueryResolversForResource(resource)
     },
     Mutation: {
-      async create_service_variant(obj, args, context, info) {
+      async create_service_variant(obj, { image_logo, image_hero, ...args }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ createResource }) => {
+            return await withSession(async ({ queryResource, createResource }) => {
+              const service = await queryResource(args.service_id);
+
+              if (image_logo) {
+                // validate and read logo image
+                const [, validationError] = validateAndReadDataUrlAsBuffer(image_logo.data);
+
+                if (validationError) {
+                  return {
+                    success: false,
+                    message: 'Logo image validation failed. ' + validationError,
+                    type: 'ServiceMutationResult'
+                  };
+                }
+
+                // create logo image
+                const image = await createResource('image', { ...image_logo, agency_id: service.agency_id, access: 'public' });
+                args.image_logo_id = image.id;
+              }
+
+              if (image_hero) {
+                // validate and read hero image
+                const [, validationError] = validateAndReadDataUrlAsBuffer(image_hero.data);
+
+                if (validationError) {
+                  return {
+                    success: false,
+                    message: 'Hero image validation failed. ' + validationError,
+                    type: 'ServiceMutationResult'
+                  };
+                }
+
+                // create hero image
+                const image = await createResource('image', { ...image_hero, agency_id: service.agency_id, access: 'public' });
+                args.image_hero_id = image.id;
+              }
+
               const { status, name, description } = args;
 
               const stripe_product_args = {
@@ -92,13 +129,52 @@ export const ServiceVariant = {
           };
         }
       },
-      async update_service_variant(obj, { service_variant_id, ...args }, context, info) {
+      async update_service_variant(obj, { service_variant_id, image_logo, image_hero, ...args }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ updateResource }) => {
+            return await withSession(async ({ queryResource, createResource, updateResource }) => {
+
+              const { service_id } = await queryResource(service_variant_id);
+              const service = await queryResource(service);
+
+              if (image_logo) {
+                // validate and read logo image
+                const [, validationError] = validateAndReadDataUrlAsBuffer(image_logo.data);
+
+                if (validationError) {
+                  return {
+                    success: false,
+                    message: 'Logo image validation failed. ' + validationError,
+                    type: 'ServiceMutationResult'
+                  };
+                }
+
+                // create logo image
+                const image = await createResource('image', { ...image_logo, agency_id: service.agency_id, access: 'public' });
+                args.image_logo_id = image.id;
+              }
+
+              if (image_hero) {
+                // validate and read hero image
+                const [, validationError] = validateAndReadDataUrlAsBuffer(image_hero.data);
+
+                if (validationError) {
+                  return {
+                    success: false,
+                    message: 'Hero image validation failed. ' + validationError,
+                    type: 'ServiceMutationResult'
+                  };
+                }
+
+                // create hero image
+                const image = await createResource('image', { ...image_hero, agency_id: service.agency_id, access: 'public' });
+                args.image_hero_id = image.id;
+              }
+
+
               // update service variant resource
               const service_variant = await updateResource(service_variant_id, args);
 

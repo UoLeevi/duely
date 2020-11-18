@@ -1,5 +1,5 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResourceAll } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResourceAll } from '../../util';
 import { AuthenticationError } from 'apollo-server-core';
 
 const resource = {
@@ -13,7 +13,7 @@ export const User = {
       id: ID!
       name: String!
       email_address: String!
-      memberships: [Membership!]!
+      memberships(filter: MembershipFilter): [Membership!]!
     }
 
     input UserFilter {

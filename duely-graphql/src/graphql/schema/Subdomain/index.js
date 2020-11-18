@@ -1,4 +1,4 @@
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../util';
 
 const resource = {
   table_name: 'subdomain',
@@ -11,7 +11,7 @@ export const Subdomain = {
       id: ID!
       name: String!
       agency: Agency!
-      memberships: [Membership!]!
+      memberships(filter: MembershipFilter): [Membership!]!
     }
 
     input SubdomainFilter {

@@ -71,7 +71,7 @@ export function createResolverForReferencedResourceAll({ name, resource_name, co
       try {
         return await withConnection(context, async withSession => {
           return await withSession(async ({ queryResourceAll }) => {
-            return await queryResourceAll(resource_name, { [column_name]: source.id });
+            return await queryResourceAll(resource_name, { ...args.filter, [column_name]: source.id });
           });
         });
       } catch (error) {

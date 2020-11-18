@@ -1,8 +1,9 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../util';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 import stripe from '../../../stripe';
+import { validateAndReadDataUrlAsBuffer } from '../Image';
 
 const resource = {
   name: 'agency',
@@ -17,7 +18,7 @@ export const Agency = {
       stripe_account: StripeAccount!
       subdomain: Subdomain!
       theme: Theme!
-      services: [Service!]
+      services(filter: ServiceFilter): [Service!]
     }
 
     input AgencyFilter {
@@ -102,39 +103,13 @@ export const Agency = {
             type: 'CreateAgencyResult'
           };
 
-        // validate logo image
+        // validate and read logo image
+        const [image_buffer, validationError] = validateAndReadDataUrlAsBuffer(image_logo.data);
 
-        if (!validator.isDataURI(image_logo.data))
+        if (validationError) {
           return {
             success: false,
-            message: `Image data should be encoded as a data URL.`,
-            type: 'CreateAgencyResult'
-          };
-
-        if (!image_logo.data.startsWith('data:image/jpeg;base64,') 
-         && !image_logo.data.startsWith('data:image/png;base64,'))
-          return {
-            success: false,
-            message: `Image should be either a JPEG or PNG`,
-            type: 'CreateAgencyResult'
-          };
-
-        if (!validator.isByteLength(image_logo.data, { max: Math.round(512000/4*3) }))
-          return {
-            success: false,
-            message: `Image max size is 512KB.`,
-            type: 'CreateAgencyResult'
-          };
-
-        let image_buffer;
-
-        try {
-          const image_base64 = image_logo.data.split(',')[1];
-          image_buffer = Buffer.from(image_base64, 'base64');
-        } catch {
-          return {
-            success: false,
-            message: `Unable to read image file.`,
+            message: 'Logo image validation failed. ' + validationError,
             type: 'CreateAgencyResult'
           };
         }
