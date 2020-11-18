@@ -55,7 +55,7 @@
     "jsonwebtoken": "^8.5.1",
     "markdown-it": "^12.0.2",
     "pg": "^8.5.1",
-    "stripe": "^8.121.0",
+    "stripe": "^8.122.1",
     "validator": "^13.0.0"
   },
   "devDependencies": {

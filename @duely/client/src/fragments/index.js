@@ -122,3 +122,46 @@ export const markdown_F = gql`
     data
   }
 `;
+
+export const membership_F = gql`
+  fragment membership_F on Membership {
+    id
+    access
+    user {
+      ...user_F
+    }
+    subdomain {
+      id
+      agency {
+        id
+      }
+    }
+  }
+  ${user_F}
+`;
+
+export const agency_F = gql`
+  fragment subdomain_F on Agency {
+    id
+    name
+    theme {
+      ...theme_F
+    }
+  }
+  ${theme_F}
+`;
+
+export const subdomain_F = gql`
+  fragment subdomain_F on Subdomain {
+    id
+    name
+    agency {
+      ...agency_F
+    }
+    memberships {
+      ...membership_F
+    }
+  }
+  ${agency_F}
+  ${membership_F}
+`;

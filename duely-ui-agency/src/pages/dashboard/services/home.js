@@ -96,7 +96,7 @@ export default function DashboardServicesHome() {
       </div>
     ),
 
-    // service variant status
+    // actions
     r => (
       <div className="flex text-xl font-medium text-gray-500 items-center justify-self-end pr-1">
         <BsThreeDotsVertical />

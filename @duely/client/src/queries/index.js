@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 import { client } from '../apollo/client';
-import { stripe_account_F, theme_F, service_F, user_F, markdown_F } from '../fragments';
+import { stripe_account_F, theme_F, service_F, user_F, markdown_F, agency_F, membership_F } from '../fragments';
 
 // just a wrapper for convenience
 export async function query(queryDef, variables, ...options) {
@@ -20,9 +20,13 @@ export const current_user_Q = {
     query {
       current_user {
         ...user_F
+        memberships {
+          ...membership_F
+        }
       }
     }
     ${user_F}
+    ${membership_F}
   `,
   notifyOnNetworkStatusChange: true,
   result: d => d?.current_user
@@ -77,22 +81,13 @@ export const current_user_agencies_Q = {
             id
             name
             agency {
-              id
-              name
-              theme {
-                ...theme_F
-              }
+              ...agency_F
               stripe_account {
                 ...stripe_account_F
               }
             }
             memberships {
-              id
-              access
-              user {
-                id
-                name
-              }
+              ...membership_F
             }
           }
           user {
@@ -101,8 +96,9 @@ export const current_user_agencies_Q = {
         }
       }
     }
+    ${agency_F}
     ${stripe_account_F}
-    ${theme_F}
+    ${membership_F}
   `,
   notifyOnNetworkStatusChange: true,
   result: d => d?.current_user?.memberships
