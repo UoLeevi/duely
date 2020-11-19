@@ -36,7 +36,7 @@ export function CreateServiceForm() {
     };
 
     const { name, description, url_name } = data;
-    const res_service = await createService({ agency_id: current_subdomain.agency.id, name, description, url_name, status: 'draft' });
+    const res_service = await createService({ agency_id: current_subdomain.agency.id, name, description, url_name, image_logo, status: 'draft' });
 
     if (!res_service?.success) return;
 

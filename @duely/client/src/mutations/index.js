@@ -136,8 +136,8 @@ export const create_agency_M = {
 
 export const create_service_M = {
   mutation: gql`
-    mutation($agency_id: ID!, $name: String!, $description: String!, $url_name: String!, $duration: String, $status: String) {
-      create_service(agency_id: $agency_id, name: $name, description: $description, url_name: $url_name, duration: $duration, status: $status) {
+    mutation($agency_id: ID!, $name: String!, $description: String!, $url_name: String!, $duration: String, $image_logo: ImageInput, $image_hero: ImageInput, $status: String) {
+      create_service(agency_id: $agency_id, name: $name, description: $description, url_name: $url_name, duration: $duration, image_logo: $image_logo, image_hero: $image_hero, status: $status) {
         success
         message
         service {
@@ -160,8 +160,8 @@ export const create_service_M = {
 
 export const update_service_M = {
   mutation: gql`
-    mutation($service_id: ID!, $name: String, $description: String, $url_name: String, $duration: String, $default_price_id: ID, $status: String) {
-      update_service(service_id: $service_id, name: $name, description: $description, url_name: $url_name, duration: $duration, default_price_id: $default_price_id, status: $status) {
+    mutation($service_id: ID!, $name: String, $description: String, $url_name: String, $duration: String, $default_price_id: ID, $image_logo: ImageInput, $image_hero: ImageInput, $status: String) {
+      update_service(service_id: $service_id, name: $name, description: $description, url_name: $url_name, duration: $duration, default_price_id: $default_price_id, image_logo: $image_logo, image_hero: $image_hero, status: $status) {
         success
         message
         service {

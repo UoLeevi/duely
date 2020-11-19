@@ -1,5 +1,6 @@
 import { Link, Route, Switch } from 'react-router-dom';
 import { useQuery, current_agency_Q, current_user_Q } from '@duely/client';
+import { LoadingScreen, ErrorScreen } from '@duely/react';
 import { DashboardLayout } from './components';
 import DashboardClients from './clients';
 import DashboardFiles from './files';
@@ -43,14 +44,8 @@ export default function Dashboard() {
   const { data: current_user } = useQuery(current_user_Q);
   const { data: current_agency, loading, error } = useQuery(current_agency_Q);
 
-  if (loading) {
-    return <span className="font-medium text-sm text-gray-700">Loading...</span>;
-  }
-
-  if (error) {
-    console.error(error);
-    return <span className="font-medium text-sm text-red-400">Error</span>;;
-  }
+  if (loading) return <LoadingScreen />
+  if (error) return <ErrorScreen />
 
   const authorized = current_user?.memberships
     .filter(m => roles.some(r => r === m.access))

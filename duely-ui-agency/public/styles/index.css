@@ -194,7 +194,9 @@ select { /* 1 */
  */
 
 button,
-[type="button"] {
+[type="button"],
+[type="reset"],
+[type="submit"] {
   -webkit-appearance: button;
 }
 
@@ -203,7 +205,9 @@ button,
  */
 
 button::-moz-focus-inner,
-[type="button"]::-moz-focus-inner {
+[type="button"]::-moz-focus-inner,
+[type="reset"]::-moz-focus-inner,
+[type="submit"]::-moz-focus-inner {
   border-style: none;
   padding: 0;
 }
@@ -213,7 +217,9 @@ button::-moz-focus-inner,
  */
 
 button:-moz-focusring,
-[type="button"]:-moz-focusring {
+[type="button"]:-moz-focusring,
+[type="reset"]:-moz-focusring,
+[type="submit"]:-moz-focusring {
   outline: 1px dotted ButtonText;
 }
 
@@ -262,7 +268,7 @@ textarea {
  * 2. Remove the padding in IE 10.
  */
 
-
+[type="checkbox"],
 [type="radio"] {
   box-sizing: border-box; /* 1 */
   padding: 0; /* 2 */
@@ -473,7 +479,8 @@ textarea::placeholder {
   color: #a0aec0;
 }
 
-button {
+button,
+[role="button"] {
   cursor: pointer;
 }
 
@@ -804,24 +811,6 @@ html, body, #root {
   background-color: rgba(102, 126, 234, var(--bg-opacity));
 }
 
-.bg-gradient-to-r {
-  background-image: linear-gradient(to right, var(--gradient-color-stops));
-}
-
-.from-blue-400 {
-  --gradient-from-color: #63b3ed;
-  --gradient-color-stops: var(--gradient-from-color), var(--gradient-to-color, rgba(99, 179, 237, 0));
-}
-
-.via-teal-500 {
-  --gradient-via-color: #38b2ac;
-  --gradient-color-stops: var(--gradient-from-color), var(--gradient-via-color), var(--gradient-to-color, rgba(56, 178, 172, 0));
-}
-
-.to-purple-500 {
-  --gradient-to-color: #9f7aea;
-}
-
 .bg-opacity-75 {
   --bg-opacity: 0.75;
 }
@@ -938,6 +927,10 @@ html, body, #root {
 
 .inline-block {
   display: inline-block;
+}
+
+.inline {
+  display: inline;
 }
 
 .flex {
@@ -1401,6 +1394,13 @@ html, body, #root {
   position: relative;
 }
 
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
 .inset-x-0 {
   right: 0;
   left: 0;
@@ -1574,6 +1574,18 @@ html, body, #root {
   color: rgba(60, 54, 107, var(--text-opacity));
 }
 
+.uppercase {
+  text-transform: uppercase;
+}
+
+.lowercase {
+  text-transform: lowercase;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
 .focus\:underline:focus {
   text-decoration: underline;
 }
@@ -1584,6 +1596,14 @@ html, body, #root {
 
 .align-middle {
   vertical-align: middle;
+}
+
+.visible {
+  visibility: visible;
+}
+
+.invisible {
+  visibility: hidden;
 }
 
 .whitespace-no-wrap {
@@ -1622,6 +1642,10 @@ html, body, #root {
 
 .z-10 {
   z-index: 10;
+}
+
+.z-20 {
+  z-index: 20;
 }
 
 .z-30 {
