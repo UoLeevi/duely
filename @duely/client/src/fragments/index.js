@@ -141,7 +141,7 @@ export const membership_F = gql`
 `;
 
 export const agency_F = gql`
-  fragment subdomain_F on Agency {
+  fragment agency_F on Agency {
     id
     name
     theme {
