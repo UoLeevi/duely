@@ -1,12 +1,12 @@
 import { Link, useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
-import { FormButton, FormErrorInfo, FormField } from '@duely/react';
+import { FormButton, FormErrorInfo, FormField, Util } from '@duely/react';
 import LoadingSpinner from 'components/LoadingSpinner';
 import { useQuery, current_user_Q, useMutation, log_in_M } from '@duely/client';
 // import { useRouter } from 'react-router-dom';
 
-export default function LogInForm() {
+export default function LogInForm({className }) {
   // const router = useRouter();
   const form = useForm();
   const [logIn, state] = useMutation(log_in_M);
@@ -27,8 +27,10 @@ export default function LogInForm() {
     await logIn(data);
   }
 
+  className = Util.createClassName('flex flex-col space-y-3', className);
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-3">
+    <form onSubmit={form.handleSubmit(onSubmit)}  className={className}>
 
       <FormField form={form} label="Email address" name="email_address" type="email" validateRule={{ required: true }} />
       <FormField form={form} label="Password" name="password" type="password" validateRule={{ required: true }}

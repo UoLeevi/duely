@@ -8,7 +8,7 @@ import { useQuery, country_codes_Q, useMutation, create_agency_M } from '@duely/
 import useImage from 'hooks/useImage';
 import { BsCheck } from 'react-icons/bs';
 
-export default function CreateBrandForm() {
+export default function CreateBrandForm({ className }) {
   const form = useForm();
   const { watch, setValue, formState } = form;
   const [createAgency, state] = useMutation(create_agency_M);
@@ -67,27 +67,26 @@ export default function CreateBrandForm() {
     );
   }
 
-  return (
-    <>
-      <h2 className="font-semibold text-xl sm:text-2xl text-gray-700 self-center">Create your brand</h2>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-3">
-        <FormField form={form} label="Brand name" name="name" type="text" validateRule={{ required: true }} />
-        <FormField form={form} label="Subdomain URL" name="subdomain_name" prefix="https://" suffix=".duely.app" hint="Choose a subdomain for your brand" type="text" validateRule={{ required: true }} />
-        <FormField form={form} label="Country" name="country_code" type="select" loading={countryCodesQ.loading} options={countries} validateRule={{ required: true }} />
-        <FormField form={form} label="Logo image" name="image_logo_file_list" type="image" loading={imageLogo.loading} src={imageLogo.data} accept="image/jpeg, image/png" hint="PNG, JPG up to 512KB, and minimum 128px by 128px." validateRule={{ required: true }} />
+  className = Util.createClassName('flex flex-col space-y-3', className);
 
-        <div className="flex flex-col pt-4">
-          <p className="text-xs text-center">
-            By creating an agency on Duely, you agree to our <button type="button" onClick={showTosModal} className="text-indigo-600" >Services Agreement</button> and the <a className="text-indigo-600" target="_blank" rel="noopener noreferrer" href="https://stripe.com/connect-account/legal">Stripe Connected Account Agreement</a>.
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className={className}>
+      <FormField form={form} label="Brand name" name="name" type="text" validateRule={{ required: true }} />
+      <FormField form={form} label="Subdomain URL" name="subdomain_name" prefix="https://" suffix=".duely.app" hint="Choose a subdomain for your brand" type="text" validateRule={{ required: true }} />
+      <FormField form={form} label="Country" name="country_code" type="select" loading={countryCodesQ.loading} options={countries} validateRule={{ required: true }} />
+      <FormField form={form} label="Logo image" name="image_logo_file_list" type="image" loading={imageLogo.loading} src={imageLogo.data} accept="image/jpeg, image/png" hint="PNG, JPG up to 512KB, and minimum 128px by 128px." validateRule={{ required: true }} />
+
+      <div className="flex flex-col pt-4">
+        <p className="text-xs text-center">
+          By creating an agency on Duely, you agree to our <button type="button" onClick={showTosModal} className="text-indigo-600" >Services Agreement</button> and the <a className="text-indigo-600" target="_blank" rel="noopener noreferrer" href="https://stripe.com/connect-account/legal">Stripe Connected Account Agreement</a>.
         </p>
-        </div>
-        <div className="flex flex-col pt-4 items-center">
-          <FormButton loading={state.loading}>Create a brand</FormButton>
-        </div>
-        <div className="flex flex-col pt-4 items-center h-24">
-          <FormErrorInfo error={state.error} />
-        </div>
-      </form>
-    </>
+      </div>
+      <div className="flex flex-col pt-4 items-center">
+        <FormButton loading={state.loading}>Create a brand</FormButton>
+      </div>
+      <div className="flex flex-col pt-4 items-center h-24">
+        <FormErrorInfo error={state.error} />
+      </div>
+    </form >
   );
 }

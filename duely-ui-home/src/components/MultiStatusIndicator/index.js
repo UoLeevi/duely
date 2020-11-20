@@ -10,7 +10,7 @@ export const status = {
 const bg = {
   [status.OK]: 'bg-green-400',
   [status.PENDING]: 'bg-blue-400',
-  [status.ACTION_REQUIRED]: 'bg-yellow-400',
+  [status.ACTION_REQUIRED]: 'bg-yellow-300',
   [status.PASSIVE]: 'bg-gray-400'
 };
 

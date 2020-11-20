@@ -1,1 +1,1 @@
-export * from './BrandList';
+export * from './ProfileBrandList';

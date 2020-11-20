@@ -1,4 +1,4 @@
-import { BrandList } from './components';
+import { ProfileBrandList } from './components';
 import TopBar from 'components/TopBar';
 import { Link } from 'react-router-dom';
 
@@ -15,12 +15,12 @@ function ProfileUserInfo({ className }) {
   const { data: current_user } = useQuery(current_user_Q);
   return (
     <div className={className}>
-      <div className="w-32 h-32 bg-indigo-500 grid self-center shadow place-items-center tracking-wider text-5xl rounded-full text-white">
+      <div className="w-24 md:w-32 h-24 md:h-32 bg-indigo-500 grid self-center shadow place-items-center tracking-wider text-4xl md:text-5xl rounded-full text-white">
         {getNameInitials(current_user.name)}
       </div>
       <div className="flex justify-between space-x-3 pt-5">
         <span className="text-xl">{current_user.name}</span>
-        <Link to="#" className="rounded font-medium text-xs bg-gray-200 border px-3 py-1 shadow-sm">Edit profile</Link>
+        <Link to="#" className="rounded font-medium text-xs bg-gray-200 border border-gray-300 px-3 py-1 shadow-sm">Edit profile</Link>
       </div>
       <span className="text-xs">{current_user.email_address}</span>
     </div>
@@ -43,7 +43,7 @@ export default function ProfileHome() {
                 + Create a brand
               </Link>
             </div>
-            <BrandList />
+            <ProfileBrandList />
           </div>
         </main>
       </div>

@@ -15,7 +15,7 @@ function BrandRow({ agency }) {
   ];
 
   return (
-    <tr className="border-b-2" key={agency.id}>
+    <tr className="border-b" key={agency.id}>
       <td className="px-2 sm:px-4 py-4 border-none">
         <div className="flex items-center space-x-3">
           <img className="rounded-full h-12 w-12 sm:h-16 sm:w-16 object-contain" src={agency.theme.image_logo.data} alt={`${agency.name} logo`} />
@@ -27,8 +27,8 @@ function BrandRow({ agency }) {
       </td>
       <td className="hidden sm:table-cell px-2 sm:px-4 py-2 border-none">
         <div className="flex items-center space-x-reverse -space-x-3 flex-row-reverse justify-end">
-          <div className="rounded-full h-10 w-10 font-semibold bg-purple-300 text-purple-700 border-2 border-white text-sm grid place-items-center">LW</div>
-          <div className="rounded-full h-10 w-10 font-semibold bg-purple-300 text-purple-700 border-2 border-white text-sm grid place-items-center">LW</div>
+          <div className="rounded-full h-10 w-10 bg-blue-400 text-white tracking-wider border-2 border-white text-sm grid place-items-center">LW</div>
+          <div className="rounded-full h-10 w-10 bg-indigo-400 text-white tracking-wider border-2 border-white text-sm grid place-items-center">LW</div>
         </div>
       </td>
       <td className="hidden sm:table-cell px-2 sm:px-4 py-2 border-none">
@@ -48,16 +48,16 @@ function BrandRow({ agency }) {
   );
 }
 
-export function BrandList() {
+export function ProfileBrandList() {
   const { loading, data: agencies, error } = useQuery(current_user_agencies_Q);
 
   return (
     <table className="table-auto w-full max-w-screen-md">
       <thead className="text-xs sm:text-sm">
-        <tr className="bg-gray-100 text-gray-600">
+        <tr className="bg-gray-100 text-gray-600 ">
           <th className="pl-4 pr-2 sm:pr-4 py-3 rounded-l-lg text-left tracking-wide">Brand</th>
           <th className="hidden sm:table-cell px-2 sm:px-4 py-3 text-left tracking-wide">Owner</th>
-          <th className="hidden sm:table-cell px-2 sm:px-4 py-3 text-left tracking-wide rounded-r-lg">Revenue</th>
+          <th className="hidden sm:table-cell px-2 sm:px-4 py-3 text-left tracking-wide">Revenue</th>
           <th className="px-2 sm:px-4 py-3 text-left tracking-wide rounded-r-lg ">Account Status</th>
         </tr>
       </thead>

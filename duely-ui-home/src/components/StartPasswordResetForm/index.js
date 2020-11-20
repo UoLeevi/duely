@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useMutation, start_password_reset_M } from '@duely/client';
-import { FormButton, FormErrorInfo, FormField } from '@duely/react';
+import { FormButton, FormErrorInfo, FormField, Util } from '@duely/react';
 
-export default function StartPasswordResetForm() {
+export default function StartPasswordResetForm({ className }) {
   const form = useForm();
   const [startPasswordReset, state] = useMutation(start_password_reset_M);
 
@@ -11,8 +11,10 @@ export default function StartPasswordResetForm() {
     await startPasswordReset({ ...data, redirect_url: 'https://duely.app/log-in' });
   };
 
+  className = Util.createClassName('flex flex-col space-y-3', className);
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-3">
+    <form onSubmit={form.handleSubmit(onSubmit)} className={className}>
       <FormField form={form} label="Email address" name="email_address" type="email" validateRule={{ required: true }} />
       <div className="flex flex-col pt-4 items-center">
         <FormButton loading={state.loading}>Send me a verification link</FormButton>

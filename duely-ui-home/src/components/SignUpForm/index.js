@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useMutation, start_sign_up_M } from '@duely/client';
-import { FormButton, FormErrorInfo, FormField } from '@duely/react';
+import { FormButton, FormErrorInfo, FormField, Util } from '@duely/react';
 
-export default function SignUpForm() {
+export default function SignUpForm({ className }) {
   const form = useForm();
   const [startSignUp, state] = useMutation(start_sign_up_M);
 
@@ -12,8 +12,10 @@ export default function SignUpForm() {
     await startSignUp({ ...sign_up_args, redirect_url: 'https://duely.app/profile' });
   };
 
+  className = Util.createClassName('flex flex-col space-y-3', className);
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-3">
+    <form onSubmit={form.handleSubmit(onSubmit)} className={className}>
       <FormField form={form} label="Name" name="name" type="text" validateRule={{ required: true }} />
       <FormField form={form} label="Email address" name="email_address" type="email" validateRule={{ required: true }} />
       <FormField form={form} label="Password" name="password" type="password" validateRule={{ required: true }} />
