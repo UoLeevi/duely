@@ -3,7 +3,7 @@ import Sidebar from 'components/Sidebar';
 // import TopBar from 'components/TopBar';
 
 export function DashboardLayout({ children }) {
-  useClassName(document.documentElement, 'bg-gray-100');
+  useClassName(document.documentElement, 'bg-gray-25');
   return (
     <div className="relative w-full">
       <Sidebar className="fixed inset-x-0 bottom-0" />

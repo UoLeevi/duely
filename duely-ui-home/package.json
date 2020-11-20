@@ -31,7 +31,7 @@
   "dependencies": {
     "@apollo/client": "^3.2.7",
     "@duely/client": "0.0.35",
-    "@duely/react": "0.0.33",
+    "@duely/react": "0.0.35",
     "@headlessui/react": "^0.2.0",
     "@tailwindcss/typography": "^0.2.0",
     "@testing-library/jest-dom": "^5.11.6",
@@ -46,10 +46,12 @@
     "react-icons": "^3.11.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.0",
-    "tailwindcss": "^1.9.6",
     "web-vitals": "^0.2.4"
   },
   "devDependencies": {
-    "postcss-cli": "^8.3.0"
+    "autoprefixer": "^9.8.6",
+    "postcss": "^7.0.35",
+    "postcss-cli": "^8.3.0",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.1"
   }
 }

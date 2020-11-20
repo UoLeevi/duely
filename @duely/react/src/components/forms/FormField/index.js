@@ -35,7 +35,7 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
             <input ref={form.register(validateRule)} key={value} value={value} id={value} name={name} type="radio" hidden {...props} />
             <div className="space-y-2">
               <span className="font-semibold">{element ?? value}</span>
-              {description && <p className="text-xs whitespace-no-wrap">{description}</p>}
+              {description && <p className="text-xs whitespace-nowrap">{description}</p>}
             </div>
           </label>
         );
@@ -56,7 +56,7 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
       }) ?? [];
 
       element = (
-        <div className="relative flex items-center outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm sm:text-sm sm:leading-5">
+        <div className="relative flex items-center outline-none border border-gray-300 rounded-md focus-within:ring shadow-sm sm:text-sm sm:leading-5">
           <select id={name} name={name} ref={form.register(validateRule)} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2 pl-3 pr-10" spellCheck="false" autoComplete="off" children={options} {...props} />
           <BsChevronDown className="absolute pointer-events-none mr-3 right-0 text-gray-600" />
         </div>
@@ -102,7 +102,7 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
       hintOrInfo = hasFile ? Array.from(fileList).map(f => Util.formatFileSize(f.size)).join(', ') : null;
 
       element = (
-        <label className="grid px-3 outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm sm:text-sm sm:leading-5" htmlFor={name}>
+        <label className="grid px-3 outline-none border border-gray-300 rounded-md focus-within:ring shadow-sm sm:text-sm sm:leading-5" htmlFor={name}>
           {filenames
             ? <span className="row-span-full col-span-full w-full rounded-md bg-transparent py-2">{filenames}</span>
             : <span className="row-span-full col-span-full w-full rounded-md bg-transparent py-2 text-gray-500"><span>Upload a file</span> or drag and drop</span>
@@ -115,7 +115,7 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
 
     case 'textarea': {
       element = (
-        <div className="flex items-center outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm sm:text-sm sm:leading-5">
+        <div className="flex items-center outline-none border border-gray-300 rounded-md focus-within:ring shadow-sm sm:text-sm sm:leading-5">
           {prefix && <span className="text-gray-500 pl-3">{prefix}</span>}
           <textarea id={name} name={name} ref={form.register(validateRule)} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2 first:pl-3 last:pr-3" spellCheck="false" autoComplete="off" {...props} />
           {suffix && <span className="text-gray-500 pr-3">{suffix}</span>}
@@ -126,7 +126,7 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
 
     default: {
       element = (
-        <div className="flex items-center outline-none border border-gray-300 rounded-md focus-within:shadow-outline shadow-sm sm:text-sm sm:leading-5">
+        <div className="flex items-center outline-none border border-gray-300 rounded-md focus-within:ring shadow-sm sm:text-sm sm:leading-5">
           {prefix && <span className="text-gray-500 pl-3">{prefix}</span>}
           <input id={name} name={name} ref={form.register(validateRule)} type={type} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2 first:pl-3 last:pr-3" spellCheck="false" autoComplete="off" {...props} />
           {suffix && <span className="text-gray-500 pr-3">{suffix}</span>}
@@ -142,7 +142,7 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
 
   return (
     <div className={className}>
-      <div className="flex justify-between whitespace-no-wrap">
+      <div className="flex justify-between whitespace-nowrap">
         {label && <label className="text-gray-700 font-medium text-sm leading-7 pl-px" htmlFor={name}>{label}</label>}
 
         {shortErrorMessage

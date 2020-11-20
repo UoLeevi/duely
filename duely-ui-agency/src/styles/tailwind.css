@@ -1,3 +1,17 @@
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --color-primary: #6366F1;
+  --color-secondary: #10B981;
+  --color-accent: #FBBF24;
+  --color-background: #fbfcfd;
+  --color-surface: #F1F5F9;
+  --color-error: #F87171;
+  --color-success: #16A34A;
+}
+
 /* purgecss start ignore */
 @tailwind base;
 @tailwind components;

@@ -75,7 +75,7 @@ export function CreateServiceForm() {
         <div className="w-12 h-12 rounded-full bg-green-200 grid place-items-center">
           <BsCheck className="text-green-600 text-3xl" />
         </div>
-        <h3 className="text-2xl font-semibold"><span className="whitespace-no-wrap">{service.name}</span> <span className="whitespace-no-wrap">created succesfully</span></h3>
+        <h3 className="text-2xl font-semibold"><span className="whitespace-nowrap">{service.name}</span> <span className="whitespace-nowrap">created succesfully</span></h3>
         <Link className="mt-2 rounded-md bg-indigo-500 text-white px-12 py-3 font-medium" to="/dashboard/services">Go to services</Link>
       </div>
     );

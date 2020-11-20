@@ -19,7 +19,7 @@ export function ServicePricingForm() {
         <div className="w-12 h-12 rounded-full bg-green-200 grid place-items-center">
           <BsCheck className="text-green-600 text-3xl" />
         </div>
-        <h3 className="text-2xl font-semibold"><span className="whitespace-no-wrap">{agency.name}</span> <span className="whitespace-no-wrap">created succesfully</span></h3>
+        <h3 className="text-2xl font-semibold"><span className="whitespace-nowrap">{agency.name}</span> <span className="whitespace-nowrap">created succesfully</span></h3>
         <p className="text-gray-600 font-medium">
           Next you can start setting up your services and <a href={stripe_verification_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600">verify your account on Stripe</a> to enable payments.
         </p>

@@ -20,7 +20,7 @@ export function DashboardOverviewCard({ title, value, to, info }) {
           <span className="text-sm self-end text-gray-500 font-medium -mb-2 mt-1">{info}</span>
         </div>
       </div>
-      <div className="rounded-md-b px-4 py-2 bg-gray-200">
+      <div className="rounded-md-b px-4 py-2 bg-gray-100">
         <Link to={to}><span className="text-sm font-semibold text-indigo-600">View all</span></Link>
       </div>
     </DashboardCard>

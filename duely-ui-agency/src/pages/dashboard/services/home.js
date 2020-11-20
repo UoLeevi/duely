@@ -50,8 +50,6 @@ function DataGrid({ getKey, rows, columns, headers, className }) {
 export default function DashboardServicesHome() {
   const { loading, error, data: agency } = useQuery(current_agency_Q);
 
-  console.log(agency);
-
   const headers = [
     (
       <div className="text-sm text-gray-500">
@@ -176,7 +174,7 @@ export default function DashboardServicesHome() {
 
                       {agency?.services.map(service => (
                         <tr key={service.id}>
-                          <td className="px-6 py-4 whitespace-no-wrap">
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-20 w-32">
                                 <img className="h-20 w-32 rounded-xl object-cover"
@@ -193,20 +191,20 @@ export default function DashboardServicesHome() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-no-wrap">
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm leading-5 text-gray-900">10</div>
                             <div className="text-sm leading-5 text-gray-500"></div>
                           </td>
-                          <td className="px-6 py-4 whitespace-no-wrap">
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                               {service.default_variant.status}
                           </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm leading-5 text-gray-500">
                             {service.default_variant.default_price?.unit_amount && `${service.default_variant.default_price.currency.toUpperCase()} ${service.default_variant.default_price.unit_amount / 100}`}
                       </td>
-                          <td className="px-6 py-4 whitespace-no-wrap text-right text-sm leading-5 font-medium">
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm leading-5 font-medium">
                             <a href="#" alt="" className="text-indigo-600 hover:text-indigo-900">Edit</a>
                           </td>
                         </tr>
