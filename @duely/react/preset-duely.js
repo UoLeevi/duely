@@ -43,6 +43,7 @@ module.exports = {
   },
   variants: {
     extend: {
+      textColor: ['focus-visible'],
       borderColor: ['focus-visible'],
       boxShadow: ['focus-visible'],
       outline: ['focus-visible'],
