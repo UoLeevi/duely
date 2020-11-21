@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { Util } from '../util';
 import { useBreakpoints } from '../hooks';
 
@@ -64,7 +64,7 @@ function TableRow({ item, row, columns, headers, dense, first, last, sm }) {
   const cells = columns.map((column, j) => column(item, j));
 
   return (
-    <>
+    <Fragment>
       <div className={className} style={{ gridArea }}>
       </div>
       {cells.map((cell, j) => (
@@ -72,7 +72,7 @@ function TableRow({ item, row, columns, headers, dense, first, last, sm }) {
           {cell}
         </TableCell>
       ))}
-    </>
+    </Fragment>
   );
 }
 
@@ -103,10 +103,10 @@ export function Table({ rows: items, columns, headers, className, dense }) {
   return (
     <div className={className} style={{ gridTemplateColumns }}>
       {sm && (
-        <>
+        <Fragment>
           <div className="border-b border-gray-200 h-8" style={{ gridArea: `1 / 1 / 2 / -1` }}></div>
           {headers}
-        </>
+        </Fragment>
       )}
       {rows}
     </div>
