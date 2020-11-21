@@ -1246,10 +1246,6 @@ html, body, #root {
   padding-top: 0.25rem;
 }
 
-.pr-1 {
-  padding-right: 0.25rem;
-}
-
 .pt-2 {
   padding-top: 0.5rem;
 }
@@ -1500,6 +1496,10 @@ html, body, #root {
 .hover\:text-indigo-500:hover {
   --tw-text-opacity: 1;
   color: rgba(99, 102, 241, var(--tw-text-opacity));
+}
+
+.hover\:text-accent:hover {
+  color: var(--color-accent);
 }
 
 .focus-visible\:text-gray-700:focus-visible {
