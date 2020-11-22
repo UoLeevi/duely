@@ -9,10 +9,10 @@ module.exports = {
       white: '#fff',
 
       gray: colors.blueGray,
-      red: colors.red,
+      red: colors.rose,
       orange: colors.orange,
       yellow: colors.amber,
-      green: colors.green,
+      green: colors.emerald,
       blue: colors.blue,
       indigo: colors.indigo,
 

@@ -4,12 +4,12 @@
 
 :root {
   --color-primary: #6366F1;
-  --color-secondary: #10B981;
+  --color-secondary: #34D399;
   --color-accent: #F97316;
   --color-background: #fbfcfd;
   --color-surface: #F1F5F9;
-  --color-error: #F87171;
-  --color-success: #16A34A;
+  --color-error: #F43F5E;
+  --color-success: #10B981;
 }
 
 /* purgecss start ignore */

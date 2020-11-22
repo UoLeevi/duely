@@ -1,7 +1,7 @@
 import { useQuery, current_subdomain_Q } from '@duely/client';
 import { useClassName, Sidebar } from '@duely/react';
 import { BsBriefcase, BsCreditCard, BsFolder, BsGear, BsHouseDoor, BsKanban, BsPeople } from 'react-icons/bs';
-// import TopBar from 'components/TopBar';
+import { Link } from 'react-router-dom';
 
 const sidebarLinks = [
   {
@@ -42,16 +42,28 @@ const sidebarLinks = [
   },
 ];
 
+function AgencyLogo({ src }) {
+  return (
+    <Link to="/" className="hidden md:flex items-center h-8 sm:h-10 md:h-12 relative space-x-2 text-gray-900 rounded p-1">
+      <img className="h-full" src={src} alt='logo' />
+    </Link>
+  );
+}
+
 export function DashboardLayout({ children }) {
   useClassName(document.documentElement, 'bg-gray-25');
   const { data: current_subdomain } = useQuery(current_subdomain_Q);
+  const logoSrc = current_subdomain?.agency.theme.image_logo.data;
 
   return (
     <div className="relative w-full">
-      <Sidebar className="fixed inset-x-0 bottom-0" links={sidebarLinks} logo={current_subdomain?.agency.theme.image_logo.data} />
+      <Sidebar className="fixed inset-x-0 bottom-0"
+        links={sidebarLinks}
+        topContent={logoSrc && <AgencyLogo src={logoSrc} />}
+      />
       <div className="pb-20 md:pb-0 md:pl-48 xl:pl-64 w-full box-border">
         <div className="flex flex-col p-4 space-y-8">
-          { children }
+          {children}
         </div>
       </div>
     </div>

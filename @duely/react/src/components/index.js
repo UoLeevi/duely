@@ -6,6 +6,7 @@ export * from './forms/FormField';
 export * from './forms/FormButton';
 export * from './forms/FormErrorInfo';
 export * from './IconImageAdd';
-export * from './SidebarLink';
 export * from './Sidebar';
 export * from './Table';
+export * from './DropMenu';
+export * from './Card';

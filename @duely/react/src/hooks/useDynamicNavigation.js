@@ -9,15 +9,15 @@ export function useDynamicNavigation({ resolveUrl, passAccessToken, action } = {
 
     let url = typeof resolveUrl === 'function'
       ? await resolveUrl()
-      : e?.target?.href;
+      : e?.currentTarget?.href;
 
     if (url == null) {
       throw new Error('resolveUrl returned null or undefined');
     }
-    
+
     if (!(url instanceof URL)) {
       url = new URL(url);
-      
+
       if (passAccessToken) {
         const isDuelyDomain = ('.' + url.hostname).endsWith('.duely.app');
         const access_token = localStorage.getItem('user-jwt');

@@ -1,11 +1,11 @@
 import React from 'react';
 import { BsAward, BsInfoCircle } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
-import { DashboardCard } from '.';
+import { Card } from '@duely/react';
 
 export function DashboardOverviewCard({ title, value, to, info }) {
   return (
-    <DashboardCard className="h-full">
+    <Card className="h-full">
       <div className="flex flex-row flex-1 rounded-md-t p-4 items-center space-x-4">
         <BsAward className="text-2xl text-gray-500" />
         <div className="flex flex-col flex-1 space-y-1">
@@ -23,6 +23,6 @@ export function DashboardOverviewCard({ title, value, to, info }) {
       <div className="rounded-md-b px-4 py-2 bg-gray-100">
         <Link to={to}><span className="text-sm font-semibold text-indigo-600">View all</span></Link>
       </div>
-    </DashboardCard>
+    </Card>
   );
 }

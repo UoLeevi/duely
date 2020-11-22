@@ -1,13 +1,12 @@
 import React from 'react';
 import { useQuery, current_agency_Q } from '@duely/client';
-import { Util, useBreakpoints, Table } from '@duely/react';
+import { Util, useBreakpoints, Table, DropMenu, Card } from '@duely/react';
 import {
   DashboardFlexGrid,
-  DashboardCard,
   DashboardCardGetStartedCreateServices,
   DashboardSection
 } from '../components';
-import { BsPencilSquare, BsThreeDotsVertical, BsTrash } from 'react-icons/bs';
+import { BsPencilSquare, BsTrash } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 
 const statusChipClassNames = {
@@ -75,8 +74,9 @@ export default function DashboardServicesHome() {
       const actions = [
         {
           key: 'edit',
+          className: 'className="text-center text-sm text-gray-500 focus:text-gray-700 focus:outline-none hover:text-accent',
           children: (
-            <div className="flex items-center space-x-2 text-center text-sm text-gray-500 hover:text-accent">
+            <div className="flex items-center space-x-2">
               <BsPencilSquare />
               <span>Edit</span>
             </div>
@@ -85,8 +85,9 @@ export default function DashboardServicesHome() {
         },
         {
           key: 'delete',
+          className: 'className="text-center text-sm text-gray-500 focus:text-gray-700 focus:outline-none hover:text-accent',
           children: (
-            <div className="flex items-center space-x-2 text-center text-sm text-gray-500 hover:text-accent">
+            <div className="flex items-center space-x-2">
               <BsTrash />
               <span>Delete</span>
             </div>
@@ -97,10 +98,13 @@ export default function DashboardServicesHome() {
 
       return (
         <div className="flex font-medium space-x-6">
-          {sm && <BsThreeDotsVertical className="text-xl text-gray-500" />}
-          {!sm && actions.map(action => (
-            <Link {...action} />
-          ))}
+          {sm && (
+            <DropMenu>
+              {actions.map(action => <Link {...action} />)}
+            </DropMenu>
+          )}
+
+          {!sm && actions.map(action => <Link {...action} />)}
         </div>
       );
     },
@@ -115,9 +119,9 @@ export default function DashboardServicesHome() {
       </DashboardSection>
 
       <DashboardSection title="Services">
-        <DashboardCard>
+        <Card>
           <Table className="px-6 py-4" rows={rows} columns={columns} headers={headers} wrap={wrap} />
-        </DashboardCard>
+        </Card>
       </DashboardSection>
     </>
   );

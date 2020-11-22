@@ -11,11 +11,11 @@ function TableHeader({ children, column }) {
   );
 }
 
-function TableCell({ children, row, column, header, dense, firstRow, lastRow, firstCol, lastCol, sm }) {
-  const gridArea = `${row} / ${column} / ${row + 1} / ${column + 1}`;
+function TableCell({ children, row, column, span, header, dense, firstRow, lastRow, firstCol, lastCol, isNotWrapped }) {
+  const gridArea = `${row} / ${column} / ${row + 1} / ${column + span}`;
 
-  if (sm) {
-    const className = 'grid items-center ' + (lastRow ? 'pt-3' : 'py-3');
+  if (isNotWrapped) {
+    const className = 'relative grid items-center ' + (lastRow ? 'pt-3' : 'py-3');
 
     return (
       <div className={className} style={{ gridArea }}>
@@ -43,48 +43,72 @@ function TableCell({ children, row, column, header, dense, firstRow, lastRow, fi
       <div className="grid text-xs text-gray-500 tracking-wide">
         {header}
       </div>
-      <div className="grid">
+      <div className="relative grid flex-1 items-center">
         {children}
       </div>
     </div>
   );
 }
 
-function TableRow({ item, row, columns, headers, dense, first, last, sm }) {
+function TableRow({ item, row, columns, headers, dense, wrapColCount, wrapColSpans, wrapColSpanSum, first, last, isNotWrapped }) {
   let className = 'border-gray-200' + (last ? '' : ' border-b');
+  const cells = columns.map((column, j) => column(item, j));
 
-  if (!sm) {
-    row = (row - 1) * columns.length + 1;
+  if (isNotWrapped) {
+    const gridArea = `${row} / 1 / ${row + 1} / -1`;
+
+    return (
+      <Fragment>
+        <div className={className} style={{ gridArea }}></div>
+
+        {cells.map((cell, j) => (
+          <TableCell key={j} row={row} column={j + 1} span={1} header={headers[j]} dense={dense} isNotWrapped={isNotWrapped} firstRow={first} lastRow={last} firstCol={j % columns.length === 0} lastCol={(j + 1) % columns.length === 0}>
+            {cell}
+          </TableCell>
+        ))}
+      </Fragment>
+    );
   }
 
-  const gridArea = sm
-    ? `${row} / 1 / ${row + 1} / -1`
-    : `${row} / 1 / ${row + columns.length} / -1`;
-
-  const cells = columns.map((column, j) => column(item, j));
+  row = (row - 1) * wrapColSpanSum / wrapColCount + 1;
+  const gridArea = `${row} / 1 / ${row + wrapColSpanSum / wrapColCount} / -1`;
+  let next = 1;
 
   return (
     <Fragment>
-      <div className={className} style={{ gridArea }}>
-      </div>
-      {cells.map((cell, j) => (
-        <TableCell key={j} row={sm ? row : row + j} column={sm ? j + 1 : 1} header={headers[j]} dense={dense} sm={sm} firstRow={first} lastRow={last} firstCol={j % columns.length === 0} lastCol={(j + 1) % columns.length === 0}>
-          {cell}
-        </TableCell>
-      ))}
+      <div className={className} style={{ gridArea }}></div>
+
+      {cells.map((cell, j) => {
+        const column = (next - 1) % wrapColCount + 1;
+        const span = wrapColSpans[j];
+        const cellRow = row + Math.floor((next - 1) / wrapColCount);
+        const firstCol = cellRow === row;
+        const lastCol = (cellRow + 1 - row) === wrapColSpanSum / wrapColCount;
+        next += span;
+        return (
+          <TableCell key={j} row={cellRow} column={column} span={span} header={headers[j]} dense={dense} isNotWrapped={isNotWrapped} firstRow={first} lastRow={last} firstCol={firstCol} lastCol={lastCol}>
+            {cell}
+          </TableCell>
+        );
+      })}
     </Fragment>
   );
 }
 
-export function Table({ rows: items, columns, headers, className, dense }) {
-  const { sm } = useBreakpoints();
-  const gridTemplateColumns = sm
+export function Table({ rows: items, columns, headers, className, dense, breakpoint, wrap: wrapOptions }) {
+  const breakpoints = useBreakpoints();
+  const isNotWrapped = breakpoints[breakpoint ?? 'sm'];
+  const wrapColCount = wrapOptions?.columns ?? 1;
+  const wrapColSpans = wrapOptions?.spans ?? new Array(columns.length).fill(1);
+  const wrapColSpanSum = wrapColSpans.reduce((a, b) => a + b, 0);
+
+  const gridTemplateColumns = isNotWrapped
     ? `repeat(${columns.length}, auto)`
-    : `repeat(1, auto)`;
+    : `repeat(${wrapOptions?.columns ?? 1}, auto)`;
 
   className = Util.createClassName(className, 'grid auto-rows-auto gap-x-6');
 
-  if (sm) {
+  if (isNotWrapped) {
     headers = headers.map((header, j) => {
       return (
         <TableHeader key={j} column={j + 1}>
@@ -96,13 +120,13 @@ export function Table({ rows: items, columns, headers, className, dense }) {
 
   const rows = items.map((item, i) => {
     return (
-      <TableRow key={item.key ?? item.id ?? i} item={item} row={i + (sm ? 2 : 1)} columns={columns} headers={headers} dense={dense} sm={sm} first={i === 0} last={i === items.length - 1} />
+      <TableRow key={item.key ?? item.id ?? i} item={item} row={i + (isNotWrapped ? 2 : 1)} columns={columns} headers={headers} dense={dense} wrapColCount={wrapColCount} wrapColSpans={wrapColSpans} wrapColSpanSum={wrapColSpanSum} isNotWrapped={isNotWrapped} first={i === 0} last={i === items.length - 1} />
     );
   });
 
   return (
     <div className={className} style={{ gridTemplateColumns }}>
-      {sm && (
+      {isNotWrapped && (
         <Fragment>
           <div className="border-b border-gray-200 h-8" style={{ gridArea: `1 / 1 / 2 / -1` }}></div>
           {headers}

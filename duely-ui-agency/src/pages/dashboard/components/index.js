@@ -1,4 +1,3 @@
-export * from './DashboardCard';
 export * from './DashboardFlexGrid';
 export * from './DashboardCardGetStartedCreateServices';
 export * from './DashboardCardGetStartedEnablePayouts';

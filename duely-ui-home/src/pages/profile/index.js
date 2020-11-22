@@ -2,6 +2,7 @@ import { Link, Route, Switch } from 'react-router-dom';
 import { useQuery, current_user_agencies_Q, current_user_Q } from '@duely/client';
 import { LoadingScreen, ErrorScreen } from '@duely/react';
 import ProfileHome from './home';
+import { ProfileLayout } from './components';
 
 const routes = [
   {
@@ -29,8 +30,10 @@ export default function Profile() {
   }
 
   return (
-    <Switch>
-      {routes.map((route, i) => <Route key={i} {...route} />)}
-    </Switch>
+    <ProfileLayout>
+      <Switch>
+        {routes.map((route, i) => <Route key={i} {...route} />)}
+      </Switch>
+    </ProfileLayout>
   );
 }

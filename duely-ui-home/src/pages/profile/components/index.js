@@ -1,1 +1,2 @@
-export * from './ProfileBrandList';
+export * from './ProfileBrandTable';
+export * from './ProfileLayout';

@@ -1502,7 +1502,10 @@ export const Util = {
   rgb2hsl,
   createClassName,
   formatDate,
-  formatFileSize
+  formatFileSize,
+  formatCurrency,
+  findFirstFocusableChild,
+  getNameInitials
 };
 
 function toFlagEmoji(alpha2Code) {
@@ -1671,4 +1674,22 @@ function formatFileSize(size) {
 
   size /= 1000;
   if (size < 1000) return `${size.toPrecision(3)}GB`;
+}
+
+function formatCurrency(amount, currency, country_code) {
+  currency = currency.toUpperCase();
+  country_code = country_code ?? 'US';
+  return new Intl.NumberFormat('en-' + country_code, {
+    currency,
+    style: 'currency',
+  }).format(amount);
+}
+
+function findFirstFocusableChild(parent) {
+  return parent.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+}
+
+function getNameInitials(name) {
+  const initials = name.match(/\b\w/g) || [];
+  return ((initials.shift() || '') + (initials.pop() || '')).toUpperCase();
 }

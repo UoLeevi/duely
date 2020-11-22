@@ -1,8 +1,7 @@
 import React from 'react';
-import { Util, Table } from '@duely/react';
+import { Util, Table, Card } from '@duely/react';
 import {
   DashboardFlexGrid,
-  DashboardCard,
   DashboardCardGetStartedCreateServices,
   DashboardCardGetStartedEnablePayouts,
   DashboardOverviewCard,
@@ -69,9 +68,9 @@ export default function DashboardHome() {
       </DashboardSection>
 
       <DashboardSection title="Recent activity">
-        <DashboardCard>
+        <Card>
           <Table className="px-6 py-4" rows={rows} columns={columns} headers={headers} dense={true} />
-        </DashboardCard>
+        </Card>
       </DashboardSection>
     </>
   );
