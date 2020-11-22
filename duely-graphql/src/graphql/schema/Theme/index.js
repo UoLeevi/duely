@@ -1,5 +1,5 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../utils';
+import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
 import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 import stripe from '../../../stripe';
