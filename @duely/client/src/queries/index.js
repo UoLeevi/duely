@@ -69,6 +69,71 @@ export const agency_stripe_account_update_url_Q = {
   result: d => d?.agency?.stripe_account?.account_update_url?.url
 };
 
+export const agency_stripe_account_balance_Q = {
+  query: gql`
+    query($agency_id: ID!) {
+      agency(id: $agency_id ) {
+        stripe_account {
+          id
+          balance {
+            available {
+              amount
+              currency
+              source_types {
+                card
+                bank_account
+              }
+            }
+            pending {
+              amount
+              currency
+              source_types {
+                card
+                bank_account
+              }
+            }
+            connect_reserved {
+              amount
+              currency
+              source_types {
+                card
+                bank_account
+              }
+            }
+          }
+        }
+      }
+    }
+  `,
+  result: d => d?.agency?.stripe_account?.balance
+};
+
+export const agency_stripe_account_balance_transactions_Q = {
+  query: gql`
+    query($agency_id: ID!) {
+      agency(id: $agency_id ) {
+        stripe_account {
+          id
+          balance_transactions {
+            id
+            id_ext
+            amount
+            available_on
+            created
+            currency
+            description
+            fee
+            net
+            status
+            type
+          }
+        }
+      }
+    }
+  `,
+  result: d => d?.agency?.stripe_account?.balance_transactions
+};
+
 export const current_user_agencies_Q = {
   query: gql`
     query {

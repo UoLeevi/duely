@@ -10,6 +10,8 @@ export const StripeAccount = {
       id: ID!
       id_ext: ID!
       account_update_url: StripeAccountLink!
+      balance: StripeBalance!
+      balance_transactions(payout_id: String, type: String, available_on: Date, created: Date, currency: String, starting_after_id: String, ending_before_id: String, limit: Int): [BalanceTransaction!]!
       business_profile: BusinessProfile!
       business_type: String
       capabilities: StripeCapabilities!
@@ -70,6 +72,24 @@ export const StripeAccount = {
       created: Date!
       expires_at: Date!
     }
+
+    type StripeBalance {
+      available: [StripeCurrencyBalance!]!
+      pending: [StripeCurrencyBalance!]!
+      connect_reserved: [StripeCurrencyBalance!]
+      instant_available: [StripeCurrencyBalance!]
+    }
+
+    type StripeCurrencyBalance {
+      amount: Int!
+      currency: String!
+      source_types: StripeBalanceSource!
+    }
+
+    type StripeBalanceSource {
+      bank_account: Int
+      card: Int
+    }
   `,
   resolvers: {
     StripeAccount: {
@@ -101,6 +121,65 @@ export const StripeAccount = {
             type: source.details_submitted ? 'account_onboarding' : 'account_update',
             collect: 'eventually_due'
           });
+
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      },
+      async balance(source, args, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        try {
+          const access = await withConnection(context, async withSession => {
+            return await withSession(async ({ queryResourceAccess }) => {
+              return await queryResourceAccess(source.id);
+            });
+          });
+
+          if (access !== 'owner') {
+            throw new Error('Only owner can access this information');
+          }
+
+          // retrive connected account balance
+          // see: https://stripe.com/docs/api/balance/balance_retrieve
+          return await stripe.balance.retrieve({ stripeAccount: source.stripe_id_ext });
+
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      },
+      async balance_transactions(source, { payout_id, starting_after_id, ending_before_id, ...args }, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        try {
+          const access = await withConnection(context, async withSession => {
+            return await withSession(async ({ queryResourceAccess }) => {
+              return await queryResourceAccess(source.id);
+            });
+          });
+
+          if (access !== 'owner') {
+            throw new Error('Only owner can access this information');
+          }
+
+          if (payout_id) {
+            args.payout = payout_id;
+          }
+
+          if (starting_after_id) {
+            args.starting_after = starting_after_id;
+          }
+
+          if (ending_before_id) {
+            args.ending_before = ending_before_id;
+          }
+
+          // retrive list of connected account balance transactions
+          // see: https://stripe.com/docs/api/balance_transactions/list
+          const list = await stripe.balanceTransactions.list(args, { stripeAccount: source.stripe_id_ext });
+          return list.data;
 
         } catch (error) {
           throw new Error(error.message);

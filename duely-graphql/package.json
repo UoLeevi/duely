@@ -1,6 +1,6 @@
 {
   "name": "duely-graphql",
-  "version": "0.102.3",
+  "version": "0.102.4",
   "keywords": [],
   "repository": "github:uoleevi/duely",
   "license": "ISC",
@@ -55,16 +55,16 @@
     "jsonwebtoken": "^8.5.1",
     "markdown-it": "^12.0.2",
     "pg": "^8.5.1",
-    "stripe": "^8.122.1",
+    "stripe": "^8.125.0",
     "validator": "^13.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.12.1",
-    "@babel/core": "^7.12.3",
+    "@babel/cli": "^7.12.7",
+    "@babel/core": "^7.12.7",
     "@babel/plugin-transform-async-to-generator": "^7.12.1",
     "@babel/plugin-transform-regenerator": "^7.12.1",
     "@babel/plugin-transform-runtime": "^7.12.1",
-    "@babel/preset-env": "^7.12.1",
-    "eslint": "^7.13.0"
+    "@babel/preset-env": "^7.12.7",
+    "eslint": "^7.14.0"
   }
 }

@@ -62,6 +62,7 @@ import { Membership } from './Membership';
 import { Date } from './Date';
 import { Theme } from './Theme';
 import { Price } from './Price';
+import { BalanceTransaction } from './BalanceTransaction';
 
 const types = [
   {
@@ -86,6 +87,7 @@ const types = [
   Agency,
   Price,
   StripeAccount,
+  BalanceTransaction,
   Service,
   ServiceVariant,
   Subdomain,
