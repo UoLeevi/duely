@@ -4,6 +4,7 @@ import {
   DashboardFlexGrid,
   DashboardCardGetStartedCreateServices,
   DashboardCardGetStartedEnablePayouts,
+  DashboardCardBalance,
   DashboardOverviewCard,
   DashboardSection
 } from './components';
@@ -62,6 +63,7 @@ export default function DashboardHome() {
 
       <DashboardSection title="Overview">
         <DashboardFlexGrid>
+          <DashboardCardBalance />
           <DashboardOverviewCard title="Sales" value="$1,000.00 USD" to="#" info="last 30 days" />
           <DashboardOverviewCard title="Active projects" value="5 projects" to="#" info="last 30 days" />
         </DashboardFlexGrid>
