@@ -812,6 +812,10 @@ html, body, #root {
   border-color: rgba(147, 197, 253, var(--tw-border-opacity));
 }
 
+.rounded-sm {
+  border-radius: 0.125rem;
+}
+
 .rounded {
   border-radius: 0.25rem;
 }
