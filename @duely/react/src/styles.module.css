@@ -602,6 +602,11 @@ html, body {
   background-color: rgba(255, 255, 255, var(--tw-bg-opacity));
 }
 
+.bg-gray-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgba(241, 245, 249, var(--tw-bg-opacity));
+}
+
 .bg-gray-200 {
   --tw-bg-opacity: 1;
   background-color: rgba(226, 232, 240, var(--tw-bg-opacity));
@@ -615,6 +620,10 @@ html, body {
 .bg-indigo-500 {
   --tw-bg-opacity: 1;
   background-color: rgba(99, 102, 241, var(--tw-bg-opacity));
+}
+
+.bg-opacity-75 {
+  --tw-bg-opacity: 0.75;
 }
 
 .border-transparent {
@@ -641,8 +650,8 @@ html, body {
   border-color: rgba(129, 140, 248, var(--tw-border-opacity));
 }
 
-.rounded {
-  border-radius: 0.25rem;
+.rounded-sm {
+  border-radius: 0.125rem;
 }
 
 .rounded-md {
@@ -673,8 +682,16 @@ html, body {
   border-bottom-width: 1px;
 }
 
+.box-border {
+  box-sizing: border-box;
+}
+
 .cursor-pointer {
   cursor: pointer;
+}
+
+.inline-block {
+  display: inline-block;
 }
 
 .flex {
@@ -781,6 +798,11 @@ html, body {
   line-height: 1.75rem;
 }
 
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
 .leading-5 {
   line-height: 1.25rem;
 }
@@ -791,6 +813,10 @@ html, body {
 
 .m-0 {
   margin: 0px;
+}
+
+.m-3 {
+  margin: 0.75rem;
 }
 
 .mx-auto {
@@ -962,6 +988,10 @@ html, body {
   pointer-events: none;
 }
 
+.pointer-events-auto {
+  pointer-events: auto;
+}
+
 .fixed {
   position: fixed;
 }
@@ -979,6 +1009,10 @@ html, body {
   right: 0px;
   bottom: 0px;
   left: 0px;
+}
+
+.top-0 {
+  top: 0px;
 }
 
 .right-0 {
@@ -1004,6 +1038,11 @@ html, body {
 
 .shadow-md {
   --tw-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.shadow-lg {
+  --tw-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
@@ -1105,10 +1144,6 @@ html, body {
   width: 3rem;
 }
 
-.w-24 {
-  width: 6rem;
-}
-
 .w-full {
   width: 100%;
 }
@@ -1119,6 +1154,10 @@ html, body {
 
 .z-20 {
   z-index: 20;
+}
+
+.z-30 {
+  z-index: 30;
 }
 
 .gap-4 {
@@ -1302,6 +1341,11 @@ html, body {
 .animate-progress {
   -webkit-animation: progress 1800ms cubic-bezier(.02,.25,1,.61) infinite;
           animation: progress 1800ms cubic-bezier(.02,.25,1,.61) infinite;
+}
+
+.bg-blur {
+  -webkit-backdrop-filter: blur(2px);
+          backdrop-filter: blur(2px);
 }
 
 .bg-mask-x-transparent {

@@ -9,3 +9,4 @@ export * from './Table';
 export * from './DropMenu';
 export * from './Card';
 export * from './skeletons';
+export * from './Modal';
