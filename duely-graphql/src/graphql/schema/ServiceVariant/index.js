@@ -21,6 +21,9 @@ export const ServiceVariant = {
       default_price: Price
       service: Service!
       prices(filter: PriceFilter): [Price!]
+      image_logo: Image
+      image_hero: Image
+      markdown_description: Markdown
     }
 
     input ServiceVariantFilter {
@@ -49,7 +52,10 @@ export const ServiceVariant = {
     ServiceVariant: {
       ...createResolverForReferencedResource({ name: 'service' }),
       ...createResolverForReferencedResource({ name: 'default_price' }),
-      ...createResolverForReferencedResourceAll({ name: 'prices', resource_name: 'price', column_name: 'service_variant_id' })
+      ...createResolverForReferencedResourceAll({ name: 'prices', resource_name: 'price', column_name: 'service_variant_id' }),
+      ...createResolverForReferencedResource({ name: 'image_logo' }),
+      ...createResolverForReferencedResource({ name: 'image_hero' }),
+      ...createResolverForReferencedResource({ name: 'markdown_description' }),
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
