@@ -14,18 +14,8 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-ALTER TABLE ONLY application_.service_
-    DROP CONSTRAINT service__default_variant_uuid__fkey,
-    ADD CONSTRAINT service__default_variant_uuid__fkey FOREIGN KEY (default_variant_uuid_) REFERENCES application_.service_variant_(uuid_) DEFERRABLE INITIALLY DEFERRED;
-
-ALTER TABLE ONLY application_.service_variant_
-    DROP CONSTRAINT service_variant__default_price_uuid__fkey,
-    ADD CONSTRAINT service_variant__default_price_uuid__fkey FOREIGN KEY (default_price_uuid_) REFERENCES application_.price_(uuid_) ON DELETE SET NULL;
-
-ALTER TABLE ONLY application_.service_variant_
-    DROP CONSTRAINT service_variant__service_uuid__fkey,
-    ADD CONSTRAINT service_variant__service_uuid__fkey FOREIGN KEY (service_uuid_) REFERENCES application_.service_(uuid_) ON DELETE CASCADE;
-
+ALTER TABLE ONLY application_.image_
+    DROP CONSTRAINT image__name__agency_uuid__key;
 
 -- CREATE OR REPLACE FUNCTION policy_.agent_can_query_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
 --     LANGUAGE plpgsql SECURITY DEFINER

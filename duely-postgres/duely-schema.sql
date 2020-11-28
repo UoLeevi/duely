@@ -6868,14 +6868,6 @@ ALTER TABLE ONLY application_.client_
 
 
 --
--- Name: image_ image__name__agency_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.image_
-    ADD CONSTRAINT image__name__agency_uuid__key UNIQUE (name_, agency_uuid_);
-
-
---
 -- Name: image_ image__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
