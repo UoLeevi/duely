@@ -17,7 +17,7 @@ export async function query(queryDef, variables, ...options) {
 
 export const current_user_Q = {
   query: gql`
-    query {
+    query current_user_Q {
       current_user {
         ...user_F
         memberships {
@@ -34,7 +34,7 @@ export const current_user_Q = {
 
 export const country_codes_Q = {
   query: gql`
-    query {
+    query country_codes_Q {
       country_codes
     }
   `,
@@ -43,7 +43,7 @@ export const country_codes_Q = {
 
 export const services_agreement_Q = {
   query: gql`
-    query {
+    query services_agreement_Q {
       markdowns(filter: { name: "Services Agreement", agency_id: null }) {
         ...markdown_F
       }
@@ -55,7 +55,7 @@ export const services_agreement_Q = {
 
 export const agency_stripe_account_update_url_Q = {
   query: gql`
-    query($agency_id: ID!) {
+    query agency_stripe_account_update_url_Q($agency_id: ID!) {
       agency(id: $agency_id ) {
         stripe_account {
           account_update_url {
@@ -71,7 +71,7 @@ export const agency_stripe_account_update_url_Q = {
 
 export const agency_stripe_account_balance_Q = {
   query: gql`
-    query($agency_id: ID!) {
+    query agency_stripe_account_balance_Q($agency_id: ID!) {
       agency(id: $agency_id ) {
         stripe_account {
           id
@@ -110,7 +110,7 @@ export const agency_stripe_account_balance_Q = {
 
 export const agency_stripe_account_balance_transactions_Q = {
   query: gql`
-    query($agency_id: ID!) {
+    query agency_stripe_account_balance_transactions_Q($agency_id: ID!) {
       agency(id: $agency_id ) {
         stripe_account {
           id
@@ -136,7 +136,7 @@ export const agency_stripe_account_balance_transactions_Q = {
 
 export const current_user_agencies_Q = {
   query: gql`
-    query {
+    query current_user_agencies_Q {
       current_user {
         id
         memberships {
@@ -175,7 +175,7 @@ export const current_user_agencies_Q = {
 
 export const subdomain_public_Q = {
   query: gql`
-    query($subdomain_name: String!) {
+    query subdomain_public_Q($subdomain_name: String!) {
       subdomains(filter: { name: $subdomain_name }) {
         id
         name
@@ -224,19 +224,22 @@ function resolveSubdomain() {
 
 export const agency_services_Q = {
   query: gql`
-    query($agency_id: ID!) {
-      services(filter: { agency_id: $agency_id }) {
-        ...service_F
+    query agency_services_Q($agency_id: ID!) {
+      agency(id: $agency_id) {
+        id
+        services {
+          ...service_F
+        }
       }
     }
     ${service_F}
   `,
-  result: d => d?.services
+  result: d => d?.agency?.services
 };
 
 export const service_Q = {
   query: gql`
-    query($service_id: ID!) {
+    query service_Q($service_id: ID!) {
       service(id: $service_id) {
         ...service_F
       }
@@ -249,23 +252,19 @@ export const service_Q = {
 export const current_agency_Q = {
   ...current_subdomain_Q,
   query: gql`
-    query($subdomain_name: String!) {
+    query current_agency_Q($subdomain_name: String!) {
       subdomains(filter: { name: $subdomain_name }) {
         id
         name
         agency {
-          id
-          name
-          theme {
-            ...theme_F
-          }
+          ...agency_F
           services {
             ...service_F
           }
         }
       }
     }
-    ${theme_F}
+    ${agency_F}
     ${service_F}
   `,
   result: d => d?.subdomains[0]?.agency
@@ -274,7 +273,7 @@ export const current_agency_Q = {
 export const current_agency_stripe_account_update_url_Q = {
   ...current_subdomain_Q,
   query: gql`
-    query($subdomain_name: String!) {
+    query current_agency_stripe_account_update_url_Q($subdomain_name: String!) {
       subdomains(filter: { name: $subdomain_name }) {
         id
         name

@@ -53,6 +53,14 @@ export const user_F = gql`
   }
 `;
 
+export const markdown_F = gql`
+  fragment markdown_F on Markdown {
+    id
+    name
+    data
+  }
+`;
+
 export const image_F = gql`
   fragment image_F on Image {
     id
@@ -65,6 +73,9 @@ export const theme_F = gql`
   fragment theme_F on Theme {
     id
     image_logo {
+      ...image_F
+    }
+    image_hero {
       ...image_F
     }
   }
@@ -96,8 +107,19 @@ export const service_variant_F = gql`
     prices {
       ...price_F
     }
+    image_logo {
+      ...image_F
+    }
+    image_hero {
+      ...image_F
+    }
+    markdown_description {
+      ...markdown_F
+    }
   }
   ${price_F}
+  ${image_F}
+  ${markdown_F}
 `;
 
 export const service_F = gql`
@@ -105,6 +127,9 @@ export const service_F = gql`
     id
     name
     url_name
+    agency {
+      id
+    }
     default_variant {
       ...service_variant_F
     }
@@ -113,14 +138,6 @@ export const service_F = gql`
     }
   }
   ${service_variant_F}
-`;
-
-export const markdown_F = gql`
-  fragment markdown_F on Markdown {
-    id
-    name
-    data
-  }
 `;
 
 export const membership_F = gql`
@@ -144,6 +161,10 @@ export const agency_F = gql`
   fragment agency_F on Agency {
     id
     name
+    subdomain {
+      id
+      name
+    }
     theme {
       ...theme_F
     }

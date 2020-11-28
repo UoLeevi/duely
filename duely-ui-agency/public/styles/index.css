@@ -1027,10 +1027,6 @@ html, body, #root {
   height: 0.25rem;
 }
 
-.h-4 {
-  height: 1rem;
-}
-
 .h-5 {
   height: 1.25rem;
 }
@@ -1182,6 +1178,10 @@ html, body, #root {
   max-width: 640px;
 }
 
+.max-w-screen-lg {
+  max-width: 1024px;
+}
+
 .min-w-min {
   min-width: -webkit-min-content;
   min-width: min-content;
@@ -1189,6 +1189,10 @@ html, body, #root {
 
 .object-contain {
   object-fit: contain;
+}
+
+.object-cover {
+  object-fit: cover;
 }
 
 .opacity-0 {
@@ -1309,6 +1313,10 @@ html, body, #root {
 
 .pt-1 {
   padding-top: 0.25rem;
+}
+
+.pb-1 {
+  padding-bottom: 0.25rem;
 }
 
 .pt-2 {
@@ -1465,6 +1473,17 @@ html, body, #root {
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
 
+.focus\:ring-2:focus {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+.focus\:ring-indigo-600:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgba(79, 70, 229, var(--tw-ring-opacity));
+}
+
 .text-left {
   text-align: left;
 }
@@ -1577,6 +1596,11 @@ html, body, #root {
   color: rgba(99, 102, 241, var(--tw-text-opacity));
 }
 
+.hover\:text-indigo-600:hover {
+  --tw-text-opacity: 1;
+  color: rgba(79, 70, 229, var(--tw-text-opacity));
+}
+
 .hover\:text-accent:hover {
   color: var(--color-accent);
 }
@@ -1595,6 +1619,10 @@ html, body, #root {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.overflow-ellipsis {
+  text-overflow: ellipsis;
 }
 
 .uppercase {

@@ -1,6 +1,6 @@
 {
   "name": "duely-checkout",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Web server handling HTTP and javascript redirects for duely related to checkout.",
   "main": "src/index.js",
   "scripts": {
@@ -50,12 +50,12 @@
     "validator": "^13.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.12.1",
-    "@babel/core": "^7.12.3",
+    "@babel/cli": "^7.12.8",
+    "@babel/core": "^7.12.9",
     "@babel/plugin-transform-async-to-generator": "^7.12.1",
     "@babel/plugin-transform-regenerator": "^7.12.1",
     "@babel/plugin-transform-runtime": "^7.12.1",
-    "@babel/preset-env": "^7.12.1",
-    "eslint": "^7.13.0"
+    "@babel/preset-env": "^7.12.7",
+    "eslint": "^7.14.0"
   }
 }

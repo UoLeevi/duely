@@ -162,10 +162,17 @@ async function get_checkout(req, res) {
   }
 
   let checkout_session_id;
+  const requestArgs = [gql_create_stripe_checkout_session, { price_id }];
+  const { access_token } = req.query.access_token;
+
+  if (access_token) {
+    requestArgs.push({
+      authorization: `Bearer ${access_token}`
+    });
+  }
 
   try {
-    const { create_stripe_checkout_session: result } = await client.request(
-      gql_create_stripe_checkout_session, { price_id });
+    const { create_stripe_checkout_session: result } = await client.request(...requestArgs);
 
     if (!result.success) {
       console.error(result.message);

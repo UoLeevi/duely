@@ -25,7 +25,7 @@ export async function mutate(mutationDef, variables, ...options) {
 
 export const log_in_M = {
   mutation: gql`
-    mutation($email_address: String!, $password: String!) {
+    mutation log_in_M($email_address: String!, $password: String!) {
       log_in(email_address: $email_address, password: $password) {
         success
         message
@@ -47,7 +47,7 @@ export const log_in_M = {
 
 export const log_out_M = {
   mutation: gql`
-    mutation {
+    mutation log_out_M {
       log_out {
         success
         message
@@ -68,7 +68,7 @@ export const log_out_M = {
 
 export const verify_password_reset_M = {
   mutation: gql`
-    mutation($verification_code: String!, $password: String!) {
+    mutation verify_password_reset_M($verification_code: String!, $password: String!) {
       verify_password_reset(verification_code: $verification_code, password: $password) {
         success
         message
@@ -80,7 +80,7 @@ export const verify_password_reset_M = {
 
 export const verify_sign_up_M = {
   mutation: gql`
-    mutation($verification_code: String!) {
+    mutation verify_sign_up_M($verification_code: String!) {
       verify_sign_up(verification_code: $verification_code) {
         success
         message
@@ -92,7 +92,7 @@ export const verify_sign_up_M = {
 
 export const start_password_reset_M = {
   mutation: gql`
-    mutation($email_address: String!, $redirect_url: String) {
+    mutation start_password_reset_M($email_address: String!, $redirect_url: String) {
       start_password_reset(email_address: $email_address, redirect_url: $redirect_url) {
         success
         message
@@ -104,7 +104,7 @@ export const start_password_reset_M = {
 
 export const start_sign_up_M = {
   mutation: gql`
-    mutation($email_address: String!, $password: String!, $name: String!, $redirect_url: String) {
+    mutation start_sign_up_M($email_address: String!, $password: String!, $name: String!, $redirect_url: String) {
       start_sign_up(email_address: $email_address, password: $password, name: $name, redirect_url: $redirect_url) {
         success
         message
@@ -116,7 +116,7 @@ export const start_sign_up_M = {
 
 export const create_agency_M = {
   mutation: gql`
-    mutation($name: String!, $subdomain_name: String!, $country_code: String!, $image_logo: ImageInput!, $return_url: String!) {
+    mutation create_agency_M($name: String!, $subdomain_name: String!, $country_code: String!, $image_logo: ImageInput!, $return_url: String!) {
       create_agency(name: $name, subdomain_name: $subdomain_name, country_code: $country_code, image_logo: $image_logo, return_url: $return_url) {
         stripe_verification_url
         message
@@ -137,25 +137,48 @@ export const create_agency_M = {
 
 export const create_service_M = {
   mutation: gql`
-    mutation($agency_id: ID!, $name: String!, $description: String!, $url_name: String!, $duration: String, $image_logo: ImageInput, $image_hero: ImageInput, $status: String) {
+    mutation create_service_M($agency_id: ID!, $name: String!, $description: String!, $url_name: String!, $duration: String, $image_logo: ImageInput, $image_hero: ImageInput, $status: String) {
       create_service(agency_id: $agency_id, name: $name, description: $description, url_name: $url_name, duration: $duration, image_logo: $image_logo, image_hero: $image_hero, status: $status) {
         success
         message
         service {
-          service {
-            ...service_F
-          }
+          ...service_F
         }
       }
     }
     ${service_F}
   `,
-  result: d => d?.create_service
+  result: d => d?.create_service,
+  async after(cache, result) {
+    if (!result.success) return;
+
+    const { service } = result;
+
+    cache.modify({
+      id: cache.identify(service.agency.id),
+      fields: {
+        services(servicesRefs = [], { readField }) {
+          const newServiceRef = cache.writeFragment({
+            data: service,
+            fragment: service_F
+          });
+
+          // Quick safety check - if the new comment is already
+          // present in the cache, we don't need to add it again.
+          if (servicesRefs.some(ref => readField('id', ref) === service.id)) {
+            return servicesRefs;
+          }
+
+          return [...servicesRefs, newServiceRef];
+        }
+      }
+    });
+  }
 };
 
 export const update_service_M = {
   mutation: gql`
-    mutation($service_id: ID!, $name: String, $description: String, $url_name: String, $duration: String, $default_price_id: ID, $image_logo: ImageInput, $image_hero: ImageInput, $status: String) {
+    mutation update_service_M($service_id: ID!, $name: String, $description: String, $url_name: String, $duration: String, $default_price_id: ID, $image_logo: ImageInput, $image_hero: ImageInput, $status: String) {
       update_service(service_id: $service_id, name: $name, description: $description, url_name: $url_name, duration: $duration, default_price_id: $default_price_id, image_logo: $image_logo, image_hero: $image_hero, status: $status) {
         success
         message
@@ -171,7 +194,7 @@ export const update_service_M = {
 
 export const delete_service_M = {
   mutation: gql`
-    mutation($service_id: ID!) {
+    mutation delete_service_M($service_id: ID!) {
       delete_service(service_id: $service_id) {
         success
         message
@@ -185,7 +208,7 @@ export const delete_service_M = {
   async after(cache, result) {
     if (!result.success) return;
 
-    const { id } = result.service;
+    const id = cache.identify(result.service);
     cache.evict({ id });
     cache.gc();
   }
@@ -193,7 +216,7 @@ export const delete_service_M = {
 
 export const create_price_M = {
   mutation: gql`
-    mutation($service_variant_id: ID!, $unit_amount: Int!, $currency: String!, $recurring_interval: String, $recurring_interval_count: Int, $status: String) {
+    mutation create_price_M($service_variant_id: ID!, $unit_amount: Int!, $currency: String!, $recurring_interval: String, $recurring_interval_count: Int, $status: String) {
       create_price(service_variant_id: $service_variant_id, unit_amount: $unit_amount, currency: $currency, recurring_interval: $recurring_interval, recurring_interval_count: $recurring_interval_count, status: $status) {
         success
         message

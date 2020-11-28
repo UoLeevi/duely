@@ -1,17 +1,18 @@
 import { useCallback } from 'react';
 import { useHistory } from 'react-router-dom';
 
-export function useDynamicNavigation({ resolveUrl, passAccessToken, action } = {}) {
+export function useDynamicNavigation({ resolveUrl, passAccessToken, action, local } = {}) {
   const history = useHistory();
 
   return useCallback(async e => {
-    if (e?.preventDefault) e.preventDefault();
+    const originalHref = e?.currentTarget?.href;
 
     let url = typeof resolveUrl === 'function'
       ? await resolveUrl()
-      : e?.currentTarget?.href;
+      : originalHref;
 
     if (url == null) {
+      if (e?.preventDefault) e.preventDefault();
       throw new Error('resolveUrl returned null or undefined');
     }
 
@@ -31,10 +32,16 @@ export function useDynamicNavigation({ resolveUrl, passAccessToken, action } = {
 
     const href = url.toString();
 
-    if (url.host === window.location.host) {
+    if (local) {
+      if (e?.preventDefault) e.preventDefault();
       const to = href.split(url.host)[1];
       history[action === 'replace' ? 'replace' : 'push'](to);
+    } else if (e?.currentTarget?.tagName === 'A') {
+      const a = e?.currentTarget;
+      a.href = href;
+      setTimeout(() => a.href = originalHref, 0);
     } else {
+      if (e?.preventDefault) e.preventDefault();
       window.location[action === 'replace' ? 'replace' : 'assign'](href);
     }
 
