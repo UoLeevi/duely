@@ -234,6 +234,18 @@ export const agency_services_Q = {
   result: d => d?.services
 };
 
+export const service_Q = {
+  query: gql`
+    query($service_id: ID!) {
+      service(id: $service_id) {
+        ...service_F
+      }
+    }
+    ${service_F}
+  `,
+  result: d => d?.service
+};
+
 export const current_agency_Q = {
   ...current_subdomain_Q,
   query: gql`

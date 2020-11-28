@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 import { client } from '../apollo/client';
+import { service_F } from '../fragments';
 // import produce from 'immer';
 // import { query } from './queries';
 
@@ -32,7 +33,7 @@ export const log_in_M = {
       }
     }
   `,
-  result: d => d['log_in'],
+  result: d => d?.log_in,
   async after(cache, result) {
     if (!result.success) return;
 
@@ -53,7 +54,7 @@ export const log_out_M = {
       }
     }
   `,
-  result: d => d['log_out'],
+  result: d => d?.log_out,
   async after(cache, result) {
     if (!result.success) return;
 
@@ -74,7 +75,7 @@ export const verify_password_reset_M = {
       }
     }
   `,
-  result: d => d['verify_password_reset']
+  result: d => d?.verify_password_reset
 };
 
 export const verify_sign_up_M = {
@@ -86,7 +87,7 @@ export const verify_sign_up_M = {
       }
     }
   `,
-  result: d => d['verify_sign_up']
+  result: d => d?.verify_sign_up
 };
 
 export const start_password_reset_M = {
@@ -98,7 +99,7 @@ export const start_password_reset_M = {
       }
     }
   `,
-  result: d => d['start_password_reset']
+  result: d => d?.start_password_reset
 };
 
 export const start_sign_up_M = {
@@ -110,7 +111,7 @@ export const start_sign_up_M = {
       }
     }
   `,
-  result: d => d['start_sign_up']
+  result: d => d?.start_sign_up
 };
 
 export const create_agency_M = {
@@ -131,8 +132,8 @@ export const create_agency_M = {
       }
     }
   `,
-  result: d => d['create_agency']
-}
+  result: d => d?.create_agency
+};
 
 export const create_service_M = {
   mutation: gql`
@@ -141,22 +142,16 @@ export const create_service_M = {
         success
         message
         service {
-          id
-          name
-          url_name
-          default_variant {
-            id
-            name
-            description
-            duration
-            status
+          service {
+            ...service_F
           }
         }
       }
     }
+    ${service_F}
   `,
-  result: d => d['create_service']
-}
+  result: d => d?.create_service
+};
 
 export const update_service_M = {
   mutation: gql`
@@ -165,25 +160,36 @@ export const update_service_M = {
         success
         message
         service {
+          ...service_F
+        }
+      }
+    }
+    ${service_F}
+  `,
+  result: d => d?.update_service
+};
+
+export const delete_service_M = {
+  mutation: gql`
+    mutation($service_id: ID!) {
+      delete_service(service_id: $service_id) {
+        success
+        message
+        service {
           id
-          name
-          url_name
-          default_variant {
-            id
-            name
-            description
-            duration
-            status
-            default_price {
-              id
-            }
-          }
         }
       }
     }
   `,
-  result: d => d['update_service']
-}
+  result: d => d?.delete_service,
+  async after(cache, result) {
+    if (!result.success) return;
+
+    const { id } = result.service;
+    cache.evict({ id });
+    cache.gc();
+  }
+};
 
 export const create_price_M = {
   mutation: gql`
@@ -203,8 +209,8 @@ export const create_price_M = {
       }
     }
   `,
-  result: d => d['create_price']
-}
+  result: d => d?.create_price
+};
 
 // createClient: {
 //   mutation: gql`
@@ -220,15 +226,7 @@ export const create_price_M = {
 //       }
 //     }
 //   `,
-//   result: d => d['createClient'],
-//   after(client, result, { agencyUuid }) {
-//     if (!result.success) return;
-//     const query = queries.clients.query;
-//     const data = produce(client.readQuery({ query, variables: { agencyUuid } }), data => {
-//       data.agency.clientsConnection.edges.push(result.client);
-//     });
-//     client.writeQuery({ query, data });
-//   }
+//   result: d => d?.createClient,
 // },
 // deleteClient: {
 //   mutation: gql`
@@ -240,7 +238,7 @@ export const create_price_M = {
 //       }
 //     }
 //   `,
-//   result: d => d['createAgency']
+//   result: d => d?.createAgency
 // },
 // createService: {
 //   mutation: gql`
@@ -256,7 +254,7 @@ export const create_price_M = {
 //       }
 //     }
 //   `,
-//   result: d => d['createService'],
+//   result: d => d?.createService,
 //   after(client, result, { agencyUuid }) {
 //     if (!result.success) return;
 //     const query = queries.services.query;
@@ -276,7 +274,7 @@ export const create_price_M = {
 //       }
 //     }
 //   `,
-//   result: d => d['createAgency']
+//   result: d => d?.createAgency
 // },
 // editImage: {
 //   mutation: gql`
@@ -290,6 +288,6 @@ export const create_price_M = {
 //       }
 //     }
 //   `,
-//   result: d => d['editImage']
+//   result: d => d?.editImage
 // },
 // };

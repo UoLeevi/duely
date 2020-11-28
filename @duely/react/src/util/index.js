@@ -1505,7 +1505,9 @@ export const Util = {
   formatFileSize,
   formatCurrency,
   findFirstFocusableChild,
-  getNameInitials
+  getNameInitials,
+  pseudoRandom,
+  poisson
 };
 
 function toFlagEmoji(alpha2Code) {
@@ -1692,4 +1694,23 @@ function findFirstFocusableChild(parent) {
 function getNameInitials(name) {
   const initials = name.match(/\b\w/g) || [];
   return ((initials.shift() || '') + (initials.pop() || '')).toUpperCase();
+}
+
+function pseudoRandom(seed) {
+  const x = Math.sin(seed || Math.random()) * 10000;
+  return x - Math.floor(x);
+}
+
+function poisson(mean, generateRandom) {
+  const L = Math.exp(-mean);
+  let p = 1.0;
+  let k = 0;
+  generateRandom = generateRandom ?? Math.random;
+
+  do {
+    k++;
+    p *= generateRandom();
+  } while (p > L);
+
+  return k - 1;
 }
