@@ -17,7 +17,12 @@ const apollo = new ApolloServer({
 const app = express();
 app.set('trust proxy', true);
 app.use(cors());
-apollo.applyMiddleware({ app });
+apollo.applyMiddleware({
+  app,
+  bodyParserConfig: {
+    limit: '100mb'
+  }
+});
 
 const server = http.createServer(app);
 apollo.installSubscriptionHandlers(server);
