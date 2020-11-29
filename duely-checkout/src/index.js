@@ -30,6 +30,10 @@ const gql_subdomain = gql`
       id
       agency {
         id
+        stripe_account {
+          id
+          id_ext
+        }
       }
     }
   }
@@ -125,6 +129,7 @@ async function get_checkout(req, res) {
   }
 
   let agency_id;
+  let stripe_id_ext;
 
   try {
     const { subdomains } = await client.request(
@@ -135,7 +140,10 @@ async function get_checkout(req, res) {
       return;
     }
 
-    agency_id = subdomains[0].agency.id;
+    const { agency } = subdomains[0];
+
+    agency_id = agency.id;
+    stripe_id_ext = agency.stripe_account.id_ext;
   } catch (error) {
     console.error(error);
     res.sendStatus(404);
@@ -195,7 +203,7 @@ async function get_checkout(req, res) {
         <title>Duely</title>
         <script src="https://js.stripe.com/v3/"></script>
         <script>
-          var stripe = Stripe('${process.env.STRIPE_PK_TEST}');
+          var stripe = Stripe('${process.env.STRIPE_PK_TEST}', { stripeAccount: '${stripe_id_ext}' });
           var redirect = stripe.redirectToCheckout({ sessionId: '${checkout_session_id}' });
         </script>
       </head>
