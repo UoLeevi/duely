@@ -42,14 +42,14 @@ export function DashboardCardBalance() {
 
   for (const b of balance.available) {
     balancesByCurrency[b.currency] = {
-      available: b.amount
+      available: b.amount / 100
     };
   }
 
   for (const b of balance.pending) {
     balancesByCurrency[b.currency] = {
       ...balancesByCurrency[b.currency],
-      pending: b.amount
+      pending: b.amount / 100
     };
   }
 
@@ -67,7 +67,7 @@ export function DashboardCardBalance() {
                 <span className="font-medium text-gray-800 flex-1">{Util.formatCurrency(available, currency)} available</span>
               </div>
               <div className="flex flex-row items-center space-x-4">
-                <span className="text-sm font-medium text-gray-400 flex-1">{Util.formatCurrency(available, currency)} pending</span>
+                <span className="text-sm font-medium text-gray-400 flex-1">{Util.formatCurrency(pending, currency)} pending</span>
               </div>
             </div>
           ))}

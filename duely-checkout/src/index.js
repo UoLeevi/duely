@@ -171,7 +171,7 @@ async function get_checkout(req, res) {
 
   let checkout_session_id;
   const requestArgs = [gql_create_stripe_checkout_session, { price_id }];
-  const { access_token } = req.query.access_token;
+  const { access_token } = req.query ?? {};
 
   if (access_token) {
     requestArgs.push({
