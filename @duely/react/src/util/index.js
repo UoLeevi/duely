@@ -1507,7 +1507,8 @@ export const Util = {
   findFirstFocusableChild,
   getNameInitials,
   pseudoRandom,
-  poisson
+  poisson,
+  truncate
 };
 
 function toFlagEmoji(alpha2Code) {
@@ -1662,7 +1663,7 @@ function createClassName(...classNames) {
 const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function formatDate(d) {
-  return `${d.getUTCDate()} ${shortMonthNames[d.getUTCMonth()]} ${d.getUTCFullYear()} ${d.getUTCHours()}:${ String(d.getUTCMinutes()).padStart(2, '0')} UTC`;
+  return `${d.getUTCDate()} ${shortMonthNames[d.getUTCMonth()]} ${d.getUTCFullYear()} ${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;
 }
 
 function formatFileSize(size) {
@@ -1713,4 +1714,10 @@ function poisson(mean, generateRandom) {
   } while (p > L);
 
   return k - 1;
+}
+
+function truncate(text, maxLength) {
+  return text?.length > maxLength
+    ? text.substring(0, maxLength).trimEnd() + '...'
+    : text;
 }

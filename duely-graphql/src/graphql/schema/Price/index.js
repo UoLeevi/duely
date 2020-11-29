@@ -52,7 +52,27 @@ export const Price = {
   `,
   resolvers: {
     Price: {
-      name: source => `${source.currency.toUpperCase()} ${source.unit_amount / 100}` + (source.type === 'recurring' ? ` / ${source.recurring_interval}` : '') + (source.recurring_interval_count ? `, ${source.recurring_interval_count} payments` : ''),
+      name(price) {
+        let text = formatCurrency(price.unit_amount / 100, price.currency);
+        
+        if (price.type === 'recurring') {
+          const count = price.recurring_interval_count;
+          text += count > 1
+            ? ` every ${count} ${price.recurring_interval}s`
+            : ` every ${price.recurring_interval}`;
+        }
+
+        return text;
+
+        function formatCurrency(amount, currency, country_code) {
+          currency = currency.toUpperCase();
+          country_code = country_code ?? 'US';
+          return new Intl.NumberFormat('en-' + country_code, {
+            currency,
+            style: 'currency',
+          }).format(amount);
+        }
+      },
       ...createResolverForReferencedResource({ name: 'service_variant' })
     },
     Query: {
@@ -85,12 +105,9 @@ export const Price = {
 
               if (interval) {
                 stripe_price_args.recurring = {
-                  interval
+                  interval,
+                  interval_count: interval_count ?? 1
                 };
-
-                if (interval_count) {
-                  stripe_price_args.recurring.interval_count = interval_count;
-                }
               }
 
               // create price object at stripe

@@ -160,10 +160,11 @@ export const create_service_M = {
         services(servicesRefs = [], { readField }) {
           const newServiceRef = cache.writeFragment({
             data: service,
-            fragment: service_F
+            fragment: service_F,
+            fragmentName: 'service_F'
           });
 
-          // Quick safety check - if the new comment is already
+          // Quick safety check - if the new service is already
           // present in the cache, we don't need to add it again.
           if (servicesRefs.some(ref => readField('id', ref) === service.id)) {
             return servicesRefs;

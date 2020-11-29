@@ -25,6 +25,19 @@ const headers = [
   'Action'
 ];
 
+function formatPrice(price) {
+  let text = Util.formatCurrency(price.unit_amount / 100, price.currency);
+
+  if (price.type === 'recurring') {
+    const count = price.recurring_interval_count;
+    text += count > 1
+      ? ` every ${count} ${price.recurring_interval}s`
+      : ` every ${price.recurring_interval}`;
+  }
+
+  return text;
+}
+
 export default function DashboardServicesHome() {
   const { data: agency } = useQuery(current_agency_Q);
   const { sm } = useBreakpoints();
@@ -54,14 +67,14 @@ export default function DashboardServicesHome() {
 
         <div className="flex flex-col space-y-1">
           <span className="font-medium">{item.service.name}</span>
-          <p className="text-xs text-gray-500 flex-1 overflow-ellipsis">{item.variant.description}</p>
+          <p className="text-xs text-gray-500 flex-1">{Util.truncate(item.variant.description, 120)}</p>
           <div className="flex items-center space-x-3 text-gray-500 text-xs pb-1">
             {item.price && (
-              <span>{Util.formatCurrency(item.price.unit_amount / 100, item.price.currency)}</span>
+              <span>{formatPrice(item.price)}</span>
             )}
 
-            <a className="rounded-sm px-1 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600" onClick={passAccessToken} target={`preview ${item.service.url_name}`} href={`https://${agency.subdomain.name}.duely.app/checkout/${item.service.url_name}?preview`} >preview checkout</a>
-            
+            <a className="rounded-sm px-1 hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600" onClick={passAccessToken} target={`preview ${item.service.url_name}`} href={`https://${agency.subdomain.name}.duely.app/checkout/${item.service.url_name}?preview`} >preview checkout</a>
+
           </div>
         </div>
       </div>

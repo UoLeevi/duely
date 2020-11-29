@@ -41,23 +41,15 @@ export function CreateServiceForm() {
     if (!res_service?.success) return;
 
     const { service } = res_service;
-    const { unit_amount_hundred_cents, payment_type, recurring_interval, recurring_interval_count } = data;
+    const { unit_amount_hundred_cents, payment_type, frequency } = data;
     const unit_amount = Math.round(unit_amount_hundred_cents * 100);
 
     const recurring = {};
 
-    switch (payment_type) {
-      case 'payment_plan':
-        recurring.recurring_interval = 'month';
-        recurring.recurring_interval_count = recurring_interval_count;
-        break;
-        
-      case 'subscription':
-        recurring.recurring_interval = recurring_interval;
-        break;
-
-      default:
-        break;
+    if (payment_type === 'recurring') {
+      const [interval_count, interval] = frequency.split(':');
+      recurring.recurring_interval_count = +interval_count;
+      recurring.recurring_interval = interval;
     }
 
     const res_price = await createPrice({ service_variant_id: service.default_variant.id, unit_amount, currency: 'usd', status: 'live', ...recurring });
