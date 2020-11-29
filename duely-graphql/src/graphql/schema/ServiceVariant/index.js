@@ -69,6 +69,7 @@ export const ServiceVariant = {
           return await withConnection(context, async withSession => {
             return await withSession(async ({ queryResource, createResource }) => {
               const service = await queryResource(args.service_id);
+              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
 
               if (image_logo) {
                 // validate and read logo image
@@ -113,7 +114,9 @@ export const ServiceVariant = {
               };
 
               // create product at stripe
-              const stripe_product = await stripe.products.create(stripe_product_args);
+              const stripe_product = await stripe.products.create(
+                stripe_product_args,
+                { stripeAccount: stripe_account.stripe_id_ext });
 
               // create service variant resource
               const service_variant = await createResource('service variant', { ...args, stripe_id_ext: stripe_product.id });
@@ -220,7 +223,7 @@ export const ServiceVariant = {
           return await withConnection(context, async withSession => {
             return await withSession(async ({ deleteResource }) => {
               const service_variant = await deleteResource(service_variant_id);
-              
+
               if (service_variant == null) {
                 return {
                   // error

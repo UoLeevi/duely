@@ -53,7 +53,7 @@ export const Price = {
   `,
   resolvers: {
     Price: {
-      name: source => `${source.currency.toUpperCase()} ${source.unit_amount / 100}` + (source.type === 'recurring' ? ` per ${source.recurring_interval}, ${source.recurring_interval_count} payments` : ''),
+      name: source => `${source.currency.toUpperCase()} ${source.unit_amount / 100}` + (source.type === 'recurring' ? ` / ${source.recurring_interval}` : '') + (source.recurring_interval_count ? `, ${source.recurring_interval_count} payments` : ''),
       ...createResolverForReferencedResource({ name: 'service_variant' })
     },
     Query: {
@@ -166,7 +166,7 @@ export const Price = {
               } catch {
                 // ignore error
               }
-              
+
               if (price == null) {
                 return {
                   // error
@@ -210,7 +210,8 @@ export const Price = {
 
               // create stripe checkout session
               // see: https://stripe.com/docs/connect/creating-a-payments-page
-              const stripe_checkout_session_args = [{
+              const stripe_checkout_session_args = {
+                mode: price.type === 'recurring' ? 'subscription' : 'payment',
                 payment_method_types: ['card'],
                 line_items: [{
                   price: price.stripe_id_ext,
@@ -218,21 +219,21 @@ export const Price = {
                 }],
                 success_url: 'https://duely.app/success',
                 cancel_url: 'https://duely.app/failure',
-              }];
+              };
 
               if (price.type === 'recurring') {
-                stripe_checkout_session_args[0].mode = 'subscription';
-                stripe_checkout_session_args[0].subscription_data = { application_fee_percent };
-                stripe_checkout_session_args.push({ stripeAccount: stripe_account.stripe_id_ext });
+                stripe_checkout_session_args.subscription_data = {
+                  application_fee_percent
+                };
               } else {
-                stripe_checkout_session_args[0].mode = 'payment';
-                stripe_checkout_session_args[0].payment_intent_data = {
+                stripe_checkout_session_args.payment_intent_data = {
                   application_fee_amount: Math.round(price.unit_amount * application_fee_percent / 100),
-                  transfer_data: { destination: stripe_account.stripe_id_ext }
                 };
               }
 
-              const checkout_session = await stripe.checkout.sessions.create(...stripe_checkout_session_args);
+              const checkout_session = await stripe.checkout.sessions.create(
+                stripe_checkout_session_args,
+                { stripeAccount: stripe_account.stripe_id_ext });
 
               // success
               return {
