@@ -1,7 +1,6 @@
 import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
 import { AuthenticationError } from 'apollo-server-core';
-import validator from 'validator';
 import stripe from '../../../stripe';
 
 const resource = {
@@ -68,6 +67,8 @@ export const Price = {
           return await withConnection(context, async withSession => {
             return await withSession(async ({ createResource, queryResource }) => {
               const service_variant = await queryResource(args.service_variant_id);
+              const service = await queryResource(service_variant.service_id);
+              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
 
               if (service_variant == null) {
                 throw Error('Service variant not found');
@@ -93,7 +94,9 @@ export const Price = {
               }
 
               // create price object at stripe
-              const stripe_price = await stripe.prices.create(stripe_price_args);
+              const stripe_price = await stripe.prices.create(
+                stripe_price_args,
+                { stripeAccount: stripe_account.stripe_id_ext });
 
               // create price resource
               const price = await createResource('price', { ...args, stripe_id_ext: stripe_price.id });
@@ -121,9 +124,12 @@ export const Price = {
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ updateResource }) => {
+            return await withSession(async ({ queryResource, updateResource }) => {
               // update price resource
               const price = await updateResource(price_id, args);
+              const service_variant = await queryResource(price.service_variant_id);
+              const service = await queryResource(service_variant.service_id);
+              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
 
               const { status } = price;
 
@@ -132,7 +138,10 @@ export const Price = {
               };
 
               // update price object at stripe
-              const stripe_price = await stripe.prices.update(price.stripe_id_ext, stripe_price_args);
+              const stripe_price = await stripe.prices.update(
+                price.stripe_id_ext,
+                stripe_price_args,
+                { stripeAccount: stripe_account.stripe_id_ext });
 
               // success
               return {
@@ -157,12 +166,18 @@ export const Price = {
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ deleteResource }) => {
+            return await withSession(async ({ queryResource, deleteResource }) => {
               const price = await deleteResource(price_id);
+              const service_variant = await queryResource(price.service_variant_id);
+              const service = await queryResource(service_variant.service_id);
+              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
 
               try {
                 // try deactivate price at stripe
-                await stripe.prices.update(price.stripe_id_ext, { active: false });
+                await stripe.prices.update(
+                  price.stripe_id_ext,
+                  { active: false },
+                  { stripeAccount: stripe_account.stripe_id_ext });
               } catch {
                 // ignore error
               }
@@ -204,8 +219,7 @@ export const Price = {
               const price = await queryResource(price_id);
               const service_variant = await queryResource(price.service_variant_id);
               const service = await queryResource(service_variant.service_id);
-              const agency = await queryResource(service.agency_id);
-              const stripe_account = await queryResource('stripe account', { agency_id: agency.id });
+              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
               const application_fee_percent = 4.5;
 
               // create stripe checkout session

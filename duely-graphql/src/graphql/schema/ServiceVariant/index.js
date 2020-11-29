@@ -147,7 +147,8 @@ export const ServiceVariant = {
             return await withSession(async ({ queryResource, createResource, updateResource }) => {
 
               const { service_id } = await queryResource(service_variant_id);
-              const service = await queryResource(service);
+              const service = await queryResource(service_id);
+              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
 
               if (image_logo) {
                 // validate and read logo image
@@ -196,7 +197,10 @@ export const ServiceVariant = {
               };
 
               // update product at stripe
-              const stripe_product = await stripe.products.update(service_variant.stripe_id_ext, stripe_product_args);
+              const stripe_product = await stripe.products.update(
+                service_variant.stripe_id_ext,
+                stripe_product_args,
+                { stripeAccount: stripe_account.stripe_id_ext });
 
               // success
               return {
@@ -221,8 +225,10 @@ export const ServiceVariant = {
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ deleteResource }) => {
+            return await withSession(async ({ queryResource, deleteResource }) => {
               const service_variant = await deleteResource(service_variant_id);
+              const service = await queryResource(service_variant.service_id);
+              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
 
               if (service_variant == null) {
                 return {
@@ -235,9 +241,14 @@ export const ServiceVariant = {
 
               // delete or deactivate product from stripe
               try {
-                await stripe.products.del(service_variant.stripe_id_ext);
+                await stripe.products.del(
+                  service_variant.stripe_id_ext,
+                  { stripeAccount: stripe_account.stripe_id_ext });
               } catch {
-                await stripe.products.update(service_variant.stripe_id_ext, { active: false });
+                await stripe.products.update(
+                  service_variant.stripe_id_ext,
+                  { active: false },
+                  { stripeAccount: stripe_account.stripe_id_ext });
               }
 
               // success

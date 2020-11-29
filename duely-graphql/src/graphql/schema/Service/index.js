@@ -67,7 +67,7 @@ export const Service = {
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ createResource, updateResource }) => {
+            return await withSession(async ({ queryResource, createResource, updateResource }) => {
 
               if (image_logo) {
                 // validate and read logo image
@@ -111,8 +111,12 @@ export const Service = {
                 active: status === 'live'
               };
 
+              const stripe_account = await queryResource('stripe account', { agency_id });
+
               // create product at stripe
-              const stripe_product = await stripe.products.create(stripe_product_args);
+              const stripe_product = await stripe.products.create(
+                stripe_product_args,
+                { stripeAccount: stripe_account.stripe_id_ext });
 
               // create service resource
               const serviceCreationOptionalArgs = {};
@@ -214,8 +218,13 @@ export const Service = {
                   active: status === 'live'
                 };
 
+                const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
+
                 // update product at stripe
-                const stripe_product = await stripe.products.update(service_variant.stripe_id_ext, stripe_product_args);
+                const stripe_product = await stripe.products.update(
+                  service_variant.stripe_id_ext, 
+                  stripe_product_args,
+                  { stripeAccount: stripe_account.stripe_id_ext });
               }
 
               // success
@@ -241,17 +250,23 @@ export const Service = {
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResourceAll, deleteResource }) => {
+            return await withSession(async ({ queryResource, queryResourceAll, deleteResource }) => {
               const service_variants = await queryResourceAll('service variant', { service_id });
               const stripe_product_ids = service_variants.map(v => v.stripe_id_ext);
               const service = await deleteResource(service_id);
+              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
 
               for (const stripe_product_id of stripe_product_ids) {
                 // delete or deactivate product from stripe
                 try {
-                  await stripe.products.del(stripe_product_id);
+                  await stripe.products.del(
+                    stripe_product_id,
+                    { stripeAccount: stripe_account.stripe_id_ext });
                 } catch {
-                  await stripe.products.update(stripe_product_id, { active: false });
+                  await stripe.products.update(
+                    stripe_product_id, 
+                    { active: false },
+                    { stripeAccount: stripe_account.stripe_id_ext });
                 }
               }
 
