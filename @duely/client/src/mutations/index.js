@@ -155,7 +155,7 @@ export const create_service_M = {
     const { service } = result;
 
     cache.modify({
-      id: cache.identify(service.agency.id),
+      id: cache.identify(service.agency),
       fields: {
         services(servicesRefs = [], { readField }) {
           const newServiceRef = cache.writeFragment({
