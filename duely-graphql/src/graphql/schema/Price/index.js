@@ -73,7 +73,7 @@ export const Price = {
                 throw Error('Service variant not found');
               }
 
-              const { type, status, unit_amount, currency, recurring_interval: interval, recurring_interval_count: interval_count } = args;
+              const { status, unit_amount, currency, recurring_interval: interval, recurring_interval_count: interval_count } = args;
 
               const stripe_price_args = {
                 unit_amount,
@@ -82,11 +82,14 @@ export const Price = {
                 active: status === 'live'
               };
 
-              if (type === 'recurring') {
+              if (interval) {
                 stripe_price_args.recurring = {
-                  interval,
-                  interval_count
+                  interval
                 };
+
+                if (interval_count) {
+                  stripe_price_args.recurring.interval_count = interval_count;
+                }
               }
 
               // create price object at stripe
