@@ -48,6 +48,11 @@ spec:
   - host: '*.duely.app'
     http:
       paths:
+      - path: /asset
+        # pathType: Prefix
+        backend:
+          serviceName: duely-asset-service
+          servicePort: 8080
       - path: /checkout
         # pathType: Prefix
         backend:

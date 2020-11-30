@@ -64,6 +64,7 @@ export const markdown_F = gql`
 export const image_F = gql`
   fragment image_F on Image {
     id
+    name
     color
     data
   }

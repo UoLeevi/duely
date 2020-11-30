@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: duely-asset-service
+spec:
+  type: NodePort
+  selector:
+    app: duely-asset
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: duely-asset-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: duely-asset
+  template:
+    metadata:
+      labels:
+        app: duely-asset
+    spec:
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: duely-asset-secret
+        secret:
+          secretName: duely-asset-secret
+      containers:
+      - name: duely-asset
+        image: uoleevi/duely-asset:v0.0.1
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 20m
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "8080"
+        - name: DUELY_SERVICE_ACCOUNT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: duely-asset-secret
+              key: duely-serviceaccount-password
+        # livenessProbe:
+        #   httpGet:
+        #     path: /.well-known/apollo/server-health
+        #     port: 8080
+        #   failureThreshold: 6
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 10
+        #   successThreshold: 1
+        #   timeoutSeconds: 5
+        # readinessProbe:
+        #   httpGet:
+        #     path: /.well-known/apollo/server-health
+        #     port: 8080
+        #   failureThreshold: 3
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 5
+        #   successThreshold: 1
+        #   timeoutSeconds: 3
