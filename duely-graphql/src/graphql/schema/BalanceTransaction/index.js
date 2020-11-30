@@ -1,7 +1,3 @@
-import { withConnection } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
-import stripe from '../../../stripe';
-
 // see: https://stripe.com/docs/api/balance_transactions/object
 
 export const BalanceTransaction = {
@@ -22,8 +18,7 @@ export const BalanceTransaction = {
   `,
   resolvers: {
     BalanceTransaction: {
-      id: source => source.stripe_id_ext,
-      id_ext: source => source.stripe_id_ext,
+      id_ext: source => source.id,
       created: source => new Date(source.created * 1000),
       available_on: source => new Date(source.created * 1000)
     }

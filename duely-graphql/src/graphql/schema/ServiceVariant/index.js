@@ -70,6 +70,15 @@ export const ServiceVariant = {
             return await withSession(async ({ queryResource, createResource }) => {
               const service = await queryResource(args.service_id);
               const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
+              const agency = await queryResource(service.agency_id);
+              const subdomain = await queryResource(agency.subdomain_id);
+
+              const { status, name, description } = args;
+              const stripe_product_args = {
+                name,
+                description,
+                active: status === 'live'
+              };
 
               if (image_logo) {
                 // validate and read logo image
@@ -86,6 +95,7 @@ export const ServiceVariant = {
                 // create logo image
                 const image = await createResource('image', { ...image_logo, agency_id: service.agency_id, access: 'public' });
                 args.image_logo_id = image.id;
+                stripe_product_args.images = [`https://${subdomain.name}.duely.app/asset/image/${image.id}`];
               }
 
               if (image_hero) {
@@ -104,14 +114,6 @@ export const ServiceVariant = {
                 const image = await createResource('image', { ...image_hero, agency_id: service.agency_id, access: 'public' });
                 args.image_hero_id = image.id;
               }
-
-              const { status, name, description } = args;
-
-              const stripe_product_args = {
-                name,
-                description,
-                active: status === 'live'
-              };
 
               // create product at stripe
               const stripe_product = await stripe.products.create(
@@ -149,6 +151,15 @@ export const ServiceVariant = {
               const { service_id } = await queryResource(service_variant_id);
               const service = await queryResource(service_id);
               const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
+              const agency = await queryResource(service.agency_id);
+              const subdomain = await queryResource(agency.subdomain_id);
+
+              const { status, name, description } = service_variant;
+              const stripe_product_args = {
+                name,
+                description,
+                active: status === 'live'
+              };
 
               if (image_logo) {
                 // validate and read logo image
@@ -165,6 +176,7 @@ export const ServiceVariant = {
                 // create logo image
                 const image = await createResource('image', { ...image_logo, agency_id: service.agency_id, access: 'public' });
                 args.image_logo_id = image.id;
+                stripe_product_args.images = [`https://${subdomain.name}.duely.app/asset/image/${image.id}`];
               }
 
               if (image_hero) {
@@ -187,14 +199,6 @@ export const ServiceVariant = {
 
               // update service variant resource
               const service_variant = await updateResource(service_variant_id, args);
-
-              const { status, name, description } = service_variant;
-
-              const stripe_product_args = {
-                name,
-                description,
-                active: status === 'live'
-              };
 
               // update product at stripe
               const stripe_product = await stripe.products.update(

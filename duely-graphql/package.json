@@ -1,6 +1,6 @@
 {
   "name": "duely-graphql",
-  "version": "0.103.0",
+  "version": "0.103.1",
   "keywords": [],
   "repository": "github:uoleevi/duely",
   "license": "ISC",
@@ -56,7 +56,7 @@
     "markdown-it": "^12.0.2",
     "pg": "^8.5.1",
     "stripe": "^8.126.0",
-    "validator": "^13.0.0"
+    "validator": "^13.5.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.8",
