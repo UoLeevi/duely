@@ -1,4 +1,5 @@
 // see: https://stripe.com/docs/api/balance_transactions/object
+// see also: https://stripe.com/docs/reports/reporting-categories
 
 export const BalanceTransaction = {
   typeDef: `
@@ -8,11 +9,23 @@ export const BalanceTransaction = {
       amount: Int!
       available_on: Date!
       created: Date!
+      exchange_rate: Float
       currency: String!
       description: String
       fee: Int!
+      fee_details: BalanceTransactionFeeDetails
       net: Int!
       status: String!
+      reporting_category: String!
+      type: String!
+      source: String!
+    }
+
+    type BalanceTransactionFeeDetails {
+      amount: Int!
+      application: String
+      currency: String!
+      description: String
       type: String!
     }
   `,
