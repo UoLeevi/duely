@@ -13,7 +13,7 @@ export const BalanceTransaction = {
       currency: String!
       description: String
       fee: Int!
-      fee_details: BalanceTransactionFeeDetails
+      fee_details: [BalanceTransactionFeeDetails!]
       net: Int!
       status: String!
       reporting_category: String!
