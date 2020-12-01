@@ -111,7 +111,7 @@ export const agency_stripe_account_balance_Q = {
 export const agency_stripe_account_balance_transactions_Q = {
   query: gql`
     query agency_stripe_account_balance_transactions_Q($agency_id: ID!) {
-      agency(id: $agency_id ) {
+      agency(id: $agency_id) {
         stripe_account {
           id
           balance_transactions {
@@ -120,12 +120,22 @@ export const agency_stripe_account_balance_transactions_Q = {
             amount
             available_on
             created
+            exchange_rate
             currency
             description
             fee
+            fee_details {
+              amount
+              application
+              currency
+              description
+              type
+            }
             net
             status
+            reporting_category
             type
+            source
           }
         }
       }
