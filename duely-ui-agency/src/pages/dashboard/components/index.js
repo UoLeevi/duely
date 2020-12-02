@@ -5,3 +5,4 @@ export * from './DashboardCardBalance';
 export * from './DashboardOverviewCard';
 export * from './DashboardSection';
 export * from './DashboardLayout';
+export * from './BalanceTransactionsTable';

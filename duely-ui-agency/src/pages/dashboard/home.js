@@ -1,70 +1,14 @@
 import React from 'react';
 import { Util, Table, Card } from '@duely/react';
-import { useQuery, agency_stripe_account_balance_transactions_Q, current_agency_Q } from '@duely/client';
 import {
   DashboardFlexGrid,
   DashboardCardGetStartedCreateServices,
   DashboardCardGetStartedEnablePayouts,
   DashboardCardBalance,
   DashboardOverviewCard,
-  DashboardSection
+  DashboardSection,
+  BalanceTransactionsTable
 } from './components';
-
-function DashboardSectionRecentTransactions() {
-  const { data: agency } = useQuery(current_agency_Q);
-  const { data: balance_transactions, loading, error } = useQuery(agency_stripe_account_balance_transactions_Q, { agency_id: agency.id });
-
-  const headers = [
-    'Type',
-    'Date',
-    'Description',
-    'Amount',
-    'Status',
-  ];
-
-  const columns = [
-    // type
-    tx => (
-      <div className="text-sm font-semibold">{tx.reporting_category}</div>
-    ),
-
-    // date
-    tx => (
-      <div className="text-sm">{Util.formatDate(new Date(tx.created))}</div>
-    ),
-
-    // description
-    tx => (
-      <div className="text-sm">{tx.description}</div>
-    ),
-
-    // amount
-    tx => (
-      <div className="flex flex-col">
-        <div className="text-sm">{Util.formatCurrency(tx.amount / 100, tx.currency)}</div>
-        <div className="text-xs text-gray-500">net {Util.formatCurrency(tx.net / 100, tx.currency)}</div>
-      </div>
-    ),
-
-    // status
-    tx => (
-      <div className="flex flex-col">
-        <div className="text-sm">{tx.status}</div>
-        {tx.status === 'pending' && (
-          <div className="text-xs text-gray-500">available on {Util.formatDate(new Date(tx.available_on))}</div>
-        )}
-      </div>
-    ),
-  ];
-
-  return (
-    <DashboardSection title="Recent transactions">
-      <Card>
-        <Table className="px-6 py-4" rows={balance_transactions} columns={columns} headers={headers} dense={true} loading={loading} error={error} />
-      </Card>
-    </DashboardSection>
-  );
-}
 
 export default function DashboardHome() {
 
@@ -132,7 +76,11 @@ export default function DashboardHome() {
         </Card>
       </DashboardSection>
 
-      <DashboardSectionRecentTransactions />
+      <DashboardSection title="Recent transactions">
+        <Card>
+          <BalanceTransactionsTable />
+        </Card>
+      </DashboardSection>
     </>
   );
 }
