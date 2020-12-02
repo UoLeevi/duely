@@ -1679,6 +1679,7 @@ function formatFileSize(size) {
   if (size < 1000) return `${size.toPrecision(3)}GB`;
 }
 
+// https://stripe.com/docs/currencies#zero-decimal
 function formatCurrency(amount, currency, country_code) {
   currency = currency.toUpperCase();
   country_code = country_code ?? 'US';

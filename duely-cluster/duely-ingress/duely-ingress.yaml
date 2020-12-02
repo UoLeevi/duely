@@ -58,6 +58,11 @@ spec:
         backend:
           serviceName: duely-checkout-service
           servicePort: 8080
+      - path: /webhook
+        # pathType: Prefix
+        backend:
+          serviceName: duely-webhook-service
+          servicePort: 8080
       - backend:
           serviceName: duely-ui-agency-service
           servicePort: 8080
