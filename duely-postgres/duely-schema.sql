@@ -3883,6 +3883,21 @@ $$;
 ALTER FUNCTION policy_.anyone_can_query_live_service_variant_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: anyone_can_query_notification_definition_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_query_notification_definition_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  RETURN '{uuid_, name_, description_, stripe_event_, feed_template_, feed_notification_enabled_, feed_notification_default_, email_template_, email_notifications_enabled_, email_notifications_default_}'::text[];
+END
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_query_notification_definition_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: anyone_can_query_own_membership_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4851,6 +4866,54 @@ $$;
 ALTER FUNCTION policy_.user_can_change_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: user_can_change_their_notification_setting_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.user_can_change_their_notification_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.active_subject_ s
+    WHERE s.type_ = 'user'
+      AND s.uuid_ = query_resource_owner_uuid_(_resource.id_, 'user')
+  ) THEN
+    RETURN '{feed_notification_, email_notification_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.user_can_change_their_notification_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: user_can_create_their_notification_setting_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.user_can_create_their_notification_setting_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.active_subject_ s
+    WHERE s.type_ = 'user'
+      AND s.uuid_ = (_data->>'user_uuid_')::uuid
+  ) THEN
+    RETURN '{user_uuid_, subdomain_uuid_, notification_definition_uuid_, feed_notification_, email_notification_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.user_can_create_their_notification_setting_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: user_can_delete_only_themselves_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4871,6 +4934,30 @@ $$;
 
 
 ALTER FUNCTION policy_.user_can_delete_only_themselves_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: user_can_query_their_notification_setting_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.user_can_query_their_notification_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.active_subject_ s
+    WHERE s.type_ = 'user'
+      AND s.uuid_ = query_resource_owner_uuid_(_resource.id_, 'user')
+  ) THEN
+    RETURN '{uuid_, user_uuid_, subdomain_uuid_, notification_definition_uuid_, feed_notification_, email_notification_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.user_can_query_their_notification_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: user_can_query_themselves_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5566,6 +5653,28 @@ CREATE VIEW application_.membership_ AS
 ALTER TABLE application_.membership_ OWNER TO postgres;
 
 --
+-- Name: notification_definition_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.notification_definition_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    name_ text NOT NULL,
+    description_ text,
+    stripe_event_ text,
+    feed_template_ text,
+    feed_notification_enabled_ boolean,
+    feed_notification_default_ boolean,
+    email_template_ text,
+    email_notifications_enabled_ boolean,
+    email_notifications_default_ boolean,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.notification_definition_ OWNER TO postgres;
+
+--
 -- Name: password_reset_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
@@ -5767,6 +5876,24 @@ CREATE VIEW application_.sign_up_ AS
 ALTER TABLE application_.sign_up_ OWNER TO postgres;
 
 --
+-- Name: user_notification_setting_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.user_notification_setting_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_uuid_ uuid NOT NULL,
+    subdomain_uuid_ uuid NOT NULL,
+    notification_definition_uuid_ uuid NOT NULL,
+    feed_notification_ boolean,
+    email_notification_ boolean,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.user_notification_setting_ OWNER TO postgres;
+
+--
 -- Name: agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -5800,6 +5927,29 @@ CREATE TABLE application__audit_.client_ (
 
 
 ALTER TABLE application__audit_.client_ OWNER TO postgres;
+
+--
+-- Name: notification_definition_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.notification_definition_ (
+    uuid_ uuid,
+    name_ text,
+    description_ text,
+    stripe_event_ text,
+    feed_template_ text,
+    feed_notification_enabled_ boolean,
+    feed_notification_default_ boolean,
+    email_template_ text,
+    email_notifications_enabled_ boolean,
+    email_notifications_default_ boolean,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.notification_definition_ OWNER TO postgres;
 
 --
 -- Name: price_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -6017,6 +6167,25 @@ CREATE TABLE application__audit_.user_invite_ (
 
 
 ALTER TABLE application__audit_.user_invite_ OWNER TO postgres;
+
+--
+-- Name: user_notification_setting_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.user_notification_setting_ (
+    uuid_ uuid,
+    user_uuid_ uuid,
+    subdomain_uuid_ uuid,
+    notification_definition_uuid_ uuid,
+    feed_notification_ boolean,
+    email_notification_ boolean,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.user_notification_setting_ OWNER TO postgres;
 
 --
 -- Name: subject_; Type: TABLE; Schema: security_; Owner: postgres
@@ -6542,6 +6711,10 @@ badf0fcf-f502-4165-9353-197af5fde1ad	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy
 96a65b10-7da0-4a81-a52e-a7b8e67e0977	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.owner_can_create_price_(security_.resource_definition_,jsonb)	create	\N
 4dfc7859-04a2-450d-ad13-28617f157549	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.owner_can_change_price_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 57510ccd-6144-477e-b572-392c8f4948c9	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+80bf1108-87d3-482e-ac0d-9173883a142f	f8e2c163-8ebf-45dc-90b8-b850e1590c7c	policy_.user_can_query_their_notification_setting_(security_.resource_definition_,application_.resource_)	query	\N
+3efc0b81-3ef0-46c0-9e58-450eb69646e0	f8e2c163-8ebf-45dc-90b8-b850e1590c7c	policy_.user_can_create_their_notification_setting_(security_.resource_definition_,jsonb)	create	\N
+bfe85df9-030c-4173-abd7-52d25725ddd3	f8e2c163-8ebf-45dc-90b8-b850e1590c7c	policy_.user_can_change_their_notification_setting_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
+cecdad34-bfee-4485-a35d-05c8b8f077c3	94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	policy_.anyone_can_query_notification_definition_(security_.resource_definition_,application_.resource_)	query	\N
 \.
 
 
@@ -6639,6 +6812,8 @@ d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-
 d8f70962-229d-49eb-a99e-7c35a55719d5	md	markdown	application_.markdown_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}
 b54431c5-bbc4-47b6-9810-0a627e49cfe5	member	membership	application_.membership_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,user_uuid_,subdomain_uuid_,access_}
 f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,service_variant_uuid_}
+94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	notidef	notification definition	application_.notification_definition_	\N	{uuid_,name_,stripe_event_,feed_notification_enabled_,email_notifications_enabled_}
+f8e2c163-8ebf-45dc-90b8-b850e1590c7c	unotiset	user notification setting	application_.user_notification_setting_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{uuid_,user_uuid_,subdomain_uuid_,notification_definition_uuid_}
 \.
 
 
@@ -6892,6 +7067,22 @@ ALTER TABLE ONLY application_.markdown_
 
 
 --
+-- Name: notification_definition_ notification_definition__name__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.notification_definition_
+    ADD CONSTRAINT notification_definition__name__key UNIQUE (name_);
+
+
+--
+-- Name: notification_definition_ notification_definition__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.notification_definition_
+    ADD CONSTRAINT notification_definition__pkey PRIMARY KEY (uuid_);
+
+
+--
 -- Name: price_ price__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -7073,6 +7264,22 @@ ALTER TABLE ONLY application_.user_invite_
 
 ALTER TABLE ONLY application_.user_invite_
     ADD CONSTRAINT user_invite__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: user_notification_setting_ user_notification_setting__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.user_notification_setting_
+    ADD CONSTRAINT user_notification_setting__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: user_notification_setting_ user_notification_setting__user_uuid__subdomain_uuid__notif_key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.user_notification_setting_
+    ADD CONSTRAINT user_notification_setting__user_uuid__subdomain_uuid__notif_key UNIQUE (user_uuid_, subdomain_uuid_, notification_definition_uuid_);
 
 
 --
@@ -7380,6 +7587,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.client
 
 
 --
+-- Name: notification_definition_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.notification_definition_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
 -- Name: price_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7461,6 +7675,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.theme_
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.user_invite_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: user_notification_setting_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.user_notification_setting_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
 
 
 --
@@ -7576,6 +7797,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.mar
 
 
 --
+-- Name: notification_definition_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.notification_definition_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: price_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7611,6 +7839,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.the
 
 
 --
+-- Name: user_notification_setting_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.user_notification_setting_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: agency_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7622,6 +7857,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.client_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: notification_definition_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.notification_definition_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -7706,6 +7948,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: user_notification_setting_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.user_notification_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -7821,6 +8070,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.mar
 
 
 --
+-- Name: notification_definition_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.notification_definition_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: price_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7856,6 +8112,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.the
 
 
 --
+-- Name: user_notification_setting_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.user_notification_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: agency_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7867,6 +8130,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.client_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: notification_definition_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.notification_definition_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -7951,6 +8221,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.user_invite_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: user_notification_setting_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.user_notification_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -8066,6 +8343,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.mar
 
 
 --
+-- Name: notification_definition_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.notification_definition_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
 -- Name: price_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -8101,6 +8385,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.the
 
 
 --
+-- Name: user_notification_setting_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.user_notification_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
 -- Name: agency_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -8112,6 +8403,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agenc
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.client_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: notification_definition_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.notification_definition_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
@@ -8196,6 +8494,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.theme
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_invite_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: user_notification_setting_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.user_notification_setting_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
@@ -8960,6 +9265,30 @@ ALTER TABLE ONLY application_.user_invite_
 
 ALTER TABLE ONLY application_.user_invite_
     ADD CONSTRAINT user_invite__role_uuid__fkey FOREIGN KEY (role_uuid_) REFERENCES security_.role_(uuid_);
+
+
+--
+-- Name: user_notification_setting_ user_notification_setting__notification_definition_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.user_notification_setting_
+    ADD CONSTRAINT user_notification_setting__notification_definition_uuid__fkey FOREIGN KEY (notification_definition_uuid_) REFERENCES application_.notification_definition_(uuid_);
+
+
+--
+-- Name: user_notification_setting_ user_notification_setting__subdomain_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.user_notification_setting_
+    ADD CONSTRAINT user_notification_setting__subdomain_uuid__fkey FOREIGN KEY (subdomain_uuid_) REFERENCES security_.subdomain_(uuid_);
+
+
+--
+-- Name: user_notification_setting_ user_notification_setting__user_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.user_notification_setting_
+    ADD CONSTRAINT user_notification_setting__user_uuid__fkey FOREIGN KEY (user_uuid_) REFERENCES security_.user_(uuid_);
 
 
 --
