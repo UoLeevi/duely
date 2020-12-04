@@ -11,7 +11,8 @@ export const StripeAccount = {
       id_ext: ID!
       account_update_url: StripeAccountLink!
       balance: StripeBalance!
-      balance_transactions(payout_id: String, type: String, available_on: Date, created: Date, currency: String, starting_after_id: String, ending_before_id: String, limit: Int): [BalanceTransaction!]!
+      balance_transactions(payout_id: ID, type: String, available_on: Date, created: Date, currency: String, starting_after_id: String, ending_before_id: String, limit: Int): [BalanceTransaction!]!
+      payment_intents(customer_id: ID, type: String, available_on: Date, created: Date, currency: String, starting_after_id: String, ending_before_id: String, limit: Int): [PaymentIntent!]!
       business_profile: BusinessProfile!
       business_type: String
       capabilities: StripeCapabilities!
@@ -176,10 +177,44 @@ export const StripeAccount = {
             args.ending_before = ending_before_id;
           }
 
-          // retrive list of connected account balance transactions
           // see: https://stripe.com/docs/api/balance_transactions/list
           const list = await stripe.balanceTransactions.list(args, { stripeAccount: source.stripe_id_ext });
-          return list.data;
+          return  list.data?.map(txn => ({ stripeAccount: source.stripe_id_ext, ...txn }));
+
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      },
+      async payment_intents(source, { customer_id, starting_after_id, ending_before_id, ...args }, context, info) {
+        if (!context.jwt)
+          throw new AuthenticationError('Unauthorized');
+
+        try {
+          const access = await withConnection(context, async withSession => {
+            return await withSession(async ({ queryResourceAccess }) => {
+              return await queryResourceAccess(source.id);
+            });
+          });
+
+          if (access !== 'owner') {
+            throw new Error('Only owner can access this information');
+          }
+
+          if (customer_id) {
+            args.customer = customer_id;
+          }
+
+          if (starting_after_id) {
+            args.starting_after = starting_after_id;
+          }
+
+          if (ending_before_id) {
+            args.ending_before = ending_before_id;
+          }
+
+          // see: https://stripe.com/docs/api/payment_intents/list
+          const list = await stripe.paymentIntents.list(args, { stripeAccount: source.stripe_id_ext });
+          return list.data?.map(pi => ({ stripeAccount: source.stripe_id_ext, ...pi }));
 
         } catch (error) {
           throw new Error(error.message);
