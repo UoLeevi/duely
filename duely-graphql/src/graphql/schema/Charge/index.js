@@ -1,5 +1,9 @@
 // see: https://stripe.com/docs/api/charges/object
 
+import stripe from '../../../stripe';
+import { parseResolveInfo } from 'graphql-parse-resolve-info';
+import { withStripeAccountProperty } from '../../util';
+
 export const Charge = {
   typeDef: `
     type Charge {
@@ -71,7 +75,37 @@ export const Charge = {
   resolvers: {
     Charge: {
       id_ext: source => source.id,
-      created: source => new Date(source.created * 1000)
+      created: source => new Date(source.created * 1000),
+      async balance_transaction(source, args, context, info) {
+        if (source.balance_transaction == null) return null;
+        if (typeof source.balance_transaction === 'object') return source.balance_transaction;
+
+        const parsedResolveInfoFragment = parseResolveInfo(info);
+        console.log(parsedResolveInfoFragment);
+
+        const balance_transaction = await stripe.balanceTransactions.retrieve(source.balance_transaction, { stripeAccount: source.stripeAccount });
+        return withStripeAccountProperty(balance_transaction, source);
+      },
+      async payment_intent(source, args, context, info) {
+        if (source.payment_intent == null) return null;
+        if (typeof source.payment_intent === 'object') return source.payment_intent;
+
+        const fields = Object.keys(Object.values(parseResolveInfo(info).fieldsByTypeName)[0]);
+        if (fields.length === 1 && fields[0] === 'id') return { id: source.payment_intent };
+
+        const payment_intent = await stripe.paymentIntents.retrieve(source.payment_intent, { stripeAccount: source.stripeAccount });
+        return withStripeAccountProperty(payment_intent, source);
+      },
+      async customer(source, args, context, info) {
+        if (source.customer == null) return null;
+        if (typeof source.customer === 'object') return source.customer;
+
+        const fields = Object.keys(Object.values(parseResolveInfo(info).fieldsByTypeName)[0]);
+        if (fields.length === 1 && fields[0] === 'id') return { id: source.customer };
+
+        const customer = await stripe.customers.retrieve(source.customer, { stripeAccount: source.stripeAccount });
+        return withStripeAccountProperty(customer, source);
+      }
     }
   }
 };

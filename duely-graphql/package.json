@@ -1,13 +1,13 @@
 {
   "name": "duely-graphql",
-  "version": "0.103.5",
+  "version": "0.103.6",
   "keywords": [],
   "repository": "github:uoleevi/duely",
   "license": "ISC",
   "author": "",
   "main": "src/index.js",
   "scripts": {
-    "build": "./node_modules/.bin/babel src -d dist --source-maps --copy-files --no-copy-ignored",
+    "build": "./node_modules/.bin/babel src -d dist --source-maps --copy-files --no-copy-ignored --extensions '.js,.ts'",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src/**"
@@ -25,7 +25,8 @@
       ]
     ],
     "presets": [
-      "@babel/preset-env"
+      "@babel/preset-env",
+      "@babel/preset-typescript"
     ]
   },
   "eslintConfig": {
@@ -50,6 +51,7 @@
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "graphql": "^14.7.0",
+    "graphql-parse-resolve-info": "^4.10.0",
     "graphql-subscriptions": "^1.1.0",
     "graphql-tools": "^4.0.8",
     "jsonwebtoken": "^8.5.1",
@@ -65,6 +67,7 @@
     "@babel/plugin-transform-regenerator": "^7.12.1",
     "@babel/plugin-transform-runtime": "^7.12.1",
     "@babel/preset-env": "^7.12.7",
+    "@babel/preset-typescript": "^7.12.7",
     "eslint": "^7.14.0"
   }
 }

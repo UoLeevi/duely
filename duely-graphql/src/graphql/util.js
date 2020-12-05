@@ -1,6 +1,14 @@
 import { withConnection } from '../db';
 import { AuthenticationError } from 'apollo-server-core';
 
+export function withStripeAccountProperty(data, source) {
+  if (data == null) return data;
+  const stripeAccount = source.stripeAccount ?? source.stripe_id_ext;
+  return typeof data[Symbol.iterator] === 'function'
+    ? data.map(item => ({ stripeAccount, ...item }))
+    : { stripeAccount, ...data };
+}
+
 export function createDefaultQueryResolversForResource({ table_name, name, plural }) {
   return {
     async [table_name ?? name](source, args, context, info) {

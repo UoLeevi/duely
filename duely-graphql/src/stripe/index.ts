@@ -1,4 +1,4 @@
-import stripe from 'stripe';
+import Stripe from 'stripe';
 import fs from 'fs';
 
 if (!process.env.STRIPE_SK_TEST) {
@@ -9,4 +9,8 @@ if (!process.env.STRIPE_SK_TEST) {
   };
 }
 
-export default stripe(process.env.STRIPE_SK_TEST);
+const stripe = new Stripe(process.env.STRIPE_SK_TEST, {
+  apiVersion: '2020-08-27',
+});
+
+export default stripe;
