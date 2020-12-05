@@ -32,7 +32,7 @@ spec:
           secretName: duely-graphql-secret
       containers:
       - name: duely-graphql
-        image: uoleevi/duely-graphql:v0.103.4
+        image: uoleevi/duely-graphql:v0.103.5
         resources:
           requests:
             memory: 64Mi
