@@ -1,29 +1,66 @@
-import { gql } from '@apollo/client';
+import { ApolloCache, gql, MutationOptions, NormalizedCacheObject, OperationVariables, Reference, StoreObject, TypedDocumentNode } from '@apollo/client';
+import { Agency, Price, Service } from '@duely/core';
 import { client } from '../apollo/client';
-import { service_F } from '../fragments';
+import { price_F, service_F } from '../fragments';
 // import produce from 'immer';
 // import { query } from './queries';
 
+// use type below if needed
+// see: https://stackoverflow.com/a/49683575
+// type Id<T> = {[K in keyof T]: T[K]};
+
+interface MutationResult {
+  success: boolean;
+  message: string | null;
+}
+
+interface TypedMutationOptions<
+  T = any,
+  TVariables = OperationVariables
+> extends MutationOptions<T, TVariables> {
+  mutation: TypedDocumentNode<T, TVariables>;
+}
+
+interface MutationDefinition<
+  TResult = any,
+  TData = any,
+  TBoundVariables = void,
+  TVariables extends TBoundVariables = TBoundVariables,
+> extends Omit<TypedMutationOptions<TData, TVariables>, 'variables'> {
+  variables?: TVariables;
+  result(data: TData): TResult & MutationResult;
+  after?(cache: ApolloCache<NormalizedCacheObject>, res: TResult & MutationResult, variables: TVariables): Promise<void>;
+}
+
 // just a wrapper for convenience
-export async function mutate(mutationDef, variables, ...options) {
+export async function mutate<
+  TResult = any,
+  TData = any,
+  TBoundVariables = void,
+  TVariables extends TBoundVariables = TBoundVariables,
+>(
+  mutationDef: MutationDefinition<TResult, TData, TBoundVariables, TVariables>,
+  variables: Omit<TVariables, keyof typeof mutationDef.variables>,
+  options?: Omit<Partial<TypedMutationOptions<TData, TVariables>>, 'mutation' | 'variables'>
+) {
   const { result, after, variables: defaultVariables, ...defaultOptions } = mutationDef;
-  variables = { ...defaultVariables, ...variables };
+  const mergedVariables = { ...defaultVariables, ...variables };
   const { data } = await client.mutate({
-    variables,
+    variables: mergedVariables,
     ...defaultOptions,
     ...options
   });
 
-  const res = result(data);
+  const res = result(data as TData);
 
   if (after) {
-    await after(client.cache, res, variables);
+    await after(client.cache, res, mergedVariables);
   }
 
   return res;
 }
 
-export const log_in_M = {
+export const log_in_M: MutationDefinition<{ jwt: string; }, { log_in: { jwt: string; } & MutationResult }, {},{ email_address: string, password: string }> = {
   mutation: gql`
     mutation log_in_M($email_address: String!, $password: String!) {
       log_in(email_address: $email_address, password: $password) {
@@ -45,7 +82,7 @@ export const log_in_M = {
   }
 };
 
-export const log_out_M = {
+export const log_out_M: MutationDefinition = {
   mutation: gql`
     mutation log_out_M {
       log_out {
@@ -66,7 +103,7 @@ export const log_out_M = {
   }
 };
 
-export const verify_password_reset_M = {
+export const verify_password_reset_M: MutationDefinition = {
   mutation: gql`
     mutation verify_password_reset_M($verification_code: String!, $password: String!) {
       verify_password_reset(verification_code: $verification_code, password: $password) {
@@ -78,7 +115,7 @@ export const verify_password_reset_M = {
   result: d => d?.verify_password_reset
 };
 
-export const verify_sign_up_M = {
+export const verify_sign_up_M: MutationDefinition = {
   mutation: gql`
     mutation verify_sign_up_M($verification_code: String!) {
       verify_sign_up(verification_code: $verification_code) {
@@ -90,7 +127,7 @@ export const verify_sign_up_M = {
   result: d => d?.verify_sign_up
 };
 
-export const start_password_reset_M = {
+export const start_password_reset_M: MutationDefinition = {
   mutation: gql`
     mutation start_password_reset_M($email_address: String!, $redirect_url: String) {
       start_password_reset(email_address: $email_address, redirect_url: $redirect_url) {
@@ -102,7 +139,7 @@ export const start_password_reset_M = {
   result: d => d?.start_password_reset
 };
 
-export const start_sign_up_M = {
+export const start_sign_up_M: MutationDefinition = {
   mutation: gql`
     mutation start_sign_up_M($email_address: String!, $password: String!, $name: String!, $redirect_url: String) {
       start_sign_up(email_address: $email_address, password: $password, name: $name, redirect_url: $redirect_url) {
@@ -114,7 +151,7 @@ export const start_sign_up_M = {
   result: d => d?.start_sign_up
 };
 
-export const create_agency_M = {
+export const create_agency_M: MutationDefinition<Agency> = {
   mutation: gql`
     mutation create_agency_M($name: String!, $subdomain_name: String!, $country_code: String!, $image_logo: ImageInput!, $return_url: String!) {
       create_agency(name: $name, subdomain_name: $subdomain_name, country_code: $country_code, image_logo: $image_logo, return_url: $return_url) {
@@ -135,7 +172,7 @@ export const create_agency_M = {
   result: d => d?.create_agency
 };
 
-export const create_service_M = {
+export const create_service_M: MutationDefinition<{ service: Service & { agency: StoreObject; }; }> = {
   mutation: gql`
     mutation create_service_M($agency_id: ID!, $name: String!, $description: String!, $url_name: String!, $duration: String, $image_logo: ImageInput, $image_hero: ImageInput, $status: String) {
       create_service(agency_id: $agency_id, name: $name, description: $description, url_name: $url_name, duration: $duration, image_logo: $image_logo, image_hero: $image_hero, status: $status) {
@@ -157,7 +194,7 @@ export const create_service_M = {
     cache.modify({
       id: cache.identify(service.agency),
       fields: {
-        services(servicesRefs = [], { readField }) {
+        services(servicesRefs: Reference[] = [], { readField }) {
           const newServiceRef = cache.writeFragment({
             data: service,
             fragment: service_F,
@@ -177,7 +214,7 @@ export const create_service_M = {
   }
 };
 
-export const update_service_M = {
+export const update_service_M: MutationDefinition<{ service: Service; }> = {
   mutation: gql`
     mutation update_service_M($service_id: ID!, $name: String, $description: String, $url_name: String, $duration: String, $default_price_id: ID, $image_logo: ImageInput, $image_hero: ImageInput, $status: String) {
       update_service(service_id: $service_id, name: $name, description: $description, url_name: $url_name, duration: $duration, default_price_id: $default_price_id, image_logo: $image_logo, image_hero: $image_hero, status: $status) {
@@ -193,7 +230,7 @@ export const update_service_M = {
   result: d => d?.update_service
 };
 
-export const delete_service_M = {
+export const delete_service_M: MutationDefinition<{ service: { id: string; }; }> = {
   mutation: gql`
     mutation delete_service_M($service_id: ID!) {
       delete_service(service_id: $service_id) {
@@ -215,23 +252,18 @@ export const delete_service_M = {
   }
 };
 
-export const create_price_M = {
+export const create_price_M: MutationDefinition<{ price: Price; }> = {
   mutation: gql`
     mutation create_price_M($service_variant_id: ID!, $unit_amount: Int!, $currency: String!, $recurring_interval: String, $recurring_interval_count: Int, $status: String) {
       create_price(service_variant_id: $service_variant_id, unit_amount: $unit_amount, currency: $currency, recurring_interval: $recurring_interval, recurring_interval_count: $recurring_interval_count, status: $status) {
         success
         message
         price {
-          id
-          name
-          unit_amount
-          currency
-          type
-          recurring_interval
-          recurring_interval_count
+          ...price_F
         }
       }
     }
+    ${price_F}
   `,
   result: d => d?.create_price
 };

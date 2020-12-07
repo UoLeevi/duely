@@ -1,0 +1,18 @@
+import { Address, Agency, Image, Markdown, Membership, Price, Service, ServiceVariant, StripeAccount, Subdomain, Theme, User } from '@duely/core';
+import { TypedDocumentNode } from '@apollo/client';
+export declare const stripe_account_F: TypedDocumentNode<StripeAccount>;
+export declare const address_F: TypedDocumentNode<Address>;
+export declare const user_F: TypedDocumentNode<User>;
+export declare const markdown_F: TypedDocumentNode<Markdown>;
+export declare const image_F: TypedDocumentNode<Image>;
+export declare const theme_F: TypedDocumentNode<Theme>;
+export declare const price_F: TypedDocumentNode<Price>;
+export declare const balance_transaction_F: import("@apollo/client").DocumentNode;
+export declare const customer_F: import("@apollo/client").DocumentNode;
+export declare const charge_F: import("@apollo/client").DocumentNode;
+export declare const payment_intent_F: import("@apollo/client").DocumentNode;
+export declare const service_variant_F: TypedDocumentNode<ServiceVariant>;
+export declare const service_F: TypedDocumentNode<Service>;
+export declare const membership_F: TypedDocumentNode<Membership>;
+export declare const agency_F: TypedDocumentNode<Agency>;
+export declare const subdomain_F: TypedDocumentNode<Subdomain>;

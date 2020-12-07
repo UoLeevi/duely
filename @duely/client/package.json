@@ -1,29 +1,32 @@
 {
   "name": "@duely/client",
-  "type": "module",
-  "version": "0.0.53",
+  "version": "0.0.59",
   "repository": "github:uoleevi/duely",
   "description": "GraphQL client by Duely (wrapper for @apollo/client)",
-  "main": "index.js",
+  "main": "dist/duely-client.js",
   "scripts": {
-    "build": "npx babel src -d dist --source-maps --copy-files --no-copy-ignored",
+    "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src/**"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@apollo/client": "^3.2.9",
+    "@duely/core": "0.0.11",
     "graphql": "^15.4.0",
     "subscriptions-transport-ws": "^0.9.18"
   },
   "devDependencies": {
-    "@babel/cli": "^7.12.8",
-    "@babel/core": "^7.12.9",
-    "@babel/preset-env": "^7.12.7",
-    "eslint": "^7.14.0"
+    "@apollo/client": "^3.3.4",
+    "@types/node": "^14.14.10",
+    "react": "^17.0.1",
+    "ts-loader": "^8.0.11",
+    "typescript": "^4.1.2",
+    "webpack": "^5.10.0",
+    "webpack-cli": "^4.2.0"
   },
   "peerDependencies": {
+    "@apollo/client": "^3.3.4",
     "react": "^17.0.1"
   }
 }
