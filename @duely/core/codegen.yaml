@@ -1,0 +1,8 @@
+schema: "https://api.duely.app/graphql"
+documents: "./src/**/*.graphql"
+generates:
+  ./src/typed-document-nodes.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typed-document-node

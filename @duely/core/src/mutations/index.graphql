@@ -1,0 +1,186 @@
+#import "../fragments/index.graphql"
+
+mutation LogIn($email_address: String!, $password: String!) {
+  log_in(email_address: $email_address, password: $password) {
+    success
+    message
+    jwt
+  }
+}
+
+mutation LogOut {
+  log_out {
+    success
+    message
+  }
+}
+
+mutation VerifyPasswordReset(
+  $verification_code: String!
+  $password: String!
+) {
+  verify_password_reset(
+    verification_code: $verification_code
+    password: $password
+  ) {
+    success
+    message
+  }
+}
+
+mutation VerifySignUp($verification_code: String!) {
+  verify_sign_up(verification_code: $verification_code) {
+    success
+    message
+  }
+}
+
+mutation StartPasswordReset(
+  $email_address: String!
+  $redirect_url: String
+) {
+  start_password_reset(
+    email_address: $email_address
+    redirect_url: $redirect_url
+  ) {
+    success
+    message
+  }
+}
+
+mutation StartSignUp(
+  $email_address: String!
+  $password: String!
+  $name: String!
+  $redirect_url: String
+) {
+  start_sign_up(
+    email_address: $email_address
+    password: $password
+    name: $name
+    redirect_url: $redirect_url
+  ) {
+    success
+    message
+  }
+}
+
+mutation CreateAgency(
+  $name: String!
+  $subdomain_name: String!
+  $country_code: String!
+  $image_logo: ImageInput!
+  $return_url: String!
+) {
+  create_agency(
+    name: $name
+    subdomain_name: $subdomain_name
+    country_code: $country_code
+    image_logo: $image_logo
+    return_url: $return_url
+  ) {
+    stripe_verification_url
+    message
+    success
+    agency {
+      id
+      name
+      subdomain {
+        id
+        name
+      }
+    }
+  }
+}
+
+mutation CreateService(
+  $agency_id: ID!
+  $name: String!
+  $description: String!
+  $url_name: String!
+  $duration: String
+  $image_logo: ImageInput
+  $image_hero: ImageInput
+  $status: String
+) {
+  create_service(
+    agency_id: $agency_id
+    name: $name
+    description: $description
+    url_name: $url_name
+    duration: $duration
+    image_logo: $image_logo
+    image_hero: $image_hero
+    status: $status
+  ) {
+    success
+    message
+    service {
+      ...service
+    }
+  }
+}
+
+mutation UpdateService(
+  $service_id: ID!
+  $name: String
+  $description: String
+  $url_name: String
+  $duration: String
+  $default_price_id: ID
+  $image_logo: ImageInput
+  $image_hero: ImageInput
+  $status: String
+) {
+  update_service(
+    service_id: $service_id
+    name: $name
+    description: $description
+    url_name: $url_name
+    duration: $duration
+    default_price_id: $default_price_id
+    image_logo: $image_logo
+    image_hero: $image_hero
+    status: $status
+  ) {
+    success
+    message
+    service {
+      ...service
+    }
+  }
+}
+
+mutation DeleteService($service_id: ID!) {
+  delete_service(service_id: $service_id) {
+    success
+    message
+    service {
+      id
+    }
+  }
+}
+
+mutation CreatePrice(
+  $service_variant_id: ID!
+  $unit_amount: Int!
+  $currency: String!
+  $recurring_interval: String
+  $recurring_interval_count: Int
+  $status: String
+) {
+  create_price(
+    service_variant_id: $service_variant_id
+    unit_amount: $unit_amount
+    currency: $currency
+    recurring_interval: $recurring_interval
+    recurring_interval_count: $recurring_interval_count
+    status: $status
+  ) {
+    success
+    message
+    price {
+      ...price
+    }
+  }
+}
