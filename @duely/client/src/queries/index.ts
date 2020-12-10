@@ -1,255 +1,159 @@
-import { Agency, Country, CountryCode, CountryUtil, Service, Subdomain, Theme, User } from '@duely/core';
-import { gql, QueryOptions, TypedDocumentNode } from '@apollo/client';
+import {
+  CountriesDocument,
+  CountryCode,
+  CountryUtil,
+  CurrentUserDocument,
+  ServicesAgreementDocument,
+  AgencyStripeAccountUpdateUrlDocument,
+  AgencyStripeAccountBalanceDocument,
+  AgencyStripeAccountBalanceTransactionsDocument,
+  AgencyStripeAccountPaymentIntentsDocument,
+  AgencyStripeAccountCustomersDocument,
+  CurrentUserAgenciesDocument,
+  SubdomainPublicDocument,
+  AgencyServicesDocument,
+  ServiceDocument,
+  SubdomainAgencyDocument,
+  SubdomainAgencyStripeAccountUpdateUrlDocument,
+} from '@duely/core';
+import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
-import { stripe_account_F, theme_F, service_F, user_F, markdown_F, agency_F, membership_F, payment_intent_F, balance_transaction_F, customer_F } from '../fragments';
+import {
+  ResultOf,
+  TypedDocumentNode,
+  VariablesOf,
+} from '@graphql-typed-document-node/core';
 
 interface TypedQueryOptions<
-  T = any,
-  TVariables = void
-  > extends QueryOptions<TVariables, T> {
-  query: TypedDocumentNode<T, TVariables>;
+  TDocumentNode extends TypedDocumentNode<unknown, unknown>
+> extends QueryOptions<VariablesOf<TDocumentNode>, ResultOf<TDocumentNode>> {
+  query: TDocumentNode;
 }
 
 interface QueryDefinition<
+  TDocumentNode extends TypedDocumentNode<unknown, unknown>,
   TResult = any,
-  TData = any,
-  TBoundVariables = void,
-  TVariables extends TBoundVariables = TBoundVariables,
-  > extends Omit<TypedQueryOptions<TData, TVariables>, 'variables'> {
-  variables?: TBoundVariables;
-  result(data: TData): TResult;
+  TBoundVariables = void
+> extends Omit<TypedQueryOptions<TDocumentNode>, 'variables'> {
+  variables?: VariablesOf<TDocumentNode> extends TBoundVariables
+    ? TBoundVariables
+    : never;
+  result(data: ResultOf<TDocumentNode>): TResult;
 }
 
 // just a wrapper for convenience
 export async function query<
-  TResult = any,
-  TData = any,
-  TBoundVariables = void,
-  TVariables extends TBoundVariables = TBoundVariables,
-  >(
-    queryDef: QueryDefinition<TResult, TData, TBoundVariables, TVariables>,
-    variables: Omit<TVariables, keyof typeof queryDef.variables>,
-    options?: Omit<Partial<TypedQueryOptions<TData, TVariables>>, 'query' | 'variables'>
-  ): Promise<TResult> {
+  TResult,
+  TData,
+  TBoundVariables,
+  TVariables extends TBoundVariables,
+  TQueryDefinition extends QueryDefinition<
+    TypedDocumentNode<TData, TVariables>,
+    TResult,
+    TBoundVariables
+  >
+>(
+  queryDef: TQueryDefinition,
+  variables: Omit<TVariables, keyof typeof queryDef.variables>,
+  options?: Omit<
+    TypedQueryOptions<TypedDocumentNode<TData, TVariables>>,
+    'query' | 'variables'
+  >
+): Promise<TResult> {
   const { result, variables: defaultVariables, ...defaultOptions } = queryDef;
   const mergedVariables = { ...defaultVariables, ...variables };
   const { data } = await client.query({
     variables: mergedVariables,
     ...defaultOptions,
-    ...options
+    ...options,
   });
 
   return result(data);
 }
 
-export const current_user_Q: QueryDefinition<User | null, { current_user: User | null; }> = {
-  query: gql`
-    query current_user_Q {
-      current_user {
-        ...user_F
-        memberships {
-          ...membership_F
-        }
-      }
-    }
-    ${user_F}
-    ${membership_F}
-  `,
+export const current_user_Q: QueryDefinition<typeof CurrentUserDocument> = {
+  query: CurrentUserDocument,
   notifyOnNetworkStatusChange: true,
-  result: d => d?.current_user
+  result: (d) => d?.current_user,
 };
 
-export const countries_Q: QueryDefinition<Country[], { country_codes: CountryCode[]; }> = {
-  query: gql`
-    query countries_Q {
-      country_codes
-    }
-  `,
-  result: d => d?.country_codes.map(code => CountryUtil.fromCode(code))
+export const countries_Q: QueryDefinition<typeof CountriesDocument> = {
+  query: CountriesDocument,
+  result: (d) =>
+    d?.country_codes?.map((code) => CountryUtil.fromCode(code as CountryCode)),
 };
 
-export const services_agreement_Q: QueryDefinition<string, { markdowns: { data: string }[] }> = {
-  query: gql`
-    query services_agreement_Q {
-      markdowns(filter: { name: "Services Agreement", agency_id: null }) {
-        ...markdown_F
-      }
-    }
-    ${markdown_F}
-  `,
-  result: d => d?.markdowns[0].data
+export const services_agreement_Q: QueryDefinition<
+  typeof ServicesAgreementDocument
+> = {
+  query: ServicesAgreementDocument,
+  result: (d) => d?.markdowns?.[0]?.data,
 };
 
-export const agency_stripe_account_update_url_Q: QueryDefinition<string, { agency: { stripe_account: { account_update_url: { url: string } } } }> = {
-  query: gql`
-    query agency_stripe_account_update_url_Q($agency_id: ID!) {
-      agency(id: $agency_id ) {
-        stripe_account {
-          account_update_url {
-            url
-          }
-        }
-      }
-    }
-  `,
+export const agency_stripe_account_update_url_Q: QueryDefinition<
+  typeof AgencyStripeAccountUpdateUrlDocument
+> = {
+  query: AgencyStripeAccountUpdateUrlDocument,
   fetchPolicy: 'no-cache',
-  result: d => d?.agency?.stripe_account?.account_update_url?.url
+  result: (d) => d?.agency?.stripe_account?.account_update_url?.url,
 };
 
-export const agency_stripe_account_balance_Q: QueryDefinition = {
-  query: gql`
-    query agency_stripe_account_balance_Q($agency_id: ID!) {
-      agency(id: $agency_id ) {
-        stripe_account {
-          id
-          balance {
-            available {
-              amount
-              currency
-              source_types {
-                card
-                bank_account
-              }
-            }
-            pending {
-              amount
-              currency
-              source_types {
-                card
-                bank_account
-              }
-            }
-            connect_reserved {
-              amount
-              currency
-              source_types {
-                card
-                bank_account
-              }
-            }
-          }
-        }
-      }
-    }
-  `,
-  result: d => d?.agency?.stripe_account?.balance
+export const agency_stripe_account_balance_Q: QueryDefinition<
+  typeof AgencyStripeAccountBalanceDocument
+> = {
+  query: AgencyStripeAccountBalanceDocument,
+  result: (d) => d?.agency?.stripe_account?.balance,
 };
 
-export const agency_stripe_account_balance_transactions_Q: QueryDefinition = {
-  query: gql`
-    query agency_stripe_account_balance_transactions_Q($agency_id: ID!, $created: Date, $starting_after_id: String, $ending_before_id: String, $limit: Int) {
-      agency(id: $agency_id) {
-        stripe_account {
-          id
-          balance_transactions(created: $created, starting_after_id: $starting_after_id, ending_before_id: $ending_before_id, limit: $limit) {
-            ...balance_transaction_F
-          }
-        }
-      }
-    }
-    ${balance_transaction_F}
-  `,
-  result: d => d?.agency?.stripe_account?.balance_transactions
+export const agency_stripe_account_balance_transactions_Q: QueryDefinition<
+  typeof AgencyStripeAccountBalanceTransactionsDocument
+> = {
+  query: AgencyStripeAccountBalanceTransactionsDocument,
+  result: (d) => d?.agency?.stripe_account?.balance_transactions,
 };
 
-export const agency_stripe_account_payment_intents_Q: QueryDefinition = {
-  query: gql`
-    query agency_stripe_account_payment_intents_Q($agency_id: ID!, $created: Date, $starting_after_id: String, $ending_before_id: String, $limit: Int) {
-      agency(id: $agency_id) {
-        stripe_account {
-          id
-          payment_intents(created: $created, starting_after_id: $starting_after_id, ending_before_id: $ending_before_id, limit: $limit) {
-            ...payment_intent_F
-          }
-        }
-      }
-    }
-    ${payment_intent_F}
-  `,
-  result: d => d?.agency?.stripe_account?.payment_intents
+export const agency_stripe_account_payment_intents_Q: QueryDefinition<
+  typeof AgencyStripeAccountPaymentIntentsDocument
+> = {
+  query: AgencyStripeAccountPaymentIntentsDocument,
+  result: (d) => d?.agency?.stripe_account?.payment_intents,
 };
 
-export const agency_stripe_account_customers_Q: QueryDefinition = {
-  query: gql`
-    query agency_stripe_account_customers_Q($agency_id: ID!, $created: Date, $starting_after_id: String, $ending_before_id: String, $limit: Int) {
-      agency(id: $agency_id) {
-        stripe_account {
-          id
-          customers(created: $created, starting_after_id: $starting_after_id, ending_before_id: $ending_before_id, limit: $limit) {
-            ...customer_F
-          }
-        }
-      }
-    }
-    ${customer_F}
-  `,
-  result: d => d?.agency?.stripe_account?.customers
+export const agency_stripe_account_customers_Q: QueryDefinition<
+  typeof AgencyStripeAccountCustomersDocument
+> = {
+  query: AgencyStripeAccountCustomersDocument,
+  result: (d) => d?.agency?.stripe_account?.customers,
 };
 
-export const current_user_agencies_Q: QueryDefinition<Agency[], { current_user: { memberships: { subdomain: { agency: Agency; }; }[]; }; }> = {
-  query: gql`
-    query current_user_agencies_Q {
-      current_user {
-        id
-        memberships {
-          id
-          access
-          subdomain {
-            id
-            name
-            agency {
-              ...agency_F
-              stripe_account {
-                ...stripe_account_F
-              }
-            }
-            memberships {
-              ...membership_F
-            }
-          }
-          user {
-            id
-          }
-        }
-      }
-    }
-    ${agency_F}
-    ${stripe_account_F}
-    ${membership_F}
-  `,
+export const current_user_agencies_Q: QueryDefinition<
+  typeof CurrentUserAgenciesDocument
+> = {
+  query: CurrentUserAgenciesDocument,
   notifyOnNetworkStatusChange: true,
-  result: d => d?.current_user?.memberships
-    .map(m => ({
+  result: (d) =>
+    d?.current_user?.memberships.map((m) => ({
       ...m.subdomain.agency,
-      subdomain: m.subdomain
-    }))
+      subdomain: m.subdomain,
+    })),
 };
 
-export const subdomain_public_Q: QueryDefinition<Subdomain, { subdomains: (Subdomain & { agency: { theme: Theme } })[] }, { subdomain_name: string; }> = {
-  query: gql`
-    query subdomain_public_Q($subdomain_name: String!) {
-      subdomains(filter: { name: $subdomain_name }) {
-        id
-        name
-        agency {
-          id
-          name
-          theme {
-            ...theme_F
-          }
-        }
-      }
-    }
-    ${theme_F}
-  `,
-  result: d => d?.subdomains[0]
+export const subdomain_public_Q: QueryDefinition<
+  typeof SubdomainPublicDocument
+> = {
+  query: SubdomainPublicDocument,
+  result: (d) => d?.subdomains?.[0],
 };
 
-export const current_subdomain_Q: QueryDefinition<Subdomain, { subdomains: (Subdomain & { agency: { theme: Theme } })[] }, { subdomain_name: string | null; }> = {
+export const current_subdomain_Q: QueryDefinition<
+  typeof SubdomainPublicDocument,
+  any,
+  { subdomain_name: string | null }
+> = {
   ...subdomain_public_Q,
   variables: {
-    subdomain_name: resolveSubdomain()
-  }
+    subdomain_name: resolveSubdomain(),
+  },
 };
 
 function resolveSubdomain(): string | null {
@@ -274,74 +178,39 @@ function resolveSubdomain(): string | null {
   return subdomain;
 }
 
-export const agency_services_Q: QueryDefinition<Service[], { agency: { services: Service[] } }, {}, { agency_id: string; }> = {
-  query: gql`
-    query agency_services_Q($agency_id: ID!) {
-      agency(id: $agency_id) {
-        id
-        services {
-          ...service_F
-        }
-      }
-    }
-    ${service_F}
-  `,
-  result: d => d?.agency?.services
+export const agency_services_Q: QueryDefinition<
+  typeof AgencyServicesDocument
+> = {
+  query: AgencyServicesDocument,
+  result: (d) => d?.agency?.services,
 };
 
-export const service_Q: QueryDefinition<Service, { service: Service }, {}, { service_id: string; }> = {
-  query: gql`
-    query service_Q($service_id: ID!) {
-      service(id: $service_id) {
-        ...service_F
-      }
-    }
-    ${service_F}
-  `,
-  result: d => d?.service
+export const service_Q: QueryDefinition<typeof ServiceDocument> = {
+  query: ServiceDocument,
+  result: (d) => d?.service,
 };
 
-export const current_agency_Q: QueryDefinition<Agency, { subdomains: { agency: Agency }[] }, {}, { subdomain_name: string; }> = {
+export const current_agency_Q: QueryDefinition<
+  typeof SubdomainAgencyDocument,
+  any,
+  { subdomain_name: string | null }
+> = {
   ...current_subdomain_Q,
-  query: gql`
-    query current_agency_Q($subdomain_name: String!) {
-      subdomains(filter: { name: $subdomain_name }) {
-        id
-        name
-        agency {
-          ...agency_F
-          services {
-            ...service_F
-          }
-        }
-      }
-    }
-    ${agency_F}
-    ${service_F}
-  `,
-  result: d => d?.subdomains[0]?.agency
+  query: SubdomainAgencyDocument,
+  result: (d) => d?.subdomains?.[0]?.agency,
 };
 
-export const current_agency_stripe_account_update_url_Q: QueryDefinition<string, { subdomains: { agency: { stripe_account: { account_update_url: { url: string } } } }[] }, {}, { subdomain_name: string; }> = {
+export const current_agency_stripe_account_update_url_Q: QueryDefinition<
+  typeof SubdomainAgencyStripeAccountUpdateUrlDocument,
+  any,
+  { subdomain_name: string | null }
+> = {
   ...current_subdomain_Q,
-  query: gql`
-    query current_agency_stripe_account_update_url_Q($subdomain_name: String!) {
-      subdomains(filter: { name: $subdomain_name }) {
-        id
-        name
-        agency {
-          stripe_account {
-            account_update_url {
-              url
-            }
-          }
-        }
-      }
-    }
-  `,
+  query: SubdomainAgencyStripeAccountUpdateUrlDocument,
   fetchPolicy: 'no-cache',
-  result: d => d?.subdomains[0]?.agency?.stripe_account?.account_update_url?.url
-};;
+  result: (d) =>
+    d?.subdomains?.[0]?.agency?.stripe_account?.account_update_url?.url,
+};
 
 // agencies: {
 //   query: gql`

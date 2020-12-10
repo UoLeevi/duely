@@ -1,48 +1,24 @@
-import { ApolloCache, MutationOptions, NormalizedCacheObject, OperationVariables, StoreObject, TypedDocumentNode } from '@apollo/client';
-import { Agency, Price, Service } from '@duely/core';
-interface MutationResult {
-    success: boolean;
-    message: string | null;
+import { ApolloCache, MutationOptions, NormalizedCacheObject } from '@apollo/client';
+import { CreateAgencyDocument, CreatePriceDocument, CreateServiceDocument, DeleteServiceDocument, LogInDocument, LogOutDocument, StartPasswordResetDocument, StartSignUpDocument, UpdateServiceDocument, VerifyPasswordResetDocument, VerifySignUpDocument } from '@duely/core';
+import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-document-node/core';
+interface TypedMutationOptions<TDocumentNode extends TypedDocumentNode<unknown, unknown>> extends MutationOptions<ResultOf<TDocumentNode>, VariablesOf<TDocumentNode>> {
+    mutation: TDocumentNode;
 }
-interface TypedMutationOptions<T = any, TVariables = OperationVariables> extends MutationOptions<T, TVariables> {
-    mutation: TypedDocumentNode<T, TVariables>;
+interface MutationDefinition<TDocumentNode extends TypedDocumentNode<unknown, unknown>, TResult = any, TBoundVariables = void> extends Omit<TypedMutationOptions<TDocumentNode>, 'variables'> {
+    variables?: VariablesOf<TDocumentNode> extends TBoundVariables ? TBoundVariables : never;
+    result(data: ResultOf<TDocumentNode>): TResult;
+    after?(cache: ApolloCache<NormalizedCacheObject>, res: TResult, variables: VariablesOf<TDocumentNode>): Promise<void>;
 }
-interface MutationDefinition<TResult = any, TData = any, TBoundVariables = void, TVariables extends TBoundVariables = TBoundVariables> extends Omit<TypedMutationOptions<TData, TVariables>, 'variables'> {
-    variables?: TVariables;
-    result(data: TData): TResult & MutationResult;
-    after?(cache: ApolloCache<NormalizedCacheObject>, res: TResult & MutationResult, variables: TVariables): Promise<void>;
-}
-export declare function mutate<TResult = any, TData = any, TBoundVariables = void, TVariables extends TBoundVariables = TBoundVariables>(mutationDef: MutationDefinition<TResult, TData, TBoundVariables, TVariables>, variables: Omit<TVariables, keyof typeof mutationDef.variables>, options?: Omit<Partial<TypedMutationOptions<TData, TVariables>>, 'mutation' | 'variables'>): Promise<TResult & MutationResult>;
-export declare const log_in_M: MutationDefinition<{
-    jwt: string;
-}, {
-    log_in: {
-        jwt: string;
-    } & MutationResult;
-}, {}, {
-    email_address: string;
-    password: string;
-}>;
-export declare const log_out_M: MutationDefinition;
-export declare const verify_password_reset_M: MutationDefinition;
-export declare const verify_sign_up_M: MutationDefinition;
-export declare const start_password_reset_M: MutationDefinition;
-export declare const start_sign_up_M: MutationDefinition;
-export declare const create_agency_M: MutationDefinition<Agency>;
-export declare const create_service_M: MutationDefinition<{
-    service: Service & {
-        agency: StoreObject;
-    };
-}>;
-export declare const update_service_M: MutationDefinition<{
-    service: Service;
-}>;
-export declare const delete_service_M: MutationDefinition<{
-    service: {
-        id: string;
-    };
-}>;
-export declare const create_price_M: MutationDefinition<{
-    price: Price;
-}>;
+export declare function mutate<TResult, TData, TBoundVariables, TVariables extends TBoundVariables, TMutationDefinition extends MutationDefinition<TypedDocumentNode<TData, TVariables>, TResult, TBoundVariables>>(mutationDef: TMutationDefinition, variables: Omit<TVariables, keyof typeof mutationDef.variables>, options?: Omit<TypedMutationOptions<TypedDocumentNode<TData, TVariables>>, 'mutation' | 'variables'>): Promise<TResult>;
+export declare const log_in_M: MutationDefinition<typeof LogInDocument>;
+export declare const log_out_M: MutationDefinition<typeof LogOutDocument>;
+export declare const verify_password_reset_M: MutationDefinition<typeof VerifyPasswordResetDocument>;
+export declare const verify_sign_up_M: MutationDefinition<typeof VerifySignUpDocument>;
+export declare const start_password_reset_M: MutationDefinition<typeof StartPasswordResetDocument>;
+export declare const start_sign_up_M: MutationDefinition<typeof StartSignUpDocument>;
+export declare const create_agency_M: MutationDefinition<typeof CreateAgencyDocument>;
+export declare const create_service_M: MutationDefinition<typeof CreateServiceDocument>;
+export declare const update_service_M: MutationDefinition<typeof UpdateServiceDocument>;
+export declare const delete_service_M: MutationDefinition<typeof DeleteServiceDocument>;
+export declare const create_price_M: MutationDefinition<typeof CreatePriceDocument>;
 export {};

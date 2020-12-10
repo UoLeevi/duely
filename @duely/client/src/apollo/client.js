@@ -170,7 +170,7 @@ export const client = new ApolloClient({
   connectToDevTools: process.env.NODE_ENV !== 'production'
 });
 
-client.onClearStore(() => {
+client.onClearStore(async () => {
   // Close socket connection which will also unregister subscriptions on the server-side.
   wsClient?.close();
   // Reconnect to the server.
