@@ -970,6 +970,26 @@ export declare type SubdomainFragment = ({
         __typename?: 'Membership';
     } & MembershipFragment)>;
 });
+export declare type BeginVisitMutationVariables = Exact<{
+    [key: string]: never;
+}>;
+export declare type BeginVisitMutation = ({
+    __typename?: 'Mutation';
+} & {
+    begin_visit: ({
+        __typename?: 'BeginVisitResult';
+    } & Pick<BeginVisitResult, 'success' | 'message' | 'jwt'>);
+});
+export declare type EndVisitMutationVariables = Exact<{
+    [key: string]: never;
+}>;
+export declare type EndVisitMutation = ({
+    __typename?: 'Mutation';
+} & {
+    end_visit: ({
+        __typename?: 'SimpleResult';
+    } & Pick<SimpleResult, 'success' | 'message'>);
+});
 export declare type LogInMutationVariables = Exact<{
     email_address: Scalars['String'];
     password: Scalars['String'];
@@ -1418,6 +1438,8 @@ export declare const AgencyFragmentDoc: DocumentNode<AgencyFragment, unknown>;
 export declare const UserFragmentDoc: DocumentNode<UserFragment, unknown>;
 export declare const MembershipFragmentDoc: DocumentNode<MembershipFragment, unknown>;
 export declare const SubdomainFragmentDoc: DocumentNode<SubdomainFragment, unknown>;
+export declare const BeginVisitDocument: DocumentNode<BeginVisitMutation, BeginVisitMutationVariables>;
+export declare const EndVisitDocument: DocumentNode<EndVisitMutation, EndVisitMutationVariables>;
 export declare const LogInDocument: DocumentNode<LogInMutation, LogInMutationVariables>;
 export declare const LogOutDocument: DocumentNode<LogOutMutation, LogOutMutationVariables>;
 export declare const VerifyPasswordResetDocument: DocumentNode<VerifyPasswordResetMutation, VerifyPasswordResetMutationVariables>;

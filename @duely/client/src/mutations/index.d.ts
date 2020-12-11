@@ -5,7 +5,7 @@ interface TypedMutationOptions<TDocumentNode extends TypedDocumentNode<unknown, 
     mutation: TDocumentNode;
 }
 interface MutationDefinition<TDocumentNode extends TypedDocumentNode<unknown, unknown>, TResult = any, TBoundVariables = void> extends Omit<TypedMutationOptions<TDocumentNode>, 'variables'> {
-    variables?: VariablesOf<TDocumentNode> extends TBoundVariables ? TBoundVariables : never;
+    readonly variables?: VariablesOf<TDocumentNode> extends TBoundVariables ? TBoundVariables : never;
     result(data: ResultOf<TDocumentNode>): TResult;
     after?(cache: ApolloCache<NormalizedCacheObject>, res: TResult, variables: VariablesOf<TDocumentNode>): Promise<void>;
 }

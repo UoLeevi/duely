@@ -5,7 +5,7 @@ interface TypedQueryOptions<TDocumentNode extends TypedDocumentNode<unknown, unk
     query: TDocumentNode;
 }
 interface QueryDefinition<TDocumentNode extends TypedDocumentNode<unknown, unknown>, TResult = any, TBoundVariables = void> extends Omit<TypedQueryOptions<TDocumentNode>, 'variables'> {
-    variables?: VariablesOf<TDocumentNode> extends TBoundVariables ? TBoundVariables : never;
+    readonly variables?: VariablesOf<TDocumentNode> extends TBoundVariables ? TBoundVariables : never;
     result(data: ResultOf<TDocumentNode>): TResult;
 }
 export declare function query<TResult, TData, TBoundVariables, TVariables extends TBoundVariables, TQueryDefinition extends QueryDefinition<TypedDocumentNode<TData, TVariables>, TResult, TBoundVariables>>(queryDef: TQueryDefinition, variables: Omit<TVariables, keyof typeof queryDef.variables>, options?: Omit<TypedQueryOptions<TypedDocumentNode<TData, TVariables>>, 'query' | 'variables'>): Promise<TResult>;

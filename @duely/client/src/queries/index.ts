@@ -14,146 +14,118 @@ import {
   AgencyServicesDocument,
   ServiceDocument,
   SubdomainAgencyDocument,
-  SubdomainAgencyStripeAccountUpdateUrlDocument,
+  SubdomainAgencyStripeAccountUpdateUrlDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
-import {
-  ResultOf,
-  TypedDocumentNode,
-  VariablesOf,
-} from '@graphql-typed-document-node/core';
+import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-document-node/core';
 
-interface TypedQueryOptions<
-  TDocumentNode extends TypedDocumentNode<unknown, unknown>
-> extends QueryOptions<VariablesOf<TDocumentNode>, ResultOf<TDocumentNode>> {
-  query: TDocumentNode;
+export interface TypedQueryOptions<TDocumentNode extends TypedDocumentNode<unknown, unknown>>
+  extends QueryOptions<VariablesOf<TDocumentNode>, ResultOf<TDocumentNode>> {
+  readonly query: TDocumentNode;
 }
 
-interface QueryDefinition<
+export interface QueryDefinition<
   TDocumentNode extends TypedDocumentNode<unknown, unknown>,
-  TResult = any,
+  TResultFunction extends (data: ResultOf<TDocumentNode>) => unknown,
   TBoundVariables = void
 > extends Omit<TypedQueryOptions<TDocumentNode>, 'variables'> {
-  variables?: VariablesOf<TDocumentNode> extends TBoundVariables
-    ? TBoundVariables
-    : never;
-  result(data: ResultOf<TDocumentNode>): TResult;
+  readonly variables?: VariablesOf<TDocumentNode> extends TBoundVariables ? TBoundVariables : never;
+  readonly result: TResultFunction;
 }
 
 // just a wrapper for convenience
 export async function query<
-  TResult,
   TData,
   TBoundVariables,
   TVariables extends TBoundVariables,
-  TQueryDefinition extends QueryDefinition<
-    TypedDocumentNode<TData, TVariables>,
-    TResult,
-    TBoundVariables
-  >
+  TResultFunction extends (data: TData) => unknown
 >(
-  queryDef: TQueryDefinition,
+  queryDef: TResultFunction extends (data: TData) => infer R
+    ? QueryDefinition<TypedDocumentNode<TData, TVariables>, (data: TData) => R, TBoundVariables>
+    : never,
   variables: Omit<TVariables, keyof typeof queryDef.variables>,
-  options?: Omit<
-    TypedQueryOptions<TypedDocumentNode<TData, TVariables>>,
-    'query' | 'variables'
-  >
-): Promise<TResult> {
+  options?: Omit<TypedQueryOptions<TypedDocumentNode<TData, TVariables>>, 'query' | 'variables'>
+): Promise<ReturnType<typeof queryDef.result>> {
   const { result, variables: defaultVariables, ...defaultOptions } = queryDef;
   const mergedVariables = { ...defaultVariables, ...variables };
   const { data } = await client.query({
     variables: mergedVariables,
     ...defaultOptions,
-    ...options,
+    ...options
   });
 
   return result(data);
 }
 
-export const current_user_Q: QueryDefinition<typeof CurrentUserDocument> = {
+export const current_user_Q = {
   query: CurrentUserDocument,
   notifyOnNetworkStatusChange: true,
-  result: (d) => d?.current_user,
+  result: (d: ResultOf<typeof CurrentUserDocument>) => d?.current_user
 };
 
-export const countries_Q: QueryDefinition<typeof CountriesDocument> = {
+export const countries_Q = {
   query: CountriesDocument,
-  result: (d) =>
-    d?.country_codes?.map((code) => CountryUtil.fromCode(code as CountryCode)),
+  result: (d: ResultOf<typeof CountriesDocument>) =>
+    d?.country_codes?.map((code) => CountryUtil.fromCode(code as CountryCode))
 };
 
-export const services_agreement_Q: QueryDefinition<
-  typeof ServicesAgreementDocument
-> = {
+export const services_agreement_Q = {
   query: ServicesAgreementDocument,
-  result: (d) => d?.markdowns?.[0]?.data,
+  result: (d: ResultOf<typeof ServicesAgreementDocument>) => d?.markdowns?.[0]?.data
 };
 
-export const agency_stripe_account_update_url_Q: QueryDefinition<
-  typeof AgencyStripeAccountUpdateUrlDocument
-> = {
+export const agency_stripe_account_update_url_Q = {
   query: AgencyStripeAccountUpdateUrlDocument,
   fetchPolicy: 'no-cache',
-  result: (d) => d?.agency?.stripe_account?.account_update_url?.url,
+  result: (d: ResultOf<typeof AgencyStripeAccountUpdateUrlDocument>) =>
+    d?.agency?.stripe_account?.account_update_url?.url
 };
 
-export const agency_stripe_account_balance_Q: QueryDefinition<
-  typeof AgencyStripeAccountBalanceDocument
-> = {
+export const agency_stripe_account_balance_Q = {
   query: AgencyStripeAccountBalanceDocument,
-  result: (d) => d?.agency?.stripe_account?.balance,
+  result: (d: ResultOf<typeof AgencyStripeAccountBalanceDocument>) =>
+    d?.agency?.stripe_account?.balance
 };
 
-export const agency_stripe_account_balance_transactions_Q: QueryDefinition<
-  typeof AgencyStripeAccountBalanceTransactionsDocument
-> = {
+export const agency_stripe_account_balance_transactions_Q = {
   query: AgencyStripeAccountBalanceTransactionsDocument,
-  result: (d) => d?.agency?.stripe_account?.balance_transactions,
+  result: (d: ResultOf<typeof AgencyStripeAccountBalanceTransactionsDocument>) =>
+    d?.agency?.stripe_account?.balance_transactions
 };
 
-export const agency_stripe_account_payment_intents_Q: QueryDefinition<
-  typeof AgencyStripeAccountPaymentIntentsDocument
-> = {
+export const agency_stripe_account_payment_intents_Q = {
   query: AgencyStripeAccountPaymentIntentsDocument,
-  result: (d) => d?.agency?.stripe_account?.payment_intents,
+  result: (d: ResultOf<typeof AgencyStripeAccountPaymentIntentsDocument>) =>
+    d?.agency?.stripe_account?.payment_intents
 };
 
-export const agency_stripe_account_customers_Q: QueryDefinition<
-  typeof AgencyStripeAccountCustomersDocument
-> = {
+export const agency_stripe_account_customers_Q = {
   query: AgencyStripeAccountCustomersDocument,
-  result: (d) => d?.agency?.stripe_account?.customers,
+  result: (d: ResultOf<typeof AgencyStripeAccountCustomersDocument>) =>
+    d?.agency?.stripe_account?.customers
 };
 
-export const current_user_agencies_Q: QueryDefinition<
-  typeof CurrentUserAgenciesDocument
-> = {
+export const current_user_agencies_Q = {
   query: CurrentUserAgenciesDocument,
   notifyOnNetworkStatusChange: true,
-  result: (d) =>
+  result: (d: ResultOf<typeof CurrentUserAgenciesDocument>) =>
     d?.current_user?.memberships.map((m) => ({
       ...m.subdomain.agency,
-      subdomain: m.subdomain,
-    })),
+      subdomain: m.subdomain
+    }))
 };
 
-export const subdomain_public_Q: QueryDefinition<
-  typeof SubdomainPublicDocument
-> = {
+export const subdomain_public_Q = {
   query: SubdomainPublicDocument,
-  result: (d) => d?.subdomains?.[0],
+  result: (d: ResultOf<typeof SubdomainPublicDocument>) => d?.subdomains?.[0]
 };
 
-export const current_subdomain_Q: QueryDefinition<
-  typeof SubdomainPublicDocument,
-  any,
-  { subdomain_name: string | null }
-> = {
+export const current_subdomain_Q = {
   ...subdomain_public_Q,
   variables: {
-    subdomain_name: resolveSubdomain(),
-  },
+    subdomain_name: resolveSubdomain()
+  }
 };
 
 function resolveSubdomain(): string | null {
@@ -178,38 +150,28 @@ function resolveSubdomain(): string | null {
   return subdomain;
 }
 
-export const agency_services_Q: QueryDefinition<
-  typeof AgencyServicesDocument
-> = {
+export const agency_services_Q = {
   query: AgencyServicesDocument,
-  result: (d) => d?.agency?.services,
+  result: (d: ResultOf<typeof AgencyServicesDocument>) => d?.agency?.services
 };
 
-export const service_Q: QueryDefinition<typeof ServiceDocument> = {
+export const service_Q = {
   query: ServiceDocument,
-  result: (d) => d?.service,
+  result: (d: ResultOf<typeof ServiceDocument>) => d?.service
 };
 
-export const current_agency_Q: QueryDefinition<
-  typeof SubdomainAgencyDocument,
-  any,
-  { subdomain_name: string | null }
-> = {
+export const current_agency_Q = {
   ...current_subdomain_Q,
   query: SubdomainAgencyDocument,
-  result: (d) => d?.subdomains?.[0]?.agency,
+  result: (d: ResultOf<typeof SubdomainAgencyDocument>) => d?.subdomains?.[0]?.agency
 };
 
-export const current_agency_stripe_account_update_url_Q: QueryDefinition<
-  typeof SubdomainAgencyStripeAccountUpdateUrlDocument,
-  any,
-  { subdomain_name: string | null }
-> = {
+export const current_agency_stripe_account_update_url_Q = {
   ...current_subdomain_Q,
   query: SubdomainAgencyStripeAccountUpdateUrlDocument,
   fetchPolicy: 'no-cache',
-  result: (d) =>
-    d?.subdomains?.[0]?.agency?.stripe_account?.account_update_url?.url,
+  result: (d: ResultOf<typeof SubdomainAgencyStripeAccountUpdateUrlDocument>) =>
+    d?.subdomains?.[0]?.agency?.stripe_account?.account_update_url?.url
 };
 
 // agencies: {

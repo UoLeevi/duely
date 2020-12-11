@@ -1,5 +1,20 @@
 #import "../fragments/index.graphql"
 
+mutation BeginVisit {
+  begin_visit {
+    success
+    message
+    jwt
+  }
+}
+
+mutation EndVisit {
+  end_visit {
+    success
+    message
+  }
+}
+
 mutation LogIn($email_address: String!, $password: String!) {
   log_in(email_address: $email_address, password: $password) {
     success
@@ -15,10 +30,7 @@ mutation LogOut {
   }
 }
 
-mutation VerifyPasswordReset(
-  $verification_code: String!
-  $password: String!
-) {
+mutation VerifyPasswordReset($verification_code: String!, $password: String!) {
   verify_password_reset(
     verification_code: $verification_code
     password: $password
@@ -35,10 +47,7 @@ mutation VerifySignUp($verification_code: String!) {
   }
 }
 
-mutation StartPasswordReset(
-  $email_address: String!
-  $redirect_url: String
-) {
+mutation StartPasswordReset($email_address: String!, $redirect_url: String) {
   start_password_reset(
     email_address: $email_address
     redirect_url: $redirect_url

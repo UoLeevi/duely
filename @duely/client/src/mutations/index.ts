@@ -1,92 +1,69 @@
+import { ApolloCache, MutationOptions, NormalizedCacheObject, Reference } from '@apollo/client';
 import {
-  ApolloCache,
-  gql,
-  MutationOptions,
-  NormalizedCacheObject,
-  Reference,
-  StoreObject,
-} from '@apollo/client';
-import {
-  Agency,
   CreateAgencyDocument,
   CreatePriceDocument,
   CreateServiceDocument,
   DeleteServiceDocument,
   LogInDocument,
   LogOutDocument,
-  Price,
-  Service,
   ServiceFragmentDoc,
   StartPasswordResetDocument,
   StartSignUpDocument,
   UpdateServiceDocument,
   VerifyPasswordResetDocument,
-  VerifySignUpDocument,
+  VerifySignUpDocument
 } from '@duely/core';
 import { client } from '../apollo/client';
-import {
-  ResultOf,
-  TypedDocumentNode,
-  VariablesOf,
-} from '@graphql-typed-document-node/core';
+import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-document-node/core';
 // import produce from 'immer';
 // import { query } from './queries';
 
-interface TypedMutationOptions<
-  TDocumentNode extends TypedDocumentNode<unknown, unknown>
-> extends MutationOptions<ResultOf<TDocumentNode>, VariablesOf<TDocumentNode>> {
+export interface TypedMutationOptions<TDocumentNode extends TypedDocumentNode<unknown, unknown>>
+  extends MutationOptions<ResultOf<TDocumentNode>, VariablesOf<TDocumentNode>> {
   mutation: TDocumentNode;
 }
 
-interface MutationDefinition<
+export interface MutationDefinition<
   TDocumentNode extends TypedDocumentNode<unknown, unknown>,
-  TResult = any,
+  TResultFunction extends (data: ResultOf<TDocumentNode>) => unknown,
   TBoundVariables = void
 > extends Omit<TypedMutationOptions<TDocumentNode>, 'variables'> {
-  variables?: VariablesOf<TDocumentNode> extends TBoundVariables
-    ? TBoundVariables
+  readonly variables?: VariablesOf<TDocumentNode> extends TBoundVariables ? TBoundVariables : never;
+  readonly result: TResultFunction;
+  readonly after?: TResultFunction extends (data: unknown) => infer R
+    ? (
+        cache?: ApolloCache<NormalizedCacheObject>,
+        res?: R,
+        variables?: VariablesOf<TDocumentNode>
+      ) => Promise<void>
     : never;
-  result(data: ResultOf<TDocumentNode>): TResult;
-  after?(
-    cache: ApolloCache<NormalizedCacheObject>,
-    res: TResult,
-    variables: VariablesOf<TDocumentNode>
-  ): Promise<void>;
 }
 
 // just a wrapper for convenience
 export async function mutate<
-  TResult,
   TData,
   TBoundVariables,
   TVariables extends TBoundVariables,
-  TMutationDefinition extends MutationDefinition<
-    TypedDocumentNode<TData, TVariables>,
-    TResult,
-    TBoundVariables
-  >
+  TResultFunction extends (data: TData) => unknown
 >(
-  mutationDef: TMutationDefinition,
+  mutationDef: TResultFunction extends (data: TData) => infer R
+    ? MutationDefinition<TypedDocumentNode<TData, TVariables>, (data: TData) => R, TBoundVariables>
+    : never,
   variables: Omit<TVariables, keyof typeof mutationDef.variables>,
   options?: Omit<
     TypedMutationOptions<TypedDocumentNode<TData, TVariables>>,
     'mutation' | 'variables'
   >
-): Promise<TResult> {
-  const {
-    result,
-    after,
-    variables: defaultVariables,
-    ...defaultOptions
-  } = mutationDef;
+): Promise<ReturnType<typeof mutationDef.result>> {
+  const { result, after, variables: defaultVariables, ...defaultOptions } = mutationDef;
   const mergedVariables = { ...defaultVariables, ...variables };
   const { data } = await client.mutate({
     variables: mergedVariables,
     ...defaultOptions,
-    ...options,
+    ...options
   });
 
-  const res = result(data as TData);
+  const res = data && result(data);
 
   if (after) {
     await after(client.cache, res, mergedVariables);
@@ -95,24 +72,26 @@ export async function mutate<
   return res;
 }
 
-export const log_in_M: MutationDefinition<typeof LogInDocument> = {
+const log_in_R = (d: ResultOf<typeof LogInDocument>) => d?.log_in;
+export const log_in_M = {
   mutation: LogInDocument,
-  result: (d) => d?.log_in,
-  async after(cache, result) {
-    if (!result.success) return;
+  result: log_in_R,
+  async after(cache: ApolloCache<NormalizedCacheObject>, result: ReturnType<typeof log_in_R>) {
+    if (!result.success || !result.jwt) return;
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('user-jwt', result.jwt);
     }
 
     await client.resetStore();
-  },
+  }
 };
 
-export const log_out_M: MutationDefinition<typeof LogOutDocument> = {
+const log_out_R = (d: ResultOf<typeof LogOutDocument>) => d?.log_out;
+export const log_out_M = {
   mutation: LogOutDocument,
-  result: (d) => d?.log_out,
-  async after(cache, result) {
+  result: log_out_R,
+  async after(cache: ApolloCache<NormalizedCacheObject>, result: ReturnType<typeof log_out_R>) {
     if (!result.success) return;
 
     if (typeof window !== 'undefined') {
@@ -120,48 +99,38 @@ export const log_out_M: MutationDefinition<typeof LogOutDocument> = {
     }
 
     await client.resetStore();
-  },
+  }
 };
 
-export const verify_password_reset_M: MutationDefinition<
-  typeof VerifyPasswordResetDocument
-> = {
+export const verify_password_reset_M: MutationDefinition<typeof VerifyPasswordResetDocument> = {
   mutation: VerifyPasswordResetDocument,
-  result: (d) => d?.verify_password_reset,
+  result: (d) => d?.verify_password_reset
 };
 
-export const verify_sign_up_M: MutationDefinition<
-  typeof VerifySignUpDocument
-> = {
+export const verify_sign_up_M: MutationDefinition<typeof VerifySignUpDocument> = {
   mutation: VerifySignUpDocument,
-  result: (d) => d?.verify_sign_up,
+  result: (d) => d?.verify_sign_up
 };
 
-export const start_password_reset_M: MutationDefinition<
-  typeof StartPasswordResetDocument
-> = {
+export const start_password_reset_M: MutationDefinition<typeof StartPasswordResetDocument> = {
   mutation: StartPasswordResetDocument,
-  result: (d) => d?.start_password_reset,
+  result: (d) => d?.start_password_reset
 };
 
 export const start_sign_up_M: MutationDefinition<typeof StartSignUpDocument> = {
   mutation: StartSignUpDocument,
-  result: (d) => d?.start_sign_up,
+  result: (d) => d?.start_sign_up
 };
 
-export const create_agency_M: MutationDefinition<
-  typeof CreateAgencyDocument
-> = {
+export const create_agency_M: MutationDefinition<typeof CreateAgencyDocument> = {
   mutation: CreateAgencyDocument,
-  result: (d) => d?.create_agency,
+  result: (d) => d?.create_agency
 };
 
-export const create_service_M: MutationDefinition<
-  typeof CreateServiceDocument
-> = {
+export const create_service_M: MutationDefinition<typeof CreateServiceDocument> = {
   mutation: CreateServiceDocument,
   result: (d) => d?.create_service,
-  async after(cache, result) {
+  async after(cache: ApolloCache<NormalizedCacheObject>, result) {
     if (!result.success) return;
 
     const { service } = result;
@@ -173,7 +142,7 @@ export const create_service_M: MutationDefinition<
           const newServiceRef = cache.writeFragment({
             data: service,
             fragment: ServiceFragmentDoc,
-            fragmentName: 'service',
+            fragmentName: 'service'
           });
 
           // Quick safety check - if the new service is already
@@ -183,36 +152,32 @@ export const create_service_M: MutationDefinition<
           }
 
           return [...servicesRefs, newServiceRef];
-        },
-      },
+        }
+      }
     });
-  },
+  }
 };
 
-export const update_service_M: MutationDefinition<
-  typeof UpdateServiceDocument
-> = {
+export const update_service_M: MutationDefinition<typeof UpdateServiceDocument> = {
   mutation: UpdateServiceDocument,
-  result: (d) => d?.update_service,
+  result: (d) => d?.update_service
 };
 
-export const delete_service_M: MutationDefinition<
-  typeof DeleteServiceDocument
-> = {
+export const delete_service_M: MutationDefinition<typeof DeleteServiceDocument> = {
   mutation: DeleteServiceDocument,
   result: (d) => d?.delete_service,
-  async after(cache, result) {
+  async after(cache: ApolloCache<NormalizedCacheObject>, result) {
     if (!result.success) return;
 
     const id = cache.identify(result.service);
     cache.evict({ id });
     cache.gc();
-  },
+  }
 };
 
 export const create_price_M: MutationDefinition<typeof CreatePriceDocument> = {
   mutation: CreatePriceDocument,
-  result: (d) => d?.create_price,
+  result: (d) => d?.create_price
 };
 
 // createClient: {

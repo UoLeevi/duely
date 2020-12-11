@@ -5,6 +5,7 @@ import { onError } from '@apollo/client/link/error';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import typePolicies from './typePolicies';
+import { BeginVisitDocument, LogInDocument } from '@duely/core';
 
 const endpoint = 'api.duely.app/graphql';
 const url_http = `https://${endpoint}`;
@@ -18,7 +19,7 @@ let getResolvedAccessToken = ssrMode
 const cache = new InMemoryCache({ typePolicies });
 const httpLink = new HttpLink({ uri: url_http });
 
-let getAccessTokenPromise = null;
+let getAccessTokenPromise: Promise<void> | null = null;
 
 async function getAccessToken() {
   let token = getResolvedAccessToken();
@@ -28,31 +29,15 @@ async function getAccessToken() {
 
   if (!getAccessTokenPromise) {
     getAccessTokenPromise = toPromise(ApolloLink.execute(httpLink, {
-      query: gql`
-        mutation {
-          begin_visit {
-            success
-            message
-            jwt
-          }
-        }
-      `
+      query: BeginVisitDocument
     }))
     .then(async ({ data }) => {
-      if (data.begin_visit.success) {
+      if (data?.begin_visit.success) {
         const visit_jwt = data.begin_visit.jwt;
 
         if (ssrMode) {
           const { data } = await toPromise(ApolloLink.execute(httpLink, {
-            query: gql`
-              mutation($email_address: String!, $password: String!) {
-                log_in(email_address: $email_address, password: $password) {
-                  success
-                  message
-                  jwt
-                }
-              }
-            `,
+            query: LogInDocument,
             variables: {
               email_address: 'serviceaccount@duely.app',
               password: process.env.DUELY_SERVICE_ACCOUNT_PASSWORD
@@ -64,19 +49,19 @@ async function getAccessToken() {
             }
           }));
 
-          if (data.log_in.success) {
+          if (data?.log_in.success) {
             token = data.log_in.jwt;
             getResolvedAccessToken = () => token;
           } else {
             // eslint-disable-next-line
-            console.error(data.log_in.message);
+            console.error(data?.log_in.message);
           }
         } else {
           localStorage.setItem('visitor-jwt', visit_jwt);
         }
 
       } else {
-        throw Error(data.begin_visit.message);
+        throw Error(data?.begin_visit.message);
       }
     });
   }
@@ -85,35 +70,37 @@ async function getAccessToken() {
   return getResolvedAccessToken();
 }
 
-let wsClient = null;
+const transportLink = httpLink;
 
-const transportLink = createTransportLink();
+// let wsClient: SubscriptionClient | null = null;
 
-function createTransportLink() {
-  if (ssrMode) return httpLink;
+// const transportLink = createTransportLink();
 
-  wsClient = new SubscriptionClient(url_ws, {
-    reconnect: true,
-    lazy: true,
-    connectionParams: async () => {
-      const token = await getAccessToken();
-      return token ? { authorization: `Bearer ${token}` } : {};
-    }
-  });
-  const wsLink = new WebSocketLink(wsClient);
-  return ApolloLink.split(
-    // split based on operation type
-    ({ query }) => {
-      const definition = getMainDefinition(query);
-      return (
-        definition.kind === 'OperationDefinition' &&
-        definition.operation === 'subscription'
-      );
-    },
-    wsLink,
-    httpLink
-  );
-}
+// function createTransportLink() {
+//   if (ssrMode) return httpLink;
+
+//   wsClient = new SubscriptionClient(url_ws, {
+//     reconnect: true,
+//     lazy: true,
+//     connectionParams: async () => {
+//       const token = await getAccessToken();
+//       return token ? { authorization: `Bearer ${token}` } : {};
+//     }
+//   });
+//   const wsLink = new WebSocketLink(wsClient);
+//   return ApolloLink.split(
+//     // split based on operation type
+//     ({ query }) => {
+//       const definition = getMainDefinition(query);
+//       return (
+//         definition.kind === 'OperationDefinition' &&
+//         definition.operation === 'subscription'
+//       );
+//     },
+//     wsLink,
+//     httpLink
+//   );
+// }
 
 const authLink = setContext(async (req, { headers }) => {
   let token = await getAccessToken();
@@ -134,7 +121,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
     for (let err of graphQLErrors) {
       console.log(err);
 
-      switch (err.extensions.code) {
+      switch (err.extensions?.code) {
         case 'UNAUTHENTICATED':
           // error code is set to UNAUTHENTICATED
           // when AuthenticationError thrown in resolver
@@ -170,9 +157,9 @@ export const client = new ApolloClient({
   connectToDevTools: process.env.NODE_ENV !== 'production'
 });
 
-client.onClearStore(async () => {
-  // Close socket connection which will also unregister subscriptions on the server-side.
-  wsClient?.close();
-  // Reconnect to the server.
-  wsClient?.connect();
-});
+// client.onClearStore(async () => {
+//   // Close socket connection which will also unregister subscriptions on the server-side.
+//   wsClient?.close();
+//   // Reconnect to the server.
+//   wsClient?.connect();
+// });
