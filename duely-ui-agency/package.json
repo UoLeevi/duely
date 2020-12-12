@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-agency",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "private": true,
   "scripts": {
     "build": "NODE_ENV='production' postcss src/styles/tailwind.css -o public/styles/index.css && react-scripts build",
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.3.6",
-    "@duely/client": "0.0.63",
+    "@duely/client": "0.0.64",
     "@duely/core": "0.0.16",
     "@duely/react": "^0.2.9",
     "@headlessui/react": "^0.2.0",
@@ -55,7 +55,6 @@
   },
   "devDependencies": {
     "@graphql-typed-document-node/core": "^3.1.0",
-    "@graphql-typed-document-node/patch-cli": "^3.0.8",
     "@types/react": "^17.0.0",
     "autoprefixer": "^9.8.6",
     "postcss": "^7.0.35",

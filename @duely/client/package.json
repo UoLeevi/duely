@@ -1,14 +1,13 @@
 {
   "name": "@duely/client",
-  "version": "0.0.63",
+  "version": "0.0.64",
   "repository": "github:uoleevi/duely",
   "description": "GraphQL client by Duely (wrapper for @apollo/client)",
   "main": "dist/duely-client.js",
   "scripts": {
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint src/**",
-    "postinstall": "patch-typed-document-node"
+    "lint": "eslint src/**"
   },
   "author": "",
   "license": "ISC",
@@ -20,7 +19,6 @@
   "devDependencies": {
     "@apollo/client": "^3.3.6",
     "@graphql-typed-document-node/core": "^3.1.0",
-    "@graphql-typed-document-node/patch-cli": "^3.0.8",
     "@types/node": "^14.14.12",
     "@types/react": "^17.0.0",
     "react": "^17.0.1",
