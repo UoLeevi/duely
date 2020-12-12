@@ -11,7 +11,8 @@ export default function ({ req, connection }) {
 
     return {
       ip: req.ip,
-      jwt
+      jwt,
+      cache: new Map()
     };
   }
 }

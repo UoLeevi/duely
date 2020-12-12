@@ -26,25 +26,24 @@ export interface TypedQueryOptions<TDocumentNode extends TypedDocumentNode<unkno
 }
 
 export interface QueryDefinition<
-  TDocumentNode extends TypedDocumentNode<unknown, unknown>,
-  TResultFunction extends (data: ResultOf<TDocumentNode>) => unknown,
-  TBoundVariables = void
-> extends Omit<TypedQueryOptions<TDocumentNode>, 'variables'> {
-  readonly variables?: VariablesOf<TDocumentNode> extends TBoundVariables ? TBoundVariables : never;
-  readonly result: TResultFunction;
+  TData,
+  TVariables extends TBoundVariables,
+  TBoundVariables extends { [key: string]: any },
+  TResult
+> extends Omit<TypedQueryOptions<TypedDocumentNode<TData, TVariables>>, 'variables'> {
+  readonly variables?: TBoundVariables;
+  readonly result: (data: TData) => TResult;
 }
 
 // just a wrapper for convenience
 export async function query<
   TData,
-  TBoundVariables,
   TVariables extends TBoundVariables,
-  TResultFunction extends (data: TData) => unknown
+  TBoundVariables extends { [key: string]: any },
+  TResult
 >(
-  queryDef: TResultFunction extends (data: TData) => infer R
-    ? QueryDefinition<TypedDocumentNode<TData, TVariables>, (data: TData) => R, TBoundVariables>
-    : never,
-  variables: Omit<TVariables, keyof typeof queryDef.variables>,
+  queryDef: QueryDefinition<TData, TVariables, TBoundVariables, TResult>,
+  variables?: Omit<TVariables, keyof typeof queryDef.variables>,
   options?: Omit<TypedQueryOptions<TypedDocumentNode<TData, TVariables>>, 'query' | 'variables'>
 ): Promise<ReturnType<typeof queryDef.result>> {
   const { result, variables: defaultVariables, ...defaultOptions } = queryDef;

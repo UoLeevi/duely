@@ -3,19 +3,14 @@ import { QueryDefinition, TypedQueryOptions } from '../queries';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 export function useQuery<
-  TResult,
   TData,
-  TBoundVariables,
   TVariables extends TBoundVariables,
-  TQueryDefinition extends QueryDefinition<
-    TypedDocumentNode<TData, TVariables>,
-    TResult,
-    TBoundVariables
-  >
+  TBoundVariables extends { [key: string]: any },
+  TResult
 >(
-  queryDef: TQueryDefinition,
-  variables: TVariables,
-  options: Omit<TypedQueryOptions<TypedDocumentNode<TData, TVariables>>, 'query' | 'variables'>
+  queryDef: QueryDefinition<TData, TVariables, TBoundVariables, TResult>,
+  variables?: Omit<TVariables, keyof typeof queryDef.variables>,
+  options?: Omit<TypedQueryOptions<TypedDocumentNode<TData, TVariables>>, 'query' | 'variables'>
 ) {
   const { query, result, variables: defaultVariables, ...defaultOptions } = queryDef;
   const { data: rawData, networkStatus, loading: initialLoading, ...rest } = useApolloQuery(query, {

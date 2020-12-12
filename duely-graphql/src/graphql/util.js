@@ -1,6 +1,18 @@
 import { withConnection } from '../db';
 import { AuthenticationError } from 'apollo-server-core';
 
+// Not yet used
+export async function withCache(context, key, fetch) {
+  let promise = context.cache.get(key);
+
+  if (!promise) {
+    promise = fetch();
+    context.cache.set(key, promise);
+  }
+
+  return await promise;
+}
+
 export function withStripeAccountProperty(data, source) {
   if (data == null) return data;
   const stripeAccount = source.stripeAccount ?? source.stripe_id_ext;

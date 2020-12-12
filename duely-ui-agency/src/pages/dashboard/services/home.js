@@ -5,6 +5,7 @@ import { Util, useBreakpoints, Table, DropMenu, Card, useDynamicNavigation } fro
 import { ConfirmServiceDeletionModal } from './components';
 import { DashboardFlexGrid, DashboardCardGetStartedCreateServices, DashboardSection } from '../components';
 import { BsPencilSquare, BsTrash } from 'react-icons/bs';
+import { Currency } from '@duely/core';
 
 const statusChipClassNames = {
   draft: 'bg-orange-100 text-orange-800',
@@ -26,7 +27,7 @@ const headers = [
 ];
 
 function formatPrice(price) {
-  let text = Util.formatCurrency(price.unit_amount / 100, price.currency);
+  let text = Currency.format(price.unit_amount, price.currency);
 
   if (price.type === 'recurring') {
     const count = price.recurring_interval_count;
@@ -61,19 +62,19 @@ export default function DashboardServicesHome() {
       <div className="flex space-x-6">
 
         {item.variant.image_logo
-          ? <img className="w-32 h-20 rounded-lg flex-shrink-1 object-cover" src={item.variant.image_logo.data} alt={`${item.variant.name} logo`} />
-          : <div className="w-32 h-20 rounded-lg flex-shrink-1 bg-gray-200"></div>
+          ? <img className="object-cover w-32 h-20 rounded-lg flex-shrink-1" src={item.variant.image_logo.data} alt={`${item.variant.name} logo`} />
+          : <div className="w-32 h-20 bg-gray-200 rounded-lg flex-shrink-1"></div>
         }
 
         <div className="flex flex-col space-y-1">
           <span className="font-medium">{item.service.name}</span>
-          <p className="text-xs text-gray-500 flex-1">{Util.truncate(item.variant.description, 120)}</p>
-          <div className="flex items-center space-x-3 text-gray-500 text-xs pb-1">
+          <p className="flex-1 text-xs text-gray-500">{Util.truncate(item.variant.description, 120)}</p>
+          <div className="flex items-center pb-1 space-x-3 text-xs text-gray-500">
             {item.price && (
               <span>{formatPrice(item.price)}</span>
             )}
 
-            <a className="rounded-sm px-1 hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600" onClick={passAccessToken} target={`preview ${item.service.url_name}`} href={`https://${agency.subdomain.name}.duely.app/checkout/${item.service.url_name}?preview`} >preview checkout</a>
+            <a className="px-1 rounded-sm hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600" onClick={passAccessToken} target={`preview ${item.service.url_name}`} href={`https://${agency.subdomain.name}.duely.app/checkout/${item.service.url_name}?preview`} >preview checkout</a>
 
           </div>
         </div>
@@ -92,7 +93,7 @@ export default function DashboardServicesHome() {
       const actions = [
         {
           key: 'edit',
-          className: 'className="text-center text-sm text-gray-500 focus:text-gray-700 focus:outline-none hover:text-accent',
+          className: 'className="text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-accent',
           children: (
             <div className="flex items-center space-x-2">
               <BsPencilSquare />
@@ -103,7 +104,7 @@ export default function DashboardServicesHome() {
         },
         {
           key: 'delete',
-          className: 'className="text-center text-sm text-gray-500 focus:text-gray-700 focus:outline-none hover:text-accent',
+          className: 'className="text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-accent',
           children: (
             <div className="flex items-center space-x-2">
               <BsTrash />
@@ -115,7 +116,7 @@ export default function DashboardServicesHome() {
       ];
 
       return (
-        <div className="flex font-medium space-x-6">
+        <div className="flex space-x-6 font-medium">
           {sm && (
             <DropMenu>
               {actions.map(action => <Link {...action} />)}

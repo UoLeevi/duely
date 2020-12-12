@@ -1,6 +1,9 @@
 import React from 'react';
+import { Currency } from '@duely/core';
 import { Util, Table } from '@duely/react';
 import { useQuery, agency_stripe_account_balance_transactions_Q, current_agency_Q } from '@duely/client';
+
+console.log(Currency);
 
 export function BalanceTransactionsTable() {
   const { data: agency } = useQuery(current_agency_Q);
@@ -16,44 +19,44 @@ export function BalanceTransactionsTable() {
 
   const columns = [
     // type
-    tx => (
+    txn => (
       <div className="flex flex-col">
-        <div className="text-sm font-semibold">{tx.reporting_category}</div>
-        {tx.reporting_category !== tx.type && (
-          <div className="text-xs text-gray-500">{tx.type}</div>
+        <div className="text-sm font-semibold">{txn.reporting_category}</div>
+        {txn.reporting_category !== txn.type && (
+          <div className="text-xs text-gray-500">{txn.type}</div>
         )}
       </div>
     ),
 
     // date
-    tx => (
+    txn => (
       <div className="flex flex-col">
-        <div className="text-sm">{Util.formatDate(new Date(tx.created))}</div>
-        {tx.status === 'pending' && tx.available_on !== tx.created && (
-          <div className="text-xs text-gray-500">available on {Util.formatDate(new Date(tx.available_on))}</div>
+        <div className="text-sm">{Util.formatDate(new Date(txn.created))}</div>
+        {txn.status === 'pending' && txn.available_on !== txn.created && (
+          <div className="text-xs text-gray-500">available on {Util.formatDate(new Date(txn.available_on))}</div>
         )}
       </div>
     ),
 
     // description
-    tx => (
+    txn => (
       <div className="flex flex-col">
-        <div className="text-sm">{tx.description}</div>
+        <div className="text-sm">{txn.description}</div>
       </div>
     ),
 
     // amount
-    tx => (
+    txn => (
       <div className="flex flex-col">
-        <div className="text-sm">{Util.formatCurrency(tx.amount / 100, tx.currency)}</div>
-        <div className="text-xs text-gray-500">net {Util.formatCurrency(tx.net / 100, tx.currency)}</div>
+        <div className="text-sm">{Currency.format(txn.amount, txn.currency)}</div>
+        <div className="text-xs text-gray-500">net {Currency.format(txn.net, txn.currency)}</div>
       </div>
     ),
 
     // status
-    tx => (
+    txn => (
       <div className="flex flex-col">
-        <div className="text-sm">{tx.status}</div>
+        <div className="text-sm">{txn.status}</div>
       </div>
     ),
   ];

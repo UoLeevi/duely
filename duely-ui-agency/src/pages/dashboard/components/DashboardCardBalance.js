@@ -1,7 +1,8 @@
 import React from 'react';
-import { Util, Card, SkeletonText } from '@duely/react';
+import { Card, SkeletonText } from '@duely/react';
 import { useQuery, current_agency_Q, agency_stripe_account_balance_Q } from '@duely/client';
 import { Link } from 'react-router-dom';
+import { Currency } from '@duely/core';
 
 export function DashboardCardBalance() {
   const { data: agency } = useQuery(current_agency_Q);
@@ -16,14 +17,14 @@ export function DashboardCardBalance() {
   if (!loading) {
     for (const b of balance.available) {
       balancesByCurrency[b.currency] = {
-        available: b.amount / 100
+        available: b.amount
       };
     }
 
     for (const b of balance.pending) {
       balancesByCurrency[b.currency] = {
         ...balancesByCurrency[b.currency],
-        pending: b.amount / 100
+        pending: b.amount
       };
     }
   }
@@ -54,10 +55,10 @@ export function DashboardCardBalance() {
           {Object.entries(balancesByCurrency).map(([currency, { available, pending }]) => (
             <div key={currency}>
               <div className="flex flex-row items-center space-x-4">
-                <span className="flex-1 font-medium text-gray-800">{Util.formatCurrency(available, currency)} available</span>
+                <span className="flex-1 font-medium text-gray-800">{Currency.format(available, currency)} available</span>
               </div>
               <div className="flex flex-row items-center space-x-4">
-                <span className="flex-1 text-sm font-medium text-gray-400">{Util.formatCurrency(pending, currency)} pending</span>
+                <span className="flex-1 text-sm font-medium text-gray-400">{Currency.format(pending, currency)} pending</span>
               </div>
             </div>
           ))}

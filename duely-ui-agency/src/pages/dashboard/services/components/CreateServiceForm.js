@@ -6,6 +6,7 @@ import { BsCheck } from 'react-icons/bs';
 import { ServiceBasicInfoFormSection } from './ServiceBasicInfoFormSection';
 import { ServicePricingFormSection } from './ServicePricingFormSection';
 import { Link } from 'react-router-dom';
+import { Currency } from '@duely/core';
 
 export function CreateServiceForm() {
   const form = useForm({
@@ -42,7 +43,8 @@ export function CreateServiceForm() {
 
     const { service } = res_service;
     const { unit_amount_hundred_cents, payment_type, frequency } = data;
-    const unit_amount = Math.round(unit_amount_hundred_cents * 100);
+    const currency = 'usd'; // TODO: have an input or use default currency
+    const unit_amount = Currency.numberToMinorCurrencyAmount(+unit_amount_hundred_cents, currency);
 
     const recurring = {};
 
@@ -52,7 +54,7 @@ export function CreateServiceForm() {
       recurring.recurring_interval = interval;
     }
 
-    const res_price = await createPrice({ service_variant_id: service.default_variant.id, unit_amount, currency: 'usd', status: 'live', ...recurring });
+    const res_price = await createPrice({ service_variant_id: service.default_variant.id, unit_amount, currency, status: 'live', ...recurring });
 
     if (!res_price?.success) return;
 
@@ -63,12 +65,12 @@ export function CreateServiceForm() {
   if (state.success) {
     const { service } = stateService.data;
     return (
-      <div className="flex flex-col space-y-4 items-center text-center">
-        <div className="w-12 h-12 rounded-full bg-green-200 grid place-items-center">
-          <BsCheck className="text-green-600 text-3xl" />
+      <div className="flex flex-col items-center space-y-4 text-center">
+        <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
+          <BsCheck className="text-3xl text-green-600" />
         </div>
         <h3 className="text-2xl font-semibold"><span className="whitespace-nowrap">{service.name}</span> <span className="whitespace-nowrap">created succesfully</span></h3>
-        <Link className="mt-2 rounded-md bg-indigo-500 text-white px-12 py-3 font-medium" to="/dashboard/services">Go to services</Link>
+        <Link className="px-12 py-3 mt-2 font-medium text-white bg-indigo-500 rounded-md" to="/dashboard/services">Go to services</Link>
       </div>
     );
   }
@@ -77,9 +79,9 @@ export function CreateServiceForm() {
     <>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-3">
         <ServiceBasicInfoFormSection form={form} />
-        <h3 className="text-lg font-medium pb-2 pt-6">Pricing</h3>
+        <h3 className="pt-6 pb-2 text-lg font-medium">Pricing</h3>
         <ServicePricingFormSection form={form} />
-        <div className="flex flex-row space-x-8 pt-3 items-center">
+        <div className="flex flex-row items-center pt-3 space-x-8">
           <FormButton loading={state.loading}>Create service</FormButton>
           <FormErrorInfo error={state.error} />
         </div>

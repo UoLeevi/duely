@@ -4,6 +4,7 @@ module.exports = {
   devtool: 'source-map',
   entry: './src/index.ts',
   externals: ['react', '@apollo/client'],
+  mode: 'none',
   module: {
     rules: [
       {

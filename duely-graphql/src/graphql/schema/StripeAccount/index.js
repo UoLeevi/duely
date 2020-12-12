@@ -1,5 +1,4 @@
 import { withConnection } from '../../../db';
-import { withStripeAccountProperty } from '../../util';
 import { AuthenticationError } from 'apollo-server-core';
 import stripe from '../../../stripe';
 
@@ -146,8 +145,7 @@ export const StripeAccount = {
 
           // retrive connected account balance
           // see: https://stripe.com/docs/api/balance/balance_retrieve
-          const balance = await stripe.balance.retrieve({ stripeAccount: source.stripe_id_ext });
-          return withStripeAccountProperty(balance, source);
+          return await stripe.balance.retrieve({ stripeAccount: source.stripe_id_ext });
 
         } catch (error) {
           throw new Error(error.message);
@@ -182,7 +180,7 @@ export const StripeAccount = {
 
           // see: https://stripe.com/docs/api/balance_transactions/list
           const list = await stripe.balanceTransactions.list(args, { stripeAccount: source.stripe_id_ext });
-          return withStripeAccountProperty(list.data, source);
+          return  list.data?.map(txn => ({ stripeAccount: source.stripe_id_ext, ...txn }));
 
         } catch (error) {
           throw new Error(error.message);
@@ -217,7 +215,7 @@ export const StripeAccount = {
 
           // see: https://stripe.com/docs/api/payment_intents/list
           const list = await stripe.paymentIntents.list(args, { stripeAccount: source.stripe_id_ext });
-          return withStripeAccountProperty(list.data, source);
+          return list.data?.map(pi => ({ stripeAccount: source.stripe_id_ext, ...pi }));
 
         } catch (error) {
           throw new Error(error.message);
@@ -248,7 +246,7 @@ export const StripeAccount = {
 
           // see: https://stripe.com/docs/api/customers/list
           const list = await stripe.paymentIntents.list(args, { stripeAccount: source.stripe_id_ext });
-          return withStripeAccountProperty(list.data, source);
+          return list.data?.map(cus => ({ stripeAccount: source.stripe_id_ext, ...cus }));
 
         } catch (error) {
           throw new Error(error.message);
