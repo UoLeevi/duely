@@ -208,6 +208,7 @@ export type Agency = Node & {
   subdomain: Subdomain;
   theme: Theme;
   services?: Maybe<Array<Service>>;
+  settings: AgencySettings;
 };
 
 
@@ -546,6 +547,7 @@ export type Service = Node & {
   agency: Agency;
   default_variant: ServiceVariant;
   variants?: Maybe<Array<ServiceVariant>>;
+  settings: ServiceSettings;
 };
 
 
@@ -604,6 +606,29 @@ export type ServiceVariantFilter = {
   service_id?: Maybe<Scalars['ID']>;
 };
 
+export type ServiceSettings = {
+  __typename?: 'ServiceSettings';
+  thank_you_page_setting?: Maybe<ServiceThankYouPageSetting>;
+};
+
+export type ServiceThankYouPageSetting = {
+  __typename?: 'ServiceThankYouPageSetting';
+  id: Scalars['ID'];
+  url: Scalars['String'];
+  agency_setting: AgencyThankYouPageSetting;
+};
+
+export type AgencyThankYouPageSetting = {
+  __typename?: 'AgencyThankYouPageSetting';
+  id: Scalars['ID'];
+  url: Scalars['String'];
+};
+
+export type AgencySettings = {
+  __typename?: 'AgencySettings';
+  thank_you_page_setting?: Maybe<AgencyThankYouPageSetting>;
+};
+
 export type UserFilter = {
   name?: Maybe<Scalars['String']>;
   email_address?: Maybe<Scalars['String']>;
@@ -644,6 +669,9 @@ export type Mutation = {
   verify_password_reset: SimpleResult;
   create_agency: CreateAgencyResult;
   delete_agency: DeleteAgencyResult;
+  create_agency_thank_you_page_setting: AgencyThankYouPageSettingMutationResult;
+  update_agency_thank_you_page_setting: AgencyThankYouPageSettingMutationResult;
+  delete_agency_thank_you_page_setting: AgencyThankYouPageSettingMutationResult;
   create_price: PriceMutationResult;
   update_price: PriceMutationResult;
   delete_price: PriceMutationResult;
@@ -651,6 +679,9 @@ export type Mutation = {
   create_service: ServiceMutationResult;
   update_service: ServiceMutationResult;
   delete_service: ServiceMutationResult;
+  create_service_thank_you_page_setting: ServiceThankYouPageSettingMutationResult;
+  update_service_thank_you_page_setting: ServiceThankYouPageSettingMutationResult;
+  delete_service_thank_you_page_setting: ServiceThankYouPageSettingMutationResult;
   create_service_variant: ServiceVariantMutationResult;
   update_service_variant: ServiceVariantMutationResult;
   delete_service_variant: ServiceVariantMutationResult;
@@ -707,6 +738,23 @@ export type MutationDelete_AgencyArgs = {
 };
 
 
+export type MutationCreate_Agency_Thank_You_Page_SettingArgs = {
+  agency_id: Scalars['ID'];
+  url: Scalars['String'];
+};
+
+
+export type MutationUpdate_Agency_Thank_You_Page_SettingArgs = {
+  setting_id: Scalars['ID'];
+  url: Scalars['String'];
+};
+
+
+export type MutationDelete_Agency_Thank_You_Page_SettingArgs = {
+  setting_id: Scalars['ID'];
+};
+
+
 export type MutationCreate_PriceArgs = {
   service_variant_id: Scalars['ID'];
   unit_amount: Scalars['Int'];
@@ -730,6 +778,8 @@ export type MutationDelete_PriceArgs = {
 
 export type MutationCreate_Stripe_Checkout_SessionArgs = {
   price_id: Scalars['ID'];
+  success_url?: Maybe<Scalars['String']>;
+  cancel_url?: Maybe<Scalars['String']>;
 };
 
 
@@ -766,6 +816,23 @@ export type MutationUpdate_ServiceArgs = {
 
 export type MutationDelete_ServiceArgs = {
   service_id: Scalars['ID'];
+};
+
+
+export type MutationCreate_Service_Thank_You_Page_SettingArgs = {
+  service_id: Scalars['ID'];
+  url: Scalars['String'];
+};
+
+
+export type MutationUpdate_Service_Thank_You_Page_SettingArgs = {
+  setting_id: Scalars['ID'];
+  url: Scalars['String'];
+};
+
+
+export type MutationDelete_Service_Thank_You_Page_SettingArgs = {
+  setting_id: Scalars['ID'];
 };
 
 
@@ -894,6 +961,13 @@ export type DeleteAgencyResult = MutationResult & {
   agency?: Maybe<Agency>;
 };
 
+export type AgencyThankYouPageSettingMutationResult = MutationResult & {
+  __typename?: 'AgencyThankYouPageSettingMutationResult';
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
+  setting?: Maybe<AgencyThankYouPageSetting>;
+};
+
 export type PriceMutationResult = MutationResult & {
   __typename?: 'PriceMutationResult';
   success: Scalars['Boolean'];
@@ -913,6 +987,13 @@ export type ServiceMutationResult = MutationResult & {
   success: Scalars['Boolean'];
   message?: Maybe<Scalars['String']>;
   service?: Maybe<Service>;
+};
+
+export type ServiceThankYouPageSettingMutationResult = MutationResult & {
+  __typename?: 'ServiceThankYouPageSettingMutationResult';
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
+  setting?: Maybe<ServiceThankYouPageSetting>;
 };
 
 export type ServiceVariantMutationResult = MutationResult & {
@@ -1377,6 +1458,112 @@ export type CreatePriceMutation = (
   ) }
 );
 
+export type CreateAgencyThankYouPageSettingMutationVariables = Exact<{
+  agency_id: Scalars['ID'];
+  url: Scalars['String'];
+}>;
+
+
+export type CreateAgencyThankYouPageSettingMutation = (
+  { __typename?: 'Mutation' }
+  & { create_agency_thank_you_page_setting: (
+    { __typename?: 'AgencyThankYouPageSettingMutationResult' }
+    & Pick<AgencyThankYouPageSettingMutationResult, 'success' | 'message'>
+    & { setting?: Maybe<(
+      { __typename?: 'AgencyThankYouPageSetting' }
+      & Pick<AgencyThankYouPageSetting, 'id' | 'url'>
+    )> }
+  ) }
+);
+
+export type UpdateAgencyThankYouPageSettingMutationVariables = Exact<{
+  setting_id: Scalars['ID'];
+  url: Scalars['String'];
+}>;
+
+
+export type UpdateAgencyThankYouPageSettingMutation = (
+  { __typename?: 'Mutation' }
+  & { update_agency_thank_you_page_setting: (
+    { __typename?: 'AgencyThankYouPageSettingMutationResult' }
+    & Pick<AgencyThankYouPageSettingMutationResult, 'success' | 'message'>
+    & { setting?: Maybe<(
+      { __typename?: 'AgencyThankYouPageSetting' }
+      & Pick<AgencyThankYouPageSetting, 'id' | 'url'>
+    )> }
+  ) }
+);
+
+export type DeleteAgencyThankYouPageSettingMutationVariables = Exact<{
+  setting_id: Scalars['ID'];
+}>;
+
+
+export type DeleteAgencyThankYouPageSettingMutation = (
+  { __typename?: 'Mutation' }
+  & { delete_agency_thank_you_page_setting: (
+    { __typename?: 'AgencyThankYouPageSettingMutationResult' }
+    & Pick<AgencyThankYouPageSettingMutationResult, 'success' | 'message'>
+    & { setting?: Maybe<(
+      { __typename?: 'AgencyThankYouPageSetting' }
+      & Pick<AgencyThankYouPageSetting, 'id' | 'url'>
+    )> }
+  ) }
+);
+
+export type CreateServiceThankYouPageSettingMutationVariables = Exact<{
+  service_id: Scalars['ID'];
+  url: Scalars['String'];
+}>;
+
+
+export type CreateServiceThankYouPageSettingMutation = (
+  { __typename?: 'Mutation' }
+  & { create_service_thank_you_page_setting: (
+    { __typename?: 'ServiceThankYouPageSettingMutationResult' }
+    & Pick<ServiceThankYouPageSettingMutationResult, 'success' | 'message'>
+    & { setting?: Maybe<(
+      { __typename?: 'ServiceThankYouPageSetting' }
+      & Pick<ServiceThankYouPageSetting, 'id' | 'url'>
+    )> }
+  ) }
+);
+
+export type UpdateServiceThankYouPageSettingMutationVariables = Exact<{
+  setting_id: Scalars['ID'];
+  url: Scalars['String'];
+}>;
+
+
+export type UpdateServiceThankYouPageSettingMutation = (
+  { __typename?: 'Mutation' }
+  & { update_service_thank_you_page_setting: (
+    { __typename?: 'ServiceThankYouPageSettingMutationResult' }
+    & Pick<ServiceThankYouPageSettingMutationResult, 'success' | 'message'>
+    & { setting?: Maybe<(
+      { __typename?: 'ServiceThankYouPageSetting' }
+      & Pick<ServiceThankYouPageSetting, 'id' | 'url'>
+    )> }
+  ) }
+);
+
+export type DeleteServiceThankYouPageSettingMutationVariables = Exact<{
+  setting_id: Scalars['ID'];
+}>;
+
+
+export type DeleteServiceThankYouPageSettingMutation = (
+  { __typename?: 'Mutation' }
+  & { delete_service_thank_you_page_setting: (
+    { __typename?: 'ServiceThankYouPageSettingMutationResult' }
+    & Pick<ServiceThankYouPageSettingMutationResult, 'success' | 'message'>
+    & { setting?: Maybe<(
+      { __typename?: 'ServiceThankYouPageSetting' }
+      & Pick<ServiceThankYouPageSetting, 'id' | 'url'>
+    )> }
+  ) }
+);
+
 export type CurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1671,6 +1858,46 @@ export type SubdomainAgencyStripeAccountUpdateUrlQuery = (
   )>> }
 );
 
+export type AgencyThankYouPageSettingQueryVariables = Exact<{
+  agency_id: Scalars['ID'];
+}>;
+
+
+export type AgencyThankYouPageSettingQuery = (
+  { __typename?: 'Query' }
+  & { agency?: Maybe<(
+    { __typename?: 'Agency' }
+    & Pick<Agency, 'id'>
+    & { settings: (
+      { __typename?: 'AgencySettings' }
+      & { thank_you_page_setting?: Maybe<(
+        { __typename?: 'AgencyThankYouPageSetting' }
+        & Pick<AgencyThankYouPageSetting, 'id' | 'url'>
+      )> }
+    ) }
+  )> }
+);
+
+export type ServiceThankYouPageSettingQueryVariables = Exact<{
+  service_id: Scalars['ID'];
+}>;
+
+
+export type ServiceThankYouPageSettingQuery = (
+  { __typename?: 'Query' }
+  & { service?: Maybe<(
+    { __typename?: 'Service' }
+    & Pick<Service, 'id'>
+    & { settings: (
+      { __typename?: 'ServiceSettings' }
+      & { thank_you_page_setting?: Maybe<(
+        { __typename?: 'ServiceThankYouPageSetting' }
+        & Pick<ServiceThankYouPageSetting, 'id' | 'url'>
+      )> }
+    ) }
+  )> }
+);
+
 export const Stripe_AccountFragmentDoc: DocumentNode<Stripe_AccountFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"stripe_account"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"StripeAccount"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"id_ext"}},{"kind":"Field","name":{"kind":"Name","value":"business_profile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mcc"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"product_description"}},{"kind":"Field","name":{"kind":"Name","value":"support_address"}},{"kind":"Field","name":{"kind":"Name","value":"support_email"}},{"kind":"Field","name":{"kind":"Name","value":"support_phone"}},{"kind":"Field","name":{"kind":"Name","value":"support_url"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}},{"kind":"Field","name":{"kind":"Name","value":"business_type"}},{"kind":"Field","name":{"kind":"Name","value":"capabilities"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"card_payments"}},{"kind":"Field","name":{"kind":"Name","value":"transfers"}}]}},{"kind":"Field","name":{"kind":"Name","value":"requirements"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"current_deadline"}},{"kind":"Field","name":{"kind":"Name","value":"disabled_reason"}},{"kind":"Field","name":{"kind":"Name","value":"currently_due"}},{"kind":"Field","name":{"kind":"Name","value":"eventually_due"}},{"kind":"Field","name":{"kind":"Name","value":"past_due"}},{"kind":"Field","name":{"kind":"Name","value":"pending_verification"}}]}},{"kind":"Field","name":{"kind":"Name","value":"settings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"branding"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"icon"}},{"kind":"Field","name":{"kind":"Name","value":"logo"}},{"kind":"Field","name":{"kind":"Name","value":"primary_color"}},{"kind":"Field","name":{"kind":"Name","value":"secondary_color"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"charges_enabled"}},{"kind":"Field","name":{"kind":"Name","value":"country"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"default_currency"}},{"kind":"Field","name":{"kind":"Name","value":"details_submitted"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"payouts_enabled"}}]}}]};
 export const Balance_TransactionFragmentDoc: DocumentNode<Balance_TransactionFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"balance_transaction"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"BalanceTransaction"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"id_ext"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"available_on"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"exchange_rate"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"fee"}},{"kind":"Field","name":{"kind":"Name","value":"fee_details"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"application"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"net"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"reporting_category"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"source"}}]}}]};
 export const AddressFragmentDoc: DocumentNode<AddressFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"address"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Address"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"country"}},{"kind":"Field","name":{"kind":"Name","value":"line1"}},{"kind":"Field","name":{"kind":"Name","value":"line2"}},{"kind":"Field","name":{"kind":"Name","value":"postal_code"}},{"kind":"Field","name":{"kind":"Name","value":"state"}}]}}]};
@@ -1700,6 +1927,12 @@ export const CreateServiceDocument: DocumentNode<CreateServiceMutation, CreateSe
 export const UpdateServiceDocument: DocumentNode<UpdateServiceMutation, UpdateServiceMutationVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateService"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"description"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"url_name"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"duration"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"default_price_id"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"image_logo"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ImageInput"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"image_hero"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ImageInput"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"status"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"update_service"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"service_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}}},{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}},{"kind":"Argument","name":{"kind":"Name","value":"description"},"value":{"kind":"Variable","name":{"kind":"Name","value":"description"}}},{"kind":"Argument","name":{"kind":"Name","value":"url_name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"url_name"}}},{"kind":"Argument","name":{"kind":"Name","value":"duration"},"value":{"kind":"Variable","name":{"kind":"Name","value":"duration"}}},{"kind":"Argument","name":{"kind":"Name","value":"default_price_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"default_price_id"}}},{"kind":"Argument","name":{"kind":"Name","value":"image_logo"},"value":{"kind":"Variable","name":{"kind":"Name","value":"image_logo"}}},{"kind":"Argument","name":{"kind":"Name","value":"image_hero"},"value":{"kind":"Variable","name":{"kind":"Name","value":"image_hero"}}},{"kind":"Argument","name":{"kind":"Name","value":"status"},"value":{"kind":"Variable","name":{"kind":"Name","value":"status"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"service"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"service"}}]}}]}}]}},...ServiceFragmentDoc.definitions]};
 export const DeleteServiceDocument: DocumentNode<DeleteServiceMutation, DeleteServiceMutationVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteService"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"delete_service"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"service_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"service"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]};
 export const CreatePriceDocument: DocumentNode<CreatePriceMutation, CreatePriceMutationVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreatePrice"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"service_variant_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"unit_amount"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"currency"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"recurring_interval"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"recurring_interval_count"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"status"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"create_price"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"service_variant_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"service_variant_id"}}},{"kind":"Argument","name":{"kind":"Name","value":"unit_amount"},"value":{"kind":"Variable","name":{"kind":"Name","value":"unit_amount"}}},{"kind":"Argument","name":{"kind":"Name","value":"currency"},"value":{"kind":"Variable","name":{"kind":"Name","value":"currency"}}},{"kind":"Argument","name":{"kind":"Name","value":"recurring_interval"},"value":{"kind":"Variable","name":{"kind":"Name","value":"recurring_interval"}}},{"kind":"Argument","name":{"kind":"Name","value":"recurring_interval_count"},"value":{"kind":"Variable","name":{"kind":"Name","value":"recurring_interval_count"}}},{"kind":"Argument","name":{"kind":"Name","value":"status"},"value":{"kind":"Variable","name":{"kind":"Name","value":"status"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"price"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"price"}}]}}]}}]}},...PriceFragmentDoc.definitions]};
+export const CreateAgencyThankYouPageSettingDocument: DocumentNode<CreateAgencyThankYouPageSettingMutation, CreateAgencyThankYouPageSettingMutationVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateAgencyThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"agency_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"url"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"create_agency_thank_you_page_setting"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"agency_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"agency_id"}}},{"kind":"Argument","name":{"kind":"Name","value":"url"},"value":{"kind":"Variable","name":{"kind":"Name","value":"url"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]};
+export const UpdateAgencyThankYouPageSettingDocument: DocumentNode<UpdateAgencyThankYouPageSettingMutation, UpdateAgencyThankYouPageSettingMutationVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateAgencyThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"setting_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"url"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"update_agency_thank_you_page_setting"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"setting_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"setting_id"}}},{"kind":"Argument","name":{"kind":"Name","value":"url"},"value":{"kind":"Variable","name":{"kind":"Name","value":"url"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]};
+export const DeleteAgencyThankYouPageSettingDocument: DocumentNode<DeleteAgencyThankYouPageSettingMutation, DeleteAgencyThankYouPageSettingMutationVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteAgencyThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"setting_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"delete_agency_thank_you_page_setting"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"setting_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"setting_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]};
+export const CreateServiceThankYouPageSettingDocument: DocumentNode<CreateServiceThankYouPageSettingMutation, CreateServiceThankYouPageSettingMutationVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateServiceThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"url"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"create_service_thank_you_page_setting"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"service_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}}},{"kind":"Argument","name":{"kind":"Name","value":"url"},"value":{"kind":"Variable","name":{"kind":"Name","value":"url"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]};
+export const UpdateServiceThankYouPageSettingDocument: DocumentNode<UpdateServiceThankYouPageSettingMutation, UpdateServiceThankYouPageSettingMutationVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateServiceThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"setting_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"url"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"update_service_thank_you_page_setting"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"setting_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"setting_id"}}},{"kind":"Argument","name":{"kind":"Name","value":"url"},"value":{"kind":"Variable","name":{"kind":"Name","value":"url"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]};
+export const DeleteServiceThankYouPageSettingDocument: DocumentNode<DeleteServiceThankYouPageSettingMutation, DeleteServiceThankYouPageSettingMutationVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteServiceThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"setting_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"delete_service_thank_you_page_setting"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"setting_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"setting_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]};
 export const CurrentUserDocument: DocumentNode<CurrentUserQuery, CurrentUserQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"CurrentUser"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"current_user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"user"}},{"kind":"Field","name":{"kind":"Name","value":"memberships"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"membership"}}]}}]}}]}},...UserFragmentDoc.definitions,...MembershipFragmentDoc.definitions]};
 export const CountriesDocument: DocumentNode<CountriesQuery, CountriesQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Countries"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"country_codes"}}]}}]};
 export const ServicesAgreementDocument: DocumentNode<ServicesAgreementQuery, ServicesAgreementQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ServicesAgreement"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"markdowns"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"name"},"value":{"kind":"StringValue","value":"Services Agreement","block":false}},{"kind":"ObjectField","name":{"kind":"Name","value":"agency_id"},"value":{"kind":"NullValue"}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"markdown"}}]}}]}},...MarkdownFragmentDoc.definitions]};
@@ -1714,3 +1947,5 @@ export const AgencyServicesDocument: DocumentNode<AgencyServicesQuery, AgencySer
 export const ServiceDocument: DocumentNode<ServiceQuery, ServiceQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Service"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"service"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"service"}}]}}]}},...ServiceFragmentDoc.definitions]};
 export const SubdomainAgencyDocument: DocumentNode<SubdomainAgencyQuery, SubdomainAgencyQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SubdomainAgency"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"subdomain_name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"subdomains"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"subdomain_name"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"agency"}},{"kind":"Field","name":{"kind":"Name","value":"services"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"service"}}]}}]}}]}}]}},...AgencyFragmentDoc.definitions,...ServiceFragmentDoc.definitions]};
 export const SubdomainAgencyStripeAccountUpdateUrlDocument: DocumentNode<SubdomainAgencyStripeAccountUpdateUrlQuery, SubdomainAgencyStripeAccountUpdateUrlQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SubdomainAgencyStripeAccountUpdateUrl"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"subdomain_name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"subdomains"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"subdomain_name"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"stripe_account"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"account_update_url"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]}}]};
+export const AgencyThankYouPageSettingDocument: DocumentNode<AgencyThankYouPageSettingQuery, AgencyThankYouPageSettingQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AgencyThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"agency_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"agency"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"agency_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"settings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"thank_you_page_setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]};
+export const ServiceThankYouPageSettingDocument: DocumentNode<ServiceThankYouPageSettingQuery, ServiceThankYouPageSettingQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ServiceThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"service"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"settings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"thank_you_page_setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]};

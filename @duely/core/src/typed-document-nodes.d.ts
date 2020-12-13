@@ -162,6 +162,7 @@ export declare type Agency = Node & {
     subdomain: Subdomain;
     theme: Theme;
     services?: Maybe<Array<Service>>;
+    settings: AgencySettings;
 };
 export declare type AgencyServicesArgs = {
     filter?: Maybe<ServiceFilter>;
@@ -466,6 +467,7 @@ export declare type Service = Node & {
     agency: Agency;
     default_variant: ServiceVariant;
     variants?: Maybe<Array<ServiceVariant>>;
+    settings: ServiceSettings;
 };
 export declare type ServiceVariantsArgs = {
     filter?: Maybe<ServiceVariantFilter>;
@@ -514,6 +516,25 @@ export declare type ServiceVariantFilter = {
     name?: Maybe<Scalars['String']>;
     service_id?: Maybe<Scalars['ID']>;
 };
+export declare type ServiceSettings = {
+    __typename?: 'ServiceSettings';
+    thank_you_page_setting?: Maybe<ServiceThankYouPageSetting>;
+};
+export declare type ServiceThankYouPageSetting = {
+    __typename?: 'ServiceThankYouPageSetting';
+    id: Scalars['ID'];
+    url: Scalars['String'];
+    agency_setting: AgencyThankYouPageSetting;
+};
+export declare type AgencyThankYouPageSetting = {
+    __typename?: 'AgencyThankYouPageSetting';
+    id: Scalars['ID'];
+    url: Scalars['String'];
+};
+export declare type AgencySettings = {
+    __typename?: 'AgencySettings';
+    thank_you_page_setting?: Maybe<AgencyThankYouPageSetting>;
+};
 export declare type UserFilter = {
     name?: Maybe<Scalars['String']>;
     email_address?: Maybe<Scalars['String']>;
@@ -548,6 +569,9 @@ export declare type Mutation = {
     verify_password_reset: SimpleResult;
     create_agency: CreateAgencyResult;
     delete_agency: DeleteAgencyResult;
+    create_agency_thank_you_page_setting: AgencyThankYouPageSettingMutationResult;
+    update_agency_thank_you_page_setting: AgencyThankYouPageSettingMutationResult;
+    delete_agency_thank_you_page_setting: AgencyThankYouPageSettingMutationResult;
     create_price: PriceMutationResult;
     update_price: PriceMutationResult;
     delete_price: PriceMutationResult;
@@ -555,6 +579,9 @@ export declare type Mutation = {
     create_service: ServiceMutationResult;
     update_service: ServiceMutationResult;
     delete_service: ServiceMutationResult;
+    create_service_thank_you_page_setting: ServiceThankYouPageSettingMutationResult;
+    update_service_thank_you_page_setting: ServiceThankYouPageSettingMutationResult;
+    delete_service_thank_you_page_setting: ServiceThankYouPageSettingMutationResult;
     create_service_variant: ServiceVariantMutationResult;
     update_service_variant: ServiceVariantMutationResult;
     delete_service_variant: ServiceVariantMutationResult;
@@ -595,6 +622,17 @@ export declare type MutationCreate_AgencyArgs = {
 export declare type MutationDelete_AgencyArgs = {
     agency_id: Scalars['ID'];
 };
+export declare type MutationCreate_Agency_Thank_You_Page_SettingArgs = {
+    agency_id: Scalars['ID'];
+    url: Scalars['String'];
+};
+export declare type MutationUpdate_Agency_Thank_You_Page_SettingArgs = {
+    setting_id: Scalars['ID'];
+    url: Scalars['String'];
+};
+export declare type MutationDelete_Agency_Thank_You_Page_SettingArgs = {
+    setting_id: Scalars['ID'];
+};
 export declare type MutationCreate_PriceArgs = {
     service_variant_id: Scalars['ID'];
     unit_amount: Scalars['Int'];
@@ -612,6 +650,8 @@ export declare type MutationDelete_PriceArgs = {
 };
 export declare type MutationCreate_Stripe_Checkout_SessionArgs = {
     price_id: Scalars['ID'];
+    success_url?: Maybe<Scalars['String']>;
+    cancel_url?: Maybe<Scalars['String']>;
 };
 export declare type MutationCreate_ServiceArgs = {
     agency_id: Scalars['ID'];
@@ -642,6 +682,17 @@ export declare type MutationUpdate_ServiceArgs = {
 };
 export declare type MutationDelete_ServiceArgs = {
     service_id: Scalars['ID'];
+};
+export declare type MutationCreate_Service_Thank_You_Page_SettingArgs = {
+    service_id: Scalars['ID'];
+    url: Scalars['String'];
+};
+export declare type MutationUpdate_Service_Thank_You_Page_SettingArgs = {
+    setting_id: Scalars['ID'];
+    url: Scalars['String'];
+};
+export declare type MutationDelete_Service_Thank_You_Page_SettingArgs = {
+    setting_id: Scalars['ID'];
 };
 export declare type MutationCreate_Service_VariantArgs = {
     service_id: Scalars['ID'];
@@ -746,6 +797,12 @@ export declare type DeleteAgencyResult = MutationResult & {
     message?: Maybe<Scalars['String']>;
     agency?: Maybe<Agency>;
 };
+export declare type AgencyThankYouPageSettingMutationResult = MutationResult & {
+    __typename?: 'AgencyThankYouPageSettingMutationResult';
+    success: Scalars['Boolean'];
+    message?: Maybe<Scalars['String']>;
+    setting?: Maybe<AgencyThankYouPageSetting>;
+};
 export declare type PriceMutationResult = MutationResult & {
     __typename?: 'PriceMutationResult';
     success: Scalars['Boolean'];
@@ -763,6 +820,12 @@ export declare type ServiceMutationResult = MutationResult & {
     success: Scalars['Boolean'];
     message?: Maybe<Scalars['String']>;
     service?: Maybe<Service>;
+};
+export declare type ServiceThankYouPageSettingMutationResult = MutationResult & {
+    __typename?: 'ServiceThankYouPageSettingMutationResult';
+    success: Scalars['Boolean'];
+    message?: Maybe<Scalars['String']>;
+    setting?: Maybe<ServiceThankYouPageSetting>;
 };
 export declare type ServiceVariantMutationResult = MutationResult & {
     __typename?: 'ServiceVariantMutationResult';
@@ -1154,6 +1217,94 @@ export declare type CreatePriceMutation = ({
         } & PriceFragment)>;
     });
 });
+export declare type CreateAgencyThankYouPageSettingMutationVariables = Exact<{
+    agency_id: Scalars['ID'];
+    url: Scalars['String'];
+}>;
+export declare type CreateAgencyThankYouPageSettingMutation = ({
+    __typename?: 'Mutation';
+} & {
+    create_agency_thank_you_page_setting: ({
+        __typename?: 'AgencyThankYouPageSettingMutationResult';
+    } & Pick<AgencyThankYouPageSettingMutationResult, 'success' | 'message'> & {
+        setting?: Maybe<({
+            __typename?: 'AgencyThankYouPageSetting';
+        } & Pick<AgencyThankYouPageSetting, 'id' | 'url'>)>;
+    });
+});
+export declare type UpdateAgencyThankYouPageSettingMutationVariables = Exact<{
+    setting_id: Scalars['ID'];
+    url: Scalars['String'];
+}>;
+export declare type UpdateAgencyThankYouPageSettingMutation = ({
+    __typename?: 'Mutation';
+} & {
+    update_agency_thank_you_page_setting: ({
+        __typename?: 'AgencyThankYouPageSettingMutationResult';
+    } & Pick<AgencyThankYouPageSettingMutationResult, 'success' | 'message'> & {
+        setting?: Maybe<({
+            __typename?: 'AgencyThankYouPageSetting';
+        } & Pick<AgencyThankYouPageSetting, 'id' | 'url'>)>;
+    });
+});
+export declare type DeleteAgencyThankYouPageSettingMutationVariables = Exact<{
+    setting_id: Scalars['ID'];
+}>;
+export declare type DeleteAgencyThankYouPageSettingMutation = ({
+    __typename?: 'Mutation';
+} & {
+    delete_agency_thank_you_page_setting: ({
+        __typename?: 'AgencyThankYouPageSettingMutationResult';
+    } & Pick<AgencyThankYouPageSettingMutationResult, 'success' | 'message'> & {
+        setting?: Maybe<({
+            __typename?: 'AgencyThankYouPageSetting';
+        } & Pick<AgencyThankYouPageSetting, 'id' | 'url'>)>;
+    });
+});
+export declare type CreateServiceThankYouPageSettingMutationVariables = Exact<{
+    service_id: Scalars['ID'];
+    url: Scalars['String'];
+}>;
+export declare type CreateServiceThankYouPageSettingMutation = ({
+    __typename?: 'Mutation';
+} & {
+    create_service_thank_you_page_setting: ({
+        __typename?: 'ServiceThankYouPageSettingMutationResult';
+    } & Pick<ServiceThankYouPageSettingMutationResult, 'success' | 'message'> & {
+        setting?: Maybe<({
+            __typename?: 'ServiceThankYouPageSetting';
+        } & Pick<ServiceThankYouPageSetting, 'id' | 'url'>)>;
+    });
+});
+export declare type UpdateServiceThankYouPageSettingMutationVariables = Exact<{
+    setting_id: Scalars['ID'];
+    url: Scalars['String'];
+}>;
+export declare type UpdateServiceThankYouPageSettingMutation = ({
+    __typename?: 'Mutation';
+} & {
+    update_service_thank_you_page_setting: ({
+        __typename?: 'ServiceThankYouPageSettingMutationResult';
+    } & Pick<ServiceThankYouPageSettingMutationResult, 'success' | 'message'> & {
+        setting?: Maybe<({
+            __typename?: 'ServiceThankYouPageSetting';
+        } & Pick<ServiceThankYouPageSetting, 'id' | 'url'>)>;
+    });
+});
+export declare type DeleteServiceThankYouPageSettingMutationVariables = Exact<{
+    setting_id: Scalars['ID'];
+}>;
+export declare type DeleteServiceThankYouPageSettingMutation = ({
+    __typename?: 'Mutation';
+} & {
+    delete_service_thank_you_page_setting: ({
+        __typename?: 'ServiceThankYouPageSettingMutationResult';
+    } & Pick<ServiceThankYouPageSettingMutationResult, 'success' | 'message'> & {
+        setting?: Maybe<({
+            __typename?: 'ServiceThankYouPageSetting';
+        } & Pick<ServiceThankYouPageSetting, 'id' | 'url'>)>;
+    });
+});
 export declare type CurrentUserQueryVariables = Exact<{
     [key: string]: never;
 }>;
@@ -1422,6 +1573,42 @@ export declare type SubdomainAgencyStripeAccountUpdateUrlQuery = ({
         });
     })>>;
 });
+export declare type AgencyThankYouPageSettingQueryVariables = Exact<{
+    agency_id: Scalars['ID'];
+}>;
+export declare type AgencyThankYouPageSettingQuery = ({
+    __typename?: 'Query';
+} & {
+    agency?: Maybe<({
+        __typename?: 'Agency';
+    } & Pick<Agency, 'id'> & {
+        settings: ({
+            __typename?: 'AgencySettings';
+        } & {
+            thank_you_page_setting?: Maybe<({
+                __typename?: 'AgencyThankYouPageSetting';
+            } & Pick<AgencyThankYouPageSetting, 'id' | 'url'>)>;
+        });
+    })>;
+});
+export declare type ServiceThankYouPageSettingQueryVariables = Exact<{
+    service_id: Scalars['ID'];
+}>;
+export declare type ServiceThankYouPageSettingQuery = ({
+    __typename?: 'Query';
+} & {
+    service?: Maybe<({
+        __typename?: 'Service';
+    } & Pick<Service, 'id'> & {
+        settings: ({
+            __typename?: 'ServiceSettings';
+        } & {
+            thank_you_page_setting?: Maybe<({
+                __typename?: 'ServiceThankYouPageSetting';
+            } & Pick<ServiceThankYouPageSetting, 'id' | 'url'>)>;
+        });
+    })>;
+});
 export declare const Stripe_AccountFragmentDoc: DocumentNode<Stripe_AccountFragment, unknown>;
 export declare const Balance_TransactionFragmentDoc: DocumentNode<Balance_TransactionFragment, unknown>;
 export declare const AddressFragmentDoc: DocumentNode<AddressFragment, unknown>;
@@ -1451,6 +1638,12 @@ export declare const CreateServiceDocument: DocumentNode<CreateServiceMutation, 
 export declare const UpdateServiceDocument: DocumentNode<UpdateServiceMutation, UpdateServiceMutationVariables>;
 export declare const DeleteServiceDocument: DocumentNode<DeleteServiceMutation, DeleteServiceMutationVariables>;
 export declare const CreatePriceDocument: DocumentNode<CreatePriceMutation, CreatePriceMutationVariables>;
+export declare const CreateAgencyThankYouPageSettingDocument: DocumentNode<CreateAgencyThankYouPageSettingMutation, CreateAgencyThankYouPageSettingMutationVariables>;
+export declare const UpdateAgencyThankYouPageSettingDocument: DocumentNode<UpdateAgencyThankYouPageSettingMutation, UpdateAgencyThankYouPageSettingMutationVariables>;
+export declare const DeleteAgencyThankYouPageSettingDocument: DocumentNode<DeleteAgencyThankYouPageSettingMutation, DeleteAgencyThankYouPageSettingMutationVariables>;
+export declare const CreateServiceThankYouPageSettingDocument: DocumentNode<CreateServiceThankYouPageSettingMutation, CreateServiceThankYouPageSettingMutationVariables>;
+export declare const UpdateServiceThankYouPageSettingDocument: DocumentNode<UpdateServiceThankYouPageSettingMutation, UpdateServiceThankYouPageSettingMutationVariables>;
+export declare const DeleteServiceThankYouPageSettingDocument: DocumentNode<DeleteServiceThankYouPageSettingMutation, DeleteServiceThankYouPageSettingMutationVariables>;
 export declare const CurrentUserDocument: DocumentNode<CurrentUserQuery, CurrentUserQueryVariables>;
 export declare const CountriesDocument: DocumentNode<CountriesQuery, CountriesQueryVariables>;
 export declare const ServicesAgreementDocument: DocumentNode<ServicesAgreementQuery, ServicesAgreementQueryVariables>;
@@ -1465,3 +1658,5 @@ export declare const AgencyServicesDocument: DocumentNode<AgencyServicesQuery, A
 export declare const ServiceDocument: DocumentNode<ServiceQuery, ServiceQueryVariables>;
 export declare const SubdomainAgencyDocument: DocumentNode<SubdomainAgencyQuery, SubdomainAgencyQueryVariables>;
 export declare const SubdomainAgencyStripeAccountUpdateUrlDocument: DocumentNode<SubdomainAgencyStripeAccountUpdateUrlQuery, SubdomainAgencyStripeAccountUpdateUrlQueryVariables>;
+export declare const AgencyThankYouPageSettingDocument: DocumentNode<AgencyThankYouPageSettingQuery, AgencyThankYouPageSettingQueryVariables>;
+export declare const ServiceThankYouPageSettingDocument: DocumentNode<ServiceThankYouPageSettingQuery, ServiceThankYouPageSettingQueryVariables>;

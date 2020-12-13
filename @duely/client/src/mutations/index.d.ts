@@ -1,5 +1,5 @@
 import { ApolloCache, MutationOptions, NormalizedCacheObject } from '@apollo/client';
-import { CreateAgencyDocument, CreatePriceDocument, CreateServiceDocument, DeleteServiceDocument, LogInDocument, LogOutDocument, StartPasswordResetDocument, StartSignUpDocument, UpdateServiceDocument, VerifyPasswordResetDocument, VerifySignUpDocument } from '@duely/core';
+import { CreateAgencyDocument, CreateAgencyThankYouPageSettingDocument, CreatePriceDocument, CreateServiceDocument, CreateServiceThankYouPageSettingDocument, DeleteAgencyThankYouPageSettingDocument, DeleteServiceDocument, DeleteServiceThankYouPageSettingDocument, LogInDocument, LogOutDocument, StartPasswordResetDocument, StartSignUpDocument, UpdateAgencyThankYouPageSettingDocument, UpdateServiceDocument, UpdateServiceThankYouPageSettingDocument, VerifyPasswordResetDocument, VerifySignUpDocument } from '@duely/core';
 import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-document-node/core';
 export interface TypedMutationOptions<TDocumentNode extends TypedDocumentNode<unknown, unknown>> extends MutationOptions<ResultOf<TDocumentNode>, VariablesOf<TDocumentNode>> {
     mutation: TDocumentNode;
@@ -111,27 +111,27 @@ declare const create_service_R: (d: ResultOf<typeof CreateServiceDocument>) => {
             __typename?: "ServiceVariant" | undefined;
         } & {
             __typename?: "ServiceVariant" | undefined;
-        } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "duration" | "status"> & {
+        } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "status" | "duration"> & {
             default_price?: ({
                 __typename?: "Price" | undefined;
             } & {
                 __typename?: "Price" | undefined;
-            } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
+            } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
             prices?: ({
                 __typename?: "Price" | undefined;
             } & {
                 __typename?: "Price" | undefined;
-            } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
+            } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
             image_logo?: ({
                 __typename?: "Image" | undefined;
             } & {
                 __typename?: "Image" | undefined;
-            } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+            } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
             image_hero?: ({
                 __typename?: "Image" | undefined;
             } & {
                 __typename?: "Image" | undefined;
-            } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+            } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
             markdown_description?: ({
                 __typename?: "Markdown" | undefined;
             } & {
@@ -142,27 +142,27 @@ declare const create_service_R: (d: ResultOf<typeof CreateServiceDocument>) => {
             __typename?: "ServiceVariant" | undefined;
         } & {
             __typename?: "ServiceVariant" | undefined;
-        } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "duration" | "status"> & {
+        } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "status" | "duration"> & {
             default_price?: ({
                 __typename?: "Price" | undefined;
             } & {
                 __typename?: "Price" | undefined;
-            } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
+            } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
             prices?: ({
                 __typename?: "Price" | undefined;
             } & {
                 __typename?: "Price" | undefined;
-            } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
+            } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
             image_logo?: ({
                 __typename?: "Image" | undefined;
             } & {
                 __typename?: "Image" | undefined;
-            } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+            } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
             image_hero?: ({
                 __typename?: "Image" | undefined;
             } & {
                 __typename?: "Image" | undefined;
-            } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+            } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
             markdown_description?: ({
                 __typename?: "Markdown" | undefined;
             } & {
@@ -197,27 +197,27 @@ export declare const create_service_M: {
                 __typename?: "ServiceVariant" | undefined;
             } & {
                 __typename?: "ServiceVariant" | undefined;
-            } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "duration" | "status"> & {
+            } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "status" | "duration"> & {
                 default_price?: ({
                     __typename?: "Price" | undefined;
                 } & {
                     __typename?: "Price" | undefined;
-                } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
+                } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
                 prices?: ({
                     __typename?: "Price" | undefined;
                 } & {
                     __typename?: "Price" | undefined;
-                } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
+                } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
                 image_logo?: ({
                     __typename?: "Image" | undefined;
                 } & {
                     __typename?: "Image" | undefined;
-                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
                 image_hero?: ({
                     __typename?: "Image" | undefined;
                 } & {
                     __typename?: "Image" | undefined;
-                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
                 markdown_description?: ({
                     __typename?: "Markdown" | undefined;
                 } & {
@@ -228,27 +228,27 @@ export declare const create_service_M: {
                 __typename?: "ServiceVariant" | undefined;
             } & {
                 __typename?: "ServiceVariant" | undefined;
-            } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "duration" | "status"> & {
+            } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "status" | "duration"> & {
                 default_price?: ({
                     __typename?: "Price" | undefined;
                 } & {
                     __typename?: "Price" | undefined;
-                } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
+                } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
                 prices?: ({
                     __typename?: "Price" | undefined;
                 } & {
                     __typename?: "Price" | undefined;
-                } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
+                } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
                 image_logo?: ({
                     __typename?: "Image" | undefined;
                 } & {
                     __typename?: "Image" | undefined;
-                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
                 image_hero?: ({
                     __typename?: "Image" | undefined;
                 } & {
                     __typename?: "Image" | undefined;
-                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
                 markdown_description?: ({
                     __typename?: "Markdown" | undefined;
                 } & {
@@ -286,27 +286,27 @@ export declare const update_service_M: {
                 __typename?: "ServiceVariant" | undefined;
             } & {
                 __typename?: "ServiceVariant" | undefined;
-            } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "duration" | "status"> & {
+            } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "status" | "duration"> & {
                 default_price?: ({
                     __typename?: "Price" | undefined;
                 } & {
                     __typename?: "Price" | undefined;
-                } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
+                } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
                 prices?: ({
                     __typename?: "Price" | undefined;
                 } & {
                     __typename?: "Price" | undefined;
-                } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
+                } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
                 image_logo?: ({
                     __typename?: "Image" | undefined;
                 } & {
                     __typename?: "Image" | undefined;
-                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
                 image_hero?: ({
                     __typename?: "Image" | undefined;
                 } & {
                     __typename?: "Image" | undefined;
-                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
                 markdown_description?: ({
                     __typename?: "Markdown" | undefined;
                 } & {
@@ -317,27 +317,27 @@ export declare const update_service_M: {
                 __typename?: "ServiceVariant" | undefined;
             } & {
                 __typename?: "ServiceVariant" | undefined;
-            } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "duration" | "status"> & {
+            } & Pick<import("@duely/core").ServiceVariant, "id" | "name" | "description" | "status" | "duration"> & {
                 default_price?: ({
                     __typename?: "Price" | undefined;
                 } & {
                     __typename?: "Price" | undefined;
-                } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
+                } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
                 prices?: ({
                     __typename?: "Price" | undefined;
                 } & {
                     __typename?: "Price" | undefined;
-                } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
+                } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">)[] | null | undefined;
                 image_logo?: ({
                     __typename?: "Image" | undefined;
                 } & {
                     __typename?: "Image" | undefined;
-                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
                 image_hero?: ({
                     __typename?: "Image" | undefined;
                 } & {
                     __typename?: "Image" | undefined;
-                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "color" | "access">) | null | undefined;
+                } & Pick<import("@duely/core").Image, "data" | "id" | "name" | "access" | "color">) | null | undefined;
                 markdown_description?: ({
                     __typename?: "Markdown" | undefined;
                 } & {
@@ -383,7 +383,83 @@ export declare const create_price_M: {
             __typename?: "Price" | undefined;
         } & {
             __typename?: "Price" | undefined;
-        } & Pick<import("@duely/core").Price, "id" | "name" | "unit_amount" | "currency" | "type" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
+        } & Pick<import("@duely/core").Price, "id" | "name" | "currency" | "type" | "unit_amount" | "recurring_interval" | "recurring_interval_count">) | null | undefined;
+    };
+};
+export declare const create_agency_thank_you_page_setting_M: {
+    mutation: TypedDocumentNode<import("@duely/core").CreateAgencyThankYouPageSettingMutation, import("@duely/core").Exact<{
+        agency_id: string;
+        url: string;
+    }>>;
+    result: (d: ResultOf<typeof CreateAgencyThankYouPageSettingDocument>) => {
+        __typename?: "AgencyThankYouPageSettingMutationResult" | undefined;
+    } & Pick<import("@duely/core").AgencyThankYouPageSettingMutationResult, "success" | "message"> & {
+        setting?: ({
+            __typename?: "AgencyThankYouPageSetting" | undefined;
+        } & Pick<import("@duely/core").AgencyThankYouPageSetting, "id" | "url">) | null | undefined;
+    };
+};
+export declare const create_service_thank_you_page_setting_M: {
+    mutation: TypedDocumentNode<import("@duely/core").CreateServiceThankYouPageSettingMutation, import("@duely/core").Exact<{
+        service_id: string;
+        url: string;
+    }>>;
+    result: (d: ResultOf<typeof CreateServiceThankYouPageSettingDocument>) => {
+        __typename?: "ServiceThankYouPageSettingMutationResult" | undefined;
+    } & Pick<import("@duely/core").ServiceThankYouPageSettingMutationResult, "success" | "message"> & {
+        setting?: ({
+            __typename?: "ServiceThankYouPageSetting" | undefined;
+        } & Pick<import("@duely/core").ServiceThankYouPageSetting, "id" | "url">) | null | undefined;
+    };
+};
+export declare const update_agency_thank_you_page_setting_M: {
+    mutation: TypedDocumentNode<import("@duely/core").UpdateAgencyThankYouPageSettingMutation, import("@duely/core").Exact<{
+        setting_id: string;
+        url: string;
+    }>>;
+    result: (d: ResultOf<typeof UpdateAgencyThankYouPageSettingDocument>) => {
+        __typename?: "AgencyThankYouPageSettingMutationResult" | undefined;
+    } & Pick<import("@duely/core").AgencyThankYouPageSettingMutationResult, "success" | "message"> & {
+        setting?: ({
+            __typename?: "AgencyThankYouPageSetting" | undefined;
+        } & Pick<import("@duely/core").AgencyThankYouPageSetting, "id" | "url">) | null | undefined;
+    };
+};
+export declare const update_service_thank_you_page_setting_M: {
+    mutation: TypedDocumentNode<import("@duely/core").UpdateServiceThankYouPageSettingMutation, import("@duely/core").Exact<{
+        setting_id: string;
+        url: string;
+    }>>;
+    result: (d: ResultOf<typeof UpdateServiceThankYouPageSettingDocument>) => {
+        __typename?: "ServiceThankYouPageSettingMutationResult" | undefined;
+    } & Pick<import("@duely/core").ServiceThankYouPageSettingMutationResult, "success" | "message"> & {
+        setting?: ({
+            __typename?: "ServiceThankYouPageSetting" | undefined;
+        } & Pick<import("@duely/core").ServiceThankYouPageSetting, "id" | "url">) | null | undefined;
+    };
+};
+export declare const delete_agency_thank_you_page_setting_M: {
+    mutation: TypedDocumentNode<import("@duely/core").DeleteAgencyThankYouPageSettingMutation, import("@duely/core").Exact<{
+        setting_id: string;
+    }>>;
+    result: (d: ResultOf<typeof DeleteAgencyThankYouPageSettingDocument>) => {
+        __typename?: "AgencyThankYouPageSettingMutationResult" | undefined;
+    } & Pick<import("@duely/core").AgencyThankYouPageSettingMutationResult, "success" | "message"> & {
+        setting?: ({
+            __typename?: "AgencyThankYouPageSetting" | undefined;
+        } & Pick<import("@duely/core").AgencyThankYouPageSetting, "id" | "url">) | null | undefined;
+    };
+};
+export declare const delete_service_thank_you_page_setting_M: {
+    mutation: TypedDocumentNode<import("@duely/core").DeleteServiceThankYouPageSettingMutation, import("@duely/core").Exact<{
+        setting_id: string;
+    }>>;
+    result: (d: ResultOf<typeof DeleteServiceThankYouPageSettingDocument>) => {
+        __typename?: "ServiceThankYouPageSettingMutationResult" | undefined;
+    } & Pick<import("@duely/core").ServiceThankYouPageSettingMutationResult, "success" | "message"> & {
+        setting?: ({
+            __typename?: "ServiceThankYouPageSetting" | undefined;
+        } & Pick<import("@duely/core").ServiceThankYouPageSetting, "id" | "url">) | null | undefined;
     };
 };
 export {};

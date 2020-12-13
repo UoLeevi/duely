@@ -31,10 +31,7 @@ mutation LogOut {
 }
 
 mutation VerifyPasswordReset($verification_code: String!, $password: String!) {
-  verify_password_reset(
-    verification_code: $verification_code
-    password: $password
-  ) {
+  verify_password_reset(verification_code: $verification_code, password: $password) {
     success
     message
   }
@@ -48,10 +45,7 @@ mutation VerifySignUp($verification_code: String!) {
 }
 
 mutation StartPasswordReset($email_address: String!, $redirect_url: String) {
-  start_password_reset(
-    email_address: $email_address
-    redirect_url: $redirect_url
-  ) {
+  start_password_reset(email_address: $email_address, redirect_url: $redirect_url) {
     success
     message
   }
@@ -190,6 +184,72 @@ mutation CreatePrice(
     message
     price {
       ...price
+    }
+  }
+}
+
+mutation CreateAgencyThankYouPageSetting($agency_id: ID!, $url: String!) {
+  create_agency_thank_you_page_setting(agency_id: $agency_id, url: $url) {
+    success
+    message
+    setting {
+      id
+      url
+    }
+  }
+}
+
+mutation UpdateAgencyThankYouPageSetting($setting_id: ID!, $url: String!) {
+  update_agency_thank_you_page_setting(setting_id: $setting_id, url: $url) {
+    success
+    message
+    setting {
+      id
+      url
+    }
+  }
+}
+
+mutation DeleteAgencyThankYouPageSetting($setting_id: ID!) {
+  delete_agency_thank_you_page_setting(setting_id: $setting_id) {
+    success
+    message
+    setting {
+      id
+      url
+    }
+  }
+}
+
+mutation CreateServiceThankYouPageSetting($service_id: ID!, $url: String!) {
+  create_service_thank_you_page_setting(service_id: $service_id, url: $url) {
+    success
+    message
+    setting {
+      id
+      url
+    }
+  }
+}
+
+mutation UpdateServiceThankYouPageSetting($setting_id: ID!, $url: String!) {
+  update_service_thank_you_page_setting(setting_id: $setting_id, url: $url) {
+    success
+    message
+    setting {
+      id
+      url
+    }
+  }
+}
+
+mutation DeleteServiceThankYouPageSetting($setting_id: ID!) {
+  delete_service_thank_you_page_setting(setting_id: $setting_id) {
+    success
+    message
+    setting {
+      id
+      url
     }
   }
 }

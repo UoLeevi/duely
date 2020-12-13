@@ -210,3 +210,27 @@ query SubdomainAgencyStripeAccountUpdateUrl($subdomain_name: String!) {
     }
   }
 }
+
+query AgencyThankYouPageSetting($agency_id: ID!) {
+  agency(id: $agency_id) {
+    id
+    settings {
+      thank_you_page_setting {
+        id
+        url
+      }
+    }
+  }
+}
+
+query ServiceThankYouPageSetting($service_id: ID!) {
+  service(id: $service_id) {
+    id
+    settings {
+      thank_you_page_setting {
+        id
+        url
+      }
+    }
+  }
+}

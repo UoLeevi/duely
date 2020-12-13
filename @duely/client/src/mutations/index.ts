@@ -1,15 +1,21 @@
 import { ApolloCache, MutationOptions, NormalizedCacheObject, Reference } from '@apollo/client';
 import {
   CreateAgencyDocument,
+  CreateAgencyThankYouPageSettingDocument,
   CreatePriceDocument,
   CreateServiceDocument,
+  CreateServiceThankYouPageSettingDocument,
+  DeleteAgencyThankYouPageSettingDocument,
   DeleteServiceDocument,
+  DeleteServiceThankYouPageSettingDocument,
   LogInDocument,
   LogOutDocument,
   ServiceFragmentDoc,
   StartPasswordResetDocument,
   StartSignUpDocument,
+  UpdateAgencyThankYouPageSettingDocument,
   UpdateServiceDocument,
+  UpdateServiceThankYouPageSettingDocument,
   VerifyPasswordResetDocument,
   VerifySignUpDocument
 } from '@duely/core';
@@ -185,82 +191,38 @@ export const create_price_M = {
   result: (d: ResultOf<typeof CreatePriceDocument>) => d?.create_price
 };
 
-// createClient: {
-//   mutation: gql`
-//     mutation($agencyUuid: ID!, $name: String!, $emailAddress: String) {
-//       createClient(agencyUuid: $agencyUuid, name: $name, emailAddress: $emailAddress) {
-//         success
-//         message
-//         client {
-//           uuid
-//           name
-//           emailAddress
-//         }
-//       }
-//     }
-//   `,
-//   result: d => d?.createClient,
-// },
-// deleteClient: {
-//   mutation: gql`
-//     mutation($clientUuid: ID!) {
-//       deleteClient(clientUuid: $clientUuid) {
-//         success
-//         message
-//         uuid
-//       }
-//     }
-//   `,
-//   result: d => d?.createAgency
-// },
-// createService: {
-//   mutation: gql`
-//     mutation($agencyUuid: ID!, $name: String!) {
-//       createService(agencyUuid: $agencyUuid, name: $name) {
-//         success
-//         message
-//         service {
-//           uuid
-//           name
-//           status
-//         }
-//       }
-//     }
-//   `,
-//   result: d => d?.createService,
-//   after(client, result, { agencyUuid }) {
-//     if (!result.success) return;
-//     const query = queries.services.query;
-//     const data = produce(client.readQuery({ query, variables: { agencyUuid } }), data => {
-//       data.agency.servicesConnection.edges.push(result.service);
-//     });
-//     client.writeQuery({ query, data });
-//   }
-// },
-// deleteService: {
-//   mutation: gql`
-//     mutation($serviceUuid: ID!) {
-//       deleteService(serviceUuid: $serviceUuid) {
-//         success
-//         message
-//         uuid
-//       }
-//     }
-//   `,
-//   result: d => d?.createAgency
-// },
-// editImage: {
-//   mutation: gql`
-//     mutation($agencyUuid: ID!, $imageName: String!, $imageData: String!, $imageColor: String!) {
-//       editImage(agencyUuid: $agencyUuid, imageName: $imageName, imageData: $imageData, imageColor: $imageColor) {
-//         success
-//         message
-//         image {
-//           uuid
-//         }
-//       }
-//     }
-//   `,
-//   result: d => d?.editImage
-// },
-// };
+export const create_agency_thank_you_page_setting_M = {
+  mutation: CreateAgencyThankYouPageSettingDocument,
+  result: (d: ResultOf<typeof CreateAgencyThankYouPageSettingDocument>) =>
+    d?.create_agency_thank_you_page_setting
+};
+
+export const create_service_thank_you_page_setting_M = {
+  mutation: CreateServiceThankYouPageSettingDocument,
+  result: (d: ResultOf<typeof CreateServiceThankYouPageSettingDocument>) =>
+    d?.create_service_thank_you_page_setting
+};
+
+export const update_agency_thank_you_page_setting_M = {
+  mutation: UpdateAgencyThankYouPageSettingDocument,
+  result: (d: ResultOf<typeof UpdateAgencyThankYouPageSettingDocument>) =>
+    d?.update_agency_thank_you_page_setting
+};
+
+export const update_service_thank_you_page_setting_M = {
+  mutation: UpdateServiceThankYouPageSettingDocument,
+  result: (d: ResultOf<typeof UpdateServiceThankYouPageSettingDocument>) =>
+    d?.update_service_thank_you_page_setting
+};
+
+export const delete_agency_thank_you_page_setting_M = {
+  mutation: DeleteAgencyThankYouPageSettingDocument,
+  result: (d: ResultOf<typeof DeleteAgencyThankYouPageSettingDocument>) =>
+    d?.delete_agency_thank_you_page_setting
+};
+
+export const delete_service_thank_you_page_setting_M = {
+  mutation: DeleteServiceThankYouPageSettingDocument,
+  result: (d: ResultOf<typeof DeleteServiceThankYouPageSettingDocument>) =>
+    d?.delete_service_thank_you_page_setting
+};
