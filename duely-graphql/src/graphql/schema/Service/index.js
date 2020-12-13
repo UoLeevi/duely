@@ -19,6 +19,7 @@ export const Service = {
       agency: Agency!
       default_variant: ServiceVariant!
       variants(filter: ServiceVariantFilter): [ServiceVariant!]
+      settings: ServiceSettings!
     }
 
     input ServiceFilter {
@@ -48,7 +49,8 @@ export const Service = {
     Service: {
       ...createResolverForReferencedResource({ name: 'agency' }),
       ...createResolverForReferencedResource({ name: 'default_variant' }),
-      ...createResolverForReferencedResourceAll({ name: 'variants', resource_name: 'service variant', column_name: 'service_id' })
+      ...createResolverForReferencedResourceAll({ name: 'variants', resource_name: 'service variant', column_name: 'service_id' }),
+      settings: service => ({ service_id: service.id })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

@@ -35,7 +35,7 @@ export const Price = {
       create_price(service_variant_id: ID!, unit_amount: Int!, currency: String!, recurring_interval: String, recurring_interval_count: Int, status: String): PriceMutationResult!
       update_price(price_id: ID!, status: String!): PriceMutationResult!
       delete_price(price_id: ID!): PriceMutationResult!
-      create_stripe_checkout_session(price_id: ID!): CreateStripeCheckoutSessionResult!
+      create_stripe_checkout_session(price_id: ID!, success_url: String, cancel_url: String): CreateStripeCheckoutSessionResult!
     }
 
     type PriceMutationResult implements MutationResult {
@@ -225,7 +225,7 @@ export const Price = {
           };
         }
       },
-      async create_stripe_checkout_session(obj, { price_id }, context, info) {
+      async create_stripe_checkout_session(obj, { price_id, success_url, cancel_url }, context, info) {
         if (!context.jwt)
           throw new AuthenticationError('Unauthorized');
 
@@ -237,10 +237,47 @@ export const Price = {
               const service_variant = await queryResource(price.service_variant_id);
               const service = await queryResource(service_variant.service_id);
               const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
-              const application_fee_percent = 4.5;
+              const agency = await queryResource(service.agency_id);
+              const subdomain = await queryResource(agency.subdomain_id);
+
+              if (!success_url) {
+                const service_thank_you_page_setting = await queryResource('agency thank you page setting', { agency_id: service.agency_id });
+                success_url = service_thank_you_page_setting?.url;
+              }
+
+              if (!success_url) {
+                const agency_thank_you_page_setting = await queryResource('service thank you page setting', { service_id: service.id });
+                success_url = agency_thank_you_page_setting?.url;
+              }
+
+              if (!success_url) {
+                success_url = `https://${subdomain.name}.duely.app/orders/thank-you`;
+              }
+
+              try {
+                // validate and normalize url
+                const url = new URL(success_url);
+                url.searchParams.append('session_id', '{CHECKOUT_SESSION_ID}');
+                success_url = url.href.replace('%7B', '{').replace('%7D', '}');
+                
+              } catch (error) {
+                return {
+                  // error
+                  success: false,
+                  message: error.message,
+                  type: 'CreateStripeCheckoutSessionResult'
+                };
+              }
+
+              if (!cancel_url) {
+                cancel_url = context.referer ?? `https://${subdomain.name}.duely.app`;
+              }
+
+              const application_fee_percent = 1;
 
               // create stripe checkout session
               // see: https://stripe.com/docs/connect/creating-a-payments-page
+              // see: https://stripe.com/docs/payments/checkout/custom-success-page
               const stripe_checkout_session_args = {
                 mode: price.type === 'recurring' ? 'subscription' : 'payment',
                 payment_method_types: ['card'],
@@ -248,8 +285,8 @@ export const Price = {
                   price: price.stripe_id_ext,
                   quantity: 1,
                 }],
-                success_url: 'https://duely.app/success',
-                cancel_url: 'https://duely.app/failure',
+                success_url,
+                cancel_url
               };
 
               if (price.type === 'recurring') {

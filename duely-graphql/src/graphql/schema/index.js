@@ -10,9 +10,11 @@ import { SignUp } from './SignUp';
 import { PasswordReset } from './PasswordReset';
 import { User } from './User';
 import { Agency } from './Agency';
+import { AgencySettings } from './AgencySettings';
 import { StripeAccount } from './StripeAccount';
 import { StripeCustomer } from './StripeCustomer';
 import { Service } from './Service';
+import { ServiceSettings } from './ServiceSettings';
 import { ServiceVariant } from './ServiceVariant';
 import { Subdomain } from './Subdomain';
 import { Country } from './Country';
@@ -48,11 +50,13 @@ const types = [
   Country,
   User,
   Agency,
+  AgencySettings,
   Price,
   StripeAccount,
   StripeCustomer,
   BalanceTransaction,
   Service,
+  ServiceSettings,
   ServiceVariant,
   Subdomain,
   Image,

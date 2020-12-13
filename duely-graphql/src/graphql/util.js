@@ -58,7 +58,7 @@ export function createResolverForReferencedResource({ name, resource_name, colum
   column_name = column_name ?? `${name}_id`;
   resource_name = resource_name ?? name;
   const createQueryArgs = reverse
-    ? source => [resource_name, { [column_name]: source.id }]
+    ? source => [resource_name, { [column_name]: source.id ?? source[column_name] }]
     : source => [source[column_name]];
 
   return {
@@ -91,7 +91,7 @@ export function createResolverForReferencedResourceAll({ name, resource_name, co
       try {
         return await withConnection(context, async withSession => {
           return await withSession(async ({ queryResourceAll }) => {
-            return await queryResourceAll(resource_name, { ...args.filter, [column_name]: source.id });
+            return await queryResourceAll(resource_name, { ...args.filter, [column_name]: source.id ?? source[column_name] });
           });
         });
       } catch (error) {

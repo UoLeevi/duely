@@ -3662,6 +3662,25 @@ $$;
 ALTER FUNCTION operation_.update_resource_(_id text, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: agent_can_query_agency_thank_you_page_setting_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.agent_can_query_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
+    RETURN '{uuid_, agency_uuid_, url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.agent_can_query_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: agent_can_query_price_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3698,6 +3717,25 @@ $$;
 
 
 ALTER FUNCTION policy_.agent_can_query_service_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: agent_can_query_service_thank_you_page_setting_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.agent_can_query_service_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
+    RETURN '{uuid_, agency_thank_you_page_setting_uuid_, service_uuid_, url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.agent_can_query_service_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: agent_can_query_service_variant_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4233,6 +4271,25 @@ $$;
 ALTER FUNCTION policy_.only_owner_can_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_agency_thank_you_page_setting_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: owner_can_change_image_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4328,6 +4385,25 @@ $$;
 ALTER FUNCTION policy_.owner_can_change_service_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_service_thank_you_page_setting_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_service_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_service_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: owner_can_change_service_variant_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4407,6 +4483,28 @@ $$;
 
 
 ALTER FUNCTION policy_.owner_can_create_agency_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: owner_can_create_agency_thank_you_page_setting_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
+    RETURN '{agency_uuid_, url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: owner_can_create_image_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4495,6 +4593,28 @@ $$;
 
 
 ALTER FUNCTION policy_.owner_can_create_service_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: owner_can_create_service_thank_you_page_setting_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_service_thank_you_page_setting_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
+    RETURN '{agency_thank_you_page_setting_uuid_, service_uuid_, url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_service_thank_you_page_setting_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: owner_can_create_service_variant_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4760,6 +4880,25 @@ $$;
 ALTER FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: serviceaccount_can_query_agency_thank_you_page_setting_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_query_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, agency_uuid_, url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_query_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: serviceaccount_can_query_markdown_without_agency_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4777,6 +4916,25 @@ $$;
 
 
 ALTER FUNCTION policy_.serviceaccount_can_query_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_query_service_thank_you_page_setting_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_query_service_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, agency_thank_you_page_setting_uuid_, service_uuid_, url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_query_service_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: serviceaccount_can_query_stripe_account_for_agency_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5578,6 +5736,21 @@ $$;
 ALTER FUNCTION security_.unregister_policy_(_table regclass, _operation_type public.operation_type_, _policy_function regproc) OWNER TO postgres;
 
 --
+-- Name: agency_thank_you_page_setting_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.agency_thank_you_page_setting_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    agency_uuid_ uuid NOT NULL,
+    url_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.agency_thank_you_page_setting_ OWNER TO postgres;
+
+--
 -- Name: markdown_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
@@ -5807,6 +5980,22 @@ CREATE TABLE application_.service_step_payment_ (
 ALTER TABLE application_.service_step_payment_ OWNER TO postgres;
 
 --
+-- Name: service_thank_you_page_setting_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.service_thank_you_page_setting_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    agency_thank_you_page_setting_uuid_ uuid NOT NULL,
+    service_uuid_ uuid NOT NULL,
+    url_ text NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.service_thank_you_page_setting_ OWNER TO postgres;
+
+--
 -- Name: service_variant_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
@@ -5908,6 +6097,22 @@ CREATE TABLE application__audit_.agency_ (
 
 
 ALTER TABLE application__audit_.agency_ OWNER TO postgres;
+
+--
+-- Name: agency_thank_you_page_setting_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.agency_thank_you_page_setting_ (
+    uuid_ uuid,
+    agency_uuid_ uuid,
+    url_ text,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.agency_thank_you_page_setting_ OWNER TO postgres;
 
 --
 -- Name: client_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -6082,6 +6287,23 @@ CREATE TABLE application__audit_.service_step_payment_ (
 
 
 ALTER TABLE application__audit_.service_step_payment_ OWNER TO postgres;
+
+--
+-- Name: service_thank_you_page_setting_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.service_thank_you_page_setting_ (
+    uuid_ uuid,
+    agency_thank_you_page_setting_uuid_ uuid,
+    service_uuid_ uuid,
+    url_ text,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.service_thank_you_page_setting_ OWNER TO postgres;
 
 --
 -- Name: service_variant_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -6715,6 +6937,16 @@ badf0fcf-f502-4165-9353-197af5fde1ad	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy
 3efc0b81-3ef0-46c0-9e58-450eb69646e0	f8e2c163-8ebf-45dc-90b8-b850e1590c7c	policy_.user_can_create_their_notification_setting_(security_.resource_definition_,jsonb)	create	\N
 bfe85df9-030c-4173-abd7-52d25725ddd3	f8e2c163-8ebf-45dc-90b8-b850e1590c7c	policy_.user_can_change_their_notification_setting_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 cecdad34-bfee-4485-a35d-05c8b8f077c3	94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	policy_.anyone_can_query_notification_definition_(security_.resource_definition_,application_.resource_)	query	\N
+2ea74b1b-e0d4-4546-808b-f6a1b4597d0c	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.serviceaccount_can_query_agency_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	\N
+64e2d02e-7e13-45e0-8aa9-cd0edc508f86	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.agent_can_query_agency_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	2ea74b1b-e0d4-4546-808b-f6a1b4597d0c
+9cb7ba87-bc38-4ec0-ab7c-27328bf7d684	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.serviceaccount_can_query_service_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	\N
+1d508b64-b0f4-4418-bf95-0bec7cc64cda	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.agent_can_query_service_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	9cb7ba87-bc38-4ec0-ab7c-27328bf7d684
+50b54bad-9e8d-4e04-b71c-4596176e9258	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.owner_can_create_agency_thank_you_page_setting_(security_.resource_definition_,jsonb)	create	\N
+57aaadab-1383-4163-9da9-575c8b7ef82a	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.owner_can_create_service_thank_you_page_setting_(security_.resource_definition_,jsonb)	create	\N
+76e27529-d910-46ed-8e25-35d34a228b3e	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.owner_can_change_agency_thank_you_page_setting_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
+1fbcbd75-06d6-4eaf-95c2-513ebc712570	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.owner_can_change_service_thank_you_page_setting_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
+3905b875-0597-47e8-9084-36731c9e1610	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+83fb2b29-e69e-476f-93dc-c5c68c5a7814	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
@@ -6813,7 +7045,9 @@ d8f70962-229d-49eb-a99e-7c35a55719d5	md	markdown	application_.markdown_	957c84e9
 b54431c5-bbc4-47b6-9810-0a627e49cfe5	member	membership	application_.membership_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,user_uuid_,subdomain_uuid_,access_}
 f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,service_variant_uuid_}
 94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	notidef	notification definition	application_.notification_definition_	\N	{uuid_,name_,stripe_event_,feed_notification_enabled_,email_notifications_enabled_}
-f8e2c163-8ebf-45dc-90b8-b850e1590c7c	unotiset	user notification setting	application_.user_notification_setting_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{uuid_,user_uuid_,subdomain_uuid_,notification_definition_uuid_}
+f8e2c163-8ebf-45dc-90b8-b850e1590c7c	set	user notification setting	application_.user_notification_setting_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{uuid_,user_uuid_,subdomain_uuid_,notification_definition_uuid_}
+6549cc83-4ce3-423d-88e1-263ac227608d	set	agency thank you page setting	application_.agency_thank_you_page_setting_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,url_}
+34f873e1-b837-4f1f-94d7-7bacf9c43d8d	set	service thank you page setting	application_.service_thank_you_page_setting_	d50773b3-5779-4333-8bc3-6ef32d488d72	{uuid_,agency_thank_you_page_setting_uuid_,service_uuid_,url_}
 \.
 
 
@@ -7027,6 +7261,22 @@ ALTER TABLE ONLY application_.agency_
 
 
 --
+-- Name: agency_thank_you_page_setting_ agency_thank_you_page_setting__agency_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.agency_thank_you_page_setting_
+    ADD CONSTRAINT agency_thank_you_page_setting__agency_uuid__key UNIQUE (agency_uuid_);
+
+
+--
+-- Name: agency_thank_you_page_setting_ agency_thank_you_page_setting__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.agency_thank_you_page_setting_
+    ADD CONSTRAINT agency_thank_you_page_setting__pkey PRIMARY KEY (uuid_);
+
+
+--
 -- Name: client_ client__agency_uuid__name__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -7184,6 +7434,22 @@ ALTER TABLE ONLY application_.service_step_form_
 
 ALTER TABLE ONLY application_.service_step_payment_
     ADD CONSTRAINT service_step_payment__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: service_thank_you_page_setting_ service_thank_you_page_settin_agency_thank_you_page_setting_key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_thank_you_page_setting_
+    ADD CONSTRAINT service_thank_you_page_settin_agency_thank_you_page_setting_key UNIQUE (agency_thank_you_page_setting_uuid_, service_uuid_);
+
+
+--
+-- Name: service_thank_you_page_setting_ service_thank_you_page_setting__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_thank_you_page_setting_
+    ADD CONSTRAINT service_thank_you_page_setting__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -7368,14 +7634,6 @@ ALTER TABLE ONLY security_.policy_assignment_
 
 ALTER TABLE ONLY security_.policy_assignment_
     ADD CONSTRAINT policy_assignment__policy_name__operation_uuid__key UNIQUE (policy_name_, operation_uuid_);
-
-
---
--- Name: resource_definition_ resource_definition__id_prefix__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
---
-
-ALTER TABLE ONLY security_.resource_definition_
-    ADD CONSTRAINT resource_definition__id_prefix__key UNIQUE (id_prefix_);
 
 
 --
@@ -7580,6 +7838,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency
 
 
 --
+-- Name: agency_thank_you_page_setting_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency_thank_you_page_setting_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
 -- Name: client_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7647,6 +7912,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.servic
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_step_payment_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: service_thank_you_page_setting_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.service_thank_you_page_setting_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
 
 
 --
@@ -7783,6 +8055,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.age
 
 
 --
+-- Name: agency_thank_you_page_setting_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.agency_thank_you_page_setting_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: image_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7818,6 +8097,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.ser
 
 
 --
+-- Name: service_thank_you_page_setting_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.service_thank_you_page_setting_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: service_variant_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7850,6 +8136,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.use
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: agency_thank_you_page_setting_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.agency_thank_you_page_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -7920,6 +8213,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_step_payment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_thank_you_page_setting_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.service_thank_you_page_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -8056,6 +8356,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.age
 
 
 --
+-- Name: agency_thank_you_page_setting_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.agency_thank_you_page_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: image_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -8091,6 +8398,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.ser
 
 
 --
+-- Name: service_thank_you_page_setting_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.service_thank_you_page_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: service_variant_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -8123,6 +8437,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.use
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: agency_thank_you_page_setting_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.agency_thank_you_page_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -8193,6 +8514,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_step_payment_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: service_thank_you_page_setting_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.service_thank_you_page_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -8329,6 +8657,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.age
 
 
 --
+-- Name: agency_thank_you_page_setting_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.agency_thank_you_page_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
 -- Name: image_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -8364,6 +8699,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.ser
 
 
 --
+-- Name: service_thank_you_page_setting_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.service_thank_you_page_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
 -- Name: service_variant_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -8396,6 +8738,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.use
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agency_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: agency_thank_you_page_setting_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agency_thank_you_page_setting_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
@@ -8466,6 +8815,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.servi
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_step_payment_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: service_thank_you_page_setting_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.service_thank_you_page_setting_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
@@ -9044,6 +9400,14 @@ ALTER TABLE ONLY application_.agency_
 
 
 --
+-- Name: agency_thank_you_page_setting_ agency_thank_you_page_setting__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.agency_thank_you_page_setting_
+    ADD CONSTRAINT agency_thank_you_page_setting__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+
+
+--
 -- Name: client_ client__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -9169,6 +9533,22 @@ ALTER TABLE ONLY application_.service_step_form_
 
 ALTER TABLE ONLY application_.service_step_payment_
     ADD CONSTRAINT service_step_payment__uuid__fkey FOREIGN KEY (uuid_) REFERENCES application_.service_step_(uuid_);
+
+
+--
+-- Name: service_thank_you_page_setting_ service_thank_you_page_settin_agency_thank_you_page_settin_fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_thank_you_page_setting_
+    ADD CONSTRAINT service_thank_you_page_settin_agency_thank_you_page_settin_fkey FOREIGN KEY (agency_thank_you_page_setting_uuid_) REFERENCES application_.agency_thank_you_page_setting_(uuid_);
+
+
+--
+-- Name: service_thank_you_page_setting_ service_thank_you_page_setting__service_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_thank_you_page_setting_
+    ADD CONSTRAINT service_thank_you_page_setting__service_uuid__fkey FOREIGN KEY (service_uuid_) REFERENCES application_.service_(uuid_);
 
 
 --

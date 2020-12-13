@@ -11,6 +11,8 @@ export default function ({ req, connection }) {
 
     return {
       ip: req.ip,
+      referer: req.headers.referer,
+      user_agent: req.headers['user-agent'],
       jwt,
       cache: new Map()
     };
