@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-home",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "private": true,
   "scripts": {
     "build": "NODE_ENV='production' postcss src/styles/tailwind.css -o public/styles/index.css && react-scripts build",
@@ -51,8 +51,8 @@
   },
   "devDependencies": {
     "autoprefixer": "^9.8.6",
-    "postcss": "^7.0.35",
+    "postcss": "^8.2.1",
     "postcss-cli": "^8.3.1",
-    "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.2"
+    "tailwindcss": "^2.0.2"
   }
 }

@@ -215,8 +215,7 @@ Correct the inability to style clickable types in iOS and Safari.
 
 button,
 [type='button'],
-[type='reset'],
-[type='submit'] {
+[type='reset'] {
   -webkit-appearance: button;
 }
 
@@ -807,6 +806,10 @@ html, body, #root {
   --tw-bg-opacity: 0.75;
 }
 
+.border-collapse {
+  border-collapse: collapse;
+}
+
 .border-transparent {
   border-color: transparent;
 }
@@ -928,10 +931,6 @@ html, body, #root {
   display: inline-block;
 }
 
-.inline {
-  display: inline;
-}
-
 .flex {
   display: flex;
 }
@@ -958,6 +957,10 @@ html, body, #root {
 
 .grid {
   display: grid;
+}
+
+.contents {
+  display: contents;
 }
 
 .hidden {
@@ -1628,16 +1631,12 @@ html, body, #root {
   white-space: nowrap;
 }
 
-.uppercase {
-  text-transform: uppercase;
-}
-
-.lowercase {
-  text-transform: lowercase;
-}
-
 .capitalize {
   text-transform: capitalize;
+}
+
+.underline {
+  text-decoration: underline;
 }
 
 .focus\:underline:focus {
@@ -1654,10 +1653,6 @@ html, body, #root {
 
 .visible {
   visibility: visible;
-}
-
-.invisible {
-  visibility: hidden;
 }
 
 .whitespace-nowrap {
@@ -1913,6 +1908,10 @@ html, body, #root {
 
   .sm\:leading-5 {
     line-height: 1.25rem;
+  }
+
+  .sm\:max-w-sm {
+    max-width: 24rem;
   }
 
   .sm\:p-2 {
