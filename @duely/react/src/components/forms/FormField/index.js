@@ -1,23 +1,38 @@
 import React from 'react';
-import { BsChevronDown } from 'react-icons/bs';
 import { Util } from '../../../util';
 import { IconImageAdd } from '../../IconImageAdd';
 import { LoadingBar } from '../../LoadingBar';
 
-export function FormField({ name, label, form, type, validateRule, hint, prefix, suffix, actions, loading, options, accept, src, className, ...props }) {
-
+export function FormField({
+  name,
+  label,
+  form,
+  type,
+  validateRule,
+  hint,
+  prefix,
+  suffix,
+  actions,
+  loading,
+  options,
+  accept,
+  src,
+  className,
+  ...props
+}) {
   const error = form.errors[name];
-  let errorMessage = error && (error.message
-    || (error.type === 'required' && 'Required')
-    || (error.type === 'minLength' && 'Too short')
-    || (error.type === 'maxLength' && 'Too long')
-    || (error.type === 'min' && 'Too small')
-    || (error.type === 'max' && 'Too large')
-    || 'Invalid');
+  let errorMessage =
+    error &&
+    (error.message ||
+      (error.type === 'required' && 'Required') ||
+      (error.type === 'minLength' && 'Too short') ||
+      (error.type === 'maxLength' && 'Too long') ||
+      (error.type === 'min' && 'Too small') ||
+      (error.type === 'max' && 'Too large') ||
+      'Invalid');
 
-  const [longErrorMessage, shortErrorMessage] = errorMessage?.length > 20
-    ? [errorMessage, null]
-    : [null, errorMessage];
+  const [longErrorMessage, shortErrorMessage] =
+    errorMessage?.length > 20 ? [errorMessage, null] : [null, errorMessage];
 
   let element;
   let hintOrInfo = hint;
@@ -26,39 +41,74 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
     case 'radio-blocks': {
       const selected = form.watch(name);
 
-      options = (options ?? []).map(option => {
-        const { value, element, description } = typeof option === 'object' ? option : { value: option };
-        const className = Util.createClassName(selected === value && 'border-blue-400', 'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1');
+      options =
+        (options ?? []).map((option) => {
+          const { value, element, description } =
+            typeof option === 'object' ? option : { value: option };
+          const className = Util.createClassName(
+            selected === value && 'border-blue-400',
+            'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1'
+          );
 
-        return (
-          <label key={value} htmlFor={value} className={className}>
-            <input ref={form.register(validateRule)} key={value} value={value} id={value} name={name} type="radio" hidden {...props} />
-            <div className="space-y-2">
-              <span className="font-semibold">{element ?? value}</span>
-              {description && <p className="text-xs whitespace-nowrap">{description}</p>}
-            </div>
-          </label>
-        );
-      }) ?? [];
+          return (
+            <label key={value} htmlFor={value} className={className}>
+              <input
+                ref={form.register(validateRule)}
+                key={value}
+                value={value}
+                id={value}
+                name={name}
+                type="radio"
+                hidden
+                {...props}
+              />
+              <div className="space-y-2">
+                <span className="font-semibold">{element ?? value}</span>
+                {description && <p className="text-xs whitespace-nowrap">{description}</p>}
+              </div>
+            </label>
+          );
+        }) ?? [];
 
-      element = (
-        <div className="grid gap-4 grid-cols-fill-200">
-          { options}
-        </div>
-      );
+      element = <div className="grid gap-4 grid-cols-fill-200">{options}</div>;
       break;
     }
 
     case 'select': {
-      options = ['', ...(options ?? [])].map(option => {
-        const { value, element } = typeof option === 'object' ? option : { value: option };
-        return <option key={value} value={value}>{element ?? value}</option>;
-      }) ?? [];
+      options =
+        ['', ...(options ?? [])].map((option) => {
+          const { value, element } = typeof option === 'object' ? option : { value: option };
+          return (
+            <option key={value} value={value}>
+              {element ?? value}
+            </option>
+          );
+        }) ?? [];
 
       element = (
-        <div className="relative flex items-center outline-none border border-gray-300 rounded-md focus-within:ring shadow-sm sm:text-sm sm:leading-5">
-          <select id={name} name={name} ref={form.register(validateRule)} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2 pl-3 pr-10" spellCheck="false" autoComplete="off" children={options} {...props} />
-          <BsChevronDown className="absolute pointer-events-none mr-3 right-0 text-gray-600" />
+        <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
+          <select
+            id={name}
+            name={name}
+            ref={form.register(validateRule)}
+            className="w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none"
+            spellCheck="false"
+            autoComplete="off"
+            children={options}
+            {...props}
+          />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="absolute right-0 mr-3 text-gray-600 pointer-events-none"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          </svg>
         </div>
       );
       break;
@@ -67,12 +117,19 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
     case 'image': {
       const fileList = form.watch(name);
       const hasFile = fileList?.length > 0;
-      hintOrInfo = hasFile ? Array.from(fileList).map(f => `${f.name} ${Util.formatFileSize(f.size)}`).join(', ') : null;
+      hintOrInfo = hasFile
+        ? Array.from(fileList)
+            .map((f) => `${f.name} ${Util.formatFileSize(f.size)}`)
+            .join(', ')
+        : null;
 
       loading = !!loading;
       accept = accept ?? 'image/png, image/jpeg';
 
-      const className = Util.createClassName(loading && 'animate-pulse border-indigo-400', 'relative flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md');
+      const className = Util.createClassName(
+        loading && 'animate-pulse border-indigo-400',
+        'relative flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md'
+      );
 
       element = (
         <label htmlFor={name} className={className}>
@@ -80,16 +137,31 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
 
           {!src && (
             <div className="text-center">
-              <IconImageAdd className="mx-auto h-12 w-12 text-gray-400" />
+              <IconImageAdd className="w-12 h-12 mx-auto text-gray-400" />
               <p className="mt-1 text-sm text-gray-600">
-                <span className="font-medium cursor-pointer text-indigo-600 hover:text-indigo-500 focus:outline-none focus:underline transition duration-150 ease-in-out">Upload a file</span>
+                <span className="font-medium text-indigo-600 transition duration-150 ease-in-out cursor-pointer hover:text-indigo-500 focus:outline-none focus:underline">
+                  Upload a file
+                </span>
                 <span> or drag and drop</span>
               </p>
-              <p className="mt-1 text-xs text-gray-500">{hint ?? accept.replaceAll('image/', '').toUpperCase()}</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {hint ?? accept.replaceAll('image/', '').toUpperCase()}
+              </p>
             </div>
           )}
 
-          <input disabled={loading} id={name} name={name} ref={form.register(validateRule)} accept={accept} type="file" hidden spellCheck="false" autoComplete="off" {...props} />
+          <input
+            disabled={loading}
+            id={name}
+            name={name}
+            ref={form.register(validateRule)}
+            accept={accept}
+            type="file"
+            hidden
+            spellCheck="false"
+            autoComplete="off"
+            {...props}
+          />
         </label>
       );
       break;
@@ -98,16 +170,42 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
     case 'file': {
       const fileList = form.watch(name);
       const hasFile = fileList?.length > 0;
-      const filenames = hasFile ? Array.from(fileList).map(f => f.name).join(', ') : null;
-      hintOrInfo = hasFile ? Array.from(fileList).map(f => Util.formatFileSize(f.size)).join(', ') : null;
+      const filenames = hasFile
+        ? Array.from(fileList)
+            .map((f) => f.name)
+            .join(', ')
+        : null;
+      hintOrInfo = hasFile
+        ? Array.from(fileList)
+            .map((f) => Util.formatFileSize(f.size))
+            .join(', ')
+        : null;
 
       element = (
-        <label className="grid px-3 outline-none border border-gray-300 rounded-md focus-within:ring shadow-sm sm:text-sm sm:leading-5" htmlFor={name}>
-          {filenames
-            ? <span className="row-span-full col-span-full w-full rounded-md bg-transparent py-2">{filenames}</span>
-            : <span className="row-span-full col-span-full w-full rounded-md bg-transparent py-2 text-gray-500"><span>Upload a file</span> or drag and drop</span>
-          }
-          <input id={name} name={name} ref={form.register(validateRule)} type="file" accept={accept} hidden spellCheck="false" autoComplete="off" {...props} />
+        <label
+          className="grid px-3 border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5"
+          htmlFor={name}
+        >
+          {filenames ? (
+            <span className="w-full py-2 bg-transparent rounded-md row-span-full col-span-full">
+              {filenames}
+            </span>
+          ) : (
+            <span className="w-full py-2 text-gray-500 bg-transparent rounded-md row-span-full col-span-full">
+              <span>Upload a file</span> or drag and drop
+            </span>
+          )}
+          <input
+            id={name}
+            name={name}
+            ref={form.register(validateRule)}
+            type="file"
+            accept={accept}
+            hidden
+            spellCheck="false"
+            autoComplete="off"
+            {...props}
+          />
         </label>
       );
       break;
@@ -115,10 +213,18 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
 
     case 'textarea': {
       element = (
-        <div className="flex items-center outline-none border border-gray-300 rounded-md focus-within:ring shadow-sm sm:text-sm sm:leading-5">
-          {prefix && <span className="text-gray-500 pl-3">{prefix}</span>}
-          <textarea id={name} name={name} ref={form.register(validateRule)} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2 first:pl-3 last:pr-3" spellCheck="false" autoComplete="off" {...props} />
-          {suffix && <span className="text-gray-500 pr-3">{suffix}</span>}
+        <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
+          {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
+          <textarea
+            id={name}
+            name={name}
+            ref={form.register(validateRule)}
+            className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
+            spellCheck="false"
+            autoComplete="off"
+            {...props}
+          />
+          {suffix && <span className="pr-3 text-gray-500">{suffix}</span>}
         </div>
       );
       break;
@@ -126,39 +232,51 @@ export function FormField({ name, label, form, type, validateRule, hint, prefix,
 
     default: {
       element = (
-        <div className="flex items-center outline-none border border-gray-300 rounded-md focus-within:ring shadow-sm sm:text-sm sm:leading-5">
-          {prefix && <span className="text-gray-500 pl-3">{prefix}</span>}
-          <input id={name} name={name} ref={form.register(validateRule)} type={type} className="w-full rounded-md bg-transparent appearance-none outline-none border-none py-2 first:pl-3 last:pr-3" spellCheck="false" autoComplete="off" {...props} />
-          {suffix && <span className="text-gray-500 pr-3">{suffix}</span>}
+        <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
+          {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
+          <input
+            id={name}
+            name={name}
+            ref={form.register(validateRule)}
+            type={type}
+            className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
+            spellCheck="false"
+            autoComplete="off"
+            {...props}
+          />
+          {suffix && <span className="pr-3 text-gray-500">{suffix}</span>}
         </div>
       );
     }
   }
 
-  className = Util.createClassName(
-    'flex flex-col relative',
-    className
-  );
+  className = Util.createClassName('flex flex-col relative', className);
 
   return (
     <div className={className}>
       <div className="flex justify-between whitespace-nowrap">
-        {label && <label className="text-gray-700 font-medium text-sm leading-7 pl-px" htmlFor={name}>{label}</label>}
+        {label && (
+          <label className="pl-px text-sm font-medium leading-7 text-gray-700" htmlFor={name}>
+            {label}
+          </label>
+        )}
 
-        {shortErrorMessage
-          ? <p className="text-red-500 text-xs leading-5 font-medium">{shortErrorMessage}</p>
-          : actions
-        }
+        {shortErrorMessage ? (
+          <p className="text-xs font-medium leading-5 text-red-500">{shortErrorMessage}</p>
+        ) : (
+          actions
+        )}
       </div>
 
       {element}
 
       <LoadingBar className="h-px px-1" loading={!!loading} />
 
-      {longErrorMessage
-        ? <p className="text-red-500 text-xs min-h-4 m-0 pl-px pt-1">{longErrorMessage}</p>
-        : <p className="text-gray-500 text-xs min-h-4 m-0 pl-px pt-1">{hintOrInfo}</p>
-      }
+      {longErrorMessage ? (
+        <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-4">{longErrorMessage}</p>
+      ) : (
+        <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-4">{hintOrInfo}</p>
+      )}
     </div>
   );
 }

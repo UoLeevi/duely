@@ -3,7 +3,7 @@ import { ViewportContext } from '../contexts/ViewportContext';
 
 export function useBreakpoints() {
   const { width } = useContext(ViewportContext);
-  const breakpoints = {
+  const breakpoints: { [breakpoint: string]: number | boolean } = {
     'sm': 640,
     'md': 768,
     'lg': 1024,

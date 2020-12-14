@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BsThreeDotsVertical } from 'react-icons/bs';
 import { Transition } from '@headlessui/react';
 
 function DropMenuItems({ children, close, buttonRef }) {
@@ -10,15 +9,19 @@ function DropMenuItems({ children, close, buttonRef }) {
   function onBlur(e) {
     const container = ref.current;
     const focusedEl = e.relatedTarget;
-    if (focusedEl === buttonRef.current)
-      return;
+    if (focusedEl === buttonRef.current) return;
     if (!focusedEl || !container.contains(focusedEl)) {
       close();
     }
   }
 
   return (
-    <div ref={ref} tabIndex="-1" className="z-10 absolute right-0 flex flex-col space-y-2 bg-white px-4 py-2 rounded-md border shadow-md focus:outline-none" onBlur={onBlur}>
+    <div
+      ref={ref}
+      tabIndex="-1"
+      className="absolute right-0 z-10 flex flex-col px-4 py-2 space-y-2 bg-white border rounded-md shadow-md focus:outline-none"
+      onBlur={onBlur}
+    >
       {children}
     </div>
   );
@@ -29,7 +32,7 @@ export function DropMenu({ children, button }) {
   const ref = useRef();
 
   function open() {
-    setIsOpen(isOpen => !isOpen);
+    setIsOpen((isOpen) => !isOpen);
   }
 
   function close() {
@@ -39,7 +42,22 @@ export function DropMenu({ children, button }) {
   return (
     <div className="relative">
       <button ref={ref} type="button" onClick={open} className="focus:outline-none">
-        {button ?? <BsThreeDotsVertical className="text-xl text-gray-500" />}
+        {button ?? (
+          <svg
+            className="text-xl text-gray-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+            />
+          </svg>
+        )}
       </button>
 
       <Transition

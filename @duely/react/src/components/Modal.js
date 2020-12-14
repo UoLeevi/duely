@@ -3,7 +3,6 @@ import { Util } from '../util';
 import { ScreenOverlayContext } from '../contexts';
 import ReactDOM from 'react-dom';
 import { Transition } from '@headlessui/react';
-// import { BsX } from 'react-icons/bs';
 
 function ModalContent({ children, close, openerRef, className }) {
   const ref = useRef();
@@ -24,7 +23,7 @@ function ModalContent({ children, close, openerRef, className }) {
 
   return (
     <div ref={ref} tabIndex="-1" className={className} onClick={e => e.stopPropagation()} onBlur={onBlur}>
-      {/* {close && <BsX onClick={close} className="absolute right-0 top-0 text-2xl m-3 text-gray-600" />} */}
+      {/* {close && <BsX onClick={close} className="absolute top-0 right-0 m-3 text-2xl text-gray-600" />} */}
       {children}
     </div>
   );
@@ -47,9 +46,9 @@ export function Modal({ children, show, close, openerRef, className }) {
       leave="transition ease-in duration-75"
       leaveFrom="transform opacity-100 scale-100"
       leaveTo="transform opacity-0 scale-95"
-      className="grid place-items-center w-full h-full"
+      className="grid w-full h-full place-items-center"
     >
-      <div style={backdropStyle} className="z-30 flex items-center justify-center bg-gray-100 bg-opacity-75 bg-blur pointer-events-auto">
+      <div style={backdropStyle} className="z-30 flex items-center justify-center bg-gray-100 bg-opacity-75 pointer-events-auto bg-blur">
         <ModalContent openerRef={openerRef} close={close} className={className}>
           {children}
         </ModalContent>
