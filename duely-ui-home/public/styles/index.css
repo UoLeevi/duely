@@ -215,8 +215,7 @@ Correct the inability to style clickable types in iOS and Safari.
 
 button,
 [type='button'],
-[type='reset'],
-[type='submit'] {
+[type='reset'] {
   -webkit-appearance: button;
 }
 
@@ -1343,6 +1342,11 @@ html, body, #root {
   background-color: rgba(226, 232, 240, var(--tw-bg-opacity));
 }
 
+.bg-red-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgba(254, 205, 211, var(--tw-bg-opacity));
+}
+
 .bg-green-200 {
   --tw-bg-opacity: 1;
   background-color: rgba(167, 243, 208, var(--tw-bg-opacity));
@@ -1397,6 +1401,10 @@ html, body, #root {
 
 .bg-opacity-75 {
   --tw-bg-opacity: 0.75;
+}
+
+.border-collapse {
+  border-collapse: collapse;
 }
 
 .border-transparent {
@@ -1498,10 +1506,6 @@ html, body, #root {
   display: inline-block;
 }
 
-.inline {
-  display: inline;
-}
-
 .flex {
   display: flex;
 }
@@ -1516,6 +1520,10 @@ html, body, #root {
 
 .grid {
   display: grid;
+}
+
+.contents {
+  display: contents;
 }
 
 .hidden {
@@ -1590,8 +1598,16 @@ html, body, #root {
   height: 1.25rem;
 }
 
+.h-6 {
+  height: 1.5rem;
+}
+
 .h-8 {
   height: 2rem;
+}
+
+.h-10 {
+  height: 2.5rem;
 }
 
 .h-12 {
@@ -1728,6 +1744,10 @@ html, body, #root {
 
 .-mr-1 {
   margin-right: -0.25rem;
+}
+
+.max-w-xs {
+  max-width: 20rem;
 }
 
 .max-w-screen-lg {
@@ -2149,16 +2169,8 @@ html, body, #root {
   white-space: nowrap;
 }
 
-.uppercase {
-  text-transform: uppercase;
-}
-
-.lowercase {
-  text-transform: lowercase;
-}
-
-.capitalize {
-  text-transform: capitalize;
+.underline {
+  text-decoration: underline;
 }
 
 .focus\:underline:focus {
@@ -2177,10 +2189,6 @@ html, body, #root {
   visibility: visible;
 }
 
-.invisible {
-  visibility: hidden;
-}
-
 .whitespace-nowrap {
   white-space: nowrap;
 }
@@ -2189,12 +2197,20 @@ html, body, #root {
   width: 1.25rem;
 }
 
+.w-6 {
+  width: 1.5rem;
+}
+
 .w-7 {
   width: 1.75rem;
 }
 
 .w-8 {
   width: 2rem;
+}
+
+.w-10 {
+  width: 2.5rem;
 }
 
 .w-12 {
@@ -2766,6 +2782,10 @@ html, body, #root {
 
   .sm\:mt-8 {
     margin-top: 2rem;
+  }
+
+  .sm\:max-w-sm {
+    max-width: 24rem;
   }
 
   .sm\:p-8 {
