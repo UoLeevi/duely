@@ -3,7 +3,6 @@ export * from './LoadingSpinner';
 export * from './LoadingScreen';
 export * from './ErrorScreen';
 export * from './forms';
-export * from './IconImageAdd';
 export * from './Sidebar';
 export * from './Table';
 export * from './DropMenu';

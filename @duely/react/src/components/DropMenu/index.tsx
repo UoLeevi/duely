@@ -5,7 +5,7 @@ type DropMenuProps = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
   HTMLDivElement
 > & {
-  button: React.ReactNode;
+  button?: React.ReactNode;
 };
 
 export function DropMenu({ children, button }: DropMenuProps) {

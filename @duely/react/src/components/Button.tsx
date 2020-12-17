@@ -6,8 +6,8 @@ type ButtonProps = React.DetailedHTMLProps<
   React.ButtonHTMLAttributes<HTMLButtonElement>,
   HTMLButtonElement
 > & {
-  loading: boolean;
-  spinner: boolean;
+  loading?: boolean;
+  spinner?: boolean;
 };
 
 export function Button({ children, disabled, loading, spinner, className, ...props }: ButtonProps) {

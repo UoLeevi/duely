@@ -7,7 +7,7 @@
 		exports["@duely/react"] = factory(require("react"), require("react-dom"), require("react-router-dom"));
 	else
 		root["@duely/react"] = factory(root["react"], root["react-dom"], root["react-router-dom"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__7__, __WEBPACK_EXTERNAL_MODULE__13__, __WEBPACK_EXTERNAL_MODULE__21__) {
+})(self, function(__WEBPACK_EXTERNAL_MODULE__7__, __WEBPACK_EXTERNAL_MODULE__13__, __WEBPACK_EXTERNAL_MODULE__20__) {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
@@ -30,7 +30,7 @@ __webpack_require__(1);
 __exportStar(__webpack_require__(4), exports);
 __exportStar(__webpack_require__(5), exports);
 __exportStar(__webpack_require__(9), exports);
-__exportStar(__webpack_require__(22), exports);
+__exportStar(__webpack_require__(21), exports);
 
 
 /***/ }),
@@ -722,14 +722,13 @@ __exportStar(__webpack_require__(11), exports);
 __exportStar(__webpack_require__(12), exports);
 __exportStar(__webpack_require__(14), exports);
 __exportStar(__webpack_require__(15), exports);
-__exportStar(__webpack_require__(17), exports);
-__exportStar(__webpack_require__(20), exports);
+__exportStar(__webpack_require__(19), exports);
+__exportStar(__webpack_require__(25), exports);
 __exportStar(__webpack_require__(26), exports);
-__exportStar(__webpack_require__(27), exports);
+__exportStar(__webpack_require__(28), exports);
 __exportStar(__webpack_require__(29), exports);
-__exportStar(__webpack_require__(30), exports);
+__exportStar(__webpack_require__(32), exports);
 __exportStar(__webpack_require__(33), exports);
-__exportStar(__webpack_require__(34), exports);
 
 
 /***/ }),
@@ -879,16 +878,18 @@ exports.LoadingScreen = void 0;
 const contexts_1 = __webpack_require__(5);
 const react_1 = __importStar(__webpack_require__(7));
 const react_dom_1 = __importDefault(__webpack_require__(13));
-function Default({ message }) {
-    message = message !== null && message !== void 0 ? message : 'Loading...';
-    return (react_1.default.createElement("span", { className: "animate-pulse font-medium tracking-wider text-gray-700" }, message));
-}
 function LoadingScreen({ message, children }) {
     const screenOverlayRef = react_1.useContext(contexts_1.ScreenOverlayContext);
+    if (!(screenOverlayRef === null || screenOverlayRef === void 0 ? void 0 : screenOverlayRef.current))
+        return null;
     const hasChildren = react_1.default.Children.count(children) !== 0;
-    return react_dom_1.default.createPortal(hasChildren ? children : react_1.default.createElement(Default, { message: message }), screenOverlayRef.current);
+    return react_dom_1.default.createPortal(hasChildren ? children : react_1.default.createElement(DefaultLoadingMessage, { message: message }), screenOverlayRef.current);
 }
 exports.LoadingScreen = LoadingScreen;
+function DefaultLoadingMessage({ message }) {
+    message = message !== null && message !== void 0 ? message : 'Loading...';
+    return react_1.default.createElement("span", { className: "font-medium tracking-wider text-gray-700 animate-pulse" }, message);
+}
 
 
 /***/ }),
@@ -929,17 +930,19 @@ exports.ErrorScreen = void 0;
 const contexts_1 = __webpack_require__(5);
 const react_1 = __importStar(__webpack_require__(7));
 const react_dom_1 = __importDefault(__webpack_require__(13));
-function Default({ message }) {
-    message = message !== null && message !== void 0 ? message : 'Some error occurred';
-    return (react_1.default.createElement("span", { className: "font-medium text-sm text-red-500" }, message));
-}
 function ErrorScreen({ error, message, children }) {
     console.error(error);
     const screenOverlayRef = react_1.useContext(contexts_1.ScreenOverlayContext);
+    if (!(screenOverlayRef === null || screenOverlayRef === void 0 ? void 0 : screenOverlayRef.current))
+        return null;
     const hasChildren = react_1.default.Children.count(children) !== 0;
-    return react_dom_1.default.createPortal(hasChildren ? children : react_1.default.createElement(Default, { message: message }), screenOverlayRef.current);
+    return react_dom_1.default.createPortal(hasChildren ? children : react_1.default.createElement(DefaultErrorMessage, { message: message }), screenOverlayRef.current);
 }
 exports.ErrorScreen = ErrorScreen;
+function DefaultErrorMessage({ message }) {
+    message = message !== null && message !== void 0 ? message : 'Some error occurred';
+    return react_1.default.createElement("span", { className: "text-sm font-medium text-red-500" }, message);
+}
 
 
 /***/ }),
@@ -959,8 +962,8 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __exportStar(__webpack_require__(16), exports);
+__exportStar(__webpack_require__(17), exports);
 __exportStar(__webpack_require__(18), exports);
-__exportStar(__webpack_require__(19), exports);
 
 
 /***/ }),
@@ -986,7 +989,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FormField = void 0;
 const react_1 = __importDefault(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-const IconImageAdd_1 = __webpack_require__(17);
 const LoadingBar_1 = __webpack_require__(10);
 function FormField(_a) {
     var _b, _c;
@@ -1043,7 +1045,8 @@ function FormField(_a) {
             element = (react_1.default.createElement("label", { htmlFor: name, className: className },
                 src && react_1.default.createElement("img", Object.assign({ className: "flex-1 object-contain", src: src, alt: label !== null && label !== void 0 ? label : '' }, props)),
                 !src && (react_1.default.createElement("div", { className: "text-center" },
-                    react_1.default.createElement(IconImageAdd_1.IconImageAdd, { className: "w-12 h-12 mx-auto text-gray-400" }),
+                    react_1.default.createElement("svg", { className: "w-12 h-12 mx-auto text-gray-400", stroke: "currentColor", fill: "none", viewBox: "0 0 48 48" },
+                        react_1.default.createElement("path", { d: "M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" })),
                     react_1.default.createElement("p", { className: "mt-1 text-sm text-gray-600" },
                         react_1.default.createElement("span", { className: "font-medium text-indigo-600 transition duration-150 ease-in-out cursor-pointer hover:text-indigo-500 focus:outline-none focus:underline" }, "Upload a file"),
                         react_1.default.createElement("span", null, " or drag and drop")),
@@ -1117,36 +1120,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.IconImageAdd = void 0;
-const react_1 = __importDefault(__webpack_require__(7));
-function IconImageAdd(_a) {
-    var { className } = _a, props = __rest(_a, ["className"]);
-    return (react_1.default.createElement("svg", Object.assign({ className: className, stroke: "currentColor", fill: "none", viewBox: "0 0 48 48" }, props),
-        react_1.default.createElement("path", { d: "M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" })));
-}
-exports.IconImageAdd = IconImageAdd;
-
-
-/***/ }),
-/* 18 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FormButton = void 0;
 const react_1 = __importDefault(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
@@ -1163,7 +1136,7 @@ exports.FormButton = FormButton;
 
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1188,7 +1161,7 @@ exports.FormErrorInfo = FormErrorInfo;
 
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1198,45 +1171,39 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Sidebar = void 0;
 const react_1 = __importDefault(__webpack_require__(7));
-const react_router_dom_1 = __webpack_require__(21);
-const hooks_1 = __webpack_require__(22);
+const react_router_dom_1 = __webpack_require__(20);
+const hooks_1 = __webpack_require__(21);
 const util_1 = __webpack_require__(4);
+function Sidebar({ className, links, topContent, bottomContent }) {
+    const { md } = hooks_1.useBreakpoints();
+    className = util_1.Util.createClassName(className, 'z-10 w-full h-16 bg-white border-t md:bg-gray-25 md:border-none border-box md:w-48 xl:w-64 md:h-full md:p-2');
+    return (react_1.default.createElement("aside", { className: className },
+        react_1.default.createElement("div", { className: "flex w-full pb-2 overflow-x-auto md:h-full md:flex-col md:justify-between md:space-y-4 max-w-screen md:pb-0" },
+            md && topContent,
+            react_1.default.createElement("nav", { className: "flex flex-row justify-center flex-1 p-1 space-x-1 md:flex-col md:justify-start md:space-y-2 md:space-x-0" }, links.map((link) => (react_1.default.createElement(SidebarLink, Object.assign({ key: link.to }, link))))),
+            md && bottomContent)));
+}
+exports.Sidebar = Sidebar;
 function SidebarLink({ text, icon, to, exact, className }) {
     const match = react_router_dom_1.useRouteMatch({ path: to, exact });
     const Icon = icon;
-    className = util_1.Util.createClassName(className, match ? 'text-accent md:bg-white md:shadow-sm' : 'focus-visible:text-gray-700 hover:text-gray-700 text-gray-500 border-transparent', 'flex flex-col md:flex-row items-center focus:outline-none md:border space-y-1 md:space-y-0 md:space-x-3 rounded-md text-xs shadow-gray-500 md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white');
+    className = util_1.Util.createClassName(className, match
+        ? 'text-accent md:bg-white md:shadow-sm'
+        : 'focus-visible:text-gray-700 hover:text-gray-700 text-gray-500 border-transparent', 'flex flex-col md:flex-row items-center focus:outline-none md:border space-y-1 md:space-y-0 md:space-x-3 rounded-md text-xs shadow-gray-500 md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white');
     return (react_1.default.createElement(react_router_dom_1.Link, { to: to, className: className },
         react_1.default.createElement(Icon, { className: "text-lg sm:text-xl md:text-2xl" }),
         react_1.default.createElement("span", null, text)));
 }
-// const links = [
-//   {
-//     text: "Home",
-//     icon: BsHouseDoor,
-//     to: '/dashboard',
-//     exact: true
-//   }
-// ];
-function Sidebar({ className, links, topContent, bottomContent }) {
-    const { md } = hooks_1.useBreakpoints();
-    className = util_1.Util.createClassName(className, 'bg-white md:bg-gray-25 border-t md:border-none border-box z-10 w-full md:w-48 xl:w-64 h-16 md:h-full md:h-screen md:p-2');
-    return (react_1.default.createElement("aside", { className: className },
-        react_1.default.createElement("div", { className: "md:h-full w-full flex md:flex-col md:justify-between md:space-y-4 max-w-screen overflow-x-auto pb-2 md:pb-0" },
-            md && topContent,
-            react_1.default.createElement("nav", { className: "flex flex-row md:flex-col flex-1 justify-center md:justify-start space-x-1 md:space-y-2 md:space-x-0 p-1" }, links.map(link => (react_1.default.createElement(SidebarLink, Object.assign({ key: link.to }, link))))),
-            md && bottomContent)));
-}
-exports.Sidebar = Sidebar;
 
+
+/***/ }),
+/* 20 */
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__20__;
 
 /***/ }),
 /* 21 */
-/***/ ((module) => {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE__21__;
-
-/***/ }),
-/* 22 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1251,13 +1218,13 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__webpack_require__(22), exports);
 __exportStar(__webpack_require__(23), exports);
 __exportStar(__webpack_require__(24), exports);
-__exportStar(__webpack_require__(25), exports);
 
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1276,7 +1243,7 @@ exports.useClassName = useClassName;
 
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1292,7 +1259,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.useDynamicNavigation = void 0;
 const react_1 = __webpack_require__(7);
-const react_router_dom_1 = __webpack_require__(21);
+const react_router_dom_1 = __webpack_require__(20);
 function isAnchorElement(target) {
     var _a;
     return ((_a = target) === null || _a === void 0 ? void 0 : _a.tagName) === 'A';
@@ -1346,7 +1313,7 @@ exports.useDynamicNavigation = useDynamicNavigation;
 
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1372,7 +1339,7 @@ exports.useBreakpoints = useBreakpoints;
 
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1399,7 +1366,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Table = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-const hooks_1 = __webpack_require__(22);
+const hooks_1 = __webpack_require__(21);
 const LoadingSpinner_1 = __webpack_require__(11);
 function Table({ rows: items, columns, headers, className, dense, breakpoint, wrap: wrapOptions, loading, error }) {
     var _a, _b, _c, _d;
@@ -1527,7 +1494,7 @@ function TableErrorRow({ row, message, wrapColCount, wrapColSpanSum, isNotWrappe
 
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1564,7 +1531,7 @@ var __rest = (this && this.__rest) || function (s, e) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DropMenu = void 0;
 const react_1 = __importStar(__webpack_require__(7));
-const react_2 = __webpack_require__(28);
+const react_2 = __webpack_require__(27);
 function DropMenu({ children, button }) {
     const [isOpen, setIsOpen] = react_1.useState(false);
     const ref = react_1.useRef(null);
@@ -1599,7 +1566,7 @@ function DropMenuItems(_a) {
 
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -3595,7 +3562,7 @@ function resolvePropValue$2(property, bag) {
 
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3626,7 +3593,7 @@ exports.Card = Card;
 
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3641,12 +3608,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__webpack_require__(30), exports);
 __exportStar(__webpack_require__(31), exports);
-__exportStar(__webpack_require__(32), exports);
 
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3669,7 +3636,7 @@ exports.SkeletonText = SkeletonText;
 
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3696,7 +3663,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SkeletonParagraph = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-const SkeletonText_1 = __webpack_require__(31);
+const SkeletonText_1 = __webpack_require__(30);
 function* generateWordLengths(count, seed) {
     const averageWordLength = 5;
     seed = seed !== null && seed !== void 0 ? seed : 0;
@@ -3716,7 +3683,7 @@ exports.SkeletonParagraph = SkeletonParagraph;
 
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3748,24 +3715,11 @@ const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const contexts_1 = __webpack_require__(5);
 const react_dom_1 = __importDefault(__webpack_require__(13));
-const react_2 = __webpack_require__(28);
-function ModalContent({ children, close, openerRef, className }) {
-    const ref = react_1.useRef();
-    react_1.useEffect(() => ref.current.focus(), []);
-    function onBlur(e) {
-        const container = ref.current;
-        const focusedEl = e.relatedTarget;
-        if (focusedEl === (openerRef === null || openerRef === void 0 ? void 0 : openerRef.current))
-            return;
-        if (!focusedEl || !container.contains(focusedEl)) {
-            close === null || close === void 0 ? void 0 : close();
-        }
-    }
-    className = util_1.Util.createClassName(className, 'flex flex-col relative shadow-lg box-border focus:outline-none');
-    return (react_1.default.createElement("div", { ref: ref, tabIndex: "-1", className: className, onClick: e => e.stopPropagation(), onBlur: onBlur }, children));
-}
+const react_2 = __webpack_require__(27);
 function Modal({ children, show, close, openerRef, className }) {
     const screenOverlayRef = react_1.useContext(contexts_1.ScreenOverlayContext);
+    if (!(screenOverlayRef === null || screenOverlayRef === void 0 ? void 0 : screenOverlayRef.current))
+        return null;
     const backdropStyle = {
         width: '110%',
         height: '110%'
@@ -3775,10 +3729,25 @@ function Modal({ children, show, close, openerRef, className }) {
             react_1.default.createElement(ModalContent, { openerRef: openerRef, close: close, className: className }, children))), screenOverlayRef.current);
 }
 exports.Modal = Modal;
+function ModalContent({ children, close, openerRef, className }) {
+    const ref = react_1.useRef(null);
+    react_1.useEffect(() => { var _a; return (_a = ref.current) === null || _a === void 0 ? void 0 : _a.focus(); }, []);
+    function onBlur(e) {
+        const container = ref.current;
+        const focusedEl = e.relatedTarget;
+        if (focusedEl === (openerRef === null || openerRef === void 0 ? void 0 : openerRef.current))
+            return;
+        if (!focusedEl || !(container === null || container === void 0 ? void 0 : container.contains(focusedEl))) {
+            close === null || close === void 0 ? void 0 : close();
+        }
+    }
+    className = util_1.Util.createClassName(className, 'box-border relative flex flex-col shadow-lg focus:outline-none');
+    return (react_1.default.createElement("div", { ref: ref, tabIndex: -1, className: className, onClick: (e) => e.stopPropagation(), onBlur: onBlur }, children));
+}
 
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
