@@ -14,7 +14,7 @@ type SidebarProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, H
   }[];
 };
 
-export function Sidebar({ className, links, topContent, bottomContent }: SidebarProps) {
+export function Sidebar({ className, links, topContent, bottomContent, ...props }: SidebarProps) {
   const { md } = useBreakpoints();
   className = Util.createClassName(
     className,
@@ -22,7 +22,7 @@ export function Sidebar({ className, links, topContent, bottomContent }: Sidebar
   );
 
   return (
-    <aside className={className}>
+    <aside className={className} {...props}>
       <div className="flex w-full pb-2 overflow-x-auto md:h-full md:flex-col md:justify-between md:space-y-4 max-w-screen md:pb-0">
         {md && topContent}
         <nav className="flex flex-row justify-center flex-1 p-1 space-x-1 md:flex-col md:justify-start md:space-y-2 md:space-x-0">

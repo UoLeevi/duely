@@ -1,7 +1,29 @@
 import React from 'react';
+import type { RegisterOptions, UseFormMethods } from 'react-hook-form';
 import { Util } from '../../../util';
-import { IconImageAdd } from '../../IconImageAdd';
 import { LoadingBar } from '../../LoadingBar';
+
+type FormFieldProps = {
+  name: string;
+  label?: React.ReactNode;
+  form: UseFormMethods<Record<string, any>>;
+  validateRule?: RegisterOptions;
+  hint?: React.ReactNode;
+  prefix?: React.ReactNode;
+  suffix?: React.ReactNode;
+  actions?: React.ReactNode;
+  loading?: boolean;
+  options?: (
+    | string
+    | {
+        value?: string;
+        element?: React.ReactNode;
+        description?: React.ReactNode;
+      }
+  )[];
+} & React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> &
+  React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement> &
+  React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>;
 
 export function FormField({
   name,
@@ -19,7 +41,7 @@ export function FormField({
   src,
   className,
   ...props
-}) {
+}: FormFieldProps) {
   const error = form.errors[name];
   let errorMessage =
     error &&
@@ -32,7 +54,7 @@ export function FormField({
       'Invalid');
 
   const [longErrorMessage, shortErrorMessage] =
-    errorMessage?.length > 20 ? [errorMessage, null] : [null, errorMessage];
+    errorMessage?.length! > 20 ? [errorMessage, null] : [null, errorMessage];
 
   let element;
   let hintOrInfo = hint;
@@ -41,10 +63,12 @@ export function FormField({
     case 'radio-blocks': {
       const selected = form.watch(name);
 
-      options =
+      const children =
         (options ?? []).map((option) => {
           const { value, element, description } =
-            typeof option === 'object' ? option : { value: option };
+            typeof option === 'object'
+              ? option
+              : { value: option, element: undefined, description: undefined };
           const className = Util.createClassName(
             selected === value && 'border-blue-400',
             'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1'
@@ -70,14 +94,15 @@ export function FormField({
           );
         }) ?? [];
 
-      element = <div className="grid gap-4 grid-cols-fill-200">{options}</div>;
+      element = <div className="grid gap-4 grid-cols-fill-200">{children}</div>;
       break;
     }
 
     case 'select': {
-      options =
+      const children =
         ['', ...(options ?? [])].map((option) => {
-          const { value, element } = typeof option === 'object' ? option : { value: option };
+          const { value, element } =
+            typeof option === 'object' ? option : { value: option, element: undefined };
           return (
             <option key={value} value={value}>
               {element ?? value}
@@ -94,9 +119,11 @@ export function FormField({
             className="w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none"
             spellCheck="false"
             autoComplete="off"
-            children={options}
             {...props}
-          />
+          >
+            {children}
+          </select>
+
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="absolute right-0 mr-3 text-gray-600 pointer-events-none"
@@ -115,10 +142,10 @@ export function FormField({
     }
 
     case 'image': {
-      const fileList = form.watch(name);
-      const hasFile = fileList?.length > 0;
+      const fileList = form.watch(name) as FileList | null;
+      const hasFile = fileList?.length ?? 0 > 0;
       hintOrInfo = hasFile
-        ? Array.from(fileList)
+        ? Array.from(fileList!)
             .map((f) => `${f.name} ${Util.formatFileSize(f.size)}`)
             .join(', ')
         : null;
@@ -133,7 +160,13 @@ export function FormField({
 
       element = (
         <label htmlFor={name} className={className}>
-          {src && <img className="flex-1 object-contain" src={src} alt={label ?? ''} {...props} />}
+          {src && (
+            <img
+              className="flex-1 object-contain"
+              src={src}
+              alt={typeof label === 'string' ? label : ''}
+            />
+          )}
 
           {!src && (
             <div className="text-center">
@@ -157,7 +190,7 @@ export function FormField({
                 <span> or drag and drop</span>
               </p>
               <p className="mt-1 text-xs text-gray-500">
-                {hint ?? accept.replaceAll('image/', '').toUpperCase()}
+                {hint ?? accept!.split('image/').join('').toUpperCase()}
               </p>
             </div>
           )}
@@ -180,15 +213,15 @@ export function FormField({
     }
 
     case 'file': {
-      const fileList = form.watch(name);
-      const hasFile = fileList?.length > 0;
+      const fileList = form.watch(name) as FileList | null;
+      const hasFile = fileList?.length ?? 0 > 0;
       const filenames = hasFile
-        ? Array.from(fileList)
+        ? Array.from(fileList!)
             .map((f) => f.name)
             .join(', ')
         : null;
       hintOrInfo = hasFile
-        ? Array.from(fileList)
+        ? Array.from(fileList!)
             .map((f) => Util.formatFileSize(f.size))
             .join(', ')
         : null;

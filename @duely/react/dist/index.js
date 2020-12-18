@@ -776,7 +776,6 @@ function LoadingBar(_a) {
     const [playAnimation, setPlayAnimation] = react_1.useState(loading);
     const progressClassName = util_1.Util.createClassName('w-full h-full transition-opacity duration-100 bg-indigo-300 bg-mask-x-transparent', loading ? 'opacity-100 delay-100' : 'opacity-0', playAnimation && 'animate-progress');
     className = util_1.Util.createClassName('relative overflow-hidden w-full h-1 bg-mask-x-transparent', className);
-    props = Object.assign({ className }, props);
     react_1.useEffect(() => {
         if (loading === playAnimation) {
             return;
@@ -788,7 +787,7 @@ function LoadingBar(_a) {
         const timeoutID = setTimeout(() => setPlayAnimation(loading), 110);
         return () => clearTimeout(timeoutID);
     }, [loading, playAnimation]);
-    return (react_1.default.createElement("div", Object.assign({}, props),
+    return (react_1.default.createElement("div", Object.assign({ className: className }, props),
         react_1.default.createElement("div", { className: progressClassName })));
 }
 exports.LoadingBar = LoadingBar;
@@ -991,7 +990,7 @@ const react_1 = __importDefault(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const LoadingBar_1 = __webpack_require__(10);
 function FormField(_a) {
-    var _b, _c;
+    var _b, _c, _d, _e;
     var { name, label, form, type, validateRule, hint, prefix, suffix, actions, loading, options, accept, src, className } = _a, props = __rest(_a, ["name", "label", "form", "type", "validateRule", "hint", "prefix", "suffix", "actions", "loading", "options", "accept", "src", "className"]);
     const error = form.errors[name];
     let errorMessage = error &&
@@ -1008,8 +1007,10 @@ function FormField(_a) {
     switch (type) {
         case 'radio-blocks': {
             const selected = form.watch(name);
-            options = (_b = (options !== null && options !== void 0 ? options : []).map((option) => {
-                const { value, element, description } = typeof option === 'object' ? option : { value: option };
+            const children = (_b = (options !== null && options !== void 0 ? options : []).map((option) => {
+                const { value, element, description } = typeof option === 'object'
+                    ? option
+                    : { value: option, element: undefined, description: undefined };
                 const className = util_1.Util.createClassName(selected === value && 'border-blue-400', 'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1');
                 return (react_1.default.createElement("label", { key: value, htmlFor: value, className: className },
                     react_1.default.createElement("input", Object.assign({ ref: form.register(validateRule), key: value, value: value, id: value, name: name, type: "radio", hidden: true }, props)),
@@ -1017,23 +1018,23 @@ function FormField(_a) {
                         react_1.default.createElement("span", { className: "font-semibold" }, element !== null && element !== void 0 ? element : value),
                         description && react_1.default.createElement("p", { className: "text-xs whitespace-nowrap" }, description))));
             })) !== null && _b !== void 0 ? _b : [];
-            element = react_1.default.createElement("div", { className: "grid gap-4 grid-cols-fill-200" }, options);
+            element = react_1.default.createElement("div", { className: "grid gap-4 grid-cols-fill-200" }, children);
             break;
         }
         case 'select': {
-            options = (_c = ['', ...(options !== null && options !== void 0 ? options : [])].map((option) => {
-                const { value, element } = typeof option === 'object' ? option : { value: option };
+            const children = (_c = ['', ...(options !== null && options !== void 0 ? options : [])].map((option) => {
+                const { value, element } = typeof option === 'object' ? option : { value: option, element: undefined };
                 return (react_1.default.createElement("option", { key: value, value: value }, element !== null && element !== void 0 ? element : value));
             })) !== null && _c !== void 0 ? _c : [];
             element = (react_1.default.createElement("div", { className: "relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5" },
-                react_1.default.createElement("select", Object.assign({ id: name, name: name, ref: form.register(validateRule), className: "w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none", spellCheck: "false", autoComplete: "off", children: options }, props)),
+                react_1.default.createElement("select", Object.assign({ id: name, name: name, ref: form.register(validateRule), className: "w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none", spellCheck: "false", autoComplete: "off" }, props), children),
                 react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", className: "absolute right-0 mr-3 text-gray-600 pointer-events-none", viewBox: "0 0 20 20", fill: "currentColor" },
                     react_1.default.createElement("path", { fillRule: "evenodd", d: "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z", clipRule: "evenodd" }))));
             break;
         }
         case 'image': {
             const fileList = form.watch(name);
-            const hasFile = (fileList === null || fileList === void 0 ? void 0 : fileList.length) > 0;
+            const hasFile = (_d = fileList === null || fileList === void 0 ? void 0 : fileList.length) !== null && _d !== void 0 ? _d : 0 > 0;
             hintOrInfo = hasFile
                 ? Array.from(fileList)
                     .map((f) => `${f.name} ${util_1.Util.formatFileSize(f.size)}`)
@@ -1043,20 +1044,20 @@ function FormField(_a) {
             accept = accept !== null && accept !== void 0 ? accept : 'image/png, image/jpeg';
             const className = util_1.Util.createClassName(loading && 'animate-pulse border-indigo-400', 'relative flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md');
             element = (react_1.default.createElement("label", { htmlFor: name, className: className },
-                src && react_1.default.createElement("img", Object.assign({ className: "flex-1 object-contain", src: src, alt: label !== null && label !== void 0 ? label : '' }, props)),
+                src && (react_1.default.createElement("img", { className: "flex-1 object-contain", src: src, alt: typeof label === 'string' ? label : '' })),
                 !src && (react_1.default.createElement("div", { className: "text-center" },
                     react_1.default.createElement("svg", { className: "w-12 h-12 mx-auto text-gray-400", stroke: "currentColor", fill: "none", viewBox: "0 0 48 48" },
                         react_1.default.createElement("path", { d: "M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" })),
                     react_1.default.createElement("p", { className: "mt-1 text-sm text-gray-600" },
                         react_1.default.createElement("span", { className: "font-medium text-indigo-600 transition duration-150 ease-in-out cursor-pointer hover:text-indigo-500 focus:outline-none focus:underline" }, "Upload a file"),
                         react_1.default.createElement("span", null, " or drag and drop")),
-                    react_1.default.createElement("p", { className: "mt-1 text-xs text-gray-500" }, hint !== null && hint !== void 0 ? hint : accept.replaceAll('image/', '').toUpperCase()))),
+                    react_1.default.createElement("p", { className: "mt-1 text-xs text-gray-500" }, hint !== null && hint !== void 0 ? hint : accept.split('image/').join('').toUpperCase()))),
                 react_1.default.createElement("input", Object.assign({ disabled: loading, id: name, name: name, ref: form.register(validateRule), accept: accept, type: "file", hidden: true, spellCheck: "false", autoComplete: "off" }, props))));
             break;
         }
         case 'file': {
             const fileList = form.watch(name);
-            const hasFile = (fileList === null || fileList === void 0 ? void 0 : fileList.length) > 0;
+            const hasFile = (_e = fileList === null || fileList === void 0 ? void 0 : fileList.length) !== null && _e !== void 0 ? _e : 0 > 0;
             const filenames = hasFile
                 ? Array.from(fileList)
                     .map((f) => f.name)
@@ -1140,6 +1141,17 @@ exports.FormButton = FormButton;
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -1147,15 +1159,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FormErrorInfo = void 0;
 const react_1 = __importDefault(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-function FormErrorInfo({ error, className }) {
-    var _a;
+function FormErrorInfo(_a) {
+    var { error, className } = _a, props = __rest(_a, ["error", "className"]);
     if (!error)
         return null;
     className = util_1.Util.createClassName('flex flex-row items-center justify-center text-red-400 space-x-3 font-semibold', className);
-    return (react_1.default.createElement("div", { className: className },
+    return (react_1.default.createElement("div", Object.assign({ className: className }, props),
         react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
             react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" })),
-        react_1.default.createElement("p", { className: "text-sm text-center" }, (_a = error.message) !== null && _a !== void 0 ? _a : error)));
+        react_1.default.createElement("p", { className: "text-sm text-center" }, typeof error === 'string' ? error : error === null || error === void 0 ? void 0 : error.message)));
 }
 exports.FormErrorInfo = FormErrorInfo;
 
@@ -1165,6 +1177,17 @@ exports.FormErrorInfo = FormErrorInfo;
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -1174,10 +1197,11 @@ const react_1 = __importDefault(__webpack_require__(7));
 const react_router_dom_1 = __webpack_require__(20);
 const hooks_1 = __webpack_require__(21);
 const util_1 = __webpack_require__(4);
-function Sidebar({ className, links, topContent, bottomContent }) {
+function Sidebar(_a) {
+    var { className, links, topContent, bottomContent } = _a, props = __rest(_a, ["className", "links", "topContent", "bottomContent"]);
     const { md } = hooks_1.useBreakpoints();
     className = util_1.Util.createClassName(className, 'z-10 w-full h-16 bg-white border-t md:bg-gray-25 md:border-none border-box md:w-48 xl:w-64 md:h-full md:p-2');
-    return (react_1.default.createElement("aside", { className: className },
+    return (react_1.default.createElement("aside", Object.assign({ className: className }, props),
         react_1.default.createElement("div", { className: "flex w-full pb-2 overflow-x-auto md:h-full md:flex-col md:justify-between md:space-y-4 max-w-screen md:pb-0" },
             md && topContent,
             react_1.default.createElement("nav", { className: "flex flex-row justify-center flex-1 p-1 space-x-1 md:flex-col md:justify-start md:space-y-2 md:space-x-0" }, links.map((link) => (react_1.default.createElement(SidebarLink, Object.assign({ key: link.to }, link))))),
@@ -3617,19 +3641,31 @@ __exportStar(__webpack_require__(31), exports);
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SkeletonText = void 0;
 const react_1 = __importDefault(__webpack_require__(7));
-function SkeletonText({ ch, className }) {
+function SkeletonText(_a) {
+    var { ch, className } = _a, props = __rest(_a, ["ch", "className"]);
     const style = {
         height: '1.7ex',
         width: `${ch || 20}ch`
     };
-    return (react_1.default.createElement("span", { className: className },
-        react_1.default.createElement("span", { style: style, className: "bg-gray-200 rounded-sm animate-pulse inline-block" }),
+    return (react_1.default.createElement("span", Object.assign({ className: className }, props),
+        react_1.default.createElement("span", { style: style, className: "inline-block bg-gray-200 rounded-sm animate-pulse" }),
         react_1.default.createElement("span", null, " ")));
 }
 exports.SkeletonText = SkeletonText;
@@ -3664,9 +3700,15 @@ exports.SkeletonParagraph = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const SkeletonText_1 = __webpack_require__(30);
+function SkeletonParagraph({ className, words, seed }) {
+    words || (words = 20);
+    const wordLengths = react_1.useMemo(() => Array.from(generateWordLengths(words, seed)), [words, seed]);
+    return (react_1.default.createElement("p", { className: className }, wordLengths.map((ch, i) => (react_1.default.createElement(SkeletonText_1.SkeletonText, { key: i, ch: ch })))));
+}
+exports.SkeletonParagraph = SkeletonParagraph;
 function* generateWordLengths(count, seed) {
     const averageWordLength = 5;
-    seed = seed !== null && seed !== void 0 ? seed : 0;
+    seed !== null && seed !== void 0 ? seed : (seed = 0);
     const generateRandom = () => util_1.Util.pseudoRandom(++seed);
     while (count--) {
         const wordLength = util_1.Util.poisson(averageWordLength, generateRandom);
@@ -3674,12 +3716,6 @@ function* generateWordLengths(count, seed) {
             yield wordLength;
     }
 }
-function SkeletonParagraph({ className, words, seed }) {
-    words = words || 20;
-    const wordLengths = react_1.useMemo(() => Array.from(generateWordLengths(words, seed)), [words, seed]);
-    return (react_1.default.createElement("p", { className: className }, wordLengths.map((ch, i) => (react_1.default.createElement(SkeletonText_1.SkeletonText, { key: i, ch: ch })))));
-}
-exports.SkeletonParagraph = SkeletonParagraph;
 
 
 /***/ }),

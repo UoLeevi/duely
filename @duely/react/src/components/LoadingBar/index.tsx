@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Util } from '../../util';
 
-export function LoadingBar ({ loading = true, className, ...props }) {
+type LoadingBarProps = React.DetailedHTMLProps<
+  React.HTMLAttributes<HTMLDivElement>,
+  HTMLDivElement
+> & {
+  loading?: boolean
+};
+
+export function LoadingBar ({ loading = true, className, ...props }: LoadingBarProps) {
   loading = !!loading;
   const [playAnimation, setPlayAnimation] = useState(loading);
   const progressClassName = Util.createClassName(
@@ -11,7 +18,6 @@ export function LoadingBar ({ loading = true, className, ...props }) {
   );
 
   className = Util.createClassName('relative overflow-hidden w-full h-1 bg-mask-x-transparent', className);
-  props = { className, ...props };
 
   useEffect(() => {
     if (loading === playAnimation) {
@@ -28,7 +34,7 @@ export function LoadingBar ({ loading = true, className, ...props }) {
   }, [loading, playAnimation]);
 
   return (
-    <div { ...props }>
+    <div className={className} { ...props }>
       <div className={ progressClassName }></div>
     </div>
   );

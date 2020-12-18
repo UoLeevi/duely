@@ -11,5 +11,5 @@ declare type SidebarProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLEle
         to: string;
     }[];
 };
-export declare function Sidebar({ className, links, topContent, bottomContent }: SidebarProps): JSX.Element;
+export declare function Sidebar({ className, links, topContent, bottomContent, ...props }: SidebarProps): JSX.Element;
 export {};

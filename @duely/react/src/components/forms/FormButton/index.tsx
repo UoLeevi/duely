@@ -2,7 +2,14 @@ import React from 'react';
 import { Util } from '../../../util';
 import { LoadingSpinner } from '../../LoadingSpinner';
 
-export function FormButton({ children, type, disabled, loading, className, ...props }) {
+type FormButtonProps = React.DetailedHTMLProps<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  HTMLButtonElement
+> & {
+  loading?: boolean;
+};
+
+export function FormButton({ children, type, disabled, loading, className, ...props }: FormButtonProps) {
   disabled = !!(disabled || loading);
   className = Util.createClassName(
     'relative flex justify-center items-center appearance-none bg-indigo-500 px-12 py-3 rounded-md text-md font-medium leading-5 text-white transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm',

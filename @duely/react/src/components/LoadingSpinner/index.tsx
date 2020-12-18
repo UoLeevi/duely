@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Util } from '../../util';
 
-export function LoadingSpinner({ className, loading }) {
+type LoadingSpinnerProps = React.DetailedHTMLProps<
+  React.SVGAttributes<SVGSVGElement>,
+  SVGSVGElement
+> & {
+  loading?: boolean;
+};
+
+export function LoadingSpinner({ className, loading }: LoadingSpinnerProps) {
   loading = !!loading;
 
   const [playAnimation, setPlayAnimation] = useState(loading);
@@ -23,7 +30,7 @@ export function LoadingSpinner({ className, loading }) {
       return;
     }
 
-    const timeoutID = setTimeout(() => setPlayAnimation(loading), 110);
+    const timeoutID = setTimeout(() => setPlayAnimation(loading!), 110);
     return () => clearTimeout(timeoutID);
   }, [loading, playAnimation]);
 
