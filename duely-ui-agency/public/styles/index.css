@@ -996,6 +996,10 @@ html, body, #root {
   place-items: center;
 }
 
+.items-start {
+  align-items: flex-start;
+}
+
 .items-center {
   align-items: center;
 }
@@ -1311,6 +1315,11 @@ html, body, #root {
   padding-right: 1rem;
 }
 
+.px-5 {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
 .py-6 {
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
@@ -1378,6 +1387,10 @@ html, body, #root {
 
 .pt-5 {
   padding-top: 1.25rem;
+}
+
+.pb-5 {
+  padding-bottom: 1.25rem;
 }
 
 .pt-6 {
@@ -2096,6 +2109,18 @@ html, body, #root {
 }
 
 @media (min-width: 1280px) {
+  .xl\:flex-row {
+    flex-direction: row;
+  }
+
+  .xl\:m-4 {
+    margin: 1rem;
+  }
+
+  .xl\:-m-4 {
+    margin: -1rem;
+  }
+
   .xl\:max-w-screen-md {
     max-width: 768px;
   }
@@ -2122,10 +2147,25 @@ html, body, #root {
     width: 16rem;
   }
 
+  .xl\:w-1\/3 {
+    width: 33.333333%;
+  }
+
+  .xl\:w-2\/3 {
+    width: 66.666667%;
+  }
+
   .xl\:w-1\/4 {
     width: 25%;
   }
 }
 
 @media (min-width: 1536px) {
+  .\32xl\:w-1\/4 {
+    width: 25%;
+  }
+
+  .\32xl\:w-3\/4 {
+    width: 75%;
+  }
 }
