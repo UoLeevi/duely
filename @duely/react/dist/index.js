@@ -838,7 +838,7 @@ function LoadingSpinner({ className, loading }) {
     }, [loading, playAnimation]);
     return (react_1.default.createElement("svg", { className: className, xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 38 38", stroke: "#fff" },
         react_1.default.createElement("g", { fill: "none", fillRule: "evenodd" },
-            react_1.default.createElement("g", { transform: "translate(1 1)", strokeWidth: "2" },
+            react_1.default.createElement("g", { transform: "translate(1 1)", strokeWidth: "3" },
                 react_1.default.createElement("circle", { strokeOpacity: ".5", cx: "18", cy: "18", r: "18" }),
                 react_1.default.createElement("path", { d: "M36 18c0-9.94-8.06-18-18-18" })))));
 }
@@ -1126,11 +1126,11 @@ const react_1 = __importDefault(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const LoadingSpinner_1 = __webpack_require__(11);
 function FormButton(_a) {
-    var { children, type, disabled, loading, className } = _a, props = __rest(_a, ["children", "type", "disabled", "loading", "className"]);
+    var { children, type, disabled, loading, dense, className } = _a, props = __rest(_a, ["children", "type", "disabled", "loading", "dense", "className"]);
     disabled = !!(disabled || loading);
-    className = util_1.Util.createClassName('relative flex justify-center items-center appearance-none bg-indigo-500 px-12 py-3 rounded-md text-md font-medium leading-5 text-white transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm', className);
+    className = util_1.Util.createClassName('relative flex justify-center items-center appearance-none bg-indigo-500 rounded-md text-md font-medium leading-5 text-white transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm', dense ? 'px-9 py-2' : 'px-12 py-3', className);
     return (react_1.default.createElement("button", Object.assign({ type: type, disabled: disabled, className: className }, props),
-        react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: loading, className: "absolute left-0 ml-3 text-xl" }),
+        react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: loading, className: `absolute left-0 ${dense ? 'h-5 ml-2' : 'h-6 ml-3'}` }),
         children));
 }
 exports.FormButton = FormButton;
@@ -1212,8 +1212,8 @@ function SidebarLink({ text, icon, to, exact, className }) {
     const match = react_router_dom_1.useRouteMatch({ path: to, exact });
     const Icon = icon;
     className = util_1.Util.createClassName(className, match
-        ? 'text-accent md:bg-white md:shadow-sm'
-        : 'focus-visible:text-gray-700 hover:text-gray-700 text-gray-500 border-transparent', 'flex flex-col md:flex-row items-center focus:outline-none md:border space-y-1 md:space-y-0 md:space-x-3 rounded-md text-xs shadow-gray-500 md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white');
+        ? 'md:bg-white md:shadow-sm'
+        : 'focus-visible:text-gray-700 hover:text-gray-700 border-transparent', 'flex flex-col md:flex-row items-center focus:outline-none md:border space-y-1 md:space-y-0 md:space-x-3 rounded-md text-gray-500 text-xs shadow-gray-500 md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white');
     return (react_1.default.createElement(react_router_dom_1.Link, { to: to, className: className },
         react_1.default.createElement(Icon, { className: "text-lg sm:text-xl md:text-2xl" }),
         react_1.default.createElement("span", null, text)));
@@ -1566,7 +1566,7 @@ function DropMenu({ children, button }) {
         setIsOpen(false);
     }
     return (react_1.default.createElement("div", { className: "relative" },
-        react_1.default.createElement("button", { ref: ref, type: "button", onClick: open, className: "focus:outline-none" }, button !== null && button !== void 0 ? button : (react_1.default.createElement("svg", { className: "text-xl text-gray-500", xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
+        react_1.default.createElement("button", { ref: ref, type: "button", onClick: open, className: "focus:outline-none" }, button !== null && button !== void 0 ? button : (react_1.default.createElement("svg", { className: "h-6 text-gray-500", xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
             react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" })))),
         react_1.default.createElement(react_2.Transition, { show: isOpen, enter: "transition ease-out duration-75", enterFrom: "transform opacity-0 scale-95", enterTo: "transform opacity-100 scale-100", leave: "transition ease-in duration-75", leaveFrom: "transform opacity-100 scale-100", leaveTo: "transform opacity-0 scale-95" },
             react_1.default.createElement(DropMenuItems, { buttonRef: ref, close: close }, children))));

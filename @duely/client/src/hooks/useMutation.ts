@@ -6,29 +6,31 @@ import { MutationResult } from '@duely/core';
 
 type MutationState<T> = {
   loading: boolean;
-  error: T | Error | undefined;
-  data: T | undefined;
+  error: Error | { message?: string | null } | undefined;
+  data: T | null | undefined;
 };
 
-const initialState: MutationState<unknown> = {
+const initialState = {
   loading: false,
   error: undefined,
   data: undefined
 };
 
-const loadingState: MutationState<unknown> = {
+const loadingState = {
   loading: true,
   error: undefined,
   data: undefined
 };
 
-const createCompletedState: <T>(data: T) => MutationState<T> = (data) => ({
+const createCompletedState: <T>(data: T | null | undefined) => MutationState<T> = (data) => ({
   loading: false,
   error: undefined,
   data
 });
 
-const createErrorState: <T>(error: T | Error) => MutationState<T> = (error) => ({
+const createErrorState: <T>(error: Error | { message?: string | null }) => MutationState<T> = (
+  error
+) => ({
   loading: false,
   error,
   data: undefined
@@ -50,10 +52,19 @@ export function useMutation<
 >(
   mutationDef: MutationDefinition<TData, TVariables, TBoundVariables, TResult>,
   options?: MutationHookOptions
-) {
+): [
+  (
+    variables: Pick<TVariables, Exclude<keyof TVariables, never>>,
+    options: Omit<
+      TypedMutationOptions<TypedDocumentNode<TData, TVariables>>,
+      'mutation' | 'variables'
+    >
+  ) => Promise<TResult | null | undefined>,
+  MutationState<TResult>
+] {
   const timeoutRef = useRef(0);
   const { resetErrorMs } = { ...defaultOptions, ...options };
-  const [state, setState] = useState(initialState);
+  const [state, setState] = useState<MutationState<TResult>>(initialState);
   const mutate = useCallback(
     async (
       variables: Omit<TVariables, keyof typeof mutationDef.variables>,
@@ -90,7 +101,7 @@ export function useMutation<
           timeoutRef.current = window.setTimeout(() => setState(initialState), resetErrorMs);
         }
 
-        return error;
+        return null;
       }
     },
     [mutationDef, resetErrorMs]

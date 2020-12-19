@@ -175,12 +175,12 @@ export const current_agency_stripe_account_update_url_Q = {
     d?.subdomains?.[0]?.agency?.stripe_account?.account_update_url?.url
 };
 
-export const agency_thank_ypu_page_settings_Q = {
+export const agency_thank_you_page_settings_Q = {
   query: AgencyThankYouPageSettingDocument,
   result: (d: ResultOf<typeof AgencyThankYouPageSettingDocument>) => d?.agency?.settings?.thank_you_page_setting
 };
 
-export const service_thank_ypu_page_settings_Q = {
+export const service_thank_you_page_settings_Q = {
   query: ServiceThankYouPageSettingDocument,
   result: (d: ResultOf<typeof ServiceThankYouPageSettingDocument>) => d?.service?.settings?.thank_you_page_setting
 };

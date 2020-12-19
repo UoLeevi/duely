@@ -49,14 +49,14 @@ export default function Dashboard() {
 
   const authorized = current_user?.memberships
     .filter(m => roles.some(r => r === m.access))
-    .some(m => m.subdomain.agency.id === current_agency.id);
+    .some(m => m.subdomain.agency.id === current_agency?.id);
 
   if (!authorized) {
     return (
-      <div className="grid h-full w-full place-items-center">
-        <div className="flex flex-col m-3 space-y-1 items-center">
-          <span className="font-medium text text-gray-700">Seems like you are not allowed to access this page</span>
-          <Link className="font-medium text-lg text-indigo-600" to="/">Go to home page</Link>
+      <div className="grid w-full h-full place-items-center">
+        <div className="flex flex-col items-center m-3 space-y-1">
+          <span className="font-medium text-gray-700 text">Seems like you are not allowed to access this page</span>
+          <Link className="text-lg font-medium text-indigo-600" to="/">Go to home page</Link>
         </div>
       </div>
     );

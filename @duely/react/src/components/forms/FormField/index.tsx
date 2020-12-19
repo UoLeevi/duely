@@ -1,12 +1,12 @@
 import React from 'react';
-import type { RegisterOptions, UseFormMethods } from 'react-hook-form';
+import type { FieldError, RegisterOptions, UseFormMethods } from 'react-hook-form';
 import { Util } from '../../../util';
 import { LoadingBar } from '../../LoadingBar';
 
-type FormFieldProps = {
-  name: string;
+type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
+  name: keyof TFieldValues;
   label?: React.ReactNode;
-  form: UseFormMethods<Record<string, any>>;
+  form: UseFormMethods<TFieldValues>;
   validateRule?: RegisterOptions;
   hint?: React.ReactNode;
   prefix?: React.ReactNode;
@@ -21,11 +21,17 @@ type FormFieldProps = {
         description?: React.ReactNode;
       }
   )[];
-} & React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> &
-  React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement> &
-  React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>;
+} & Omit<
+  React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> &
+    React.DetailedHTMLProps<
+      React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+      HTMLTextAreaElement
+    > &
+    React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>,
+  'form'
+>;
 
-export function FormField({
+export function FormField<TFieldValues extends Record<string, any> = Record<string, any>>({
   name,
   label,
   form,
@@ -41,8 +47,8 @@ export function FormField({
   src,
   className,
   ...props
-}: FormFieldProps) {
-  const error = form.errors[name];
+}: FormFieldProps<TFieldValues>) {
+  const error = form.errors[name] as FieldError | undefined;
   let errorMessage =
     error &&
     (error.message ||

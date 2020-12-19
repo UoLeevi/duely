@@ -25,7 +25,7 @@ export function DropMenu({ children, button }: DropMenuProps) {
       <button ref={ref} type="button" onClick={open} className="focus:outline-none">
         {button ?? (
           <svg
-            className="text-xl text-gray-500"
+            className="h-6 text-gray-500"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

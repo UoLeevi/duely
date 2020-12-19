@@ -5,7 +5,7 @@ type FormErrorFieldProps = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
   HTMLDivElement
 > & {
-  error?: Error | string | null
+  error?: Error | string | null | { message?: string | null };
 };
 
 export function FormErrorInfo({ error, className, ...props }: FormErrorFieldProps) {

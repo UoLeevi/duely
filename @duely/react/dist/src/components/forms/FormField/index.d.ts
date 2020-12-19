@@ -1,9 +1,9 @@
 import React from 'react';
 import type { RegisterOptions, UseFormMethods } from 'react-hook-form';
-declare type FormFieldProps = {
-    name: string;
+declare type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
+    name: keyof TFieldValues;
     label?: React.ReactNode;
-    form: UseFormMethods<Record<string, any>>;
+    form: UseFormMethods<TFieldValues>;
     validateRule?: RegisterOptions;
     hint?: React.ReactNode;
     prefix?: React.ReactNode;
@@ -15,6 +15,6 @@ declare type FormFieldProps = {
         element?: React.ReactNode;
         description?: React.ReactNode;
     })[];
-} & React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement> & React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>;
-export declare function FormField({ name, label, form, type, validateRule, hint, prefix, suffix, actions, loading, options, accept, src, className, ...props }: FormFieldProps): JSX.Element;
+} & Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement> & React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>, 'form'>;
+export declare function FormField<TFieldValues extends Record<string, any> = Record<string, any>>({ name, label, form, type, validateRule, hint, prefix, suffix, actions, loading, options, accept, src, className, ...props }: FormFieldProps<TFieldValues>): JSX.Element;
 export {};
