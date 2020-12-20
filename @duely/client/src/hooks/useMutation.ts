@@ -40,6 +40,11 @@ type MutationHookOptions = {
   resetErrorMs: number;
 };
 
+type OptionalOptions<TData, TVariables> = Omit<
+  TypedMutationOptions<TypedDocumentNode<TData, TVariables>>,
+  'mutation' | 'variables'
+>;
+
 const defaultOptions: MutationHookOptions = {
   resetErrorMs: 6000
 };
@@ -55,10 +60,7 @@ export function useMutation<
 ): [
   (
     variables: Pick<TVariables, Exclude<keyof TVariables, never>>,
-    options: Omit<
-      TypedMutationOptions<TypedDocumentNode<TData, TVariables>>,
-      'mutation' | 'variables'
-    >
+    options?: OptionalOptions<TData, TVariables>
   ) => Promise<TResult | null | undefined>,
   MutationState<TResult>
 ] {
@@ -68,10 +70,7 @@ export function useMutation<
   const mutate = useCallback(
     async (
       variables: Omit<TVariables, keyof typeof mutationDef.variables>,
-      options: Omit<
-        TypedMutationOptions<TypedDocumentNode<TData, TVariables>>,
-        'mutation' | 'variables'
-      >
+      options?: OptionalOptions<TData, TVariables>
     ) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);

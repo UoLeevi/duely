@@ -146,517 +146,6 @@ export type QueryThemesArgs = {
   filter: ThemeFilter;
 };
 
-export type User = Node & {
-  __typename?: 'User';
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  email_address: Scalars['String'];
-  memberships: Array<Membership>;
-};
-
-
-export type UserMembershipsArgs = {
-  filter?: Maybe<MembershipFilter>;
-};
-
-export type Node = {
-  id: Scalars['ID'];
-  name: Scalars['String'];
-};
-
-export type MembershipFilter = {
-  access?: Maybe<AccessLevel>;
-  user_id?: Maybe<Scalars['ID']>;
-  subdomain_id?: Maybe<Scalars['ID']>;
-};
-
-export enum AccessLevel {
-  Owner = 'OWNER',
-  Manager = 'MANAGER',
-  Agent = 'AGENT',
-  Client = 'CLIENT',
-  Public = 'PUBLIC'
-}
-
-export type Membership = Node & {
-  __typename?: 'Membership';
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  access: AccessLevel;
-  user: User;
-  subdomain: Subdomain;
-};
-
-export type Subdomain = Node & {
-  __typename?: 'Subdomain';
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  agency: Agency;
-  memberships: Array<Membership>;
-};
-
-
-export type SubdomainMembershipsArgs = {
-  filter?: Maybe<MembershipFilter>;
-};
-
-export type Agency = Node & {
-  __typename?: 'Agency';
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  stripe_account: StripeAccount;
-  subdomain: Subdomain;
-  theme: Theme;
-  services?: Maybe<Array<Service>>;
-  settings: AgencySettings;
-};
-
-
-export type AgencyServicesArgs = {
-  filter?: Maybe<ServiceFilter>;
-};
-
-export type StripeAccount = {
-  __typename?: 'StripeAccount';
-  id: Scalars['ID'];
-  id_ext: Scalars['ID'];
-  account_update_url: StripeAccountLink;
-  balance: StripeBalance;
-  balance_transactions: Array<BalanceTransaction>;
-  payment_intents: Array<PaymentIntent>;
-  customers: Array<StripeCustomer>;
-  business_profile: BusinessProfile;
-  business_type?: Maybe<Scalars['String']>;
-  capabilities: StripeCapabilities;
-  requirements: StripeRequirements;
-  settings: StripeSettings;
-  charges_enabled: Scalars['Boolean'];
-  country: Scalars['String'];
-  created: Scalars['Date'];
-  default_currency?: Maybe<Scalars['String']>;
-  details_submitted: Scalars['Boolean'];
-  email?: Maybe<Scalars['String']>;
-  payouts_enabled: Scalars['Boolean'];
-};
-
-
-export type StripeAccountBalance_TransactionsArgs = {
-  payout_id?: Maybe<Scalars['ID']>;
-  type?: Maybe<Scalars['String']>;
-  available_on?: Maybe<Scalars['Date']>;
-  created?: Maybe<Scalars['Date']>;
-  currency?: Maybe<Scalars['String']>;
-  starting_after_id?: Maybe<Scalars['String']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-};
-
-
-export type StripeAccountPayment_IntentsArgs = {
-  customer_id?: Maybe<Scalars['ID']>;
-  created?: Maybe<Scalars['Date']>;
-  starting_after_id?: Maybe<Scalars['String']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-};
-
-
-export type StripeAccountCustomersArgs = {
-  email?: Maybe<Scalars['String']>;
-  created?: Maybe<Scalars['Date']>;
-  starting_after_id?: Maybe<Scalars['String']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-};
-
-export type StripeAccountLink = {
-  __typename?: 'StripeAccountLink';
-  type: Scalars['String'];
-  url: Scalars['String'];
-  created: Scalars['Date'];
-  expires_at: Scalars['Date'];
-};
-
-
-export type StripeBalance = {
-  __typename?: 'StripeBalance';
-  available: Array<StripeCurrencyBalance>;
-  pending: Array<StripeCurrencyBalance>;
-  connect_reserved?: Maybe<Array<StripeCurrencyBalance>>;
-  instant_available?: Maybe<Array<StripeCurrencyBalance>>;
-};
-
-export type StripeCurrencyBalance = {
-  __typename?: 'StripeCurrencyBalance';
-  amount: Scalars['Int'];
-  currency: Scalars['String'];
-  source_types: StripeBalanceSource;
-};
-
-export type StripeBalanceSource = {
-  __typename?: 'StripeBalanceSource';
-  bank_account?: Maybe<Scalars['Int']>;
-  card?: Maybe<Scalars['Int']>;
-};
-
-export type BalanceTransaction = {
-  __typename?: 'BalanceTransaction';
-  id: Scalars['ID'];
-  id_ext: Scalars['ID'];
-  amount: Scalars['Int'];
-  available_on: Scalars['Date'];
-  created: Scalars['Date'];
-  exchange_rate?: Maybe<Scalars['Float']>;
-  currency: Scalars['String'];
-  description?: Maybe<Scalars['String']>;
-  fee: Scalars['Int'];
-  fee_details?: Maybe<Array<BalanceTransactionFeeDetails>>;
-  net: Scalars['Int'];
-  status: Scalars['String'];
-  reporting_category: Scalars['String'];
-  type: Scalars['String'];
-  source: Scalars['String'];
-};
-
-export type BalanceTransactionFeeDetails = {
-  __typename?: 'BalanceTransactionFeeDetails';
-  amount: Scalars['Int'];
-  application?: Maybe<Scalars['String']>;
-  currency: Scalars['String'];
-  description?: Maybe<Scalars['String']>;
-  type: Scalars['String'];
-};
-
-export type PaymentIntent = {
-  __typename?: 'PaymentIntent';
-  id: Scalars['ID'];
-  id_ext: Scalars['ID'];
-  amount: Scalars['Int'];
-  amount_capturable?: Maybe<Scalars['Int']>;
-  amount_received?: Maybe<Scalars['Int']>;
-  application_fee_amount?: Maybe<Scalars['Int']>;
-  canceled_at?: Maybe<Scalars['Date']>;
-  cancellation_reason?: Maybe<Scalars['String']>;
-  capture_method?: Maybe<Scalars['String']>;
-  charges?: Maybe<Array<Maybe<Charge>>>;
-  confirmation_method?: Maybe<Scalars['String']>;
-  created?: Maybe<Scalars['Date']>;
-  currency?: Maybe<Scalars['String']>;
-  customer?: Maybe<StripeCustomer>;
-  description?: Maybe<Scalars['String']>;
-  invoice?: Maybe<Scalars['String']>;
-  on_behalf_of?: Maybe<Scalars['String']>;
-  payment_method?: Maybe<Scalars['String']>;
-  payment_method_types?: Maybe<Array<Maybe<Scalars['String']>>>;
-  receipt_email?: Maybe<Scalars['String']>;
-  setup_future_usage?: Maybe<Scalars['String']>;
-  shipping?: Maybe<Shipping>;
-  statement_descriptor?: Maybe<Scalars['String']>;
-  statement_descriptor_suffix?: Maybe<Scalars['String']>;
-  status?: Maybe<Scalars['String']>;
-  transfer_group?: Maybe<Scalars['String']>;
-};
-
-export type Charge = {
-  __typename?: 'Charge';
-  id: Scalars['ID'];
-  id_ext: Scalars['ID'];
-  amount: Scalars['Int'];
-  amount_capturable?: Maybe<Scalars['Int']>;
-  amount_received?: Maybe<Scalars['Int']>;
-  application_fee_amount?: Maybe<Scalars['Int']>;
-  authorization_code?: Maybe<Scalars['String']>;
-  balance_transaction?: Maybe<BalanceTransaction>;
-  billing_details?: Maybe<BillingDetails>;
-  calculated_statement_descriptor?: Maybe<Scalars['String']>;
-  captured?: Maybe<Scalars['Boolean']>;
-  created?: Maybe<Scalars['Date']>;
-  currency?: Maybe<Scalars['String']>;
-  customer?: Maybe<StripeCustomer>;
-  description?: Maybe<Scalars['String']>;
-  disputed?: Maybe<Scalars['Boolean']>;
-  failure_code?: Maybe<Scalars['String']>;
-  failure_message?: Maybe<Scalars['String']>;
-  fraud_details?: Maybe<FraudDetails>;
-  invoice?: Maybe<Scalars['String']>;
-  order?: Maybe<Scalars['String']>;
-  outcome?: Maybe<Outcome>;
-  paid?: Maybe<Scalars['Boolean']>;
-  payment_intent?: Maybe<PaymentIntent>;
-  payment_method?: Maybe<Scalars['String']>;
-  receipt_email?: Maybe<Scalars['String']>;
-  receipt_number?: Maybe<Scalars['String']>;
-  receipt_url?: Maybe<Scalars['String']>;
-  refunded?: Maybe<Scalars['Boolean']>;
-  source_transfer?: Maybe<Scalars['String']>;
-  statement_descriptor?: Maybe<Scalars['String']>;
-  statement_descriptor_suffix?: Maybe<Scalars['String']>;
-  status?: Maybe<Scalars['String']>;
-  transfer?: Maybe<Scalars['String']>;
-  transfer_group?: Maybe<Scalars['String']>;
-};
-
-export type BillingDetails = {
-  __typename?: 'BillingDetails';
-  address?: Maybe<Address>;
-  email?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
-  phone?: Maybe<Scalars['String']>;
-};
-
-export type Address = {
-  __typename?: 'Address';
-  city?: Maybe<Scalars['String']>;
-  country?: Maybe<Scalars['String']>;
-  line1?: Maybe<Scalars['String']>;
-  line2?: Maybe<Scalars['String']>;
-  postal_code?: Maybe<Scalars['String']>;
-  state?: Maybe<Scalars['String']>;
-};
-
-export type StripeCustomer = {
-  __typename?: 'StripeCustomer';
-  id: Scalars['ID'];
-  id_ext: Scalars['ID'];
-  address?: Maybe<Address>;
-  balance?: Maybe<Scalars['Int']>;
-  created?: Maybe<Scalars['Date']>;
-  currency?: Maybe<Scalars['String']>;
-  delinquent?: Maybe<Scalars['Boolean']>;
-  description?: Maybe<Scalars['String']>;
-  email?: Maybe<Scalars['String']>;
-  invoice_prefix?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
-  next_invoice_sequence?: Maybe<Scalars['Int']>;
-  phone?: Maybe<Scalars['String']>;
-  preferred_locales?: Maybe<Array<Maybe<Scalars['String']>>>;
-};
-
-export type FraudDetails = {
-  __typename?: 'FraudDetails';
-  stripe_report?: Maybe<Scalars['String']>;
-  user_report?: Maybe<Scalars['String']>;
-};
-
-export type Outcome = {
-  __typename?: 'Outcome';
-  network_status?: Maybe<Scalars['String']>;
-  reason?: Maybe<Scalars['String']>;
-  risk_level?: Maybe<Scalars['String']>;
-  risk_score?: Maybe<Scalars['Int']>;
-  rule?: Maybe<OutcomeRule>;
-  seller_message?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
-};
-
-export type OutcomeRule = {
-  __typename?: 'OutcomeRule';
-  action?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['String']>;
-  predicate?: Maybe<Scalars['String']>;
-};
-
-export type Shipping = {
-  __typename?: 'Shipping';
-  address?: Maybe<Address>;
-  carrier?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
-  phone?: Maybe<Scalars['String']>;
-  tracking_number?: Maybe<Scalars['String']>;
-};
-
-export type BusinessProfile = {
-  __typename?: 'BusinessProfile';
-  mcc?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
-  product_description?: Maybe<Scalars['String']>;
-  support_address?: Maybe<Scalars['String']>;
-  support_email?: Maybe<Scalars['String']>;
-  support_phone?: Maybe<Scalars['String']>;
-  support_url?: Maybe<Scalars['String']>;
-  url?: Maybe<Scalars['String']>;
-};
-
-export type StripeCapabilities = {
-  __typename?: 'StripeCapabilities';
-  card_payments?: Maybe<Scalars['String']>;
-  transfers?: Maybe<Scalars['String']>;
-};
-
-export type StripeRequirements = {
-  __typename?: 'StripeRequirements';
-  current_deadline?: Maybe<Scalars['String']>;
-  disabled_reason?: Maybe<Scalars['String']>;
-  currently_due: Array<Maybe<Scalars['String']>>;
-  eventually_due: Array<Maybe<Scalars['String']>>;
-  past_due: Array<Maybe<Scalars['String']>>;
-  pending_verification: Array<Maybe<Scalars['String']>>;
-};
-
-export type StripeSettings = {
-  __typename?: 'StripeSettings';
-  branding?: Maybe<StripeBranding>;
-};
-
-export type StripeBranding = {
-  __typename?: 'StripeBranding';
-  icon?: Maybe<Scalars['String']>;
-  logo?: Maybe<Scalars['String']>;
-  primary_color?: Maybe<Scalars['String']>;
-  secondary_color?: Maybe<Scalars['String']>;
-};
-
-export type Theme = Node & {
-  __typename?: 'Theme';
-  id: Scalars['ID'];
-  agency: Agency;
-  name: Scalars['String'];
-  image_logo?: Maybe<Image>;
-  image_hero?: Maybe<Image>;
-  color_primary?: Maybe<Scalars['String']>;
-  color_secondary?: Maybe<Scalars['String']>;
-  color_accent?: Maybe<Scalars['String']>;
-  color_background?: Maybe<Scalars['String']>;
-  color_surface?: Maybe<Scalars['String']>;
-  color_error?: Maybe<Scalars['String']>;
-  color_success?: Maybe<Scalars['String']>;
-};
-
-export type Image = Node & {
-  __typename?: 'Image';
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  data: Scalars['String'];
-  color: Scalars['String'];
-  agency?: Maybe<Agency>;
-  access: AccessLevel;
-};
-
-export type ServiceFilter = {
-  name?: Maybe<Scalars['String']>;
-  agency_id?: Maybe<Scalars['ID']>;
-  url_name?: Maybe<Scalars['String']>;
-};
-
-export type Service = Node & {
-  __typename?: 'Service';
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  url_name: Scalars['String'];
-  status: Scalars['String'];
-  agency: Agency;
-  default_variant: ServiceVariant;
-  variants?: Maybe<Array<ServiceVariant>>;
-  settings: ServiceSettings;
-};
-
-
-export type ServiceVariantsArgs = {
-  filter?: Maybe<ServiceVariantFilter>;
-};
-
-export type ServiceVariant = Node & {
-  __typename?: 'ServiceVariant';
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  status: Scalars['String'];
-  description?: Maybe<Scalars['String']>;
-  duration?: Maybe<Scalars['String']>;
-  default_price?: Maybe<Price>;
-  service: Service;
-  prices?: Maybe<Array<Price>>;
-  image_logo?: Maybe<Image>;
-  image_hero?: Maybe<Image>;
-  markdown_description?: Maybe<Markdown>;
-};
-
-
-export type ServiceVariantPricesArgs = {
-  filter?: Maybe<PriceFilter>;
-};
-
-export type Price = Node & {
-  __typename?: 'Price';
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  status: Scalars['String'];
-  type: Scalars['String'];
-  unit_amount: Scalars['Int'];
-  currency: Scalars['String'];
-  recurring_interval?: Maybe<Scalars['String']>;
-  recurring_interval_count?: Maybe<Scalars['Int']>;
-  service_variant: ServiceVariant;
-};
-
-export type PriceFilter = {
-  service_variant_id?: Maybe<Scalars['ID']>;
-};
-
-export type Markdown = Node & {
-  __typename?: 'Markdown';
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  data: Scalars['String'];
-  agency?: Maybe<Agency>;
-  access: AccessLevel;
-};
-
-export type ServiceVariantFilter = {
-  name?: Maybe<Scalars['String']>;
-  service_id?: Maybe<Scalars['ID']>;
-};
-
-export type ServiceSettings = {
-  __typename?: 'ServiceSettings';
-  thank_you_page_setting?: Maybe<ServiceThankYouPageSetting>;
-};
-
-export type ServiceThankYouPageSetting = {
-  __typename?: 'ServiceThankYouPageSetting';
-  id: Scalars['ID'];
-  url: Scalars['String'];
-  agency_setting: AgencyThankYouPageSetting;
-};
-
-export type AgencyThankYouPageSetting = {
-  __typename?: 'AgencyThankYouPageSetting';
-  id: Scalars['ID'];
-  url: Scalars['String'];
-};
-
-export type AgencySettings = {
-  __typename?: 'AgencySettings';
-  thank_you_page_setting?: Maybe<AgencyThankYouPageSetting>;
-};
-
-export type UserFilter = {
-  name?: Maybe<Scalars['String']>;
-  email_address?: Maybe<Scalars['String']>;
-};
-
-export type AgencyFilter = {
-  name?: Maybe<Scalars['String']>;
-};
-
-export type SubdomainFilter = {
-  name?: Maybe<Scalars['String']>;
-};
-
-export type ImageFilter = {
-  name?: Maybe<Scalars['String']>;
-  agency_id?: Maybe<Scalars['ID']>;
-};
-
-export type MarkdownFilter = {
-  name?: Maybe<Scalars['String']>;
-  agency_id?: Maybe<Scalars['ID']>;
-};
-
-export type ThemeFilter = {
-  name?: Maybe<Scalars['String']>;
-  agency_id?: Maybe<Scalars['String']>;
-};
-
 export type Mutation = {
   __typename?: 'Mutation';
   begin_visit: BeginVisitResult;
@@ -915,11 +404,15 @@ export type MutationUpdate_ThemeArgs = {
   color_success?: Maybe<Scalars['String']>;
 };
 
-export type BeginVisitResult = MutationResult & {
-  __typename?: 'BeginVisitResult';
+export type SimpleResult = MutationResult & {
+  __typename?: 'SimpleResult';
   success: Scalars['Boolean'];
   message?: Maybe<Scalars['String']>;
-  jwt?: Maybe<Scalars['String']>;
+};
+
+export type Node = {
+  id: Scalars['ID'];
+  name: Scalars['String'];
 };
 
 export type MutationResult = {
@@ -927,10 +420,153 @@ export type MutationResult = {
   message?: Maybe<Scalars['String']>;
 };
 
-export type SimpleResult = MutationResult & {
-  __typename?: 'SimpleResult';
+export type Connection = {
+  edges: Array<Edge>;
+};
+
+
+export type ConnectionEdgesArgs = {
+  ids?: Maybe<Array<Scalars['ID']>>;
+};
+
+export type Edge = {
+  cursor?: Maybe<Scalars['String']>;
+  node: Node;
+};
+
+export enum AccessLevel {
+  Owner = 'OWNER',
+  Manager = 'MANAGER',
+  Agent = 'AGENT',
+  Client = 'CLIENT',
+  Public = 'PUBLIC'
+}
+
+export type Address = {
+  __typename?: 'Address';
+  city?: Maybe<Scalars['String']>;
+  country?: Maybe<Scalars['String']>;
+  line1?: Maybe<Scalars['String']>;
+  line2?: Maybe<Scalars['String']>;
+  postal_code?: Maybe<Scalars['String']>;
+  state?: Maybe<Scalars['String']>;
+};
+
+export type Charge = {
+  __typename?: 'Charge';
+  id: Scalars['ID'];
+  id_ext: Scalars['ID'];
+  amount: Scalars['Int'];
+  amount_capturable?: Maybe<Scalars['Int']>;
+  amount_received?: Maybe<Scalars['Int']>;
+  application_fee_amount?: Maybe<Scalars['Int']>;
+  authorization_code?: Maybe<Scalars['String']>;
+  balance_transaction?: Maybe<BalanceTransaction>;
+  billing_details?: Maybe<BillingDetails>;
+  calculated_statement_descriptor?: Maybe<Scalars['String']>;
+  captured?: Maybe<Scalars['Boolean']>;
+  created?: Maybe<Scalars['Date']>;
+  currency?: Maybe<Scalars['String']>;
+  customer?: Maybe<StripeCustomer>;
+  description?: Maybe<Scalars['String']>;
+  disputed?: Maybe<Scalars['Boolean']>;
+  failure_code?: Maybe<Scalars['String']>;
+  failure_message?: Maybe<Scalars['String']>;
+  fraud_details?: Maybe<FraudDetails>;
+  invoice?: Maybe<Scalars['String']>;
+  order?: Maybe<Scalars['String']>;
+  outcome?: Maybe<Outcome>;
+  paid?: Maybe<Scalars['Boolean']>;
+  payment_intent?: Maybe<PaymentIntent>;
+  payment_method?: Maybe<Scalars['String']>;
+  receipt_email?: Maybe<Scalars['String']>;
+  receipt_number?: Maybe<Scalars['String']>;
+  receipt_url?: Maybe<Scalars['String']>;
+  refunded?: Maybe<Scalars['Boolean']>;
+  source_transfer?: Maybe<Scalars['String']>;
+  statement_descriptor?: Maybe<Scalars['String']>;
+  statement_descriptor_suffix?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['String']>;
+  transfer?: Maybe<Scalars['String']>;
+  transfer_group?: Maybe<Scalars['String']>;
+};
+
+export type BillingDetails = {
+  __typename?: 'BillingDetails';
+  address?: Maybe<Address>;
+  email?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  phone?: Maybe<Scalars['String']>;
+};
+
+export type FraudDetails = {
+  __typename?: 'FraudDetails';
+  stripe_report?: Maybe<Scalars['String']>;
+  user_report?: Maybe<Scalars['String']>;
+};
+
+export type Outcome = {
+  __typename?: 'Outcome';
+  network_status?: Maybe<Scalars['String']>;
+  reason?: Maybe<Scalars['String']>;
+  risk_level?: Maybe<Scalars['String']>;
+  risk_score?: Maybe<Scalars['Int']>;
+  rule?: Maybe<OutcomeRule>;
+  seller_message?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars['String']>;
+};
+
+export type OutcomeRule = {
+  __typename?: 'OutcomeRule';
+  action?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['String']>;
+  predicate?: Maybe<Scalars['String']>;
+};
+
+export type PaymentIntent = {
+  __typename?: 'PaymentIntent';
+  id: Scalars['ID'];
+  id_ext: Scalars['ID'];
+  amount: Scalars['Int'];
+  amount_capturable?: Maybe<Scalars['Int']>;
+  amount_received?: Maybe<Scalars['Int']>;
+  application_fee_amount?: Maybe<Scalars['Int']>;
+  canceled_at?: Maybe<Scalars['Date']>;
+  cancellation_reason?: Maybe<Scalars['String']>;
+  capture_method?: Maybe<Scalars['String']>;
+  charges?: Maybe<Array<Maybe<Charge>>>;
+  confirmation_method?: Maybe<Scalars['String']>;
+  created?: Maybe<Scalars['Date']>;
+  currency?: Maybe<Scalars['String']>;
+  customer?: Maybe<StripeCustomer>;
+  description?: Maybe<Scalars['String']>;
+  invoice?: Maybe<Scalars['String']>;
+  on_behalf_of?: Maybe<Scalars['String']>;
+  payment_method?: Maybe<Scalars['String']>;
+  payment_method_types?: Maybe<Array<Maybe<Scalars['String']>>>;
+  receipt_email?: Maybe<Scalars['String']>;
+  setup_future_usage?: Maybe<Scalars['String']>;
+  shipping?: Maybe<Shipping>;
+  statement_descriptor?: Maybe<Scalars['String']>;
+  statement_descriptor_suffix?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['String']>;
+  transfer_group?: Maybe<Scalars['String']>;
+};
+
+export type Shipping = {
+  __typename?: 'Shipping';
+  address?: Maybe<Address>;
+  carrier?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  phone?: Maybe<Scalars['String']>;
+  tracking_number?: Maybe<Scalars['String']>;
+};
+
+export type BeginVisitResult = MutationResult & {
+  __typename?: 'BeginVisitResult';
   success: Scalars['Boolean'];
   message?: Maybe<Scalars['String']>;
+  jwt?: Maybe<Scalars['String']>;
 };
 
 export type LogInResult = MutationResult & {
@@ -940,10 +576,42 @@ export type LogInResult = MutationResult & {
   jwt?: Maybe<Scalars['String']>;
 };
 
-export type ImageInput = {
+export type User = Node & {
+  __typename?: 'User';
+  id: Scalars['ID'];
   name: Scalars['String'];
-  data: Scalars['String'];
-  color: Scalars['String'];
+  email_address: Scalars['String'];
+  memberships: Array<Membership>;
+};
+
+
+export type UserMembershipsArgs = {
+  filter?: Maybe<MembershipFilter>;
+};
+
+export type UserFilter = {
+  name?: Maybe<Scalars['String']>;
+  email_address?: Maybe<Scalars['String']>;
+};
+
+export type Agency = Node & {
+  __typename?: 'Agency';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  stripe_account: StripeAccount;
+  subdomain: Subdomain;
+  theme: Theme;
+  services?: Maybe<Array<Service>>;
+  settings: AgencySettings;
+};
+
+
+export type AgencyServicesArgs = {
+  filter?: Maybe<ServiceFilter>;
+};
+
+export type AgencyFilter = {
+  name?: Maybe<Scalars['String']>;
 };
 
 export type CreateAgencyResult = MutationResult & {
@@ -961,11 +629,40 @@ export type DeleteAgencyResult = MutationResult & {
   agency?: Maybe<Agency>;
 };
 
+export type AgencySettings = {
+  __typename?: 'AgencySettings';
+  id: Scalars['ID'];
+  thank_you_page_setting?: Maybe<AgencyThankYouPageSetting>;
+};
+
+export type AgencyThankYouPageSetting = {
+  __typename?: 'AgencyThankYouPageSetting';
+  id: Scalars['ID'];
+  url: Scalars['String'];
+};
+
 export type AgencyThankYouPageSettingMutationResult = MutationResult & {
   __typename?: 'AgencyThankYouPageSettingMutationResult';
   success: Scalars['Boolean'];
   message?: Maybe<Scalars['String']>;
   setting?: Maybe<AgencyThankYouPageSetting>;
+};
+
+export type Price = Node & {
+  __typename?: 'Price';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  status: Scalars['String'];
+  type: Scalars['String'];
+  unit_amount: Scalars['Int'];
+  currency: Scalars['String'];
+  recurring_interval?: Maybe<Scalars['String']>;
+  recurring_interval_count?: Maybe<Scalars['Int']>;
+  service_variant: ServiceVariant;
+};
+
+export type PriceFilter = {
+  service_variant_id?: Maybe<Scalars['ID']>;
 };
 
 export type PriceMutationResult = MutationResult & {
@@ -982,11 +679,216 @@ export type CreateStripeCheckoutSessionResult = MutationResult & {
   checkout_session_id?: Maybe<Scalars['String']>;
 };
 
+export type StripeAccount = {
+  __typename?: 'StripeAccount';
+  id: Scalars['ID'];
+  id_ext: Scalars['ID'];
+  account_update_url: StripeAccountLink;
+  balance: StripeBalance;
+  balance_transactions: Array<BalanceTransaction>;
+  payment_intents: Array<PaymentIntent>;
+  customers: Array<StripeCustomer>;
+  business_profile: BusinessProfile;
+  business_type?: Maybe<Scalars['String']>;
+  capabilities: StripeCapabilities;
+  requirements: StripeRequirements;
+  settings: StripeSettings;
+  charges_enabled: Scalars['Boolean'];
+  country: Scalars['String'];
+  created: Scalars['Date'];
+  default_currency?: Maybe<Scalars['String']>;
+  details_submitted: Scalars['Boolean'];
+  email?: Maybe<Scalars['String']>;
+  payouts_enabled: Scalars['Boolean'];
+};
+
+
+export type StripeAccountBalance_TransactionsArgs = {
+  payout_id?: Maybe<Scalars['ID']>;
+  type?: Maybe<Scalars['String']>;
+  available_on?: Maybe<Scalars['Date']>;
+  created?: Maybe<Scalars['Date']>;
+  currency?: Maybe<Scalars['String']>;
+  starting_after_id?: Maybe<Scalars['String']>;
+  ending_before_id?: Maybe<Scalars['String']>;
+  limit?: Maybe<Scalars['Int']>;
+};
+
+
+export type StripeAccountPayment_IntentsArgs = {
+  customer_id?: Maybe<Scalars['ID']>;
+  created?: Maybe<Scalars['Date']>;
+  starting_after_id?: Maybe<Scalars['String']>;
+  ending_before_id?: Maybe<Scalars['String']>;
+  limit?: Maybe<Scalars['Int']>;
+};
+
+
+export type StripeAccountCustomersArgs = {
+  email?: Maybe<Scalars['String']>;
+  created?: Maybe<Scalars['Date']>;
+  starting_after_id?: Maybe<Scalars['String']>;
+  ending_before_id?: Maybe<Scalars['String']>;
+  limit?: Maybe<Scalars['Int']>;
+};
+
+export type BusinessProfile = {
+  __typename?: 'BusinessProfile';
+  mcc?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  product_description?: Maybe<Scalars['String']>;
+  support_address?: Maybe<Scalars['String']>;
+  support_email?: Maybe<Scalars['String']>;
+  support_phone?: Maybe<Scalars['String']>;
+  support_url?: Maybe<Scalars['String']>;
+  url?: Maybe<Scalars['String']>;
+};
+
+export type StripeCapabilities = {
+  __typename?: 'StripeCapabilities';
+  card_payments?: Maybe<Scalars['String']>;
+  transfers?: Maybe<Scalars['String']>;
+};
+
+export type StripeRequirements = {
+  __typename?: 'StripeRequirements';
+  current_deadline?: Maybe<Scalars['String']>;
+  disabled_reason?: Maybe<Scalars['String']>;
+  currently_due: Array<Maybe<Scalars['String']>>;
+  eventually_due: Array<Maybe<Scalars['String']>>;
+  past_due: Array<Maybe<Scalars['String']>>;
+  pending_verification: Array<Maybe<Scalars['String']>>;
+};
+
+export type StripeSettings = {
+  __typename?: 'StripeSettings';
+  branding?: Maybe<StripeBranding>;
+};
+
+export type StripeBranding = {
+  __typename?: 'StripeBranding';
+  icon?: Maybe<Scalars['String']>;
+  logo?: Maybe<Scalars['String']>;
+  primary_color?: Maybe<Scalars['String']>;
+  secondary_color?: Maybe<Scalars['String']>;
+};
+
+export type StripeAccountLink = {
+  __typename?: 'StripeAccountLink';
+  type: Scalars['String'];
+  url: Scalars['String'];
+  created: Scalars['Date'];
+  expires_at: Scalars['Date'];
+};
+
+export type StripeBalance = {
+  __typename?: 'StripeBalance';
+  available: Array<StripeCurrencyBalance>;
+  pending: Array<StripeCurrencyBalance>;
+  connect_reserved?: Maybe<Array<StripeCurrencyBalance>>;
+  instant_available?: Maybe<Array<StripeCurrencyBalance>>;
+};
+
+export type StripeCurrencyBalance = {
+  __typename?: 'StripeCurrencyBalance';
+  amount: Scalars['Int'];
+  currency: Scalars['String'];
+  source_types: StripeBalanceSource;
+};
+
+export type StripeBalanceSource = {
+  __typename?: 'StripeBalanceSource';
+  bank_account?: Maybe<Scalars['Int']>;
+  card?: Maybe<Scalars['Int']>;
+};
+
+export type StripeCustomer = {
+  __typename?: 'StripeCustomer';
+  id: Scalars['ID'];
+  id_ext: Scalars['ID'];
+  address?: Maybe<Address>;
+  balance?: Maybe<Scalars['Int']>;
+  created?: Maybe<Scalars['Date']>;
+  currency?: Maybe<Scalars['String']>;
+  delinquent?: Maybe<Scalars['Boolean']>;
+  description?: Maybe<Scalars['String']>;
+  email?: Maybe<Scalars['String']>;
+  invoice_prefix?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  next_invoice_sequence?: Maybe<Scalars['Int']>;
+  phone?: Maybe<Scalars['String']>;
+  preferred_locales?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+export type BalanceTransaction = {
+  __typename?: 'BalanceTransaction';
+  id: Scalars['ID'];
+  id_ext: Scalars['ID'];
+  amount: Scalars['Int'];
+  available_on: Scalars['Date'];
+  created: Scalars['Date'];
+  exchange_rate?: Maybe<Scalars['Float']>;
+  currency: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  fee: Scalars['Int'];
+  fee_details?: Maybe<Array<BalanceTransactionFeeDetails>>;
+  net: Scalars['Int'];
+  status: Scalars['String'];
+  reporting_category: Scalars['String'];
+  type: Scalars['String'];
+  source: Scalars['String'];
+};
+
+export type BalanceTransactionFeeDetails = {
+  __typename?: 'BalanceTransactionFeeDetails';
+  amount: Scalars['Int'];
+  application?: Maybe<Scalars['String']>;
+  currency: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  type: Scalars['String'];
+};
+
+export type Service = Node & {
+  __typename?: 'Service';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  url_name: Scalars['String'];
+  status: Scalars['String'];
+  agency: Agency;
+  default_variant: ServiceVariant;
+  variants?: Maybe<Array<ServiceVariant>>;
+  settings: ServiceSettings;
+};
+
+
+export type ServiceVariantsArgs = {
+  filter?: Maybe<ServiceVariantFilter>;
+};
+
+export type ServiceFilter = {
+  name?: Maybe<Scalars['String']>;
+  agency_id?: Maybe<Scalars['ID']>;
+  url_name?: Maybe<Scalars['String']>;
+};
+
 export type ServiceMutationResult = MutationResult & {
   __typename?: 'ServiceMutationResult';
   success: Scalars['Boolean'];
   message?: Maybe<Scalars['String']>;
   service?: Maybe<Service>;
+};
+
+export type ServiceSettings = {
+  __typename?: 'ServiceSettings';
+  id: Scalars['ID'];
+  thank_you_page_setting?: Maybe<ServiceThankYouPageSetting>;
+};
+
+export type ServiceThankYouPageSetting = {
+  __typename?: 'ServiceThankYouPageSetting';
+  id: Scalars['ID'];
+  url: Scalars['String'];
+  agency_setting: AgencyThankYouPageSetting;
 };
 
 export type ServiceThankYouPageSettingMutationResult = MutationResult & {
@@ -996,11 +898,74 @@ export type ServiceThankYouPageSettingMutationResult = MutationResult & {
   setting?: Maybe<ServiceThankYouPageSetting>;
 };
 
+export type ServiceVariant = Node & {
+  __typename?: 'ServiceVariant';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  status: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  duration?: Maybe<Scalars['String']>;
+  default_price?: Maybe<Price>;
+  service: Service;
+  prices?: Maybe<Array<Price>>;
+  image_logo?: Maybe<Image>;
+  image_hero?: Maybe<Image>;
+  markdown_description?: Maybe<Markdown>;
+};
+
+
+export type ServiceVariantPricesArgs = {
+  filter?: Maybe<PriceFilter>;
+};
+
+export type ServiceVariantFilter = {
+  name?: Maybe<Scalars['String']>;
+  service_id?: Maybe<Scalars['ID']>;
+};
+
 export type ServiceVariantMutationResult = MutationResult & {
   __typename?: 'ServiceVariantMutationResult';
   success: Scalars['Boolean'];
   message?: Maybe<Scalars['String']>;
   service_variant?: Maybe<ServiceVariant>;
+};
+
+export type Subdomain = Node & {
+  __typename?: 'Subdomain';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  agency: Agency;
+  memberships: Array<Membership>;
+};
+
+
+export type SubdomainMembershipsArgs = {
+  filter?: Maybe<MembershipFilter>;
+};
+
+export type SubdomainFilter = {
+  name?: Maybe<Scalars['String']>;
+};
+
+export type Image = Node & {
+  __typename?: 'Image';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  data: Scalars['String'];
+  color: Scalars['String'];
+  agency?: Maybe<Agency>;
+  access: AccessLevel;
+};
+
+export type ImageInput = {
+  name: Scalars['String'];
+  data: Scalars['String'];
+  color: Scalars['String'];
+};
+
+export type ImageFilter = {
+  name?: Maybe<Scalars['String']>;
+  agency_id?: Maybe<Scalars['ID']>;
 };
 
 export type ImageMutationResult = MutationResult & {
@@ -1010,11 +975,61 @@ export type ImageMutationResult = MutationResult & {
   image?: Maybe<Image>;
 };
 
+export type Markdown = Node & {
+  __typename?: 'Markdown';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  data: Scalars['String'];
+  agency?: Maybe<Agency>;
+  access: AccessLevel;
+};
+
+export type MarkdownFilter = {
+  name?: Maybe<Scalars['String']>;
+  agency_id?: Maybe<Scalars['ID']>;
+};
+
 export type MarkdownMutationResult = MutationResult & {
   __typename?: 'MarkdownMutationResult';
   success: Scalars['Boolean'];
   message?: Maybe<Scalars['String']>;
   markdown?: Maybe<Markdown>;
+};
+
+export type Membership = Node & {
+  __typename?: 'Membership';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  access: AccessLevel;
+  user: User;
+  subdomain: Subdomain;
+};
+
+export type MembershipFilter = {
+  access?: Maybe<AccessLevel>;
+  user_id?: Maybe<Scalars['ID']>;
+  subdomain_id?: Maybe<Scalars['ID']>;
+};
+
+export type Theme = Node & {
+  __typename?: 'Theme';
+  id: Scalars['ID'];
+  agency: Agency;
+  name: Scalars['String'];
+  image_logo?: Maybe<Image>;
+  image_hero?: Maybe<Image>;
+  color_primary?: Maybe<Scalars['String']>;
+  color_secondary?: Maybe<Scalars['String']>;
+  color_accent?: Maybe<Scalars['String']>;
+  color_background?: Maybe<Scalars['String']>;
+  color_surface?: Maybe<Scalars['String']>;
+  color_error?: Maybe<Scalars['String']>;
+  color_success?: Maybe<Scalars['String']>;
+};
+
+export type ThemeFilter = {
+  name?: Maybe<Scalars['String']>;
+  agency_id?: Maybe<Scalars['String']>;
 };
 
 export type UpdateThemeResult = MutationResult & {
@@ -1024,19 +1039,6 @@ export type UpdateThemeResult = MutationResult & {
   theme?: Maybe<Theme>;
 };
 
-export type Connection = {
-  edges: Array<Edge>;
-};
-
-
-export type ConnectionEdgesArgs = {
-  ids?: Maybe<Array<Scalars['ID']>>;
-};
-
-export type Edge = {
-  cursor?: Maybe<Scalars['String']>;
-  node: Node;
-};
 
 export type Stripe_AccountFragment = (
   { __typename?: 'StripeAccount' }
@@ -1198,7 +1200,10 @@ export type ServiceFragment = (
   ), variants?: Maybe<Array<(
     { __typename?: 'ServiceVariant' }
     & Service_VariantFragment
-  )>> }
+  )>>, settings: (
+    { __typename?: 'ServiceSettings' }
+    & Pick<ServiceSettings, 'id'>
+  ) }
 );
 
 export type MembershipFragment = (
@@ -1226,6 +1231,9 @@ export type AgencyFragment = (
   ), theme: (
     { __typename?: 'Theme' }
     & ThemeFragment
+  ), settings: (
+    { __typename?: 'AgencySettings' }
+    & Pick<AgencySettings, 'id'>
   ) }
 );
 
@@ -1870,6 +1878,7 @@ export type AgencyThankYouPageSettingQuery = (
     & Pick<Agency, 'id'>
     & { settings: (
       { __typename?: 'AgencySettings' }
+      & Pick<AgencySettings, 'id'>
       & { thank_you_page_setting?: Maybe<(
         { __typename?: 'AgencyThankYouPageSetting' }
         & Pick<AgencyThankYouPageSetting, 'id' | 'url'>
@@ -1890,6 +1899,7 @@ export type ServiceThankYouPageSettingQuery = (
     & Pick<Service, 'id'>
     & { settings: (
       { __typename?: 'ServiceSettings' }
+      & Pick<ServiceSettings, 'id'>
       & { thank_you_page_setting?: Maybe<(
         { __typename?: 'ServiceThankYouPageSetting' }
         & Pick<ServiceThankYouPageSetting, 'id' | 'url'>
@@ -1908,9 +1918,9 @@ export const PriceFragmentDoc: DocumentNode<PriceFragment, unknown> = {"kind":"D
 export const ImageFragmentDoc: DocumentNode<ImageFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"image"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Image"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"data"}},{"kind":"Field","name":{"kind":"Name","value":"access"}}]}}]};
 export const MarkdownFragmentDoc: DocumentNode<MarkdownFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"markdown"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Markdown"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"data"}}]}}]};
 export const Service_VariantFragmentDoc: DocumentNode<Service_VariantFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"service_variant"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ServiceVariant"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"duration"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"default_price"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"price"}}]}},{"kind":"Field","name":{"kind":"Name","value":"prices"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"price"}}]}},{"kind":"Field","name":{"kind":"Name","value":"image_logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"image"}}]}},{"kind":"Field","name":{"kind":"Name","value":"image_hero"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"image"}}]}},{"kind":"Field","name":{"kind":"Name","value":"markdown_description"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"markdown"}}]}}]}},...PriceFragmentDoc.definitions,...ImageFragmentDoc.definitions,...MarkdownFragmentDoc.definitions]};
-export const ServiceFragmentDoc: DocumentNode<ServiceFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"service"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Service"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"url_name"}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"default_variant"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"service_variant"}}]}},{"kind":"Field","name":{"kind":"Name","value":"variants"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"service_variant"}}]}}]}},...Service_VariantFragmentDoc.definitions]};
+export const ServiceFragmentDoc: DocumentNode<ServiceFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"service"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Service"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"url_name"}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"default_variant"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"service_variant"}}]}},{"kind":"Field","name":{"kind":"Name","value":"variants"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"service_variant"}}]}},{"kind":"Field","name":{"kind":"Name","value":"settings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},...Service_VariantFragmentDoc.definitions]};
 export const ThemeFragmentDoc: DocumentNode<ThemeFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"theme"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Theme"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"image_logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"image"}}]}},{"kind":"Field","name":{"kind":"Name","value":"image_hero"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"image"}}]}},{"kind":"Field","name":{"kind":"Name","value":"color_primary"}},{"kind":"Field","name":{"kind":"Name","value":"color_secondary"}},{"kind":"Field","name":{"kind":"Name","value":"color_accent"}},{"kind":"Field","name":{"kind":"Name","value":"color_background"}},{"kind":"Field","name":{"kind":"Name","value":"color_surface"}},{"kind":"Field","name":{"kind":"Name","value":"color_error"}},{"kind":"Field","name":{"kind":"Name","value":"color_success"}}]}},...ImageFragmentDoc.definitions]};
-export const AgencyFragmentDoc: DocumentNode<AgencyFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"agency"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Agency"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"subdomain"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"theme"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"theme"}}]}}]}},...ThemeFragmentDoc.definitions]};
+export const AgencyFragmentDoc: DocumentNode<AgencyFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"agency"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Agency"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"subdomain"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"theme"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"theme"}}]}},{"kind":"Field","name":{"kind":"Name","value":"settings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}},...ThemeFragmentDoc.definitions]};
 export const UserFragmentDoc: DocumentNode<UserFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"user"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email_address"}}]}}]};
 export const MembershipFragmentDoc: DocumentNode<MembershipFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"membership"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Membership"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"access"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"user"}}]}},{"kind":"Field","name":{"kind":"Name","value":"subdomain"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}},...UserFragmentDoc.definitions]};
 export const SubdomainFragmentDoc: DocumentNode<SubdomainFragment, unknown> = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"subdomain"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Subdomain"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"agency"}}]}},{"kind":"Field","name":{"kind":"Name","value":"memberships"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"membership"}}]}}]}},...AgencyFragmentDoc.definitions,...MembershipFragmentDoc.definitions]};
@@ -1947,5 +1957,5 @@ export const AgencyServicesDocument: DocumentNode<AgencyServicesQuery, AgencySer
 export const ServiceDocument: DocumentNode<ServiceQuery, ServiceQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Service"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"service"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"service"}}]}}]}},...ServiceFragmentDoc.definitions]};
 export const SubdomainAgencyDocument: DocumentNode<SubdomainAgencyQuery, SubdomainAgencyQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SubdomainAgency"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"subdomain_name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"subdomains"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"subdomain_name"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"agency"}},{"kind":"Field","name":{"kind":"Name","value":"services"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"service"}}]}}]}}]}}]}},...AgencyFragmentDoc.definitions,...ServiceFragmentDoc.definitions]};
 export const SubdomainAgencyStripeAccountUpdateUrlDocument: DocumentNode<SubdomainAgencyStripeAccountUpdateUrlQuery, SubdomainAgencyStripeAccountUpdateUrlQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SubdomainAgencyStripeAccountUpdateUrl"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"subdomain_name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"subdomains"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"subdomain_name"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"stripe_account"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"account_update_url"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]}}]};
-export const AgencyThankYouPageSettingDocument: DocumentNode<AgencyThankYouPageSettingQuery, AgencyThankYouPageSettingQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AgencyThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"agency_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"agency"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"agency_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"settings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"thank_you_page_setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]};
-export const ServiceThankYouPageSettingDocument: DocumentNode<ServiceThankYouPageSettingQuery, ServiceThankYouPageSettingQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ServiceThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"service"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"settings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"thank_you_page_setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]};
+export const AgencyThankYouPageSettingDocument: DocumentNode<AgencyThankYouPageSettingQuery, AgencyThankYouPageSettingQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AgencyThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"agency_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"agency"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"agency_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"settings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"thank_you_page_setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]};
+export const ServiceThankYouPageSettingDocument: DocumentNode<ServiceThankYouPageSettingQuery, ServiceThankYouPageSettingQueryVariables> = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ServiceThankYouPageSetting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"service"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"service_id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"settings"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"thank_you_page_setting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]}}]}}]}}]};

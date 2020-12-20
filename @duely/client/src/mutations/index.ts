@@ -1,5 +1,12 @@
-import { ApolloCache, MutationOptions, NormalizedCacheObject, Reference } from '@apollo/client';
 import {
+  ApolloCache,
+  gql,
+  MutationOptions,
+  NormalizedCacheObject,
+  Reference
+} from '@apollo/client';
+import {
+  AgencyThankYouPageSettingDocument,
   CreateAgencyDocument,
   CreateAgencyThankYouPageSettingDocument,
   CreatePriceDocument,
@@ -11,6 +18,7 @@ import {
   LogInDocument,
   LogOutDocument,
   ServiceFragmentDoc,
+  ServiceThankYouPageSettingDocument,
   StartPasswordResetDocument,
   StartSignUpDocument,
   UpdateAgencyThankYouPageSettingDocument,
@@ -37,11 +45,15 @@ export interface MutationDefinition<
 > extends Omit<TypedMutationOptions<TypedDocumentNode<TData, TVariables>>, 'variables'> {
   readonly variables?: TBoundVariables;
   readonly result: (data: TData) => TResult;
-  readonly after?: (
-    cache?: ApolloCache<NormalizedCacheObject>,
-    res?: TResult | null | undefined,
-    variables?: TVariables
-  ) => Promise<void>;
+  readonly after?:
+    | ((
+        cache: ApolloCache<NormalizedCacheObject>,
+        res: TResult | null,
+        variables: TVariables
+      ) => Promise<void>)
+    | ((cache: ApolloCache<NormalizedCacheObject>, res: TResult | null) => Promise<void>)
+    | ((cache: ApolloCache<NormalizedCacheObject>) => Promise<void>)
+    | (() => Promise<void>);
 }
 
 // just a wrapper for convenience
@@ -69,7 +81,7 @@ export async function mutate<
   const res = data && result(data);
 
   if (after) {
-    await after(client.cache, res, mergedVariables);
+    await after(client.cache, res ?? null, mergedVariables);
   }
 
   return res;
@@ -79,8 +91,11 @@ const log_in_R = (d: ResultOf<typeof LogInDocument>) => d?.log_in;
 export const log_in_M = {
   mutation: LogInDocument,
   result: log_in_R,
-  async after(cache: ApolloCache<NormalizedCacheObject>, result: ReturnType<typeof log_in_R>) {
-    if (!result.success || !result.jwt) return;
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof log_in_R> | null
+  ) {
+    if (!result?.success || !result.jwt) return;
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('user-jwt', result.jwt);
@@ -94,8 +109,11 @@ const log_out_R = (d: ResultOf<typeof LogOutDocument>) => d?.log_out;
 export const log_out_M = {
   mutation: LogOutDocument,
   result: log_out_R,
-  async after(cache: ApolloCache<NormalizedCacheObject>, result: ReturnType<typeof log_out_R>) {
-    if (!result.success) return;
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof log_out_R> | null
+  ) {
+    if (!result?.success) return;
 
     if (typeof window !== 'undefined') {
       localStorage.removeItem('user-jwt');
@@ -136,9 +154,9 @@ export const create_service_M = {
   result: create_service_R,
   async after(
     cache: ApolloCache<NormalizedCacheObject>,
-    result: ReturnType<typeof create_service_R>
+    result: ReturnType<typeof create_service_R> | null
   ) {
-    if (!result.success || !result.service) return;
+    if (!result?.success || !result.service) return;
 
     const { service } = result;
 
@@ -176,9 +194,9 @@ export const delete_service_M = {
   result: delete_service_R,
   async after(
     cache: ApolloCache<NormalizedCacheObject>,
-    result: ReturnType<typeof delete_service_R>
+    result: ReturnType<typeof delete_service_R> | null
   ) {
-    if (!result.success || !result.service) return;
+    if (!result?.success || !result.service) return;
 
     const id = cache.identify(result.service);
     cache.evict({ id });
@@ -191,22 +209,98 @@ export const create_price_M = {
   result: (d: ResultOf<typeof CreatePriceDocument>) => d?.create_price
 };
 
+const create_agency_thank_you_page_setting_R = (
+  d: ResultOf<typeof CreateAgencyThankYouPageSettingDocument>
+) => d?.create_agency_thank_you_page_setting;
 export const create_agency_thank_you_page_setting_M = {
   mutation: CreateAgencyThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof CreateAgencyThankYouPageSettingDocument>) =>
-    d?.create_agency_thank_you_page_setting
+  result: create_agency_thank_you_page_setting_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof create_agency_thank_you_page_setting_R> | null,
+    variables: VariablesOf<typeof CreateAgencyThankYouPageSettingDocument>
+  ) {
+    if (!result?.success || !result.setting) return;
+
+    const { agency = null } =
+      client.readQuery({
+        query: AgencyThankYouPageSettingDocument,
+        variables: {
+          agency_id: variables.agency_id
+        }
+      }) ?? {};
+
+    if (!agency?.settings) return;
+
+    cache.modify({
+      id: cache.identify(agency.settings),
+      fields: {
+        thank_you_page_setting() {
+          return cache.writeFragment({
+            data: result.setting,
+            fragment: gql`
+              fragment agency_thank_you_page_setting on AgencyThankYouPageSetting {
+                id
+                url
+              }
+            `,
+            fragmentName: 'agency_thank_you_page_setting'
+          });
+        }
+      }
+    });
+  }
 };
 
+const create_service_thank_you_page_setting_R = (
+  d: ResultOf<typeof CreateServiceThankYouPageSettingDocument>
+) => d?.create_service_thank_you_page_setting;
 export const create_service_thank_you_page_setting_M = {
   mutation: CreateServiceThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof CreateServiceThankYouPageSettingDocument>) =>
-    d?.create_service_thank_you_page_setting
+  result: create_service_thank_you_page_setting_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof create_service_thank_you_page_setting_R> | null,
+    variables: VariablesOf<typeof CreateServiceThankYouPageSettingDocument>
+  ) {
+    if (!result?.success || !result.setting) return;
+
+    const { service = null } =
+      client.readQuery({
+        query: ServiceThankYouPageSettingDocument,
+        variables: {
+          service_id: variables.service_id
+        }
+      }) ?? {};
+
+    if (!service?.settings) return;
+
+    cache.modify({
+      id: cache.identify(service.settings),
+      fields: {
+        thank_you_page_setting() {
+          return cache.writeFragment({
+            data: result.setting,
+            fragment: gql`
+              fragment service_thank_you_page_setting on ServiceThankYouPageSetting {
+                id
+                url
+              }
+            `,
+            fragmentName: 'service_thank_you_page_setting'
+          });
+        }
+      }
+    });
+  }
 };
 
+const update_agency_thank_you_page_setting_R = (
+  d: ResultOf<typeof UpdateAgencyThankYouPageSettingDocument>
+) => d?.update_agency_thank_you_page_setting;
 export const update_agency_thank_you_page_setting_M = {
   mutation: UpdateAgencyThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof UpdateAgencyThankYouPageSettingDocument>) =>
-    d?.update_agency_thank_you_page_setting
+  result: update_agency_thank_you_page_setting_R
 };
 
 export const update_service_thank_you_page_setting_M = {
@@ -215,14 +309,38 @@ export const update_service_thank_you_page_setting_M = {
     d?.update_service_thank_you_page_setting
 };
 
+const delete_agency_thank_you_page_setting_R = (
+  d: ResultOf<typeof DeleteAgencyThankYouPageSettingDocument>
+) => d?.delete_agency_thank_you_page_setting;
 export const delete_agency_thank_you_page_setting_M = {
   mutation: DeleteAgencyThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof DeleteAgencyThankYouPageSettingDocument>) =>
-    d?.delete_agency_thank_you_page_setting
+  result: delete_agency_thank_you_page_setting_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof delete_agency_thank_you_page_setting_R> | null
+  ) {
+    if (!result?.success || !result.setting) return;
+
+    const id = cache.identify(result.setting);
+    cache.evict({ id });
+    cache.gc();
+  }
 };
 
+const delete_service_thank_you_page_setting_R = (
+  d: ResultOf<typeof DeleteServiceThankYouPageSettingDocument>
+) => d?.delete_service_thank_you_page_setting;
 export const delete_service_thank_you_page_setting_M = {
   mutation: DeleteServiceThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof DeleteServiceThankYouPageSettingDocument>) =>
-    d?.delete_service_thank_you_page_setting
+  result: delete_service_thank_you_page_setting_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof delete_service_thank_you_page_setting_R> | null
+  ) {
+    if (!result?.success || !result.setting) return;
+
+    const id = cache.identify(result.setting);
+    cache.evict({ id });
+    cache.gc();
+  }
 };

@@ -110,453 +110,6 @@ export declare type QueryThemeArgs = {
 export declare type QueryThemesArgs = {
     filter: ThemeFilter;
 };
-export declare type User = Node & {
-    __typename?: 'User';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    email_address: Scalars['String'];
-    memberships: Array<Membership>;
-};
-export declare type UserMembershipsArgs = {
-    filter?: Maybe<MembershipFilter>;
-};
-export declare type Node = {
-    id: Scalars['ID'];
-    name: Scalars['String'];
-};
-export declare type MembershipFilter = {
-    access?: Maybe<AccessLevel>;
-    user_id?: Maybe<Scalars['ID']>;
-    subdomain_id?: Maybe<Scalars['ID']>;
-};
-export declare enum AccessLevel {
-    Owner = "OWNER",
-    Manager = "MANAGER",
-    Agent = "AGENT",
-    Client = "CLIENT",
-    Public = "PUBLIC"
-}
-export declare type Membership = Node & {
-    __typename?: 'Membership';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    access: AccessLevel;
-    user: User;
-    subdomain: Subdomain;
-};
-export declare type Subdomain = Node & {
-    __typename?: 'Subdomain';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    agency: Agency;
-    memberships: Array<Membership>;
-};
-export declare type SubdomainMembershipsArgs = {
-    filter?: Maybe<MembershipFilter>;
-};
-export declare type Agency = Node & {
-    __typename?: 'Agency';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    stripe_account: StripeAccount;
-    subdomain: Subdomain;
-    theme: Theme;
-    services?: Maybe<Array<Service>>;
-    settings: AgencySettings;
-};
-export declare type AgencyServicesArgs = {
-    filter?: Maybe<ServiceFilter>;
-};
-export declare type StripeAccount = {
-    __typename?: 'StripeAccount';
-    id: Scalars['ID'];
-    id_ext: Scalars['ID'];
-    account_update_url: StripeAccountLink;
-    balance: StripeBalance;
-    balance_transactions: Array<BalanceTransaction>;
-    payment_intents: Array<PaymentIntent>;
-    customers: Array<StripeCustomer>;
-    business_profile: BusinessProfile;
-    business_type?: Maybe<Scalars['String']>;
-    capabilities: StripeCapabilities;
-    requirements: StripeRequirements;
-    settings: StripeSettings;
-    charges_enabled: Scalars['Boolean'];
-    country: Scalars['String'];
-    created: Scalars['Date'];
-    default_currency?: Maybe<Scalars['String']>;
-    details_submitted: Scalars['Boolean'];
-    email?: Maybe<Scalars['String']>;
-    payouts_enabled: Scalars['Boolean'];
-};
-export declare type StripeAccountBalance_TransactionsArgs = {
-    payout_id?: Maybe<Scalars['ID']>;
-    type?: Maybe<Scalars['String']>;
-    available_on?: Maybe<Scalars['Date']>;
-    created?: Maybe<Scalars['Date']>;
-    currency?: Maybe<Scalars['String']>;
-    starting_after_id?: Maybe<Scalars['String']>;
-    ending_before_id?: Maybe<Scalars['String']>;
-    limit?: Maybe<Scalars['Int']>;
-};
-export declare type StripeAccountPayment_IntentsArgs = {
-    customer_id?: Maybe<Scalars['ID']>;
-    created?: Maybe<Scalars['Date']>;
-    starting_after_id?: Maybe<Scalars['String']>;
-    ending_before_id?: Maybe<Scalars['String']>;
-    limit?: Maybe<Scalars['Int']>;
-};
-export declare type StripeAccountCustomersArgs = {
-    email?: Maybe<Scalars['String']>;
-    created?: Maybe<Scalars['Date']>;
-    starting_after_id?: Maybe<Scalars['String']>;
-    ending_before_id?: Maybe<Scalars['String']>;
-    limit?: Maybe<Scalars['Int']>;
-};
-export declare type StripeAccountLink = {
-    __typename?: 'StripeAccountLink';
-    type: Scalars['String'];
-    url: Scalars['String'];
-    created: Scalars['Date'];
-    expires_at: Scalars['Date'];
-};
-export declare type StripeBalance = {
-    __typename?: 'StripeBalance';
-    available: Array<StripeCurrencyBalance>;
-    pending: Array<StripeCurrencyBalance>;
-    connect_reserved?: Maybe<Array<StripeCurrencyBalance>>;
-    instant_available?: Maybe<Array<StripeCurrencyBalance>>;
-};
-export declare type StripeCurrencyBalance = {
-    __typename?: 'StripeCurrencyBalance';
-    amount: Scalars['Int'];
-    currency: Scalars['String'];
-    source_types: StripeBalanceSource;
-};
-export declare type StripeBalanceSource = {
-    __typename?: 'StripeBalanceSource';
-    bank_account?: Maybe<Scalars['Int']>;
-    card?: Maybe<Scalars['Int']>;
-};
-export declare type BalanceTransaction = {
-    __typename?: 'BalanceTransaction';
-    id: Scalars['ID'];
-    id_ext: Scalars['ID'];
-    amount: Scalars['Int'];
-    available_on: Scalars['Date'];
-    created: Scalars['Date'];
-    exchange_rate?: Maybe<Scalars['Float']>;
-    currency: Scalars['String'];
-    description?: Maybe<Scalars['String']>;
-    fee: Scalars['Int'];
-    fee_details?: Maybe<Array<BalanceTransactionFeeDetails>>;
-    net: Scalars['Int'];
-    status: Scalars['String'];
-    reporting_category: Scalars['String'];
-    type: Scalars['String'];
-    source: Scalars['String'];
-};
-export declare type BalanceTransactionFeeDetails = {
-    __typename?: 'BalanceTransactionFeeDetails';
-    amount: Scalars['Int'];
-    application?: Maybe<Scalars['String']>;
-    currency: Scalars['String'];
-    description?: Maybe<Scalars['String']>;
-    type: Scalars['String'];
-};
-export declare type PaymentIntent = {
-    __typename?: 'PaymentIntent';
-    id: Scalars['ID'];
-    id_ext: Scalars['ID'];
-    amount: Scalars['Int'];
-    amount_capturable?: Maybe<Scalars['Int']>;
-    amount_received?: Maybe<Scalars['Int']>;
-    application_fee_amount?: Maybe<Scalars['Int']>;
-    canceled_at?: Maybe<Scalars['Date']>;
-    cancellation_reason?: Maybe<Scalars['String']>;
-    capture_method?: Maybe<Scalars['String']>;
-    charges?: Maybe<Array<Maybe<Charge>>>;
-    confirmation_method?: Maybe<Scalars['String']>;
-    created?: Maybe<Scalars['Date']>;
-    currency?: Maybe<Scalars['String']>;
-    customer?: Maybe<StripeCustomer>;
-    description?: Maybe<Scalars['String']>;
-    invoice?: Maybe<Scalars['String']>;
-    on_behalf_of?: Maybe<Scalars['String']>;
-    payment_method?: Maybe<Scalars['String']>;
-    payment_method_types?: Maybe<Array<Maybe<Scalars['String']>>>;
-    receipt_email?: Maybe<Scalars['String']>;
-    setup_future_usage?: Maybe<Scalars['String']>;
-    shipping?: Maybe<Shipping>;
-    statement_descriptor?: Maybe<Scalars['String']>;
-    statement_descriptor_suffix?: Maybe<Scalars['String']>;
-    status?: Maybe<Scalars['String']>;
-    transfer_group?: Maybe<Scalars['String']>;
-};
-export declare type Charge = {
-    __typename?: 'Charge';
-    id: Scalars['ID'];
-    id_ext: Scalars['ID'];
-    amount: Scalars['Int'];
-    amount_capturable?: Maybe<Scalars['Int']>;
-    amount_received?: Maybe<Scalars['Int']>;
-    application_fee_amount?: Maybe<Scalars['Int']>;
-    authorization_code?: Maybe<Scalars['String']>;
-    balance_transaction?: Maybe<BalanceTransaction>;
-    billing_details?: Maybe<BillingDetails>;
-    calculated_statement_descriptor?: Maybe<Scalars['String']>;
-    captured?: Maybe<Scalars['Boolean']>;
-    created?: Maybe<Scalars['Date']>;
-    currency?: Maybe<Scalars['String']>;
-    customer?: Maybe<StripeCustomer>;
-    description?: Maybe<Scalars['String']>;
-    disputed?: Maybe<Scalars['Boolean']>;
-    failure_code?: Maybe<Scalars['String']>;
-    failure_message?: Maybe<Scalars['String']>;
-    fraud_details?: Maybe<FraudDetails>;
-    invoice?: Maybe<Scalars['String']>;
-    order?: Maybe<Scalars['String']>;
-    outcome?: Maybe<Outcome>;
-    paid?: Maybe<Scalars['Boolean']>;
-    payment_intent?: Maybe<PaymentIntent>;
-    payment_method?: Maybe<Scalars['String']>;
-    receipt_email?: Maybe<Scalars['String']>;
-    receipt_number?: Maybe<Scalars['String']>;
-    receipt_url?: Maybe<Scalars['String']>;
-    refunded?: Maybe<Scalars['Boolean']>;
-    source_transfer?: Maybe<Scalars['String']>;
-    statement_descriptor?: Maybe<Scalars['String']>;
-    statement_descriptor_suffix?: Maybe<Scalars['String']>;
-    status?: Maybe<Scalars['String']>;
-    transfer?: Maybe<Scalars['String']>;
-    transfer_group?: Maybe<Scalars['String']>;
-};
-export declare type BillingDetails = {
-    __typename?: 'BillingDetails';
-    address?: Maybe<Address>;
-    email?: Maybe<Scalars['String']>;
-    name?: Maybe<Scalars['String']>;
-    phone?: Maybe<Scalars['String']>;
-};
-export declare type Address = {
-    __typename?: 'Address';
-    city?: Maybe<Scalars['String']>;
-    country?: Maybe<Scalars['String']>;
-    line1?: Maybe<Scalars['String']>;
-    line2?: Maybe<Scalars['String']>;
-    postal_code?: Maybe<Scalars['String']>;
-    state?: Maybe<Scalars['String']>;
-};
-export declare type StripeCustomer = {
-    __typename?: 'StripeCustomer';
-    id: Scalars['ID'];
-    id_ext: Scalars['ID'];
-    address?: Maybe<Address>;
-    balance?: Maybe<Scalars['Int']>;
-    created?: Maybe<Scalars['Date']>;
-    currency?: Maybe<Scalars['String']>;
-    delinquent?: Maybe<Scalars['Boolean']>;
-    description?: Maybe<Scalars['String']>;
-    email?: Maybe<Scalars['String']>;
-    invoice_prefix?: Maybe<Scalars['String']>;
-    name?: Maybe<Scalars['String']>;
-    next_invoice_sequence?: Maybe<Scalars['Int']>;
-    phone?: Maybe<Scalars['String']>;
-    preferred_locales?: Maybe<Array<Maybe<Scalars['String']>>>;
-};
-export declare type FraudDetails = {
-    __typename?: 'FraudDetails';
-    stripe_report?: Maybe<Scalars['String']>;
-    user_report?: Maybe<Scalars['String']>;
-};
-export declare type Outcome = {
-    __typename?: 'Outcome';
-    network_status?: Maybe<Scalars['String']>;
-    reason?: Maybe<Scalars['String']>;
-    risk_level?: Maybe<Scalars['String']>;
-    risk_score?: Maybe<Scalars['Int']>;
-    rule?: Maybe<OutcomeRule>;
-    seller_message?: Maybe<Scalars['String']>;
-    type?: Maybe<Scalars['String']>;
-};
-export declare type OutcomeRule = {
-    __typename?: 'OutcomeRule';
-    action?: Maybe<Scalars['String']>;
-    id?: Maybe<Scalars['String']>;
-    predicate?: Maybe<Scalars['String']>;
-};
-export declare type Shipping = {
-    __typename?: 'Shipping';
-    address?: Maybe<Address>;
-    carrier?: Maybe<Scalars['String']>;
-    name?: Maybe<Scalars['String']>;
-    phone?: Maybe<Scalars['String']>;
-    tracking_number?: Maybe<Scalars['String']>;
-};
-export declare type BusinessProfile = {
-    __typename?: 'BusinessProfile';
-    mcc?: Maybe<Scalars['String']>;
-    name?: Maybe<Scalars['String']>;
-    product_description?: Maybe<Scalars['String']>;
-    support_address?: Maybe<Scalars['String']>;
-    support_email?: Maybe<Scalars['String']>;
-    support_phone?: Maybe<Scalars['String']>;
-    support_url?: Maybe<Scalars['String']>;
-    url?: Maybe<Scalars['String']>;
-};
-export declare type StripeCapabilities = {
-    __typename?: 'StripeCapabilities';
-    card_payments?: Maybe<Scalars['String']>;
-    transfers?: Maybe<Scalars['String']>;
-};
-export declare type StripeRequirements = {
-    __typename?: 'StripeRequirements';
-    current_deadline?: Maybe<Scalars['String']>;
-    disabled_reason?: Maybe<Scalars['String']>;
-    currently_due: Array<Maybe<Scalars['String']>>;
-    eventually_due: Array<Maybe<Scalars['String']>>;
-    past_due: Array<Maybe<Scalars['String']>>;
-    pending_verification: Array<Maybe<Scalars['String']>>;
-};
-export declare type StripeSettings = {
-    __typename?: 'StripeSettings';
-    branding?: Maybe<StripeBranding>;
-};
-export declare type StripeBranding = {
-    __typename?: 'StripeBranding';
-    icon?: Maybe<Scalars['String']>;
-    logo?: Maybe<Scalars['String']>;
-    primary_color?: Maybe<Scalars['String']>;
-    secondary_color?: Maybe<Scalars['String']>;
-};
-export declare type Theme = Node & {
-    __typename?: 'Theme';
-    id: Scalars['ID'];
-    agency: Agency;
-    name: Scalars['String'];
-    image_logo?: Maybe<Image>;
-    image_hero?: Maybe<Image>;
-    color_primary?: Maybe<Scalars['String']>;
-    color_secondary?: Maybe<Scalars['String']>;
-    color_accent?: Maybe<Scalars['String']>;
-    color_background?: Maybe<Scalars['String']>;
-    color_surface?: Maybe<Scalars['String']>;
-    color_error?: Maybe<Scalars['String']>;
-    color_success?: Maybe<Scalars['String']>;
-};
-export declare type Image = Node & {
-    __typename?: 'Image';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    data: Scalars['String'];
-    color: Scalars['String'];
-    agency?: Maybe<Agency>;
-    access: AccessLevel;
-};
-export declare type ServiceFilter = {
-    name?: Maybe<Scalars['String']>;
-    agency_id?: Maybe<Scalars['ID']>;
-    url_name?: Maybe<Scalars['String']>;
-};
-export declare type Service = Node & {
-    __typename?: 'Service';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    url_name: Scalars['String'];
-    status: Scalars['String'];
-    agency: Agency;
-    default_variant: ServiceVariant;
-    variants?: Maybe<Array<ServiceVariant>>;
-    settings: ServiceSettings;
-};
-export declare type ServiceVariantsArgs = {
-    filter?: Maybe<ServiceVariantFilter>;
-};
-export declare type ServiceVariant = Node & {
-    __typename?: 'ServiceVariant';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    status: Scalars['String'];
-    description?: Maybe<Scalars['String']>;
-    duration?: Maybe<Scalars['String']>;
-    default_price?: Maybe<Price>;
-    service: Service;
-    prices?: Maybe<Array<Price>>;
-    image_logo?: Maybe<Image>;
-    image_hero?: Maybe<Image>;
-    markdown_description?: Maybe<Markdown>;
-};
-export declare type ServiceVariantPricesArgs = {
-    filter?: Maybe<PriceFilter>;
-};
-export declare type Price = Node & {
-    __typename?: 'Price';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    status: Scalars['String'];
-    type: Scalars['String'];
-    unit_amount: Scalars['Int'];
-    currency: Scalars['String'];
-    recurring_interval?: Maybe<Scalars['String']>;
-    recurring_interval_count?: Maybe<Scalars['Int']>;
-    service_variant: ServiceVariant;
-};
-export declare type PriceFilter = {
-    service_variant_id?: Maybe<Scalars['ID']>;
-};
-export declare type Markdown = Node & {
-    __typename?: 'Markdown';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    data: Scalars['String'];
-    agency?: Maybe<Agency>;
-    access: AccessLevel;
-};
-export declare type ServiceVariantFilter = {
-    name?: Maybe<Scalars['String']>;
-    service_id?: Maybe<Scalars['ID']>;
-};
-export declare type ServiceSettings = {
-    __typename?: 'ServiceSettings';
-    thank_you_page_setting?: Maybe<ServiceThankYouPageSetting>;
-};
-export declare type ServiceThankYouPageSetting = {
-    __typename?: 'ServiceThankYouPageSetting';
-    id: Scalars['ID'];
-    url: Scalars['String'];
-    agency_setting: AgencyThankYouPageSetting;
-};
-export declare type AgencyThankYouPageSetting = {
-    __typename?: 'AgencyThankYouPageSetting';
-    id: Scalars['ID'];
-    url: Scalars['String'];
-};
-export declare type AgencySettings = {
-    __typename?: 'AgencySettings';
-    thank_you_page_setting?: Maybe<AgencyThankYouPageSetting>;
-};
-export declare type UserFilter = {
-    name?: Maybe<Scalars['String']>;
-    email_address?: Maybe<Scalars['String']>;
-};
-export declare type AgencyFilter = {
-    name?: Maybe<Scalars['String']>;
-};
-export declare type SubdomainFilter = {
-    name?: Maybe<Scalars['String']>;
-};
-export declare type ImageFilter = {
-    name?: Maybe<Scalars['String']>;
-    agency_id?: Maybe<Scalars['ID']>;
-};
-export declare type MarkdownFilter = {
-    name?: Maybe<Scalars['String']>;
-    agency_id?: Maybe<Scalars['ID']>;
-};
-export declare type ThemeFilter = {
-    name?: Maybe<Scalars['String']>;
-    agency_id?: Maybe<Scalars['String']>;
-};
 export declare type Mutation = {
     __typename?: 'Mutation';
     begin_visit: BeginVisitResult;
@@ -758,20 +311,153 @@ export declare type MutationUpdate_ThemeArgs = {
     color_error?: Maybe<Scalars['String']>;
     color_success?: Maybe<Scalars['String']>;
 };
-export declare type BeginVisitResult = MutationResult & {
-    __typename?: 'BeginVisitResult';
+export declare type SimpleResult = MutationResult & {
+    __typename?: 'SimpleResult';
     success: Scalars['Boolean'];
     message?: Maybe<Scalars['String']>;
-    jwt?: Maybe<Scalars['String']>;
+};
+export declare type Node = {
+    id: Scalars['ID'];
+    name: Scalars['String'];
 };
 export declare type MutationResult = {
     success: Scalars['Boolean'];
     message?: Maybe<Scalars['String']>;
 };
-export declare type SimpleResult = MutationResult & {
-    __typename?: 'SimpleResult';
+export declare type Connection = {
+    edges: Array<Edge>;
+};
+export declare type ConnectionEdgesArgs = {
+    ids?: Maybe<Array<Scalars['ID']>>;
+};
+export declare type Edge = {
+    cursor?: Maybe<Scalars['String']>;
+    node: Node;
+};
+export declare enum AccessLevel {
+    Owner = "OWNER",
+    Manager = "MANAGER",
+    Agent = "AGENT",
+    Client = "CLIENT",
+    Public = "PUBLIC"
+}
+export declare type Address = {
+    __typename?: 'Address';
+    city?: Maybe<Scalars['String']>;
+    country?: Maybe<Scalars['String']>;
+    line1?: Maybe<Scalars['String']>;
+    line2?: Maybe<Scalars['String']>;
+    postal_code?: Maybe<Scalars['String']>;
+    state?: Maybe<Scalars['String']>;
+};
+export declare type Charge = {
+    __typename?: 'Charge';
+    id: Scalars['ID'];
+    id_ext: Scalars['ID'];
+    amount: Scalars['Int'];
+    amount_capturable?: Maybe<Scalars['Int']>;
+    amount_received?: Maybe<Scalars['Int']>;
+    application_fee_amount?: Maybe<Scalars['Int']>;
+    authorization_code?: Maybe<Scalars['String']>;
+    balance_transaction?: Maybe<BalanceTransaction>;
+    billing_details?: Maybe<BillingDetails>;
+    calculated_statement_descriptor?: Maybe<Scalars['String']>;
+    captured?: Maybe<Scalars['Boolean']>;
+    created?: Maybe<Scalars['Date']>;
+    currency?: Maybe<Scalars['String']>;
+    customer?: Maybe<StripeCustomer>;
+    description?: Maybe<Scalars['String']>;
+    disputed?: Maybe<Scalars['Boolean']>;
+    failure_code?: Maybe<Scalars['String']>;
+    failure_message?: Maybe<Scalars['String']>;
+    fraud_details?: Maybe<FraudDetails>;
+    invoice?: Maybe<Scalars['String']>;
+    order?: Maybe<Scalars['String']>;
+    outcome?: Maybe<Outcome>;
+    paid?: Maybe<Scalars['Boolean']>;
+    payment_intent?: Maybe<PaymentIntent>;
+    payment_method?: Maybe<Scalars['String']>;
+    receipt_email?: Maybe<Scalars['String']>;
+    receipt_number?: Maybe<Scalars['String']>;
+    receipt_url?: Maybe<Scalars['String']>;
+    refunded?: Maybe<Scalars['Boolean']>;
+    source_transfer?: Maybe<Scalars['String']>;
+    statement_descriptor?: Maybe<Scalars['String']>;
+    statement_descriptor_suffix?: Maybe<Scalars['String']>;
+    status?: Maybe<Scalars['String']>;
+    transfer?: Maybe<Scalars['String']>;
+    transfer_group?: Maybe<Scalars['String']>;
+};
+export declare type BillingDetails = {
+    __typename?: 'BillingDetails';
+    address?: Maybe<Address>;
+    email?: Maybe<Scalars['String']>;
+    name?: Maybe<Scalars['String']>;
+    phone?: Maybe<Scalars['String']>;
+};
+export declare type FraudDetails = {
+    __typename?: 'FraudDetails';
+    stripe_report?: Maybe<Scalars['String']>;
+    user_report?: Maybe<Scalars['String']>;
+};
+export declare type Outcome = {
+    __typename?: 'Outcome';
+    network_status?: Maybe<Scalars['String']>;
+    reason?: Maybe<Scalars['String']>;
+    risk_level?: Maybe<Scalars['String']>;
+    risk_score?: Maybe<Scalars['Int']>;
+    rule?: Maybe<OutcomeRule>;
+    seller_message?: Maybe<Scalars['String']>;
+    type?: Maybe<Scalars['String']>;
+};
+export declare type OutcomeRule = {
+    __typename?: 'OutcomeRule';
+    action?: Maybe<Scalars['String']>;
+    id?: Maybe<Scalars['String']>;
+    predicate?: Maybe<Scalars['String']>;
+};
+export declare type PaymentIntent = {
+    __typename?: 'PaymentIntent';
+    id: Scalars['ID'];
+    id_ext: Scalars['ID'];
+    amount: Scalars['Int'];
+    amount_capturable?: Maybe<Scalars['Int']>;
+    amount_received?: Maybe<Scalars['Int']>;
+    application_fee_amount?: Maybe<Scalars['Int']>;
+    canceled_at?: Maybe<Scalars['Date']>;
+    cancellation_reason?: Maybe<Scalars['String']>;
+    capture_method?: Maybe<Scalars['String']>;
+    charges?: Maybe<Array<Maybe<Charge>>>;
+    confirmation_method?: Maybe<Scalars['String']>;
+    created?: Maybe<Scalars['Date']>;
+    currency?: Maybe<Scalars['String']>;
+    customer?: Maybe<StripeCustomer>;
+    description?: Maybe<Scalars['String']>;
+    invoice?: Maybe<Scalars['String']>;
+    on_behalf_of?: Maybe<Scalars['String']>;
+    payment_method?: Maybe<Scalars['String']>;
+    payment_method_types?: Maybe<Array<Maybe<Scalars['String']>>>;
+    receipt_email?: Maybe<Scalars['String']>;
+    setup_future_usage?: Maybe<Scalars['String']>;
+    shipping?: Maybe<Shipping>;
+    statement_descriptor?: Maybe<Scalars['String']>;
+    statement_descriptor_suffix?: Maybe<Scalars['String']>;
+    status?: Maybe<Scalars['String']>;
+    transfer_group?: Maybe<Scalars['String']>;
+};
+export declare type Shipping = {
+    __typename?: 'Shipping';
+    address?: Maybe<Address>;
+    carrier?: Maybe<Scalars['String']>;
+    name?: Maybe<Scalars['String']>;
+    phone?: Maybe<Scalars['String']>;
+    tracking_number?: Maybe<Scalars['String']>;
+};
+export declare type BeginVisitResult = MutationResult & {
+    __typename?: 'BeginVisitResult';
     success: Scalars['Boolean'];
     message?: Maybe<Scalars['String']>;
+    jwt?: Maybe<Scalars['String']>;
 };
 export declare type LogInResult = MutationResult & {
     __typename?: 'LogInResult';
@@ -779,10 +465,35 @@ export declare type LogInResult = MutationResult & {
     message?: Maybe<Scalars['String']>;
     jwt?: Maybe<Scalars['String']>;
 };
-export declare type ImageInput = {
+export declare type User = Node & {
+    __typename?: 'User';
+    id: Scalars['ID'];
     name: Scalars['String'];
-    data: Scalars['String'];
-    color: Scalars['String'];
+    email_address: Scalars['String'];
+    memberships: Array<Membership>;
+};
+export declare type UserMembershipsArgs = {
+    filter?: Maybe<MembershipFilter>;
+};
+export declare type UserFilter = {
+    name?: Maybe<Scalars['String']>;
+    email_address?: Maybe<Scalars['String']>;
+};
+export declare type Agency = Node & {
+    __typename?: 'Agency';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    stripe_account: StripeAccount;
+    subdomain: Subdomain;
+    theme: Theme;
+    services?: Maybe<Array<Service>>;
+    settings: AgencySettings;
+};
+export declare type AgencyServicesArgs = {
+    filter?: Maybe<ServiceFilter>;
+};
+export declare type AgencyFilter = {
+    name?: Maybe<Scalars['String']>;
 };
 export declare type CreateAgencyResult = MutationResult & {
     __typename?: 'CreateAgencyResult';
@@ -797,11 +508,36 @@ export declare type DeleteAgencyResult = MutationResult & {
     message?: Maybe<Scalars['String']>;
     agency?: Maybe<Agency>;
 };
+export declare type AgencySettings = {
+    __typename?: 'AgencySettings';
+    id: Scalars['ID'];
+    thank_you_page_setting?: Maybe<AgencyThankYouPageSetting>;
+};
+export declare type AgencyThankYouPageSetting = {
+    __typename?: 'AgencyThankYouPageSetting';
+    id: Scalars['ID'];
+    url: Scalars['String'];
+};
 export declare type AgencyThankYouPageSettingMutationResult = MutationResult & {
     __typename?: 'AgencyThankYouPageSettingMutationResult';
     success: Scalars['Boolean'];
     message?: Maybe<Scalars['String']>;
     setting?: Maybe<AgencyThankYouPageSetting>;
+};
+export declare type Price = Node & {
+    __typename?: 'Price';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    status: Scalars['String'];
+    type: Scalars['String'];
+    unit_amount: Scalars['Int'];
+    currency: Scalars['String'];
+    recurring_interval?: Maybe<Scalars['String']>;
+    recurring_interval_count?: Maybe<Scalars['Int']>;
+    service_variant: ServiceVariant;
+};
+export declare type PriceFilter = {
+    service_variant_id?: Maybe<Scalars['ID']>;
 };
 export declare type PriceMutationResult = MutationResult & {
     __typename?: 'PriceMutationResult';
@@ -815,11 +551,191 @@ export declare type CreateStripeCheckoutSessionResult = MutationResult & {
     message?: Maybe<Scalars['String']>;
     checkout_session_id?: Maybe<Scalars['String']>;
 };
+export declare type StripeAccount = {
+    __typename?: 'StripeAccount';
+    id: Scalars['ID'];
+    id_ext: Scalars['ID'];
+    account_update_url: StripeAccountLink;
+    balance: StripeBalance;
+    balance_transactions: Array<BalanceTransaction>;
+    payment_intents: Array<PaymentIntent>;
+    customers: Array<StripeCustomer>;
+    business_profile: BusinessProfile;
+    business_type?: Maybe<Scalars['String']>;
+    capabilities: StripeCapabilities;
+    requirements: StripeRequirements;
+    settings: StripeSettings;
+    charges_enabled: Scalars['Boolean'];
+    country: Scalars['String'];
+    created: Scalars['Date'];
+    default_currency?: Maybe<Scalars['String']>;
+    details_submitted: Scalars['Boolean'];
+    email?: Maybe<Scalars['String']>;
+    payouts_enabled: Scalars['Boolean'];
+};
+export declare type StripeAccountBalance_TransactionsArgs = {
+    payout_id?: Maybe<Scalars['ID']>;
+    type?: Maybe<Scalars['String']>;
+    available_on?: Maybe<Scalars['Date']>;
+    created?: Maybe<Scalars['Date']>;
+    currency?: Maybe<Scalars['String']>;
+    starting_after_id?: Maybe<Scalars['String']>;
+    ending_before_id?: Maybe<Scalars['String']>;
+    limit?: Maybe<Scalars['Int']>;
+};
+export declare type StripeAccountPayment_IntentsArgs = {
+    customer_id?: Maybe<Scalars['ID']>;
+    created?: Maybe<Scalars['Date']>;
+    starting_after_id?: Maybe<Scalars['String']>;
+    ending_before_id?: Maybe<Scalars['String']>;
+    limit?: Maybe<Scalars['Int']>;
+};
+export declare type StripeAccountCustomersArgs = {
+    email?: Maybe<Scalars['String']>;
+    created?: Maybe<Scalars['Date']>;
+    starting_after_id?: Maybe<Scalars['String']>;
+    ending_before_id?: Maybe<Scalars['String']>;
+    limit?: Maybe<Scalars['Int']>;
+};
+export declare type BusinessProfile = {
+    __typename?: 'BusinessProfile';
+    mcc?: Maybe<Scalars['String']>;
+    name?: Maybe<Scalars['String']>;
+    product_description?: Maybe<Scalars['String']>;
+    support_address?: Maybe<Scalars['String']>;
+    support_email?: Maybe<Scalars['String']>;
+    support_phone?: Maybe<Scalars['String']>;
+    support_url?: Maybe<Scalars['String']>;
+    url?: Maybe<Scalars['String']>;
+};
+export declare type StripeCapabilities = {
+    __typename?: 'StripeCapabilities';
+    card_payments?: Maybe<Scalars['String']>;
+    transfers?: Maybe<Scalars['String']>;
+};
+export declare type StripeRequirements = {
+    __typename?: 'StripeRequirements';
+    current_deadline?: Maybe<Scalars['String']>;
+    disabled_reason?: Maybe<Scalars['String']>;
+    currently_due: Array<Maybe<Scalars['String']>>;
+    eventually_due: Array<Maybe<Scalars['String']>>;
+    past_due: Array<Maybe<Scalars['String']>>;
+    pending_verification: Array<Maybe<Scalars['String']>>;
+};
+export declare type StripeSettings = {
+    __typename?: 'StripeSettings';
+    branding?: Maybe<StripeBranding>;
+};
+export declare type StripeBranding = {
+    __typename?: 'StripeBranding';
+    icon?: Maybe<Scalars['String']>;
+    logo?: Maybe<Scalars['String']>;
+    primary_color?: Maybe<Scalars['String']>;
+    secondary_color?: Maybe<Scalars['String']>;
+};
+export declare type StripeAccountLink = {
+    __typename?: 'StripeAccountLink';
+    type: Scalars['String'];
+    url: Scalars['String'];
+    created: Scalars['Date'];
+    expires_at: Scalars['Date'];
+};
+export declare type StripeBalance = {
+    __typename?: 'StripeBalance';
+    available: Array<StripeCurrencyBalance>;
+    pending: Array<StripeCurrencyBalance>;
+    connect_reserved?: Maybe<Array<StripeCurrencyBalance>>;
+    instant_available?: Maybe<Array<StripeCurrencyBalance>>;
+};
+export declare type StripeCurrencyBalance = {
+    __typename?: 'StripeCurrencyBalance';
+    amount: Scalars['Int'];
+    currency: Scalars['String'];
+    source_types: StripeBalanceSource;
+};
+export declare type StripeBalanceSource = {
+    __typename?: 'StripeBalanceSource';
+    bank_account?: Maybe<Scalars['Int']>;
+    card?: Maybe<Scalars['Int']>;
+};
+export declare type StripeCustomer = {
+    __typename?: 'StripeCustomer';
+    id: Scalars['ID'];
+    id_ext: Scalars['ID'];
+    address?: Maybe<Address>;
+    balance?: Maybe<Scalars['Int']>;
+    created?: Maybe<Scalars['Date']>;
+    currency?: Maybe<Scalars['String']>;
+    delinquent?: Maybe<Scalars['Boolean']>;
+    description?: Maybe<Scalars['String']>;
+    email?: Maybe<Scalars['String']>;
+    invoice_prefix?: Maybe<Scalars['String']>;
+    name?: Maybe<Scalars['String']>;
+    next_invoice_sequence?: Maybe<Scalars['Int']>;
+    phone?: Maybe<Scalars['String']>;
+    preferred_locales?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+export declare type BalanceTransaction = {
+    __typename?: 'BalanceTransaction';
+    id: Scalars['ID'];
+    id_ext: Scalars['ID'];
+    amount: Scalars['Int'];
+    available_on: Scalars['Date'];
+    created: Scalars['Date'];
+    exchange_rate?: Maybe<Scalars['Float']>;
+    currency: Scalars['String'];
+    description?: Maybe<Scalars['String']>;
+    fee: Scalars['Int'];
+    fee_details?: Maybe<Array<BalanceTransactionFeeDetails>>;
+    net: Scalars['Int'];
+    status: Scalars['String'];
+    reporting_category: Scalars['String'];
+    type: Scalars['String'];
+    source: Scalars['String'];
+};
+export declare type BalanceTransactionFeeDetails = {
+    __typename?: 'BalanceTransactionFeeDetails';
+    amount: Scalars['Int'];
+    application?: Maybe<Scalars['String']>;
+    currency: Scalars['String'];
+    description?: Maybe<Scalars['String']>;
+    type: Scalars['String'];
+};
+export declare type Service = Node & {
+    __typename?: 'Service';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    url_name: Scalars['String'];
+    status: Scalars['String'];
+    agency: Agency;
+    default_variant: ServiceVariant;
+    variants?: Maybe<Array<ServiceVariant>>;
+    settings: ServiceSettings;
+};
+export declare type ServiceVariantsArgs = {
+    filter?: Maybe<ServiceVariantFilter>;
+};
+export declare type ServiceFilter = {
+    name?: Maybe<Scalars['String']>;
+    agency_id?: Maybe<Scalars['ID']>;
+    url_name?: Maybe<Scalars['String']>;
+};
 export declare type ServiceMutationResult = MutationResult & {
     __typename?: 'ServiceMutationResult';
     success: Scalars['Boolean'];
     message?: Maybe<Scalars['String']>;
     service?: Maybe<Service>;
+};
+export declare type ServiceSettings = {
+    __typename?: 'ServiceSettings';
+    id: Scalars['ID'];
+    thank_you_page_setting?: Maybe<ServiceThankYouPageSetting>;
+};
+export declare type ServiceThankYouPageSetting = {
+    __typename?: 'ServiceThankYouPageSetting';
+    id: Scalars['ID'];
+    url: Scalars['String'];
+    agency_setting: AgencyThankYouPageSetting;
 };
 export declare type ServiceThankYouPageSettingMutationResult = MutationResult & {
     __typename?: 'ServiceThankYouPageSettingMutationResult';
@@ -827,11 +743,63 @@ export declare type ServiceThankYouPageSettingMutationResult = MutationResult & 
     message?: Maybe<Scalars['String']>;
     setting?: Maybe<ServiceThankYouPageSetting>;
 };
+export declare type ServiceVariant = Node & {
+    __typename?: 'ServiceVariant';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    status: Scalars['String'];
+    description?: Maybe<Scalars['String']>;
+    duration?: Maybe<Scalars['String']>;
+    default_price?: Maybe<Price>;
+    service: Service;
+    prices?: Maybe<Array<Price>>;
+    image_logo?: Maybe<Image>;
+    image_hero?: Maybe<Image>;
+    markdown_description?: Maybe<Markdown>;
+};
+export declare type ServiceVariantPricesArgs = {
+    filter?: Maybe<PriceFilter>;
+};
+export declare type ServiceVariantFilter = {
+    name?: Maybe<Scalars['String']>;
+    service_id?: Maybe<Scalars['ID']>;
+};
 export declare type ServiceVariantMutationResult = MutationResult & {
     __typename?: 'ServiceVariantMutationResult';
     success: Scalars['Boolean'];
     message?: Maybe<Scalars['String']>;
     service_variant?: Maybe<ServiceVariant>;
+};
+export declare type Subdomain = Node & {
+    __typename?: 'Subdomain';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    agency: Agency;
+    memberships: Array<Membership>;
+};
+export declare type SubdomainMembershipsArgs = {
+    filter?: Maybe<MembershipFilter>;
+};
+export declare type SubdomainFilter = {
+    name?: Maybe<Scalars['String']>;
+};
+export declare type Image = Node & {
+    __typename?: 'Image';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    data: Scalars['String'];
+    color: Scalars['String'];
+    agency?: Maybe<Agency>;
+    access: AccessLevel;
+};
+export declare type ImageInput = {
+    name: Scalars['String'];
+    data: Scalars['String'];
+    color: Scalars['String'];
+};
+export declare type ImageFilter = {
+    name?: Maybe<Scalars['String']>;
+    agency_id?: Maybe<Scalars['ID']>;
 };
 export declare type ImageMutationResult = MutationResult & {
     __typename?: 'ImageMutationResult';
@@ -839,27 +807,61 @@ export declare type ImageMutationResult = MutationResult & {
     message?: Maybe<Scalars['String']>;
     image?: Maybe<Image>;
 };
+export declare type Markdown = Node & {
+    __typename?: 'Markdown';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    data: Scalars['String'];
+    agency?: Maybe<Agency>;
+    access: AccessLevel;
+};
+export declare type MarkdownFilter = {
+    name?: Maybe<Scalars['String']>;
+    agency_id?: Maybe<Scalars['ID']>;
+};
 export declare type MarkdownMutationResult = MutationResult & {
     __typename?: 'MarkdownMutationResult';
     success: Scalars['Boolean'];
     message?: Maybe<Scalars['String']>;
     markdown?: Maybe<Markdown>;
 };
+export declare type Membership = Node & {
+    __typename?: 'Membership';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    access: AccessLevel;
+    user: User;
+    subdomain: Subdomain;
+};
+export declare type MembershipFilter = {
+    access?: Maybe<AccessLevel>;
+    user_id?: Maybe<Scalars['ID']>;
+    subdomain_id?: Maybe<Scalars['ID']>;
+};
+export declare type Theme = Node & {
+    __typename?: 'Theme';
+    id: Scalars['ID'];
+    agency: Agency;
+    name: Scalars['String'];
+    image_logo?: Maybe<Image>;
+    image_hero?: Maybe<Image>;
+    color_primary?: Maybe<Scalars['String']>;
+    color_secondary?: Maybe<Scalars['String']>;
+    color_accent?: Maybe<Scalars['String']>;
+    color_background?: Maybe<Scalars['String']>;
+    color_surface?: Maybe<Scalars['String']>;
+    color_error?: Maybe<Scalars['String']>;
+    color_success?: Maybe<Scalars['String']>;
+};
+export declare type ThemeFilter = {
+    name?: Maybe<Scalars['String']>;
+    agency_id?: Maybe<Scalars['String']>;
+};
 export declare type UpdateThemeResult = MutationResult & {
     __typename?: 'UpdateThemeResult';
     success: Scalars['Boolean'];
     message?: Maybe<Scalars['String']>;
     theme?: Maybe<Theme>;
-};
-export declare type Connection = {
-    edges: Array<Edge>;
-};
-export declare type ConnectionEdgesArgs = {
-    ids?: Maybe<Array<Scalars['ID']>>;
-};
-export declare type Edge = {
-    cursor?: Maybe<Scalars['String']>;
-    node: Node;
 };
 export declare type Stripe_AccountFragment = ({
     __typename?: 'StripeAccount';
@@ -998,6 +1000,9 @@ export declare type ServiceFragment = ({
     variants?: Maybe<Array<({
         __typename?: 'ServiceVariant';
     } & Service_VariantFragment)>>;
+    settings: ({
+        __typename?: 'ServiceSettings';
+    } & Pick<ServiceSettings, 'id'>);
 });
 export declare type MembershipFragment = ({
     __typename?: 'Membership';
@@ -1022,6 +1027,9 @@ export declare type AgencyFragment = ({
     theme: ({
         __typename?: 'Theme';
     } & ThemeFragment);
+    settings: ({
+        __typename?: 'AgencySettings';
+    } & Pick<AgencySettings, 'id'>);
 });
 export declare type SubdomainFragment = ({
     __typename?: 'Subdomain';
@@ -1584,7 +1592,7 @@ export declare type AgencyThankYouPageSettingQuery = ({
     } & Pick<Agency, 'id'> & {
         settings: ({
             __typename?: 'AgencySettings';
-        } & {
+        } & Pick<AgencySettings, 'id'> & {
             thank_you_page_setting?: Maybe<({
                 __typename?: 'AgencyThankYouPageSetting';
             } & Pick<AgencyThankYouPageSetting, 'id' | 'url'>)>;
@@ -1602,7 +1610,7 @@ export declare type ServiceThankYouPageSettingQuery = ({
     } & Pick<Service, 'id'> & {
         settings: ({
             __typename?: 'ServiceSettings';
-        } & {
+        } & Pick<ServiceSettings, 'id'> & {
             thank_you_page_setting?: Maybe<({
                 __typename?: 'ServiceThankYouPageSetting';
             } & Pick<ServiceThankYouPageSetting, 'id' | 'url'>)>;

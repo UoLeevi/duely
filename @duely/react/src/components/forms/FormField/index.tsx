@@ -132,7 +132,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
 
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="absolute right-0 mr-3 text-gray-600 pointer-events-none"
+            className="absolute right-0 w-5 h-5 mr-3 text-gray-600 pointer-events-none"
             viewBox="0 0 20 20"
             fill="currentColor"
           >

@@ -283,6 +283,9 @@ fragment service on Service {
   variants {
     ...service_variant
   }
+  settings {
+    id
+  }
 }
 
 fragment membership on Membership {
@@ -308,6 +311,9 @@ fragment agency on Agency {
   }
   theme {
     ...theme
+  }
+  settings {
+    id
   }
 }
 

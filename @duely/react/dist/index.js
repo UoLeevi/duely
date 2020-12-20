@@ -1028,7 +1028,7 @@ function FormField(_a) {
             })) !== null && _c !== void 0 ? _c : [];
             element = (react_1.default.createElement("div", { className: "relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5" },
                 react_1.default.createElement("select", Object.assign({ id: name, name: name, ref: form.register(validateRule), className: "w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none", spellCheck: "false", autoComplete: "off" }, props), children),
-                react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", className: "absolute right-0 mr-3 text-gray-600 pointer-events-none", viewBox: "0 0 20 20", fill: "currentColor" },
+                react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", className: "absolute right-0 w-5 h-5 mr-3 text-gray-600 pointer-events-none", viewBox: "0 0 20 20", fill: "currentColor" },
                     react_1.default.createElement("path", { fillRule: "evenodd", d: "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z", clipRule: "evenodd" }))));
             break;
         }

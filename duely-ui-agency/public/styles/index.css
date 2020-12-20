@@ -1921,10 +1921,6 @@ html, body, #root {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 
-.underline-highlight-accent {
-  box-shadow: inset 0 -0.15em 0 0 #fff, inset 0 -0.375em 0 0 var(--color-accent-0\.3);
-}
-
 @media (min-width: 640px) {
   .sm\:flex-row {
     flex-direction: row;
