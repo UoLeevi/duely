@@ -5,6 +5,7 @@ import { AuthenticationError } from 'apollo-server-core';
 export const AgencySettings = {
   typeDef: `
     type AgencySettings {
+      id: ID!
       thank_you_page_setting: AgencyThankYouPageSetting
     }
 
@@ -27,6 +28,7 @@ export const AgencySettings = {
   `,
   resolvers: {
     AgencySettings: {
+      id: (source) => `set${source.agency_id}_x`,
       ...createResolverForReferencedResource({ name: 'thank_you_page_setting', resource_name: 'agency thank you page setting', reverse: true, column_name: 'agency_id' }),
     },
     Mutation: {

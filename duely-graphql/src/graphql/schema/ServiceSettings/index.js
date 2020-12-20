@@ -5,6 +5,7 @@ import { AuthenticationError } from 'apollo-server-core';
 export const ServiceSettings = {
   typeDef: `
     type ServiceSettings {
+      id: ID!
       thank_you_page_setting: ServiceThankYouPageSetting
     }
 
@@ -28,6 +29,7 @@ export const ServiceSettings = {
   `,
   resolvers: {
     ServiceSettings: {
+      id: (source) => `set${source.service_id}_x`,
       ...createResolverForReferencedResource({ name: 'thank_you_page_setting', resource_name: 'service thank you page setting', reverse: true, column_name: 'service_id' }),
     },
     ServiceThankYouPageSetting: {
