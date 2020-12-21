@@ -32,7 +32,7 @@ spec:
           secretName: duely-graphql-secret
       containers:
       - name: duely-graphql
-        image: uoleevi/duely-graphql:v0.104.0
+        image: uoleevi/duely-graphql:v0.104.1
         resources:
           requests:
             memory: 64Mi
@@ -76,7 +76,7 @@ spec:
               key: stripe-sk_live
         livenessProbe:
           httpGet:
-            path: /.well-known/apollo/server-health
+            path: /.well-known/server-health
             port: 8080
           failureThreshold: 6
           initialDelaySeconds: 60
@@ -85,7 +85,7 @@ spec:
           timeoutSeconds: 5
         readinessProbe:
           httpGet:
-            path: /.well-known/apollo/server-health
+            path: /.well-known/server-health
             port: 8080
           failureThreshold: 3
           initialDelaySeconds: 5

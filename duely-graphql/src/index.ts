@@ -22,6 +22,8 @@ app.use(
   })
 );
 
+app.get('/.well-known/server-health', (req, res) => res.send('ok'));
+
 app.listen(process.env.PORT, () => {
   console.log(`🚀 Server ready at http://localhost:${process.env.PORT}/graphql`);
   // console.log(`🚀 Subscriptions ready at ws://localhost:${process.env.PORT}${apollo.subscriptionsPath}`);
