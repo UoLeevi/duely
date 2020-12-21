@@ -32,7 +32,7 @@ spec:
           secretName: duely-checkout-secret
       containers:
       - name: duely-checkout
-        image: uoleevi/duely-checkout:v0.2.5
+        image: uoleevi/duely-checkout:v0.2.6
         resources:
           requests:
             memory: 64Mi
@@ -67,21 +67,21 @@ spec:
             secretKeyRef:
               name: duely-checkout-secret
               key: duely-serviceaccount-password
-        # livenessProbe:
-        #   httpGet:
-        #     path: /.well-known/apollo/server-health
-        #     port: 8080
-        #   failureThreshold: 6
-        #   initialDelaySeconds: 60
-        #   periodSeconds: 10
-        #   successThreshold: 1
-        #   timeoutSeconds: 5
-        # readinessProbe:
-        #   httpGet:
-        #     path: /.well-known/apollo/server-health
-        #     port: 8080
-        #   failureThreshold: 3
-        #   initialDelaySeconds: 5
-        #   periodSeconds: 5
-        #   successThreshold: 1
-        #   timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /.well-known/server-health
+            port: 8080
+          failureThreshold: 6
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /.well-known/server-health
+            port: 8080
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3

@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import fs from 'fs';
 import validator from 'validator';
@@ -66,7 +66,7 @@ const gql_create_stripe_checkout_session = gql`
 setupEnvironment();
 main();
 
-let client;
+let client: GraphQLClient;
 
 async function main() {
   client = await createGraphQLClient();
@@ -75,6 +75,7 @@ async function main() {
   app.use(cors());
   app.get('/checkout/:subdomain_name/services/:service_url_name', get_checkout);
   app.get('/checkout/:service_url_name', get_checkout);
+  app.get('/.well-known/server-health', (req, res) => res.send('ok'));
 
   app.listen({ port: process.env.PORT }, () => {
     console.log(`🚀 Server ready at http://localhost:${process.env.PORT}`);
@@ -88,15 +89,17 @@ async function createGraphQLClient() {
   const { begin_visit } = await client.request(gql_begin_visit);
 
   if (!begin_visit.success) {
-    throw new Error("Unable to get access token.");
+    throw new Error('Unable to get access token.');
   }
 
   client.setHeader('authorization', `Bearer ${begin_visit.jwt}`);
 
-  const { log_in } = await client.request(gql_log_in_serviceaccount, { password: process.env.DUELY_SERVICE_ACCOUNT_PASSWORD });
+  const { log_in } = await client.request(gql_log_in_serviceaccount, {
+    password: process.env.DUELY_SERVICE_ACCOUNT_PASSWORD
+  });
 
   if (!log_in.success) {
-    throw new Error("Unable to get access token.");
+    throw new Error('Unable to get access token.');
   }
 
   client.setHeader('authorization', `Bearer ${log_in.jwt}`);
@@ -106,6 +109,8 @@ async function createGraphQLClient() {
 
 function setupEnvironment() {
   if (!process.env.STRIPE_PK_TEST) {
+    if (!process.env.STRIPECONFIGFILE) throw new Error('Invalid configuration.');
+
     const config = JSON.parse(fs.readFileSync(process.env.STRIPECONFIGFILE, 'utf8'));
     process.env = {
       ...config.env,
@@ -114,17 +119,16 @@ function setupEnvironment() {
   }
 }
 
-async function get_checkout(req, res) {
+async function get_checkout(req: Request, res: Response) {
   let subdomain_name = req.params.subdomain_name;
 
   if (subdomain_name == null) {
-
     const domain = req.hostname;
 
     if (!domain.endsWith('.duely.app')) {
-      throw new Error("Invalid reverse proxy configuration.");
+      throw new Error('Invalid reverse proxy configuration.');
     }
-  
+
     subdomain_name = req.hostname.split('.duely.app')[0];
   }
 
@@ -132,8 +136,7 @@ async function get_checkout(req, res) {
   let stripe_id_ext;
 
   try {
-    const { subdomains } = await client.request(
-      gql_subdomain, { subdomain_name });
+    const { subdomains } = await client.request(gql_subdomain, { subdomain_name });
 
     if (subdomains.length != 1) {
       res.sendStatus(404);
@@ -154,8 +157,7 @@ async function get_checkout(req, res) {
   const service_url_name = req.params.service_url_name;
 
   try {
-    const { services } = await client.request(
-      gql_service, { agency_id, service_url_name });
+    const { services } = await client.request(gql_service, { agency_id, service_url_name });
 
     if (services.length != 1) {
       res.sendStatus(404);
@@ -170,7 +172,10 @@ async function get_checkout(req, res) {
   }
 
   let checkout_session_id;
-  const requestArgs = [gql_create_stripe_checkout_session, { price_id }];
+  const requestArgs: [string, { price_id: string }, { authorization: string }?] = [
+    gql_create_stripe_checkout_session,
+    { price_id }
+  ];
   const { access_token } = req.query ?? {};
 
   if (access_token) {

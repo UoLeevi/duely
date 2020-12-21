@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { GraphQLClient, gql } from 'graphql-request';
 
@@ -35,7 +35,7 @@ const gql_image = gql`
 
 main();
 
-let client;
+let client: GraphQLClient;
 
 async function main() {
   client = await createGraphQLClient();
@@ -44,6 +44,7 @@ async function main() {
   app.use(cors());
   app.get('/asset/:subdomain_name/image/:image_id', get_image);
   app.get('/asset/image/:image_id', get_image);
+  app.get('/.well-known/server-health', (req, res) => res.send('ok'));
 
   app.listen({ port: process.env.PORT }, () => {
     console.log(`🚀 Server ready at http://localhost:${process.env.PORT}`);
@@ -73,8 +74,8 @@ async function createGraphQLClient() {
   return client;
 }
 
-async function get_image(req, res) {
-  const requestArgs = [gql_image, { image_id: req.params.image_id }];
+async function get_image(req: Request, res: Response) {
+  const requestArgs: [string, { image_id: string }, { authorization: string }?] = [gql_image, { image_id: req.params.image_id }];
   const { access_token } = req.query ?? {};
 
   if (access_token) {
