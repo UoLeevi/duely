@@ -1,5 +1,4 @@
 import { withConnection } from '../../db';
-import { AuthenticationError } from 'apollo-server-core';
 
 export default {
   typeDef: `
@@ -11,7 +10,7 @@ export default {
     AgencySubjectsConnection: {
       async edges(connection, { uuids }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         if (connection.subjectType === 'visitor')
           return [];
@@ -41,7 +40,7 @@ export default {
                 type: 'AgencySubjectsEdge'
               }));
             } catch (error) {
-              throw new AuthenticationError(error.message);
+              throw new Error(error.message);
             }
           });
         });

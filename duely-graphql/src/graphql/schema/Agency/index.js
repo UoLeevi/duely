@@ -1,6 +1,5 @@
 import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../util';
-import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 import stripe from '../../../stripe';
 import { validateAndReadDataUrlAsBuffer } from '../Image';
@@ -53,7 +52,7 @@ export const Agency = {
     Agency: {
       async stripe_account(source, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           const stripe_account = await withConnection(context, async withSession => {
@@ -79,7 +78,7 @@ export const Agency = {
     Mutation: {
       async create_agency(obj, { name, subdomain_name, country_code, image_logo, return_url }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         // validate subdomain name
         const reservedSubdomains = ['api', 'test', 'example', 'admin'];
@@ -228,7 +227,7 @@ export const Agency = {
       },
       async delete_agency(obj, { agency_id }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {

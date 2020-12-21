@@ -1,9 +1,8 @@
 import { withConnection } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
 
 export default async function editService(obj, { serviceUuid, name, description, duration, price, currency, imageLogoUuid, imageHeroUuid }, context, info) {
   if (!context.jwt)
-    throw new AuthenticationError('Unauthorized');
+    throw new Error('Unauthorized');
 
   // validate currency arguments
   currency = currency != null ? currency.toLowerCase() : currency;

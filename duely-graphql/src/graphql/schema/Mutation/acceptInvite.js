@@ -1,9 +1,8 @@
 import { withConnection } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
 
 export default async function acceptInvite(obj, { inviteUuid }, context, info) {
   if (!context.jwt)
-    throw new AuthenticationError('Unauthorized');
+    throw new Error('Unauthorized');
 
   return await withConnection(context, async withSession => {
     return await withSession(async client => {

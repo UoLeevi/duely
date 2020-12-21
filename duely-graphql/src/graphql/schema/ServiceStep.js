@@ -1,5 +1,4 @@
 import { withConnection } from '../../db';
-import { AuthenticationError } from 'apollo-server-core';
 
 export default {
   typeDef: `
@@ -26,7 +25,7 @@ export default {
       type: serviceStep => serviceStep.type_.toUpperCase(),
       async previous(serviceStep, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         if (serviceStep.previous_service_step_uuid_ === null)
           return null;
@@ -37,14 +36,14 @@ export default {
               const res = await client.query('SELECT * FROM operation_.query_service_step_($1::uuid)', [serviceStep.previous_service_step_uuid_]);
               return res.rows.length === 1 ? res.rows[0] : null;
             } catch (error) {
-              throw new AuthenticationError(error.message);
+              throw new Error(error.message);
             }
           });
         });
       },
       async service(serviceStep, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         return await withConnection(context, async withSession => {
           return await withSession(async client => {
@@ -52,7 +51,7 @@ export default {
               const res = await client.query('SELECT * FROM operation_.query_service_($1::uuid)', [serviceStep.service_uuid_]);
               return res.rows[0];
             } catch (error) {
-              throw new AuthenticationError(error.message);
+              throw new Error(error.message);
             }
           });
         });

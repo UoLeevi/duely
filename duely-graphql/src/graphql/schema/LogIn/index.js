@@ -1,5 +1,4 @@
 import { withConnection } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
 
 export const LogIn = {
   typeDef: `
@@ -18,7 +17,7 @@ export const LogIn = {
     Mutation: {
       async log_in(obj, { email_address, password }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {
@@ -41,7 +40,7 @@ export const LogIn = {
       },
       async log_out(obj, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {

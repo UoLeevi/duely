@@ -1,5 +1,4 @@
 import { withConnection } from '../../db';
-import { AuthenticationError } from 'apollo-server-core';
 
 export default {
   typeDef: `
@@ -15,7 +14,7 @@ export default {
       name: source => source.name_,
       async agency(subdomain, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         return await withConnection(context, async withSession => {
           return await withSession(async client => {
@@ -23,7 +22,7 @@ export default {
               const res = await client.query('SELECT * FROM operation_.query_agency_by_subdomain_name_($1::text)', [subdomain.name_]);
               return res.rows[0];
             } catch (error) {
-              throw new AuthenticationError(error.message);
+              throw new Error(error.message);
             }
           });
         });

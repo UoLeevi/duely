@@ -1,4 +1,3 @@
-import { AuthenticationError } from 'apollo-server-core';
 import stripe from '../../../stripe';
 
 let countryCodesPromise = null;
@@ -31,7 +30,7 @@ export const Country = {
     Query: {
       async country_codes(source, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         if (countryCodesPromise === null) {
           countryCodesPromise = fetchCountryCodes();

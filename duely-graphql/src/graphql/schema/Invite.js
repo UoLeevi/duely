@@ -1,5 +1,4 @@
 import { withConnection } from '../../db';
-import { AuthenticationError } from 'apollo-server-core';
 
 export default {
   typeDef: `
@@ -20,7 +19,7 @@ export default {
       inviteeEmailAddress: source => source.invitee_email_address_,
       async agency(invite, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         return await withConnection(context, async withSession => {
           return await withSession(async client => {
@@ -28,14 +27,14 @@ export default {
               const res = await client.query('SELECT * FROM operation_.query_agency_($1::uuid)', [invite.agency_uuid_]);
               return res.rows[0];
             } catch (error) {
-              throw new AuthenticationError(error.message);
+              throw new Error(error.message);
             }
           });
         });
       },
       async role(invite, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         return await withConnection(context, async withSession => {
           return await withSession(async client => {
@@ -43,7 +42,7 @@ export default {
               const res = await client.query('SELECT * FROM operation_.query_role_($1::uuid)', [invite.role_uuid_]);
               return res.rows[0];
             } catch (error) {
-              throw new AuthenticationError(error.message);
+              throw new Error(error.message);
             }
           });
         });

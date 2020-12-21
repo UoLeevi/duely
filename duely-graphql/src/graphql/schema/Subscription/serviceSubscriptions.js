@@ -1,6 +1,5 @@
 import { withFilter } from 'apollo-server-express';
 import { addBackgroundJob, pool } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
 import pubsub from '../../pubsub';
 
 const SERVICE_CREATED = 'SERVICE_CREATED';
@@ -36,7 +35,7 @@ const serviceCreated = {
     () => pubsub.asyncIterator(SERVICE_CREATED),
     async (obj, args, context, info) => {
       if (!context.jwt)
-        throw new AuthenticationError('Unauthorized');
+        throw new Error('Unauthorized');
 
       return await withConnection(context, async withSession => {
         return await withSession(async client => {
@@ -62,7 +61,7 @@ const serviceCreated = {
           const res = await client.query('SELECT * FROM operation_.query_service_($1::uuid)', [obj.uuid_]);
           return res.rows[0];
         } catch (error) {
-          throw new AuthenticationError(error.message);
+          throw new Error(error.message);
         }
       });
     });
@@ -74,7 +73,7 @@ const serviceUpdated = {
     () => pubsub.asyncIterator(SERVICE_UPDATED),
     (obj, { serviceUuids }, context, info) => {
       if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
       return serviceUuids.includes(obj.uuid_);
     }
@@ -86,7 +85,7 @@ const serviceUpdated = {
           const res = await client.query('SELECT * FROM operation_.query_service_($1::uuid)', [obj.uuid_]);
           return res.rows[0];
         } catch (error) {
-          throw new AuthenticationError(error.message);
+          throw new Error(error.message);
         }
       });
     });
@@ -98,7 +97,7 @@ const serviceDeleted = {
     () => pubsub.asyncIterator(SERVICE_DELETED),
     (obj, { serviceUuids }, context, info) => {
       if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
       return serviceUuids.includes(obj.uuid_);
     }

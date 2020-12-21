@@ -1,5 +1,4 @@
 import { withConnection } from '../db';
-import { AuthenticationError } from 'apollo-server-core';
 
 // Not yet used
 export async function withCache(context, key, fetch) {
@@ -25,7 +24,7 @@ export function createDefaultQueryResolversForResource({ table_name, name, plura
   return {
     async [table_name ?? name](source, args, context, info) {
       if (!context.jwt)
-        throw new AuthenticationError('Unauthorized');
+        throw new Error('Unauthorized');
 
       try {
         return await withConnection(context, async withSession => {
@@ -39,7 +38,7 @@ export function createDefaultQueryResolversForResource({ table_name, name, plura
     },
     async [plural ?? (table_name ?? name) + 's'](source, args, context, info) {
       if (!context.jwt)
-        throw new AuthenticationError('Unauthorized');
+        throw new Error('Unauthorized');
 
       try {
         return await withConnection(context, async withSession => {
@@ -64,7 +63,7 @@ export function createResolverForReferencedResource({ name, resource_name, colum
   return {
     async [name](source, args, context, info) {
       if (!context.jwt)
-        throw new AuthenticationError('Unauthorized');
+        throw new Error('Unauthorized');
 
       try {
         return await withConnection(context, async withSession => {
@@ -86,7 +85,7 @@ export function createResolverForReferencedResourceAll({ name, resource_name, co
   return {
     async [name](source, args, context, info) {
       if (!context.jwt)
-        throw new AuthenticationError('Unauthorized');
+        throw new Error('Unauthorized');
 
       try {
         return await withConnection(context, async withSession => {

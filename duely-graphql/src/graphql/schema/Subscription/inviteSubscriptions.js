@@ -1,6 +1,5 @@
 import { withFilter } from 'apollo-server-express';
 import { addBackgroundJob, pool } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
 import pubsub from '../../pubsub';
 
 const INVITE_CREATED = 'INVITE_CREATED';
@@ -36,7 +35,7 @@ const inviteCreated = {
     () => pubsub.asyncIterator(INVITE_CREATED),
     async (obj, args, context, info) => {
       if (!context.jwt)
-        throw new AuthenticationError('Unauthorized');
+        throw new Error('Unauthorized');
 
       return await withConnection(context, async withSession => {
         return await withSession(async client => {
@@ -60,7 +59,7 @@ const inviteCreated = {
           const res = await client.query('SELECT * FROM operation_.query_user_invite_($1::uuid)', [obj.uuid_]);
           return res.rows[0];
         } catch (error) {
-          throw new AuthenticationError(error.message);
+          throw new Error(error.message);
         }
       });
     });
@@ -72,7 +71,7 @@ const inviteUpdated = {
     () => pubsub.asyncIterator(INVITE_UPDATED),
     (obj, { inviteUuids }, context, info) => {
       if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
       return inviteUuids.includes(obj.uuid_);
     }
@@ -84,7 +83,7 @@ const inviteUpdated = {
           const res = await client.query('SELECT * FROM operation_.query_user_invite_($1::uuid)', [obj.uuid_]);
           return res.rows[0];
         } catch (error) {
-          throw new AuthenticationError(error.message);
+          throw new Error(error.message);
         }
       });
     });
@@ -96,7 +95,7 @@ const inviteDeleted = {
     () => pubsub.asyncIterator(INVITE_DELETED),
     (obj, { inviteUuids }, context, info) => {
       if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
       return inviteUuids.includes(obj.uuid_);
     }

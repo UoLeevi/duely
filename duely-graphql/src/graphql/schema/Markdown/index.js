@@ -1,6 +1,5 @@
 import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
-import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 import md from '../../../markdown-it';
 
@@ -49,7 +48,7 @@ export const Markdown = {
     Mutation: {
       async create_markdown(obj, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           // validate markdown
@@ -88,7 +87,7 @@ export const Markdown = {
       },
       async update_markdown(obj, { markdown_id, ...args }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         if (args.data) {
           try {

@@ -1,6 +1,5 @@
 import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
-import { AuthenticationError } from 'apollo-server-core';
 
 const resource = {
   name: 'membership'

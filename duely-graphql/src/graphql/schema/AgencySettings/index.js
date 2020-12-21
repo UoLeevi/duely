@@ -1,6 +1,5 @@
 import { withConnection } from '../../../db';
 import { createResolverForReferencedResource } from '../../util';
-import { AuthenticationError } from 'apollo-server-core';
 
 export const AgencySettings = {
   typeDef: `
@@ -34,7 +33,7 @@ export const AgencySettings = {
     Mutation: {
       async create_agency_thank_you_page_setting(obj, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         let url;
 
@@ -86,7 +85,7 @@ export const AgencySettings = {
       },
       async update_agency_thank_you_page_setting(obj, { setting_id, ...args }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         let url;
 
@@ -138,7 +137,7 @@ export const AgencySettings = {
       },
       async delete_agency_thank_you_page_setting(obj, { setting_id }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {

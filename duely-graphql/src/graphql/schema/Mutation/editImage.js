@@ -1,10 +1,9 @@
 import { withConnection } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
 export default async function editImage(obj, { agencyUuid, imageName, imageData, imageColor }, context, info) {
   if (!context.jwt)
-    throw new AuthenticationError('Unauthorized');
+    throw new Error('Unauthorized');
 
   // validate image argument
 

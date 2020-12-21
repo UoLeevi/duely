@@ -1,6 +1,5 @@
 import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../util';
-import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 import stripe from '../../../stripe';
 import { validateAndReadDataUrlAsBuffer } from '../Image';
@@ -63,7 +62,7 @@ export const ServiceVariant = {
     Mutation: {
       async create_service_variant(obj, { image_logo, image_hero, ...args }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {
@@ -142,7 +141,7 @@ export const ServiceVariant = {
       },
       async update_service_variant(obj, { service_variant_id, image_logo, image_hero, ...args }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {
@@ -225,7 +224,7 @@ export const ServiceVariant = {
       },
       async delete_service_variant(obj, { service_variant_id }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {

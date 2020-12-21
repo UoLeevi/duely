@@ -1,6 +1,5 @@
 import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource, createResolverForReferencedResourceAll } from '../../util';
-import { AuthenticationError } from 'apollo-server-core';
 
 const resource = {
   table_name: 'user',
@@ -34,7 +33,7 @@ export const User = {
     Query: {
       async current_user(source, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {

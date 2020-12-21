@@ -1,6 +1,5 @@
 import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
-import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
 const resource = {
@@ -106,7 +105,7 @@ export const Image = {
     Mutation: {
       async create_image(obj, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         // validate and read image
 
@@ -145,7 +144,7 @@ export const Image = {
       },
       async update_image(obj, { image_id, ...args }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         if (args.data) {
           const [_, validationError] = validateAndReadDataUrlAsBuffer(args.data);

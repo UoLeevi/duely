@@ -1,12 +1,11 @@
 import { withConnection } from '../../../db';
 import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
-import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
 export default async function inviteUser(obj, { agencyUuid, emailAddress, role, message }, context, info) {
   if (!context.jwt)
-    throw new AuthenticationError('Unauthorized');
+    throw new Error('Unauthorized');
 
   if (!validator.isEmail(emailAddress))
     return {

@@ -1,5 +1,4 @@
 import { withConnection } from '../../db';
-import { AuthenticationError } from 'apollo-server-core';
 
 export default {
   typeDef: `
@@ -11,7 +10,7 @@ export default {
     AgencyServicesConnection: {
       async edges(connection, { status, uuids }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         return await withConnection(context, async withSession => {
           return await withSession(async client => {
@@ -32,7 +31,7 @@ export default {
                 type: 'AgencyServicesEdge'
               }));
             } catch (error) {
-              throw new AuthenticationError(error.message);
+              throw new Error(error.message);
             }
           });
         });

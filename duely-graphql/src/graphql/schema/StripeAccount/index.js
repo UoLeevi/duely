@@ -1,5 +1,4 @@
 import { withConnection } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
 import stripe from '../../../stripe';
 
 // see: https://stripe.com/docs/api/accounts/object
@@ -99,7 +98,7 @@ export const StripeAccount = {
       created: source => new Date(source.created * 1000),
       async account_update_url(source, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           const access = await withConnection(context, async withSession => {
@@ -130,7 +129,7 @@ export const StripeAccount = {
       },
       async balance(source, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           const access = await withConnection(context, async withSession => {
@@ -153,7 +152,7 @@ export const StripeAccount = {
       },
       async balance_transactions(source, { payout_id, starting_after_id, ending_before_id, ...args }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           const access = await withConnection(context, async withSession => {
@@ -188,7 +187,7 @@ export const StripeAccount = {
       },
       async payment_intents(source, { customer_id, starting_after_id, ending_before_id, ...args }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           const access = await withConnection(context, async withSession => {
@@ -223,7 +222,7 @@ export const StripeAccount = {
       },
       async customers(source, { starting_after_id, ending_before_id, ...args }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           const access = await withConnection(context, async withSession => {
@@ -260,7 +259,7 @@ export const StripeAccount = {
     Query: {
       async stripe_account(source, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           const stripe_account = await withConnection(context, async withSession => {

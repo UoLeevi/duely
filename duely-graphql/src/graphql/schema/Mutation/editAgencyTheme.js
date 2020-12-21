@@ -1,10 +1,9 @@
 import { withConnection } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
 import validator from 'validator';
 
 export default async function editAgencyTheme(obj, { agencyUuid, imageLogoUuid, imageHeroUuid, colorPrimary, colorSecondary, colorAccent, colorBackground, colorSurface, colorError, colorSuccess }, context, info) {
   if (!context.jwt)
-    throw new AuthenticationError('Unauthorized');
+    throw new Error('Unauthorized');
 
   // validate color arguments
 

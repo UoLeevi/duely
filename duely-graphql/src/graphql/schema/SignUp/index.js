@@ -1,5 +1,4 @@
 import { withConnection } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
 import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
 import validator from 'validator';
@@ -17,7 +16,7 @@ export const SignUp = {
     Mutation: {
       async start_sign_up(source, { email_address, password, name, redirect_url }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         if (!validator.isEmail(email_address))
           return {
@@ -111,7 +110,7 @@ export const SignUp = {
       },
       async verify_sign_up(source, { verification_code }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {

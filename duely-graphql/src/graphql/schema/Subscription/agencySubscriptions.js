@@ -1,6 +1,5 @@
 import { withFilter } from 'apollo-server-express';
 import { addBackgroundJob, pool } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
 import pubsub from '../../pubsub';
 
 const AGENCY_CREATED = 'AGENCY_CREATED';
@@ -36,7 +35,7 @@ const agencyCreated = {
     () => pubsub.asyncIterator(AGENCY_CREATED),
     async (obj, args, context, info) => {
       if (!context.jwt)
-        throw new AuthenticationError('Unauthorized');
+        throw new Error('Unauthorized');
 
       return await withConnection(context, async withSession => {
         return await withSession(async client => {
@@ -62,7 +61,7 @@ const agencyCreated = {
           const res = await client.query('SELECT * FROM operation_.query_agency_($1::uuid)', [obj.uuid_]);
           return res.rows[0];
         } catch (error) {
-          throw new AuthenticationError(error.message);
+          throw new Error(error.message);
         }
       });
     });
@@ -74,7 +73,7 @@ const agencyUpdated = {
     () => pubsub.asyncIterator(AGENCY_UPDATED),
     (obj, { agencyUuids }, context, info) => {
       if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
       return agencyUuids.includes(obj.uuid_);
     }
@@ -86,7 +85,7 @@ const agencyUpdated = {
           const res = await client.query('SELECT * FROM operation_.query_agency_($1::uuid)', [obj.uuid_]);
           return res.rows[0];
         } catch (error) {
-          throw new AuthenticationError(error.message);
+          throw new Error(error.message);
         }
       });
     });
@@ -98,7 +97,7 @@ const agencyDeleted = {
     () => pubsub.asyncIterator(AGENCY_DELETED),
     (obj, { agencyUuids }, context, info) => {
       if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
       return agencyUuids.includes(obj.uuid_);
     }

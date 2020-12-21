@@ -1,6 +1,5 @@
 import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
-import { AuthenticationError } from 'apollo-server-core';
 import stripe from '../../../stripe';
 
 const resource = {
@@ -81,7 +80,7 @@ export const Price = {
     Mutation: {
       async create_price(obj, args, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {
@@ -137,7 +136,7 @@ export const Price = {
       },
       async update_price(obj, { price_id, ...args }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {
@@ -179,7 +178,7 @@ export const Price = {
       },
       async delete_price(obj, { price_id }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {
@@ -227,7 +226,7 @@ export const Price = {
       },
       async create_stripe_checkout_session(obj, { price_id, success_url, cancel_url }, context, info) {
         if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
         try {
           return await withConnection(context, async withSession => {

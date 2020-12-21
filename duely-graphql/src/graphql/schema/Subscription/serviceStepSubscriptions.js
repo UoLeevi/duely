@@ -1,6 +1,5 @@
 import { withFilter } from 'apollo-server-express';
 import { addBackgroundJob, pool } from '../../../db';
-import { AuthenticationError } from 'apollo-server-core';
 import pubsub from '../../pubsub';
 
 const SERVICE_STEP_CREATED = 'SERVICE_STEP_CREATED';
@@ -36,7 +35,7 @@ const serviceStepCreated = {
     () => pubsub.asyncIterator(SERVICE_STEP_CREATED),
     async (obj, args, context, info) => {
       if (!context.jwt)
-        throw new AuthenticationError('Unauthorized');
+        throw new Error('Unauthorized');
 
       return await withConnection(context, async withSession => {
         return await withSession(async client => {
@@ -62,7 +61,7 @@ const serviceStepCreated = {
           const res = await client.query('SELECT * FROM operation_.query_service_step_($1::uuid)', [obj.uuid_]);
           return res.rows[0];
         } catch (error) {
-          throw new AuthenticationError(error.message);
+          throw new Error(error.message);
         }
       });
     });
@@ -74,7 +73,7 @@ const serviceStepUpdated = {
     () => pubsub.asyncIterator(SERVICE_STEP_UPDATED),
     (obj, { serviceStepUuids }, context, info) => {
       if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
       return serviceStepUuids.includes(obj.uuid_);
     }
@@ -86,7 +85,7 @@ const serviceStepUpdated = {
           const res = await client.query('SELECT * FROM operation_.query_service_step_($1::uuid)', [obj.uuid_]);
           return res.rows[0];
         } catch (error) {
-          throw new AuthenticationError(error.message);
+          throw new Error(error.message);
         }
       });
     });
@@ -98,7 +97,7 @@ const serviceStepDeleted = {
     () => pubsub.asyncIterator(SERVICE_STEP_DELETED),
     (obj, { serviceStepUuids }, context, info) => {
       if (!context.jwt)
-          throw new AuthenticationError('Unauthorized');
+          throw new Error('Unauthorized');
 
       return serviceStepUuids.includes(obj.uuid_);
     }

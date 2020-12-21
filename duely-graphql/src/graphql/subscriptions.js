@@ -1,5 +1,4 @@
-import { AuthenticationError } from 'apollo-server-core';
-
+i
 export default {
   onConnect: (connectionParams, webSocket) => {
     const authorization = connectionParams.authorization || null;
@@ -8,7 +7,7 @@ export default {
       : null);
 
     if (!jwt)
-      throw new AuthenticationError('Unauthorized');
+      throw new Error('Unauthorized');
 
     return {
       jwt,
