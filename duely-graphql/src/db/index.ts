@@ -83,7 +83,7 @@ export async function addBackgroundJob(
   return removeBackgroundJob;
 }
 
-type WithSessionCallback = <R = any>(functions: ReturnType<typeof useFunctions>) => Promise<R>;
+type WithSessionCallback<R = any> = (functions: ReturnType<typeof useFunctions>) => Promise<R>;
 type WithConnectionCallback<R = any> = (
   withSession: (callback: WithSessionCallback) => Promise<R>
 ) => Promise<R>;
