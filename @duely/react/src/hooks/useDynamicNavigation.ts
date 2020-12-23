@@ -12,17 +12,17 @@ function isAnchorElement(target: EventTarget | null | undefined): target is HTML
   return (target as any)?.tagName === 'A';
 }
 
-export function useDynamicNavigation({
+export function useDynamicNavigation<T>({
   resolveUrl,
   passAccessToken,
   replace,
   local
-}: useDynamicNavigationArgs = {}) {
+}: useDynamicNavigationArgs = {}): React.ReactEventHandler<T> {
   // TODO: async event handler does not work if default is not prevented
   const history = useHistory();
 
   return useCallback(
-    async (e: Event | null) => {
+    async (e) => {
       const a = isAnchorElement(e?.currentTarget) ? e?.currentTarget : null;
       let url: string | URL | null = null;
       let shouldRelyOnDefault = false;

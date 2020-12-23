@@ -13,10 +13,12 @@ import {
   SubdomainPublicDocument,
   AgencyServicesDocument,
   ServiceDocument,
+  ServicesDocument,
   SubdomainAgencyDocument,
   SubdomainAgencyStripeAccountUpdateUrlDocument,
   AgencyThankYouPageSettingDocument,
-  ServiceThankYouPageSettingDocument
+  ServiceThankYouPageSettingDocument,
+  ServiceAndAgencyFromUrlPartsDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -159,6 +161,11 @@ export const agency_services_Q = {
 export const service_Q = {
   query: ServiceDocument,
   result: (d: ResultOf<typeof ServiceDocument>) => d?.service
+};
+
+export const service_and_agency_from_url_parts_Q = {
+  query: ServiceAndAgencyFromUrlPartsDocument,
+  result: (d: ResultOf<typeof ServiceAndAgencyFromUrlPartsDocument>) => d?.subdomains?.[0]?.agency.services?.[0]
 };
 
 export const current_agency_Q = {

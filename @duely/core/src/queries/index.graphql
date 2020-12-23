@@ -184,6 +184,29 @@ query Service($service_id: ID!) {
   }
 }
 
+query Services($filter: ServiceFilter!) {
+  services(filter: $filter) {
+    ...service
+  }
+}
+
+
+query ServiceAndAgencyFromUrlParts($subdomain_name: String!, $service_url_name: String!) {
+  subdomains(filter: { name: $subdomain_name }) {
+    id
+    name
+    agency {
+      id
+      services(filter: { url_name: $service_url_name }) {
+        ...service
+        agency {
+          ...agency
+        }
+      }
+    }
+  }
+}
+
 query SubdomainAgency($subdomain_name: String!) {
   subdomains(filter: { name: $subdomain_name }) {
     id

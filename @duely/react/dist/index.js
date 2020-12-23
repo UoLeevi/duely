@@ -723,12 +723,12 @@ __exportStar(__webpack_require__(12), exports);
 __exportStar(__webpack_require__(14), exports);
 __exportStar(__webpack_require__(15), exports);
 __exportStar(__webpack_require__(19), exports);
-__exportStar(__webpack_require__(25), exports);
 __exportStar(__webpack_require__(26), exports);
-__exportStar(__webpack_require__(28), exports);
+__exportStar(__webpack_require__(27), exports);
 __exportStar(__webpack_require__(29), exports);
-__exportStar(__webpack_require__(32), exports);
+__exportStar(__webpack_require__(30), exports);
 __exportStar(__webpack_require__(33), exports);
+__exportStar(__webpack_require__(34), exports);
 
 
 /***/ }),
@@ -1245,6 +1245,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 __exportStar(__webpack_require__(22), exports);
 __exportStar(__webpack_require__(23), exports);
 __exportStar(__webpack_require__(24), exports);
+__exportStar(__webpack_require__(25), exports);
 
 
 /***/ }),
@@ -1345,19 +1346,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.useBreakpoints = void 0;
 const react_1 = __webpack_require__(7);
 const ViewportContext_1 = __webpack_require__(8);
+const breakpoints = {
+    'sm': 640,
+    'md': 768,
+    'lg': 1024,
+    'xl': 1280,
+    '2xl': 1536
+};
 function useBreakpoints() {
     const { width } = react_1.useContext(ViewportContext_1.ViewportContext);
-    const breakpoints = {
-        'sm': 640,
-        'md': 768,
-        'lg': 1024,
-        'xl': 1280,
-        '2xl': 1536
-    };
-    for (let [k, v] of Object.entries(breakpoints)) {
-        breakpoints[k] = v <= width;
-    }
-    return breakpoints;
+    return Object.assign({}, ...Object.entries(breakpoints).map(([k, v]) => ({ [k]: v <= width })));
 }
 exports.useBreakpoints = useBreakpoints;
 
@@ -1387,13 +1385,81 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.useHashScrolling = void 0;
+const react_1 = __importStar(__webpack_require__(7));
+const react_router_dom_1 = __webpack_require__(20);
+function HashLink({ hash }) {
+    return (react_1.default.createElement(react_router_dom_1.Link, { to: hash, className: "absolute inset-y-0 right-0 flex items-center my-auto text-transparent transition-colors focus:outline-none group-hover:text-indigo-600 focus-visible:text-indigo-500", style: {
+            marginRight: '-1.5em'
+        } },
+        react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", style: { height: '1em', width: '1em' }, viewBox: "0 0 20 20", fill: "currentColor", transform: "scale(-1 1)" },
+            react_1.default.createElement("path", { fillRule: "evenodd", d: "M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z", clipRule: "evenodd" }))));
+}
+function useHashScrolling() {
+    const [hash, setHash] = react_1.useState();
+    const hashLink = hash && react_1.default.createElement(HashLink, { hash: hash });
+    const location = react_router_dom_1.useLocation();
+    return [
+        react_1.useCallback((node) => {
+            var _a, _b;
+            if (!node)
+                return;
+            let id = node.id || ((_a = node.querySelector('[id]')) === null || _a === void 0 ? void 0 : _a.id);
+            if (!id) {
+                id = (_b = node.textContent) === null || _b === void 0 ? void 0 : _b.trim().toLowerCase().replace(/[^\w\d-]+/g, '-');
+                if (!id)
+                    return;
+                node.id = id;
+                if (!node.classList.contains('relative'))
+                    node.classList.add('relative');
+                if (!node.classList.contains('group'))
+                    node.classList.add('group');
+            }
+            const hash = `#${id}`;
+            setHash(hash);
+            if (location.hash !== hash)
+                return;
+            node.scrollIntoView();
+        }, [location.hash, setHash]),
+        hashLink,
+        hash
+    ];
+}
+exports.useHashScrolling = useHashScrolling;
+
+
+/***/ }),
+/* 26 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Table = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const hooks_1 = __webpack_require__(21);
 const LoadingSpinner_1 = __webpack_require__(11);
 function Table({ rows: items, columns, headers, className, dense, breakpoint, wrap: wrapOptions, loading, error }) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c;
     const breakpoints = hooks_1.useBreakpoints();
     const isNotWrapped = breakpoints[breakpoint !== null && breakpoint !== void 0 ? breakpoint : 'sm'];
     const wrapColCount = (_a = wrapOptions === null || wrapOptions === void 0 ? void 0 : wrapOptions.columns) !== null && _a !== void 0 ? _a : 1;
@@ -1406,10 +1472,14 @@ function Table({ rows: items, columns, headers, className, dense, breakpoint, wr
     loading = !!loading;
     if (isNotWrapped) {
         if (error) {
-            headers = (react_1.default.createElement(TableHeader, { column: 1 }, "Error"));
+            headers = [
+                react_1.default.createElement(TableHeader, { key: 0, column: 1 }, "Error")
+            ];
         }
         else if (loading) {
-            headers = (react_1.default.createElement(TableHeader, { column: 1 }, "Loading..."));
+            headers = [
+                react_1.default.createElement(TableHeader, { key: 0, column: 1 }, "Loading...")
+            ];
         }
         else {
             headers = headers.map((header, j) => {
@@ -1419,12 +1489,12 @@ function Table({ rows: items, columns, headers, className, dense, breakpoint, wr
     }
     let rows;
     if (error) {
-        let message = (_d = error === null || error === void 0 ? void 0 : error.message) !== null && _d !== void 0 ? _d : error;
+        let message = typeof error === 'object' ? error === null || error === void 0 ? void 0 : error.message : error;
         message = message === 'string' ? message : null;
-        rows = (react_1.default.createElement(TableErrorRow, { message: message, dense: dense, row: isNotWrapped ? 2 : 1, headers: headers, wrapColCount: wrapColCount, wrapColSpanSum: wrapColSpanSum, isNotWrapped: isNotWrapped }));
+        rows = (react_1.default.createElement(TableErrorRow, { message: message, row: isNotWrapped ? 2 : 1, wrapColCount: wrapColCount, wrapColSpanSum: wrapColSpanSum, isNotWrapped: isNotWrapped }));
     }
     else if (loading) {
-        rows = (react_1.default.createElement(TableLoadingRow, { dense: dense, row: isNotWrapped ? 2 : 1, headers: headers, wrapColCount: wrapColCount, wrapColSpanSum: wrapColSpanSum, isNotWrapped: isNotWrapped }));
+        rows = (react_1.default.createElement(TableLoadingRow, { row: isNotWrapped ? 2 : 1, wrapColCount: wrapColCount, wrapColSpanSum: wrapColSpanSum, isNotWrapped: isNotWrapped }));
     }
     else {
         rows = items.map((item, i) => {
@@ -1451,14 +1521,10 @@ function TableCell({ children, row, column, span, header, dense, firstRow, lastR
     }
     let className = 'flex flex-col space-y-2 ';
     if (!firstRow || !firstCol) {
-        className += dense
-            ? (firstCol ? 'pt-4 ' : 'pt-2 ')
-            : (firstCol ? 'pt-6 ' : 'pt-3 ');
+        className += dense ? (firstCol ? 'pt-4 ' : 'pt-2 ') : firstCol ? 'pt-6 ' : 'pt-3 ';
     }
     if (!lastRow || !lastCol) {
-        className += dense
-            ? (lastCol ? 'pb-4 ' : 'pb-2 ')
-            : (lastCol ? 'pb-6 ' : 'pb-3 ');
+        className += dense ? (lastCol ? 'pb-4 ' : 'pb-2 ') : lastCol ? 'pb-6 ' : 'pb-3 ';
     }
     return (react_1.default.createElement("div", { className: className, style: { gridArea } },
         react_1.default.createElement("div", { className: "grid text-xs tracking-wide text-gray-500" }, header),
@@ -1473,17 +1539,17 @@ function TableRow({ item, row, columns, headers, dense, wrapColCount, wrapColSpa
             react_1.default.createElement("div", { className: className, style: { gridArea } }),
             cells.map((cell, j) => (react_1.default.createElement(TableCell, { key: j, row: row, column: j + 1, span: 1, header: headers[j], dense: dense, isNotWrapped: isNotWrapped, firstRow: first, lastRow: last, firstCol: j % columns.length === 0, lastCol: (j + 1) % columns.length === 0 }, cell)))));
     }
-    row = (row - 1) * wrapColSpanSum / wrapColCount + 1;
+    row = ((row - 1) * wrapColSpanSum) / wrapColCount + 1;
     const gridArea = `${row} / 1 / ${row + wrapColSpanSum / wrapColCount} / -1`;
     let next = 1;
     return (react_1.default.createElement(react_1.Fragment, null,
         react_1.default.createElement("div", { className: className, style: { gridArea } }),
         cells.map((cell, j) => {
-            const column = (next - 1) % wrapColCount + 1;
+            const column = ((next - 1) % wrapColCount) + 1;
             const span = wrapColSpans[j];
             const cellRow = row + Math.floor((next - 1) / wrapColCount);
             const firstCol = cellRow === row;
-            const lastCol = (cellRow + 1 - row) === wrapColSpanSum / wrapColCount;
+            const lastCol = cellRow + 1 - row === wrapColSpanSum / wrapColCount;
             next += span;
             return (react_1.default.createElement(TableCell, { key: j, row: cellRow, column: column, span: span, header: headers[j], dense: dense, isNotWrapped: isNotWrapped, firstRow: first, lastRow: last, firstCol: firstCol, lastCol: lastCol }, cell));
         })));
@@ -1492,33 +1558,31 @@ function TableLoadingRow({ row, wrapColCount, wrapColSpanSum, isNotWrapped }) {
     let className = 'grid p-4 text-gray-400 border-gray-200 place-items-center';
     let gridArea = `${row} / 1 / ${row + 1} / -1`;
     if (!isNotWrapped) {
-        row = (row - 1) * wrapColSpanSum / wrapColCount + 1;
+        row = ((row - 1) * wrapColSpanSum) / wrapColCount + 1;
         gridArea = `${row} / 1 / ${row + wrapColSpanSum / wrapColCount} / -1`;
     }
-    return (react_1.default.createElement(react_1.Fragment, null,
-        react_1.default.createElement("div", { className: className, style: { gridArea } },
-            react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: true, className: "w-10 h-10" }))));
+    return (react_1.default.createElement("div", { className: className, style: { gridArea } },
+        react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: true, className: "w-10 h-10" })));
 }
 function TableErrorRow({ row, message, wrapColCount, wrapColSpanSum, isNotWrapped }) {
     let className = 'grid p-4 border-gray-200 place-items-center';
     let gridArea = `${row} / 1 / ${row + 1} / -1`;
     message = message !== null && message !== void 0 ? message : 'Some error occurred';
     if (!isNotWrapped) {
-        row = (row - 1) * wrapColSpanSum / wrapColCount + 1;
+        row = ((row - 1) * wrapColSpanSum) / wrapColCount + 1;
         gridArea = `${row} / 1 / ${row + wrapColSpanSum / wrapColCount} / -1`;
     }
-    return (react_1.default.createElement(react_1.Fragment, null,
-        react_1.default.createElement("div", { className: className, style: { gridArea } },
-            react_1.default.createElement("div", { className: "flex items-center space-x-3 text-red-500" },
-                react_1.default.createElement("div", { className: "grid w-8 h-8 bg-red-200 rounded-full place-items-center" },
-                    react_1.default.createElement("svg", { className: "w-6 h-6", xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
-                        react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" }))),
-                react_1.default.createElement("span", { className: "text-sm font-medium" }, message)))));
+    return (react_1.default.createElement("div", { className: className, style: { gridArea } },
+        react_1.default.createElement("div", { className: "flex items-center space-x-3 text-red-500" },
+            react_1.default.createElement("div", { className: "grid w-8 h-8 bg-red-200 rounded-full place-items-center" },
+                react_1.default.createElement("svg", { className: "w-6 h-6", xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
+                    react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" }))),
+            react_1.default.createElement("span", { className: "text-sm font-medium" }, message))));
 }
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1555,7 +1619,7 @@ var __rest = (this && this.__rest) || function (s, e) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DropMenu = void 0;
 const react_1 = __importStar(__webpack_require__(7));
-const react_2 = __webpack_require__(27);
+const react_2 = __webpack_require__(28);
 function DropMenu({ children, button }) {
     const [isOpen, setIsOpen] = react_1.useState(false);
     const ref = react_1.useRef(null);
@@ -1590,7 +1654,7 @@ function DropMenuItems(_a) {
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -3586,7 +3650,7 @@ function resolvePropValue$2(property, bag) {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3617,7 +3681,7 @@ exports.Card = Card;
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3632,12 +3696,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(30), exports);
 __exportStar(__webpack_require__(31), exports);
+__exportStar(__webpack_require__(32), exports);
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3672,7 +3736,7 @@ exports.SkeletonText = SkeletonText;
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3699,7 +3763,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SkeletonParagraph = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-const SkeletonText_1 = __webpack_require__(30);
+const SkeletonText_1 = __webpack_require__(31);
 function SkeletonParagraph({ className, words, seed }) {
     words || (words = 20);
     const wordLengths = react_1.useMemo(() => Array.from(generateWordLengths(words, seed)), [words, seed]);
@@ -3719,7 +3783,7 @@ function* generateWordLengths(count, seed) {
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3751,7 +3815,7 @@ const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const contexts_1 = __webpack_require__(5);
 const react_dom_1 = __importDefault(__webpack_require__(13));
-const react_2 = __webpack_require__(27);
+const react_2 = __webpack_require__(28);
 function Modal({ children, show, close, openerRef, className }) {
     const screenOverlayRef = react_1.useContext(contexts_1.ScreenOverlayContext);
     if (!(screenOverlayRef === null || screenOverlayRef === void 0 ? void 0 : screenOverlayRef.current))
@@ -3783,7 +3847,7 @@ function ModalContent({ children, close, openerRef, className }) {
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 

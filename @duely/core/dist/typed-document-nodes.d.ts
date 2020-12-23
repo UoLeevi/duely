@@ -1541,6 +1541,39 @@ export declare type ServiceQuery = ({
         __typename?: 'Service';
     } & ServiceFragment)>;
 });
+export declare type ServicesQueryVariables = Exact<{
+    filter: ServiceFilter;
+}>;
+export declare type ServicesQuery = ({
+    __typename?: 'Query';
+} & {
+    services?: Maybe<Array<({
+        __typename?: 'Service';
+    } & ServiceFragment)>>;
+});
+export declare type ServiceAndAgencyFromUrlPartsQueryVariables = Exact<{
+    subdomain_name: Scalars['String'];
+    service_url_name: Scalars['String'];
+}>;
+export declare type ServiceAndAgencyFromUrlPartsQuery = ({
+    __typename?: 'Query';
+} & {
+    subdomains?: Maybe<Array<({
+        __typename?: 'Subdomain';
+    } & Pick<Subdomain, 'id' | 'name'> & {
+        agency: ({
+            __typename?: 'Agency';
+        } & Pick<Agency, 'id'> & {
+            services?: Maybe<Array<({
+                __typename?: 'Service';
+            } & {
+                agency: ({
+                    __typename?: 'Agency';
+                } & AgencyFragment);
+            } & ServiceFragment)>>;
+        });
+    })>>;
+});
 export declare type SubdomainAgencyQueryVariables = Exact<{
     subdomain_name: Scalars['String'];
 }>;
@@ -1664,6 +1697,8 @@ export declare const CurrentUserAgenciesDocument: DocumentNode<CurrentUserAgenci
 export declare const SubdomainPublicDocument: DocumentNode<SubdomainPublicQuery, SubdomainPublicQueryVariables>;
 export declare const AgencyServicesDocument: DocumentNode<AgencyServicesQuery, AgencyServicesQueryVariables>;
 export declare const ServiceDocument: DocumentNode<ServiceQuery, ServiceQueryVariables>;
+export declare const ServicesDocument: DocumentNode<ServicesQuery, ServicesQueryVariables>;
+export declare const ServiceAndAgencyFromUrlPartsDocument: DocumentNode<ServiceAndAgencyFromUrlPartsQuery, ServiceAndAgencyFromUrlPartsQueryVariables>;
 export declare const SubdomainAgencyDocument: DocumentNode<SubdomainAgencyQuery, SubdomainAgencyQueryVariables>;
 export declare const SubdomainAgencyStripeAccountUpdateUrlDocument: DocumentNode<SubdomainAgencyStripeAccountUpdateUrlQuery, SubdomainAgencyStripeAccountUpdateUrlQueryVariables>;
 export declare const AgencyThankYouPageSettingDocument: DocumentNode<AgencyThankYouPageSettingQuery, AgencyThankYouPageSettingQueryVariables>;
