@@ -11,6 +11,7 @@ import { Card, FormButton, FormErrorInfo, FormField } from '@duely/react';
 import { useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { DashboardSection } from '../components';
+import { FormSection } from '../components/FormSection';
 
 type SettingsCheckoutSettingsFormValues = { url: string };
 
@@ -37,7 +38,6 @@ function SettingsCheckoutSettingsForm() {
     if (settingsLoading || state.loading) return;
     form.setValue('url', agency_thank_you_page_settings?.url?.replace('https://', ''));
   }, [agency_thank_you_page_settings?.url, form, settingsLoading, state.loading]);
-
 
   const onSubmit: SubmitHandler<SettingsCheckoutSettingsFormValues> = async ({ url }) => {
     url = url.trim();
@@ -91,17 +91,12 @@ export default function DashboardSettings() {
     <>
       <DashboardSection title="Settings">
         <Card>
-          <div className="relative flex flex-col px-5 pt-4 pb-5 -m-2 xl:-m-4 xl:flex-row">
-            <div className="flex flex-col items-start m-2 space-y-1 xl:m-4 xl:w-1/3 2xl:w-1/4">
-              <h3 className="font-bold tracking-wide text-gray-700">Checkout</h3>
-              <span className="text-sm text-gray-500">
-                You can set up a custom thank you page URL or use the one provided by Duely
-              </span>
-            </div>
-            <div className="flex flex-col m-2 xl:m-4 xl:w-2/3 2xl:w-3/4">
-              <SettingsCheckoutSettingsForm />
-            </div>
-          </div>
+          <FormSection
+            title="Checkout"
+            description="You can set up a custom thank you page URL or use the one provided by Duely"
+          >
+            <SettingsCheckoutSettingsForm />
+          </FormSection>
         </Card>
       </DashboardSection>
     </>

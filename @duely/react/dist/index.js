@@ -399,7 +399,8 @@ exports.Util = {
     getNameInitials,
     pseudoRandom,
     poisson,
-    truncate
+    truncate,
+    sentenceCase
 };
 function processImageFile(file, options = { estimateColor: true }) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -575,6 +576,9 @@ function poisson(mean, generateRandom) {
 }
 function truncate(text, maxLength) {
     return (text === null || text === void 0 ? void 0 : text.length) > maxLength ? text.substring(0, maxLength).trimEnd() + '...' : text;
+}
+function sentenceCase(text) {
+    return text && text.charAt(0).toUpperCase() + text.substring(1);
 }
 
 

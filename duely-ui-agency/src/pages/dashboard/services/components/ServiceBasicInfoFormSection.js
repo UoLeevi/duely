@@ -7,7 +7,7 @@ export function ServiceBasicInfoFormSection({ form }) {
 
   // image logo
   const image_logo_file = form.watch('image_logo_file_list')?.[0];
-  const imageLogo = useImage(image_logo_file);
+  const imageLogo = useImage({ file: image_logo_file });
 
   // subdomain name
   if (!form.formState.dirtyFields.subdomain_name) {

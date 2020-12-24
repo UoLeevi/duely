@@ -2889,6 +2889,10 @@ html, body, #root {
     line-height: 1;
   }
 
+  .md\:mt-10 {
+    margin-top: 2.5rem;
+  }
+
   .md\:p-2 {
     padding: 0.5rem;
   }
@@ -3148,6 +3152,10 @@ html, body, #root {
   .lg\:text-8xl {
     font-size: 6rem;
     line-height: 1;
+  }
+
+  .lg\:mt-12 {
+    margin-top: 3rem;
   }
 }
 

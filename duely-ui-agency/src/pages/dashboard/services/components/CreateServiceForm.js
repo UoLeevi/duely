@@ -27,7 +27,7 @@ export function CreateServiceForm() {
 
   // image logo
   const image_logo_file = form.watch('image_logo_file_list')?.[0];
-  const imageLogo = useImage(image_logo_file);
+  const imageLogo = useImage({ file: image_logo_file });
 
   async function onSubmit({ image_logo_file_list, ...data }) {
     const image_logo = {

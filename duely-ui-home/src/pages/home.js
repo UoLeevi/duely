@@ -23,7 +23,7 @@ export default function Home() {
               <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-blue-500 to-green-500">digital agencies</span>
             </h3>
             <Link to="/sign-up">
-              <button className="px-5 py-3 mt-6 font-medium leading-5 text-white transition duration-150 ease-in-out bg-indigo-500 border border-gray-300 rounded-md shadow-lg sm:mt-8 hover:bg-indigo-700 text-md focus:outline-none focus:border-blue-300 focus:ring-blue active:bg-gray-50">Request early access</button>
+              <button className="px-5 py-3 mt-6 font-medium leading-5 text-white transition duration-150 ease-in-out bg-indigo-500 border border-gray-300 rounded-md shadow-lg sm:mt-8 md:mt-10 lg:mt-12 hover:bg-indigo-700 text-md focus:outline-none focus:border-blue-300 focus:ring-blue active:bg-gray-50">Request early access</button>
             </Link>
           </div>
         </main>

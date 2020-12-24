@@ -25,7 +25,7 @@ export default function CreateBrandForm({ className }) {
 
   // image logo
   const image_logo_file = watch('image_logo_file_list')?.[0];
-  const imageLogo = useImage(image_logo_file);
+  const imageLogo = useImage({ file: image_logo_file });
 
   // subdomain name
   if (!formState.dirtyFields.subdomain_name) {

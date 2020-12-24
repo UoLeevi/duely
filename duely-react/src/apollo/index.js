@@ -105,7 +105,7 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
       switch (err.extensions.code) {
         case 'UNAUTHENTICATED':
           // error code is set to UNAUTHENTICATED
-          // when AuthenticationError thrown in resolver
+          // when Error thrown in resolver
 
           // reset access tokens
           localStorage.removeItem('user-jwt');

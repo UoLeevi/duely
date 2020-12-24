@@ -44,7 +44,7 @@ const sidebarLinks = [
 
 function AgencyLogo({ src }) {
   return (
-    <Link to="/" className="hidden md:flex items-center h-8 sm:h-10 md:h-12 relative space-x-2 text-gray-900 rounded p-1">
+    <Link to="/" className="relative items-center hidden h-8 p-1 space-x-2 text-gray-900 rounded md:flex sm:h-10 md:h-12">
       <img className="h-full" src={src} alt='logo' />
     </Link>
   );
@@ -61,8 +61,8 @@ export function DashboardLayout({ children }) {
         links={sidebarLinks}
         topContent={logoSrc && <AgencyLogo src={logoSrc} />}
       />
-      <div className="pb-20 md:pb-0 md:pl-48 xl:pl-64 w-full box-border">
-        <div className="flex flex-col p-4 space-y-8">
+      <div className="box-border w-full pb-20 md:pb-0 md:pl-48 xl:pl-64">
+        <div className="flex flex-col px-2 py-4 space-y-8 sm:px-4">
           {children}
         </div>
       </div>

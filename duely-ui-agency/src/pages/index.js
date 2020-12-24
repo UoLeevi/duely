@@ -1,8 +1,13 @@
 import { Route, Switch } from 'react-router-dom';
 import Home from './home';
 import Dashboard from './dashboard';
+import ThankYouPage from './orders/thank-you';
 
 const routes = [
+  {
+    path: '/orders/thank-you',
+    component: ThankYouPage
+  },
   {
     path: '/dashboard',
     component: Dashboard

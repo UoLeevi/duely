@@ -16,7 +16,8 @@ export const Util = {
   getNameInitials,
   pseudoRandom,
   poisson,
-  truncate
+  truncate,
+  sentenceCase
 };
 
 async function processImageFile(file: File | null | undefined, options = { estimateColor: true }) {
@@ -243,4 +244,8 @@ function poisson(mean: number, generateRandom?: () => number) {
 
 function truncate(text: string, maxLength: number) {
   return text?.length > maxLength ? text.substring(0, maxLength).trimEnd() + '...' : text;
+}
+
+function sentenceCase(text: string) {
+  return text && text.charAt(0).toUpperCase() + text.substring(1);
 }

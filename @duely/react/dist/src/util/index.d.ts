@@ -17,6 +17,7 @@ export declare const Util: {
     pseudoRandom: typeof pseudoRandom;
     poisson: typeof poisson;
     truncate: typeof truncate;
+    sentenceCase: typeof sentenceCase;
 };
 declare function processImageFile(file: File | null | undefined, options?: {
     estimateColor: boolean;
@@ -45,4 +46,5 @@ declare function getNameInitials(name: string): string;
 declare function pseudoRandom(seed?: number): number;
 declare function poisson(mean: number, generateRandom?: () => number): number;
 declare function truncate(text: string, maxLength: number): string;
+declare function sentenceCase(text: string): string;
 export {};
