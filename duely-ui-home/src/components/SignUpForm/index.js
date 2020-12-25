@@ -16,9 +16,9 @@ export default function SignUpForm({ className }) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className={className}>
-      <FormField form={form} label="Name" name="name" type="text" validateRule={{ required: true }} />
-      <FormField form={form} label="Email address" name="email_address" type="email" validateRule={{ required: true }} />
-      <FormField form={form} label="Password" name="password" type="password" validateRule={{ required: true }} />
+      <FormField form={form} label="Name" name="name" type="text" registerOptions={{ required: true }} />
+      <FormField form={form} label="Email address" name="email_address" type="email" registerOptions={{ required: true }} />
+      <FormField form={form} label="Password" name="password" type="password" registerOptions={{ required: true }} />
       <div className="flex flex-col">
         <label className="block text-gray-500 font-bold">
           <input name="newsletter" ref={form.register} className="mr-2" type="checkbox" />

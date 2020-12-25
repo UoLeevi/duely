@@ -1,3 +1,4 @@
+import type { ImageInput } from '@duely/core';
 import React from 'react';
 import type { FieldError, RegisterOptions, UseFormMethods } from 'react-hook-form';
 import { Util } from '../../../util';
@@ -5,12 +6,13 @@ import { LoadingBar } from '../../LoadingBar';
 
 type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
   name: keyof TFieldValues;
-  label?: React.ReactNode;
   form: UseFormMethods<TFieldValues>;
+  label?: React.ReactNode;
   registerOptions?: RegisterOptions;
   hint?: React.ReactNode;
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
+  image?: ImageInput | null;
   actions?: React.ReactNode;
   loading?: boolean;
   options?: (
@@ -44,7 +46,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
   loading,
   options,
   accept,
-  src,
+  image,
   className,
   ...props
 }: FormFieldProps<TFieldValues>) {
@@ -149,7 +151,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
 
     case 'image': {
       const fileList = form.watch(name) as FileList | null;
-      const hasFile = fileList?.length ?? 0 > 0;
+      const hasFile = (fileList?.length ?? 0) > 0;
       hintOrInfo = hasFile
         ? Array.from(fileList!)
             .map((f) => `${f.name} ${Util.formatFileSize(f.size)}`)
@@ -162,21 +164,22 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
       const className = Util.createClassName(
         loading && 'animate-pulse border-indigo-400',
         !loading && 'border-gray-300',
-        'relative transition-colors flex justify-center border-2 border-dashed rounded-md',
-        !src && 'px-6 pt-5 pb-6'
+        image && 'border border-gray-300 shadow-sm',
+        !image && 'px-6 pt-5 pb-6 border-2 border-dashed',
+        'relative transition-colors flex justify-center rounded-md'
       );
 
       element = (
         <label htmlFor={name} className={className}>
-          {src && (
+          {image && (
             <img
               className="flex-1 object-contain rounded-md"
-              src={src}
+              src={image.data}
               alt={typeof label === 'string' ? label : ''}
             />
           )}
 
-          {!src && (
+          {!image && (
             <div className="text-center">
               <svg
                 className="w-12 h-12 mx-auto text-gray-400"
@@ -222,7 +225,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
 
     case 'file': {
       const fileList = form.watch(name) as FileList | null;
-      const hasFile = fileList?.length ?? 0 > 0;
+      const hasFile = (fileList?.length ?? 0) > 0;
       const filenames = hasFile
         ? Array.from(fileList!)
             .map((f) => f.name)

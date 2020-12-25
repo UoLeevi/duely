@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form';
-import { FormButton, FormErrorInfo } from '@duely/react';
+import { FormButton, FormErrorInfo, useImageInputFromFileList } from '@duely/react';
 import { useMutation, useQuery, current_subdomain_Q, create_service_M, create_price_M, update_service_M } from '@duely/client';
-import useImage from 'hooks/useImage';
 import { BsCheck } from 'react-icons/bs';
 import { ServiceBasicInfoFormSection } from './ServiceBasicInfoFormSection';
 import { ServicePricingFormSection } from './ServicePricingFormSection';
@@ -26,16 +25,10 @@ export function CreateServiceForm() {
   };
 
   // image logo
-  const image_logo_file = form.watch('image_logo_file_list')?.[0];
-  const imageLogo = useImage({ file: image_logo_file });
+  const image_logo_file_list = form.watch('image_logo_file_list');
+  const { image: image_logo } = useImageInputFromFileList(image_logo_file_list);
 
   async function onSubmit({ image_logo_file_list, ...data }) {
-    const image_logo = {
-      name: image_logo_file_list[0].name,
-      data: imageLogo.data,
-      color: imageLogo.color ?? '#FFFFFF'
-    };
-
     const { name, description, url_name } = data;
     const res_service = await createService({ agency_id: current_subdomain.agency.id, name, description, url_name, image_logo, status: 'draft' });
 

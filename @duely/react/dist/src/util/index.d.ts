@@ -1,6 +1,7 @@
+import type { ImageInput } from '@duely/core';
 export declare const Util: {
-    processImageFile: typeof processImageFile;
-    processFile: typeof processFile;
+    readFileAsDataUrl: typeof readFileAsDataUrl;
+    readFileAsImageInput: typeof readFileAsImageInput;
     estimateImageColor: typeof estimateImageColor;
     dataUriFromSvg: typeof dataUriFromSvg;
     byteToHex: typeof byteToHex;
@@ -20,17 +21,8 @@ export declare const Util: {
     sentenceCase: typeof sentenceCase;
     mimeTypeFromDataUrl: typeof mimeTypeFromDataUrl;
 };
-declare function processImageFile(file: File | null | undefined, options?: {
-    estimateColor: boolean;
-}): Promise<{
-    url: string | null;
-    data: string | null;
-    color?: string | undefined;
-} | null>;
-declare function processFile<T = string | null>(file: File | null | undefined, decoder?: (data: string | null) => T): Promise<{
-    url: string | null;
-    data: T | string | null;
-} | null>;
+declare function readFileAsDataUrl(file: File | null | undefined): Promise<string | null>;
+declare function readFileAsImageInput(file: File | null | undefined): Promise<ImageInput | null>;
 declare function estimateImageColor(url: string): Promise<string>;
 declare function dataUriFromSvg(svg: string): string;
 declare function byteToHex(x: number): string;

@@ -21,7 +21,7 @@ Text.args = {
   label: 'Brand name',
   name: 'name',
   type: 'text',
-  validateRule: { required: true }
+  registerOptions: { required: true }
 };
 
 export const Loading = Template.bind({});
@@ -31,7 +31,7 @@ Loading.args = {
   name: 'name',
   type: 'text',
   loading: true,
-  validateRule: { required: true }
+  registerOptions: { required: true }
 };
 
 export const Subdomain = Template.bind({});
@@ -43,18 +43,18 @@ Subdomain.args = {
   prefix: 'https://',
   suffix: '.duely.app',
   hint: 'Choose a subdomain for your brand',
-  validateRule: { required: true }
+  registerOptions: { required: true }
 };
 
 export const Image = Template.bind({});
 Image.args = {
   className: 'max-w-xs sm:max-w-sm',
   label: 'Logo image',
-  name: 'image_logo_file',
+  name: 'image_logo_file_list',
   type: 'file',
   accept: 'image/jpeg, image/png',
   hint: 'PNG, JPG up to 512kb, and minimum 128px by 128px.',
-  validateRule: { required: true }
+  registerOptions: { required: true }
 };
 
 const countries = ['FI', 'SG', 'US', 'GB', 'JP']
@@ -69,5 +69,5 @@ Countries.args = {
   name: 'country_code',
   type: 'select',
   options: countries,
-  validateRule: { required: true }
+  registerOptions: { required: true }
 };

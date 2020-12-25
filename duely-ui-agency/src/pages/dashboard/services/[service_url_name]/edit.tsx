@@ -6,8 +6,13 @@ import {
   useMutation,
   useQuery
 } from '@duely/client';
-import { Card, FormButton, FormErrorInfo, FormField } from '@duely/react';
-import useImage from 'hooks/useImage';
+import {
+  Card,
+  FormButton,
+  FormErrorInfo,
+  FormField,
+  useImageInputFromFileList
+} from '@duely/react';
 import { FormSection } from 'pages/dashboard/components/FormSection';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -44,8 +49,7 @@ export default function DashboardServicesEditService() {
           <FormSection
             title="Pricing"
             description="Service pricing can be set to either a one-time payment or a subscription."
-          >
-          </FormSection>
+          ></FormSection>
         </Card>
       </DashboardSection>
     </>
@@ -69,8 +73,11 @@ function UpdateServiceBasicInfoFrom({ service_id }: ServiceProps) {
 
   // image logo
   const current_image_logo = service?.default_variant.image_logo;
-  const image_logo_file = form.watch('image_logo_file_list')?.[0];
-  const imageLogo = useImage({ file: image_logo_file, image: current_image_logo });
+
+  const image_logo_file_list = form.watch('image_logo_file_list');
+  const { image: imageLogoInput, loading: imageLogoLoading } = useImageInputFromFileList(
+    image_logo_file_list
+  );
 
   useEffect(() => {
     if (!service) return;
@@ -94,7 +101,7 @@ function UpdateServiceBasicInfoFrom({ service_id }: ServiceProps) {
           className="max-w-xl"
           name="name"
           type="text"
-          validateRule={{ required: true }}
+          registerOptions={{ required: true }}
         />
         <FormField
           form={form}
@@ -104,7 +111,7 @@ function UpdateServiceBasicInfoFrom({ service_id }: ServiceProps) {
           type="text"
           prefix={`/`}
           hint="How would you like the service name to appear in URLs"
-          validateRule={{ required: true }}
+          registerOptions={{ required: true }}
         />
         <FormField
           form={form}
@@ -113,7 +120,7 @@ function UpdateServiceBasicInfoFrom({ service_id }: ServiceProps) {
           name="description"
           type="textarea"
           rows={5}
-          validateRule={{ required: true }}
+          registerOptions={{ required: true }}
         />
         <FormField
           form={form}
@@ -121,11 +128,11 @@ function UpdateServiceBasicInfoFrom({ service_id }: ServiceProps) {
           className="max-w-xl"
           name="image_logo_file_list"
           type="image"
-          loading={imageLogo.loading}
-          src={imageLogo.data ?? undefined}
+          loading={imageLogoLoading}
+          image={imageLogoInput ?? current_image_logo}
           accept="image/jpeg, image/png"
           hint="PNG, JPG up to 512KB, and minimum 128px by 128px."
-          validateRule={{ required: true }}
+          registerOptions={{ required: true }}
         />
 
         <div className="flex flex-row items-center pt-3 space-x-8">

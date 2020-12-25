@@ -382,8 +382,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Util = void 0;
 exports.Util = {
-    processImageFile,
-    processFile,
+    readFileAsDataUrl,
+    readFileAsImageInput,
     estimateImageColor,
     dataUriFromSvg,
     byteToHex,
@@ -403,16 +403,8 @@ exports.Util = {
     sentenceCase,
     mimeTypeFromDataUrl
 };
-function processImageFile(file, options = { estimateColor: true }) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const imageFile = yield processFile(file);
-        if (options.estimateColor && (imageFile === null || imageFile === void 0 ? void 0 : imageFile.url)) {
-            imageFile.color = yield estimateImageColor(imageFile.url);
-        }
-        return imageFile;
-    });
-}
-function processFile(file, decoder) {
+// see: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
+function readFileAsDataUrl(file) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!file)
             return null;
@@ -422,21 +414,34 @@ function processFile(file, decoder) {
                 reader.readAsDataURL(file);
                 reader.onerror = reject;
                 reader.onload = () => __awaiter(this, void 0, void 0, function* () {
-                    const url = reader.result;
-                    const result = {
-                        url,
-                        data: url
-                    };
-                    if (decoder) {
-                        result.data = yield decoder(url);
+                    if (!reader.result) {
+                        reject(new Error('Unable to read file as Data-URL.'));
+                        return;
                     }
-                    resolve(result);
+                    const dataUrl = reader.result;
+                    resolve(dataUrl);
                 });
             }
             catch (err) {
                 reject(err);
             }
         });
+    });
+}
+function readFileAsImageInput(file) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!file)
+            return null;
+        const dataUrl = yield readFileAsDataUrl(file);
+        if (!dataUrl)
+            return null;
+        const color = (_a = (yield estimateImageColor(dataUrl))) !== null && _a !== void 0 ? _a : '#ffffff';
+        return {
+            name: file.name,
+            data: dataUrl,
+            color
+        };
     });
 }
 function estimateImageColor(url) {
@@ -458,7 +463,7 @@ function estimateImageColor(url) {
     });
 }
 function dataUriFromSvg(svg) {
-    return 'data:image/svg+xml;base64,' + btoa(svg);
+    return ('data:image/svg+xml;base64,' + btoa(svg));
 }
 function byteToHex(x) {
     const hex = x.toString(16);
@@ -731,12 +736,12 @@ __exportStar(__webpack_require__(12), exports);
 __exportStar(__webpack_require__(14), exports);
 __exportStar(__webpack_require__(15), exports);
 __exportStar(__webpack_require__(19), exports);
-__exportStar(__webpack_require__(26), exports);
 __exportStar(__webpack_require__(27), exports);
-__exportStar(__webpack_require__(29), exports);
+__exportStar(__webpack_require__(28), exports);
 __exportStar(__webpack_require__(30), exports);
-__exportStar(__webpack_require__(33), exports);
+__exportStar(__webpack_require__(31), exports);
 __exportStar(__webpack_require__(34), exports);
+__exportStar(__webpack_require__(35), exports);
 
 
 /***/ }),
@@ -999,7 +1004,7 @@ const util_1 = __webpack_require__(4);
 const LoadingBar_1 = __webpack_require__(10);
 function FormField(_a) {
     var _b, _c, _d, _e;
-    var { name, label, form, type, registerOptions, hint, prefix, suffix, actions, loading, options, accept, src, className } = _a, props = __rest(_a, ["name", "label", "form", "type", "registerOptions", "hint", "prefix", "suffix", "actions", "loading", "options", "accept", "src", "className"]);
+    var { name, label, form, type, registerOptions, hint, prefix, suffix, actions, loading, options, accept, image, className } = _a, props = __rest(_a, ["name", "label", "form", "type", "registerOptions", "hint", "prefix", "suffix", "actions", "loading", "options", "accept", "image", "className"]);
     const error = form.errors[name];
     let errorMessage = error &&
         (error.message ||
@@ -1042,7 +1047,7 @@ function FormField(_a) {
         }
         case 'image': {
             const fileList = form.watch(name);
-            const hasFile = (_d = fileList === null || fileList === void 0 ? void 0 : fileList.length) !== null && _d !== void 0 ? _d : 0 > 0;
+            const hasFile = ((_d = fileList === null || fileList === void 0 ? void 0 : fileList.length) !== null && _d !== void 0 ? _d : 0) > 0;
             hintOrInfo = hasFile
                 ? Array.from(fileList)
                     .map((f) => `${f.name} ${util_1.Util.formatFileSize(f.size)}`)
@@ -1050,10 +1055,10 @@ function FormField(_a) {
                 : null;
             loading = !!loading;
             accept = accept !== null && accept !== void 0 ? accept : 'image/png, image/jpeg';
-            const className = util_1.Util.createClassName(loading && 'animate-pulse border-indigo-400', !loading && 'border-gray-300', 'relative transition-colors flex justify-center border-2 border-dashed rounded-md', !src && 'px-6 pt-5 pb-6');
+            const className = util_1.Util.createClassName(loading && 'animate-pulse border-indigo-400', !loading && 'border-gray-300', image && 'border border-gray-300 shadow-sm', !image && 'px-6 pt-5 pb-6 border-2 border-dashed', 'relative transition-colors flex justify-center rounded-md');
             element = (react_1.default.createElement("label", { htmlFor: name, className: className },
-                src && (react_1.default.createElement("img", { className: "flex-1 object-contain rounded-md", src: src, alt: typeof label === 'string' ? label : '' })),
-                !src && (react_1.default.createElement("div", { className: "text-center" },
+                image && (react_1.default.createElement("img", { className: "flex-1 object-contain rounded-md", src: image.data, alt: typeof label === 'string' ? label : '' })),
+                !image && (react_1.default.createElement("div", { className: "text-center" },
                     react_1.default.createElement("svg", { className: "w-12 h-12 mx-auto text-gray-400", stroke: "currentColor", fill: "none", viewBox: "0 0 48 48" },
                         react_1.default.createElement("path", { d: "M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" })),
                     react_1.default.createElement("p", { className: "mt-1 text-sm text-gray-600" },
@@ -1065,7 +1070,7 @@ function FormField(_a) {
         }
         case 'file': {
             const fileList = form.watch(name);
-            const hasFile = (_e = fileList === null || fileList === void 0 ? void 0 : fileList.length) !== null && _e !== void 0 ? _e : 0 > 0;
+            const hasFile = ((_e = fileList === null || fileList === void 0 ? void 0 : fileList.length) !== null && _e !== void 0 ? _e : 0) > 0;
             const filenames = hasFile
                 ? Array.from(fileList)
                     .map((f) => f.name)
@@ -1254,6 +1259,7 @@ __exportStar(__webpack_require__(22), exports);
 __exportStar(__webpack_require__(23), exports);
 __exportStar(__webpack_require__(24), exports);
 __exportStar(__webpack_require__(25), exports);
+__exportStar(__webpack_require__(26), exports);
 
 
 /***/ }),
@@ -1438,6 +1444,48 @@ exports.useHashScrolling = useHashScrolling;
 
 /***/ }),
 /* 26 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.useImageInputFromFileList = void 0;
+const react_1 = __webpack_require__(7);
+const util_1 = __webpack_require__(4);
+/**
+ * Use image from file or if file is not provided use image from image object.
+ */
+function useImageInputFromFileList(fileList) {
+    const [state, setState] = react_1.useState({
+        image: null,
+        loading: !!fileList,
+        error: null
+    });
+    react_1.useEffect(() => {
+        if (!fileList) {
+            setState({ loading: false, error: null, image: null });
+            return;
+        }
+        if (fileList.length !== 1) {
+            setState({
+                loading: false,
+                error: new Error('Only one file should be provided.'),
+                image: null
+            });
+            return;
+        }
+        const file = fileList[0];
+        setState({ loading: true, error: null, image: null });
+        util_1.Util.readFileAsImageInput(file)
+            .then((image) => setState({ loading: false, error: null, image }))
+            .catch((error) => setState({ loading: false, error, image: null }));
+    }, [fileList]);
+    return state;
+}
+exports.useImageInputFromFileList = useImageInputFromFileList;
+
+
+/***/ }),
+/* 27 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1590,7 +1638,7 @@ function TableErrorRow({ row, message, wrapColCount, wrapColSpanSum, isNotWrappe
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1627,7 +1675,7 @@ var __rest = (this && this.__rest) || function (s, e) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DropMenu = void 0;
 const react_1 = __importStar(__webpack_require__(7));
-const react_2 = __webpack_require__(28);
+const react_2 = __webpack_require__(29);
 function DropMenu({ children, button }) {
     const [isOpen, setIsOpen] = react_1.useState(false);
     const ref = react_1.useRef(null);
@@ -1662,7 +1710,7 @@ function DropMenuItems(_a) {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -3658,7 +3706,7 @@ function resolvePropValue$2(property, bag) {
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3689,7 +3737,7 @@ exports.Card = Card;
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3704,12 +3752,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(31), exports);
 __exportStar(__webpack_require__(32), exports);
+__exportStar(__webpack_require__(33), exports);
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3744,7 +3792,7 @@ exports.SkeletonText = SkeletonText;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3771,7 +3819,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SkeletonParagraph = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-const SkeletonText_1 = __webpack_require__(31);
+const SkeletonText_1 = __webpack_require__(32);
 function SkeletonParagraph({ className, words, seed }) {
     words || (words = 20);
     const wordLengths = react_1.useMemo(() => Array.from(generateWordLengths(words, seed)), [words, seed]);
@@ -3791,7 +3839,7 @@ function* generateWordLengths(count, seed) {
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3823,7 +3871,7 @@ const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const contexts_1 = __webpack_require__(5);
 const react_dom_1 = __importDefault(__webpack_require__(13));
-const react_2 = __webpack_require__(28);
+const react_2 = __webpack_require__(29);
 function Modal({ children, show, close, openerRef, className }) {
     const screenOverlayRef = react_1.useContext(contexts_1.ScreenOverlayContext);
     if (!(screenOverlayRef === null || screenOverlayRef === void 0 ? void 0 : screenOverlayRef.current))
@@ -3855,7 +3903,7 @@ function ModalContent({ children, close, openerRef, className }) {
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 

@@ -1,6 +1,8 @@
+import type { ImageInput } from '@duely/core';
+
 export const Util = {
-  processImageFile,
-  processFile,
+  readFileAsDataUrl,
+  readFileAsImageInput,
   estimateImageColor,
   dataUriFromSvg,
   byteToHex,
@@ -21,27 +23,8 @@ export const Util = {
   mimeTypeFromDataUrl
 };
 
-async function processImageFile(file: File | null | undefined, options = { estimateColor: true }) {
-  const imageFile: {
-    url: string | null;
-    data: string | null;
-    color?: string;
-  } | null = await processFile(file);
-
-  if (options.estimateColor && imageFile?.url) {
-    imageFile.color = await estimateImageColor(imageFile.url);
-  }
-
-  return imageFile;
-}
-
-async function processFile<T = string | null>(
-  file: File | null | undefined,
-  decoder?: (data: string | null) => T
-): Promise<{
-  url: string | null;
-  data: T | string | null;
-} | null> {
+// see: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
+async function readFileAsDataUrl(file: File | null | undefined): Promise<string | null> {
   if (!file) return null;
 
   return new Promise((resolve, reject) => {
@@ -50,25 +33,30 @@ async function processFile<T = string | null>(
       reader.readAsDataURL(file);
       reader.onerror = reject;
       reader.onload = async () => {
-        const url = reader.result as string;
-        const result: {
-          url: string | null;
-          data: T | string | null;
-        } = {
-          url,
-          data: url
-        };
-
-        if (decoder) {
-          result.data = await decoder(url);
+        if (!reader.result) {
+          reject(new Error('Unable to read file as Data-URL.'));
+          return;
         }
 
-        resolve(result);
+        const dataUrl = reader.result as string;
+        resolve(dataUrl);
       };
     } catch (err) {
       reject(err);
     }
   });
+}
+
+async function readFileAsImageInput(file: File | null | undefined): Promise<ImageInput | null> {
+  if (!file) return null;
+  const dataUrl = await readFileAsDataUrl(file);
+  if (!dataUrl) return null;
+  const color = (await estimateImageColor(dataUrl)) ?? '#ffffff';
+  return {
+    name: file.name,
+    data: dataUrl,
+    color
+  };
 }
 
 function estimateImageColor(url: string): Promise<string> {
@@ -94,8 +82,8 @@ function estimateImageColor(url: string): Promise<string> {
   });
 }
 
-function dataUriFromSvg(svg: string) {
-  return 'data:image/svg+xml;base64,' + btoa(svg);
+function dataUriFromSvg(svg: string): string {
+  return ('data:image/svg+xml;base64,' + btoa(svg));
 }
 
 function byteToHex(x: number) {

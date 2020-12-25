@@ -32,8 +32,8 @@ export default function LogInForm({className }) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}  className={className}>
 
-      <FormField form={form} label="Email address" name="email_address" type="email" validateRule={{ required: true }} />
-      <FormField form={form} label="Password" name="password" type="password" validateRule={{ required: true }}
+      <FormField form={form} label="Email address" name="email_address" type="email" registerOptions={{ required: true }} />
+      <FormField form={form} label="Password" name="password" type="password" registerOptions={{ required: true }}
         actions={<Link to="/password-reset" className="text-indigo-500 text-xs font-bold" tabIndex="10">Reset password</Link>}
       />
       <div className="flex flex-col pt-4 items-center">
