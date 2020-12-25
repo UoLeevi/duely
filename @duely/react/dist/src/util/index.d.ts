@@ -18,6 +18,7 @@ export declare const Util: {
     poisson: typeof poisson;
     truncate: typeof truncate;
     sentenceCase: typeof sentenceCase;
+    mimeTypeFromDataUrl: typeof mimeTypeFromDataUrl;
 };
 declare function processImageFile(file: File | null | undefined, options?: {
     estimateColor: boolean;
@@ -47,4 +48,5 @@ declare function pseudoRandom(seed?: number): number;
 declare function poisson(mean: number, generateRandom?: () => number): number;
 declare function truncate(text: string, maxLength: number): string;
 declare function sentenceCase(text: string): string;
+declare function mimeTypeFromDataUrl(dataUrl: string): string;
 export {};

@@ -7,7 +7,7 @@ type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, an
   name: keyof TFieldValues;
   label?: React.ReactNode;
   form: UseFormMethods<TFieldValues>;
-  validateRule?: RegisterOptions;
+  registerOptions?: RegisterOptions;
   hint?: React.ReactNode;
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
@@ -36,7 +36,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
   label,
   form,
   type,
-  validateRule,
+  registerOptions,
   hint,
   prefix,
   suffix,
@@ -83,7 +83,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           return (
             <label key={value} htmlFor={value} className={className}>
               <input
-                ref={form.register(validateRule)}
+                ref={form.register(registerOptions)}
                 key={value}
                 value={value}
                 id={value}
@@ -121,7 +121,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           <select
             id={name}
             name={name}
-            ref={form.register(validateRule)}
+            ref={form.register(registerOptions)}
             className="w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none"
             spellCheck="false"
             autoComplete="off"
@@ -161,14 +161,16 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
 
       const className = Util.createClassName(
         loading && 'animate-pulse border-indigo-400',
-        'relative flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md'
+        !loading && 'border-gray-300',
+        'relative transition-colors flex justify-center border-2 border-dashed rounded-md',
+        !src && 'px-6 pt-5 pb-6'
       );
 
       element = (
         <label htmlFor={name} className={className}>
           {src && (
             <img
-              className="flex-1 object-contain"
+              className="flex-1 object-contain rounded-md"
               src={src}
               alt={typeof label === 'string' ? label : ''}
             />
@@ -205,7 +207,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
             disabled={loading}
             id={name}
             name={name}
-            ref={form.register(validateRule)}
+            ref={form.register(registerOptions)}
             accept={accept}
             type="file"
             hidden
@@ -249,7 +251,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           <input
             id={name}
             name={name}
-            ref={form.register(validateRule)}
+            ref={form.register(registerOptions)}
             type="file"
             accept={accept}
             hidden
@@ -269,7 +271,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           <textarea
             id={name}
             name={name}
-            ref={form.register(validateRule)}
+            ref={form.register(registerOptions)}
             className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
             spellCheck="false"
             autoComplete="off"
@@ -288,7 +290,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           <input
             id={name}
             name={name}
-            ref={form.register(validateRule)}
+            ref={form.register(registerOptions)}
             type={type}
             className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
             spellCheck="false"

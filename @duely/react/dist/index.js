@@ -400,7 +400,8 @@ exports.Util = {
     pseudoRandom,
     poisson,
     truncate,
-    sentenceCase
+    sentenceCase,
+    mimeTypeFromDataUrl
 };
 function processImageFile(file, options = { estimateColor: true }) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -579,6 +580,9 @@ function truncate(text, maxLength) {
 }
 function sentenceCase(text) {
     return text && text.charAt(0).toUpperCase() + text.substring(1);
+}
+function mimeTypeFromDataUrl(dataUrl) {
+    return dataUrl.substr(5, dataUrl.indexOf(';') - 5);
 }
 
 
@@ -995,7 +999,7 @@ const util_1 = __webpack_require__(4);
 const LoadingBar_1 = __webpack_require__(10);
 function FormField(_a) {
     var _b, _c, _d, _e;
-    var { name, label, form, type, validateRule, hint, prefix, suffix, actions, loading, options, accept, src, className } = _a, props = __rest(_a, ["name", "label", "form", "type", "validateRule", "hint", "prefix", "suffix", "actions", "loading", "options", "accept", "src", "className"]);
+    var { name, label, form, type, registerOptions, hint, prefix, suffix, actions, loading, options, accept, src, className } = _a, props = __rest(_a, ["name", "label", "form", "type", "registerOptions", "hint", "prefix", "suffix", "actions", "loading", "options", "accept", "src", "className"]);
     const error = form.errors[name];
     let errorMessage = error &&
         (error.message ||
@@ -1017,7 +1021,7 @@ function FormField(_a) {
                     : { value: option, element: undefined, description: undefined };
                 const className = util_1.Util.createClassName(selected === value && 'border-blue-400', 'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1');
                 return (react_1.default.createElement("label", { key: value, htmlFor: value, className: className },
-                    react_1.default.createElement("input", Object.assign({ ref: form.register(validateRule), key: value, value: value, id: value, name: name, type: "radio", hidden: true }, props)),
+                    react_1.default.createElement("input", Object.assign({ ref: form.register(registerOptions), key: value, value: value, id: value, name: name, type: "radio", hidden: true }, props)),
                     react_1.default.createElement("div", { className: "space-y-2" },
                         react_1.default.createElement("span", { className: "font-semibold" }, element !== null && element !== void 0 ? element : value),
                         description && react_1.default.createElement("p", { className: "text-xs whitespace-nowrap" }, description))));
@@ -1031,7 +1035,7 @@ function FormField(_a) {
                 return (react_1.default.createElement("option", { key: value, value: value }, element !== null && element !== void 0 ? element : value));
             })) !== null && _c !== void 0 ? _c : [];
             element = (react_1.default.createElement("div", { className: "relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5" },
-                react_1.default.createElement("select", Object.assign({ id: name, name: name, ref: form.register(validateRule), className: "w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none", spellCheck: "false", autoComplete: "off" }, props), children),
+                react_1.default.createElement("select", Object.assign({ id: name, name: name, ref: form.register(registerOptions), className: "w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none", spellCheck: "false", autoComplete: "off" }, props), children),
                 react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", className: "absolute right-0 w-5 h-5 mr-3 text-gray-600 pointer-events-none", viewBox: "0 0 20 20", fill: "currentColor" },
                     react_1.default.createElement("path", { fillRule: "evenodd", d: "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z", clipRule: "evenodd" }))));
             break;
@@ -1046,9 +1050,9 @@ function FormField(_a) {
                 : null;
             loading = !!loading;
             accept = accept !== null && accept !== void 0 ? accept : 'image/png, image/jpeg';
-            const className = util_1.Util.createClassName(loading && 'animate-pulse border-indigo-400', 'relative flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md');
+            const className = util_1.Util.createClassName(loading && 'animate-pulse border-indigo-400', !loading && 'border-gray-300', 'relative transition-colors flex justify-center border-2 border-dashed rounded-md', !src && 'px-6 pt-5 pb-6');
             element = (react_1.default.createElement("label", { htmlFor: name, className: className },
-                src && (react_1.default.createElement("img", { className: "flex-1 object-contain", src: src, alt: typeof label === 'string' ? label : '' })),
+                src && (react_1.default.createElement("img", { className: "flex-1 object-contain rounded-md", src: src, alt: typeof label === 'string' ? label : '' })),
                 !src && (react_1.default.createElement("div", { className: "text-center" },
                     react_1.default.createElement("svg", { className: "w-12 h-12 mx-auto text-gray-400", stroke: "currentColor", fill: "none", viewBox: "0 0 48 48" },
                         react_1.default.createElement("path", { d: "M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" })),
@@ -1056,7 +1060,7 @@ function FormField(_a) {
                         react_1.default.createElement("span", { className: "font-medium text-indigo-600 transition duration-150 ease-in-out cursor-pointer hover:text-indigo-500 focus:outline-none focus:underline" }, "Upload a file"),
                         react_1.default.createElement("span", null, " or drag and drop")),
                     react_1.default.createElement("p", { className: "mt-1 text-xs text-gray-500" }, hint !== null && hint !== void 0 ? hint : accept.split('image/').join('').toUpperCase()))),
-                react_1.default.createElement("input", Object.assign({ disabled: loading, id: name, name: name, ref: form.register(validateRule), accept: accept, type: "file", hidden: true, spellCheck: "false", autoComplete: "off" }, props))));
+                react_1.default.createElement("input", Object.assign({ disabled: loading, id: name, name: name, ref: form.register(registerOptions), accept: accept, type: "file", hidden: true, spellCheck: "false", autoComplete: "off" }, props))));
             break;
         }
         case 'file': {
@@ -1076,20 +1080,20 @@ function FormField(_a) {
                 filenames ? (react_1.default.createElement("span", { className: "w-full py-2 bg-transparent rounded-md row-span-full col-span-full" }, filenames)) : (react_1.default.createElement("span", { className: "w-full py-2 text-gray-500 bg-transparent rounded-md row-span-full col-span-full" },
                     react_1.default.createElement("span", null, "Upload a file"),
                     " or drag and drop")),
-                react_1.default.createElement("input", Object.assign({ id: name, name: name, ref: form.register(validateRule), type: "file", accept: accept, hidden: true, spellCheck: "false", autoComplete: "off" }, props))));
+                react_1.default.createElement("input", Object.assign({ id: name, name: name, ref: form.register(registerOptions), type: "file", accept: accept, hidden: true, spellCheck: "false", autoComplete: "off" }, props))));
             break;
         }
         case 'textarea': {
             element = (react_1.default.createElement("div", { className: "flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5" },
                 prefix && react_1.default.createElement("span", { className: "pl-3 text-gray-500" }, prefix),
-                react_1.default.createElement("textarea", Object.assign({ id: name, name: name, ref: form.register(validateRule), className: "w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3", spellCheck: "false", autoComplete: "off" }, props)),
+                react_1.default.createElement("textarea", Object.assign({ id: name, name: name, ref: form.register(registerOptions), className: "w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3", spellCheck: "false", autoComplete: "off" }, props)),
                 suffix && react_1.default.createElement("span", { className: "pr-3 text-gray-500" }, suffix)));
             break;
         }
         default: {
             element = (react_1.default.createElement("div", { className: "flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5" },
                 prefix && react_1.default.createElement("span", { className: "pl-3 text-gray-500" }, prefix),
-                react_1.default.createElement("input", Object.assign({ id: name, name: name, ref: form.register(validateRule), type: type, className: "w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3", spellCheck: "false", autoComplete: "off" }, props)),
+                react_1.default.createElement("input", Object.assign({ id: name, name: name, ref: form.register(registerOptions), type: type, className: "w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3", spellCheck: "false", autoComplete: "off" }, props)),
                 suffix && react_1.default.createElement("span", { className: "pr-3 text-gray-500" }, suffix)));
         }
     }

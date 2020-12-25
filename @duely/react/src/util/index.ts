@@ -17,7 +17,8 @@ export const Util = {
   pseudoRandom,
   poisson,
   truncate,
-  sentenceCase
+  sentenceCase,
+  mimeTypeFromDataUrl
 };
 
 async function processImageFile(file: File | null | undefined, options = { estimateColor: true }) {
@@ -248,4 +249,8 @@ function truncate(text: string, maxLength: number) {
 
 function sentenceCase(text: string) {
   return text && text.charAt(0).toUpperCase() + text.substring(1);
+}
+
+function mimeTypeFromDataUrl(dataUrl: string) {
+  return dataUrl.substr(5, dataUrl.indexOf(';') - 5);
 }
