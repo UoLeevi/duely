@@ -7,11 +7,11 @@ import {
   useMutation,
   useQuery
 } from '@duely/client';
-import { Card, FormButton, FormErrorInfo, FormField } from '@duely/react';
+import type { MutationResult } from '@duely/core';
+import { Card, FormButton, FormField, FormInfoMessage, FormSection, useFormMessages } from '@duely/react';
 import { useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { DashboardSection } from '../components';
-import { FormSection } from '../components/FormSection';
 
 type SettingsCheckoutSettingsFormValues = { url: string };
 
@@ -28,16 +28,27 @@ function SettingsCheckoutSettingsForm() {
     loading: settingsLoading
   } = useQuery(agency_thank_you_page_settings_Q, { agency_id: current_agency!.id });
 
+  const {
+    infoMessage,
+    setInfoMessage,
+    successMessage,
+    setSuccessMessage,
+    errorMessage,
+    setErrorMessage
+  } = useFormMessages();
+
   const state = {
-    loading: stateCreate.loading || stateUpdate.loading || stateDelete.loading,
-    error: stateCreate.error || stateUpdate.error || stateDelete.error,
-    success: stateCreate.data?.success || stateUpdate.data?.success || stateDelete.data?.success
+    loading: stateCreate.loading || stateUpdate.loading || stateDelete.loading
   };
 
+  const reset = form.reset;
+
   useEffect(() => {
-    if (settingsLoading || state.loading) return;
-    form.setValue('url', agency_thank_you_page_settings?.url?.replace('https://', ''));
-  }, [agency_thank_you_page_settings?.url, form, settingsLoading, state.loading]);
+    if (!agency_thank_you_page_settings) return;
+    reset({
+      url: agency_thank_you_page_settings?.url?.replace('https://', '')
+    });
+  }, [reset, agency_thank_you_page_settings]);
 
   const onSubmit: SubmitHandler<SettingsCheckoutSettingsFormValues> = async ({ url }) => {
     url = url.trim();
@@ -51,10 +62,25 @@ function SettingsCheckoutSettingsForm() {
     } else {
       url = `https://${url}`;
 
+      if (url === agency_thank_you_page_settings?.url) {
+        setInfoMessage('No changes to be saved');
+        form.reset();
+        return;
+      }
+
+      let res: MutationResult | null | undefined;
+
       if (agency_thank_you_page_settings == null) {
-        await createSetting({ url, agency_id: current_agency!.id });
+        res = await createSetting({ url, agency_id: current_agency!.id });
       } else {
-        await updateSetting({ url, setting_id: agency_thank_you_page_settings.id });
+        res = await updateSetting({ url, setting_id: agency_thank_you_page_settings.id });
+      }
+
+      if (res?.success) {
+        setSuccessMessage('Saved');
+        return;
+      } else {
+        setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
       }
     }
   };
@@ -76,11 +102,15 @@ function SettingsCheckoutSettingsForm() {
           </span>
         }
       />
-      <div className="flex flex-row items-center pt-3 space-x-8">
-        <FormButton dense loading={state.loading}>
+
+      <div className="flex flex-row items-center pt-3 space-x-4">
+        <FormButton form={form} spinner dense loading={state.loading}>
           Save
         </FormButton>
-        <FormErrorInfo error={state.error} />
+        <FormButton form={form} type="reset" dense disabled={state.loading}>
+          Cancel
+        </FormButton>
+        <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
       </div>
     </form>
   );

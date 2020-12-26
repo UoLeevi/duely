@@ -1,7 +1,10 @@
 import React from 'react';
-declare type FormButtonProps = React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> & {
+import { UseFormMethods } from 'react-hook-form';
+declare type FormButtonProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
+    form: UseFormMethods<TFieldValues>;
+    spinner?: boolean;
     loading?: boolean;
     dense?: boolean;
-};
-export declare function FormButton({ children, type, disabled, loading, dense, className, ...props }: FormButtonProps): JSX.Element;
+} & Omit<React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, 'form'>;
+export declare function FormButton<TFieldValues extends Record<string, any> = Record<string, any>>({ form, children, type, disabled, loading, spinner, dense, className, ...props }: FormButtonProps<TFieldValues>): JSX.Element;
 export {};

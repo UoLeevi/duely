@@ -75,7 +75,7 @@ export function CreateServiceForm() {
         <h3 className="pt-6 pb-2 text-lg font-medium">Pricing</h3>
         <ServicePricingFormSection form={form} />
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <FormButton loading={state.loading}>Create service</FormButton>
+          <FormButton form={form} spinner loading={state.loading}>Create service</FormButton>
           <FormErrorInfo error={state.error} />
         </div>
       </form>

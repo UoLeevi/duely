@@ -17,7 +17,7 @@ export default function StartPasswordResetForm({ className }) {
     <form onSubmit={form.handleSubmit(onSubmit)} className={className}>
       <FormField form={form} label="Email address" name="email_address" type="email" registerOptions={{ required: true }} />
       <div className="flex flex-col pt-4 items-center">
-        <FormButton loading={state.loading}>Send me a verification link</FormButton>
+        <FormButton form={form} spinner loading={state.loading}>Send me a verification link</FormButton>
       </div>
       <div className="flex flex-row pt-4 justify-center space-x-4 text-sm">
         <span>Don't have an account?</span>

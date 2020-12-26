@@ -20,7 +20,9 @@ export const Util = {
   poisson,
   truncate,
   sentenceCase,
-  mimeTypeFromDataUrl
+  mimeTypeFromDataUrl,
+  pick,
+  diff
 };
 
 // see: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
@@ -241,4 +243,20 @@ function sentenceCase(text: string) {
 
 function mimeTypeFromDataUrl(dataUrl: string) {
   return dataUrl.substr(5, dataUrl.indexOf(';') - 5);
+}
+
+function pick(fromObject: object, keys: string[] | object) {
+  keys = Array.isArray(keys) ? keys : Object.keys(keys);
+
+  return Object.fromEntries(
+    Object.entries(fromObject).filter(([key]) => (keys as string[]).includes(key))
+  );
+}
+
+function diff(fromObject: object, omitObject: object) {
+  return Object.fromEntries(
+    Object.entries(fromObject).filter(
+      ([key, value]) => omitObject?.[key as keyof typeof omitObject] !== value
+    )
+  );
 }

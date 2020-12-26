@@ -78,7 +78,8 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
               ? option
               : { value: option, element: undefined, description: undefined };
           const className = Util.createClassName(
-            selected === value && 'border-blue-400',
+            selected === value && (props.disabled ? 'border-gray-400' : 'border-blue-400'),
+            selected !== value && props.disabled && 'opacity-50',
             'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1'
           );
 
@@ -312,7 +313,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
     <div className={className}>
       <div className="flex justify-between whitespace-nowrap">
         {label && (
-          <label className="pl-px text-sm font-medium leading-7 text-gray-700" htmlFor={name}>
+          <label className="pb-1 pl-px text-sm font-medium text-gray-700" htmlFor={name}>
             {label}
           </label>
         )}

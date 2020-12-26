@@ -43,7 +43,6 @@ Use a more readable tab size (opinionated).
 */
 
 :root {
-  -moz-tab-size: 4;
   tab-size: 4;
 }
 
@@ -827,9 +826,19 @@ html, body, #root {
   background-color: rgba(248, 250, 252, var(--tw-bg-opacity));
 }
 
+.hover\:bg-gray-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgba(241, 245, 249, var(--tw-bg-opacity));
+}
+
 .hover\:bg-red-700:hover {
   --tw-bg-opacity: 1;
   background-color: rgba(190, 18, 60, var(--tw-bg-opacity));
+}
+
+.hover\:bg-indigo-600:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgba(90, 103, 216, var(--tw-bg-opacity));
 }
 
 .bg-opacity-75 {
@@ -857,6 +866,11 @@ html, body, #root {
 .border-gray-300 {
   --tw-border-opacity: 1;
   border-color: rgba(203, 213, 225, var(--tw-border-opacity));
+}
+
+.border-gray-400 {
+  --tw-border-opacity: 1;
+  border-color: rgba(148, 163, 184, var(--tw-border-opacity));
 }
 
 .border-green-500 {
@@ -964,6 +978,10 @@ html, body, #root {
 
 .inline-block {
   display: inline-block;
+}
+
+.inline {
+  display: inline;
 }
 
 .flex {
@@ -1076,6 +1094,10 @@ html, body, #root {
 
 .h-1 {
   height: 0.25rem;
+}
+
+.h-4 {
+  height: 1rem;
 }
 
 .h-5 {
@@ -1199,6 +1221,10 @@ html, body, #root {
   margin-top: 0.25rem;
 }
 
+.mr-1 {
+  margin-right: 0.25rem;
+}
+
 .mt-2 {
   margin-top: 0.5rem;
 }
@@ -1279,6 +1305,10 @@ html, body, #root {
 
 .opacity-100 {
   opacity: 1;
+}
+
+.disabled\:opacity-50:disabled {
+  opacity: 0.5;
 }
 
 .outline-none {
@@ -1380,6 +1410,11 @@ html, body, #root {
   padding-right: 1.5rem;
 }
 
+.px-7 {
+  padding-left: 1.75rem;
+  padding-right: 1.75rem;
+}
+
 .px-9 {
   padding-left: 2.25rem;
   padding-right: 2.25rem;
@@ -1393,6 +1428,11 @@ html, body, #root {
 .px-12 {
   padding-left: 3rem;
   padding-right: 3rem;
+}
+
+.py-1\.5 {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
 }
 
 .py-2\.5 {
@@ -1702,6 +1742,11 @@ html, body, #root {
   color: rgba(51, 65, 85, var(--tw-text-opacity));
 }
 
+.hover\:text-gray-800:hover {
+  --tw-text-opacity: 1;
+  color: rgba(30, 41, 59, var(--tw-text-opacity));
+}
+
 .hover\:text-indigo-500:hover {
   --tw-text-opacity: 1;
   color: rgba(102, 126, 234, var(--tw-text-opacity));
@@ -1710,10 +1755,6 @@ html, body, #root {
 .hover\:text-indigo-600:hover {
   --tw-text-opacity: 1;
   color: rgba(90, 103, 216, var(--tw-text-opacity));
-}
-
-.hover\:text-accent:hover {
-  color: var(--color-accent);
 }
 
 .focus\:text-gray-700:focus {

@@ -20,6 +20,8 @@ export declare const Util: {
     truncate: typeof truncate;
     sentenceCase: typeof sentenceCase;
     mimeTypeFromDataUrl: typeof mimeTypeFromDataUrl;
+    pick: typeof pick;
+    diff: typeof diff;
 };
 declare function readFileAsDataUrl(file: File | null | undefined): Promise<string | null>;
 declare function readFileAsImageInput(file: File | null | undefined): Promise<ImageInput | null>;
@@ -41,4 +43,10 @@ declare function poisson(mean: number, generateRandom?: () => number): number;
 declare function truncate(text: string, maxLength: number): string;
 declare function sentenceCase(text: string): string;
 declare function mimeTypeFromDataUrl(dataUrl: string): string;
+declare function pick(fromObject: object, keys: string[] | object): {
+    [k: string]: any;
+};
+declare function diff(fromObject: object, omitObject: object): {
+    [k: string]: any;
+};
 export {};

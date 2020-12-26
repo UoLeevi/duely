@@ -37,7 +37,7 @@ export default function LogInForm({className }) {
         actions={<Link to="/password-reset" className="text-indigo-500 text-xs font-bold" tabIndex="10">Reset password</Link>}
       />
       <div className="flex flex-col pt-4 items-center">
-        <FormButton loading={state.loading}>Log in</FormButton>
+        <FormButton form={form} spinner loading={state.loading}>Log in</FormButton>
       </div>
       <div className="flex flex-row pt-4 justify-center space-x-4 text-sm">
         <span>Don&apos;t have an account?</span>

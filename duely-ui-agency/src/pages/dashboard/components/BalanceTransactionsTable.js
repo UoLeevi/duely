@@ -8,8 +8,6 @@ import {
 } from '@duely/client';
 import { ColoredChip } from './ColoredChip';
 
-console.log(Currency);
-
 export function BalanceTransactionsTable() {
   const { data: agency } = useQuery(current_agency_Q);
   const {
@@ -61,7 +59,7 @@ export function BalanceTransactionsTable() {
     // status
     (txn) => (
       <div className="flex flex-col items-center">
-        <ColoredChip text={txn.status} color={{ pending: 'blue', available: 'green' }} />
+        <ColoredChip text={txn.status} color={{ pending: 'gray', available: 'green' }} />
       </div>
     )
   ];

@@ -7,7 +7,7 @@
 		exports["@duely/react"] = factory(require("react"), require("react-dom"), require("react-router-dom"));
 	else
 		root["@duely/react"] = factory(root["react"], root["react-dom"], root["react-router-dom"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__7__, __WEBPACK_EXTERNAL_MODULE__13__, __WEBPACK_EXTERNAL_MODULE__20__) {
+})(self, function(__WEBPACK_EXTERNAL_MODULE__7__, __WEBPACK_EXTERNAL_MODULE__13__, __WEBPACK_EXTERNAL_MODULE__25__) {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
@@ -30,7 +30,7 @@ __webpack_require__(1);
 __exportStar(__webpack_require__(4), exports);
 __exportStar(__webpack_require__(5), exports);
 __exportStar(__webpack_require__(9), exports);
-__exportStar(__webpack_require__(21), exports);
+__exportStar(__webpack_require__(22), exports);
 
 
 /***/ }),
@@ -401,7 +401,9 @@ exports.Util = {
     poisson,
     truncate,
     sentenceCase,
-    mimeTypeFromDataUrl
+    mimeTypeFromDataUrl,
+    pick,
+    diff
 };
 // see: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
 function readFileAsDataUrl(file) {
@@ -589,6 +591,13 @@ function sentenceCase(text) {
 function mimeTypeFromDataUrl(dataUrl) {
     return dataUrl.substr(5, dataUrl.indexOf(';') - 5);
 }
+function pick(fromObject, keys) {
+    keys = Array.isArray(keys) ? keys : Object.keys(keys);
+    return Object.fromEntries(Object.entries(fromObject).filter(([key]) => keys.includes(key)));
+}
+function diff(fromObject, omitObject) {
+    return Object.fromEntries(Object.entries(fromObject).filter(([key, value]) => (omitObject === null || omitObject === void 0 ? void 0 : omitObject[key]) !== value));
+}
 
 
 /***/ }),
@@ -735,13 +744,13 @@ __exportStar(__webpack_require__(11), exports);
 __exportStar(__webpack_require__(12), exports);
 __exportStar(__webpack_require__(14), exports);
 __exportStar(__webpack_require__(15), exports);
-__exportStar(__webpack_require__(19), exports);
-__exportStar(__webpack_require__(27), exports);
-__exportStar(__webpack_require__(28), exports);
-__exportStar(__webpack_require__(30), exports);
-__exportStar(__webpack_require__(31), exports);
+__exportStar(__webpack_require__(32), exports);
+__exportStar(__webpack_require__(33), exports);
 __exportStar(__webpack_require__(34), exports);
-__exportStar(__webpack_require__(35), exports);
+__exportStar(__webpack_require__(36), exports);
+__exportStar(__webpack_require__(37), exports);
+__exportStar(__webpack_require__(40), exports);
+__exportStar(__webpack_require__(41), exports);
 
 
 /***/ }),
@@ -976,10 +985,69 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 __exportStar(__webpack_require__(16), exports);
 __exportStar(__webpack_require__(17), exports);
 __exportStar(__webpack_require__(18), exports);
+__exportStar(__webpack_require__(19), exports);
+__exportStar(__webpack_require__(20), exports);
+__exportStar(__webpack_require__(21), exports);
+__exportStar(__webpack_require__(30), exports);
 
 
 /***/ }),
 /* 16 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Form = void 0;
+const react_1 = __importStar(__webpack_require__(7));
+function Form(_a) {
+    var { form, onSubmit, values, children } = _a, props = __rest(_a, ["form", "onSubmit", "values", "children"]);
+    const reset = form.reset;
+    react_1.useEffect(() => {
+        if (!values)
+            return;
+        reset(values);
+    }, [reset, values]);
+    const onReset = react_1.useCallback((e) => {
+        e.preventDefault();
+        reset();
+    }, [reset]);
+    return (react_1.default.createElement("form", Object.assign({ onSubmit: form.handleSubmit(onSubmit), onReset: onReset }, props), children));
+}
+exports.Form = Form;
+
+
+/***/ }),
+/* 17 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1024,7 +1092,7 @@ function FormField(_a) {
                 const { value, element, description } = typeof option === 'object'
                     ? option
                     : { value: option, element: undefined, description: undefined };
-                const className = util_1.Util.createClassName(selected === value && 'border-blue-400', 'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1');
+                const className = util_1.Util.createClassName(selected === value && (props.disabled ? 'border-gray-400' : 'border-blue-400'), selected !== value && props.disabled && 'opacity-50', 'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1');
                 return (react_1.default.createElement("label", { key: value, htmlFor: value, className: className },
                     react_1.default.createElement("input", Object.assign({ ref: form.register(registerOptions), key: value, value: value, id: value, name: name, type: "radio", hidden: true }, props)),
                     react_1.default.createElement("div", { className: "space-y-2" },
@@ -1105,7 +1173,7 @@ function FormField(_a) {
     className = util_1.Util.createClassName('flex flex-col relative', className);
     return (react_1.default.createElement("div", { className: className },
         react_1.default.createElement("div", { className: "flex justify-between whitespace-nowrap" },
-            label && (react_1.default.createElement("label", { className: "pl-px text-sm font-medium leading-7 text-gray-700", htmlFor: name }, label)),
+            label && (react_1.default.createElement("label", { className: "pb-1 pl-px text-sm font-medium text-gray-700", htmlFor: name }, label)),
             shortErrorMessage ? (react_1.default.createElement("p", { className: "text-xs font-medium leading-5 text-red-500" }, shortErrorMessage)) : (actions)),
         element,
         react_1.default.createElement(LoadingBar_1.LoadingBar, { className: "h-px px-1", loading: !!loading }),
@@ -1115,7 +1183,7 @@ exports.FormField = FormField;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1139,9 +1207,12 @@ const react_1 = __importDefault(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const LoadingSpinner_1 = __webpack_require__(11);
 function FormButton(_a) {
-    var { children, type, disabled, loading, dense, className } = _a, props = __rest(_a, ["children", "type", "disabled", "loading", "dense", "className"]);
-    disabled = !!(disabled || loading);
-    className = util_1.Util.createClassName('relative flex justify-center items-center appearance-none bg-indigo-500 rounded-md text-md font-medium leading-5 text-white transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm', dense ? 'px-9 py-2' : 'px-12 py-3', className);
+    var { form, children, type, disabled, loading, spinner, dense, className } = _a, props = __rest(_a, ["form", "children", "type", "disabled", "loading", "spinner", "dense", "className"]);
+    spinner = spinner || loading;
+    disabled = !!(disabled || loading || !form.formState.isDirty);
+    className = util_1.Util.createClassName('relative flex justify-center tracking-wide items-center border appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm', type === 'reset'
+        ? 'bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100'
+        : 'bg-indigo-500 text-white border-transparent hover:bg-indigo-600', spinner ? (dense ? 'px-9 py-1.5' : 'px-12 py-2.5') : dense ? 'px-4 py-1.5' : 'px-7 py-2.5', !loading && 'disabled:opacity-50', className);
     return (react_1.default.createElement("button", Object.assign({ type: type, disabled: disabled, className: className }, props),
         react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: loading, className: `absolute left-0 ${dense ? 'h-5 ml-2' : 'h-6 ml-3'}` }),
         children));
@@ -1150,7 +1221,7 @@ exports.FormButton = FormButton;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1186,7 +1257,7 @@ exports.FormErrorInfo = FormErrorInfo;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1205,42 +1276,72 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Sidebar = void 0;
+exports.FormInfoMessage = void 0;
 const react_1 = __importDefault(__webpack_require__(7));
-const react_router_dom_1 = __webpack_require__(20);
-const hooks_1 = __webpack_require__(21);
 const util_1 = __webpack_require__(4);
-function Sidebar(_a) {
-    var { className, links, topContent, bottomContent } = _a, props = __rest(_a, ["className", "links", "topContent", "bottomContent"]);
-    const { md } = hooks_1.useBreakpoints();
-    className = util_1.Util.createClassName(className, 'z-10 w-full h-16 bg-white border-t md:bg-gray-25 md:border-none border-box md:w-48 xl:w-64 md:h-full md:p-2');
-    return (react_1.default.createElement("aside", Object.assign({ className: className }, props),
-        react_1.default.createElement("div", { className: "flex w-full pb-2 overflow-x-auto md:h-full md:flex-col md:justify-between md:space-y-4 max-w-screen md:pb-0" },
-            md && topContent,
-            react_1.default.createElement("nav", { className: "flex flex-row justify-center flex-1 p-1 space-x-1 md:flex-col md:justify-start md:space-y-2 md:space-x-0" }, links.map((link) => (react_1.default.createElement(SidebarLink, Object.assign({ key: link.to }, link))))),
-            md && bottomContent)));
+function FormInfoMessage(_a) {
+    var { success, info, error, className } = _a, props = __rest(_a, ["success", "info", "error", "className"]);
+    className = util_1.Util.createClassName('flex flex-row items-center justify-center space-x-2 font-medium', error ? 'text-red-400' : 'text-gray-500', className);
+    return (react_1.default.createElement("div", Object.assign({ className: className }, props),
+        error && (react_1.default.createElement(react_1.default.Fragment, null,
+            react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", className: "h-5" },
+                react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" })),
+            react_1.default.createElement("p", { className: "text-sm text-center" }, typeof error === 'string' ? error : error === null || error === void 0 ? void 0 : error.message))),
+        !error && success && (react_1.default.createElement(react_1.default.Fragment, null,
+            react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", className: "h-5 text-green-600" },
+                react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" })),
+            react_1.default.createElement("p", { className: "text-sm text-center" }, success))),
+        !error && !success && info && (react_1.default.createElement(react_1.default.Fragment, null,
+            react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", className: "h-5" },
+                react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" })),
+            react_1.default.createElement("p", { className: "text-sm text-center" }, info)))));
 }
-exports.Sidebar = Sidebar;
-function SidebarLink({ text, icon, to, exact, className }) {
-    const match = react_router_dom_1.useRouteMatch({ path: to, exact });
-    const Icon = icon;
-    className = util_1.Util.createClassName(className, match
-        ? 'md:bg-white md:shadow-sm'
-        : 'focus-visible:text-gray-700 hover:text-gray-700 border-transparent', 'flex flex-col md:flex-row items-center focus:outline-none md:border space-y-1 md:space-y-0 md:space-x-3 rounded-md text-gray-500 text-xs shadow-gray-500 md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white');
-    return (react_1.default.createElement(react_router_dom_1.Link, { to: to, className: className },
-        react_1.default.createElement(Icon, { className: "text-lg sm:text-xl md:text-2xl" }),
-        react_1.default.createElement("span", null, text)));
-}
+exports.FormInfoMessage = FormInfoMessage;
 
-
-/***/ }),
-/* 20 */
-/***/ ((module) => {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE__20__;
 
 /***/ }),
 /* 21 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FormSection = void 0;
+const react_1 = __importDefault(__webpack_require__(7));
+const hooks_1 = __webpack_require__(22);
+const util_1 = __webpack_require__(4);
+function FormSection(_a) {
+    var { title, description, children, className, id } = _a, props = __rest(_a, ["title", "description", "children", "className", "id"]);
+    className = util_1.Util.createClassName(className, 'relative flex flex-col px-5 pt-4 pb-5');
+    const [linkRef, hashLink] = hooks_1.useHashScrolling();
+    return (react_1.default.createElement("section", Object.assign({ className: className }, props),
+        react_1.default.createElement("div", { className: "flex items-center space-x-2 group" },
+            react_1.default.createElement("h3", { ref: linkRef, className: "font-bold tracking-wide text-gray-700" },
+                title,
+                hashLink)),
+        react_1.default.createElement("div", { className: "flex flex-col -m-2 xl:-m-4 xl:flex-row" },
+            react_1.default.createElement("div", { className: "flex flex-col items-start pt-1 m-2 xl:m-4 xl:w-1/3 2xl:w-1/4" },
+                react_1.default.createElement("p", { className: "text-sm text-gray-500" }, description)),
+            react_1.default.createElement("div", { className: "flex flex-col m-2 xl:m-4 xl:w-2/3 2xl:w-3/4" }, children))));
+}
+exports.FormSection = FormSection;
+
+
+/***/ }),
+/* 22 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1255,15 +1356,16 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(22), exports);
 __exportStar(__webpack_require__(23), exports);
 __exportStar(__webpack_require__(24), exports);
-__exportStar(__webpack_require__(25), exports);
 __exportStar(__webpack_require__(26), exports);
+__exportStar(__webpack_require__(27), exports);
+__exportStar(__webpack_require__(28), exports);
+__exportStar(__webpack_require__(29), exports);
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1282,7 +1384,7 @@ exports.useClassName = useClassName;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1298,7 +1400,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.useDynamicNavigation = void 0;
 const react_1 = __webpack_require__(7);
-const react_router_dom_1 = __webpack_require__(20);
+const react_router_dom_1 = __webpack_require__(25);
 function isAnchorElement(target) {
     var _a;
     return ((_a = target) === null || _a === void 0 ? void 0 : _a.tagName) === 'A';
@@ -1352,7 +1454,13 @@ exports.useDynamicNavigation = useDynamicNavigation;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__25__;
+
+/***/ }),
+/* 26 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1375,7 +1483,7 @@ exports.useBreakpoints = useBreakpoints;
 
 
 /***/ }),
-/* 25 */
+/* 27 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1401,7 +1509,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.useHashScrolling = void 0;
 const react_1 = __importStar(__webpack_require__(7));
-const react_router_dom_1 = __webpack_require__(20);
+const react_router_dom_1 = __webpack_require__(25);
 function HashLink({ hash }) {
     return (react_1.default.createElement(react_router_dom_1.Link, { to: hash, className: "absolute inset-y-0 right-0 flex items-center my-auto text-transparent transition-colors focus:outline-none group-hover:text-indigo-600 focus-visible:text-indigo-500", style: {
             marginRight: '-1.5em'
@@ -1443,7 +1551,7 @@ exports.useHashScrolling = useHashScrolling;
 
 
 /***/ }),
-/* 26 */
+/* 28 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1485,7 +1593,152 @@ exports.useImageInputFromFileList = useImageInputFromFileList;
 
 
 /***/ }),
-/* 27 */
+/* 29 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.useTemporaryValue = void 0;
+const react_1 = __webpack_require__(7);
+function useTemporaryValue(durationMs) {
+    const timeoutRef = react_1.useRef();
+    const isMountedRef = react_1.useRef();
+    react_1.useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
+    const [value, setValue] = react_1.useState();
+    return {
+        value,
+        setValue: react_1.useCallback((value) => {
+            if (timeoutRef.current) {
+                window.clearTimeout(timeoutRef.current);
+            }
+            timeoutRef.current = window.setTimeout(() => {
+                timeoutRef.current = undefined;
+                if (isMountedRef.current)
+                    setValue(undefined);
+            }, durationMs);
+            setValue(value);
+        }, [durationMs]),
+        reset: react_1.useCallback(() => {
+            if (timeoutRef.current) {
+                window.clearTimeout(timeoutRef.current);
+            }
+            timeoutRef.current = undefined;
+        }, [])
+    };
+}
+exports.useTemporaryValue = useTemporaryValue;
+
+
+/***/ }),
+/* 30 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__webpack_require__(31), exports);
+
+
+/***/ }),
+/* 31 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.useFormMessages = void 0;
+const hooks_1 = __webpack_require__(22);
+function useFormMessages() {
+    const { value: infoMessage, setValue: setInfoMessage, reset: resetInfoMessage } = hooks_1.useTemporaryValue(4000);
+    const { value: successMessage, setValue: setSuccessMessage, reset: resetSuccessMessage } = hooks_1.useTemporaryValue(4000);
+    const { value: errorMessage, setValue: setErrorMessage, reset: resetErrorMessage } = hooks_1.useTemporaryValue(7000);
+    return {
+        infoMessage,
+        setInfoMessage(infoMessage) {
+            resetErrorMessage();
+            resetSuccessMessage();
+            setInfoMessage(infoMessage);
+        },
+        successMessage,
+        setSuccessMessage(successMessage) {
+            resetInfoMessage();
+            resetErrorMessage();
+            setSuccessMessage(successMessage);
+        },
+        errorMessage,
+        setErrorMessage(errorMessage) {
+            resetInfoMessage();
+            resetSuccessMessage();
+            setErrorMessage(errorMessage);
+        }
+    };
+}
+exports.useFormMessages = useFormMessages;
+
+
+/***/ }),
+/* 32 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Sidebar = void 0;
+const react_1 = __importDefault(__webpack_require__(7));
+const react_router_dom_1 = __webpack_require__(25);
+const hooks_1 = __webpack_require__(22);
+const util_1 = __webpack_require__(4);
+function Sidebar(_a) {
+    var { className, links, topContent, bottomContent } = _a, props = __rest(_a, ["className", "links", "topContent", "bottomContent"]);
+    const { md } = hooks_1.useBreakpoints();
+    className = util_1.Util.createClassName(className, 'z-10 w-full h-16 bg-white border-t md:bg-gray-25 md:border-none border-box md:w-48 xl:w-64 md:h-full md:p-2');
+    return (react_1.default.createElement("aside", Object.assign({ className: className }, props),
+        react_1.default.createElement("div", { className: "flex w-full pb-2 overflow-x-auto md:h-full md:flex-col md:justify-between md:space-y-4 max-w-screen md:pb-0" },
+            md && topContent,
+            react_1.default.createElement("nav", { className: "flex flex-row justify-center flex-1 p-1 space-x-1 md:flex-col md:justify-start md:space-y-2 md:space-x-0" }, links.map((link) => (react_1.default.createElement(SidebarLink, Object.assign({ key: link.to }, link))))),
+            md && bottomContent)));
+}
+exports.Sidebar = Sidebar;
+function SidebarLink({ text, icon, to, exact, className }) {
+    const match = react_router_dom_1.useRouteMatch({ path: to, exact });
+    const Icon = icon;
+    className = util_1.Util.createClassName(className, match
+        ? 'md:bg-white md:shadow-sm'
+        : 'focus-visible:text-gray-700 hover:text-gray-700 border-transparent', 'flex flex-col md:flex-row items-center focus:outline-none md:border space-y-1 md:space-y-0 md:space-x-3 rounded-md text-gray-500 text-xs shadow-gray-500 md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white');
+    return (react_1.default.createElement(react_router_dom_1.Link, { to: to, className: className },
+        react_1.default.createElement(Icon, { className: "text-lg sm:text-xl md:text-2xl" }),
+        react_1.default.createElement("span", null, text)));
+}
+
+
+/***/ }),
+/* 33 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1512,7 +1765,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Table = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-const hooks_1 = __webpack_require__(21);
+const hooks_1 = __webpack_require__(22);
 const LoadingSpinner_1 = __webpack_require__(11);
 function Table({ rows: items, columns, headers, className, dense, breakpoint, wrap: wrapOptions, loading, error }) {
     var _a, _b, _c;
@@ -1638,7 +1891,7 @@ function TableErrorRow({ row, message, wrapColCount, wrapColSpanSum, isNotWrappe
 
 
 /***/ }),
-/* 28 */
+/* 34 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1675,7 +1928,7 @@ var __rest = (this && this.__rest) || function (s, e) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DropMenu = void 0;
 const react_1 = __importStar(__webpack_require__(7));
-const react_2 = __webpack_require__(29);
+const react_2 = __webpack_require__(35);
 function DropMenu({ children, button }) {
     const [isOpen, setIsOpen] = react_1.useState(false);
     const ref = react_1.useRef(null);
@@ -1710,7 +1963,7 @@ function DropMenuItems(_a) {
 
 
 /***/ }),
-/* 29 */
+/* 35 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -3706,7 +3959,7 @@ function resolvePropValue$2(property, bag) {
 
 
 /***/ }),
-/* 30 */
+/* 36 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3737,7 +3990,7 @@ exports.Card = Card;
 
 
 /***/ }),
-/* 31 */
+/* 37 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3752,12 +4005,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(32), exports);
-__exportStar(__webpack_require__(33), exports);
+__exportStar(__webpack_require__(38), exports);
+__exportStar(__webpack_require__(39), exports);
 
 
 /***/ }),
-/* 32 */
+/* 38 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3792,7 +4045,7 @@ exports.SkeletonText = SkeletonText;
 
 
 /***/ }),
-/* 33 */
+/* 39 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3819,7 +4072,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SkeletonParagraph = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-const SkeletonText_1 = __webpack_require__(32);
+const SkeletonText_1 = __webpack_require__(38);
 function SkeletonParagraph({ className, words, seed }) {
     words || (words = 20);
     const wordLengths = react_1.useMemo(() => Array.from(generateWordLengths(words, seed)), [words, seed]);
@@ -3839,7 +4092,7 @@ function* generateWordLengths(count, seed) {
 
 
 /***/ }),
-/* 34 */
+/* 40 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3871,7 +4124,7 @@ const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const contexts_1 = __webpack_require__(5);
 const react_dom_1 = __importDefault(__webpack_require__(13));
-const react_2 = __webpack_require__(29);
+const react_2 = __webpack_require__(35);
 function Modal({ children, show, close, openerRef, className }) {
     const screenOverlayRef = react_1.useContext(contexts_1.ScreenOverlayContext);
     if (!(screenOverlayRef === null || screenOverlayRef === void 0 ? void 0 : screenOverlayRef.current))
@@ -3903,7 +4156,7 @@ function ModalContent({ children, close, openerRef, className }) {
 
 
 /***/ }),
-/* 35 */
+/* 41 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 

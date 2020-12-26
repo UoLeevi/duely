@@ -28,7 +28,7 @@ export default function SignUpForm({ className }) {
         </label>
       </div>
       <div className="flex flex-col pt-4 items-center">
-        <FormButton loading={state.loading}>Sign up</FormButton>
+        <FormButton form={form} spinner loading={state.loading}>Sign up</FormButton>
       </div>
       <div className="flex flex-row pt-4 justify-center space-x-4 text-sm">
         <span>Already have an account?</span>
