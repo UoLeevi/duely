@@ -123,7 +123,12 @@ export default function DashboardSettings() {
         <Card>
           <FormSection
             title="Checkout"
-            description="You can set up a custom thank you page URL or use the one provided by Duely"
+            description={
+              <span>
+                By default, after a successful checkout, customers will be redirected to a default thank you page hosted on Duely. Alternatively, you can set custom URLs for the thank you pages.<br/><br/>
+                Custom thank you page URL can be set on both agency level and on service level. If the thank you page URL is set on both agency level and service level, the service level setting will be used. To set the thank you page URL on the service level, please edit an individual service settings.
+              </span>
+            }
           >
             <SettingsCheckoutSettingsForm />
           </FormSection>
