@@ -11,7 +11,6 @@ export const ServiceSettings = {
     type ServiceThankYouPageSetting {
       id: ID!
       url: String!
-      agency_setting: AgencyThankYouPageSetting!
     }
 
     extend type Mutation {
@@ -30,9 +29,6 @@ export const ServiceSettings = {
     ServiceSettings: {
       id: (source) => `set${source.service_id}_x`,
       ...createResolverForReferencedResource({ name: 'thank_you_page_setting', resource_name: 'service thank you page setting', reverse: true, column_name: 'service_id' }),
-    },
-    ServiceThankYouPageSetting: {
-      ...createResolverForReferencedResource({ name: 'agency_setting', column_name: 'agency_thank_you_page_setting_id' }),
     },
     Mutation: {
       async create_service_thank_you_page_setting(obj, args, context, info) {
@@ -66,20 +62,7 @@ export const ServiceSettings = {
 
         try {
           return await withConnection(context, async withSession => {
-            return await withSession(async ({ queryResource, createResource }) => {
-
-              const service = await queryResource(args.service_id);
-              const agency_setting = await queryResource('service thank you page setting', { agency_id: service.agency_id });
-
-              if (agency_setting == null) {
-                return {
-                  success: false,
-                  message: 'Thank you page URL should be first set at general level',
-                  type: 'ServiceThankYouPageSettingMutationResult'
-                };
-              }
-
-              args.agency_thank_you_page_setting_id = agency_setting.id;
+            return await withSession(async ({ createResource }) => {
 
               // create resource
               const setting = await createResource('service thank you page setting', args);

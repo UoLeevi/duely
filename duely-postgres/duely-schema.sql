@@ -3727,7 +3727,7 @@ CREATE FUNCTION policy_.agent_can_query_service_thank_you_page_setting_(_resourc
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, agency_thank_you_page_setting_uuid_, service_uuid_, url_}'::text[];
+    RETURN '{uuid_, service_uuid_, url_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4606,7 +4606,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{agency_thank_you_page_setting_uuid_, service_uuid_, url_}'::text[];
+    RETURN '{service_uuid_, url_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4926,7 +4926,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_service_thank_you_page_setting_
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, agency_thank_you_page_setting_uuid_, service_uuid_, url_}'::text[];
+    RETURN '{uuid_, service_uuid_, url_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5985,7 +5985,6 @@ ALTER TABLE application_.service_step_payment_ OWNER TO postgres;
 
 CREATE TABLE application_.service_thank_you_page_setting_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
-    agency_thank_you_page_setting_uuid_ uuid NOT NULL,
     service_uuid_ uuid NOT NULL,
     url_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -6294,7 +6293,6 @@ ALTER TABLE application__audit_.service_step_payment_ OWNER TO postgres;
 
 CREATE TABLE application__audit_.service_thank_you_page_setting_ (
     uuid_ uuid,
-    agency_thank_you_page_setting_uuid_ uuid,
     service_uuid_ uuid,
     url_ text,
     audit_at_ timestamp with time zone,
@@ -7047,7 +7045,7 @@ f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bd
 94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	notidef	notification definition	application_.notification_definition_	\N	{uuid_,name_,stripe_event_,feed_notification_enabled_,email_notifications_enabled_}
 f8e2c163-8ebf-45dc-90b8-b850e1590c7c	set	user notification setting	application_.user_notification_setting_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{uuid_,user_uuid_,subdomain_uuid_,notification_definition_uuid_}
 6549cc83-4ce3-423d-88e1-263ac227608d	set	agency thank you page setting	application_.agency_thank_you_page_setting_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,url_}
-34f873e1-b837-4f1f-94d7-7bacf9c43d8d	set	service thank you page setting	application_.service_thank_you_page_setting_	d50773b3-5779-4333-8bc3-6ef32d488d72	{uuid_,agency_thank_you_page_setting_uuid_,service_uuid_,url_}
+34f873e1-b837-4f1f-94d7-7bacf9c43d8d	set	service thank you page setting	application_.service_thank_you_page_setting_	d50773b3-5779-4333-8bc3-6ef32d488d72	{uuid_,service_uuid_,url_}
 \.
 
 
@@ -7437,19 +7435,19 @@ ALTER TABLE ONLY application_.service_step_payment_
 
 
 --
--- Name: service_thank_you_page_setting_ service_thank_you_page_settin_agency_thank_you_page_setting_key; Type: CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.service_thank_you_page_setting_
-    ADD CONSTRAINT service_thank_you_page_settin_agency_thank_you_page_setting_key UNIQUE (agency_thank_you_page_setting_uuid_, service_uuid_);
-
-
---
 -- Name: service_thank_you_page_setting_ service_thank_you_page_setting__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
 ALTER TABLE ONLY application_.service_thank_you_page_setting_
     ADD CONSTRAINT service_thank_you_page_setting__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: service_thank_you_page_setting_ service_thank_you_page_setting__service_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.service_thank_you_page_setting_
+    ADD CONSTRAINT service_thank_you_page_setting__service_uuid__key UNIQUE (service_uuid_);
 
 
 --
@@ -9533,14 +9531,6 @@ ALTER TABLE ONLY application_.service_step_form_
 
 ALTER TABLE ONLY application_.service_step_payment_
     ADD CONSTRAINT service_step_payment__uuid__fkey FOREIGN KEY (uuid_) REFERENCES application_.service_step_(uuid_);
-
-
---
--- Name: service_thank_you_page_setting_ service_thank_you_page_settin_agency_thank_you_page_settin_fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.service_thank_you_page_setting_
-    ADD CONSTRAINT service_thank_you_page_settin_agency_thank_you_page_settin_fkey FOREIGN KEY (agency_thank_you_page_setting_uuid_) REFERENCES application_.agency_thank_you_page_setting_(uuid_);
 
 
 --
