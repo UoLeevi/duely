@@ -1,5 +1,8 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
+import {
+  createDefaultQueryResolversForResource,
+  createResolverForReferencedResource
+} from '../../util';
 import stripe from '../../../stripe';
 
 const resource = {
@@ -53,12 +56,13 @@ export const Price = {
     Price: {
       name(price) {
         let text = formatCurrency(price.unit_amount / 100, price.currency);
-        
+
         if (price.type === 'recurring') {
           const count = price.recurring_interval_count;
-          text += count > 1
-            ? ` every ${count} ${price.recurring_interval}s`
-            : ` every ${price.recurring_interval}`;
+          text +=
+            count > 1
+              ? ` every ${count} ${price.recurring_interval}s`
+              : ` every ${price.recurring_interval}`;
         }
 
         return text;
@@ -68,7 +72,7 @@ export const Price = {
           country_code = country_code ?? 'US';
           return new Intl.NumberFormat('en-' + country_code, {
             currency,
-            style: 'currency',
+            style: 'currency'
           }).format(amount);
         }
       },
@@ -79,21 +83,28 @@ export const Price = {
     },
     Mutation: {
       async create_price(obj, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ createResource, queryResource }) => {
               const service_variant = await queryResource(args.service_variant_id);
               const service = await queryResource(service_variant.service_id);
-              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
+              const stripe_account = await queryResource('stripe account', {
+                agency_id: service.agency_id
+              });
 
               if (service_variant == null) {
                 throw Error('Service variant not found');
               }
 
-              const { status, unit_amount, currency, recurring_interval: interval, recurring_interval_count: interval_count } = args;
+              const {
+                status,
+                unit_amount,
+                currency,
+                recurring_interval: interval,
+                recurring_interval_count: interval_count
+              } = args;
 
               const stripe_price_args = {
                 unit_amount,
@@ -110,12 +121,15 @@ export const Price = {
               }
 
               // create price object at stripe
-              const stripe_price = await stripe.prices.create(
-                stripe_price_args,
-                { stripeAccount: stripe_account.stripe_id_ext });
+              const stripe_price = await stripe.prices.create(stripe_price_args, {
+                stripeAccount: stripe_account.stripe_id_ext
+              });
 
               // create price resource
-              const price = await createResource('price', { ...args, stripe_id_ext: stripe_price.id });
+              const price = await createResource('price', {
+                ...args,
+                stripe_id_ext: stripe_price.id
+              });
 
               // success
               return {
@@ -135,17 +149,18 @@ export const Price = {
         }
       },
       async update_price(obj, { price_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource, updateResource }) => {
               // update price resource
               const price = await updateResource(price_id, args);
               const service_variant = await queryResource(price.service_variant_id);
               const service = await queryResource(service_variant.service_id);
-              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
+              const stripe_account = await queryResource('stripe account', {
+                agency_id: service.agency_id
+              });
 
               const { status } = price;
 
@@ -157,7 +172,8 @@ export const Price = {
               const stripe_price = await stripe.prices.update(
                 price.stripe_id_ext,
                 stripe_price_args,
-                { stripeAccount: stripe_account.stripe_id_ext });
+                { stripeAccount: stripe_account.stripe_id_ext }
+              );
 
               // success
               return {
@@ -177,23 +193,25 @@ export const Price = {
         }
       },
       async delete_price(obj, { price_id }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource, deleteResource }) => {
               const price = await deleteResource(price_id);
               const service_variant = await queryResource(price.service_variant_id);
               const service = await queryResource(service_variant.service_id);
-              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
+              const stripe_account = await queryResource('stripe account', {
+                agency_id: service.agency_id
+              });
 
               try {
                 // try deactivate price at stripe
                 await stripe.prices.update(
                   price.stripe_id_ext,
                   { active: false },
-                  { stripeAccount: stripe_account.stripe_id_ext });
+                  { stripeAccount: stripe_account.stripe_id_ext }
+                );
               } catch {
                 // ignore error
               }
@@ -224,28 +242,40 @@ export const Price = {
           };
         }
       },
-      async create_stripe_checkout_session(obj, { price_id, success_url, cancel_url }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+      async create_stripe_checkout_session(
+        obj,
+        { price_id, success_url, cancel_url },
+        context,
+        info
+      ) {
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource }) => {
               // get resources
               const price = await queryResource(price_id);
               const service_variant = await queryResource(price.service_variant_id);
               const service = await queryResource(service_variant.service_id);
-              const stripe_account = await queryResource('stripe account', { agency_id: service.agency_id });
+              const stripe_account = await queryResource('stripe account', {
+                agency_id: service.agency_id
+              });
               const agency = await queryResource(service.agency_id);
               const subdomain = await queryResource(agency.subdomain_id);
 
               if (!success_url) {
-                const service_thank_you_page_setting = await queryResource('agency thank you page setting', { agency_id: service.agency_id });
+                const service_thank_you_page_setting = await queryResource(
+                  'service thank you page setting',
+                  { service_id: service.id }
+                );
                 success_url = service_thank_you_page_setting?.url;
               }
 
               if (!success_url) {
-                const agency_thank_you_page_setting = await queryResource('service thank you page setting', { service_id: service.id });
+                const agency_thank_you_page_setting = await queryResource(
+                  'agency thank you page setting',
+                  { agency_id: service.agency_id }
+                );
                 success_url = agency_thank_you_page_setting?.url;
               }
 
@@ -258,7 +288,6 @@ export const Price = {
                 const url = new URL(success_url);
                 url.searchParams.append('session_id', '{CHECKOUT_SESSION_ID}');
                 success_url = url.href.replace('%7B', '{').replace('%7D', '}');
-                
               } catch (error) {
                 return {
                   // error
@@ -280,10 +309,12 @@ export const Price = {
               const stripe_checkout_session_args = {
                 mode: price.type === 'recurring' ? 'subscription' : 'payment',
                 payment_method_types: ['card'],
-                line_items: [{
-                  price: price.stripe_id_ext,
-                  quantity: 1,
-                }],
+                line_items: [
+                  {
+                    price: price.stripe_id_ext,
+                    quantity: 1
+                  }
+                ],
                 success_url,
                 cancel_url
               };
@@ -294,13 +325,16 @@ export const Price = {
                 };
               } else {
                 stripe_checkout_session_args.payment_intent_data = {
-                  application_fee_amount: Math.round(price.unit_amount * application_fee_percent / 100),
+                  application_fee_amount: Math.round(
+                    (price.unit_amount * application_fee_percent) / 100
+                  )
                 };
               }
 
               const checkout_session = await stripe.checkout.sessions.create(
                 stripe_checkout_session_args,
-                { stripeAccount: stripe_account.stripe_id_ext });
+                { stripeAccount: stripe_account.stripe_id_ext }
+              );
 
               // success
               return {
