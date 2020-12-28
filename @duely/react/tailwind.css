@@ -1,0 +1,114 @@
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --color-primary: #667eea;
+  --color-secondary: #34d399;
+  --color-accent: #f97316;
+  --color-background: #fbfcfd;
+  --color-surface: #f1f5f9;
+  --color-error: #f43f5e;
+  --color-success: #10b981;
+}
+
+/* purgecss start ignore */
+@tailwind base;
+@tailwind components;
+/* purgecss end ignore */
+
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    @apply h-full;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply box-border relative flex flex-col h-full bg-white;
+  }
+
+  .page-body-container {
+    @apply container box-border inset-x-0 top-0 flex flex-col flex-1 h-full px-3 py-12 mx-auto space-y-6 md:px-4 md:py-16;
+  }
+
+  .form-container {
+    @apply flex flex-col w-full max-w-xs py-4 mx-auto space-y-4 sm:max-w-sm;
+  }
+
+  /* #region form-field-radio-toggle */
+  .form-field-radio-toggle {
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .form-field-radio-toggle > label {
+    grid-column: span 2 / span 2;
+    opacity: 0.4;
+  }
+
+  .form-field-radio-toggle > div > div {
+    transform: translateX(calc(100% - 4px));
+  }
+
+  .form-field-radio-toggle > :checked + label + div > div {
+    transform: translateX(0);
+  }
+
+  .form-field-radio-toggle > label:first-of-type {
+    grid-column-start: 1;
+    grid-template-columns: 1fr calc(3rem + 2px);
+  }
+
+  .form-field-radio-toggle > label:first-of-type > span {
+    grid-column-start: 1;
+  }
+
+  .form-field-radio-toggle > label:last-of-type {
+    grid-column-start: 2;
+    grid-template-columns: calc(3rem + 2px) 1fr;
+  }
+
+  .form-field-radio-toggle > :checked + label:last-of-type {
+    grid-column-start: 3;
+  }
+
+  .form-field-radio-toggle > label:last-of-type > span {
+    grid-column-start: 2;
+  }
+
+  .form-field-radio-toggle > :checked + label:last-of-type > span {
+    grid-column-start: 1;
+  }
+
+  .form-field-radio-toggle > :checked + label {
+    opacity: 1;
+    grid-template-columns: 1fr;
+    grid-column: span 1 / span 1;
+  }
+
+  /* #endregion */
+}
+
+@layer utilities {
+  .bg-blur {
+    backdrop-filter: blur(2px);
+  }
+
+  .bg-mask-x-transparent {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      rgba(0, 0, 0, 1),
+      rgba(0, 0, 0, 1),
+      transparent
+    );
+  }
+
+  .grid-cols-fill-200 {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}

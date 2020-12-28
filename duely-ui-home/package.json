@@ -3,12 +3,12 @@
   "version": "0.9.11",
   "private": true,
   "scripts": {
-    "build": "NODE_ENV='production' postcss src/styles/tailwind.css -o public/styles/index.css && react-scripts build",
-    "build:css": "NODE_ENV='production' postcss src/styles/tailwind.css -o public/styles/index.css",
+    "build": "NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o public/styles/index.css && react-scripts build",
+    "build:css": "NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o public/styles/index.css",
     "eject": "react-scripts eject",
     "start": "react-scripts start",
     "test": "react-scripts test",
-    "watch:css": "postcss -w src/styles/tailwind.css -o public/styles/index.css"
+    "watch:css": "postcss -w node_modules/@duely/react/tailwind.css -o public/styles/index.css"
   },
   "browserslist": {
     "production": [

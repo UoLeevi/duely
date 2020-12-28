@@ -1,4 +1,4 @@
-import '../src/styles.module.css';
+import '../src/styles/module.css';
 
 import { MemoryRouter as Router } from 'react-router-dom';
 import { ViewportContextProvider, ScreenOverlayContextProvider } from '../src/contexts';

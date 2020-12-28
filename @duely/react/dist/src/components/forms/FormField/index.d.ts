@@ -13,9 +13,10 @@ declare type FormFieldProps<TFieldValues extends Record<string, any> = Record<st
     actions?: React.ReactNode;
     loading?: boolean;
     options?: (string | {
-        value?: string;
+        value: string;
         element?: React.ReactNode;
         description?: React.ReactNode;
+        className?: string;
     })[];
 } & Omit<React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement> & React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>, 'form'>;
 export declare function FormField<TFieldValues extends Record<string, any> = Record<string, any>>({ name, label, form, type, registerOptions, hint, prefix, suffix, actions, loading, options, accept, image, className, ...props }: FormFieldProps<TFieldValues>): JSX.Element;

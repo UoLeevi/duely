@@ -4,6 +4,15 @@ import type { FieldError, RegisterOptions, UseFormMethods } from 'react-hook-for
 import { Util } from '../../../util';
 import { LoadingBar } from '../../LoadingBar';
 
+type FormFieldBaseProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
+  name: keyof TFieldValues;
+  form: UseFormMethods<TFieldValues>;
+  label?: React.ReactNode;
+  registerOptions?: RegisterOptions;
+  hint?: React.ReactNode;
+  loading?: boolean;
+};
+
 type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
   name: keyof TFieldValues;
   form: UseFormMethods<TFieldValues>;
@@ -18,9 +27,10 @@ type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, an
   options?: (
     | string
     | {
-        value?: string;
+        value: string;
         element?: React.ReactNode;
         description?: React.ReactNode;
+        className?: string;
       }
   )[];
 } & Omit<
@@ -68,6 +78,62 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
   let hintOrInfo = hint;
 
   switch (type) {
+    case 'radio-toggle': {
+      if (!Array.isArray(options) || options.length !== 2)
+        throw new Error('radio-toggle expects options prop as an array containing two items.');
+      const [left, right] = options.map((option) =>
+        typeof option === 'object' ? option : { value: option }
+      );
+
+      const selected = form.watch(name);
+
+      element = (
+        <div className="flex">
+          <div className="grid items-center grid-cols-3 form-field-radio-toggle">
+            <input
+              ref={form.register(registerOptions)}
+              type="radio"
+              id={`radio-toggle-option-${left.value}`}
+              name={name}
+              value={left.value}
+              defaultChecked
+              hidden
+              {...props}
+            />
+            <label htmlFor={`radio-toggle-option-${left.value}`} className="grid row-start-1">
+              <span className="pr-3 font-medium tracking-wide text-right">
+                {left.element ?? Util.sentenceCase(left.value)}
+              </span>
+            </label>
+
+            <div className="relative w-12 h-8 col-start-2 row-start-1 border border-gray-300 rounded-md shadow-sm outline-none pointer-events-none sm:text-sm sm:leading-5">
+              <div
+                className={`box-border grid place-items-center absolute inset-y-0 w-6 m-px transition border-2 border-transparent rounded-md bg-clip-content ${
+                  (left.value === selected ? left : right).className ?? 'bg-gradient-to-r from-gray-400 to-gray-300'
+                }`}
+              ></div>
+            </div>
+
+            <input
+              ref={form.register(registerOptions)}
+              type="radio"
+              id={`radio-toggle-option-${right.value}`}
+              name={name}
+              value={right.value}
+              hidden
+              {...props}
+            />
+            <label htmlFor={`radio-toggle-option-${right.value}`} className="grid row-start-1">
+              <span className="pl-3 font-medium tracking-wide text-left">
+                {right.element ?? Util.sentenceCase(right.value)}
+              </span>
+            </label>
+          </div>
+        </div>
+      );
+      break;
+    }
+
     case 'radio-blocks': {
       const selected = form.watch(name);
 
@@ -84,12 +150,12 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           );
 
           return (
-            <label key={value} htmlFor={value} className={className}>
+            <label key={value} htmlFor={`radio-blocks-option-${value}`} className={className}>
               <input
                 ref={form.register(registerOptions)}
                 key={value}
                 value={value}
-                id={value}
+                id={`radio-blocks-option-${value}`}
                 name={name}
                 type="radio"
                 hidden

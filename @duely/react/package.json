@@ -1,6 +1,6 @@
 {
   "name": "@duely/react",
-  "version": "0.2.41",
+  "version": "0.2.45",
   "description": "UI components used in duely.app",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -10,19 +10,20 @@
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
-    "preset-duely.js"
+    "preset-duely.js",
+    "tailwind.css"
   ],
   "scripts": {
     "build": "webpack",
     "build-storybook": "build-storybook",
-    "build:css": "cross-env NODE_ENV='production' postcss src/styles/tailwind.css -o src/styles.module.css",
+    "build:css": "cross-env NODE_ENV='production' postcss tailwind.css -o src/styles/module.css",
     "storybook": "start-storybook -p 6006",
     "test": "run-s test:unit test:lint test:build",
     "test:build": "run-s build",
     "test:lint": "eslint .",
     "test:unit": "cross-env CI=1 react-scripts test --env=jsdom",
     "test:watch": "react-scripts test --env=jsdom",
-    "watch:css": "cross-env postcss -w src/styles/tailwind.css -o src/styles.module.css"
+    "watch:css": "cross-env postcss -w tailwind.css -o src/styles/module.css"
   },
   "dependencies": {
     "@duely/core": "0.0.22"

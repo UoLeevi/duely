@@ -1,6 +1,13 @@
 import { useForm } from 'react-hook-form';
-import { FormButton, FormErrorInfo, useImageInputFromFileList } from '@duely/react';
-import { useMutation, useQuery, current_subdomain_Q, create_service_M, create_price_M, update_service_M } from '@duely/client';
+import { FormButton, FormErrorInfo, FormField, useImageInputFromFileList } from '@duely/react';
+import {
+  useMutation,
+  useQuery,
+  current_subdomain_Q,
+  create_service_M,
+  create_price_M,
+  update_service_M
+} from '@duely/client';
 import { BsCheck } from 'react-icons/bs';
 import { ServiceBasicInfoFormSection } from './ServiceBasicInfoFormSection';
 import { ServicePricingFormSection } from './ServicePricingFormSection';
@@ -21,7 +28,7 @@ export function CreateServiceForm() {
   const state = {
     loading: stateService.loading || statePrice.loading || stateUpdate.loading,
     error: stateService.error || statePrice.error || stateUpdate.error,
-    success: stateService.data?.success && statePrice.data?.success && stateUpdate.data?.success,
+    success: stateService.data?.success && statePrice.data?.success && stateUpdate.data?.success
   };
 
   // image logo
@@ -29,8 +36,16 @@ export function CreateServiceForm() {
   const { image: image_logo } = useImageInputFromFileList(image_logo_file_list);
 
   async function onSubmit({ image_logo_file_list, ...data }) {
-    const { name, description, url_name } = data;
-    const res_service = await createService({ agency_id: current_subdomain.agency.id, name, description, url_name, image_logo, status: 'draft' });
+    const { name, description, url_name, status } = data;
+
+    const res_service = await createService({
+      agency_id: current_subdomain.agency.id,
+      name,
+      description,
+      url_name,
+      image_logo,
+      status: 'draft'
+    });
 
     if (!res_service?.success) return;
 
@@ -47,13 +62,19 @@ export function CreateServiceForm() {
       recurring.recurring_interval = interval;
     }
 
-    const res_price = await createPrice({ service_variant_id: service.default_variant.id, unit_amount, currency, status: 'live', ...recurring });
+    const res_price = await createPrice({
+      service_variant_id: service.default_variant.id,
+      unit_amount,
+      currency,
+      status,
+      ...recurring
+    });
 
     if (!res_price?.success) return;
 
     const { price } = res_price;
-    await updateService({ service_id: service.id, default_price_id: price.id, status: 'live' });
-  };
+    await updateService({ service_id: service.id, default_price_id: price.id, status });
+  }
 
   if (state.success) {
     const { service } = stateService.data;
@@ -62,8 +83,16 @@ export function CreateServiceForm() {
         <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
           <BsCheck className="text-3xl text-green-600" />
         </div>
-        <h3 className="text-2xl font-semibold"><span className="whitespace-nowrap">{service.name}</span> <span className="whitespace-nowrap">created succesfully</span></h3>
-        <Link className="px-12 py-3 mt-2 font-medium text-white bg-indigo-500 rounded-md" to="/dashboard/services">Go to services</Link>
+        <h3 className="text-2xl font-semibold">
+          <span className="whitespace-nowrap">{service.name}</span>{' '}
+          <span className="whitespace-nowrap">created succesfully</span>
+        </h3>
+        <Link
+          className="px-12 py-3 mt-2 font-medium text-white bg-indigo-500 rounded-md"
+          to="/dashboard/services"
+        >
+          Go to services
+        </Link>
       </div>
     );
   }
@@ -74,8 +103,20 @@ export function CreateServiceForm() {
         <ServiceBasicInfoFormSection form={form} />
         <h3 className="pt-6 pb-2 text-lg font-medium">Pricing</h3>
         <ServicePricingFormSection form={form} />
+        <h3 className="pt-6 pb-2 text-lg font-medium">Status</h3>
+        <FormField
+          form={form}
+          name="status"
+          type="radio-toggle"
+          options={[
+            'draft',
+            { value: 'live', className: 'bg-gradient-to-r from-green-400 to-green-300' }
+          ]}
+        />
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <FormButton form={form} spinner loading={state.loading}>Create service</FormButton>
+          <FormButton form={form} spinner loading={state.loading}>
+            Create service
+          </FormButton>
           <FormErrorInfo error={state.error} />
         </div>
       </form>

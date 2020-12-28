@@ -5,6 +5,7 @@ import { DashboardSection } from '../../components';
 import { UpdateServiceBasicInfoForm } from './components';
 import { UpdateServiceCheckoutSettingsForm } from './components/UpdateServiceCheckoutSettingsForm';
 import { UpdateServicePricingForm } from './components/UpdateServicePricingForm';
+import { UpdateServiceStatusForm } from './components/UpdateServiceStatusForm';
 
 export default function DashboardServicesEditService() {
   const { service_url_name } = useParams<{ service_url_name: string }>();
@@ -41,12 +42,39 @@ export default function DashboardServicesEditService() {
             title="Checkout"
             description={
               <span>
-                By default, after a successful checkout, customers will be redirected to a default thank you page hosted on Duely. Alternatively, you can set custom URLs for the thank you pages.<br/><br/>
-                Custom thank you page URL can be set on both agency level and on service level. If the thank you page URL is set on both agency level and service level, the service level setting will be used. To set the thank you page URL on the agency level, please see the <Link className="text-indigo-600" to="/dashboard/settings#checkout"> checkout settings for the agency</Link>.
+                By default, after a successful checkout, customers will be redirected to a default
+                thank you page hosted on Duely. Alternatively, you can set custom URLs for the thank
+                you pages.
+                <br />
+                <br />
+                Custom thank you page URL can be set on both agency level and on service level. If
+                the thank you page URL is set on both agency level and service level, the service
+                level setting will be used. To set the thank you page URL on the agency level,
+                please see the{' '}
+                <Link className="text-indigo-600" to="/dashboard/settings#checkout">
+                  {' '}
+                  checkout settings for the agency
+                </Link>
+                .
               </span>
             }
           >
             {service && <UpdateServiceCheckoutSettingsForm service_id={service.id} />}
+          </FormSection>
+        </Card>
+
+        <Card>
+          <FormSection
+            title="Status"
+            description={
+              <span>
+                Service can be published by setting the status as{' '}
+                <span className="italic">live</span> or unpublished by setting the status as{' '}
+                <span className="italic">draft</span>.
+              </span>
+            }
+          >
+            {service && <UpdateServiceStatusForm service_id={service.id} />}
           </FormSection>
         </Card>
       </DashboardSection>
