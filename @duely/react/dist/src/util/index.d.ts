@@ -22,6 +22,8 @@ export declare const Util: {
     mimeTypeFromDataUrl: typeof mimeTypeFromDataUrl;
     pick: typeof pick;
     diff: typeof diff;
+    get: typeof get;
+    template: typeof template;
 };
 declare function readFileAsDataUrl(file: File | null | undefined): Promise<string | null>;
 declare function readFileAsImageInput(file: File | null | undefined): Promise<ImageInput | null>;
@@ -49,4 +51,9 @@ declare function pick(fromObject: object, keys: string[] | object): {
 declare function diff(fromObject: object, omitObject: object): {
     [k: string]: any;
 };
+declare type NestedDictionary = {
+    [key: string]: NestedDictionary | any;
+};
+declare function get(obj: NestedDictionary, path: string): string | null | undefined;
+declare function template(template: string, variables: Record<string, any>): string;
 export {};

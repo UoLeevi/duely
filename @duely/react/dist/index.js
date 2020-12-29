@@ -201,7 +201,9 @@ exports.Util = {
     sentenceCase,
     mimeTypeFromDataUrl,
     pick,
-    diff
+    diff,
+    get,
+    template
 };
 // see: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
 function readFileAsDataUrl(file) {
@@ -395,6 +397,16 @@ function pick(fromObject, keys) {
 }
 function diff(fromObject, omitObject) {
     return Object.fromEntries(Object.entries(fromObject).filter(([key, value]) => (omitObject === null || omitObject === void 0 ? void 0 : omitObject[key]) !== value));
+}
+function get(obj, path) {
+    return path
+        .replace(/\[(\w+)\]/g, '.$1')
+        .replace(/^\./, '')
+        .split('.')
+        .reduce((prev, key) => { var _a; return (_a = prev) === null || _a === void 0 ? void 0 : _a[key]; }, obj);
+}
+function template(template, variables) {
+    return template.replace(/{(.*?)}/g, (_, placeholder) => { var _a, _b; return (_b = (_a = get(variables, placeholder)) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : placeholder; });
 }
 
 

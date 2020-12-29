@@ -22,7 +22,9 @@ export const Util = {
   sentenceCase,
   mimeTypeFromDataUrl,
   pick,
-  diff
+  diff,
+  get,
+  template
 };
 
 // see: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
@@ -259,4 +261,20 @@ function diff(fromObject: object, omitObject: object) {
       ([key, value]) => omitObject?.[key as keyof typeof omitObject] !== value
     )
   );
+}
+
+type NestedDictionary = {
+  [key: string]: NestedDictionary | any
+};
+
+function get(obj: NestedDictionary, path: string): string| null | undefined {
+  return path
+    .replace(/\[(\w+)\]/g, '.$1')
+    .replace(/^\./, '')
+    .split('.')
+    .reduce((prev, key) => (prev as NestedDictionary)?.[key] as NestedDictionary, obj) as unknown as string | null | undefined;
+}
+
+function template(template: string, variables: Record<string, any>) {
+  return template.replace(/{(.*?)}/g, (_, placeholder) => get(variables, placeholder)?.toString() ?? placeholder);
 }
