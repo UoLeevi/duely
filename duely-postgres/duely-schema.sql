@@ -1697,6 +1697,64 @@ $$;
 ALTER FUNCTION internal_.try_verify_sign_up_() OWNER TO postgres;
 
 --
+-- Name: update_form_field_linked_list_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.update_form_field_linked_list_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _before_uuid uuid;
+BEGIN
+  IF NEW.after_uuid_ IS NULL THEN
+    SELECT uuid_ INTO _before_uuid
+    FROM internal_.form_field_ f
+    WHERE f.form_uuid_ = NEW.form_uuid_
+      AND NOT EXISTS (
+        SELECT 1
+        FROM internal_.form_field_ f_after
+        WHERE f_after.after_uuid_ = f.uuid_
+      );
+
+    NEW.after_uuid_ = _before_uuid;
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+
+ALTER FUNCTION internal_.update_form_field_linked_list_() OWNER TO postgres;
+
+--
+-- Name: update_page_block_linked_list_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.update_page_block_linked_list_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _before_uuid uuid;
+BEGIN
+  IF NEW.after_uuid_ IS NULL THEN
+    SELECT uuid_ INTO _before_uuid
+    FROM application_.page_block_ b
+    WHERE b.page_uuid_ = NEW.page_uuid_
+      AND NOT EXISTS (
+        SELECT 1
+        FROM application_.page_block_ b_after
+        WHERE b_after.after_uuid_ = f.uuid_
+      );
+
+    NEW.after_uuid_ = _before_uuid;
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+
+ALTER FUNCTION internal_.update_page_block_linked_list_() OWNER TO postgres;
+
+--
 -- Name: user_invite_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
@@ -3900,7 +3958,7 @@ ALTER FUNCTION policy_.anyone_can_query_form_(_resource_definition security_.res
 CREATE FUNCTION policy_.anyone_can_query_form_field_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
-  SELECT '{uuid_, name_, type_, form_uuid_, default_}'::text[];
+  SELECT '{uuid_, name_, label_, type_, form_uuid_, after_uuid_, default_}'::text[];
 $$;
 
 
@@ -6708,6 +6766,8 @@ CREATE TABLE internal_.form_field_ (
     type_ text NOT NULL,
     form_uuid_ uuid NOT NULL,
     default_ jsonb,
+    label_ text NOT NULL,
+    after_uuid_ uuid,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6769,6 +6829,8 @@ CREATE TABLE internal__audit_.form_field_ (
     type_ text,
     form_uuid_ uuid,
     default_ jsonb,
+    label_ text,
+    after_uuid_ uuid,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -7216,7 +7278,11 @@ COPY internal_.form_ (uuid_, audit_at_, audit_session_uuid_) FROM stdin;
 -- Data for Name: form_field_; Type: TABLE DATA; Schema: internal_; Owner: postgres
 --
 
-COPY internal_.form_field_ (uuid_, name_, type_, form_uuid_, default_, audit_at_, audit_session_uuid_) FROM stdin;
+COPY internal_.form_field_ (uuid_, name_, type_, form_uuid_, default_, label_, after_uuid_, audit_at_, audit_session_uuid_) FROM stdin;
+087ecce8-4fcf-4471-ae4c-ab4d8660a114	headline1	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"{agency.name}"	Headline 1	\N	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000
+3ea3f1de-0144-4819-9ce4-c9c04c12e6dc	headline2	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"Services"	Headline 2	087ecce8-4fcf-4471-ae4c-ab4d8660a114	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000
+0f3fa468-e427-4477-a409-8a695fbabe34	paragraph	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"Services"	Paragraph	3ea3f1de-0144-4819-9ce4-c9c04c12e6dc	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000
+b78b6a5b-9034-4fef-acb1-b9cd6982a0da	imageSrc	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	\N	Image URL	0f3fa468-e427-4477-a409-8a695fbabe34	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7251,7 +7317,11 @@ COPY internal__audit_.form_ (uuid_, audit_at_, audit_session_uuid_, audit_op_) F
 -- Data for Name: form_field_; Type: TABLE DATA; Schema: internal__audit_; Owner: postgres
 --
 
-COPY internal__audit_.form_field_ (uuid_, name_, type_, form_uuid_, default_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+COPY internal__audit_.form_field_ (uuid_, name_, type_, form_uuid_, default_, label_, after_uuid_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+087ecce8-4fcf-4471-ae4c-ab4d8660a114	headline1	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"{agency.name}"	Headline 1	\N	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000	I
+3ea3f1de-0144-4819-9ce4-c9c04c12e6dc	headline2	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"Services"	Headline 2	087ecce8-4fcf-4471-ae4c-ab4d8660a114	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000	I
+0f3fa468-e427-4477-a409-8a695fbabe34	paragraph	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"Services"	Paragraph	3ea3f1de-0144-4819-9ce4-c9c04c12e6dc	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000	I
+b78b6a5b-9034-4fef-acb1-b9cd6982a0da	imageSrc	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	\N	Image URL	0f3fa468-e427-4477-a409-8a695fbabe34	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -7829,6 +7899,14 @@ ALTER TABLE ONLY application_.page_
 
 
 --
+-- Name: page_block_ page_block__after_uuid__page_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.page_block_
+    ADD CONSTRAINT page_block__after_uuid__page_uuid__key UNIQUE (after_uuid_, page_uuid_) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: page_block_ page_block__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -8058,6 +8136,14 @@ ALTER TABLE ONLY application_.user_notification_setting_
 
 ALTER TABLE ONLY internal_.form_
     ADD CONSTRAINT form__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: form_field_ form_field__after_uuid__form_uuid__key; Type: CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.form_field_
+    ADD CONSTRAINT form_field__after_uuid__form_uuid__key UNIQUE (after_uuid_, form_uuid_) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -9378,6 +9464,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.use
 
 
 --
+-- Name: page_block_ tr_before_insert_or_update_update_page_block_linked_list_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_insert_or_update_update_page_block_linked_list_ BEFORE INSERT OR UPDATE ON application_.page_block_ FOR EACH ROW EXECUTE FUNCTION internal_.update_page_block_linked_list_();
+
+
+--
 -- Name: agency_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -9732,6 +9825,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON internal_.page_d
 --
 
 CREATE TRIGGER tr_before_insert_insert_form_ BEFORE INSERT ON internal_.page_block_definition_ FOR EACH ROW EXECUTE FUNCTION internal_.insert_form_();
+
+
+--
+-- Name: form_field_ tr_before_insert_or_update_update_form_field_linked_list_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_insert_or_update_update_form_field_linked_list_ BEFORE INSERT OR UPDATE ON internal_.form_field_ FOR EACH ROW EXECUTE FUNCTION internal_.update_form_field_linked_list_();
 
 
 --
@@ -10562,6 +10662,14 @@ ALTER TABLE ONLY application_.user_notification_setting_
 
 ALTER TABLE ONLY application_.user_notification_setting_
     ADD CONSTRAINT user_notification_setting__user_uuid__fkey FOREIGN KEY (user_uuid_) REFERENCES security_.user_(uuid_);
+
+
+--
+-- Name: form_field_ form_field__after_uuid__fkey; Type: FK CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.form_field_
+    ADD CONSTRAINT form_field__after_uuid__fkey FOREIGN KEY (after_uuid_) REFERENCES internal_.form_field_(uuid_);
 
 
 --
