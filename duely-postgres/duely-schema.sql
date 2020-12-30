@@ -750,6 +750,26 @@ $$;
 ALTER FUNCTION internal_.extract_referenced_resources_jsonb_(_resource_definition_uuid uuid, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: insert_form_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.insert_form_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _form_uuid uuid;
+BEGIN
+  INSERT INTO internal_.form_ DEFAULT VALUES RETURNING uuid_ INTO _form_uuid;
+
+  NEW.form_uuid_ := _form_uuid;
+  RETURN NEW;
+END
+$$;
+
+
+ALTER FUNCTION internal_.insert_form_() OWNER TO postgres;
+
+--
 -- Name: insert_subject_for_user_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -7188,6 +7208,7 @@ ALTER TABLE ONLY application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT gen_random
 --
 
 COPY internal_.form_ (uuid_, audit_at_, audit_session_uuid_) FROM stdin;
+63bb3010-4ed1-40bb-a029-e4501e3b0bd7	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7204,6 +7225,7 @@ COPY internal_.form_field_ (uuid_, name_, type_, form_uuid_, default_, audit_at_
 --
 
 COPY internal_.page_block_definition_ (uuid_, name_, page_definition_uuid_, form_uuid_, audit_at_, audit_session_uuid_) FROM stdin;
+3b91df48-2d20-4161-8528-4f47fb54208d	Hero with angled image	ab02480a-efd0-4aac-b54c-b800b08f0c02	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7212,6 +7234,7 @@ COPY internal_.page_block_definition_ (uuid_, name_, page_definition_uuid_, form
 --
 
 COPY internal_.page_definition_ (uuid_, name_, audit_at_, audit_session_uuid_) FROM stdin;
+ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7220,6 +7243,7 @@ COPY internal_.page_definition_ (uuid_, name_, audit_at_, audit_session_uuid_) F
 --
 
 COPY internal__audit_.form_ (uuid_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+63bb3010-4ed1-40bb-a029-e4501e3b0bd7	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -7236,6 +7260,7 @@ COPY internal__audit_.form_field_ (uuid_, name_, type_, form_uuid_, default_, au
 --
 
 COPY internal__audit_.page_block_definition_ (uuid_, name_, page_definition_uuid_, form_uuid_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+3b91df48-2d20-4161-8528-4f47fb54208d	Hero with angled image	ab02480a-efd0-4aac-b54c-b800b08f0c02	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -7244,6 +7269,7 @@ COPY internal__audit_.page_block_definition_ (uuid_, name_, page_definition_uuid
 --
 
 COPY internal__audit_.page_definition_ (uuid_, name_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -9699,6 +9725,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON internal_.page_b
 --
 
 CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON internal_.page_definition_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
+-- Name: page_block_definition_ tr_before_insert_insert_form_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_insert_insert_form_ BEFORE INSERT ON internal_.page_block_definition_ FOR EACH ROW EXECUTE FUNCTION internal_.insert_form_();
 
 
 --
