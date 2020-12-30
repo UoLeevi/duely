@@ -131,6 +131,7 @@ type CreateResolverForReferencedResourceAllArgs = {
   name: string;
   resource_name?: string;
   column_name?: string;
+  reverse_column_name?: string;
 };
 
 export function createResolverForReferencedResourceAll<
@@ -138,7 +139,7 @@ export function createResolverForReferencedResourceAll<
   TSource extends { id?: string },
   TContext extends { jwt?: string; ip?: string },
   TFilterArg
->({ name, resource_name, column_name }: CreateResolverForReferencedResourceAllArgs) {
+>({ name, resource_name, column_name, reverse_column_name }: CreateResolverForReferencedResourceAllArgs) {
   column_name = column_name ?? `${name}_id`;
   resource_name = resource_name ?? name;
 
@@ -156,7 +157,9 @@ export function createResolverForReferencedResourceAll<
           return await withSession(async ({ queryResourceAll }) => {
             return await queryResourceAll<TResult>(resource_name!, {
               ...args.filter,
-              [column_name!]: source.id ?? source[column_name! as keyof TSource]
+              [column_name!]: reverse_column_name 
+                ? (source[reverse_column_name as keyof TSource])
+                : (source.id ?? source[column_name! as keyof TSource])
             });
           });
         });
