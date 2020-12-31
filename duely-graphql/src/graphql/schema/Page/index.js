@@ -9,6 +9,7 @@ export const Page = {
     type Page {
       id: ID!
       agency: Agency!
+      service: Service
       definition: PageDefinition!
       access: AccessLevel!
       blocks: [PageBlock!]!
@@ -25,9 +26,7 @@ export const Page = {
     }
 
     extend type Mutation {
-      create_page(agency_id: ID!, page_definition_id: ID!, access: AccessLevel): PageMutationResult!
       update_page(page_id: ID!, access: AccessLevel): PageMutationResult!
-      delete_page(page_id: ID!): PageMutationResult!
     }
 
     type PageMutationResult implements MutationResult {
@@ -39,6 +38,7 @@ export const Page = {
   resolvers: {
     Page: {
       ...createResolverForReferencedResource({ name: 'agency' }),
+      ...createResolverForReferencedResource({ name: 'service' }),
       ...createResolverForReferencedResource({ name: 'definition', column_name: 'page_definition_id' }),
       ...createResolverForReferencedResourceAll({ name: 'blocks', resource_name: 'page block',  column_name: 'page_id' })
     },
@@ -46,33 +46,6 @@ export const Page = {
       ...createDefaultQueryResolversForResource(resource)
     },
     Mutation: {
-      async create_page(obj, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
-
-        try {
-          return await withConnection(context, async withSession => {
-            return await withSession(async ({ createResource }) => {
-              // create page resource
-              const page = await createResource(resource.name, args);
-
-              // success
-              return {
-                success: true,
-                page,
-                type: 'PageMutationResult'
-              };
-            });
-          });
-        } catch (error) {
-          return {
-            // error
-            success: false,
-            message: error.message,
-            type: 'PageMutationResult'
-          };
-        }
-      },
       async update_page(obj, { page_id, ...args }, context, info) {
         if (!context.jwt)
           throw new Error('Unauthorized');
@@ -83,31 +56,6 @@ export const Page = {
               // update page resource
               const page = await updateResource(page_id, args);
 
-              // success
-              return {
-                success: true,
-                page,
-                type: 'PageMutationResult'
-              };
-            });
-          });
-        } catch (error) {
-          return {
-            // error
-            success: false,
-            message: error.message,
-            type: 'PageMutationResult'
-          };
-        }
-      },
-      async delete_page(obj, { page_id }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
-  
-        try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ deleteResource }) => {
-              const page = await deleteResource(page_id);
-  
               // success
               return {
                 success: true,

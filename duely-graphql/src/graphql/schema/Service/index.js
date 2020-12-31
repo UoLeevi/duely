@@ -18,6 +18,7 @@ export const Service = {
       agency: Agency!
       default_variant: ServiceVariant!
       variants(filter: ServiceVariantFilter): [ServiceVariant!]
+      pages(filter: PageFilter): [Page!]
       settings: ServiceSettings!
     }
 
@@ -49,6 +50,7 @@ export const Service = {
       ...createResolverForReferencedResource({ name: 'agency' }),
       ...createResolverForReferencedResource({ name: 'default_variant' }),
       ...createResolverForReferencedResourceAll({ name: 'variants', resource_name: 'service variant', column_name: 'service_id' }),
+      ...createResolverForReferencedResourceAll({ name: 'pages', resource_name: 'page', column_name: 'service_id' }),
       settings: service => ({ service_id: service.id })
     },
     Query: {
