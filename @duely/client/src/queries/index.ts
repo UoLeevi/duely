@@ -13,12 +13,18 @@ import {
   SubdomainPublicDocument,
   AgencyServicesDocument,
   ServiceDocument,
-  ServicesDocument,
   SubdomainAgencyDocument,
   SubdomainAgencyStripeAccountUpdateUrlDocument,
   AgencyThankYouPageSettingDocument,
   ServiceThankYouPageSettingDocument,
-  ServiceAndAgencyFromUrlPartsDocument
+  ServiceAndAgencyFromUrlPartsDocument,
+  AgencyPagesDocument,
+  PageDocument,
+  PageBlockDocument,
+  PageDefinitionDocument,
+  PageBlockDefinitionDocument,
+  PageDefinitionsByNameDocument,
+  PageBlockDefinitionsByNameDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -190,4 +196,39 @@ export const agency_thank_you_page_settings_Q = {
 export const service_thank_you_page_settings_Q = {
   query: ServiceThankYouPageSettingDocument,
   result: (d: ResultOf<typeof ServiceThankYouPageSettingDocument>) => d?.service?.settings?.thank_you_page_setting
+};
+
+export const agency_pages_Q = {
+  query: AgencyPagesDocument,
+  result: (d: ResultOf<typeof AgencyPagesDocument>) => d?.pages
+};
+
+export const page_Q = {
+  query: PageDocument,
+  result: (d: ResultOf<typeof PageDocument>) => d?.page
+};
+
+export const page_block_Q = {
+  query: PageBlockDocument,
+  result: (d: ResultOf<typeof PageBlockDocument>) => d?.page_block
+};
+
+export const page_definition_Q = {
+  query: PageDefinitionDocument,
+  result: (d: ResultOf<typeof PageDefinitionDocument>) => d?.page_definition
+};
+
+export const page_block_definition_Q = {
+  query: PageBlockDefinitionDocument,
+  result: (d: ResultOf<typeof PageBlockDefinitionDocument>) => d?.page_block_definition
+};
+
+export const page_definition_by_name_Q = {
+  query: PageDefinitionsByNameDocument,
+  result: (d: ResultOf<typeof PageDefinitionsByNameDocument>) => d?.page_definitions?.[0]
+};
+
+export const page_block_definition_by_name_Q = {
+  query: PageBlockDefinitionsByNameDocument,
+  result: (d: ResultOf<typeof PageBlockDefinitionsByNameDocument>) => d?.page_block_definitions?.[0]
 };

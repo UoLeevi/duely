@@ -327,3 +327,55 @@ fragment subdomain on Subdomain {
     ...membership
   }
 }
+
+fragment form_field on FormField {
+  id
+  name
+  label
+  type
+  default
+}
+
+fragment page_definition on PageDefinition {
+  id
+  name
+}
+
+fragment page_block_definition on PageBlockDefinition {
+  id
+  name
+  page {
+    id
+  }
+  fields {
+    ...form_field
+  }
+}
+
+fragment page on Page {
+  id
+  agency {
+    id
+  }
+  service {
+    id
+  }
+  definition {
+    ...page_definition
+  }
+  blocks {
+    ...page_block
+  }
+  access
+}
+
+fragment page_block on PageBlock {
+  id
+  page {
+    id
+  }
+  definition {
+    ...page_block_definition
+  }
+  data
+}

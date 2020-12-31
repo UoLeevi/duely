@@ -9,19 +9,24 @@ import {
   AgencyThankYouPageSettingDocument,
   CreateAgencyDocument,
   CreateAgencyThankYouPageSettingDocument,
+  CreatePageBlockDocument,
   CreatePriceDocument,
   CreateServiceDocument,
   CreateServiceThankYouPageSettingDocument,
   DeleteAgencyThankYouPageSettingDocument,
+  DeletePageBlockDocument,
   DeleteServiceDocument,
   DeleteServiceThankYouPageSettingDocument,
   LogInDocument,
   LogOutDocument,
+  Page_BlockFragmentDoc,
   ServiceFragmentDoc,
   ServiceThankYouPageSettingDocument,
   StartPasswordResetDocument,
   StartSignUpDocument,
   UpdateAgencyThankYouPageSettingDocument,
+  UpdatePageBlockDocument,
+  UpdatePageDocument,
   UpdateServiceDocument,
   UpdateServiceThankYouPageSettingDocument,
   VerifyPasswordResetDocument,
@@ -340,6 +345,67 @@ export const delete_service_thank_you_page_setting_M = {
     if (!result?.success || !result.setting) return;
 
     const id = cache.identify(result.setting);
+    cache.evict({ id });
+    cache.gc();
+  }
+};
+
+export const update_page_M = {
+  mutation: UpdatePageDocument,
+  result: (d: ResultOf<typeof UpdatePageDocument>) => d?.update_page
+};
+
+const create_page_block_R = (d: ResultOf<typeof CreatePageBlockDocument>) => d?.create_page_block;
+export const create_page_block_M = {
+  mutation: CreatePageBlockDocument,
+  result: create_page_block_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof create_page_block_R> | null
+  ) {
+    if (!result?.success || !result.page_block) return;
+
+    const { page_block } = result;
+
+    cache.modify({
+      id: cache.identify(page_block.page),
+      fields: {
+        blocks(blocksRefs: Reference[] = [], { readField }) {
+          const newPageBlockRef = cache.writeFragment({
+            data: page_block,
+            fragment: Page_BlockFragmentDoc,
+            fragmentName: 'page_block'
+          });
+
+          // Quick safety check - if the new page_block is already
+          // present in the cache, we don't need to add it again.
+          if (blocksRefs.some((ref) => readField('id', ref) === page_block.id)) {
+            return blocksRefs;
+          }
+
+          return [...blocksRefs, newPageBlockRef];
+        }
+      }
+    });
+  }
+};
+
+export const update_page_block_M = {
+  mutation: UpdatePageBlockDocument,
+  result: (d: ResultOf<typeof UpdatePageBlockDocument>) => d?.update_page_block
+};
+
+const delete_page_block_R = (d: ResultOf<typeof DeletePageBlockDocument>) => d?.delete_page_block;
+export const delete_page_block_M = {
+  mutation: DeletePageBlockDocument,
+  result: delete_page_block_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof delete_page_block_R> | null
+  ) {
+    if (!result?.success || !result.page_block) return;
+
+    const id = cache.identify(result.page_block);
     cache.evict({ id });
     cache.gc();
   }

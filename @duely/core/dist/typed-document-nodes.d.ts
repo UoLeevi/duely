@@ -23,6 +23,14 @@ export declare type Scalars = {
 };
 export declare type Query = {
     __typename?: 'Query';
+    page?: Maybe<Page>;
+    pages?: Maybe<Array<Page>>;
+    page_block?: Maybe<PageBlock>;
+    page_blocks?: Maybe<Array<PageBlock>>;
+    page_definition?: Maybe<PageDefinition>;
+    page_definitions?: Maybe<Array<PageDefinition>>;
+    page_block_definition?: Maybe<PageBlockDefinition>;
+    page_block_definitions?: Maybe<Array<PageBlockDefinition>>;
     country_codes?: Maybe<Array<Scalars['String']>>;
     current_user?: Maybe<User>;
     user?: Maybe<User>;
@@ -46,6 +54,30 @@ export declare type Query = {
     memberships?: Maybe<Array<Membership>>;
     theme?: Maybe<Theme>;
     themes?: Maybe<Array<Theme>>;
+};
+export declare type QueryPageArgs = {
+    id: Scalars['ID'];
+};
+export declare type QueryPagesArgs = {
+    filter: PageFilter;
+};
+export declare type QueryPage_BlockArgs = {
+    id: Scalars['ID'];
+};
+export declare type QueryPage_BlocksArgs = {
+    filter: PageBlockFilter;
+};
+export declare type QueryPage_DefinitionArgs = {
+    id: Scalars['ID'];
+};
+export declare type QueryPage_DefinitionsArgs = {
+    filter: PageDefinitionFilter;
+};
+export declare type QueryPage_Block_DefinitionArgs = {
+    id: Scalars['ID'];
+};
+export declare type QueryPage_Block_DefinitionsArgs = {
+    filter: PageBlockDefinitionFilter;
 };
 export declare type QueryUserArgs = {
     id: Scalars['ID'];
@@ -112,6 +144,10 @@ export declare type QueryThemesArgs = {
 };
 export declare type Mutation = {
     __typename?: 'Mutation';
+    update_page: PageMutationResult;
+    create_page_block: PageBlockMutationResult;
+    update_page_block: PageBlockMutationResult;
+    delete_page_block: PageBlockMutationResult;
     begin_visit: BeginVisitResult;
     end_visit: SimpleResult;
     log_in: LogInResult;
@@ -143,6 +179,24 @@ export declare type Mutation = {
     create_markdown: MarkdownMutationResult;
     update_markdown: MarkdownMutationResult;
     update_theme: UpdateThemeResult;
+};
+export declare type MutationUpdate_PageArgs = {
+    page_id: Scalars['ID'];
+    access?: Maybe<AccessLevel>;
+};
+export declare type MutationCreate_Page_BlockArgs = {
+    page_id: Scalars['ID'];
+    page_block_definition_id: Scalars['ID'];
+    data: Scalars['String'];
+    after_id?: Maybe<Scalars['ID']>;
+};
+export declare type MutationUpdate_Page_BlockArgs = {
+    page_block_id: Scalars['ID'];
+    data?: Maybe<Scalars['String']>;
+    after_id?: Maybe<Scalars['ID']>;
+};
+export declare type MutationDelete_Page_BlockArgs = {
+    page_block_id: Scalars['ID'];
 };
 export declare type MutationLog_InArgs = {
     email_address: Scalars['String'];
@@ -341,6 +395,71 @@ export declare enum AccessLevel {
     Client = "CLIENT",
     Public = "PUBLIC"
 }
+export declare type FormField = Node & {
+    __typename?: 'FormField';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    label: Scalars['String'];
+    type: Scalars['String'];
+    default?: Maybe<Scalars['String']>;
+};
+export declare type Page = {
+    __typename?: 'Page';
+    id: Scalars['ID'];
+    agency: Agency;
+    service?: Maybe<Service>;
+    definition: PageDefinition;
+    access: AccessLevel;
+    blocks: Array<PageBlock>;
+};
+export declare type PageFilter = {
+    agency_id?: Maybe<Scalars['ID']>;
+    service_id?: Maybe<Scalars['ID']>;
+    page_definition_id?: Maybe<Scalars['ID']>;
+};
+export declare type PageMutationResult = MutationResult & {
+    __typename?: 'PageMutationResult';
+    success: Scalars['Boolean'];
+    message?: Maybe<Scalars['String']>;
+    page?: Maybe<Page>;
+};
+export declare type PageBlock = {
+    __typename?: 'PageBlock';
+    id: Scalars['ID'];
+    page: Page;
+    definition: PageBlockDefinition;
+    data: Scalars['String'];
+};
+export declare type PageBlockFilter = {
+    page_id?: Maybe<Scalars['ID']>;
+    page_block_definition_id?: Maybe<Scalars['ID']>;
+};
+export declare type PageBlockMutationResult = MutationResult & {
+    __typename?: 'PageBlockMutationResult';
+    success: Scalars['Boolean'];
+    message?: Maybe<Scalars['String']>;
+    page_block?: Maybe<PageBlock>;
+};
+export declare type PageDefinition = Node & {
+    __typename?: 'PageDefinition';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    blocks: Array<PageBlockDefinition>;
+};
+export declare type PageDefinitionFilter = {
+    name?: Maybe<Scalars['String']>;
+};
+export declare type PageBlockDefinition = Node & {
+    __typename?: 'PageBlockDefinition';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    page: PageDefinition;
+    fields: Array<FormField>;
+};
+export declare type PageBlockDefinitionFilter = {
+    name?: Maybe<Scalars['String']>;
+    page_definition_id?: Maybe<Scalars['ID']>;
+};
 export declare type Address = {
     __typename?: 'Address';
     city?: Maybe<Scalars['String']>;
@@ -487,10 +606,14 @@ export declare type Agency = Node & {
     subdomain: Subdomain;
     theme: Theme;
     services?: Maybe<Array<Service>>;
+    pages?: Maybe<Array<Page>>;
     settings: AgencySettings;
 };
 export declare type AgencyServicesArgs = {
     filter?: Maybe<ServiceFilter>;
+};
+export declare type AgencyPagesArgs = {
+    filter?: Maybe<PageFilter>;
 };
 export declare type AgencyFilter = {
     name?: Maybe<Scalars['String']>;
@@ -710,10 +833,14 @@ export declare type Service = Node & {
     agency: Agency;
     default_variant: ServiceVariant;
     variants?: Maybe<Array<ServiceVariant>>;
+    pages?: Maybe<Array<Page>>;
     settings: ServiceSettings;
 };
 export declare type ServiceVariantsArgs = {
     filter?: Maybe<ServiceVariantFilter>;
+};
+export declare type ServicePagesArgs = {
+    filter?: Maybe<PageFilter>;
 };
 export declare type ServiceFilter = {
     name?: Maybe<Scalars['String']>;
@@ -735,7 +862,6 @@ export declare type ServiceThankYouPageSetting = {
     __typename?: 'ServiceThankYouPageSetting';
     id: Scalars['ID'];
     url: Scalars['String'];
-    agency_setting: AgencyThankYouPageSetting;
 };
 export declare type ServiceThankYouPageSettingMutationResult = MutationResult & {
     __typename?: 'ServiceThankYouPageSettingMutationResult';
@@ -1041,6 +1167,48 @@ export declare type SubdomainFragment = ({
         __typename?: 'Membership';
     } & MembershipFragment)>;
 });
+export declare type Form_FieldFragment = ({
+    __typename?: 'FormField';
+} & Pick<FormField, 'id' | 'name' | 'label' | 'type' | 'default'>);
+export declare type Page_DefinitionFragment = ({
+    __typename?: 'PageDefinition';
+} & Pick<PageDefinition, 'id' | 'name'>);
+export declare type Page_Block_DefinitionFragment = ({
+    __typename?: 'PageBlockDefinition';
+} & Pick<PageBlockDefinition, 'id' | 'name'> & {
+    page: ({
+        __typename?: 'PageDefinition';
+    } & Pick<PageDefinition, 'id'>);
+    fields: Array<({
+        __typename?: 'FormField';
+    } & Form_FieldFragment)>;
+});
+export declare type PageFragment = ({
+    __typename?: 'Page';
+} & Pick<Page, 'id' | 'access'> & {
+    agency: ({
+        __typename?: 'Agency';
+    } & Pick<Agency, 'id'>);
+    service?: Maybe<({
+        __typename?: 'Service';
+    } & Pick<Service, 'id'>)>;
+    definition: ({
+        __typename?: 'PageDefinition';
+    } & Page_DefinitionFragment);
+    blocks: Array<({
+        __typename?: 'PageBlock';
+    } & Page_BlockFragment)>;
+});
+export declare type Page_BlockFragment = ({
+    __typename?: 'PageBlock';
+} & Pick<PageBlock, 'id' | 'data'> & {
+    page: ({
+        __typename?: 'Page';
+    } & Pick<Page, 'id'>);
+    definition: ({
+        __typename?: 'PageBlockDefinition';
+    } & Page_Block_DefinitionFragment);
+});
 export declare type BeginVisitMutationVariables = Exact<{
     [key: string]: never;
 }>;
@@ -1311,6 +1479,68 @@ export declare type DeleteServiceThankYouPageSettingMutation = ({
         setting?: Maybe<({
             __typename?: 'ServiceThankYouPageSetting';
         } & Pick<ServiceThankYouPageSetting, 'id' | 'url'>)>;
+    });
+});
+export declare type UpdatePageMutationVariables = Exact<{
+    page_id: Scalars['ID'];
+    access?: Maybe<AccessLevel>;
+}>;
+export declare type UpdatePageMutation = ({
+    __typename?: 'Mutation';
+} & {
+    update_page: ({
+        __typename?: 'PageMutationResult';
+    } & Pick<PageMutationResult, 'success' | 'message'> & {
+        page?: Maybe<({
+            __typename?: 'Page';
+        } & PageFragment)>;
+    });
+});
+export declare type CreatePageBlockMutationVariables = Exact<{
+    page_id: Scalars['ID'];
+    page_block_definition_id: Scalars['ID'];
+    data: Scalars['String'];
+    after_id?: Maybe<Scalars['ID']>;
+}>;
+export declare type CreatePageBlockMutation = ({
+    __typename?: 'Mutation';
+} & {
+    create_page_block: ({
+        __typename?: 'PageBlockMutationResult';
+    } & Pick<PageBlockMutationResult, 'success' | 'message'> & {
+        page_block?: Maybe<({
+            __typename?: 'PageBlock';
+        } & Page_BlockFragment)>;
+    });
+});
+export declare type UpdatePageBlockMutationVariables = Exact<{
+    page_block_id: Scalars['ID'];
+    data: Scalars['String'];
+    after_id?: Maybe<Scalars['ID']>;
+}>;
+export declare type UpdatePageBlockMutation = ({
+    __typename?: 'Mutation';
+} & {
+    update_page_block: ({
+        __typename?: 'PageBlockMutationResult';
+    } & Pick<PageBlockMutationResult, 'success' | 'message'> & {
+        page_block?: Maybe<({
+            __typename?: 'PageBlock';
+        } & Page_BlockFragment)>;
+    });
+});
+export declare type DeletePageBlockMutationVariables = Exact<{
+    page_block_id: Scalars['ID'];
+}>;
+export declare type DeletePageBlockMutation = ({
+    __typename?: 'Mutation';
+} & {
+    delete_page_block: ({
+        __typename?: 'PageBlockMutationResult';
+    } & Pick<PageBlockMutationResult, 'success' | 'message'> & {
+        page_block?: Maybe<({
+            __typename?: 'PageBlock';
+        } & Page_BlockFragment)>;
     });
 });
 export declare type CurrentUserQueryVariables = Exact<{
@@ -1650,6 +1880,86 @@ export declare type ServiceThankYouPageSettingQuery = ({
         });
     })>;
 });
+export declare type AgencyPagesQueryVariables = Exact<{
+    agency_id: Scalars['ID'];
+}>;
+export declare type AgencyPagesQuery = ({
+    __typename?: 'Query';
+} & {
+    pages?: Maybe<Array<({
+        __typename?: 'Page';
+    } & PageFragment)>>;
+});
+export declare type ServicePagesQueryVariables = Exact<{
+    service_id: Scalars['ID'];
+}>;
+export declare type ServicePagesQuery = ({
+    __typename?: 'Query';
+} & {
+    pages?: Maybe<Array<({
+        __typename?: 'Page';
+    } & PageFragment)>>;
+});
+export declare type PageQueryVariables = Exact<{
+    page_id: Scalars['ID'];
+}>;
+export declare type PageQuery = ({
+    __typename?: 'Query';
+} & {
+    page?: Maybe<({
+        __typename?: 'Page';
+    } & PageFragment)>;
+});
+export declare type PageBlockQueryVariables = Exact<{
+    page_block_id: Scalars['ID'];
+}>;
+export declare type PageBlockQuery = ({
+    __typename?: 'Query';
+} & {
+    page_block?: Maybe<({
+        __typename?: 'PageBlock';
+    } & Page_BlockFragment)>;
+});
+export declare type PageDefinitionQueryVariables = Exact<{
+    page_definition_id: Scalars['ID'];
+}>;
+export declare type PageDefinitionQuery = ({
+    __typename?: 'Query';
+} & {
+    page_definition?: Maybe<({
+        __typename?: 'PageDefinition';
+    } & Page_DefinitionFragment)>;
+});
+export declare type PageBlockDefinitionQueryVariables = Exact<{
+    page_block_definition_id: Scalars['ID'];
+}>;
+export declare type PageBlockDefinitionQuery = ({
+    __typename?: 'Query';
+} & {
+    page_block_definition?: Maybe<({
+        __typename?: 'PageBlockDefinition';
+    } & Page_Block_DefinitionFragment)>;
+});
+export declare type PageDefinitionsByNameQueryVariables = Exact<{
+    name: Scalars['String'];
+}>;
+export declare type PageDefinitionsByNameQuery = ({
+    __typename?: 'Query';
+} & {
+    page_definitions?: Maybe<Array<({
+        __typename?: 'PageDefinition';
+    } & Page_DefinitionFragment)>>;
+});
+export declare type PageBlockDefinitionsByNameQueryVariables = Exact<{
+    name: Scalars['String'];
+}>;
+export declare type PageBlockDefinitionsByNameQuery = ({
+    __typename?: 'Query';
+} & {
+    page_block_definitions?: Maybe<Array<({
+        __typename?: 'PageBlockDefinition';
+    } & Page_Block_DefinitionFragment)>>;
+});
 export declare const Stripe_AccountFragmentDoc: DocumentNode<Stripe_AccountFragment, unknown>;
 export declare const Balance_TransactionFragmentDoc: DocumentNode<Balance_TransactionFragment, unknown>;
 export declare const AddressFragmentDoc: DocumentNode<AddressFragment, unknown>;
@@ -1666,6 +1976,11 @@ export declare const AgencyFragmentDoc: DocumentNode<AgencyFragment, unknown>;
 export declare const UserFragmentDoc: DocumentNode<UserFragment, unknown>;
 export declare const MembershipFragmentDoc: DocumentNode<MembershipFragment, unknown>;
 export declare const SubdomainFragmentDoc: DocumentNode<SubdomainFragment, unknown>;
+export declare const Page_DefinitionFragmentDoc: DocumentNode<Page_DefinitionFragment, unknown>;
+export declare const Form_FieldFragmentDoc: DocumentNode<Form_FieldFragment, unknown>;
+export declare const Page_Block_DefinitionFragmentDoc: DocumentNode<Page_Block_DefinitionFragment, unknown>;
+export declare const Page_BlockFragmentDoc: DocumentNode<Page_BlockFragment, unknown>;
+export declare const PageFragmentDoc: DocumentNode<PageFragment, unknown>;
 export declare const BeginVisitDocument: DocumentNode<BeginVisitMutation, BeginVisitMutationVariables>;
 export declare const EndVisitDocument: DocumentNode<EndVisitMutation, EndVisitMutationVariables>;
 export declare const LogInDocument: DocumentNode<LogInMutation, LogInMutationVariables>;
@@ -1685,6 +2000,10 @@ export declare const DeleteAgencyThankYouPageSettingDocument: DocumentNode<Delet
 export declare const CreateServiceThankYouPageSettingDocument: DocumentNode<CreateServiceThankYouPageSettingMutation, CreateServiceThankYouPageSettingMutationVariables>;
 export declare const UpdateServiceThankYouPageSettingDocument: DocumentNode<UpdateServiceThankYouPageSettingMutation, UpdateServiceThankYouPageSettingMutationVariables>;
 export declare const DeleteServiceThankYouPageSettingDocument: DocumentNode<DeleteServiceThankYouPageSettingMutation, DeleteServiceThankYouPageSettingMutationVariables>;
+export declare const UpdatePageDocument: DocumentNode<UpdatePageMutation, UpdatePageMutationVariables>;
+export declare const CreatePageBlockDocument: DocumentNode<CreatePageBlockMutation, CreatePageBlockMutationVariables>;
+export declare const UpdatePageBlockDocument: DocumentNode<UpdatePageBlockMutation, UpdatePageBlockMutationVariables>;
+export declare const DeletePageBlockDocument: DocumentNode<DeletePageBlockMutation, DeletePageBlockMutationVariables>;
 export declare const CurrentUserDocument: DocumentNode<CurrentUserQuery, CurrentUserQueryVariables>;
 export declare const CountriesDocument: DocumentNode<CountriesQuery, CountriesQueryVariables>;
 export declare const ServicesAgreementDocument: DocumentNode<ServicesAgreementQuery, ServicesAgreementQueryVariables>;
@@ -1703,3 +2022,11 @@ export declare const SubdomainAgencyDocument: DocumentNode<SubdomainAgencyQuery,
 export declare const SubdomainAgencyStripeAccountUpdateUrlDocument: DocumentNode<SubdomainAgencyStripeAccountUpdateUrlQuery, SubdomainAgencyStripeAccountUpdateUrlQueryVariables>;
 export declare const AgencyThankYouPageSettingDocument: DocumentNode<AgencyThankYouPageSettingQuery, AgencyThankYouPageSettingQueryVariables>;
 export declare const ServiceThankYouPageSettingDocument: DocumentNode<ServiceThankYouPageSettingQuery, ServiceThankYouPageSettingQueryVariables>;
+export declare const AgencyPagesDocument: DocumentNode<AgencyPagesQuery, AgencyPagesQueryVariables>;
+export declare const ServicePagesDocument: DocumentNode<ServicePagesQuery, ServicePagesQueryVariables>;
+export declare const PageDocument: DocumentNode<PageQuery, PageQueryVariables>;
+export declare const PageBlockDocument: DocumentNode<PageBlockQuery, PageBlockQueryVariables>;
+export declare const PageDefinitionDocument: DocumentNode<PageDefinitionQuery, PageDefinitionQueryVariables>;
+export declare const PageBlockDefinitionDocument: DocumentNode<PageBlockDefinitionQuery, PageBlockDefinitionQueryVariables>;
+export declare const PageDefinitionsByNameDocument: DocumentNode<PageDefinitionsByNameQuery, PageDefinitionsByNameQueryVariables>;
+export declare const PageBlockDefinitionsByNameDocument: DocumentNode<PageBlockDefinitionsByNameQuery, PageBlockDefinitionsByNameQueryVariables>;

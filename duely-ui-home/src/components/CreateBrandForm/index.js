@@ -1,11 +1,10 @@
 import { useForm } from 'react-hook-form';
-import { FormButton, FormErrorInfo, Util } from '@duely/react';
+import { FormButton, FormErrorInfo, useImageInputFromFileList, Util } from '@duely/react';
 import { useMemo, useRef } from 'react';
 import { useModal } from 'hooks';
 import { FormField, useDynamicNavigation } from '@duely/react';
 import ServicesAgreement from 'components/ServicesAgreement';
 import { useQuery, countries_Q, useMutation, create_agency_M } from '@duely/client';
-import { useImageInputFromFileList } from 'hooks/useImageInputFromFileList';
 import { BsCheck } from 'react-icons/bs';
 
 export default function CreateBrandForm({ className }) {
@@ -25,7 +24,9 @@ export default function CreateBrandForm({ className }) {
 
   // image logo
   const image_logo_file_list = watch('image_logo_file_list');
-  const { image: imageLogo, loading: imageLogoLoading } = useImageInputFromFileList(image_logo_file_list);
+  const { image: image_logo, loading: imageLogoLoading } = useImageInputFromFileList(
+    image_logo_file_list
+  );
 
   // subdomain name
   if (!formState.dirtyFields.subdomain_name) {
@@ -37,8 +38,6 @@ export default function CreateBrandForm({ className }) {
   }
 
   async function onSubmit({ image_logo_file_list, ...data }) {
-    const image_logo = imageLogo;
-
     await createAgency({ ...data, image_logo, return_url: 'https://duely.app/profile' });
   }
 
@@ -121,7 +120,7 @@ export default function CreateBrandForm({ className }) {
         name="image_logo_file_list"
         type="image"
         loading={imageLogoLoading}
-        src={imageLogo.data}
+        image={image_logo}
         accept="image/jpeg, image/png"
         hint="PNG, JPG up to 512KB, and minimum 128px by 128px."
         registerOptions={{ required: true }}

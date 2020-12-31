@@ -259,3 +259,53 @@ query ServiceThankYouPageSetting($service_id: ID!) {
     }
   }
 }
+
+
+query AgencyPages($agency_id: ID!) {
+  pages(filter: { agency_id: $agency_id }) {
+    ...page
+  }
+}
+
+query ServicePages($service_id: ID!) {
+  pages(filter: { service_id: $service_id }) {
+    ...page
+  }
+}
+
+query Page($page_id: ID!) {
+  page(id: $page_id) {
+    ...page
+  }
+}
+
+query PageBlock($page_block_id: ID!) {
+  page_block(id: $page_block_id) {
+    ...page_block
+  }
+}
+
+query PageDefinition($page_definition_id: ID!) {
+  page_definition(id: $page_definition_id) {
+    ...page_definition
+  }
+}
+
+query PageBlockDefinition($page_block_definition_id: ID!) {
+  page_block_definition(id: $page_block_definition_id) {
+    ...page_block_definition
+  }
+}
+
+query PageDefinitionsByName($name: String!) {
+  page_definitions(filter: { name: $name }) {
+    ...page_definition
+  }
+}
+
+query PageBlockDefinitionsByName($name: String!) {
+  page_block_definitions(filter: { name: $name }) {
+    ...page_block_definition
+  }
+}
+
