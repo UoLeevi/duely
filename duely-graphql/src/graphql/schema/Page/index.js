@@ -17,6 +17,7 @@ export const Page = {
 
     input PageFilter {
       agency_id: ID
+      service_id: ID
       page_definition_id: ID
     }
 
