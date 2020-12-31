@@ -1,64 +1,39 @@
-import { current_agency_Q, useQuery } from '@duely/client';
-import { ErrorScreen, LoadingScreen, Util } from '@duely/react';
-import TopBar from 'components/TopBar';
-// import useMessage from 'hooks/useMessage';
-import Markdown from 'markdown-to-jsx';
-// import { BsExclamationDiamond } from 'react-icons/bs';
-
-function Hero() {
-  const { data: agency } = useQuery(current_agency_Q);
-  return <span className="text-3xl font-bold">{agency?.name}</span>;
-}
-
-function Services() {
-  const { data: agency } = useQuery(current_agency_Q);
-  return <span className="text-2xl font-bold">Services</span>;
-}
-
-type MarkdownTemplateProps = {
-  markdown: string;
-  variables: Record<string, any>;
-};
-
-function MarkdownTemplate({ markdown, variables }: MarkdownTemplateProps) {
-  markdown = Util.template(markdown, variables);
-  return <Markdown children={markdown} options={{ overrides: { Hero, Services } }} />
-}
+import {
+  agency_pages_Q,
+  current_agency_Q,
+  page_definition_by_name_Q,
+  useQuery
+} from '@duely/client';
+import { ErrorScreen, LoadingScreen } from '@duely/react';
+import { useMemo } from 'react';
+import { pageBlockComponents } from '../components/PageBlockEditor';
 
 export default function Home() {
-  // useMessage(
-  //   <div className="flex flex-row items-center space-x-4 font-semibold">
-  //     <BsExclamationDiamond className="text-orange-600" />
-  //     <span className="text-sm">Duely is still in development</span>
-  //   </div>,
-  //   { autoHideMs: 6000, show: true }
-  // );
+  const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
+  const {
+    data: page_definition,
+    loading: page_definitionLoading,
+    error: page_definitionError
+  } = useQuery(page_definition_by_name_Q, { name: 'Home' });
+  const { data: pages, loading: pagesLoading, error: pagesError } = useQuery(
+    agency_pages_Q,
+    { agency_id: agency?.id!, page_definition_id: page_definition?.id! },
+    { skip: !agency || !page_definition }
+  );
 
-  const { data: agency, loading, error } = useQuery(current_agency_Q);
+  const loading = agencyLoading || page_definitionLoading || pagesLoading;
+  const error = agencyError ?? page_definitionError ?? pagesError;
+
+  const page = pages?.[0];
+  const children = useMemo(() => page?.blocks.map((block) => {
+    const definition = block.definition;
+    const Component = block && pageBlockComponents[definition.name as keyof typeof pageBlockComponents];
+    const props = JSON.parse(block.data);
+    return <Component key={block.id} {...props} />
+  }), [page]);
 
   if (loading) return <LoadingScreen />;
-  if (error) return <ErrorScreen />;
+  if (error || !children) return <ErrorScreen />;
 
-  const hero_markdown = `
-Welcome to
-
-<Hero />
-
-overhere, you will find services we offer
-
-<Services />
-
-...
-`;
-
-  return (
-    <div className="page-container">
-      <TopBar />
-      <div className="page-body-container">
-        <main className="flex flex-col justify-around flex-grow flex-shrink-0 py-6">
-          <MarkdownTemplate markdown={hero_markdown} variables={{ agency }} />
-        </main>
-      </div>
-    </div>
-  );
+  return children;
 }

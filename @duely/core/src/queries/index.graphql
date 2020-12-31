@@ -261,14 +261,14 @@ query ServiceThankYouPageSetting($service_id: ID!) {
 }
 
 
-query AgencyPages($agency_id: ID!) {
-  pages(filter: { agency_id: $agency_id }) {
+query AgencyPages($agency_id: ID!, $page_definition_id: ID) {
+  pages(filter: { agency_id: $agency_id, page_definition_id: $page_definition_id }) {
     ...page
   }
 }
 
-query ServicePages($service_id: ID!) {
-  pages(filter: { service_id: $service_id }) {
+query ServicePages($service_id: ID!, $page_definition_id: ID) {
+  pages(filter: { service_id: $service_id, page_definition_id: $page_definition_id }) {
     ...page
   }
 }

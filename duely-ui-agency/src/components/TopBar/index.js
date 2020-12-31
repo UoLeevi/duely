@@ -6,9 +6,9 @@ export default function TopBar() {
   const { data: current_subdomain } = useQuery(current_subdomain_Q);
 
   return (
-    <header className="h-12 md:h-16 z-10 px-3 md:px-4 box-border border-b border-gray-300 fixed top-0 inset-x-0 bg-white">
-      <div className="container h-full mx-auto box-border flex items-center justify-between">
-        <Link to="/" className="flex items-center h-8 md:h-12 relative space-x-2 text-gray-900 rounded p-1">
+    <header className="box-border fixed inset-x-0 top-0 z-10 h-12 px-3 bg-white border-b border-gray-300 md:h-16 md:px-4">
+      <div className="container box-border flex items-center justify-between h-full mx-auto">
+        <Link to="/" className="relative flex items-center h-8 p-1 space-x-2 text-gray-900 rounded md:h-12">
           <img className="h-full" src={current_subdomain?.agency.theme.image_logo.data} alt='logo' />
           <span className="text-2xl font-bold">{ current_subdomain?.agency?.name }</span>
         </Link>

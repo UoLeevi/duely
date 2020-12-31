@@ -264,7 +264,7 @@ mutation UpdatePage($page_id: ID!, $access: AccessLevel) {
   }
 }
 
-mutation CreatePageBlock($page_id: ID!, $page_block_definition_id: ID!, $data: String!, $after_id: ID) {
+mutation CreatePageBlock($page_id: ID!, $page_block_definition_id: ID!, $data: Json!, $after_id: ID) {
   create_page_block(page_id: $page_id, page_block_definition_id: $page_block_definition_id, data: $data, after_id: $after_id) {
     success
     message
@@ -274,7 +274,7 @@ mutation CreatePageBlock($page_id: ID!, $page_block_definition_id: ID!, $data: S
   }
 }
 
-mutation UpdatePageBlock($page_block_id: ID!, $data: String!, $after_id: ID) {
+mutation UpdatePageBlock($page_block_id: ID!, $data: Json!, $after_id: ID) {
   update_page_block(page_block_id: $page_block_id, data: $data, after_id: $after_id) {
     success
     message

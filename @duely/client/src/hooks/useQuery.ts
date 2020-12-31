@@ -1,6 +1,5 @@
-import { useQuery as useApolloQuery } from '@apollo/client';
-import { QueryDefinition, TypedQueryOptions } from '../queries';
-import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { QueryFunctionOptions, useQuery as useApolloQuery } from '@apollo/client';
+import { QueryDefinition } from '../queries';
 
 export function useQuery<
   TData,
@@ -10,7 +9,7 @@ export function useQuery<
 >(
   queryDef: QueryDefinition<TData, TVariables, TBoundVariables, TResult>,
   variables?: Omit<TVariables, keyof typeof queryDef.variables>,
-  options?: Omit<TypedQueryOptions<TypedDocumentNode<TData, TVariables>>, 'query' | 'variables'>
+  options?: QueryFunctionOptions<TData, TVariables>
 ) {
   const { query, result, variables: defaultVariables, ...defaultOptions } = queryDef;
   const { data: rawData, networkStatus, loading: initialLoading, ...rest } = useApolloQuery(query, {

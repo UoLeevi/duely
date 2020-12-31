@@ -20,6 +20,8 @@ export declare type Scalars = {
     Float: number;
     /** Date custom scalar type */
     Date: any;
+    /** Json custom scalar type */
+    Json: any;
 };
 export declare type Query = {
     __typename?: 'Query';
@@ -187,12 +189,12 @@ export declare type MutationUpdate_PageArgs = {
 export declare type MutationCreate_Page_BlockArgs = {
     page_id: Scalars['ID'];
     page_block_definition_id: Scalars['ID'];
-    data: Scalars['String'];
+    data: Scalars['Json'];
     after_id?: Maybe<Scalars['ID']>;
 };
 export declare type MutationUpdate_Page_BlockArgs = {
     page_block_id: Scalars['ID'];
-    data?: Maybe<Scalars['String']>;
+    data?: Maybe<Scalars['Json']>;
     after_id?: Maybe<Scalars['ID']>;
 };
 export declare type MutationDelete_Page_BlockArgs = {
@@ -401,7 +403,7 @@ export declare type FormField = Node & {
     name: Scalars['String'];
     label: Scalars['String'];
     type: Scalars['String'];
-    default?: Maybe<Scalars['String']>;
+    default?: Maybe<Scalars['Json']>;
 };
 export declare type Page = {
     __typename?: 'Page';
@@ -428,7 +430,7 @@ export declare type PageBlock = {
     id: Scalars['ID'];
     page: Page;
     definition: PageBlockDefinition;
-    data: Scalars['String'];
+    data: Scalars['Json'];
 };
 export declare type PageBlockFilter = {
     page_id?: Maybe<Scalars['ID']>;
@@ -1499,7 +1501,7 @@ export declare type UpdatePageMutation = ({
 export declare type CreatePageBlockMutationVariables = Exact<{
     page_id: Scalars['ID'];
     page_block_definition_id: Scalars['ID'];
-    data: Scalars['String'];
+    data: Scalars['Json'];
     after_id?: Maybe<Scalars['ID']>;
 }>;
 export declare type CreatePageBlockMutation = ({
@@ -1515,7 +1517,7 @@ export declare type CreatePageBlockMutation = ({
 });
 export declare type UpdatePageBlockMutationVariables = Exact<{
     page_block_id: Scalars['ID'];
-    data: Scalars['String'];
+    data: Scalars['Json'];
     after_id?: Maybe<Scalars['ID']>;
 }>;
 export declare type UpdatePageBlockMutation = ({
@@ -1882,6 +1884,7 @@ export declare type ServiceThankYouPageSettingQuery = ({
 });
 export declare type AgencyPagesQueryVariables = Exact<{
     agency_id: Scalars['ID'];
+    page_definition_id?: Maybe<Scalars['ID']>;
 }>;
 export declare type AgencyPagesQuery = ({
     __typename?: 'Query';
@@ -1892,6 +1895,7 @@ export declare type AgencyPagesQuery = ({
 });
 export declare type ServicePagesQueryVariables = Exact<{
     service_id: Scalars['ID'];
+    page_definition_id?: Maybe<Scalars['ID']>;
 }>;
 export declare type ServicePagesQuery = ({
     __typename?: 'Query';
