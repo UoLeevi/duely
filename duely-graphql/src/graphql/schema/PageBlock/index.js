@@ -40,7 +40,7 @@ export const PageBlock = {
     PageBlock: {
       ...createResolverForReferencedResource({ name: 'page' }),
       ...createResolverForReferencedResource({ name: 'definition', column_name: 'page_block_definition_id' }),
-      data: (source) => data && JSON.stringify(data)
+      data: (source) => source.data && JSON.stringify(source.data)
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
