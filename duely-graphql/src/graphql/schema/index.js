@@ -4,6 +4,8 @@ import { AccessLevel } from './AccessLevel';
 import { Address } from './Address';
 import { Charge } from './Charge';
 import { FormField } from './FormField';
+import { Page } from './Page';
+import { PageBlock } from './PageBlock';
 import { PageDefinition } from './PageDefinition';
 import { PageBlockDefinition } from './PageBlockDefinition';
 import { PaymentIntent } from './PaymentIntent';
@@ -44,6 +46,8 @@ const types = [
   interfaces,
   AccessLevel,
   FormField,
+  Page,
+  PageBlock,
   PageDefinition,
   PageBlockDefinition,
   Address,

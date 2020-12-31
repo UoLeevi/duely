@@ -18,6 +18,7 @@ export const Agency = {
       subdomain: Subdomain!
       theme: Theme!
       services(filter: ServiceFilter): [Service!]
+      pages(filter: PageFilter): [Page!]
       settings: AgencySettings!
     }
 
@@ -70,6 +71,7 @@ export const Agency = {
       ...createResolverForReferencedResource({ name: 'subdomain' }),
       ...createResolverForReferencedResource({ name: 'theme', reverse: true, column_name: 'agency_id' }),
       ...createResolverForReferencedResourceAll({ name: 'services', resource_name: 'service', column_name: 'agency_id' }),
+      ...createResolverForReferencedResourceAll({ name: 'pages', resource_name: 'page', column_name: 'agency_id' }),
       settings: agency => ({ agency_id: agency.id })
     },
     Query: {
