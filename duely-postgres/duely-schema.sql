@@ -792,6 +792,35 @@ $$;
 ALTER FUNCTION internal_.insert_form_() OWNER TO postgres;
 
 --
+-- Name: insert_page_default_blocks_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.insert_page_default_blocks_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  WITH
+    cte AS (
+      SELECT p.uuid_ page_uuid_, unnest(d.default_block_uuids_) page_block_definition_uuid_
+      FROM _new_table p
+      JOIN internal_.page_definition_ d ON p.page_definition_uuid_ = d.uuid_
+    )
+  INSERT INTO application_.page_block_ (page_block_definition_uuid_, page_uuid_, data_)
+  SELECT cte.page_block_definition_uuid_, cte.page_uuid_, jsonb_object_agg(f.name_, f.default_)
+  FROM cte
+  JOIN internal_.page_block_definition_ d ON d.uuid_ = cte.page_block_definition_uuid_
+  JOIN internal_.form_field_ f ON f.form_uuid_ = d.form_uuid_
+  GROUP BY cte.page_block_definition_uuid_, cte.page_uuid_;
+
+  RETURN NULL;
+
+END;
+$$;
+
+
+ALTER FUNCTION internal_.insert_page_default_blocks_() OWNER TO postgres;
+
+--
 -- Name: insert_service_page_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -1786,7 +1815,7 @@ BEGIN
       AND NOT EXISTS (
         SELECT 1
         FROM application_.page_block_ b_after
-        WHERE b_after.after_uuid_ = f.uuid_
+        WHERE b_after.after_uuid_ = b.uuid_
       );
 
     NEW.after_uuid_ = _before_uuid;
@@ -6163,7 +6192,7 @@ CREATE TABLE application_.page_block_ (
     page_block_definition_uuid_ uuid NOT NULL,
     page_uuid_ uuid NOT NULL,
     data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
-    after_uuid_ uuid NOT NULL,
+    after_uuid_ uuid,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6822,6 +6851,7 @@ ALTER TABLE internal_.page_block_definition_ OWNER TO postgres;
 CREATE TABLE internal_.page_definition_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
+    default_block_uuids_ uuid[] DEFAULT '{}'::uuid[],
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6887,6 +6917,7 @@ ALTER TABLE internal__audit_.page_block_definition_ OWNER TO postgres;
 CREATE TABLE internal__audit_.page_definition_ (
     uuid_ uuid,
     name_ text,
+    default_block_uuids_ uuid[],
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -7323,9 +7354,9 @@ COPY internal_.page_block_definition_ (uuid_, name_, page_definition_uuid_, form
 -- Data for Name: page_definition_; Type: TABLE DATA; Schema: internal_; Owner: postgres
 --
 
-COPY internal_.page_definition_ (uuid_, name_, audit_at_, audit_session_uuid_) FROM stdin;
-ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000
-e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	2020-12-31 10:33:11.384298+00	00000000-0000-0000-0000-000000000000
+COPY internal_.page_definition_ (uuid_, name_, default_block_uuids_, audit_at_, audit_session_uuid_) FROM stdin;
+e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	{}	2020-12-31 11:47:56.258908+00	00000000-0000-0000-0000-000000000000
+ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	{3b91df48-2d20-4161-8528-4f47fb54208d}	2020-12-31 11:47:56.258908+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7363,9 +7394,10 @@ COPY internal__audit_.page_block_definition_ (uuid_, name_, page_definition_uuid
 -- Data for Name: page_definition_; Type: TABLE DATA; Schema: internal__audit_; Owner: postgres
 --
 
-COPY internal__audit_.page_definition_ (uuid_, name_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
-ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000	I
-e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	2020-12-31 10:33:11.384298+00	00000000-0000-0000-0000-000000000000	I
+COPY internal__audit_.page_definition_ (uuid_, name_, default_block_uuids_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	{}	2020-12-31 11:47:56.258908+00	00000000-0000-0000-0000-000000000000	I
+e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	{}	2020-12-31 11:47:56.258908+00	00000000-0000-0000-0000-000000000000	I
+ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	{3b91df48-2d20-4161-8528-4f47fb54208d}	2020-12-31 11:47:56.258908+00	00000000-0000-0000-0000-000000000000	U
 \.
 
 
@@ -7912,6 +7944,14 @@ ALTER TABLE ONLY application_.notification_definition_
 
 ALTER TABLE ONLY application_.notification_definition_
     ADD CONSTRAINT notification_definition__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: page_ page__page_definition_uuid__agency_uuid__service_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.page_
+    ADD CONSTRAINT page__page_definition_uuid__agency_uuid__service_uuid__key UNIQUE (page_definition_uuid_, agency_uuid_, service_uuid_);
 
 
 --
@@ -8974,6 +9014,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_insert_agency_home_page_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_agency_home_page_();
+
+
+--
+-- Name: page_ tr_after_insert_insert_page_default_blocks_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_insert_page_default_blocks_ AFTER INSERT ON application_.page_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_page_default_blocks_();
 
 
 --
