@@ -10530,7 +10530,7 @@ ALTER TABLE ONLY application_.page_block_
 --
 
 ALTER TABLE ONLY application_.page_block_
-    ADD CONSTRAINT page_block__page_uuid__fkey FOREIGN KEY (page_uuid_) REFERENCES application_.page_(uuid_);
+    ADD CONSTRAINT page_block__page_uuid__fkey FOREIGN KEY (page_uuid_) REFERENCES application_.page_(uuid_) ON DELETE CASCADE;
 
 
 --
