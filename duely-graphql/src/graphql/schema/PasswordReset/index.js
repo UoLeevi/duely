@@ -64,6 +64,16 @@ export const PasswordReset = {
               return await createResource(resource_name, { email_address, data: { redirect_url: redirect_url.href } });
             });
           });
+
+          if (!password_reset) {
+            // No user with specified email address exists.
+            // Let's anyway send a successful result to not tell if user exists or not.
+            return {
+              success: true,
+              type: 'SimpleResult'
+            };
+          }
+
         } catch (error) {
           return {
             success: false,
