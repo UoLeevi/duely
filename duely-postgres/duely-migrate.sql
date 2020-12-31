@@ -14,20 +14,9 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE OR REPLACE FUNCTION internal_.resource_insert_from_(_table regclass) RETURNS void
-    LANGUAGE plpgsql
-    AS $_$
-BEGIN
-  EXECUTE '
-    SELECT internal_.resource_insert_(d, to_jsonb(r))
-    FROM ' || _table || ' r
-    CROSS JOIN security_.resource_definition_ d
-    WHERE d.table_ = $1;
-  '
-  USING _table;
-END
-$_$;
-
+UPDATE internal_.form_field_
+SET type_ = 'textarea'
+WHERE name_ = 'paragraph';
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN

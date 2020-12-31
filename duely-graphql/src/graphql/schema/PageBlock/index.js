@@ -1,3 +1,4 @@
+import { withConnection } from '../../../db';
 import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
 
 const resource = {

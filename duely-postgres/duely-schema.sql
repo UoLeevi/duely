@@ -1187,6 +1187,27 @@ $_$;
 ALTER FUNCTION internal_.resource_insert_(_resource_definition security_.resource_definition_, _record jsonb) OWNER TO postgres;
 
 --
+-- Name: resource_insert_from_(regclass); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_insert_from_(_table regclass) RETURNS void
+    LANGUAGE plpgsql
+    AS $_$
+BEGIN
+  EXECUTE '
+    SELECT internal_.resource_insert_(d, to_jsonb(r))
+    FROM ' || _table || ' r
+    CROSS JOIN security_.resource_definition_ d
+    WHERE d.table_ = $1;
+  '
+  USING _table;
+END
+$_$;
+
+
+ALTER FUNCTION internal_.resource_insert_from_(_table regclass) OWNER TO postgres;
+
+--
 -- Name: resource_insert_membership_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -7336,8 +7357,8 @@ COPY internal_.form_ (uuid_, audit_at_, audit_session_uuid_) FROM stdin;
 COPY internal_.form_field_ (uuid_, name_, type_, form_uuid_, default_, label_, after_uuid_, audit_at_, audit_session_uuid_) FROM stdin;
 087ecce8-4fcf-4471-ae4c-ab4d8660a114	headline1	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"{agency.name}"	Headline 1	\N	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000
 3ea3f1de-0144-4819-9ce4-c9c04c12e6dc	headline2	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"Services"	Headline 2	087ecce8-4fcf-4471-ae4c-ab4d8660a114	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000
-0f3fa468-e427-4477-a409-8a695fbabe34	paragraph	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"Services"	Paragraph	3ea3f1de-0144-4819-9ce4-c9c04c12e6dc	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000
 b78b6a5b-9034-4fef-acb1-b9cd6982a0da	imageSrc	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	\N	Image URL	0f3fa468-e427-4477-a409-8a695fbabe34	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000
+0f3fa468-e427-4477-a409-8a695fbabe34	paragraph	textarea	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"Services"	Paragraph	3ea3f1de-0144-4819-9ce4-c9c04c12e6dc	2020-12-31 19:19:41.953557+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7378,6 +7399,7 @@ COPY internal__audit_.form_field_ (uuid_, name_, type_, form_uuid_, default_, la
 3ea3f1de-0144-4819-9ce4-c9c04c12e6dc	headline2	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"Services"	Headline 2	087ecce8-4fcf-4471-ae4c-ab4d8660a114	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000	I
 0f3fa468-e427-4477-a409-8a695fbabe34	paragraph	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"Services"	Paragraph	3ea3f1de-0144-4819-9ce4-c9c04c12e6dc	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000	I
 b78b6a5b-9034-4fef-acb1-b9cd6982a0da	imageSrc	text	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	\N	Image URL	0f3fa468-e427-4477-a409-8a695fbabe34	2020-12-30 20:10:48.905176+00	00000000-0000-0000-0000-000000000000	I
+0f3fa468-e427-4477-a409-8a695fbabe34	paragraph	textarea	63bb3010-4ed1-40bb-a029-e4501e3b0bd7	"Services"	Paragraph	3ea3f1de-0144-4819-9ce4-c9c04c12e6dc	2020-12-31 19:19:41.953557+00	00000000-0000-0000-0000-000000000000	U
 \.
 
 
