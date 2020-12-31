@@ -12,7 +12,7 @@ export const PageBlock = {
       id: ID!
       page: Page!
       definition: PageBlockDefinition!
-      data: String!
+      data: Json!
     }
 
     input PageBlockFilter {
@@ -40,8 +40,7 @@ export const PageBlock = {
   resolvers: {
     PageBlock: {
       ...createResolverForReferencedResource({ name: 'page' }),
-      ...createResolverForReferencedResource({ name: 'definition', column_name: 'page_block_definition_id' }),
-      data: (source) => source.data && JSON.stringify(source.data)
+      ...createResolverForReferencedResource({ name: 'definition', column_name: 'page_block_definition_id' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

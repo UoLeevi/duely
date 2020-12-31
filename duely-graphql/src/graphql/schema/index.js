@@ -27,6 +27,7 @@ import { Image } from './Image';
 import { Markdown } from './Markdown';
 import { Membership } from './Membership';
 import { Date } from './Date';
+import { Json } from './Json';
 import { Theme } from './Theme';
 import { Price } from './Price';
 import { BalanceTransaction } from './BalanceTransaction';
@@ -73,7 +74,8 @@ const types = [
   Markdown,
   Membership,
   Theme,
-  Date
+  Date,
+  Json
 ];
 
 const schema = {

@@ -5,7 +5,7 @@ export const FormField = {
       name: String!
       label: String!
       type: String!
-      default: String
+      default: Json
     }
   `
 };
