@@ -750,6 +750,28 @@ $$;
 ALTER FUNCTION internal_.extract_referenced_resources_jsonb_(_resource_definition_uuid uuid, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: insert_agency_home_page_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.insert_agency_home_page_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  INSERT INTO application_.page_ (agency_uuid_, page_definition_uuid_)
+  SELECT a.uuid_, d.uuid_
+  FROM _new_table a
+  CROSS JOIN internal_.page_definition_ d
+  WHERE d.name_ = 'Home';
+
+  RETURN NULL;
+
+END;
+$$;
+
+
+ALTER FUNCTION internal_.insert_agency_home_page_() OWNER TO postgres;
+
+--
 -- Name: insert_form_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -768,6 +790,28 @@ $$;
 
 
 ALTER FUNCTION internal_.insert_form_() OWNER TO postgres;
+
+--
+-- Name: insert_service_page_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.insert_service_page_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  INSERT INTO application_.page_ (agency_uuid_, service_uuid_, page_definition_uuid_)
+  SELECT s.agency_uuid_, s.uuid_, d.uuid_
+  FROM _new_table s
+  CROSS JOIN internal_.page_definition_ d
+  WHERE d.name_ = 'Service';
+
+  RETURN NULL;
+
+END;
+$$;
+
+
+ALTER FUNCTION internal_.insert_service_page_() OWNER TO postgres;
 
 --
 -- Name: insert_subject_for_user_(); Type: FUNCTION; Schema: internal_; Owner: postgres
@@ -4775,28 +4819,6 @@ $$;
 ALTER FUNCTION policy_.owner_can_create_markdown_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
--- Name: owner_can_create_page_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
---
-
-CREATE FUNCTION policy_.owner_can_create_page_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF (
-    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
-    FROM internal_.query_owner_resource_(_resource_definition, _data)
-  ) THEN
-    RETURN '{access_, page_definition_uuid_, agency_uuid_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-
-ALTER FUNCTION policy_.owner_can_create_page_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
-
---
 -- Name: owner_can_create_page_block_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -6124,6 +6146,7 @@ CREATE TABLE application_.page_ (
     agency_uuid_ uuid NOT NULL,
     page_definition_uuid_ uuid NOT NULL,
     access_ public.access_level_ DEFAULT 'agent'::public.access_level_ NOT NULL,
+    service_uuid_ uuid,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6465,6 +6488,7 @@ CREATE TABLE application__audit_.page_ (
     agency_uuid_ uuid,
     page_definition_uuid_ uuid,
     access_ public.access_level_,
+    service_uuid_ uuid,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -7301,6 +7325,7 @@ COPY internal_.page_block_definition_ (uuid_, name_, page_definition_uuid_, form
 
 COPY internal_.page_definition_ (uuid_, name_, audit_at_, audit_session_uuid_) FROM stdin;
 ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000
+e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	2020-12-31 10:33:11.384298+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7340,6 +7365,7 @@ COPY internal__audit_.page_block_definition_ (uuid_, name_, page_definition_uuid
 
 COPY internal__audit_.page_definition_ (uuid_, name_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000	I
+e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	2020-12-31 10:33:11.384298+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -7491,10 +7517,8 @@ cecdad34-bfee-4485-a35d-05c8b8f077c3	94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	policy
 c32871f2-1540-438e-b375-a7671d40a81f	cbe96769-7f38-4220-82fb-c746c634bc99	policy_.anyone_can_query_page_definition_(security_.resource_definition_,application_.resource_)	query	\N
 6536c5ca-7960-42b5-ac89-ef75a1663b15	e61bae44-071d-4f80-9f53-c639f9b48661	policy_.anyone_can_query_page_block_definition_(security_.resource_definition_,application_.resource_)	query	\N
 cacf6b3b-c992-4f31-bcb4-43f3d157249d	c042e657-0005-42a1-b3c2-6ee25d62fb33	policy_.anyone_can_query_form_field_(security_.resource_definition_,application_.resource_)	query	\N
-baafa157-d21b-4f43-a182-4b26dbe7f5d8	08b16cec-4d78-499a-a092-91fc2d360f86	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 60c14718-5559-47ae-ab3a-89bcef23c3fc	08b16cec-4d78-499a-a092-91fc2d360f86	policy_.can_query_page_based_on_access_level_(security_.resource_definition_,application_.resource_)	query	\N
 0b410b7a-9a8e-4781-ac7e-83a18d6ba010	08b16cec-4d78-499a-a092-91fc2d360f86	policy_.owner_can_change_page_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-3cc8c0a6-f1c1-416e-876a-547a743dbf62	08b16cec-4d78-499a-a092-91fc2d360f86	policy_.owner_can_create_page_(security_.resource_definition_,jsonb)	create	\N
 3c066f80-65b5-470b-987a-2de1ec7cd06d	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 15cc0e4e-c216-4410-b1ea-bd6a550353ca	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.can_query_page_block_based_on_page_access_level_(security_.resource_definition_,application_.resource_)	query	\N
 2859ef7b-837f-4b6d-97ff-0e10c3d9acc1	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.owner_can_change_page_block_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
@@ -7604,8 +7628,8 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 e61bae44-071d-4f80-9f53-c639f9b48661	pblkdef	page block definition	internal_.page_block_definition_	cbe96769-7f38-4220-82fb-c746c634bc99	{uuid_,name_,page_definition_uuid_,form_uuid_}
 34f873e1-b837-4f1f-94d7-7bacf9c43d8d	set	service thank you page setting	application_.service_thank_you_page_setting_	d50773b3-5779-4333-8bc3-6ef32d488d72	{uuid_,service_uuid_,url_}
 c042e657-0005-42a1-b3c2-6ee25d62fb33	formfld	form field	internal_.form_field_	8248bebc-96c3-4f72-83df-ad4c68184470	{uuid_,name_,form_uuid_}
-08b16cec-4d78-499a-a092-91fc2d360f86	pblk	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,page_definition_uuid_}
 bc2e81b9-be64-4068-ad32-3ed89151bbfa	pblk	page block	application_.page_block_	08b16cec-4d78-499a-a092-91fc2d360f86	{uuid_,page_block_definition_uuid_,page_uuid_}
+08b16cec-4d78-499a-a092-91fc2d360f86	pblk	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,service_uuid_,page_definition_uuid_}
 \.
 
 
@@ -8943,6 +8967,20 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.user_notification_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: agency_ tr_after_insert_insert_agency_home_page_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_insert_agency_home_page_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_agency_home_page_();
+
+
+--
+-- Name: service_ tr_after_insert_insert_service_page_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_insert_service_page_ AFTER INSERT ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_service_page_();
 
 
 --
@@ -10405,7 +10443,7 @@ ALTER TABLE ONLY application_.image_
 --
 
 ALTER TABLE ONLY application_.page_
-    ADD CONSTRAINT page__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+    ADD CONSTRAINT page__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
 
 
 --
@@ -10414,6 +10452,14 @@ ALTER TABLE ONLY application_.page_
 
 ALTER TABLE ONLY application_.page_
     ADD CONSTRAINT page__page_definition_uuid__fkey FOREIGN KEY (page_definition_uuid_) REFERENCES internal_.page_definition_(uuid_);
+
+
+--
+-- Name: page_ page__service_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.page_
+    ADD CONSTRAINT page__service_uuid__fkey FOREIGN KEY (service_uuid_) REFERENCES application_.service_(uuid_) ON DELETE CASCADE;
 
 
 --
