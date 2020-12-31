@@ -26,8 +26,8 @@ export const PageBlock = {
     }
 
     extend type Mutation {
-      create_page_block(page_id: ID!, page_block_definition_id: ID!, data: String!, after_id: ID): PageBlockMutationResult!
-      update_page_block(page_block_id: ID!, data: String, after_id: ID): PageBlockMutationResult!
+      create_page_block(page_id: ID!, page_block_definition_id: ID!, data: Json!, after_id: ID): PageBlockMutationResult!
+      update_page_block(page_block_id: ID!, data: Json, after_id: ID): PageBlockMutationResult!
       delete_page_block(page_block_id: ID!): PageBlockMutationResult!
     }
 
