@@ -1,14 +1,19 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../util';
+import {
+  createDefaultQueryResolversForResource,
+  createResolverForReferencedResource,
+  createResolverForReferencedResourceAll
+} from '../../util';
 
 const resource = {
   name: 'page'
-}
+};
 
 export const Page = {
   typeDef: `
     type Page {
       id: ID!
+      url_path: String!
       agency: Agency!
       service: Service
       definition: PageDefinition!
@@ -17,6 +22,7 @@ export const Page = {
     }
 
     input PageFilter {
+      url_path: String
       agency_id: ID
       service_id: ID
       page_definition_id: ID
@@ -24,6 +30,7 @@ export const Page = {
 
     extend type Query {
       page(id: ID!): Page
+      page_by_url(url: String!): Page
       pages(filter: PageFilter!): [Page!]
     }
 
@@ -41,19 +48,62 @@ export const Page = {
     Page: {
       ...createResolverForReferencedResource({ name: 'agency' }),
       ...createResolverForReferencedResource({ name: 'service' }),
-      ...createResolverForReferencedResource({ name: 'definition', column_name: 'page_definition_id' }),
-      ...createResolverForReferencedResourceAll({ name: 'blocks', resource_name: 'page block',  column_name: 'page_id' })
+      ...createResolverForReferencedResource({
+        name: 'definition',
+        column_name: 'page_definition_id'
+      }),
+      ...createResolverForReferencedResourceAll({
+        name: 'blocks',
+        resource_name: 'page block',
+        column_name: 'page_id'
+      })
     },
     Query: {
-      ...createDefaultQueryResolversForResource(resource)
+      ...createDefaultQueryResolversForResource(resource),
+      async page_by_url(source, args, context, info) {
+        if (!context.jwt) throw new Error('Unauthorized');
+
+        let url;
+
+        try {
+          url = new URL(args.url);
+          if (url == null) throw new Error(error.message);
+        } catch (error) {
+          throw new Error(error.message);
+        }
+
+        const domain = url.hostname.toLowerCase();
+        const path = url.pathname.toLowerCase();
+        let subdomain_name = null;
+
+        if (domain.endsWith('.duely.app')) {
+          subdomain_name = domain.slice(0, -'.duely.app'.length);
+        } else {
+          // TODO: check from database
+          throw new Error('Not implemented.');
+        }
+
+        try {
+          return await withConnection(context, async (withSession) => {
+            return await withSession(async ({ queryResource }) => {
+              const subdomain = await queryResource('subdomain', { name: subdomain_name });
+              if (!subdomain) return null;
+              const agency = await queryResource('agency', { subdomain_id: subdomain.id });
+              if (!agency) return null;
+              return await queryResource('page', { agency_id: agency.id, url_path: path });
+            });
+          });
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      }
     },
     Mutation: {
       async update_page(obj, { page_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ updateResource }) => {
               // update page resource
               const page = await updateResource(page_id, args);
