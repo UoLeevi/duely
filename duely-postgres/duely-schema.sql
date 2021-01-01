@@ -757,8 +757,8 @@ CREATE FUNCTION internal_.insert_agency_home_page_() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  INSERT INTO application_.page_ (agency_uuid_, page_definition_uuid_)
-  SELECT a.uuid_, d.uuid_
+  INSERT INTO application_.page_ (agency_uuid_, page_definition_uuid_, url_path_)
+  SELECT a.uuid_, d.uuid_, '/'
   FROM _new_table a
   CROSS JOIN internal_.page_definition_ d
   WHERE d.name_ = 'Home';
@@ -828,8 +828,8 @@ CREATE FUNCTION internal_.insert_service_page_() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  INSERT INTO application_.page_ (agency_uuid_, service_uuid_, page_definition_uuid_)
-  SELECT s.agency_uuid_, s.uuid_, d.uuid_
+  INSERT INTO application_.page_ (agency_uuid_, service_uuid_, page_definition_uuid_, url_path_)
+  SELECT s.agency_uuid_, s.uuid_, d.uuid_, '/services/' || s.url_name_
   FROM _new_table s
   CROSS JOIN internal_.page_definition_ d
   WHERE d.name_ = 'Service';
@@ -1847,6 +1847,30 @@ $$;
 
 
 ALTER FUNCTION internal_.update_page_block_linked_list_() OWNER TO postgres;
+
+--
+-- Name: update_service_page_url_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.update_service_page_url_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  UPDATE application_.page_ p
+  SET url_path_ = '/services/' || s.url_name_
+  FROM _new_table s
+  CROSS JOIN internal_.page_definition_ d
+  WHERE d.name_ = 'Service'
+    AND d.uuid_ = p.page_definition_uuid_
+    AND p.service_uuid_ = s.uuid_;
+
+  RETURN NULL;
+
+END;
+$$;
+
+
+ALTER FUNCTION internal_.update_service_page_url_() OWNER TO postgres;
 
 --
 -- Name: user_invite_; Type: TABLE; Schema: application_; Owner: postgres
@@ -4345,7 +4369,7 @@ BEGIN
     FROM application_.page_
     WHERE uuid_ = _resource.uuid_
   ) THEN
-    RETURN '{uuid_, access_, page_definition_uuid_, agency_uuid_, service_uuid_}'::text[];
+    RETURN '{uuid_, access_, page_definition_uuid_, agency_uuid_, service_uuid_, url_path_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -6197,6 +6221,7 @@ CREATE TABLE application_.page_ (
     page_definition_uuid_ uuid NOT NULL,
     access_ public.access_level_ DEFAULT 'agent'::public.access_level_ NOT NULL,
     service_uuid_ uuid,
+    url_path_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6539,6 +6564,7 @@ CREATE TABLE application__audit_.page_ (
     page_definition_uuid_ uuid,
     access_ public.access_level_,
     service_uuid_ uuid,
+    url_path_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -6873,6 +6899,7 @@ CREATE TABLE internal_.page_definition_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     name_ text NOT NULL,
     default_block_uuids_ uuid[] DEFAULT '{}'::uuid[],
+    url_path_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6939,6 +6966,7 @@ CREATE TABLE internal__audit_.page_definition_ (
     uuid_ uuid,
     name_ text,
     default_block_uuids_ uuid[],
+    url_path_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -7375,9 +7403,9 @@ COPY internal_.page_block_definition_ (uuid_, name_, page_definition_uuid_, form
 -- Data for Name: page_definition_; Type: TABLE DATA; Schema: internal_; Owner: postgres
 --
 
-COPY internal_.page_definition_ (uuid_, name_, default_block_uuids_, audit_at_, audit_session_uuid_) FROM stdin;
-e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	{}	2020-12-31 11:47:56.258908+00	00000000-0000-0000-0000-000000000000
-ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	{3b91df48-2d20-4161-8528-4f47fb54208d}	2020-12-31 11:47:56.258908+00	00000000-0000-0000-0000-000000000000
+COPY internal_.page_definition_ (uuid_, name_, default_block_uuids_, url_path_, audit_at_, audit_session_uuid_) FROM stdin;
+ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	{3b91df48-2d20-4161-8528-4f47fb54208d}	/	2021-01-01 10:57:09.10212+00	00000000-0000-0000-0000-000000000000
+e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	{}	/services/:service_url_name	2021-01-01 10:57:09.10212+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7416,10 +7444,9 @@ COPY internal__audit_.page_block_definition_ (uuid_, name_, page_definition_uuid
 -- Data for Name: page_definition_; Type: TABLE DATA; Schema: internal__audit_; Owner: postgres
 --
 
-COPY internal__audit_.page_definition_ (uuid_, name_, default_block_uuids_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
-ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	{}	2020-12-31 11:47:56.258908+00	00000000-0000-0000-0000-000000000000	I
-e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	{}	2020-12-31 11:47:56.258908+00	00000000-0000-0000-0000-000000000000	I
-ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	{3b91df48-2d20-4161-8528-4f47fb54208d}	2020-12-31 11:47:56.258908+00	00000000-0000-0000-0000-000000000000	U
+COPY internal__audit_.page_definition_ (uuid_, name_, default_block_uuids_, url_path_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	{3b91df48-2d20-4161-8528-4f47fb54208d}	/	2021-01-01 10:57:09.10212+00	00000000-0000-0000-0000-000000000000	I
+e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	{}	/services/:service_url_name	2021-01-01 10:57:09.10212+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -7678,12 +7705,12 @@ f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bd
 f8e2c163-8ebf-45dc-90b8-b850e1590c7c	set	user notification setting	application_.user_notification_setting_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{uuid_,user_uuid_,subdomain_uuid_,notification_definition_uuid_}
 8248bebc-96c3-4f72-83df-ad4c68184470	form	form	internal_.form_	\N	{uuid_}
 6549cc83-4ce3-423d-88e1-263ac227608d	set	agency thank you page setting	application_.agency_thank_you_page_setting_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,url_}
-cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_definition_	\N	{uuid_,name_}
 e61bae44-071d-4f80-9f53-c639f9b48661	pblkdef	page block definition	internal_.page_block_definition_	cbe96769-7f38-4220-82fb-c746c634bc99	{uuid_,name_,page_definition_uuid_,form_uuid_}
 34f873e1-b837-4f1f-94d7-7bacf9c43d8d	set	service thank you page setting	application_.service_thank_you_page_setting_	d50773b3-5779-4333-8bc3-6ef32d488d72	{uuid_,service_uuid_,url_}
 c042e657-0005-42a1-b3c2-6ee25d62fb33	formfld	form field	internal_.form_field_	8248bebc-96c3-4f72-83df-ad4c68184470	{uuid_,name_,form_uuid_}
 bc2e81b9-be64-4068-ad32-3ed89151bbfa	pblk	page block	application_.page_block_	08b16cec-4d78-499a-a092-91fc2d360f86	{uuid_,page_block_definition_uuid_,page_uuid_}
-08b16cec-4d78-499a-a092-91fc2d360f86	pblk	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,service_uuid_,page_definition_uuid_}
+cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_definition_	\N	{uuid_,name_,url_path_}
+08b16cec-4d78-499a-a092-91fc2d360f86	page	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,"service_uuid_ url_path_"}
 \.
 
 
@@ -7985,6 +8012,14 @@ ALTER TABLE ONLY application_.page_
 
 
 --
+-- Name: page_ page__url_path__agency_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.page_
+    ADD CONSTRAINT page__url_path__agency_uuid__key UNIQUE (url_path_, agency_uuid_);
+
+
+--
 -- Name: page_block_ page_block__after_uuid__page_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -8278,6 +8313,14 @@ ALTER TABLE ONLY internal_.page_definition_
 
 ALTER TABLE ONLY internal_.page_definition_
     ADD CONSTRAINT page_definition__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: page_definition_ page_definition__url_path__key; Type: CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.page_definition_
+    ADD CONSTRAINT page_definition__url_path__key UNIQUE (url_path_);
 
 
 --
@@ -9568,6 +9611,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.the
 --
 
 CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.user_notification_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
+-- Name: service_ tr_after_update_update_service_page_url_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_update_service_page_url_ AFTER UPDATE ON application_.service_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.update_service_page_url_();
 
 
 --
