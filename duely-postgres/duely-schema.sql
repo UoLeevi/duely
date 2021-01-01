@@ -4345,7 +4345,7 @@ BEGIN
     FROM application_.page_
     WHERE uuid_ = _resource.uuid_
   ) THEN
-    RETURN '{uuid_, access_, page_definition_uuid_, agency_uuid_}'::text[];
+    RETURN '{uuid_, access_, page_definition_uuid_, agency_uuid_, service_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
