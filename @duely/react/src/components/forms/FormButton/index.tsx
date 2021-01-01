@@ -38,10 +38,12 @@ export function FormButton<TFieldValues extends Record<string, any> = Record<str
 
   return (
     <button type={type} disabled={disabled} className={className} {...props}>
-      <LoadingSpinner
-        loading={loading}
-        className={`absolute left-0 ${dense ? 'h-5 ml-2' : 'h-6 ml-3'}`}
-      />
+      {spinner && (
+        <LoadingSpinner
+          loading={loading}
+          className={`absolute left-0 ${dense ? 'h-5 ml-2' : 'h-6 ml-3'}`}
+        />
+      )}
       {children}
     </button>
   );

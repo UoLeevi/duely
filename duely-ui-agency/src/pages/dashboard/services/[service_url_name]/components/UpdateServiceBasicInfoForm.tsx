@@ -101,7 +101,7 @@ export function UpdateServiceBasicInfoForm({ service_id }: ServiceProps) {
           className="max-w-xl"
           name="url_name"
           type="text"
-          prefix={`/`}
+          prefix="/services/"
           hint={
             <span>
               <span>How service name should appear in URLs.</span>

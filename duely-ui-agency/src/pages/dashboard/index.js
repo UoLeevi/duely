@@ -3,7 +3,7 @@ import { useQuery, current_agency_Q, current_user_Q } from '@duely/client';
 import { LoadingScreen, ErrorScreen } from '@duely/react';
 import { DashboardLayout } from './components';
 import DashboardClients from './clients';
-import DashboardFiles from './files';
+import DashboardSite from './site';
 import DashboardHome from './home';
 import DashboardPayments from './payments';
 import DashboardProjects from './projects';
@@ -25,8 +25,8 @@ const routes = [
     component: DashboardPayments
   },
   {
-    path: '/dashboard/files',
-    component: DashboardFiles
+    path: '/dashboard/site',
+    component: DashboardSite
   },
   {
     path: '/dashboard/settings',
@@ -48,7 +48,7 @@ export default function Dashboard() {
   if (error) return <ErrorScreen />
 
   const authorized = current_user?.memberships
-    .filter(m => roles.some(r => r === m.access))
+    .filter(m => roles.includes(m.access))
     .some(m => m.subdomain.agency.id === current_agency?.id);
 
   if (!authorized) {

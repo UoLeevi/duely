@@ -26,10 +26,12 @@ export declare type Scalars = {
 export declare type Query = {
     __typename?: 'Query';
     page?: Maybe<Page>;
+    page_by_url?: Maybe<Page>;
     pages?: Maybe<Array<Page>>;
     page_block?: Maybe<PageBlock>;
     page_blocks?: Maybe<Array<PageBlock>>;
     page_definition?: Maybe<PageDefinition>;
+    page_definition_by_url_path?: Maybe<PageDefinition>;
     page_definitions?: Maybe<Array<PageDefinition>>;
     page_block_definition?: Maybe<PageBlockDefinition>;
     page_block_definitions?: Maybe<Array<PageBlockDefinition>>;
@@ -60,6 +62,9 @@ export declare type Query = {
 export declare type QueryPageArgs = {
     id: Scalars['ID'];
 };
+export declare type QueryPage_By_UrlArgs = {
+    url: Scalars['String'];
+};
 export declare type QueryPagesArgs = {
     filter: PageFilter;
 };
@@ -71,6 +76,9 @@ export declare type QueryPage_BlocksArgs = {
 };
 export declare type QueryPage_DefinitionArgs = {
     id: Scalars['ID'];
+};
+export declare type QueryPage_Definition_By_Url_PathArgs = {
+    url_path: Scalars['String'];
 };
 export declare type QueryPage_DefinitionsArgs = {
     filter: PageDefinitionFilter;
@@ -408,6 +416,7 @@ export declare type FormField = Node & {
 export declare type Page = {
     __typename?: 'Page';
     id: Scalars['ID'];
+    url_path: Scalars['String'];
     agency: Agency;
     service?: Maybe<Service>;
     definition: PageDefinition;
@@ -415,6 +424,7 @@ export declare type Page = {
     blocks: Array<PageBlock>;
 };
 export declare type PageFilter = {
+    url_path?: Maybe<Scalars['String']>;
     agency_id?: Maybe<Scalars['ID']>;
     service_id?: Maybe<Scalars['ID']>;
     page_definition_id?: Maybe<Scalars['ID']>;
@@ -446,10 +456,12 @@ export declare type PageDefinition = Node & {
     __typename?: 'PageDefinition';
     id: Scalars['ID'];
     name: Scalars['String'];
+    url_path: Scalars['String'];
     blocks: Array<PageBlockDefinition>;
 };
 export declare type PageDefinitionFilter = {
     name?: Maybe<Scalars['String']>;
+    url_path?: Maybe<Scalars['String']>;
 };
 export declare type PageBlockDefinition = Node & {
     __typename?: 'PageBlockDefinition';
@@ -1174,7 +1186,7 @@ export declare type Form_FieldFragment = ({
 } & Pick<FormField, 'id' | 'name' | 'label' | 'type' | 'default'>);
 export declare type Page_DefinitionFragment = ({
     __typename?: 'PageDefinition';
-} & Pick<PageDefinition, 'id' | 'name'>);
+} & Pick<PageDefinition, 'id' | 'name' | 'url_path'>);
 export declare type Page_Block_DefinitionFragment = ({
     __typename?: 'PageBlockDefinition';
 } & Pick<PageBlockDefinition, 'id' | 'name'> & {
@@ -1187,7 +1199,7 @@ export declare type Page_Block_DefinitionFragment = ({
 });
 export declare type PageFragment = ({
     __typename?: 'Page';
-} & Pick<Page, 'id' | 'access'> & {
+} & Pick<Page, 'id' | 'url_path' | 'access'> & {
     agency: ({
         __typename?: 'Agency';
     } & Pick<Agency, 'id'>);
@@ -1914,6 +1926,16 @@ export declare type PageQuery = ({
         __typename?: 'Page';
     } & PageFragment)>;
 });
+export declare type PageByUrlQueryVariables = Exact<{
+    url: Scalars['String'];
+}>;
+export declare type PageByUrlQuery = ({
+    __typename?: 'Query';
+} & {
+    page_by_url?: Maybe<({
+        __typename?: 'Page';
+    } & PageFragment)>;
+});
 export declare type PageBlockQueryVariables = Exact<{
     page_block_id: Scalars['ID'];
 }>;
@@ -1953,6 +1975,16 @@ export declare type PageDefinitionsByNameQuery = ({
     page_definitions?: Maybe<Array<({
         __typename?: 'PageDefinition';
     } & Page_DefinitionFragment)>>;
+});
+export declare type PageDefinitionByUrlPathQueryVariables = Exact<{
+    url_path: Scalars['String'];
+}>;
+export declare type PageDefinitionByUrlPathQuery = ({
+    __typename?: 'Query';
+} & {
+    page_definition_by_url_path?: Maybe<({
+        __typename?: 'PageDefinition';
+    } & Page_DefinitionFragment)>;
 });
 export declare type PageBlockDefinitionsByNameQueryVariables = Exact<{
     name: Scalars['String'];
@@ -2029,8 +2061,10 @@ export declare const ServiceThankYouPageSettingDocument: DocumentNode<ServiceTha
 export declare const AgencyPagesDocument: DocumentNode<AgencyPagesQuery, AgencyPagesQueryVariables>;
 export declare const ServicePagesDocument: DocumentNode<ServicePagesQuery, ServicePagesQueryVariables>;
 export declare const PageDocument: DocumentNode<PageQuery, PageQueryVariables>;
+export declare const PageByUrlDocument: DocumentNode<PageByUrlQuery, PageByUrlQueryVariables>;
 export declare const PageBlockDocument: DocumentNode<PageBlockQuery, PageBlockQueryVariables>;
 export declare const PageDefinitionDocument: DocumentNode<PageDefinitionQuery, PageDefinitionQueryVariables>;
 export declare const PageBlockDefinitionDocument: DocumentNode<PageBlockDefinitionQuery, PageBlockDefinitionQueryVariables>;
 export declare const PageDefinitionsByNameDocument: DocumentNode<PageDefinitionsByNameQuery, PageDefinitionsByNameQueryVariables>;
+export declare const PageDefinitionByUrlPathDocument: DocumentNode<PageDefinitionByUrlPathQuery, PageDefinitionByUrlPathQueryVariables>;
 export declare const PageBlockDefinitionsByNameDocument: DocumentNode<PageBlockDefinitionsByNameQuery, PageBlockDefinitionsByNameQueryVariables>;

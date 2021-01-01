@@ -24,7 +24,9 @@ import {
   PageDefinitionDocument,
   PageBlockDefinitionDocument,
   PageDefinitionsByNameDocument,
-  PageBlockDefinitionsByNameDocument
+  PageBlockDefinitionsByNameDocument,
+  PageDefinitionByUrlPathDocument,
+  PageByUrlDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -208,6 +210,11 @@ export const page_Q = {
   result: (d: ResultOf<typeof PageDocument>) => d?.page
 };
 
+export const page_by_url_Q = {
+  query: PageByUrlDocument,
+  result: (d: ResultOf<typeof PageByUrlDocument>) => d?.page_by_url
+};
+
 export const page_block_Q = {
   query: PageBlockDocument,
   result: (d: ResultOf<typeof PageBlockDocument>) => d?.page_block
@@ -226,6 +233,11 @@ export const page_block_definition_Q = {
 export const page_definition_by_name_Q = {
   query: PageDefinitionsByNameDocument,
   result: (d: ResultOf<typeof PageDefinitionsByNameDocument>) => d?.page_definitions?.[0]
+};
+
+export const page_definition_by_url_path_Q = {
+  query: PageDefinitionByUrlPathDocument,
+  result: (d: ResultOf<typeof PageDefinitionByUrlPathDocument>) => d?.page_definition_by_url_path
 };
 
 export const page_block_definition_by_name_Q = {

@@ -27,7 +27,7 @@ export const PageDefinition = {
   `,
   resolvers: {
     PageDefinition: {
-      ...createResolverForReferencedResourceAll({ name: 'blocks', resource_name: 'page block definition',  column_name: 'page_definition_id' })
+      ...createResolverForReferencedResourceAll({ name: 'blocks', resource_name: 'page block definition', column_name: 'page_definition_id' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource),

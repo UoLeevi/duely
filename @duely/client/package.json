@@ -1,6 +1,6 @@
 {
   "name": "@duely/client",
-  "version": "0.0.82",
+  "version": "0.0.83",
   "description": "GraphQL client by Duely (wrapper for @apollo/client)",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -14,7 +14,7 @@
     "lint": "eslint src/**"
   },
   "dependencies": {
-    "@duely/core": "0.0.28",
+    "@duely/core": "0.0.29",
     "graphql": "^15.4.0",
     "subscriptions-transport-ws": "^0.9.18"
   },

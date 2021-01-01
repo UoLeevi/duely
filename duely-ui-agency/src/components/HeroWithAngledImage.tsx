@@ -1,5 +1,7 @@
-import { current_agency_Q, useQuery } from '@duely/client';
+import { current_agency_Q, current_user_Q, useQuery } from '@duely/client';
+import { Util } from '@duely/react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 type HeroWithAngledImageProps = {
   headline1?: string;
@@ -16,6 +18,11 @@ export function HeroWithAngledImage({
   imageSrc,
   imageAlt
 }: HeroWithAngledImageProps) {
+  const { data: agency } = useQuery(current_agency_Q);
+  headline1 = headline1 && Util.template(headline1, { agency });
+  headline2 = headline2 && Util.template(headline2, { agency });
+  paragraph = paragraph && Util.template(paragraph, { agency });
+
   return (
     <div className="relative overflow-hidden bg-white">
       <div className="mx-auto max-w-7xl">
@@ -120,7 +127,11 @@ function AngledEdgeRight() {
 function HeroNavBar() {
   const [showMenu, setShowMenu] = useState(false);
   const { data: agency } = useQuery(current_agency_Q);
+  const { data: user, loading: userLoading } = useQuery(current_user_Q);
   const logoSrc = agency?.theme?.image_logo?.data;
+  const isAgent = user?.memberships
+    .filter((m) => ['AGENT', 'MANAGER', 'OWNER'].includes(m.access))
+    .some((m) => m.subdomain.id === agency?.subdomain.id);
 
   return (
     <>
@@ -179,9 +190,23 @@ function HeroNavBar() {
               Contact
             </a>
 
-            <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Log in
-            </a>
+            {isAgent && (
+              <Link to="/dashboard" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Dashboard
+              </Link>
+            )}
+
+            {!user && (
+              <Link to="/log-in" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Log in
+              </Link>
+            )}
+
+            {user && !isAgent && (
+              <Link to="/log-out" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Log out
+              </Link>
+            )}
           </div>
         </nav>
       </div>

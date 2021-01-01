@@ -1,6 +1,6 @@
 import { useQuery, current_subdomain_Q } from '@duely/client';
 import { useClassName, Sidebar } from '@duely/react';
-import { BsBriefcase, BsCreditCard, BsFolder, BsGear, BsHouseDoor, BsKanban, BsPeople } from 'react-icons/bs';
+import { BsBriefcase, BsCreditCard, BsGear, BsHouseDoor, BsKanban, BsLayoutTextWindowReverse, BsPeople } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 
 const sidebarLinks = [
@@ -31,9 +31,9 @@ const sidebarLinks = [
     to: '/dashboard/payments',
   },
   {
-    text: "Files",
-    icon: BsFolder,
-    to: '/dashboard/files',
+    text: "Site",
+    icon: BsLayoutTextWindowReverse,
+    to: '/dashboard/site',
   },
   {
     text: "Settings",

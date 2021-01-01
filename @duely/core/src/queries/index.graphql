@@ -279,6 +279,12 @@ query Page($page_id: ID!) {
   }
 }
 
+query PageByUrl($url: String!) {
+  page_by_url(url: $url) {
+    ...page
+  }
+}
+
 query PageBlock($page_block_id: ID!) {
   page_block(id: $page_block_id) {
     ...page_block
@@ -299,6 +305,12 @@ query PageBlockDefinition($page_block_definition_id: ID!) {
 
 query PageDefinitionsByName($name: String!) {
   page_definitions(filter: { name: $name }) {
+    ...page_definition
+  }
+}
+
+query PageDefinitionByUrlPath($url_path: String!) {
+  page_definition_by_url_path(url_path: $url_path) {
     ...page_definition
   }
 }

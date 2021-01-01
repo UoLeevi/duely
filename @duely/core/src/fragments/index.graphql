@@ -339,6 +339,7 @@ fragment form_field on FormField {
 fragment page_definition on PageDefinition {
   id
   name
+  url_path
 }
 
 fragment page_block_definition on PageBlockDefinition {
@@ -354,6 +355,7 @@ fragment page_block_definition on PageBlockDefinition {
 
 fragment page on Page {
   id
+  url_path
   agency {
     id
   }

@@ -50,9 +50,9 @@ export function CreateServiceForm() {
     if (!res_service?.success) return;
 
     const { service } = res_service;
-    const { unit_amount_hundred_cents, payment_type, frequency } = data;
+    const { unit_amount_major, payment_type, frequency } = data;
     const currency = 'usd'; // TODO: have an input or use default currency
-    const unit_amount = Currency.numberToMinorCurrencyAmount(+unit_amount_hundred_cents, currency);
+    const unit_amount = Currency.numberToMinorCurrencyAmount(+unit_amount_major, currency);
 
     const recurring = {};
 
