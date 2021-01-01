@@ -14,9 +14,11 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CALL internal_.setup_resource_('application_.page_', 'page', 'page', '{uuid_, agency_uuid_, service_uuid_, url_path_}', 'application_.agency_');
-
-UPDATE application_.page_ p SET url_path_ = p.url_path_;
+CREATE OR REPLACE FUNCTION policy_.anyone_can_query_page_definition_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE sql STABLE SECURITY DEFINER
+    AS $$
+  SELECT '{uuid_, name_, url_path_}'::text[];
+$$;
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
