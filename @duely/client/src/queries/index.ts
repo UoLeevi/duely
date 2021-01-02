@@ -26,7 +26,10 @@ import {
   PageDefinitionsByNameDocument,
   PageBlockDefinitionsByNameDocument,
   PageDefinitionByUrlPathDocument,
-  PageByUrlDocument
+  PageByUrlDocument,
+  ServicesDocument,
+  AgencyDocument,
+  AgenciesDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -84,6 +87,16 @@ export const countries_Q = {
 export const services_agreement_Q = {
   query: ServicesAgreementDocument,
   result: (d: ResultOf<typeof ServicesAgreementDocument>) => d?.markdowns?.[0]?.data
+};
+
+export const agency_Q = {
+  query: AgencyDocument,
+  result: (d: ResultOf<typeof AgencyDocument>) => d?.agency
+};
+
+export const agencies_Q = {
+  query: AgenciesDocument,
+  result: (d: ResultOf<typeof AgenciesDocument>) => d?.agencies
 };
 
 export const agency_stripe_account_update_url_Q = {
@@ -169,6 +182,11 @@ export const agency_services_Q = {
 export const service_Q = {
   query: ServiceDocument,
   result: (d: ResultOf<typeof ServiceDocument>) => d?.service
+};
+
+export const services_Q = {
+  query: ServicesDocument,
+  result: (d: ResultOf<typeof ServicesDocument>) => d?.services
 };
 
 export const service_and_agency_from_url_parts_Q = {

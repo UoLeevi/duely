@@ -1041,7 +1041,7 @@ function FormButton(_a) {
         ? 'bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100'
         : 'bg-indigo-500 text-white border-transparent hover:bg-indigo-600', spinner ? (dense ? 'px-9 py-1.5' : 'px-12 py-2.5') : dense ? 'px-4 py-1.5' : 'px-7 py-2.5', !loading && 'disabled:opacity-50', className);
     return (react_1.default.createElement("button", Object.assign({ type: type, disabled: disabled, className: className }, props),
-        react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: loading, className: `absolute left-0 ${dense ? 'h-5 ml-2' : 'h-6 ml-3'}` }),
+        spinner && (react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: loading, className: `absolute left-0 ${dense ? 'h-5 ml-2' : 'h-6 ml-3'}` })),
         children));
 }
 exports.FormButton = FormButton;
@@ -4007,11 +4007,12 @@ const react_1 = __importDefault(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const LoadingSpinner_1 = __webpack_require__(11);
 function Button(_a) {
-    var { children, disabled, loading, spinner, className } = _a, props = __rest(_a, ["children", "disabled", "loading", "spinner", "className"]);
+    var { children, disabled, loading, spinner, dense, className } = _a, props = __rest(_a, ["children", "disabled", "loading", "spinner", "dense", "className"]);
+    spinner = spinner || loading;
     disabled = !!(disabled || loading);
-    className = util_1.Util.createClassName('relative inline-flex items-center justify-center font-medium leading-5 transition duration-150 ease-in-out border border-transparent rounded-md shadow-sm appearance-none focus:outline-none focus-visible:outline-none focus-visible:ring', spinner && 'px-9', className);
+    className = util_1.Util.createClassName('relative flex justify-center tracking-wide items-center border appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm', spinner ? (dense ? 'px-9 py-1.5' : 'px-12 py-2.5') : dense ? 'px-4 py-1.5' : 'px-7 py-2.5', !loading && 'disabled:opacity-50', className);
     return (react_1.default.createElement("button", Object.assign({ disabled: disabled, className: className }, props),
-        spinner && react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: loading, className: "absolute left-0 ml-2 text-xl" }),
+        spinner && (react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: loading, className: `absolute left-0 ${dense ? 'h-5 ml-2' : 'h-6 ml-3'}` })),
         children));
 }
 exports.Button = Button;

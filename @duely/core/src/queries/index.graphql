@@ -129,6 +129,18 @@ query AgencyStripeAccountCustomers(
   }
 }
 
+query Agency($agency_id: ID!) {
+  agency(id: $agency_id) {
+    ...agency
+  }
+}
+
+query Agencies($filter: AgencyFilter!) {
+  agencies(filter: $filter) {
+    ...agency
+  }
+}
+
 query CurrentUserAgencies {
   current_user {
     id

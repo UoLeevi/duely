@@ -1711,6 +1711,26 @@ export declare type AgencyStripeAccountCustomersQuery = ({
         });
     })>;
 });
+export declare type AgencyQueryVariables = Exact<{
+    agency_id: Scalars['ID'];
+}>;
+export declare type AgencyQuery = ({
+    __typename?: 'Query';
+} & {
+    agency?: Maybe<({
+        __typename?: 'Agency';
+    } & AgencyFragment)>;
+});
+export declare type AgenciesQueryVariables = Exact<{
+    filter: AgencyFilter;
+}>;
+export declare type AgenciesQuery = ({
+    __typename?: 'Query';
+} & {
+    agencies?: Maybe<Array<({
+        __typename?: 'Agency';
+    } & AgencyFragment)>>;
+});
 export declare type CurrentUserAgenciesQueryVariables = Exact<{
     [key: string]: never;
 }>;
@@ -2048,6 +2068,8 @@ export declare const AgencyStripeAccountBalanceDocument: DocumentNode<AgencyStri
 export declare const AgencyStripeAccountBalanceTransactionsDocument: DocumentNode<AgencyStripeAccountBalanceTransactionsQuery, AgencyStripeAccountBalanceTransactionsQueryVariables>;
 export declare const AgencyStripeAccountPaymentIntentsDocument: DocumentNode<AgencyStripeAccountPaymentIntentsQuery, AgencyStripeAccountPaymentIntentsQueryVariables>;
 export declare const AgencyStripeAccountCustomersDocument: DocumentNode<AgencyStripeAccountCustomersQuery, AgencyStripeAccountCustomersQueryVariables>;
+export declare const AgencyDocument: DocumentNode<AgencyQuery, AgencyQueryVariables>;
+export declare const AgenciesDocument: DocumentNode<AgenciesQuery, AgenciesQueryVariables>;
 export declare const CurrentUserAgenciesDocument: DocumentNode<CurrentUserAgenciesQuery, CurrentUserAgenciesQueryVariables>;
 export declare const SubdomainPublicDocument: DocumentNode<SubdomainPublicQuery, SubdomainPublicQueryVariables>;
 export declare const AgencyServicesDocument: DocumentNode<AgencyServicesQuery, AgencyServicesQueryVariables>;
