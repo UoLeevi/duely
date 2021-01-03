@@ -33,7 +33,7 @@ const sidebarLinks = [
   {
     text: "Site",
     icon: BsLayoutTextWindowReverse,
-    to: '/dashboard/site',
+    to: '/dashboard/site/pages',
   },
   {
     text: "Settings",
@@ -56,13 +56,13 @@ export function DashboardLayout({ children }) {
   const logoSrc = current_subdomain?.agency.theme.image_logo.data;
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full h-full">
       <Sidebar className="fixed inset-x-0 bottom-0"
         links={sidebarLinks}
         topContent={logoSrc && <AgencyLogo src={logoSrc} />}
       />
-      <div className="box-border w-full pb-20 md:pb-0 md:pl-48 xl:pl-64">
-        <div className="flex flex-col px-2 py-4 space-y-8 sm:px-4">
+      <div className="box-border w-full h-full pb-20 md:pb-0 md:pl-48 xl:pl-64">
+        <div className="flex flex-col h-full px-2 py-4 space-y-8 sm:px-4">
           {children}
         </div>
       </div>

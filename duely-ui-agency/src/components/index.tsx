@@ -1,2 +1,3 @@
 export * from './HeroWithAngledImage';
-export * from './PageBlockEditor';
+export * from './PageEditor';
+export * from './page-blocks';

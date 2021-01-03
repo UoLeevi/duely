@@ -3,7 +3,7 @@ import { useQuery, current_agency_Q, current_user_Q } from '@duely/client';
 import { LoadingScreen, ErrorScreen } from '@duely/react';
 import { DashboardLayout } from './components';
 import DashboardClients from './clients';
-import DashboardSite from './site';
+import { routes as siteRoutes } from './site';
 import DashboardHome from './home';
 import DashboardPayments from './payments';
 import DashboardProjects from './projects';
@@ -16,6 +16,7 @@ const routes = [
     component: DashboardProjects
   },
   ...serviceRoutes,
+  ...siteRoutes,
   {
     path: '/dashboard/clients',
     component: DashboardClients
@@ -23,10 +24,6 @@ const routes = [
   {
     path: '/dashboard/payments',
     component: DashboardPayments
-  },
-  {
-    path: '/dashboard/site',
-    component: DashboardSite
   },
   {
     path: '/dashboard/settings',

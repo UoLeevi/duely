@@ -1,7 +1,8 @@
-import { current_agency_Q, current_user_Q, useQuery } from '@duely/client';
+import { agency_Q, current_agency_Q, current_user_Q, useQuery } from '@duely/client';
 import { Util } from '@duely/react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { PageBlockComponentProps } from './page-blocks';
 
 type HeroWithAngledImageProps = {
   headline1?: string;
@@ -9,16 +10,16 @@ type HeroWithAngledImageProps = {
   paragraph?: string;
   imageSrc?: string;
   imageAlt?: string;
-};
+} & PageBlockComponentProps;
 
 export function HeroWithAngledImage({
+  agency,
   headline1,
   headline2,
   paragraph,
   imageSrc,
   imageAlt
 }: HeroWithAngledImageProps) {
-  const { data: agency } = useQuery(current_agency_Q);
   headline1 = headline1 && Util.template(headline1, { agency });
   headline2 = headline2 && Util.template(headline2, { agency });
   paragraph = paragraph && Util.template(paragraph, { agency });
