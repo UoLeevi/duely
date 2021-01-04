@@ -13,7 +13,6 @@ import { MutationResult } from '@duely/core';
 import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
 
 type ServiceProps = {
   service_id: string;
@@ -23,12 +22,15 @@ type UpdateServiceCheckoutSettingsFormFields = { url: string };
 
 export function UpdateServiceCheckoutSettingsForm({ service_id }: ServiceProps) {
   const form = useForm<UpdateServiceCheckoutSettingsFormFields>();
-  const { data: service, loading: serviceLoading } = useQuery(service_Q, { service_id });
+  const { loading: serviceLoading } = useQuery(service_Q, { service_id });
+
   const {
     data: service_thank_you_page_settings,
     loading: settingsLoading
   } = useQuery(service_thank_you_page_settings_Q, { service_id });
+
   const { data: current_agency } = useQuery(current_agency_Q);
+
   const {
     data: agency_thank_you_page_settings,
     loading: agencySettingsLoading

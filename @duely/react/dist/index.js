@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("react"), require("react-dom"), require("react-router-dom"));
+		module.exports = factory(require("react"), require("react-dom"), require("react-router-dom"), require("react-hook-form"), require("@duely/client"));
 	else if(typeof define === 'function' && define.amd)
-		define(["react", "react-dom", "react-router-dom"], factory);
+		define(["react", "react-dom", "react-router-dom", "react-hook-form", "@duely/client"], factory);
 	else if(typeof exports === 'object')
-		exports["@duely/react"] = factory(require("react"), require("react-dom"), require("react-router-dom"));
+		exports["@duely/react"] = factory(require("react"), require("react-dom"), require("react-router-dom"), require("react-hook-form"), require("@duely/client"));
 	else
-		root["@duely/react"] = factory(root["react"], root["react-dom"], root["react-router-dom"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__7__, __WEBPACK_EXTERNAL_MODULE__13__, __WEBPACK_EXTERNAL_MODULE__25__) {
+		root["@duely/react"] = factory(root["react"], root["react-dom"], root["react-router-dom"], root["react-hook-form"], root["@duely/client"]);
+})(self, function(__WEBPACK_EXTERNAL_MODULE__7__, __WEBPACK_EXTERNAL_MODULE__13__, __WEBPACK_EXTERNAL_MODULE__17__, __WEBPACK_EXTERNAL_MODULE__18__, __WEBPACK_EXTERNAL_MODULE__19__) {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
@@ -30,7 +30,7 @@ __webpack_require__(1);
 __exportStar(__webpack_require__(4), exports);
 __exportStar(__webpack_require__(5), exports);
 __exportStar(__webpack_require__(9), exports);
-__exportStar(__webpack_require__(22), exports);
+__exportStar(__webpack_require__(27), exports);
 
 
 /***/ }),
@@ -554,13 +554,14 @@ __exportStar(__webpack_require__(11), exports);
 __exportStar(__webpack_require__(12), exports);
 __exportStar(__webpack_require__(14), exports);
 __exportStar(__webpack_require__(15), exports);
-__exportStar(__webpack_require__(32), exports);
-__exportStar(__webpack_require__(33), exports);
-__exportStar(__webpack_require__(34), exports);
-__exportStar(__webpack_require__(36), exports);
-__exportStar(__webpack_require__(37), exports);
+__exportStar(__webpack_require__(20), exports);
+__exportStar(__webpack_require__(39), exports);
 __exportStar(__webpack_require__(40), exports);
 __exportStar(__webpack_require__(41), exports);
+__exportStar(__webpack_require__(43), exports);
+__exportStar(__webpack_require__(44), exports);
+__exportStar(__webpack_require__(47), exports);
+__exportStar(__webpack_require__(37), exports);
 
 
 /***/ }),
@@ -793,16 +794,134 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __exportStar(__webpack_require__(16), exports);
-__exportStar(__webpack_require__(17), exports);
-__exportStar(__webpack_require__(18), exports);
-__exportStar(__webpack_require__(19), exports);
-__exportStar(__webpack_require__(20), exports);
-__exportStar(__webpack_require__(21), exports);
-__exportStar(__webpack_require__(30), exports);
+__exportStar(__webpack_require__(36), exports);
+__exportStar(__webpack_require__(38), exports);
 
 
 /***/ }),
 /* 16 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LogInForm = void 0;
+const react_1 = __importStar(__webpack_require__(7));
+const react_router_dom_1 = __webpack_require__(17);
+const react_hook_form_1 = __webpack_require__(18);
+const client_1 = __webpack_require__(19);
+const forms_1 = __webpack_require__(20);
+const util_1 = __webpack_require__(4);
+function LogInForm({ className, redirectTo }) {
+    const form = react_hook_form_1.useForm();
+    const [logIn, { loading: logInLoading }] = client_1.useMutation(client_1.log_in_M);
+    const { data: user, loading: userLoading } = client_1.useQuery(client_1.current_user_Q);
+    const history = react_router_dom_1.useHistory();
+    const loading = userLoading || logInLoading;
+    const { errorMessage, setErrorMessage } = forms_1.useFormMessages();
+    react_1.useEffect(() => {
+        if (user)
+            history.replace(redirectTo !== null && redirectTo !== void 0 ? redirectTo : '/');
+    }, [history, redirectTo, user]);
+    function onSubmit(data) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const { success, message } = (_a = (yield logIn(data))) !== null && _a !== void 0 ? _a : {};
+            if (success) {
+                history.replace(redirectTo !== null && redirectTo !== void 0 ? redirectTo : '/');
+            }
+            else {
+                setErrorMessage(message !== null && message !== void 0 ? message : 'Incorrect password');
+            }
+        });
+    }
+    className = util_1.Util.createClassName('flex flex-col space-y-3', className);
+    return (react_1.default.createElement(forms_1.Form, { form: form, onSubmit: onSubmit, className: className },
+        react_1.default.createElement(forms_1.FormField, { form: form, label: "Email address", name: "email_address", type: "email", registerOptions: { required: true } }),
+        react_1.default.createElement(forms_1.FormField, { form: form, label: "Password", name: "password", type: "password", registerOptions: { required: true }, actions: react_1.default.createElement(react_router_dom_1.Link, { to: "/password-reset", className: "text-xs font-bold text-indigo-500 focus-visible:text-indigo-700 focus:outline-none", tabIndex: 10 }, "Reset password") }),
+        react_1.default.createElement("div", { className: "flex flex-col items-center pt-4" },
+            react_1.default.createElement(forms_1.FormButton, { form: form, spinner: true, loading: loading }, "Log in")),
+        react_1.default.createElement("div", { className: "flex flex-row justify-center pt-4 space-x-4 text-sm" },
+            react_1.default.createElement("span", null, "Don't have an account?"),
+            react_1.default.createElement(react_router_dom_1.Link, { to: "/sign-up", className: "font-semibold text-indigo-600" }, "Sign up")),
+        react_1.default.createElement("div", { className: "flex flex-col items-center h-24 pt-4" },
+            react_1.default.createElement(forms_1.FormInfoMessage, { error: errorMessage }))));
+}
+exports.LogInForm = LogInForm;
+
+
+/***/ }),
+/* 17 */
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__17__;
+
+/***/ }),
+/* 18 */
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__18__;
+
+/***/ }),
+/* 19 */
+/***/ ((module) => {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE__19__;
+
+/***/ }),
+/* 20 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__webpack_require__(21), exports);
+__exportStar(__webpack_require__(22), exports);
+__exportStar(__webpack_require__(23), exports);
+__exportStar(__webpack_require__(24), exports);
+__exportStar(__webpack_require__(25), exports);
+__exportStar(__webpack_require__(26), exports);
+__exportStar(__webpack_require__(34), exports);
+
+
+/***/ }),
+/* 21 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -857,7 +976,7 @@ exports.Form = Form;
 
 
 /***/ }),
-/* 17 */
+/* 22 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1010,7 +1129,7 @@ exports.FormField = FormField;
 
 
 /***/ }),
-/* 18 */
+/* 23 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1048,7 +1167,7 @@ exports.FormButton = FormButton;
 
 
 /***/ }),
-/* 19 */
+/* 24 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1084,7 +1203,7 @@ exports.FormErrorInfo = FormErrorInfo;
 
 
 /***/ }),
-/* 20 */
+/* 25 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1127,7 +1246,7 @@ exports.FormInfoMessage = FormInfoMessage;
 
 
 /***/ }),
-/* 21 */
+/* 26 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1148,7 +1267,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FormSection = void 0;
 const react_1 = __importDefault(__webpack_require__(7));
-const hooks_1 = __webpack_require__(22);
+const hooks_1 = __webpack_require__(27);
 const util_1 = __webpack_require__(4);
 function FormSection(_a) {
     var { title, description, children, className, id } = _a, props = __rest(_a, ["title", "description", "children", "className", "id"]);
@@ -1168,7 +1287,7 @@ exports.FormSection = FormSection;
 
 
 /***/ }),
-/* 22 */
+/* 27 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1183,16 +1302,16 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(23), exports);
-__exportStar(__webpack_require__(24), exports);
-__exportStar(__webpack_require__(26), exports);
-__exportStar(__webpack_require__(27), exports);
 __exportStar(__webpack_require__(28), exports);
 __exportStar(__webpack_require__(29), exports);
+__exportStar(__webpack_require__(30), exports);
+__exportStar(__webpack_require__(31), exports);
+__exportStar(__webpack_require__(32), exports);
+__exportStar(__webpack_require__(33), exports);
 
 
 /***/ }),
-/* 23 */
+/* 28 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1211,7 +1330,7 @@ exports.useClassName = useClassName;
 
 
 /***/ }),
-/* 24 */
+/* 29 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1227,7 +1346,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.useDynamicNavigation = void 0;
 const react_1 = __webpack_require__(7);
-const react_router_dom_1 = __webpack_require__(25);
+const react_router_dom_1 = __webpack_require__(17);
 function isAnchorElement(target) {
     var _a;
     return ((_a = target) === null || _a === void 0 ? void 0 : _a.tagName) === 'A';
@@ -1281,13 +1400,7 @@ exports.useDynamicNavigation = useDynamicNavigation;
 
 
 /***/ }),
-/* 25 */
-/***/ ((module) => {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE__25__;
-
-/***/ }),
-/* 26 */
+/* 30 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1310,7 +1423,7 @@ exports.useBreakpoints = useBreakpoints;
 
 
 /***/ }),
-/* 27 */
+/* 31 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1336,7 +1449,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.useHashScrolling = void 0;
 const react_1 = __importStar(__webpack_require__(7));
-const react_router_dom_1 = __webpack_require__(25);
+const react_router_dom_1 = __webpack_require__(17);
 function HashLink({ hash }) {
     return (react_1.default.createElement(react_router_dom_1.Link, { to: hash, className: "absolute inset-y-0 right-0 flex items-center my-auto text-transparent transition-colors focus:outline-none group-hover:text-indigo-600 focus-visible:text-indigo-500", style: {
             marginRight: '-1.5em'
@@ -1378,7 +1491,7 @@ exports.useHashScrolling = useHashScrolling;
 
 
 /***/ }),
-/* 28 */
+/* 32 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1420,7 +1533,7 @@ exports.useImageInputFromFileList = useImageInputFromFileList;
 
 
 /***/ }),
-/* 29 */
+/* 33 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1462,7 +1575,7 @@ exports.useTemporaryValue = useTemporaryValue;
 
 
 /***/ }),
-/* 30 */
+/* 34 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1477,17 +1590,17 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(31), exports);
+__exportStar(__webpack_require__(35), exports);
 
 
 /***/ }),
-/* 31 */
+/* 35 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.useFormMessages = void 0;
-const hooks_1 = __webpack_require__(22);
+const hooks_1 = __webpack_require__(27);
 function useFormMessages() {
     const { value: infoMessage, setValue: setInfoMessage, reset: resetInfoMessage } = hooks_1.useTemporaryValue(4000);
     const { value: successMessage, setValue: setSuccessMessage, reset: resetSuccessMessage } = hooks_1.useTemporaryValue(4000);
@@ -1517,7 +1630,245 @@ exports.useFormMessages = useFormMessages;
 
 
 /***/ }),
-/* 32 */
+/* 36 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.StartPasswordResetForm = void 0;
+const react_1 = __importStar(__webpack_require__(7));
+const react_router_dom_1 = __webpack_require__(17);
+const react_hook_form_1 = __webpack_require__(18);
+const client_1 = __webpack_require__(19);
+const forms_1 = __webpack_require__(20);
+const Button_1 = __webpack_require__(37);
+const util_1 = __webpack_require__(4);
+function StartPasswordResetForm({ className, redirectUrl }) {
+    const form = react_hook_form_1.useForm();
+    const [completed, setCompleted] = react_1.useState(false);
+    const [startPasswordReset, { loading: startPasswordResetLoading }] = client_1.useMutation(client_1.start_password_reset_M);
+    const { errorMessage, setErrorMessage } = forms_1.useFormMessages();
+    function onSubmit({ email_address }) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const { success, message } = (_a = (yield startPasswordReset({
+                email_address,
+                redirect_url: redirectUrl !== null && redirectUrl !== void 0 ? redirectUrl : `${window.location.origin}/log-in`
+            }))) !== null && _a !== void 0 ? _a : {};
+            if (success) {
+                setCompleted(true);
+            }
+            else {
+                setErrorMessage(message !== null && message !== void 0 ? message : 'Incorrect password');
+            }
+        });
+    }
+    if (completed) {
+        return (react_1.default.createElement("div", { className: "flex flex-col items-center space-y-4 text-center" },
+            react_1.default.createElement("div", { className: "grid w-10 h-10 bg-green-200 rounded-full place-items-center" },
+                react_1.default.createElement("svg", { className: "text-green-600 h-7 w-7", xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
+                    react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M5 13l4 4L19 7" }))),
+            react_1.default.createElement("p", { className: "font-semibold" },
+                react_1.default.createElement("span", null, "Password reset verification link sent to "),
+                react_1.default.createElement("span", { className: "font-bold whitespace-nowrap" }, form.getValues('email_address')),
+                react_1.default.createElement("span", null, "."),
+                react_1.default.createElement("br", null),
+                react_1.default.createElement("span", null, "Please check your inbox.")),
+            react_1.default.createElement("div", { className: "flex pt-3 space-x-5" },
+                react_1.default.createElement(Button_1.Button, { className: "text-white bg-indigo-500 whitespace-nowrap", type: "button" },
+                    react_1.default.createElement(react_router_dom_1.Link, { to: "/" }, "Go to home")),
+                react_1.default.createElement(Button_1.Button, { onClick: () => setCompleted(false), dense: true, className: "bg-gray-50 whitespace-nowrap", type: "button" }, "Use different email"))));
+    }
+    className = util_1.Util.createClassName('flex flex-col space-y-3', className);
+    return (react_1.default.createElement(forms_1.Form, { form: form, onSubmit: onSubmit, className: className },
+        react_1.default.createElement(forms_1.FormField, { form: form, label: "Email address", name: "email_address", type: "email", registerOptions: { required: true } }),
+        react_1.default.createElement("div", { className: "flex flex-col items-center pt-4" },
+            react_1.default.createElement(forms_1.FormButton, { form: form, spinner: true, loading: startPasswordResetLoading }, "Send a verification link")),
+        react_1.default.createElement("div", { className: "flex flex-row justify-center pt-4 space-x-4 text-sm" },
+            react_1.default.createElement("span", null, "Don't have an account?"),
+            react_1.default.createElement(react_router_dom_1.Link, { to: "/sign-up", className: "font-semibold text-indigo-600" }, "Sign up")),
+        react_1.default.createElement("div", { className: "flex flex-col items-center h-24 pt-4" },
+            react_1.default.createElement(forms_1.FormInfoMessage, { error: errorMessage }))));
+}
+exports.StartPasswordResetForm = StartPasswordResetForm;
+
+
+/***/ }),
+/* 37 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Button = void 0;
+const react_1 = __importDefault(__webpack_require__(7));
+const util_1 = __webpack_require__(4);
+const LoadingSpinner_1 = __webpack_require__(11);
+function Button(_a) {
+    var { children, disabled, loading, spinner, dense, className } = _a, props = __rest(_a, ["children", "disabled", "loading", "spinner", "dense", "className"]);
+    spinner = spinner || loading;
+    disabled = !!(disabled || loading);
+    className = util_1.Util.createClassName('relative flex justify-center tracking-wide items-center border appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm', spinner ? (dense ? 'px-9 py-1.5' : 'px-12 py-2.5') : dense ? 'px-4 py-1.5' : 'px-7 py-2.5', !loading && 'disabled:opacity-50', className);
+    return (react_1.default.createElement("button", Object.assign({ disabled: disabled, className: className }, props),
+        spinner && (react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: loading, className: `absolute left-0 ${dense ? 'h-5 ml-2' : 'h-6 ml-3'}` })),
+        children));
+}
+exports.Button = Button;
+
+
+/***/ }),
+/* 38 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SignUpForm = void 0;
+const react_1 = __importStar(__webpack_require__(7));
+const react_router_dom_1 = __webpack_require__(17);
+const react_hook_form_1 = __webpack_require__(18);
+const client_1 = __webpack_require__(19);
+const forms_1 = __webpack_require__(20);
+const Button_1 = __webpack_require__(37);
+const util_1 = __webpack_require__(4);
+function SignUpForm({ className, redirectUrl }) {
+    const form = react_hook_form_1.useForm();
+    const [completed, setCompleted] = react_1.useState(false);
+    const [startSignUp, { loading: startSignUpLoading }] = client_1.useMutation(client_1.start_sign_up_M);
+    const { infoMessage, setInfoMessage, errorMessage, setErrorMessage } = forms_1.useFormMessages();
+    function onSubmit(data) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const { newsletter } = data, sign_up_args = __rest(data, ["newsletter"]);
+            const { success, message } = (_a = (yield startSignUp(Object.assign(Object.assign({}, sign_up_args), { redirect_url: redirectUrl !== null && redirectUrl !== void 0 ? redirectUrl : `${window.location.origin}/log-in` })))) !== null && _a !== void 0 ? _a : {};
+            if (success) {
+                setCompleted(true);
+            }
+            else if (message === null || message === void 0 ? void 0 : message.includes('duplicate key')) {
+                setInfoMessage('Email address is already registered. Try to log in.');
+            }
+            else {
+                setErrorMessage(message !== null && message !== void 0 ? message : 'Something went wrong. Pleas try again later.');
+            }
+        });
+    }
+    if (completed) {
+        return (react_1.default.createElement("div", { className: "flex flex-col items-center space-y-4 text-center" },
+            react_1.default.createElement("div", { className: "grid w-10 h-10 bg-green-200 rounded-full place-items-center" },
+                react_1.default.createElement("svg", { className: "text-green-600 h-7 w-7", xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
+                    react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M5 13l4 4L19 7" }))),
+            react_1.default.createElement("p", { className: "font-semibold" },
+                react_1.default.createElement("span", null, "Sign up verification link sent to "),
+                react_1.default.createElement("span", { className: "font-bold whitespace-nowrap" }, form.getValues('email_address')),
+                react_1.default.createElement("span", null, "."),
+                react_1.default.createElement("br", null),
+                react_1.default.createElement("span", null, "Please check your inbox.")),
+            react_1.default.createElement("div", { className: "flex pt-3 space-x-5" },
+                react_1.default.createElement(Button_1.Button, { className: "text-white bg-indigo-500 whitespace-nowrap", type: "button" },
+                    react_1.default.createElement(react_router_dom_1.Link, { to: "/" }, "Go to home")),
+                react_1.default.createElement(Button_1.Button, { onClick: () => setCompleted(false), dense: true, className: "bg-gray-50 whitespace-nowrap", type: "button" }, "Use different email"))));
+    }
+    className = util_1.Util.createClassName('flex flex-col space-y-3', className);
+    return (react_1.default.createElement(forms_1.Form, { form: form, onSubmit: onSubmit, className: className },
+        react_1.default.createElement(forms_1.FormField, { form: form, label: "Name", name: "name", type: "text", registerOptions: { required: true } }),
+        react_1.default.createElement(forms_1.FormField, { form: form, label: "Email address", name: "email_address", type: "email", registerOptions: { required: true } }),
+        react_1.default.createElement(forms_1.FormField, { form: form, label: "Password", name: "password", type: "password", registerOptions: { required: true } }),
+        react_1.default.createElement("div", { className: "flex flex-col" },
+            react_1.default.createElement("label", { className: "block font-bold text-gray-500" },
+                react_1.default.createElement("input", { name: "newsletter", ref: form.register, className: "mr-2", type: "checkbox" }),
+                react_1.default.createElement("span", { className: "text-sm font-medium leading-6 text-gray-700" }, "Send me your newsletter!"))),
+        react_1.default.createElement("div", { className: "flex flex-col items-center pt-4" },
+            react_1.default.createElement(forms_1.FormButton, { form: form, spinner: true, loading: startSignUpLoading }, "Sign up")),
+        react_1.default.createElement("div", { className: "flex flex-row justify-center pt-4 space-x-4 text-sm" },
+            react_1.default.createElement("span", null, "Already have an account?"),
+            react_1.default.createElement(react_router_dom_1.Link, { to: "/log-in", className: "font-semibold text-indigo-600" }, "Log in")),
+        react_1.default.createElement("div", { className: "flex flex-col items-center h-24 pt-4" },
+            react_1.default.createElement(forms_1.FormInfoMessage, { info: infoMessage, error: errorMessage }))));
+}
+exports.SignUpForm = SignUpForm;
+
+
+/***/ }),
+/* 39 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1538,8 +1889,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Sidebar = void 0;
 const react_1 = __importDefault(__webpack_require__(7));
-const react_router_dom_1 = __webpack_require__(25);
-const hooks_1 = __webpack_require__(22);
+const react_router_dom_1 = __webpack_require__(17);
+const hooks_1 = __webpack_require__(27);
 const util_1 = __webpack_require__(4);
 function Sidebar(_a) {
     var { className, links, topContent, bottomContent } = _a, props = __rest(_a, ["className", "links", "topContent", "bottomContent"]);
@@ -1565,7 +1916,7 @@ function SidebarLink({ text, icon, to, exact, className }) {
 
 
 /***/ }),
-/* 33 */
+/* 40 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1592,7 +1943,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Table = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-const hooks_1 = __webpack_require__(22);
+const hooks_1 = __webpack_require__(27);
 const LoadingSpinner_1 = __webpack_require__(11);
 function Table({ rows: items, columns, headers, className, dense, breakpoint, wrap: wrapOptions, loading, error }) {
     var _a, _b, _c;
@@ -1718,7 +2069,7 @@ function TableErrorRow({ row, message, wrapColCount, wrapColSpanSum, isNotWrappe
 
 
 /***/ }),
-/* 34 */
+/* 41 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1755,7 +2106,7 @@ var __rest = (this && this.__rest) || function (s, e) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DropMenu = void 0;
 const react_1 = __importStar(__webpack_require__(7));
-const react_2 = __webpack_require__(35);
+const react_2 = __webpack_require__(42);
 function DropMenu({ children, button }) {
     const [isOpen, setIsOpen] = react_1.useState(false);
     const ref = react_1.useRef(null);
@@ -1790,7 +2141,7 @@ function DropMenuItems(_a) {
 
 
 /***/ }),
-/* 35 */
+/* 42 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -3786,7 +4137,7 @@ function resolvePropValue$2(property, bag) {
 
 
 /***/ }),
-/* 36 */
+/* 43 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3817,7 +4168,7 @@ exports.Card = Card;
 
 
 /***/ }),
-/* 37 */
+/* 44 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3832,12 +4183,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(38), exports);
-__exportStar(__webpack_require__(39), exports);
+__exportStar(__webpack_require__(45), exports);
+__exportStar(__webpack_require__(46), exports);
 
 
 /***/ }),
-/* 38 */
+/* 45 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3872,7 +4223,7 @@ exports.SkeletonText = SkeletonText;
 
 
 /***/ }),
-/* 39 */
+/* 46 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3899,7 +4250,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SkeletonParagraph = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-const SkeletonText_1 = __webpack_require__(38);
+const SkeletonText_1 = __webpack_require__(45);
 function SkeletonParagraph({ className, words, seed }) {
     words || (words = 20);
     const wordLengths = react_1.useMemo(() => Array.from(generateWordLengths(words, seed)), [words, seed]);
@@ -3919,7 +4270,7 @@ function* generateWordLengths(count, seed) {
 
 
 /***/ }),
-/* 40 */
+/* 47 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3951,7 +4302,7 @@ const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const contexts_1 = __webpack_require__(5);
 const react_dom_1 = __importDefault(__webpack_require__(13));
-const react_2 = __webpack_require__(35);
+const react_2 = __webpack_require__(42);
 function Modal({ children, show, close, openerRef, className }) {
     const screenOverlayRef = react_1.useContext(contexts_1.ScreenOverlayContext);
     if (!(screenOverlayRef === null || screenOverlayRef === void 0 ? void 0 : screenOverlayRef.current))
@@ -3980,42 +4331,6 @@ function ModalContent({ children, close, openerRef, className }) {
     className = util_1.Util.createClassName(className, 'box-border relative flex flex-col shadow-lg focus:outline-none');
     return (react_1.default.createElement("div", { ref: ref, tabIndex: -1, className: className, onClick: (e) => e.stopPropagation(), onBlur: onBlur }, children));
 }
-
-
-/***/ }),
-/* 41 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Button = void 0;
-const react_1 = __importDefault(__webpack_require__(7));
-const util_1 = __webpack_require__(4);
-const LoadingSpinner_1 = __webpack_require__(11);
-function Button(_a) {
-    var { children, disabled, loading, spinner, dense, className } = _a, props = __rest(_a, ["children", "disabled", "loading", "spinner", "dense", "className"]);
-    spinner = spinner || loading;
-    disabled = !!(disabled || loading);
-    className = util_1.Util.createClassName('relative flex justify-center tracking-wide items-center border appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm', spinner ? (dense ? 'px-9 py-1.5' : 'px-12 py-2.5') : dense ? 'px-4 py-1.5' : 'px-7 py-2.5', !loading && 'disabled:opacity-50', className);
-    return (react_1.default.createElement("button", Object.assign({ disabled: disabled, className: className }, props),
-        spinner && (react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: loading, className: `absolute left-0 ${dense ? 'h-5 ml-2' : 'h-6 ml-3'}` })),
-        children));
-}
-exports.Button = Button;
 
 
 /***/ })

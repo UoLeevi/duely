@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   devtool: 'source-map',
   entry: './src/index.ts',
-  externals: ['react', 'react-dom', 'react-hook-form', 'react-router-dom'],
+  externals: ['react', 'react-dom', 'react-hook-form', 'react-router-dom', '@duely/client'],
   mode: 'none',
   module: {
     rules: [
