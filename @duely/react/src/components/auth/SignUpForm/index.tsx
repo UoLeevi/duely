@@ -83,6 +83,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
 
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>
+      <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Sign up</h2>
       <FormField
         form={form}
         label="Name"
@@ -119,7 +120,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
       </div>
       <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
         <span>Already have an account?</span>
-        <Link to="/log-in" className="font-semibold text-indigo-600">
+        <Link to="/log-in" className="font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none">
           Log in
         </Link>
       </div>

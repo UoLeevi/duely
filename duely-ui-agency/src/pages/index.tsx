@@ -6,8 +6,23 @@ import { page_by_url_Q, current_subdomain_Q, useQuery, agency_Q, service_Q } fro
 import { useMemo } from 'react';
 import { pageBlockComponents } from 'components/page-blocks';
 import { ErrorScreen, LoadingScreen } from '@duely/react';
+import LogIn from './log-in';
+import SignUp from './sign-up';
+import PasswordReset from './password-reset';
 
 const routes = [
+  {
+    path: '/log-in',
+    component: LogIn
+  },
+  {
+    path: '/sign-up',
+    component: SignUp
+  },
+  {
+    path: '/password-reset',
+    component: PasswordReset
+  },
   {
     path: '/orders/thank-you',
     component: ThankYouPage
@@ -26,7 +41,7 @@ function DynamicPage() {
   const { data: subdomain } = useQuery(current_subdomain_Q);
   const location = useLocation();
   const { data: page, loading: pageLoading, error: pageError } = useQuery(page_by_url_Q, {
-    url: `https://${subdomain!.name}.duely.app${location.pathname}`
+    url: `https://${subdomain?.name}.duely.app${location.pathname}`
   });
 
   const { data: agency, loading: agencyLoading } = useQuery(

@@ -1,6 +1,6 @@
 {
   "name": "@duely/react",
-  "version": "0.2.55",
+  "version": "0.2.57",
   "description": "UI components used in duely.app",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -22,11 +22,11 @@
     "watch:css": "cross-env postcss -w tailwind.css -o src/styles/module.css"
   },
   "dependencies": {
-    "@duely/core": "0.0.22"
+    "@duely/core": "0.0.31"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
-    "@duely/client": "0.0.84",
+    "@duely/client": "0.0.85",
     "@headlessui/react": "^0.2.0",
     "@storybook/addon-actions": "^6.1.11",
     "@storybook/addon-essentials": "^6.1.11",
@@ -54,7 +54,7 @@
     "react-scripts": "^4.0.0",
     "tailwindcss": "^2.0.1",
     "ts-jest": "^26.4.4",
-    "ts-loader": "^8.0.13",
+    "ts-loader": "^8.0.14",
     "typescript": "^4.1.3",
     "webpack": "^5.11.1",
     "webpack-cli": "^4.3.1"

@@ -21,7 +21,9 @@ query ServicesAgreement {
 
 query AgencyStripeAccountUpdateUrl($agency_id: ID!) {
   agency(id: $agency_id) {
+    id
     stripe_account {
+      id
       account_update_url {
         url
       }

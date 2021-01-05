@@ -16,10 +16,11 @@ export default function App() {
           <ScreenOverlayContextProvider>
             <MessageContextProvider>
               <ModalContextProvider>
-                <AuthManager />
-                <DomainManager>
-                  <Pages />
-                </DomainManager>
+                <AuthManager>
+                  <DomainManager>
+                    <Pages />
+                  </DomainManager>
+                </AuthManager>
               </ModalContextProvider>
             </MessageContextProvider>
           </ScreenOverlayContextProvider>

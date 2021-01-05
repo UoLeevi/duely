@@ -80,6 +80,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
 
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>
+      <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Password reset</h2>
       <FormField
         form={form}
         label="Email address"
@@ -94,7 +95,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
       </div>
       <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
         <span>Don't have an account?</span>
-        <Link to="/sign-up" className="font-semibold text-indigo-600">
+        <Link to="/sign-up" className="font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none">
           Sign up
         </Link>
       </div>

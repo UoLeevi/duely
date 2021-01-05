@@ -17,7 +17,7 @@ export function ConfirmServiceDeletionModal() {
   service_id = service_id ?? prev;
 
   const { data: service, loading: loadingService } = useQuery(service_Q, { service_id }, { skip: !service_id });
-  const [deleteService, { loading, error }] = useMutation(delete_service_M);
+  const [deleteService, { loading }] = useMutation(delete_service_M);
 
   const close = useCallback(() => {
     const searchParams = new URLSearchParams(history.location.search);

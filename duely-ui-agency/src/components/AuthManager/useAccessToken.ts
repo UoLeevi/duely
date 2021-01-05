@@ -1,29 +1,28 @@
 import { useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { mutate, log_out_M } from '@duely/client';
 import { produce } from 'immer';
 
-export function useLogInOut() {
-  // Get verification code from url query string and replace history entry
+export function useAccessToken() {
+  // Get access token from url query string and replace history entry
   const history = useHistory();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const shouldLogOut = searchParams.has('log-out');
+  const access_token = searchParams.get('access_token');
 
   useEffect(() => {
-    if (!shouldLogOut)
-      return;
+    if (!access_token) return;
 
     const searchParams = new URLSearchParams(history.location.search);
-    searchParams.delete('log-out');
+    searchParams.delete('access_token');
 
-    const location = produce(history.location, location => {
+    const location = produce(history.location, (location) => {
       const search = '?' + searchParams.toString();
       location.search = search === '?' ? '' : search;
     });
 
-    mutate(log_out_M);
+    localStorage.setItem('user-jwt', access_token);
     history.replace(location);
+  }, [history, access_token]);
 
-  }, [history, shouldLogOut]);
+  return { loading: !!access_token };
 }

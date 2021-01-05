@@ -59,7 +59,10 @@ module.exports = {
       boxShadow: ['focus-visible'],
       opacity: ['disabled'],
       outline: ['focus-visible'],
-      padding: ['first', 'last']
+      padding: ['first', 'last'],
+      ringColor: ['focus-visible'],
+      ringOpacity: ['focus-visible'],
+      ringWidth: ['focus-visible']
     }
   },
   plugins: [

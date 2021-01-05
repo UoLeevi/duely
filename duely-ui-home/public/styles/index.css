@@ -1687,6 +1687,10 @@ html, body, #root {
   height: 1.5rem;
 }
 
+.h-7 {
+  height: 1.75rem;
+}
+
 .h-8 {
   height: 2rem;
 }
@@ -1802,6 +1806,10 @@ html, body, #root {
 
 .mt-2 {
   margin-top: 0.5rem;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
 }
 
 .mb-2 {
@@ -2293,6 +2301,11 @@ html, body, #root {
 .focus-visible\:text-indigo-500:focus-visible {
   --tw-text-opacity: 1;
   color: rgba(102, 126, 234, var(--tw-text-opacity));
+}
+
+.focus-visible\:text-indigo-700:focus-visible {
+  --tw-text-opacity: 1;
+  color: rgba(76, 81, 191, var(--tw-text-opacity));
 }
 
 .truncate {

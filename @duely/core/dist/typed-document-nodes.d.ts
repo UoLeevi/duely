@@ -1595,10 +1595,10 @@ export declare type AgencyStripeAccountUpdateUrlQuery = ({
 } & {
     agency?: Maybe<({
         __typename?: 'Agency';
-    } & {
+    } & Pick<Agency, 'id'> & {
         stripe_account: ({
             __typename?: 'StripeAccount';
-        } & {
+        } & Pick<StripeAccount, 'id'> & {
             account_update_url: ({
                 __typename?: 'StripeAccountLink';
             } & Pick<StripeAccountLink, 'url'>);

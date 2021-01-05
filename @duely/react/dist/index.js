@@ -864,13 +864,14 @@ function LogInForm({ className, redirectTo }) {
     }
     className = util_1.Util.createClassName('flex flex-col space-y-3', className);
     return (react_1.default.createElement(forms_1.Form, { form: form, onSubmit: onSubmit, className: className },
+        react_1.default.createElement("h2", { className: "self-center mb-1 text-xl font-semibold text-gray-700" }, "Log in"),
         react_1.default.createElement(forms_1.FormField, { form: form, label: "Email address", name: "email_address", type: "email", registerOptions: { required: true } }),
         react_1.default.createElement(forms_1.FormField, { form: form, label: "Password", name: "password", type: "password", registerOptions: { required: true }, actions: react_1.default.createElement(react_router_dom_1.Link, { to: "/password-reset", className: "text-xs font-bold text-indigo-500 focus-visible:text-indigo-700 focus:outline-none", tabIndex: 10 }, "Reset password") }),
         react_1.default.createElement("div", { className: "flex flex-col items-center pt-4" },
             react_1.default.createElement(forms_1.FormButton, { form: form, spinner: true, loading: loading }, "Log in")),
         react_1.default.createElement("div", { className: "flex flex-row justify-center pt-4 space-x-4 text-sm" },
             react_1.default.createElement("span", null, "Don't have an account?"),
-            react_1.default.createElement(react_router_dom_1.Link, { to: "/sign-up", className: "font-semibold text-indigo-600" }, "Sign up")),
+            react_1.default.createElement(react_router_dom_1.Link, { to: "/sign-up", className: "font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none" }, "Sign up")),
         react_1.default.createElement("div", { className: "flex flex-col items-center h-24 pt-4" },
             react_1.default.createElement(forms_1.FormInfoMessage, { error: errorMessage }))));
 }
@@ -1709,12 +1710,13 @@ function StartPasswordResetForm({ className, redirectUrl }) {
     }
     className = util_1.Util.createClassName('flex flex-col space-y-3', className);
     return (react_1.default.createElement(forms_1.Form, { form: form, onSubmit: onSubmit, className: className },
+        react_1.default.createElement("h2", { className: "self-center mb-1 text-xl font-semibold text-gray-700" }, "Password reset"),
         react_1.default.createElement(forms_1.FormField, { form: form, label: "Email address", name: "email_address", type: "email", registerOptions: { required: true } }),
         react_1.default.createElement("div", { className: "flex flex-col items-center pt-4" },
             react_1.default.createElement(forms_1.FormButton, { form: form, spinner: true, loading: startPasswordResetLoading }, "Send a verification link")),
         react_1.default.createElement("div", { className: "flex flex-row justify-center pt-4 space-x-4 text-sm" },
             react_1.default.createElement("span", null, "Don't have an account?"),
-            react_1.default.createElement(react_router_dom_1.Link, { to: "/sign-up", className: "font-semibold text-indigo-600" }, "Sign up")),
+            react_1.default.createElement(react_router_dom_1.Link, { to: "/sign-up", className: "font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none" }, "Sign up")),
         react_1.default.createElement("div", { className: "flex flex-col items-center h-24 pt-4" },
             react_1.default.createElement(forms_1.FormInfoMessage, { error: errorMessage }))));
 }
@@ -1849,6 +1851,7 @@ function SignUpForm({ className, redirectUrl }) {
     }
     className = util_1.Util.createClassName('flex flex-col space-y-3', className);
     return (react_1.default.createElement(forms_1.Form, { form: form, onSubmit: onSubmit, className: className },
+        react_1.default.createElement("h2", { className: "self-center mb-1 text-xl font-semibold text-gray-700" }, "Sign up"),
         react_1.default.createElement(forms_1.FormField, { form: form, label: "Name", name: "name", type: "text", registerOptions: { required: true } }),
         react_1.default.createElement(forms_1.FormField, { form: form, label: "Email address", name: "email_address", type: "email", registerOptions: { required: true } }),
         react_1.default.createElement(forms_1.FormField, { form: form, label: "Password", name: "password", type: "password", registerOptions: { required: true } }),
@@ -1860,7 +1863,7 @@ function SignUpForm({ className, redirectUrl }) {
             react_1.default.createElement(forms_1.FormButton, { form: form, spinner: true, loading: startSignUpLoading }, "Sign up")),
         react_1.default.createElement("div", { className: "flex flex-row justify-center pt-4 space-x-4 text-sm" },
             react_1.default.createElement("span", null, "Already have an account?"),
-            react_1.default.createElement(react_router_dom_1.Link, { to: "/log-in", className: "font-semibold text-indigo-600" }, "Log in")),
+            react_1.default.createElement(react_router_dom_1.Link, { to: "/log-in", className: "font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none" }, "Log in")),
         react_1.default.createElement("div", { className: "flex flex-col items-center h-24 pt-4" },
             react_1.default.createElement(forms_1.FormInfoMessage, { info: infoMessage, error: errorMessage }))));
 }

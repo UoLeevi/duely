@@ -40,6 +40,7 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
 
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>
+      <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Log in</h2>
       <FormField
         form={form}
         label="Email address"
@@ -54,7 +55,11 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
         type="password"
         registerOptions={{ required: true }}
         actions={
-          <Link to="/password-reset" className="text-xs font-bold text-indigo-500 focus-visible:text-indigo-700 focus:outline-none" tabIndex={10}>
+          <Link
+            to="/password-reset"
+            className="text-xs font-bold text-indigo-500 focus-visible:text-indigo-700 focus:outline-none"
+            tabIndex={10}
+          >
             Reset password
           </Link>
         }
@@ -66,7 +71,7 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
       </div>
       <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
         <span>Don&apos;t have an account?</span>
-        <Link to="/sign-up" className="font-semibold text-indigo-600">
+        <Link to="/sign-up" className="font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none">
           Sign up
         </Link>
       </div>

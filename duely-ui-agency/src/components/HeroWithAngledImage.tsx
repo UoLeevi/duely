@@ -1,4 +1,4 @@
-import { agency_Q, current_agency_Q, current_user_Q, useQuery } from '@duely/client';
+import { current_agency_Q, current_user_Q, useQuery } from '@duely/client';
 import { Util } from '@duely/react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -65,20 +65,20 @@ function HeroActions() {
   return (
     <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
       <div className="rounded-md shadow">
-        <a
-          href="#"
+        <Link
+          to="#book-constultation"
           className="flex items-center justify-center w-full px-8 py-3 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
         >
           Book a consultation
-        </a>
+        </Link>
       </div>
       <div className="mt-3 sm:mt-0 sm:ml-3">
-        <a
-          href="#"
+        <Link
+          to="#learn-more"
           className="flex items-center justify-center w-full px-8 py-3 text-base font-medium text-indigo-700 bg-indigo-100 border border-transparent rounded-md hover:bg-indigo-200 md:py-4 md:text-lg md:px-10"
         >
           Learn more
-        </a>
+        </Link>
       </div>
     </div>
   );
@@ -128,7 +128,7 @@ function AngledEdgeRight() {
 function HeroNavBar() {
   const [showMenu, setShowMenu] = useState(false);
   const { data: agency } = useQuery(current_agency_Q);
-  const { data: user, loading: userLoading } = useQuery(current_user_Q);
+  const { data: user } = useQuery(current_user_Q);
   const logoSrc = agency?.theme?.image_logo?.data;
   const isAgent = user?.memberships
     .filter((m) => ['AGENT', 'MANAGER', 'OWNER'].includes(m.access))
@@ -144,10 +144,10 @@ function HeroNavBar() {
           <div className="flex items-center flex-grow flex-shrink-0 lg:flex-grow-0">
             <div className="flex items-center justify-between w-full md:w-auto">
               {logoSrc && (
-                <a href="/">
+                <Link to="/">
                   <span className="sr-only">{agency?.name}</span>
                   <img className="w-auto h-8 sm:h-10" src={logoSrc} alt="logo" />
-                </a>
+                </Link>
               )}
               <div className="flex items-center -mr-2 md:hidden">
                 <button
@@ -179,17 +179,17 @@ function HeroNavBar() {
             </div>
           </div>
           <div className="hidden md:block md:ml-10 md:pr-4 md:space-x-8">
-            <a href="#" className="font-medium text-gray-500 hover:text-gray-900">
+            <Link to="#services" className="font-medium text-gray-500 hover:text-gray-900">
               Services
-            </a>
+            </Link>
 
-            <a href="#" className="font-medium text-gray-500 hover:text-gray-900">
+            <Link to="#about-us" className="font-medium text-gray-500 hover:text-gray-900">
               About us
-            </a>
+            </Link>
 
-            <a href="#" className="font-medium text-gray-500 hover:text-gray-900">
+            <Link to="#contact" className="font-medium text-gray-500 hover:text-gray-900">
               Contact
-            </a>
+            </Link>
 
             {isAgent && (
               <Link to="/dashboard" className="font-medium text-indigo-600 hover:text-indigo-500">
@@ -204,7 +204,7 @@ function HeroNavBar() {
             )}
 
             {user && !isAgent && (
-              <Link to="/log-out" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link to="/?log-out" className="font-medium text-indigo-600 hover:text-indigo-500">
                 Log out
               </Link>
             )}
@@ -255,38 +255,38 @@ function HeroNavBar() {
             </div>
             <div role="menu" aria-orientation="vertical" aria-labelledby="main-menu">
               <div className="px-2 pt-2 pb-3 space-y-1" role="none">
-                <a
-                  href="#"
+                <Link
+                  to="#services"
                   className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-gray-900 hover:bg-gray-50"
                   role="menuitem"
                 >
                   Services
-                </a>
+                </Link>
 
-                <a
-                  href="#"
+                <Link
+                  to="#about-us"
                   className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-gray-900 hover:bg-gray-50"
                   role="menuitem"
                 >
                   About us
-                </a>
+                </Link>
 
-                <a
-                  href="#"
+                <Link
+                  to="#contact"
                   className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-gray-900 hover:bg-gray-50"
                   role="menuitem"
                 >
                   Contact
-                </a>
+                </Link>
               </div>
               <div role="none">
-                <a
-                  href="#"
+                <Link
+                  to="/log-in"
                   className="block w-full px-5 py-3 font-medium text-center text-indigo-600 bg-gray-50 hover:bg-gray-100"
                   role="menuitem"
                 >
                   Log in
-                </a>
+                </Link>
               </div>
             </div>
           </div>

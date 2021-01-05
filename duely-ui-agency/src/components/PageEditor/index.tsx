@@ -1,11 +1,7 @@
 import {
   useMutation,
-  create_page_block_M,
-  current_agency_Q,
-  delete_page_block_M,
   update_page_block_M,
   useQuery,
-  page_block_Q,
   page_Q,
   agency_Q,
   service_Q
@@ -14,7 +10,6 @@ import {
   AgencyFragment,
   PageFragment,
   Page_BlockFragment,
-  Page_Block_DefinitionFragment,
   ServiceFragment
 } from '@duely/core';
 import {
@@ -29,9 +24,7 @@ import {
   Util
 } from '@duely/react';
 import { pageBlockComponents } from 'components/page-blocks';
-import { usePrevious } from 'hooks';
-import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
-import { useEffect } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 
@@ -143,7 +136,6 @@ function PageEditorEditBlockForm() {
 
   const {
     infoMessage,
-    setInfoMessage,
     successMessage,
     setSuccessMessage,
     errorMessage,
@@ -202,7 +194,7 @@ function PageEditorSidebarBlockList() {
 }
 
 function PageEditorSidebar() {
-  const { selectedBlock, goBackToBlockList, page } = usePageEditor();
+  const { selectedBlock, goBackToBlockList } = usePageEditor();
   return selectedBlock ? (
     <>
       <div className="flex items-center pb-1.5 space-x-3 border-b">

@@ -1,7 +1,7 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { produce } from 'immer';
-import { mutate, verify_sign_up_M } from '@duely/client';
+import { useMutation, verify_sign_up_M } from '@duely/client';
 
 export function useVerificationCode() {
   // Get verification code from url query string and replace history entry
@@ -11,9 +11,8 @@ export function useVerificationCode() {
   const verify = searchParams.get('verify');
   const verification_code = searchParams.get('verification_code');
 
-  const verifySignUp = useCallback(async verification_code => {
-    await mutate(verify_sign_up_M, { verification_code });
-  }, []);
+  const [verifySignUp, { loading: verifySignUpLoading }] = useMutation(verify_sign_up_M);
+  const loading = (verify && verification_code) || verifySignUpLoading;
 
   useEffect(() => {
     const searchParams = new URLSearchParams(history.location.search);
@@ -34,7 +33,7 @@ export function useVerificationCode() {
 
         case 'sign_up':
           history.replace(location);
-          verifySignUp(verification_code);
+          verifySignUp({ verification_code });
           break;
 
         default:
@@ -44,4 +43,6 @@ export function useVerificationCode() {
       }
     }
   }, [history, verify, verification_code, verifySignUp]);
+
+  return { loading };
 }
