@@ -5244,6 +5244,25 @@ $$;
 ALTER FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: serviceaccount_can_query_agency_price_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_query_agency_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, name_, stripe_id_ext_, livemode_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_query_agency_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: serviceaccount_can_query_agency_thank_you_page_setting_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -6844,6 +6863,23 @@ CREATE TABLE application__audit_.user_notification_setting_ (
 ALTER TABLE application__audit_.user_notification_setting_ OWNER TO postgres;
 
 --
+-- Name: agency_price_; Type: TABLE; Schema: internal_; Owner: postgres
+--
+
+CREATE TABLE internal_.agency_price_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    name_ text NOT NULL,
+    stripe_id_ext_ text NOT NULL,
+    livemode_ boolean NOT NULL,
+    data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE internal_.agency_price_ OWNER TO postgres;
+
+--
 -- Name: form_; Type: TABLE; Schema: internal_; Owner: postgres
 --
 
@@ -6906,6 +6942,24 @@ CREATE TABLE internal_.page_definition_ (
 
 
 ALTER TABLE internal_.page_definition_ OWNER TO postgres;
+
+--
+-- Name: agency_price_; Type: TABLE; Schema: internal__audit_; Owner: postgres
+--
+
+CREATE TABLE internal__audit_.agency_price_ (
+    uuid_ uuid,
+    name_ text,
+    stripe_id_ext_ text,
+    livemode_ boolean,
+    data_ jsonb,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE internal__audit_.agency_price_ OWNER TO postgres;
 
 --
 -- Name: form_; Type: TABLE; Schema: internal__audit_; Owner: postgres
@@ -7370,6 +7424,15 @@ ALTER TABLE ONLY application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT gen_random
 
 
 --
+-- Data for Name: agency_price_; Type: TABLE DATA; Schema: internal_; Owner: postgres
+--
+
+COPY internal_.agency_price_ (uuid_, name_, stripe_id_ext_, livemode_, data_, audit_at_, audit_session_uuid_) FROM stdin;
+9c491e2e-306c-4b24-a1bb-cb97fee062f6	Free plan small payout fee	price_1I6diAJ63WXDoaGF7SJ5pRSH	f	{"threshold": 30000}	2021-01-06 15:42:45.821603+00	00000000-0000-0000-0000-000000000000
+\.
+
+
+--
 -- Data for Name: form_; Type: TABLE DATA; Schema: internal_; Owner: postgres
 --
 
@@ -7406,6 +7469,15 @@ COPY internal_.page_block_definition_ (uuid_, name_, page_definition_uuid_, form
 COPY internal_.page_definition_ (uuid_, name_, default_block_uuids_, url_path_, audit_at_, audit_session_uuid_) FROM stdin;
 ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	{3b91df48-2d20-4161-8528-4f47fb54208d}	/	2021-01-01 10:57:09.10212+00	00000000-0000-0000-0000-000000000000
 e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	{}	/services/:service_url_name	2021-01-01 10:57:09.10212+00	00000000-0000-0000-0000-000000000000
+\.
+
+
+--
+-- Data for Name: agency_price_; Type: TABLE DATA; Schema: internal__audit_; Owner: postgres
+--
+
+COPY internal__audit_.agency_price_ (uuid_, name_, stripe_id_ext_, livemode_, data_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+9c491e2e-306c-4b24-a1bb-cb97fee062f6	Free plan small payout fee	price_1I6diAJ63WXDoaGF7SJ5pRSH	f	{"threshold": 30000}	2021-01-06 15:42:45.821603+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -7604,6 +7676,7 @@ cacf6b3b-c992-4f31-bcb4-43f3d157249d	c042e657-0005-42a1-b3c2-6ee25d62fb33	policy
 15cc0e4e-c216-4410-b1ea-bd6a550353ca	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.can_query_page_block_based_on_page_access_level_(security_.resource_definition_,application_.resource_)	query	\N
 2859ef7b-837f-4b6d-97ff-0e10c3d9acc1	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.owner_can_change_page_block_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 d0c11115-cef1-41c8-a9ca-5b57b0fa6dd3	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.owner_can_create_page_block_(security_.resource_definition_,jsonb)	create	\N
+f01f0e1c-6449-4dcd-b622-9b8eae178019	3ad07e0d-69ed-478d-ac8f-04f64043dce9	policy_.serviceaccount_can_query_agency_price_(security_.resource_definition_,application_.resource_)	query	\N
 \.
 
 
@@ -7711,6 +7784,7 @@ c042e657-0005-42a1-b3c2-6ee25d62fb33	formfld	form field	internal_.form_field_	82
 bc2e81b9-be64-4068-ad32-3ed89151bbfa	pblk	page block	application_.page_block_	08b16cec-4d78-499a-a092-91fc2d360f86	{uuid_,page_block_definition_uuid_,page_uuid_}
 cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_definition_	\N	{uuid_,name_,url_path_}
 08b16cec-4d78-499a-a092-91fc2d360f86	page	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,service_uuid_,url_path_}
+3ad07e0d-69ed-478d-ac8f-04f64043dce9	agcyprice	agency price	internal_.agency_price_	\N	{uuid_,name_,stripe_id_ext_,livemode_}
 \.
 
 
@@ -8249,6 +8323,22 @@ ALTER TABLE ONLY application_.user_notification_setting_
 
 ALTER TABLE ONLY application_.user_notification_setting_
     ADD CONSTRAINT user_notification_setting__user_uuid__subdomain_uuid__notif_key UNIQUE (user_uuid_, subdomain_uuid_, notification_definition_uuid_);
+
+
+--
+-- Name: agency_price_ agency_price__name__livemode__key; Type: CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.agency_price_
+    ADD CONSTRAINT agency_price__name__livemode__key UNIQUE (name_, livemode_);
+
+
+--
+-- Name: agency_price_ agency_price__pkey; Type: CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.agency_price_
+    ADD CONSTRAINT agency_price__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -9810,6 +9900,13 @@ CREATE TRIGGER tr_instead_of_update_try_verify_sign_up_ INSTEAD OF UPDATE ON app
 
 
 --
+-- Name: agency_price_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON internal_.agency_price_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
 -- Name: form_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
@@ -9835,6 +9932,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON internal_.page_bloc
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON internal_.page_definition_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: agency_price_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON internal_.agency_price_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
 
 
 --
@@ -9866,6 +9970,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON internal_.page_d
 
 
 --
+-- Name: agency_price_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON internal_.agency_price_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
 -- Name: form_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
@@ -9891,6 +10002,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON internal_
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON internal_.page_definition_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: agency_price_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON internal_.agency_price_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
 
 
 --
@@ -9922,6 +10040,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON internal_.page_d
 
 
 --
+-- Name: agency_price_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON internal_.agency_price_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
 -- Name: form_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
@@ -9947,6 +10072,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON internal_
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON internal_.page_definition_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: agency_price_ tr_after_update_resource_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON internal_.agency_price_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
@@ -9989,6 +10121,13 @@ CREATE TRIGGER tr_before_insert_insert_form_ BEFORE INSERT ON internal_.page_blo
 --
 
 CREATE TRIGGER tr_before_insert_or_update_update_form_field_linked_list_ BEFORE INSERT OR UPDATE ON internal_.form_field_ FOR EACH ROW EXECUTE FUNCTION internal_.update_form_field_linked_list_();
+
+
+--
+-- Name: agency_price_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON internal_.agency_price_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
