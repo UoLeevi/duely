@@ -14,7 +14,7 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE TABLE internal_.agency_price_ (
+CREATE TABLE internal_.agency_subscription_ (
     uuid_ uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     name_ text NOT NULL,
     stripe_id_ext_ text NOT NULL,
@@ -22,13 +22,13 @@ CREATE TABLE internal_.agency_price_ (
     data_ jsonb NOT NULL DEFAULT '{}'::jsonb,
     UNIQUE (name_, livemode_)
 );
-CALL internal_.setup_auditing_('internal_.agency_price_');
-CALL internal_.setup_resource_('internal_.agency_price_', 'agency price', 'agcyprice', '{uuid_, name_, stripe_id_ext_, livemode_}');
+CALL internal_.setup_auditing_('internal_.agency_subscription_');
+CALL internal_.setup_resource_('internal_.agency_subscription_', 'agency subscription', 'agcyprod', '{uuid_, name_, stripe_id_ext_, livemode_}');
 
-INSERT INTO internal_.agency_price_(name_, livemode_, stripe_id_ext_, data_)
-VALUES ('Free plan small payout fee', 'f', 'price_1I6diAJ63WXDoaGF7SJ5pRSH', '{"threshold": 30000}'::jsonb);
+INSERT INTO internal_.agency_subscription_(name_, livemode_, stripe_id_ext_)
+VALUES ('Free plan', 'f', 'prod_Ii3pSbiBAIHaY3');
 
-CREATE FUNCTION policy_.serviceaccount_can_query_agency_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+CREATE FUNCTION policy_.serviceaccount_can_query_agency_subscription_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
@@ -40,7 +40,7 @@ BEGIN
 END
 $$;
 
-PERFORM security_.register_policy_('internal_.agency_price_', 'query', 'policy_.serviceaccount_can_query_agency_price_');
+PERFORM security_.register_policy_('internal_.agency_subscription_', 'query', 'policy_.serviceaccount_can_query_agency_subscription_');
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
