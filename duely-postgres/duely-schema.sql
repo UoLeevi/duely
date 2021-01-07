@@ -2338,6 +2338,7 @@ CREATE TABLE application_.stripe_account_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     agency_uuid_ uuid NOT NULL,
     stripe_id_ext_ text NOT NULL,
+    livemode_ boolean DEFAULT false,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6809,6 +6810,7 @@ CREATE TABLE application__audit_.stripe_account_ (
     uuid_ uuid,
     agency_uuid_ uuid,
     stripe_id_ext_ text,
+    livemode_ boolean,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -7841,7 +7843,6 @@ e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	{uuid
 f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,email_address_}
 3b56d171-3e69-41ca-9a98-d1a3abc9170b	su	sign up	application_.sign_up_	\N	{verification_code_}
 edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_reset_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{verification_code_}
-3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_}
 7f589215-bdc7-4664-99c6-b7745349c352	svcvar	service variant	application_.service_variant_	d50773b3-5779-4333-8bc3-6ef32d488d72	{uuid_,service_uuid_}
 d50773b3-5779-4333-8bc3-6ef32d488d72	svc	service	application_.service_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,url_name_,agency_uuid_}
 d8f70962-229d-49eb-a99e-7c35a55719d5	md	markdown	application_.markdown_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}
@@ -7859,6 +7860,7 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 08b16cec-4d78-499a-a092-91fc2d360f86	page	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,service_uuid_,url_path_}
 3ad07e0d-69ed-478d-ac8f-04f64043dce9	agcyprice	agency price	internal_.agency_price_	\N	{uuid_,name_,stripe_id_ext_,livemode_}
 09788539-be6e-4804-847c-6d0022912ac8	agcyprod	agency subscription	internal_.agency_subscription_	\N	{uuid_,name_,stripe_id_ext_,livemode_}
+3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,stripe_id_ext_,livemode_}
 \.
 
 
@@ -8328,11 +8330,11 @@ ALTER TABLE ONLY application_.service_variant_
 
 
 --
--- Name: stripe_account_ stripe_account__agency_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+-- Name: stripe_account_ stripe_account__agency_uuid__livemode__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
 ALTER TABLE ONLY application_.stripe_account_
-    ADD CONSTRAINT stripe_account__agency_uuid__key UNIQUE (agency_uuid_);
+    ADD CONSTRAINT stripe_account__agency_uuid__livemode__key UNIQUE (agency_uuid_, livemode_);
 
 
 --
