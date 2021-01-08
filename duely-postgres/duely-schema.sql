@@ -7484,7 +7484,7 @@ ALTER TABLE ONLY application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT gen_random
 --
 
 COPY internal_.agency_price_ (uuid_, name_, stripe_id_ext_, livemode_, data_, audit_at_, audit_session_uuid_) FROM stdin;
-9c491e2e-306c-4b24-a1bb-cb97fee062f6	Free plan small payout fee	price_1I6diAJ63WXDoaGF7SJ5pRSH	f	{"threshold": 30000}	2021-01-06 15:42:45.821603+00	00000000-0000-0000-0000-000000000000
+9c491e2e-306c-4b24-a1bb-cb97fee062f6	Basic plan small payout fee	price_1I6diAJ63WXDoaGF7SJ5pRSH	f	{"threshold": 30000}	2021-01-08 16:01:47.135695+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7493,7 +7493,7 @@ COPY internal_.agency_price_ (uuid_, name_, stripe_id_ext_, livemode_, data_, au
 --
 
 COPY internal_.agency_subscription_ (uuid_, name_, stripe_id_ext_, livemode_, data_, audit_at_, audit_session_uuid_) FROM stdin;
-78398031-4e95-4cca-a960-03c6f8029002	Free plan	prod_Ii3pSbiBAIHaY3	f	{}	2021-01-06 15:58:32.029648+00	00000000-0000-0000-0000-000000000000
+78398031-4e95-4cca-a960-03c6f8029002	Basic plan	prod_Ii3pSbiBAIHaY3	f	{}	2021-01-08 16:01:47.135695+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7543,6 +7543,7 @@ e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	{}	/services/:service_url_name	2021
 
 COPY internal__audit_.agency_price_ (uuid_, name_, stripe_id_ext_, livemode_, data_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 9c491e2e-306c-4b24-a1bb-cb97fee062f6	Free plan small payout fee	price_1I6diAJ63WXDoaGF7SJ5pRSH	f	{"threshold": 30000}	2021-01-06 15:42:45.821603+00	00000000-0000-0000-0000-000000000000	I
+9c491e2e-306c-4b24-a1bb-cb97fee062f6	Basic plan small payout fee	price_1I6diAJ63WXDoaGF7SJ5pRSH	f	{"threshold": 30000}	2021-01-08 16:01:47.135695+00	00000000-0000-0000-0000-000000000000	U
 \.
 
 
@@ -7552,6 +7553,7 @@ COPY internal__audit_.agency_price_ (uuid_, name_, stripe_id_ext_, livemode_, da
 
 COPY internal__audit_.agency_subscription_ (uuid_, name_, stripe_id_ext_, livemode_, data_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 78398031-4e95-4cca-a960-03c6f8029002	Free plan	prod_Ii3pSbiBAIHaY3	f	{}	2021-01-06 15:58:32.029648+00	00000000-0000-0000-0000-000000000000	I
+78398031-4e95-4cca-a960-03c6f8029002	Basic plan	prod_Ii3pSbiBAIHaY3	f	{}	2021-01-08 16:01:47.135695+00	00000000-0000-0000-0000-000000000000	U
 \.
 
 

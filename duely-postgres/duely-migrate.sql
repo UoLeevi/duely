@@ -14,12 +14,13 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CALL internal_.drop_auditing_('application_.stripe_account_');
-ALTER TABLE application_.stripe_account_ ADD COLUMN livemode_ boolean DEFAULT 'f';
-ALTER TABLE ONLY application_.stripe_account_ ADD UNIQUE (agency_uuid_, livemode_);
-ALTER TABLE ONLY application_.stripe_account_ DROP CONSTRAINT stripe_account__agency_uuid__key;
-CALL internal_.setup_auditing_('application_.stripe_account_');
-CALL internal_.setup_resource_('application_.stripe_account_', 'stripe account', 'stripe', '{uuid_, agency_uuid_, stripe_id_ext_, livemode_}', 'application_.agency_');
+UPDATE internal_.agency_price_
+SET name_ = 'Basic plan small payout fee'
+WHERE name_ = 'Free plan small payout fee';
+
+UPDATE internal_.agency_subscription_
+SET name_ = 'Basic plan'
+WHERE name_ = 'Free plan';
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
