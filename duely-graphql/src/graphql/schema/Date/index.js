@@ -16,8 +16,7 @@ export const Date = {
         return Number.isInteger(value) ? value : value.getTime();
       },
       parseLiteral(ast) {
-        if (ast.kind === Kind.INT)
-          return parseInt(ast.value, 10);
+        if (ast.kind === Kind.INT) return parseInt(ast.value, 10);
 
         return null;
       }

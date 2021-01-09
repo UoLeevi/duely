@@ -15,7 +15,7 @@ export const Page = {
       id: ID!
       url_path: String!
       agency: Agency!
-      service: Service
+      product: Product
       definition: PageDefinition!
       access: AccessLevel!
       blocks: [PageBlock!]!
@@ -24,7 +24,7 @@ export const Page = {
     input PageFilter {
       url_path: String
       agency_id: ID
-      service_id: ID
+      product_id: ID
       page_definition_id: ID
     }
 
@@ -47,7 +47,7 @@ export const Page = {
   resolvers: {
     Page: {
       ...createResolverForReferencedResource({ name: 'agency' }),
-      ...createResolverForReferencedResource({ name: 'service' }),
+      ...createResolverForReferencedResource({ name: 'product' }),
       ...createResolverForReferencedResource({
         name: 'definition',
         column_name: 'page_definition_id'

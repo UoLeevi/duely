@@ -1,10 +1,13 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
+import {
+  createDefaultQueryResolversForResource,
+  createResolverForReferencedResource
+} from '../../util';
 
 const resource = {
   name: 'page block',
   table_name: 'page_block'
-}
+};
 
 export const PageBlock = {
   typeDef: `
@@ -40,18 +43,20 @@ export const PageBlock = {
   resolvers: {
     PageBlock: {
       ...createResolverForReferencedResource({ name: 'page' }),
-      ...createResolverForReferencedResource({ name: 'definition', column_name: 'page_block_definition_id' })
+      ...createResolverForReferencedResource({
+        name: 'definition',
+        column_name: 'page_block_definition_id'
+      })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
     },
     Mutation: {
       async create_page_block(obj, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ createResource }) => {
               // create page block resource
               const page_block = await createResource(resource.name, args);
@@ -74,11 +79,10 @@ export const PageBlock = {
         }
       },
       async update_page_block(obj, { page_block_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ updateResource }) => {
               // update page_block resource
               const page_block = await updateResource(page_block_id, args);
@@ -102,12 +106,12 @@ export const PageBlock = {
       },
       async delete_page_block(obj, { page_block_id }, context, info) {
         if (!context.jwt) throw new Error('Unauthorized');
-  
+
         try {
           return await withConnection(context, async (withSession) => {
             return await withSession(async ({ deleteResource }) => {
               const page_block = await deleteResource(page_block_id);
-  
+
               // success
               return {
                 success: true,

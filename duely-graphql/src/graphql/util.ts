@@ -19,13 +19,14 @@ export async function withCache<TKey, TValue>(
 
 export function withStripeAccountProperty<TData>(
   data: TData | Iterable<TData>,
-  source: { stripeAccount?: string; stripe_id_ext?: string }
+  source: { livemode: boolean, stripeAccount?: string; stripe_id_ext?: string }
 ) {
   if (data == null) return data;
   const stripeAccount = source.stripeAccount ?? source.stripe_id_ext;
+  const livemode = source.livemode;
   return Array.isArray(data)
     ? data.map((item) => ({ stripeAccount, ...item }))
-    : { stripeAccount, ...data };
+    : { stripeAccount, livemode, ...data };
 }
 
 type CreateDefaultQueryResolversForResourceArgs = {

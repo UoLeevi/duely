@@ -25,12 +25,12 @@ const gql_log_in_serviceaccount = gql`
 `;
 
 const gql_subdomain = gql`
-  query($subdomain_name: String!) {
+  query($subdomain_name: String!, livemode: Boolean!) {
     subdomains(filter: { name: $subdomain_name }) {
       id
       agency {
         id
-        stripe_account {
+        stripe_account(livemode: $livemode) {
           id
           id_ext
         }
@@ -39,23 +39,20 @@ const gql_subdomain = gql`
   }
 `;
 
-const gql_service = gql`
-  query($agency_id: ID!, $service_url_name: String!) {
-    services(filter: { url_name: $service_url_name, agency_id: $agency_id }) {
+const gql_product = gql`
+  query($agency_id: ID!, $product_url_name: String!) {
+    products(filter: { url_name: $product_url_name, agency_id: $agency_id }) {
       id
-      default_variant {
+      default_price {
         id
-        default_price {
-          id
-        }
       }
     }
   }
 `;
 
 const gql_create_stripe_checkout_session = gql`
-  mutation($price_id: ID!) {
-    create_stripe_checkout_session(price_id: $price_id) {
+  mutation($price_id: ID!, $livemode: Boolean) {
+    create_stripe_checkout_session(livemode: $livemode, price_id: $price_id) {
       success
       message
       checkout_session_id
@@ -73,8 +70,8 @@ async function main() {
   const app = express();
   app.set('trust proxy', true);
   app.use(cors());
-  app.get('/checkout/:subdomain_name/services/:service_url_name', get_checkout);
-  app.get('/checkout/:service_url_name', get_checkout);
+  app.get('/checkout/:subdomain_name/products/:product_url_name', get_checkout);
+  app.get('/checkout/:product_url_name', get_checkout);
   app.get('/.well-known/server-health', (req, res) => res.send('ok'));
 
   app.listen({ port: process.env.PORT }, () => {
@@ -108,7 +105,7 @@ async function createGraphQLClient() {
 }
 
 function setupEnvironment() {
-  if (!process.env.STRIPE_PK_TEST) {
+  if (!process.env.STRIPE_PK_TEST || !process.env.STRIPE_PK_LIVE) {
     if (!process.env.STRIPECONFIGFILE) throw new Error('Invalid configuration.');
 
     const config = JSON.parse(fs.readFileSync(process.env.STRIPECONFIGFILE, 'utf8'));
@@ -116,11 +113,17 @@ function setupEnvironment() {
       ...config.env,
       ...process.env
     };
+
+    if (!process.env.STRIPE_PK_TEST || !process.env.STRIPE_PK_LIVE) {
+      throw new Error('Invalid configuration.');
+    }
   }
 }
 
 async function get_checkout(req: Request, res: Response) {
   let subdomain_name = req.params.subdomain_name;
+  const livemode = !req.query?.preview;
+  const stripe_pk = process.env[livemode ? 'STRIPE_PK_LIVE' : 'STRIPE_PK_TEST'];
 
   if (subdomain_name == null) {
     const domain = req.hostname;
@@ -136,7 +139,7 @@ async function get_checkout(req: Request, res: Response) {
   let stripe_id_ext;
 
   try {
-    const { subdomains } = await client.request(gql_subdomain, { subdomain_name });
+    const { subdomains } = await client.request(gql_subdomain, { subdomain_name, livemode });
 
     if (subdomains.length != 1) {
       res.sendStatus(404);
@@ -154,17 +157,17 @@ async function get_checkout(req: Request, res: Response) {
   }
 
   let price_id;
-  const service_url_name = req.params.service_url_name;
+  const product_url_name = req.params.product_url_name;
 
   try {
-    const { services } = await client.request(gql_service, { agency_id, service_url_name });
+    const { products } = await client.request(gql_product, { agency_id, product_url_name });
 
-    if (services.length != 1) {
+    if (products.length != 1) {
       res.sendStatus(404);
       return;
     }
 
-    price_id = services[0].default_variant.default_price?.id;
+    price_id = products[0].default_price?.id;
   } catch (error) {
     console.error(error);
     res.sendStatus(404);
@@ -172,9 +175,9 @@ async function get_checkout(req: Request, res: Response) {
   }
 
   let checkout_session_id;
-  const requestArgs: [string, { price_id: string }, { authorization: string }?] = [
+  const requestArgs: [string, { price_id: string, livemode: boolean }, { authorization: string }?] = [
     gql_create_stripe_checkout_session,
-    { price_id }
+    { price_id, livemode }
   ];
   const { access_token } = req.query ?? {};
 
@@ -208,7 +211,7 @@ async function get_checkout(req: Request, res: Response) {
         <title>Duely</title>
         <script src="https://js.stripe.com/v3/"></script>
         <script>
-          var stripe = Stripe('${process.env.STRIPE_PK_TEST}', { stripeAccount: '${stripe_id_ext}' });
+          var stripe = Stripe('${stripe_pk}', { stripeAccount: '${stripe_id_ext}' });
           var redirect = stripe.redirectToCheckout({ sessionId: '${checkout_session_id}' });
         </script>
       </head>

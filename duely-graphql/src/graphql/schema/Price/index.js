@@ -21,11 +21,11 @@ export const Price = {
       currency: String!
       recurring_interval: String
       recurring_interval_count: Int
-      service_variant: ServiceVariant!
+      product: Product!
     }
 
     input PriceFilter {
-      service_variant_id: ID
+      product_id: ID
     }
 
     extend type Query {
@@ -34,10 +34,10 @@ export const Price = {
     }
 
     extend type Mutation {
-      create_price(service_variant_id: ID!, unit_amount: Int!, currency: String!, recurring_interval: String, recurring_interval_count: Int, status: String): PriceMutationResult!
+      create_price(product_id: ID!, unit_amount: Int!, currency: String!, recurring_interval: String, recurring_interval_count: Int, status: String): PriceMutationResult!
       update_price(price_id: ID!, status: String!): PriceMutationResult!
       delete_price(price_id: ID!): PriceMutationResult!
-      create_stripe_checkout_session(price_id: ID!, success_url: String, cancel_url: String): CreateStripeCheckoutSessionResult!
+      create_stripe_checkout_session(price_id: ID!, livemode: Boolean!, success_url: String, cancel_url: String): CreateStripeCheckoutSessionResult!
     }
 
     type PriceMutationResult implements MutationResult {
@@ -76,7 +76,7 @@ export const Price = {
           }).format(amount);
         }
       },
-      ...createResolverForReferencedResource({ name: 'service_variant' })
+      ...createResolverForReferencedResource({ name: 'product' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
@@ -88,15 +88,13 @@ export const Price = {
         try {
           return await withConnection(context, async (withSession) => {
             return await withSession(async ({ createResource, queryResource }) => {
-              const service_variant = await queryResource(args.service_variant_id);
-              const service = await queryResource(service_variant.service_id);
-              const stripe_account = await queryResource('stripe account', {
-                agency_id: service.agency_id
-              });
+              const product = await queryResource(args.product_id);
 
-              if (service_variant == null) {
+              if (product == null) {
                 throw Error('Service variant not found');
               }
+
+              const service = await queryResource(product.service_id);
 
               const {
                 status,
@@ -109,7 +107,7 @@ export const Price = {
               const stripe_price_args = {
                 unit_amount,
                 currency,
-                product: service_variant.stripe_id_ext,
+                product: product.stripe_id_ext,
                 active: status === 'live'
               };
 
@@ -120,15 +118,31 @@ export const Price = {
                 };
               }
 
-              // create price object at stripe
-              const stripe_price = await stripe.prices.create(stripe_price_args, {
-                stripeAccount: stripe_account.stripe_id_ext
-              });
+              const stripe_price = {
+                live: null,
+                test: null
+              };
+
+              for (const stripe_env of ['test', 'live']) {
+                const stripe_account = await queryResource('stripe account', {
+                  agency_id: service.agency_id,
+                  livemode: stripe_env === 'live'
+                });
+
+                // create price object at stripe
+                stripe_price[stripe_env] = await stripe[stripe_env].prices.create(
+                  stripe_price_args,
+                  {
+                    stripeAccount: stripe_account.stripe_id_ext
+                  }
+                );
+              }
 
               // create price resource
               const price = await createResource('price', {
                 ...args,
-                stripe_id_ext: stripe_price.id
+                stripe_id_ext_live: stripe_price.live.id,
+                stripe_id_ext_test: stripe_price.test.id
               });
 
               // success
@@ -156,24 +170,27 @@ export const Price = {
             return await withSession(async ({ queryResource, updateResource }) => {
               // update price resource
               const price = await updateResource(price_id, args);
-              const service_variant = await queryResource(price.service_variant_id);
-              const service = await queryResource(service_variant.service_id);
-              const stripe_account = await queryResource('stripe account', {
-                agency_id: service.agency_id
-              });
-
+              const product = await queryResource(price.product_id);
+              const service = await queryResource(product.service_id);
               const { status } = price;
 
               const stripe_price_args = {
                 active: status === 'live'
               };
 
-              // update price object at stripe
-              const stripe_price = await stripe.prices.update(
-                price.stripe_id_ext,
-                stripe_price_args,
-                { stripeAccount: stripe_account.stripe_id_ext }
-              );
+              for (const stripe_env of ['test', 'live']) {
+                const stripe_account = await queryResource('stripe account', {
+                  agency_id: service.agency_id,
+                  livemode: stripe_env === 'live'
+                });
+
+                // update price object at stripe
+                const stripe_price = await stripe[stripe_env].prices.update(
+                  price.stripe_id_ext,
+                  stripe_price_args,
+                  { stripeAccount: stripe_account.stripe_id_ext }
+                );
+              }
 
               // success
               return {
@@ -199,22 +216,6 @@ export const Price = {
           return await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource, deleteResource }) => {
               const price = await deleteResource(price_id);
-              const service_variant = await queryResource(price.service_variant_id);
-              const service = await queryResource(service_variant.service_id);
-              const stripe_account = await queryResource('stripe account', {
-                agency_id: service.agency_id
-              });
-
-              try {
-                // try deactivate price at stripe
-                await stripe.prices.update(
-                  price.stripe_id_ext,
-                  { active: false },
-                  { stripeAccount: stripe_account.stripe_id_ext }
-                );
-              } catch {
-                // ignore error
-              }
 
               if (price == null) {
                 return {
@@ -223,6 +224,27 @@ export const Price = {
                   message: 'Price not found',
                   type: 'PriceMutationResult'
                 };
+              }
+
+              const product = await queryResource(price.product_id);
+              const service = await queryResource(product.service_id);
+
+              for (const stripe_env of ['test', 'live']) {
+                const stripe_account = await queryResource('stripe account', {
+                  agency_id: service.agency_id,
+                  livemode: stripe_env === 'live'
+                });
+
+                try {
+                  // try deactivate price at stripe
+                  await stripe[stripe_env].prices.update(
+                    price.stripe_id_ext,
+                    { active: false },
+                    { stripeAccount: stripe_account.stripe_id_ext }
+                  );
+                } catch {
+                  // ignore error
+                }
               }
 
               // success
@@ -244,21 +266,24 @@ export const Price = {
       },
       async create_stripe_checkout_session(
         obj,
-        { price_id, success_url, cancel_url },
+        { price_id, livemode, success_url, cancel_url },
         context,
         info
       ) {
         if (!context.jwt) throw new Error('Unauthorized');
+
+        const stripe_env = livemode ? 'live' : 'test';
 
         try {
           return await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource }) => {
               // get resources
               const price = await queryResource(price_id);
-              const service_variant = await queryResource(price.service_variant_id);
-              const service = await queryResource(service_variant.service_id);
+              const product = await queryResource(price.product_id);
+              const service = await queryResource(product.service_id);
               const stripe_account = await queryResource('stripe account', {
-                agency_id: service.agency_id
+                agency_id: service.agency_id,
+                livemode
               });
               const agency = await queryResource(service.agency_id);
               const subdomain = await queryResource(agency.subdomain_id);
@@ -311,7 +336,8 @@ export const Price = {
                 payment_method_types: ['card'],
                 line_items: [
                   {
-                    price: price.stripe_id_ext,
+                    price:
+                      price[livemode ? 'stripe_price_id_ext_live' : 'stripe_price_id_ext_test'],
                     quantity: 1
                   }
                 ],
@@ -331,10 +357,11 @@ export const Price = {
                 };
               }
 
-              const checkout_session = await stripe.checkout.sessions.create(
-                stripe_checkout_session_args,
-                { stripeAccount: stripe_account.stripe_id_ext }
-              );
+              const checkout_session = await stripe[
+                stripe_env
+              ].checkout.sessions.create(stripe_checkout_session_args, {
+                stripeAccount: stripe_account.stripe_id_ext
+              });
 
               // success
               return {

@@ -1,39 +1,43 @@
 import { withConnection } from '../../../db';
 import { createResolverForReferencedResource } from '../../util';
 
-export const ServiceSettings = {
+export const ProductSettings = {
   typeDef: `
-    type ServiceSettings {
+    type ProductSettings {
       id: ID!
-      thank_you_page_setting: ServiceThankYouPageSetting
+      thank_you_page_setting: ProductThankYouPageSetting
     }
 
-    type ServiceThankYouPageSetting {
+    type ProductThankYouPageSetting {
       id: ID!
       url: String!
     }
 
     extend type Mutation {
-      create_service_thank_you_page_setting(service_id: ID!, url: String!): ServiceThankYouPageSettingMutationResult!
-      update_service_thank_you_page_setting(setting_id: ID!, url: String!): ServiceThankYouPageSettingMutationResult!
-      delete_service_thank_you_page_setting(setting_id: ID!): ServiceThankYouPageSettingMutationResult!
+      create_product_thank_you_page_setting(product_id: ID!, url: String!): ProductThankYouPageSettingMutationResult!
+      update_product_thank_you_page_setting(setting_id: ID!, url: String!): ProductThankYouPageSettingMutationResult!
+      delete_product_thank_you_page_setting(setting_id: ID!): ProductThankYouPageSettingMutationResult!
     }
 
-    type ServiceThankYouPageSettingMutationResult implements MutationResult {
+    type ProductThankYouPageSettingMutationResult implements MutationResult {
       success: Boolean!
       message: String
-      setting: ServiceThankYouPageSetting
+      setting: ProductThankYouPageSetting
     }
   `,
   resolvers: {
-    ServiceSettings: {
-      id: (source) => `set${source.service_id}_x`,
-      ...createResolverForReferencedResource({ name: 'thank_you_page_setting', resource_name: 'service thank you page setting', reverse: true, column_name: 'service_id' }),
+    ProductSettings: {
+      id: (source) => `set${source.product_id}_x`,
+      ...createResolverForReferencedResource({
+        name: 'thank_you_page_setting',
+        resource_name: 'product thank you page setting',
+        reverse: true,
+        column_name: 'product_id'
+      })
     },
     Mutation: {
-      async create_service_thank_you_page_setting(obj, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+      async create_product_thank_you_page_setting(obj, args, context, info) {
+        if (!context.jwt) throw new Error('Unauthorized');
 
         let url;
 
@@ -45,7 +49,7 @@ export const ServiceSettings = {
             // error
             success: false,
             message: error.message,
-            type: 'ServiceThankYouPageSettingMutationResult'
+            type: 'ProductThankYouPageSettingMutationResult'
           };
         }
 
@@ -54,24 +58,23 @@ export const ServiceSettings = {
             // error
             success: false,
             message: 'URL should use https protocol.',
-            type: 'ServiceThankYouPageSettingMutationResult'
+            type: 'ProductThankYouPageSettingMutationResult'
           };
         }
 
         args.url = url.href;
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ createResource }) => {
-
               // create resource
-              const setting = await createResource('service thank you page setting', args);
+              const setting = await createResource('product thank you page setting', args);
 
               // success
               return {
                 success: true,
                 setting,
-                type: 'ServiceThankYouPageSettingMutationResult'
+                type: 'ProductThankYouPageSettingMutationResult'
               };
             });
           });
@@ -80,13 +83,12 @@ export const ServiceSettings = {
             // error
             success: false,
             message: error.message,
-            type: 'ServiceThankYouPageSettingMutationResult'
+            type: 'ProductThankYouPageSettingMutationResult'
           };
         }
       },
-      async update_service_thank_you_page_setting(obj, { setting_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+      async update_product_thank_you_page_setting(obj, { setting_id, ...args }, context, info) {
+        if (!context.jwt) throw new Error('Unauthorized');
 
         let url;
 
@@ -98,7 +100,7 @@ export const ServiceSettings = {
             // error
             success: false,
             message: error.message,
-            type: 'ServiceThankYouPageSettingMutationResult'
+            type: 'ProductThankYouPageSettingMutationResult'
           };
         }
 
@@ -107,14 +109,14 @@ export const ServiceSettings = {
             // error
             success: false,
             message: 'URL should use https protocol.',
-            type: 'ServiceThankYouPageSettingMutationResult'
+            type: 'ProductThankYouPageSettingMutationResult'
           };
         }
 
         args.url = url.href;
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ updateResource }) => {
               // update resource
               const setting = await updateResource(setting_id, args);
@@ -123,7 +125,7 @@ export const ServiceSettings = {
               return {
                 success: true,
                 setting,
-                type: 'ServiceThankYouPageSettingMutationResult'
+                type: 'ProductThankYouPageSettingMutationResult'
               };
             });
           });
@@ -132,16 +134,15 @@ export const ServiceSettings = {
             // error
             success: false,
             message: error.message,
-            type: 'ServiceThankYouPageSettingMutationResult'
+            type: 'ProductThankYouPageSettingMutationResult'
           };
         }
       },
-      async delete_service_thank_you_page_setting(obj, { setting_id }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+      async delete_product_thank_you_page_setting(obj, { setting_id }, context, info) {
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ deleteResource }) => {
               // delete resource
               const setting = await deleteResource(setting_id);
@@ -150,7 +151,7 @@ export const ServiceSettings = {
               return {
                 success: true,
                 setting,
-                type: 'ServiceThankYouPageSettingMutationResult'
+                type: 'ProductThankYouPageSettingMutationResult'
               };
             });
           });
@@ -159,7 +160,7 @@ export const ServiceSettings = {
             // error
             success: false,
             message: error.message,
-            type: 'ServiceThankYouPageSettingMutationResult'
+            type: 'ProductThankYouPageSettingMutationResult'
           };
         }
       }

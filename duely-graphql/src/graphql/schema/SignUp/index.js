@@ -15,8 +15,7 @@ export const SignUp = {
   resolvers: {
     Mutation: {
       async start_sign_up(source, { email_address, password, name, redirect_url }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         if (!validator.isEmail(email_address))
           return {
@@ -28,7 +27,14 @@ export const SignUp = {
         email_address = validator.normalizeEmail(email_address);
 
         if (redirect_url) {
-          if (!validator.isURL(redirect_url, { require_tld: false, protocols: ['http', 'https'], require_protocol: true, allow_underscores: true }))
+          if (
+            !validator.isURL(redirect_url, {
+              require_tld: false,
+              protocols: ['http', 'https'],
+              require_protocol: true,
+              allow_underscores: true
+            })
+          )
             return {
               success: false,
               message: `URL '${redirect_url}' format is invalid.`,
@@ -59,9 +65,14 @@ export const SignUp = {
         let sign_up;
 
         try {
-          sign_up = await withConnection(context, async withSession => {
+          sign_up = await withConnection(context, async (withSession) => {
             return await withSession(async ({ createResource }) => {
-              return await createResource(resource_name, { name, password, email_address, data: { redirect_url: redirect_url.href } });
+              return await createResource(resource_name, {
+                name,
+                password,
+                email_address,
+                data: { redirect_url: redirect_url.href }
+              });
             });
           });
         } catch (error) {
@@ -82,16 +93,16 @@ export const SignUp = {
           subject: 'Verify your email for Duely',
           body: (redirect_url
             ? [
-              p`Hi, ${validator.escape(name)}! 👋`,
-              p`Click the link below to verify your email address for Duely.${br``}* this link ${strong`expires in 24 hours`}. After that you will need to request another link.${br``}* this link ${strong`can only be used once`}. After you click the link it will no longer work.`,
-              p`${strong`==&gt; ${a`${redirect_url.href}Click here to verify your email and access Duely`}`}`,
-              p`${em`This link expires in 24 hours and can only be used once. You can always request another link to be sent if this one has been used or is expired.`}`
-            ]
+                p`Hi, ${validator.escape(name)}! 👋`,
+                p`Click the link below to verify your email address for Duely.${br``}* this link ${strong`expires in 24 hours`}. After that you will need to request another link.${br``}* this link ${strong`can only be used once`}. After you click the link it will no longer work.`,
+                p`${strong`==&gt; ${a`${redirect_url.href}Click here to verify your email and access Duely`}`}`,
+                p`${em`This link expires in 24 hours and can only be used once. You can always request another link to be sent if this one has been used or is expired.`}`
+              ]
             : [
-              p`Hi, ${validator.escape(name)}! 👋`,
-              p`Your sign up verification code is ${strong`${sign_up.verification_code}`}.`,
-              p`${em`This code expires in 24 hours and can only be used once. You can always request another verification code to be sent if this one has been used or is expired.`}`
-            ]
+                p`Hi, ${validator.escape(name)}! 👋`,
+                p`Your sign up verification code is ${strong`${sign_up.verification_code}`}.`,
+                p`${em`This code expires in 24 hours and can only be used once. You can always request another verification code to be sent if this one has been used or is expired.`}`
+              ]
           ).join('\r\n')
         });
 
@@ -109,11 +120,10 @@ export const SignUp = {
         };
       },
       async verify_sign_up(source, { verification_code }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource, updateResource }) => {
               let sign_up = await queryResource(resource_name, { verification_code });
 

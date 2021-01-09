@@ -1,6 +1,8 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
-import validator from 'validator';
+import {
+  createDefaultQueryResolversForResource,
+  createResolverForReferencedResource
+} from '../../util';
 import md from '../../../markdown-it';
 
 const resource = {
@@ -47,8 +49,7 @@ export const Markdown = {
     },
     Mutation: {
       async create_markdown(obj, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
           // validate markdown
@@ -63,7 +64,7 @@ export const Markdown = {
         }
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ createResource }) => {
               // create markdown resource
               const markdown = await createResource(resource.name, args);
@@ -86,8 +87,7 @@ export const Markdown = {
         }
       },
       async update_markdown(obj, { markdown_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         if (args.data) {
           try {
@@ -104,7 +104,7 @@ export const Markdown = {
         }
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ updateResource }) => {
               // update markdown resource
               const markdown = await updateResource(markdown_id, args);

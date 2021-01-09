@@ -31,9 +31,9 @@ export const BalanceTransaction = {
   `,
   resolvers: {
     BalanceTransaction: {
-      id_ext: source => source.id,
-      created: source => new Date(source.created * 1000),
-      available_on: source => new Date(source.created * 1000)
+      id_ext: (source) => source.id,
+      created: (source) => new Date(source.created * 1000),
+      available_on: (source) => new Date(source.created * 1000)
     }
   }
 };

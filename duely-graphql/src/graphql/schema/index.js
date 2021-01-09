@@ -18,10 +18,11 @@ import { Agency } from './Agency';
 import { AgencySettings } from './AgencySettings';
 import { StripeAccount } from './StripeAccount';
 import { StripeCustomer } from './StripeCustomer';
-import { Service } from './Service';
-import { ServiceSettings } from './ServiceSettings';
-import { ServiceVariant } from './ServiceVariant';
+import { ProductSettings } from './ProductSettings';
+import { Product } from './Product';
 import { Subdomain } from './Subdomain';
+import { SubscriptionPlan } from './SubscriptionPlan';
+import { TransactionFee } from './TransactionFee';
 import { Country } from './Country';
 import { Image } from './Image';
 import { Markdown } from './Markdown';
@@ -66,10 +67,11 @@ const types = [
   StripeAccount,
   StripeCustomer,
   BalanceTransaction,
-  Service,
-  ServiceSettings,
-  ServiceVariant,
+  ProductSettings,
+  Product,
   Subdomain,
+  SubscriptionPlan,
+  TransactionFee,
   Image,
   Markdown,
   Membership,
@@ -79,11 +81,11 @@ const types = [
 ];
 
 const schema = {
-  typeDefs: types.map(t => t.typeDef ?? '').join(''),
+  typeDefs: types.map((t) => t.typeDef ?? '').join(''),
   resolvers: {}
 };
 
-for (const [t, resolvers] of types.flatMap(t => Object.entries(t.resolvers ?? {}))) {
+for (const [t, resolvers] of types.flatMap((t) => Object.entries(t.resolvers ?? {}))) {
   schema.resolvers[t] = {
     ...schema.resolvers[t],
     ...resolvers

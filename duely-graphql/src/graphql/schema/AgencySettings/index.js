@@ -28,12 +28,16 @@ export const AgencySettings = {
   resolvers: {
     AgencySettings: {
       id: (source) => `set${source.agency_id}_x`,
-      ...createResolverForReferencedResource({ name: 'thank_you_page_setting', resource_name: 'agency thank you page setting', reverse: true, column_name: 'agency_id' }),
+      ...createResolverForReferencedResource({
+        name: 'thank_you_page_setting',
+        resource_name: 'agency thank you page setting',
+        reverse: true,
+        column_name: 'agency_id'
+      })
     },
     Mutation: {
       async create_agency_thank_you_page_setting(obj, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         let url;
 
@@ -61,7 +65,7 @@ export const AgencySettings = {
         args.url = url.href;
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ createResource }) => {
               // create resource
               const setting = await createResource('agency thank you page setting', args);
@@ -84,8 +88,7 @@ export const AgencySettings = {
         }
       },
       async update_agency_thank_you_page_setting(obj, { setting_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         let url;
 
@@ -113,7 +116,7 @@ export const AgencySettings = {
         args.url = url.href;
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ updateResource }) => {
               // update resource
               const setting = await updateResource(setting_id, args);
@@ -136,11 +139,10 @@ export const AgencySettings = {
         }
       },
       async delete_agency_thank_you_page_setting(obj, { setting_id }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ deleteResource }) => {
               // delete resource
               const setting = await deleteResource(setting_id);

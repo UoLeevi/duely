@@ -8,6 +8,7 @@ export const StripeAccount = {
     type StripeAccount {
       id: ID!
       id_ext: ID!
+      livemode: Boolean!
       account_update_url: StripeAccountLink!
       balance: StripeBalance!
       balance_transactions(payout_id: ID, type: String, available_on: Date, created: Date, currency: String, starting_after_id: String, ending_before_id: String, limit: Int): [BalanceTransaction!]!
@@ -94,14 +95,15 @@ export const StripeAccount = {
   `,
   resolvers: {
     StripeAccount: {
-      id_ext: source => source.stripe_id_ext,
-      created: source => new Date(source.created * 1000),
+      id_ext: (source) => source.stripe_id_ext,
+      created: (source) => new Date(source.created * 1000),
       async account_update_url(source, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
+
+        const stripe_env = source.livemode ? 'live' : 'test';
 
         try {
-          const access = await withConnection(context, async withSession => {
+          const access = await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResourceAccess }) => {
               return await queryResourceAccess(source.id);
             });
@@ -112,27 +114,27 @@ export const StripeAccount = {
           }
 
           const return_url = `https://${source.business_profile.url}`;
-          
+
           // create stripe account verification url
           // see: https://stripe.com/docs/api/account_links/create
-          return await stripe.accountLinks.create({
+          return await stripe[stripe_env].accountLinks.create({
             account: source.stripe_id_ext,
             refresh_url: return_url,
             return_url,
             type: source.details_submitted ? 'account_onboarding' : 'account_update',
             collect: 'eventually_due'
           });
-
         } catch (error) {
           throw new Error(error.message);
         }
       },
       async balance(source, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
+
+        const stripe_env = source.livemode ? 'live' : 'test';
 
         try {
-          const access = await withConnection(context, async withSession => {
+          const access = await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResourceAccess }) => {
               return await queryResourceAccess(source.id);
             });
@@ -144,18 +146,23 @@ export const StripeAccount = {
 
           // retrive connected account balance
           // see: https://stripe.com/docs/api/balance/balance_retrieve
-          return await stripe.balance.retrieve({ stripeAccount: source.stripe_id_ext });
-
+          return await stripe[stripe_env].balance.retrieve({ stripeAccount: source.stripe_id_ext });
         } catch (error) {
           throw new Error(error.message);
         }
       },
-      async balance_transactions(source, { payout_id, starting_after_id, ending_before_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+      async balance_transactions(
+        source,
+        { payout_id, starting_after_id, ending_before_id, ...args },
+        context,
+        info
+      ) {
+        if (!context.jwt) throw new Error('Unauthorized');
+
+        const stripe_env = source.livemode ? 'live' : 'test';
 
         try {
-          const access = await withConnection(context, async withSession => {
+          const access = await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResourceAccess }) => {
               return await queryResourceAccess(source.id);
             });
@@ -178,19 +185,30 @@ export const StripeAccount = {
           }
 
           // see: https://stripe.com/docs/api/balance_transactions/list
-          const list = await stripe.balanceTransactions.list(args, { stripeAccount: source.stripe_id_ext });
-          return  list.data?.map(txn => ({ stripeAccount: source.stripe_id_ext, ...txn }));
-
+          const list = await stripe[stripe_env].balanceTransactions.list(args, {
+            stripeAccount: source.stripe_id_ext
+          });
+          return list.data?.map((txn) => ({
+            livemode: source.livemode,
+            stripeAccount: source.stripe_id_ext,
+            ...txn
+          }));
         } catch (error) {
           throw new Error(error.message);
         }
       },
-      async payment_intents(source, { customer_id, starting_after_id, ending_before_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+      async payment_intents(
+        source,
+        { customer_id, starting_after_id, ending_before_id, ...args },
+        context,
+        info
+      ) {
+        if (!context.jwt) throw new Error('Unauthorized');
+
+        const stripe_env = source.livemode ? 'live' : 'test';
 
         try {
-          const access = await withConnection(context, async withSession => {
+          const access = await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResourceAccess }) => {
               return await queryResourceAccess(source.id);
             });
@@ -213,19 +231,25 @@ export const StripeAccount = {
           }
 
           // see: https://stripe.com/docs/api/payment_intents/list
-          const list = await stripe.paymentIntents.list(args, { stripeAccount: source.stripe_id_ext });
-          return list.data?.map(pi => ({ stripeAccount: source.stripe_id_ext, ...pi }));
-
+          const list = await stripe[stripe_env].paymentIntents.list(args, {
+            stripeAccount: source.stripe_id_ext
+          });
+          return list.data?.map((pi) => ({
+            livemode: source.livemode,
+            stripeAccount: source.stripe_id_ext,
+            ...pi
+          }));
         } catch (error) {
           throw new Error(error.message);
         }
       },
       async customers(source, { starting_after_id, ending_before_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
+
+        const stripe_env = source.livemode ? 'live' : 'test';
 
         try {
-          const access = await withConnection(context, async withSession => {
+          const access = await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResourceAccess }) => {
               return await queryResourceAccess(source.id);
             });
@@ -244,33 +268,40 @@ export const StripeAccount = {
           }
 
           // see: https://stripe.com/docs/api/customers/list
-          const list = await stripe.paymentIntents.list(args, { stripeAccount: source.stripe_id_ext });
-          return list.data?.map(cus => ({ stripeAccount: source.stripe_id_ext, ...cus }));
-
+          const list = await stripe[stripe_env].paymentIntents.list(args, {
+            stripeAccount: source.stripe_id_ext
+          });
+          return list.data?.map((cus) => ({
+            livemode: source.livemode,
+            stripeAccount: source.stripe_id_ext,
+            ...cus
+          }));
         } catch (error) {
           throw new Error(error.message);
         }
       }
     },
     StripeAccountLink: {
-      created: source => new Date(source.created * 1000),
-      expires_at: source => new Date(source.expires_at * 1000)
+      created: (source) => new Date(source.created * 1000),
+      expires_at: (source) => new Date(source.expires_at * 1000)
     },
     Query: {
       async stripe_account(source, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          const stripe_account = await withConnection(context, async withSession => {
+          const stripe_account = await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource }) => {
               return await queryResource(args.id);
             });
           });
 
-          const { id, object, ...stripe_account_ext } = await stripe.accounts.retrieve(stripe_account.stripe_id_ext);
-          return { ...stripe_account, ...stripe_account_ext };
+          const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
+          const { id, object, ...stripe_account_ext } = await stripe[stripe_env].accounts.retrieve(
+            stripe_account.stripe_id_ext
+          );
+          return { ...stripe_account, ...stripe_account_ext };
         } catch (error) {
           throw new Error(error.message);
         }

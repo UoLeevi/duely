@@ -1,5 +1,8 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
+import {
+  createDefaultQueryResolversForResource,
+  createResolverForReferencedResource
+} from '../../util';
 import validator from 'validator';
 
 const resource = {
@@ -7,10 +10,7 @@ const resource = {
 };
 
 const defaultValidationOptions = {
-  allowedMimeTypes: [
-    'image/jpeg',
-    'image/png'
-  ],
+  allowedMimeTypes: ['image/jpeg', 'image/png'],
   maxSize: 512000
 };
 
@@ -41,12 +41,14 @@ export function validateAndReadDataUrlAsBuffer(dataUrl, options) {
     return [null, 'File data should be encoded as a data URL.'];
   }
 
-  if (!options.allowedMimeTypes.some(type => dataUrl.startsWith(`data:${type};base64,`))) {
-    const extensions = options.allowedMimeTypes.map(t => t.split('/', 2)[1].split(/\W/, 1)[0].toUpperCase());
+  if (!options.allowedMimeTypes.some((type) => dataUrl.startsWith(`data:${type};base64,`))) {
+    const extensions = options.allowedMimeTypes.map((t) =>
+      t.split('/', 2)[1].split(/\W/, 1)[0].toUpperCase()
+    );
     return [null, 'File type should be one of ' + extensions.join(',')];
   }
 
-  if (!validator.isByteLength(dataUrl, { max: Math.round(options.maxSize / 4 * 3) })) {
+  if (!validator.isByteLength(dataUrl, { max: Math.round((options.maxSize / 4) * 3) })) {
     return [null, `File max size is ${formatFileSize(options.maxSize)}.`];
   }
 
@@ -97,15 +99,14 @@ export const Image = {
   `,
   resolvers: {
     Image: {
-      ...createResolverForReferencedResource({ name: 'agency' }),
+      ...createResolverForReferencedResource({ name: 'agency' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
     },
     Mutation: {
       async create_image(obj, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         // validate and read image
 
@@ -120,7 +121,7 @@ export const Image = {
         }
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ createResource }) => {
               // create image resource
               const image = await createResource(resource.name, args);
@@ -143,8 +144,7 @@ export const Image = {
         }
       },
       async update_image(obj, { image_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         if (args.data) {
           const [_, validationError] = validateAndReadDataUrlAsBuffer(args.data);
@@ -159,7 +159,7 @@ export const Image = {
         }
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ updateResource }) => {
               // update image resource
               const image = await updateResource(image_id, args);

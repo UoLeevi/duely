@@ -8,11 +8,11 @@ async function fetchCountryCodes() {
   let starting_after = null;
 
   while (has_more) {
-    const res = await stripe.countrySpecs.list(starting_after
-      ? { limit: 100, starting_after }
-      : { limit: 100 });
+    const res = await stripe.live.countrySpecs.list(
+      starting_after ? { limit: 100, starting_after } : { limit: 100 }
+    );
 
-    countryCodes.push(...res.data.map(s => s.id));
+    countryCodes.push(...res.data.map((s) => s.id));
     starting_after = countryCodes[countryCodes.length - 1];
     has_more = res.has_more;
   }
@@ -29,8 +29,7 @@ export const Country = {
   resolvers: {
     Query: {
       async country_codes(source, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         if (countryCodesPromise === null) {
           countryCodesPromise = fetchCountryCodes();

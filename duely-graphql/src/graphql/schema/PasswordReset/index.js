@@ -15,8 +15,7 @@ export const PasswordReset = {
   resolvers: {
     Mutation: {
       async start_password_reset(source, { email_address, redirect_url }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         if (!validator.isEmail(email_address))
           return {
@@ -28,7 +27,14 @@ export const PasswordReset = {
         email_address = validator.normalizeEmail(email_address);
 
         if (redirect_url) {
-          if (!validator.isURL(redirect_url, { require_tld: false, protocols: ['http', 'https'], require_protocol: true, allow_underscores: true }))
+          if (
+            !validator.isURL(redirect_url, {
+              require_tld: false,
+              protocols: ['http', 'https'],
+              require_protocol: true,
+              allow_underscores: true
+            })
+          )
             return {
               success: false,
               message: `URL '${redirect_url}' format is invalid.`,
@@ -59,9 +65,12 @@ export const PasswordReset = {
         let password_reset;
 
         try {
-          password_reset = await withConnection(context, async withSession => {
+          password_reset = await withConnection(context, async (withSession) => {
             return await withSession(async ({ createResource }) => {
-              return await createResource(resource_name, { email_address, data: { redirect_url: redirect_url.href } });
+              return await createResource(resource_name, {
+                email_address,
+                data: { redirect_url: redirect_url.href }
+              });
             });
           });
 
@@ -73,7 +82,6 @@ export const PasswordReset = {
               type: 'SimpleResult'
             };
           }
-
         } catch (error) {
           return {
             success: false,
@@ -92,16 +100,16 @@ export const PasswordReset = {
           subject: 'Verify your email for Duely',
           body: (redirect_url
             ? [
-              p`Hi, 👋`,
-              p`Click the link below to verify your email address for Duely.${br``}* this link ${strong`expires in 24 hours`}. After that you will need to request another link.${br``}* this link ${strong`can only be used once`}. After you click the link it will no longer work.`,
-              p`${strong`==&gt; ${a`${redirect_url.href}Click here to verify your email and access Duely`}`}`,
-              p`${em`This link expires in 24 hours and can only be used once. You can always request another link to be sent if this one has been used or is expired.`}`
-            ]
+                p`Hi, 👋`,
+                p`Click the link below to verify your email address for Duely.${br``}* this link ${strong`expires in 24 hours`}. After that you will need to request another link.${br``}* this link ${strong`can only be used once`}. After you click the link it will no longer work.`,
+                p`${strong`==&gt; ${a`${redirect_url.href}Click here to verify your email and access Duely`}`}`,
+                p`${em`This link expires in 24 hours and can only be used once. You can always request another link to be sent if this one has been used or is expired.`}`
+              ]
             : [
-              p`Hi, 👋`,
-              p`Your password reset verification code is ${strong`${password_reset.verification_code}`}.`,
-              p`${em`This code expires in 24 hours and can only be used once. You can always request another verification code to be sent if this one has been used or is expired.`}`
-            ]
+                p`Hi, 👋`,
+                p`Your password reset verification code is ${strong`${password_reset.verification_code}`}.`,
+                p`${em`This code expires in 24 hours and can only be used once. You can always request another verification code to be sent if this one has been used or is expired.`}`
+              ]
           ).join('\r\n')
         });
 
@@ -119,11 +127,10 @@ export const PasswordReset = {
         };
       },
       async verify_password_reset(source, { verification_code, password }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource, updateResource }) => {
               let password_reset = await queryResource(resource_name, { verification_code });
 
@@ -135,7 +142,11 @@ export const PasswordReset = {
                 };
               }
 
-              password_reset = await updateResource(password_reset.id, { verification_code, password, verified: true });
+              password_reset = await updateResource(password_reset.id, {
+                verification_code,
+                password,
+                verified: true
+              });
 
               return {
                 success: true,

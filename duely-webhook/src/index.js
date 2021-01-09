@@ -110,7 +110,7 @@ async function handle_webhook_platform(req, res) {
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WHSEC_PLATFORM_TEST);
+    event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, process.env.STRIPE_WHSEC_PLATFORM_TEST);
   } catch (err) {
     res.status(400).send(`Webhook Error: ${err.message}`);
   }
@@ -130,7 +130,7 @@ async function handle_webhook_agency(req, res) {
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WHSEC_AGENCY_TEST);
+    event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, process.env.STRIPE_WHSEC_AGENCY_TEST);
   } catch (err) {
     res.status(400).send(`Webhook Error: ${err.message}`);
   }

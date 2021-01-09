@@ -1,9 +1,12 @@
-import { createDefaultQueryResolversForResource, createResolverForReferencedResourceAll } from '../../util';
+import {
+  createDefaultQueryResolversForResource,
+  createResolverForReferencedResourceAll
+} from '../../util';
 
 const resource = {
   name: 'page definition',
   table_name: 'page_definition'
-}
+};
 
 export const PageDefinition = {
   typeDef: `
@@ -27,7 +30,11 @@ export const PageDefinition = {
   `,
   resolvers: {
     PageDefinition: {
-      ...createResolverForReferencedResourceAll({ name: 'blocks', resource_name: 'page block definition', column_name: 'page_definition_id' })
+      ...createResolverForReferencedResourceAll({
+        name: 'blocks',
+        resource_name: 'page block definition',
+        column_name: 'page_definition_id'
+      })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource),

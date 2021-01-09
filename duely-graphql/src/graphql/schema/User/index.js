@@ -1,5 +1,8 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResourceAll } from '../../util';
+import {
+  createDefaultQueryResolversForResource,
+  createResolverForReferencedResourceAll
+} from '../../util';
 
 const resource = {
   table_name: 'user',
@@ -28,15 +31,18 @@ export const User = {
   `,
   resolvers: {
     User: {
-      ...createResolverForReferencedResourceAll({ name: 'memberships', resource_name: 'membership', column_name: 'user_id' }),
+      ...createResolverForReferencedResourceAll({
+        name: 'memberships',
+        resource_name: 'membership',
+        column_name: 'user_id'
+      })
     },
     Query: {
       async current_user(source, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ query }) => {
               return await query('SELECT * FROM operation_.query_current_user_()');
             });

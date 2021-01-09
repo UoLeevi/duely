@@ -1,5 +1,7 @@
-import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
+import {
+  createDefaultQueryResolversForResource,
+  createResolverForReferencedResource
+} from '../../util';
 
 const resource = {
   name: 'membership'

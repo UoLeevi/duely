@@ -1,4 +1,8 @@
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../util';
+import {
+  createDefaultQueryResolversForResource,
+  createResolverForReferencedResource,
+  createResolverForReferencedResourceAll
+} from '../../util';
 
 const resource = {
   table_name: 'subdomain',
@@ -25,8 +29,16 @@ export const Subdomain = {
   `,
   resolvers: {
     Subdomain: {
-      ...createResolverForReferencedResource({ name: 'agency', reverse: true, column_name: 'subdomain_id' }),
-      ...createResolverForReferencedResourceAll({ name: 'memberships', resource_name: 'membership', column_name: 'subdomain_id' })
+      ...createResolverForReferencedResource({
+        name: 'agency',
+        reverse: true,
+        column_name: 'subdomain_id'
+      }),
+      ...createResolverForReferencedResourceAll({
+        name: 'memberships',
+        resource_name: 'membership',
+        column_name: 'subdomain_id'
+      })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

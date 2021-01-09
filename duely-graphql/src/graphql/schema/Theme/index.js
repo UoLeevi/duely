@@ -1,7 +1,8 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource } from '../../util';
-import validator from 'validator';
-import stripe from '../../../stripe';
+import {
+  createDefaultQueryResolversForResource,
+  createResolverForReferencedResource
+} from '../../util';
 
 const resource = {
   name: 'theme'
@@ -55,11 +56,10 @@ export const Theme = {
     },
     Mutation: {
       async update_theme(obj, { theme_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ updateResource }) => {
               // update theme resource
               const theme = await updateResource(theme_id, args);

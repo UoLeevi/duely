@@ -1,5 +1,9 @@
 import { withConnection } from '../../../db';
-import { createDefaultQueryResolversForResource, createResolverForReferencedResource, createResolverForReferencedResourceAll } from '../../util';
+import {
+  createDefaultQueryResolversForResource,
+  createResolverForReferencedResource,
+  createResolverForReferencedResourceAll
+} from '../../util';
 import validator from 'validator';
 import stripe from '../../../stripe';
 import { validateAndReadDataUrlAsBuffer } from '../Image';
@@ -14,12 +18,13 @@ export const Agency = {
     type Agency implements Node {
       id: ID!
       name: String!
-      stripe_account: StripeAccount!
+      stripe_account(livemode: Boolean!): StripeAccount!
       subdomain: Subdomain!
       theme: Theme!
-      services(filter: ServiceFilter): [Service!]
+      products(filter: ProductFilter): [Product!]
       pages(filter: PageFilter): [Page!]
       settings: AgencySettings!
+      subscription_plan: SubscriptionPlan!
     }
 
     input AgencyFilter {
@@ -51,36 +56,56 @@ export const Agency = {
   `,
   resolvers: {
     Agency: {
-      async stripe_account(source, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+      async stripe_account(source, { livemode }, context, info) {
+        if (!context.jwt) throw new Error('Unauthorized');
+
+        const stripe_env = livemode ? 'live' : 'test';
 
         try {
-          const stripe_account = await withConnection(context, async withSession => {
+          const stripe_account = await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource }) => {
-              return await queryResource('stripe account', { agency_id: source.id });
+              return await queryResource('stripe account', { agency_id: source.id, livemode });
             });
           });
 
-          const { id, object, ...stripe_account_ext } = await stripe.accounts.retrieve(stripe_account.stripe_id_ext);
+          const { id, object, ...stripe_account_ext } = await stripe[stripe_env].accounts.retrieve(
+            stripe_account.stripe_id_ext
+          );
           return { ...stripe_account, ...stripe_account_ext };
         } catch (error) {
           throw new Error(error.message);
         }
       },
       ...createResolverForReferencedResource({ name: 'subdomain' }),
-      ...createResolverForReferencedResource({ name: 'theme', reverse: true, column_name: 'agency_id' }),
-      ...createResolverForReferencedResourceAll({ name: 'services', resource_name: 'service', column_name: 'agency_id' }),
-      ...createResolverForReferencedResourceAll({ name: 'pages', resource_name: 'page', column_name: 'agency_id' }),
-      settings: agency => ({ agency_id: agency.id })
+      ...createResolverForReferencedResource({ name: 'subscription_plan' }),
+      ...createResolverForReferencedResource({
+        name: 'theme',
+        reverse: true,
+        column_name: 'agency_id'
+      }),
+      ...createResolverForReferencedResourceAll({
+        name: 'products',
+        resource_name: 'product',
+        column_name: 'agency_id'
+      }),
+      ...createResolverForReferencedResourceAll({
+        name: 'pages',
+        resource_name: 'page',
+        column_name: 'agency_id'
+      }),
+      settings: (agency) => ({ agency_id: agency.id })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
     },
     Mutation: {
-      async create_agency(obj, { name, subdomain_name, country_code, image_logo, return_url }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+      async create_agency(
+        obj,
+        { name, subdomain_name, country_code, image_logo, return_url },
+        context,
+        info
+      ) {
+        if (!context.jwt) throw new Error('Unauthorized');
 
         // validate subdomain name
         const reservedSubdomains = ['api', 'test', 'example', 'admin'];
@@ -126,29 +151,30 @@ export const Agency = {
           };
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ query, createResource }) => {
               // get current user
               const user = await query('SELECT * FROM operation_.query_current_user_()');
 
               // create subdomain and agency on database
-              const subdomain = await createResource('subdomain', { name: subdomain_name, agency: { name } });
+              const subdomain = await createResource('subdomain', {
+                name: subdomain_name,
+                agency: { name }
+              });
               const agency = subdomain.agency;
 
               // create logo image
-              const image = await createResource('image', { ...image_logo, agency_id: agency.id, access: 'public' });
+              const image = await createResource('image', {
+                ...image_logo,
+                agency_id: agency.id,
+                access: 'public'
+              });
 
               // create theme
-              const theme = await createResource('theme', { name, image_logo_id: image.id, agency_id: agency.id });
-
-              // upload logo image to stripe
-              const logo_upload = await stripe.files.create({
-                file: {
-                  data: image_buffer,
-                  name: image_logo.name,
-                  type: 'application/octet-stream',
-                },
-                purpose: 'business_logo',
+              const theme = await createResource('theme', {
+                name,
+                image_logo_id: image.id,
+                agency_id: agency.id
               });
 
               // create stripe custom account for agency
@@ -160,7 +186,7 @@ export const Agency = {
                 country: country_code,
                 capabilities: {
                   card_payments: { requested: true },
-                  transfers: { requested: true },
+                  transfers: { requested: true }
                 },
                 business_profile: {
                   name,
@@ -174,7 +200,7 @@ export const Agency = {
                 },
                 settings: {
                   branding: {
-                    logo: logo_upload.id
+                    logo: null
                   }
                 }
               };
@@ -183,16 +209,34 @@ export const Agency = {
                 createStripeAccountArgs.tos_acceptance.ip = context.ip;
               }
 
-              const account = await stripe.accounts.create(createStripeAccountArgs);
+              for (const stripe_env of ['test', 'live']) {
+                // upload logo image to stripe
+                const logo_upload = await stripe[stripe_env].files.create({
+                  file: {
+                    data: image_buffer,
+                    name: image_logo.name,
+                    type: 'application/octet-stream'
+                  },
+                  purpose: 'business_logo'
+                });
 
-              // store stripe custom account id to database
-              agency.stripe_account = await createResource('stripe account', { agency_id: agency.id, stripe_id_ext: account.id });
+                createStripeAccountArgs.settings.branding.logo = logo_upload.id;
+
+                const account = await stripe[stripe_env].accounts.create(createStripeAccountArgs);
+
+                // store stripe custom account id to database
+                await createResource('stripe account', {
+                  agency_id: agency.id,
+                  stripe_id_ext: account.id,
+                  livemode: stripe_env === 'live'
+                });
+              }
 
               // create stripe account verification url
               // see: https://stripe.com/docs/api/account_links/create
               let accountLink;
               try {
-                accountLink = await stripe.accountLinks.create({
+                accountLink = await stripe['live'].accountLinks.create({
                   account: account.id,
                   refresh_url: return_url,
                   return_url,
@@ -228,14 +272,13 @@ export const Agency = {
         }
       },
       async delete_agency(obj, { agency_id }, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource, deleteResource }) => {
               const agency = await queryResource(agency_id);
-              
+
               if (agency == null) {
                 return {
                   // error
@@ -245,15 +288,20 @@ export const Agency = {
                 };
               }
 
-              // query stripe account from database
-              const stripe_account = await queryResource('stripe account', { agency_id });
+              for (const stripe_env of ['live', 'test']) {
+                // query stripe account from database
+                const stripe_account = await queryResource('stripe account', {
+                  agency_id,
+                  livemode: stripe_env === 'live'
+                });
+
+                // delete stripe custom account for agency
+                // see: https://stripe.com/docs/api/accounts/delete
+                const deleted = await stripe[stripe_env].accounts.del(stripe_account.stripe_id_ext);
+              }
 
               // delete subdomain from database, will cascade to agency, theme, subject assignment and stripe account tables
               const subdomain = await deleteResource(agency.subdomain_id);
-
-              // delete stripe custom account for agency
-              // see: https://stripe.com/docs/api/accounts/delete
-              const deleted = await stripe.accounts.del(stripe_account.stripe_id_ext);
 
               // success
               return {

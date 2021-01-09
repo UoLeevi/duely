@@ -21,8 +21,8 @@ export const StripeCustomer = {
   `,
   resolvers: {
     StripeCustomer: {
-      id_ext: source => source.id,
-      created: source => new Date(source.created * 1000)
+      id_ext: (source) => source.id,
+      created: (source) => new Date(source.created * 1000)
     }
   }
 };

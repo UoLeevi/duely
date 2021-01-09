@@ -30,24 +30,21 @@ export const Visit = {
             message: error.message,
             type: 'BeginVisitResult'
           };
-        }
-        finally {
+        } finally {
           client.release();
         }
       },
       async end_visit(obj, args, context, info) {
-        if (!context.jwt)
-          throw new Error('Unauthorized');
+        if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async withSession => {
+          return await withConnection(context, async (withSession) => {
             return await withSession(async ({ client }) => {
               const res = await client.query('SELECT operation_.end_visit_()');
               return {
                 success: true,
                 type: 'SimpleResult'
               };
-
             });
           });
         } catch (error) {

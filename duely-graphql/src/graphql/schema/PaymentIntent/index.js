@@ -45,18 +45,22 @@ export const PaymentIntent = {
   `,
   resolvers: {
     PaymentIntent: {
-      id_ext: source => source.id,
-      created: source => new Date(source.created * 1000),
-      canceled_at: source => new Date(source.created * 1000),
-      charges: source => withStripeAccountProperty(source.charges?.data, source),
+      id_ext: (source) => source.id,
+      created: (source) => new Date(source.created * 1000),
+      canceled_at: (source) => new Date(source.created * 1000),
+      charges: (source) => withStripeAccountProperty(source.charges?.data, source),
       async customer(source, args, context, info) {
         if (source.customer == null) return null;
         if (typeof source.customer === 'object') return source.customer;
 
+        const stripe_env = source.livemode ? 'live' : 'test';
+
         const fields = Object.keys(Object.values(parseResolveInfo(info).fieldsByTypeName)[0]);
         if (fields.length === 1 && fields[0] === 'id') return { id: source.customer };
 
-        const customer = await stripe.customers.retrieve(source.customer, { stripeAccount: source.stripeAccount });
+        const customer = await stripe[stripe_env].customers.retrieve(source.customer, {
+          stripeAccount: source.stripeAccount
+        });
         return withStripeAccountProperty(customer, source);
       }
     }
