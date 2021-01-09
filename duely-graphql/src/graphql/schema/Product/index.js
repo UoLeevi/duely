@@ -43,7 +43,7 @@ export const Product = {
     }
 
     extend type Mutation {
-      create_product(service_id: ID!, name: String!, url_name: String!, description: String, duration: String, markdown_description_id: ID, image_logo: ImageInput, image_logo_id: ID, image_hero: ImageInput, status: String): ProductMutationResult!
+      create_product(agency_id: ID!, name: String!, url_name: String!, description: String, duration: String, markdown_description_id: ID, image_logo: ImageInput, image_logo_id: ID, image_hero: ImageInput, status: String): ProductMutationResult!
       update_product(product_id: ID!, name: String, url_name: String, description: String, duration: String, default_price_id: ID, markdown_description_id: ID, image_logo: ImageInput, image_logo_id: ID, image_hero: ImageInput, status: String): ProductMutationResult!
       delete_product(product_id: ID!): ProductMutationResult!
     }
