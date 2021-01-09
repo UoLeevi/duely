@@ -11,13 +11,13 @@ import {
   AgencyStripeAccountCustomersDocument,
   CurrentUserAgenciesDocument,
   SubdomainPublicDocument,
-  AgencyServicesDocument,
-  ServiceDocument,
+  AgencyProductsDocument,
+  ProductDocument,
   SubdomainAgencyDocument,
   SubdomainAgencyStripeAccountUpdateUrlDocument,
   AgencyThankYouPageSettingDocument,
-  ServiceThankYouPageSettingDocument,
-  ServiceAndAgencyFromUrlPartsDocument,
+  ProductThankYouPageSettingDocument,
+  ProductAndAgencyFromUrlPartsDocument,
   AgencyPagesDocument,
   PageDocument,
   PageBlockDocument,
@@ -27,7 +27,7 @@ import {
   PageBlockDefinitionsByNameDocument,
   PageDefinitionByUrlPathDocument,
   PageByUrlDocument,
-  ServicesDocument,
+  ProductsDocument,
   AgencyDocument,
   AgenciesDocument
 } from '@duely/core';
@@ -101,6 +101,9 @@ export const agencies_Q = {
 
 export const agency_stripe_account_update_url_Q = {
   query: AgencyStripeAccountUpdateUrlDocument,
+  variables: {
+    livemode: true
+  },
   fetchPolicy: 'no-cache',
   result: (d: ResultOf<typeof AgencyStripeAccountUpdateUrlDocument>) =>
     d?.agency?.stripe_account?.account_update_url?.url
@@ -108,24 +111,36 @@ export const agency_stripe_account_update_url_Q = {
 
 export const agency_stripe_account_balance_Q = {
   query: AgencyStripeAccountBalanceDocument,
+  variables: {
+    livemode: true
+  },
   result: (d: ResultOf<typeof AgencyStripeAccountBalanceDocument>) =>
     d?.agency?.stripe_account?.balance
 };
 
 export const agency_stripe_account_balance_transactions_Q = {
   query: AgencyStripeAccountBalanceTransactionsDocument,
+  variables: {
+    livemode: true
+  },
   result: (d: ResultOf<typeof AgencyStripeAccountBalanceTransactionsDocument>) =>
     d?.agency?.stripe_account?.balance_transactions
 };
 
 export const agency_stripe_account_payment_intents_Q = {
   query: AgencyStripeAccountPaymentIntentsDocument,
+  variables: {
+    livemode: true
+  },
   result: (d: ResultOf<typeof AgencyStripeAccountPaymentIntentsDocument>) =>
     d?.agency?.stripe_account?.payment_intents
 };
 
 export const agency_stripe_account_customers_Q = {
   query: AgencyStripeAccountCustomersDocument,
+  variables: {
+    livemode: true
+  },
   result: (d: ResultOf<typeof AgencyStripeAccountCustomersDocument>) =>
     d?.agency?.stripe_account?.customers
 };
@@ -174,24 +189,24 @@ function resolveSubdomain(): string | null {
   return subdomain;
 }
 
-export const agency_services_Q = {
-  query: AgencyServicesDocument,
-  result: (d: ResultOf<typeof AgencyServicesDocument>) => d?.agency?.services
+export const agency_products_Q = {
+  query: AgencyProductsDocument,
+  result: (d: ResultOf<typeof AgencyProductsDocument>) => d?.agency?.products
 };
 
-export const service_Q = {
-  query: ServiceDocument,
-  result: (d: ResultOf<typeof ServiceDocument>) => d?.service
+export const product_Q = {
+  query: ProductDocument,
+  result: (d: ResultOf<typeof ProductDocument>) => d?.product
 };
 
-export const services_Q = {
-  query: ServicesDocument,
-  result: (d: ResultOf<typeof ServicesDocument>) => d?.services
+export const products_Q = {
+  query: ProductsDocument,
+  result: (d: ResultOf<typeof ProductsDocument>) => d?.products
 };
 
-export const service_and_agency_from_url_parts_Q = {
-  query: ServiceAndAgencyFromUrlPartsDocument,
-  result: (d: ResultOf<typeof ServiceAndAgencyFromUrlPartsDocument>) => d?.subdomains?.[0]?.agency.services?.[0]
+export const product_and_agency_from_url_parts_Q = {
+  query: ProductAndAgencyFromUrlPartsDocument,
+  result: (d: ResultOf<typeof ProductAndAgencyFromUrlPartsDocument>) => d?.subdomains?.[0]?.agency.products?.[0]
 };
 
 export const current_agency_Q = {
@@ -203,6 +218,9 @@ export const current_agency_Q = {
 export const current_agency_stripe_account_update_url_Q = {
   ...current_subdomain_Q,
   query: SubdomainAgencyStripeAccountUpdateUrlDocument,
+  variables: {
+    livemode: true
+  },
   fetchPolicy: 'no-cache',
   result: (d: ResultOf<typeof SubdomainAgencyStripeAccountUpdateUrlDocument>) =>
     d?.subdomains?.[0]?.agency?.stripe_account?.account_update_url?.url
@@ -213,9 +231,9 @@ export const agency_thank_you_page_settings_Q = {
   result: (d: ResultOf<typeof AgencyThankYouPageSettingDocument>) => d?.agency?.settings?.thank_you_page_setting
 };
 
-export const service_thank_you_page_settings_Q = {
-  query: ServiceThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof ServiceThankYouPageSettingDocument>) => d?.service?.settings?.thank_you_page_setting
+export const product_thank_you_page_settings_Q = {
+  query: ProductThankYouPageSettingDocument,
+  result: (d: ResultOf<typeof ProductThankYouPageSettingDocument>) => d?.product?.settings?.thank_you_page_setting
 };
 
 export const agency_pages_Q = {

@@ -11,24 +11,24 @@ import {
   CreateAgencyThankYouPageSettingDocument,
   CreatePageBlockDocument,
   CreatePriceDocument,
-  CreateServiceDocument,
-  CreateServiceThankYouPageSettingDocument,
+  CreateProductDocument,
+  CreateProductThankYouPageSettingDocument,
   DeleteAgencyThankYouPageSettingDocument,
   DeletePageBlockDocument,
-  DeleteServiceDocument,
-  DeleteServiceThankYouPageSettingDocument,
+  DeleteProductDocument,
+  DeleteProductThankYouPageSettingDocument,
   LogInDocument,
   LogOutDocument,
   Page_BlockFragmentDoc,
-  ServiceFragmentDoc,
-  ServiceThankYouPageSettingDocument,
+  ProductFragmentDoc,
+  ProductThankYouPageSettingDocument,
   StartPasswordResetDocument,
   StartSignUpDocument,
   UpdateAgencyThankYouPageSettingDocument,
   UpdatePageBlockDocument,
   UpdatePageDocument,
-  UpdateServiceDocument,
-  UpdateServiceThankYouPageSettingDocument,
+  UpdateProductDocument,
+  UpdateProductThankYouPageSettingDocument,
   VerifyPasswordResetDocument,
   VerifySignUpDocument
 } from '@duely/core';
@@ -153,57 +153,57 @@ export const create_agency_M = {
   result: (d: ResultOf<typeof CreateAgencyDocument>) => d?.create_agency
 };
 
-const create_service_R = (d: ResultOf<typeof CreateServiceDocument>) => d?.create_service;
-export const create_service_M = {
-  mutation: CreateServiceDocument,
-  result: create_service_R,
+const create_product_R = (d: ResultOf<typeof CreateProductDocument>) => d?.create_product;
+export const create_product_M = {
+  mutation: CreateProductDocument,
+  result: create_product_R,
   async after(
     cache: ApolloCache<NormalizedCacheObject>,
-    result: ReturnType<typeof create_service_R> | null
+    result: ReturnType<typeof create_product_R> | null
   ) {
-    if (!result?.success || !result.service) return;
+    if (!result?.success || !result.product) return;
 
-    const { service } = result;
+    const { product } = result;
 
     cache.modify({
-      id: cache.identify(service.agency),
+      id: cache.identify(product.agency),
       fields: {
-        services(servicesRefs: Reference[] = [], { readField }) {
-          const newServiceRef = cache.writeFragment({
-            data: service,
-            fragment: ServiceFragmentDoc,
-            fragmentName: 'service'
+        products(productsRefs: Reference[] = [], { readField }) {
+          const newProductRef = cache.writeFragment({
+            data: product,
+            fragment: ProductFragmentDoc,
+            fragmentName: 'product'
           });
 
-          // Quick safety check - if the new service is already
+          // Quick safety check - if the new product is already
           // present in the cache, we don't need to add it again.
-          if (servicesRefs.some((ref) => readField('id', ref) === service.id)) {
-            return servicesRefs;
+          if (productsRefs.some((ref) => readField('id', ref) === product.id)) {
+            return productsRefs;
           }
 
-          return [...servicesRefs, newServiceRef];
+          return [...productsRefs, newProductRef];
         }
       }
     });
   }
 };
 
-export const update_service_M = {
-  mutation: UpdateServiceDocument,
-  result: (d: ResultOf<typeof UpdateServiceDocument>) => d?.update_service
+export const update_product_M = {
+  mutation: UpdateProductDocument,
+  result: (d: ResultOf<typeof UpdateProductDocument>) => d?.update_product
 };
 
-const delete_service_R = (d: ResultOf<typeof DeleteServiceDocument>) => d?.delete_service;
-export const delete_service_M = {
-  mutation: DeleteServiceDocument,
-  result: delete_service_R,
+const delete_product_R = (d: ResultOf<typeof DeleteProductDocument>) => d?.delete_product;
+export const delete_product_M = {
+  mutation: DeleteProductDocument,
+  result: delete_product_R,
   async after(
     cache: ApolloCache<NormalizedCacheObject>,
-    result: ReturnType<typeof delete_service_R> | null
+    result: ReturnType<typeof delete_product_R> | null
   ) {
-    if (!result?.success || !result.service) return;
+    if (!result?.success || !result.product) return;
 
-    const id = cache.identify(result.service);
+    const id = cache.identify(result.product);
     cache.evict({ id });
     cache.gc();
   }
@@ -257,42 +257,42 @@ export const create_agency_thank_you_page_setting_M = {
   }
 };
 
-const create_service_thank_you_page_setting_R = (
-  d: ResultOf<typeof CreateServiceThankYouPageSettingDocument>
-) => d?.create_service_thank_you_page_setting;
-export const create_service_thank_you_page_setting_M = {
-  mutation: CreateServiceThankYouPageSettingDocument,
-  result: create_service_thank_you_page_setting_R,
+const create_product_thank_you_page_setting_R = (
+  d: ResultOf<typeof CreateProductThankYouPageSettingDocument>
+) => d?.create_product_thank_you_page_setting;
+export const create_product_thank_you_page_setting_M = {
+  mutation: CreateProductThankYouPageSettingDocument,
+  result: create_product_thank_you_page_setting_R,
   async after(
     cache: ApolloCache<NormalizedCacheObject>,
-    result: ReturnType<typeof create_service_thank_you_page_setting_R> | null,
-    variables: VariablesOf<typeof CreateServiceThankYouPageSettingDocument>
+    result: ReturnType<typeof create_product_thank_you_page_setting_R> | null,
+    variables: VariablesOf<typeof CreateProductThankYouPageSettingDocument>
   ) {
     if (!result?.success || !result.setting) return;
 
-    const { service = null } =
+    const { product = null } =
       client.readQuery({
-        query: ServiceThankYouPageSettingDocument,
+        query: ProductThankYouPageSettingDocument,
         variables: {
-          service_id: variables.service_id
+          product_id: variables.product_id
         }
       }) ?? {};
 
-    if (!service?.settings) return;
+    if (!product?.settings) return;
 
     cache.modify({
-      id: cache.identify(service.settings),
+      id: cache.identify(product.settings),
       fields: {
         thank_you_page_setting() {
           return cache.writeFragment({
             data: result.setting,
             fragment: gql`
-              fragment service_thank_you_page_setting on ServiceThankYouPageSetting {
+              fragment product_thank_you_page_setting on ProductThankYouPageSetting {
                 id
                 url
               }
             `,
-            fragmentName: 'service_thank_you_page_setting'
+            fragmentName: 'product_thank_you_page_setting'
           });
         }
       }
@@ -308,10 +308,10 @@ export const update_agency_thank_you_page_setting_M = {
   result: update_agency_thank_you_page_setting_R
 };
 
-export const update_service_thank_you_page_setting_M = {
-  mutation: UpdateServiceThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof UpdateServiceThankYouPageSettingDocument>) =>
-    d?.update_service_thank_you_page_setting
+export const update_product_thank_you_page_setting_M = {
+  mutation: UpdateProductThankYouPageSettingDocument,
+  result: (d: ResultOf<typeof UpdateProductThankYouPageSettingDocument>) =>
+    d?.update_product_thank_you_page_setting
 };
 
 const delete_agency_thank_you_page_setting_R = (
@@ -332,15 +332,15 @@ export const delete_agency_thank_you_page_setting_M = {
   }
 };
 
-const delete_service_thank_you_page_setting_R = (
-  d: ResultOf<typeof DeleteServiceThankYouPageSettingDocument>
-) => d?.delete_service_thank_you_page_setting;
-export const delete_service_thank_you_page_setting_M = {
-  mutation: DeleteServiceThankYouPageSettingDocument,
-  result: delete_service_thank_you_page_setting_R,
+const delete_product_thank_you_page_setting_R = (
+  d: ResultOf<typeof DeleteProductThankYouPageSettingDocument>
+) => d?.delete_product_thank_you_page_setting;
+export const delete_product_thank_you_page_setting_M = {
+  mutation: DeleteProductThankYouPageSettingDocument,
+  result: delete_product_thank_you_page_setting_R,
   async after(
     cache: ApolloCache<NormalizedCacheObject>,
-    result: ReturnType<typeof delete_service_thank_you_page_setting_R> | null
+    result: ReturnType<typeof delete_product_thank_you_page_setting_R> | null
   ) {
     if (!result?.success || !result.setting) return;
 

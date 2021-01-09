@@ -19,10 +19,10 @@ query ServicesAgreement {
   }
 }
 
-query AgencyStripeAccountUpdateUrl($agency_id: ID!) {
+query AgencyStripeAccountUpdateUrl($agency_id: ID!, $livemode: Boolean!) {
   agency(id: $agency_id) {
     id
-    stripe_account {
+    stripe_account(livemode: $livemode) {
       id
       account_update_url {
         url
@@ -31,9 +31,9 @@ query AgencyStripeAccountUpdateUrl($agency_id: ID!) {
   }
 }
 
-query AgencyStripeAccountBalance($agency_id: ID!) {
+query AgencyStripeAccountBalance($agency_id: ID!, $livemode: Boolean!) {
   agency(id: $agency_id) {
-    stripe_account {
+    stripe_account(livemode: $livemode) {
       id
       balance {
         available {
@@ -67,13 +67,14 @@ query AgencyStripeAccountBalance($agency_id: ID!) {
 
 query AgencyStripeAccountBalanceTransactions(
   $agency_id: ID!
+  $livemode: Boolean!
   $created: Date
   $starting_after_id: String
   $ending_before_id: String
   $limit: Int
 ) {
   agency(id: $agency_id) {
-    stripe_account {
+    stripe_account(livemode: $livemode) {
       id
       balance_transactions(
         created: $created
@@ -89,13 +90,14 @@ query AgencyStripeAccountBalanceTransactions(
 
 query AgencyStripeAccountPaymentIntents(
   $agency_id: ID!
+  $livemode: Boolean!
   $created: Date
   $starting_after_id: String
   $ending_before_id: String
   $limit: Int
 ) {
   agency(id: $agency_id) {
-    stripe_account {
+    stripe_account(livemode: $livemode) {
       id
       payment_intents(
         created: $created
@@ -111,13 +113,14 @@ query AgencyStripeAccountPaymentIntents(
 
 query AgencyStripeAccountCustomers(
   $agency_id: ID!
+  $livemode: Boolean!
   $created: Date
   $starting_after_id: String
   $ending_before_id: String
   $limit: Int
 ) {
   agency(id: $agency_id) {
-    stripe_account {
+    stripe_account(livemode: $livemode) {
       id
       customers(
         created: $created
@@ -154,7 +157,7 @@ query CurrentUserAgencies {
         name
         agency {
           ...agency
-          stripe_account {
+          stripe_account(livemode: true) {
             ...stripe_account
           }
         }
@@ -183,36 +186,36 @@ query SubdomainPublic($subdomain_name: String!) {
   }
 }
 
-query AgencyServices($agency_id: ID!) {
+query AgencyProducts($agency_id: ID!) {
   agency(id: $agency_id) {
     id
-    services {
-      ...service
+    products {
+      ...product
     }
   }
 }
 
-query Service($service_id: ID!) {
-  service(id: $service_id) {
-    ...service
+query Product($product_id: ID!) {
+  product(id: $product_id) {
+    ...product
   }
 }
 
-query Services($filter: ServiceFilter!) {
-  services(filter: $filter) {
-    ...service
+query Products($filter: ProductFilter!) {
+  products(filter: $filter) {
+    ...product
   }
 }
 
 
-query ServiceAndAgencyFromUrlParts($subdomain_name: String!, $service_url_name: String!) {
+query ProductAndAgencyFromUrlParts($subdomain_name: String!, $product_url_name: String!) {
   subdomains(filter: { name: $subdomain_name }) {
     id
     name
     agency {
       id
-      services(filter: { url_name: $service_url_name }) {
-        ...service
+      products(filter: { url_name: $product_url_name }) {
+        ...product
         agency {
           ...agency
         }
@@ -227,19 +230,19 @@ query SubdomainAgency($subdomain_name: String!) {
     name
     agency {
       ...agency
-      services {
-        ...service
+      products {
+        ...product
       }
     }
   }
 }
 
-query SubdomainAgencyStripeAccountUpdateUrl($subdomain_name: String!) {
+query SubdomainAgencyStripeAccountUpdateUrl($subdomain_name: String!, $livemode: Boolean!) {
   subdomains(filter: { name: $subdomain_name }) {
     id
     name
     agency {
-      stripe_account {
+      stripe_account(livemode: $livemode) {
         account_update_url {
           url
         }
@@ -261,8 +264,8 @@ query AgencyThankYouPageSetting($agency_id: ID!) {
   }
 }
 
-query ServiceThankYouPageSetting($service_id: ID!) {
-  service(id: $service_id) {
+query ProductThankYouPageSetting($product_id: ID!) {
+  product(id: $product_id) {
     id
     settings {
       id
@@ -281,8 +284,8 @@ query AgencyPages($agency_id: ID!, $page_definition_id: ID) {
   }
 }
 
-query ServicePages($service_id: ID!, $page_definition_id: ID) {
-  pages(filter: { service_id: $service_id, page_definition_id: $page_definition_id }) {
+query ProductPages($product_id: ID!, $page_definition_id: ID) {
+  pages(filter: { product_id: $product_id, page_definition_id: $page_definition_id }) {
     ...page
   }
 }

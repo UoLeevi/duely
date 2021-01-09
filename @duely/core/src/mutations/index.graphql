@@ -96,7 +96,7 @@ mutation CreateAgency(
   }
 }
 
-mutation CreateService(
+mutation CreateProduct(
   $agency_id: ID!
   $name: String!
   $description: String!
@@ -106,7 +106,7 @@ mutation CreateService(
   $image_hero: ImageInput
   $status: String
 ) {
-  create_service(
+  create_product(
     agency_id: $agency_id
     name: $name
     description: $description
@@ -118,14 +118,14 @@ mutation CreateService(
   ) {
     success
     message
-    service {
-      ...service
+    product {
+      ...product
     }
   }
 }
 
-mutation UpdateService(
-  $service_id: ID!
+mutation UpdateProduct(
+  $product_id: ID!
   $name: String
   $description: String
   $url_name: String
@@ -135,8 +135,8 @@ mutation UpdateService(
   $image_hero: ImageInput
   $status: String
 ) {
-  update_service(
-    service_id: $service_id
+  update_product(
+    product_id: $product_id
     name: $name
     description: $description
     url_name: $url_name
@@ -148,24 +148,24 @@ mutation UpdateService(
   ) {
     success
     message
-    service {
-      ...service
+    product {
+      ...product
     }
   }
 }
 
-mutation DeleteService($service_id: ID!) {
-  delete_service(service_id: $service_id) {
+mutation DeleteProduct($product_id: ID!) {
+  delete_product(product_id: $product_id) {
     success
     message
-    service {
+    product {
       id
     }
   }
 }
 
 mutation CreatePrice(
-  $service_variant_id: ID!
+  $product_id: ID!
   $unit_amount: Int!
   $currency: String!
   $recurring_interval: String
@@ -173,7 +173,7 @@ mutation CreatePrice(
   $status: String
 ) {
   create_price(
-    service_variant_id: $service_variant_id
+    product_id: $product_id
     unit_amount: $unit_amount
     currency: $currency
     recurring_interval: $recurring_interval
@@ -221,8 +221,8 @@ mutation DeleteAgencyThankYouPageSetting($setting_id: ID!) {
   }
 }
 
-mutation CreateServiceThankYouPageSetting($service_id: ID!, $url: String!) {
-  create_service_thank_you_page_setting(service_id: $service_id, url: $url) {
+mutation CreateProductThankYouPageSetting($product_id: ID!, $url: String!) {
+  create_product_thank_you_page_setting(product_id: $product_id, url: $url) {
     success
     message
     setting {
@@ -232,8 +232,8 @@ mutation CreateServiceThankYouPageSetting($service_id: ID!, $url: String!) {
   }
 }
 
-mutation UpdateServiceThankYouPageSetting($setting_id: ID!, $url: String!) {
-  update_service_thank_you_page_setting(setting_id: $setting_id, url: $url) {
+mutation UpdateProductThankYouPageSetting($setting_id: ID!, $url: String!) {
+  update_product_thank_you_page_setting(setting_id: $setting_id, url: $url) {
     success
     message
     setting {
@@ -243,8 +243,8 @@ mutation UpdateServiceThankYouPageSetting($setting_id: ID!, $url: String!) {
   }
 }
 
-mutation DeleteServiceThankYouPageSetting($setting_id: ID!) {
-  delete_service_thank_you_page_setting(setting_id: $setting_id) {
+mutation DeleteProductThankYouPageSetting($setting_id: ID!) {
+  delete_product_thank_you_page_setting(setting_id: $setting_id) {
     success
     message
     setting {
@@ -264,8 +264,18 @@ mutation UpdatePage($page_id: ID!, $access: AccessLevel) {
   }
 }
 
-mutation CreatePageBlock($page_id: ID!, $page_block_definition_id: ID!, $data: Json!, $after_id: ID) {
-  create_page_block(page_id: $page_id, page_block_definition_id: $page_block_definition_id, data: $data, after_id: $after_id) {
+mutation CreatePageBlock(
+  $page_id: ID!
+  $page_block_definition_id: ID!
+  $data: Json!
+  $after_id: ID
+) {
+  create_page_block(
+    page_id: $page_id
+    page_block_definition_id: $page_block_definition_id
+    data: $data
+    after_id: $after_id
+  ) {
     success
     message
     page_block {

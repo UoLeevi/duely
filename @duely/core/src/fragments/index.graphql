@@ -247,9 +247,10 @@ fragment payment_intent on PaymentIntent {
   transfer_group
 }
 
-fragment service_variant on ServiceVariant {
+fragment product on Product {
   id
   name
+  url_name
   description
   duration
   status
@@ -268,20 +269,8 @@ fragment service_variant on ServiceVariant {
   markdown_description {
     ...markdown
   }
-}
-
-fragment service on Service {
-  id
-  name
-  url_name
   agency {
     id
-  }
-  default_variant {
-    ...service_variant
-  }
-  variants {
-    ...service_variant
   }
   settings {
     id
@@ -299,6 +288,28 @@ fragment membership on Membership {
     agency {
       id
     }
+  }
+}
+
+
+
+fragment transaction_fee on TransactionFee {
+  id
+  percentage
+  fixed_amount
+  currency
+  transaction_amount_upper_bound
+  data
+  subscription_plan {
+    id
+  }
+}
+
+fragment subscription_plan on SubscriptionPlan {
+  id
+  name
+  transaction_fees {
+    ...transaction_fee
   }
 }
 
@@ -359,7 +370,7 @@ fragment page on Page {
   agency {
     id
   }
-  service {
+  product {
     id
   }
   definition {

@@ -44,12 +44,14 @@ export declare type Query = {
     price?: Maybe<Price>;
     prices?: Maybe<Array<Price>>;
     stripe_account?: Maybe<StripeAccount>;
-    service?: Maybe<Service>;
-    services?: Maybe<Array<Service>>;
-    service_variant?: Maybe<ServiceVariant>;
-    service_variants?: Maybe<Array<ServiceVariant>>;
+    product?: Maybe<Product>;
+    products?: Maybe<Array<Product>>;
     subdomain?: Maybe<Subdomain>;
     subdomains?: Maybe<Array<Subdomain>>;
+    subscription_plan?: Maybe<SubscriptionPlan>;
+    subscription_plans?: Maybe<Array<SubscriptionPlan>>;
+    transaction_fee?: Maybe<TransactionFee>;
+    transaction_fees?: Maybe<Array<TransactionFee>>;
     image?: Maybe<Image>;
     images?: Maybe<Array<Image>>;
     markdown?: Maybe<Markdown>;
@@ -110,23 +112,29 @@ export declare type QueryPricesArgs = {
 export declare type QueryStripe_AccountArgs = {
     id: Scalars['ID'];
 };
-export declare type QueryServiceArgs = {
+export declare type QueryProductArgs = {
     id: Scalars['ID'];
 };
-export declare type QueryServicesArgs = {
-    filter: ServiceFilter;
-};
-export declare type QueryService_VariantArgs = {
-    id: Scalars['ID'];
-};
-export declare type QueryService_VariantsArgs = {
-    filter: ServiceVariantFilter;
+export declare type QueryProductsArgs = {
+    filter: ProductFilter;
 };
 export declare type QuerySubdomainArgs = {
     id: Scalars['ID'];
 };
 export declare type QuerySubdomainsArgs = {
     filter: SubdomainFilter;
+};
+export declare type QuerySubscription_PlanArgs = {
+    id: Scalars['ID'];
+};
+export declare type QuerySubscription_PlansArgs = {
+    filter: SubscriptionPlanFilter;
+};
+export declare type QueryTransaction_FeeArgs = {
+    id: Scalars['ID'];
+};
+export declare type QueryTransaction_FeesArgs = {
+    filter: TransactionFeeFilter;
 };
 export declare type QueryImageArgs = {
     id: Scalars['ID'];
@@ -175,15 +183,12 @@ export declare type Mutation = {
     update_price: PriceMutationResult;
     delete_price: PriceMutationResult;
     create_stripe_checkout_session: CreateStripeCheckoutSessionResult;
-    create_service: ServiceMutationResult;
-    update_service: ServiceMutationResult;
-    delete_service: ServiceMutationResult;
-    create_service_thank_you_page_setting: ServiceThankYouPageSettingMutationResult;
-    update_service_thank_you_page_setting: ServiceThankYouPageSettingMutationResult;
-    delete_service_thank_you_page_setting: ServiceThankYouPageSettingMutationResult;
-    create_service_variant: ServiceVariantMutationResult;
-    update_service_variant: ServiceVariantMutationResult;
-    delete_service_variant: ServiceVariantMutationResult;
+    create_product_thank_you_page_setting: ProductThankYouPageSettingMutationResult;
+    update_product_thank_you_page_setting: ProductThankYouPageSettingMutationResult;
+    delete_product_thank_you_page_setting: ProductThankYouPageSettingMutationResult;
+    create_product: ProductMutationResult;
+    update_product: ProductMutationResult;
+    delete_product: ProductMutationResult;
     create_image: ImageMutationResult;
     update_image: ImageMutationResult;
     create_markdown: MarkdownMutationResult;
@@ -251,7 +256,7 @@ export declare type MutationDelete_Agency_Thank_You_Page_SettingArgs = {
     setting_id: Scalars['ID'];
 };
 export declare type MutationCreate_PriceArgs = {
-    service_variant_id: Scalars['ID'];
+    product_id: Scalars['ID'];
     unit_amount: Scalars['Int'];
     currency: Scalars['String'];
     recurring_interval?: Maybe<Scalars['String']>;
@@ -267,10 +272,22 @@ export declare type MutationDelete_PriceArgs = {
 };
 export declare type MutationCreate_Stripe_Checkout_SessionArgs = {
     price_id: Scalars['ID'];
+    livemode: Scalars['Boolean'];
     success_url?: Maybe<Scalars['String']>;
     cancel_url?: Maybe<Scalars['String']>;
 };
-export declare type MutationCreate_ServiceArgs = {
+export declare type MutationCreate_Product_Thank_You_Page_SettingArgs = {
+    product_id: Scalars['ID'];
+    url: Scalars['String'];
+};
+export declare type MutationUpdate_Product_Thank_You_Page_SettingArgs = {
+    setting_id: Scalars['ID'];
+    url: Scalars['String'];
+};
+export declare type MutationDelete_Product_Thank_You_Page_SettingArgs = {
+    setting_id: Scalars['ID'];
+};
+export declare type MutationCreate_ProductArgs = {
     agency_id: Scalars['ID'];
     name: Scalars['String'];
     url_name: Scalars['String'];
@@ -280,53 +297,14 @@ export declare type MutationCreate_ServiceArgs = {
     image_logo?: Maybe<ImageInput>;
     image_logo_id?: Maybe<Scalars['ID']>;
     image_hero?: Maybe<ImageInput>;
-    image_hero_id?: Maybe<Scalars['ID']>;
     status?: Maybe<Scalars['String']>;
 };
-export declare type MutationUpdate_ServiceArgs = {
-    service_id: Scalars['ID'];
+export declare type MutationUpdate_ProductArgs = {
+    product_id: Scalars['ID'];
     name?: Maybe<Scalars['String']>;
     url_name?: Maybe<Scalars['String']>;
     description?: Maybe<Scalars['String']>;
     duration?: Maybe<Scalars['String']>;
-    markdown_description_id?: Maybe<Scalars['ID']>;
-    image_logo?: Maybe<ImageInput>;
-    image_logo_id?: Maybe<Scalars['ID']>;
-    image_hero?: Maybe<ImageInput>;
-    image_hero_id?: Maybe<Scalars['ID']>;
-    default_price_id?: Maybe<Scalars['ID']>;
-    status?: Maybe<Scalars['String']>;
-};
-export declare type MutationDelete_ServiceArgs = {
-    service_id: Scalars['ID'];
-};
-export declare type MutationCreate_Service_Thank_You_Page_SettingArgs = {
-    service_id: Scalars['ID'];
-    url: Scalars['String'];
-};
-export declare type MutationUpdate_Service_Thank_You_Page_SettingArgs = {
-    setting_id: Scalars['ID'];
-    url: Scalars['String'];
-};
-export declare type MutationDelete_Service_Thank_You_Page_SettingArgs = {
-    setting_id: Scalars['ID'];
-};
-export declare type MutationCreate_Service_VariantArgs = {
-    service_id: Scalars['ID'];
-    name: Scalars['String'];
-    description?: Maybe<Scalars['String']>;
-    duration?: Maybe<Scalars['String']>;
-    markdown_description_id?: Maybe<Scalars['ID']>;
-    image_logo?: Maybe<ImageInput>;
-    image_logo_id?: Maybe<Scalars['ID']>;
-    image_hero?: Maybe<ImageInput>;
-    status?: Maybe<Scalars['String']>;
-};
-export declare type MutationUpdate_Service_VariantArgs = {
-    service_variant_id: Scalars['ID'];
-    name?: Maybe<Scalars['String']>;
-    description?: Maybe<Scalars['String']>;
-    duration?: Maybe<Scalars['String']>;
     default_price_id?: Maybe<Scalars['ID']>;
     markdown_description_id?: Maybe<Scalars['ID']>;
     image_logo?: Maybe<ImageInput>;
@@ -334,8 +312,8 @@ export declare type MutationUpdate_Service_VariantArgs = {
     image_hero?: Maybe<ImageInput>;
     status?: Maybe<Scalars['String']>;
 };
-export declare type MutationDelete_Service_VariantArgs = {
-    service_variant_id: Scalars['ID'];
+export declare type MutationDelete_ProductArgs = {
+    product_id: Scalars['ID'];
 };
 export declare type MutationCreate_ImageArgs = {
     agency_id?: Maybe<Scalars['ID']>;
@@ -418,7 +396,7 @@ export declare type Page = {
     id: Scalars['ID'];
     url_path: Scalars['String'];
     agency: Agency;
-    service?: Maybe<Service>;
+    product?: Maybe<Product>;
     definition: PageDefinition;
     access: AccessLevel;
     blocks: Array<PageBlock>;
@@ -426,7 +404,7 @@ export declare type Page = {
 export declare type PageFilter = {
     url_path?: Maybe<Scalars['String']>;
     agency_id?: Maybe<Scalars['ID']>;
-    service_id?: Maybe<Scalars['ID']>;
+    product_id?: Maybe<Scalars['ID']>;
     page_definition_id?: Maybe<Scalars['ID']>;
 };
 export declare type PageMutationResult = MutationResult & {
@@ -619,12 +597,16 @@ export declare type Agency = Node & {
     stripe_account: StripeAccount;
     subdomain: Subdomain;
     theme: Theme;
-    services?: Maybe<Array<Service>>;
+    products?: Maybe<Array<Product>>;
     pages?: Maybe<Array<Page>>;
     settings: AgencySettings;
+    subscription_plan: SubscriptionPlan;
 };
-export declare type AgencyServicesArgs = {
-    filter?: Maybe<ServiceFilter>;
+export declare type AgencyStripe_AccountArgs = {
+    livemode: Scalars['Boolean'];
+};
+export declare type AgencyProductsArgs = {
+    filter?: Maybe<ProductFilter>;
 };
 export declare type AgencyPagesArgs = {
     filter?: Maybe<PageFilter>;
@@ -671,10 +653,10 @@ export declare type Price = Node & {
     currency: Scalars['String'];
     recurring_interval?: Maybe<Scalars['String']>;
     recurring_interval_count?: Maybe<Scalars['Int']>;
-    service_variant: ServiceVariant;
+    product: Product;
 };
 export declare type PriceFilter = {
-    service_variant_id?: Maybe<Scalars['ID']>;
+    product_id?: Maybe<Scalars['ID']>;
 };
 export declare type PriceMutationResult = MutationResult & {
     __typename?: 'PriceMutationResult';
@@ -692,6 +674,7 @@ export declare type StripeAccount = {
     __typename?: 'StripeAccount';
     id: Scalars['ID'];
     id_ext: Scalars['ID'];
+    livemode: Scalars['Boolean'];
     account_update_url: StripeAccountLink;
     balance: StripeBalance;
     balance_transactions: Array<BalanceTransaction>;
@@ -838,77 +821,55 @@ export declare type BalanceTransactionFeeDetails = {
     description?: Maybe<Scalars['String']>;
     type: Scalars['String'];
 };
-export declare type Service = Node & {
-    __typename?: 'Service';
+export declare type ProductSettings = {
+    __typename?: 'ProductSettings';
+    id: Scalars['ID'];
+    thank_you_page_setting?: Maybe<ProductThankYouPageSetting>;
+};
+export declare type ProductThankYouPageSetting = {
+    __typename?: 'ProductThankYouPageSetting';
+    id: Scalars['ID'];
+    url: Scalars['String'];
+};
+export declare type ProductThankYouPageSettingMutationResult = MutationResult & {
+    __typename?: 'ProductThankYouPageSettingMutationResult';
+    success: Scalars['Boolean'];
+    message?: Maybe<Scalars['String']>;
+    setting?: Maybe<ProductThankYouPageSetting>;
+};
+export declare type Product = Node & {
+    __typename?: 'Product';
     id: Scalars['ID'];
     name: Scalars['String'];
     url_name: Scalars['String'];
     status: Scalars['String'];
-    agency: Agency;
-    default_variant: ServiceVariant;
-    variants?: Maybe<Array<ServiceVariant>>;
-    pages?: Maybe<Array<Page>>;
-    settings: ServiceSettings;
-};
-export declare type ServiceVariantsArgs = {
-    filter?: Maybe<ServiceVariantFilter>;
-};
-export declare type ServicePagesArgs = {
-    filter?: Maybe<PageFilter>;
-};
-export declare type ServiceFilter = {
-    name?: Maybe<Scalars['String']>;
-    agency_id?: Maybe<Scalars['ID']>;
-    url_name?: Maybe<Scalars['String']>;
-};
-export declare type ServiceMutationResult = MutationResult & {
-    __typename?: 'ServiceMutationResult';
-    success: Scalars['Boolean'];
-    message?: Maybe<Scalars['String']>;
-    service?: Maybe<Service>;
-};
-export declare type ServiceSettings = {
-    __typename?: 'ServiceSettings';
-    id: Scalars['ID'];
-    thank_you_page_setting?: Maybe<ServiceThankYouPageSetting>;
-};
-export declare type ServiceThankYouPageSetting = {
-    __typename?: 'ServiceThankYouPageSetting';
-    id: Scalars['ID'];
-    url: Scalars['String'];
-};
-export declare type ServiceThankYouPageSettingMutationResult = MutationResult & {
-    __typename?: 'ServiceThankYouPageSettingMutationResult';
-    success: Scalars['Boolean'];
-    message?: Maybe<Scalars['String']>;
-    setting?: Maybe<ServiceThankYouPageSetting>;
-};
-export declare type ServiceVariant = Node & {
-    __typename?: 'ServiceVariant';
-    id: Scalars['ID'];
-    name: Scalars['String'];
-    status: Scalars['String'];
     description?: Maybe<Scalars['String']>;
     duration?: Maybe<Scalars['String']>;
     default_price?: Maybe<Price>;
-    service: Service;
+    agency: Agency;
     prices?: Maybe<Array<Price>>;
     image_logo?: Maybe<Image>;
     image_hero?: Maybe<Image>;
     markdown_description?: Maybe<Markdown>;
+    pages?: Maybe<Array<Page>>;
+    settings: ProductSettings;
 };
-export declare type ServiceVariantPricesArgs = {
+export declare type ProductPricesArgs = {
     filter?: Maybe<PriceFilter>;
 };
-export declare type ServiceVariantFilter = {
-    name?: Maybe<Scalars['String']>;
-    service_id?: Maybe<Scalars['ID']>;
+export declare type ProductPagesArgs = {
+    filter?: Maybe<PageFilter>;
 };
-export declare type ServiceVariantMutationResult = MutationResult & {
-    __typename?: 'ServiceVariantMutationResult';
+export declare type ProductFilter = {
+    name?: Maybe<Scalars['String']>;
+    agency_id?: Maybe<Scalars['ID']>;
+    url_name?: Maybe<Scalars['String']>;
+};
+export declare type ProductMutationResult = MutationResult & {
+    __typename?: 'ProductMutationResult';
     success: Scalars['Boolean'];
     message?: Maybe<Scalars['String']>;
-    service_variant?: Maybe<ServiceVariant>;
+    product?: Maybe<Product>;
 };
 export declare type Subdomain = Node & {
     __typename?: 'Subdomain';
@@ -922,6 +883,28 @@ export declare type SubdomainMembershipsArgs = {
 };
 export declare type SubdomainFilter = {
     name?: Maybe<Scalars['String']>;
+};
+export declare type SubscriptionPlan = {
+    __typename?: 'SubscriptionPlan';
+    id: Scalars['ID'];
+    name: Scalars['String'];
+    transaction_fees: Array<TransactionFee>;
+};
+export declare type SubscriptionPlanFilter = {
+    name?: Maybe<Scalars['String']>;
+};
+export declare type TransactionFee = {
+    __typename?: 'TransactionFee';
+    id: Scalars['ID'];
+    subscription_plan: SubscriptionPlan;
+    percentage: Scalars['Float'];
+    fixed_amount: Scalars['Int'];
+    currency: Scalars['String'];
+    transaction_amount_upper_bound: Scalars['Int'];
+    data: Scalars['Json'];
+};
+export declare type TransactionFeeFilter = {
+    subscription_plan_id?: Maybe<Scalars['ID']>;
 };
 export declare type Image = Node & {
     __typename?: 'Image';
@@ -1109,9 +1092,9 @@ export declare type Payment_IntentFragment = ({
         } & AddressFragment)>;
     })>;
 });
-export declare type Service_VariantFragment = ({
-    __typename?: 'ServiceVariant';
-} & Pick<ServiceVariant, 'id' | 'name' | 'description' | 'duration' | 'status'> & {
+export declare type ProductFragment = ({
+    __typename?: 'Product';
+} & Pick<Product, 'id' | 'name' | 'url_name' | 'description' | 'duration' | 'status'> & {
     default_price?: Maybe<({
         __typename?: 'Price';
     } & PriceFragment)>;
@@ -1127,22 +1110,12 @@ export declare type Service_VariantFragment = ({
     markdown_description?: Maybe<({
         __typename?: 'Markdown';
     } & MarkdownFragment)>;
-});
-export declare type ServiceFragment = ({
-    __typename?: 'Service';
-} & Pick<Service, 'id' | 'name' | 'url_name'> & {
     agency: ({
         __typename?: 'Agency';
     } & Pick<Agency, 'id'>);
-    default_variant: ({
-        __typename?: 'ServiceVariant';
-    } & Service_VariantFragment);
-    variants?: Maybe<Array<({
-        __typename?: 'ServiceVariant';
-    } & Service_VariantFragment)>>;
     settings: ({
-        __typename?: 'ServiceSettings';
-    } & Pick<ServiceSettings, 'id'>);
+        __typename?: 'ProductSettings';
+    } & Pick<ProductSettings, 'id'>);
 });
 export declare type MembershipFragment = ({
     __typename?: 'Membership';
@@ -1157,6 +1130,20 @@ export declare type MembershipFragment = ({
             __typename?: 'Agency';
         } & Pick<Agency, 'id'>);
     });
+});
+export declare type Transaction_FeeFragment = ({
+    __typename?: 'TransactionFee';
+} & Pick<TransactionFee, 'id' | 'percentage' | 'fixed_amount' | 'currency' | 'transaction_amount_upper_bound' | 'data'> & {
+    subscription_plan: ({
+        __typename?: 'SubscriptionPlan';
+    } & Pick<SubscriptionPlan, 'id'>);
+});
+export declare type Subscription_PlanFragment = ({
+    __typename?: 'SubscriptionPlan';
+} & Pick<SubscriptionPlan, 'id' | 'name'> & {
+    transaction_fees: Array<({
+        __typename?: 'TransactionFee';
+    } & Transaction_FeeFragment)>;
 });
 export declare type AgencyFragment = ({
     __typename?: 'Agency';
@@ -1203,9 +1190,9 @@ export declare type PageFragment = ({
     agency: ({
         __typename?: 'Agency';
     } & Pick<Agency, 'id'>);
-    service?: Maybe<({
-        __typename?: 'Service';
-    } & Pick<Service, 'id'>)>;
+    product?: Maybe<({
+        __typename?: 'Product';
+    } & Pick<Product, 'id'>)>;
     definition: ({
         __typename?: 'PageDefinition';
     } & Page_DefinitionFragment);
@@ -1331,7 +1318,7 @@ export declare type CreateAgencyMutation = ({
         })>;
     });
 });
-export declare type CreateServiceMutationVariables = Exact<{
+export declare type CreateProductMutationVariables = Exact<{
     agency_id: Scalars['ID'];
     name: Scalars['String'];
     description: Scalars['String'];
@@ -1341,19 +1328,19 @@ export declare type CreateServiceMutationVariables = Exact<{
     image_hero?: Maybe<ImageInput>;
     status?: Maybe<Scalars['String']>;
 }>;
-export declare type CreateServiceMutation = ({
+export declare type CreateProductMutation = ({
     __typename?: 'Mutation';
 } & {
-    create_service: ({
-        __typename?: 'ServiceMutationResult';
-    } & Pick<ServiceMutationResult, 'success' | 'message'> & {
-        service?: Maybe<({
-            __typename?: 'Service';
-        } & ServiceFragment)>;
+    create_product: ({
+        __typename?: 'ProductMutationResult';
+    } & Pick<ProductMutationResult, 'success' | 'message'> & {
+        product?: Maybe<({
+            __typename?: 'Product';
+        } & ProductFragment)>;
     });
 });
-export declare type UpdateServiceMutationVariables = Exact<{
-    service_id: Scalars['ID'];
+export declare type UpdateProductMutationVariables = Exact<{
+    product_id: Scalars['ID'];
     name?: Maybe<Scalars['String']>;
     description?: Maybe<Scalars['String']>;
     url_name?: Maybe<Scalars['String']>;
@@ -1363,33 +1350,33 @@ export declare type UpdateServiceMutationVariables = Exact<{
     image_hero?: Maybe<ImageInput>;
     status?: Maybe<Scalars['String']>;
 }>;
-export declare type UpdateServiceMutation = ({
+export declare type UpdateProductMutation = ({
     __typename?: 'Mutation';
 } & {
-    update_service: ({
-        __typename?: 'ServiceMutationResult';
-    } & Pick<ServiceMutationResult, 'success' | 'message'> & {
-        service?: Maybe<({
-            __typename?: 'Service';
-        } & ServiceFragment)>;
+    update_product: ({
+        __typename?: 'ProductMutationResult';
+    } & Pick<ProductMutationResult, 'success' | 'message'> & {
+        product?: Maybe<({
+            __typename?: 'Product';
+        } & ProductFragment)>;
     });
 });
-export declare type DeleteServiceMutationVariables = Exact<{
-    service_id: Scalars['ID'];
+export declare type DeleteProductMutationVariables = Exact<{
+    product_id: Scalars['ID'];
 }>;
-export declare type DeleteServiceMutation = ({
+export declare type DeleteProductMutation = ({
     __typename?: 'Mutation';
 } & {
-    delete_service: ({
-        __typename?: 'ServiceMutationResult';
-    } & Pick<ServiceMutationResult, 'success' | 'message'> & {
-        service?: Maybe<({
-            __typename?: 'Service';
-        } & Pick<Service, 'id'>)>;
+    delete_product: ({
+        __typename?: 'ProductMutationResult';
+    } & Pick<ProductMutationResult, 'success' | 'message'> & {
+        product?: Maybe<({
+            __typename?: 'Product';
+        } & Pick<Product, 'id'>)>;
     });
 });
 export declare type CreatePriceMutationVariables = Exact<{
-    service_variant_id: Scalars['ID'];
+    product_id: Scalars['ID'];
     unit_amount: Scalars['Int'];
     currency: Scalars['String'];
     recurring_interval?: Maybe<Scalars['String']>;
@@ -1451,48 +1438,48 @@ export declare type DeleteAgencyThankYouPageSettingMutation = ({
         } & Pick<AgencyThankYouPageSetting, 'id' | 'url'>)>;
     });
 });
-export declare type CreateServiceThankYouPageSettingMutationVariables = Exact<{
-    service_id: Scalars['ID'];
+export declare type CreateProductThankYouPageSettingMutationVariables = Exact<{
+    product_id: Scalars['ID'];
     url: Scalars['String'];
 }>;
-export declare type CreateServiceThankYouPageSettingMutation = ({
+export declare type CreateProductThankYouPageSettingMutation = ({
     __typename?: 'Mutation';
 } & {
-    create_service_thank_you_page_setting: ({
-        __typename?: 'ServiceThankYouPageSettingMutationResult';
-    } & Pick<ServiceThankYouPageSettingMutationResult, 'success' | 'message'> & {
+    create_product_thank_you_page_setting: ({
+        __typename?: 'ProductThankYouPageSettingMutationResult';
+    } & Pick<ProductThankYouPageSettingMutationResult, 'success' | 'message'> & {
         setting?: Maybe<({
-            __typename?: 'ServiceThankYouPageSetting';
-        } & Pick<ServiceThankYouPageSetting, 'id' | 'url'>)>;
+            __typename?: 'ProductThankYouPageSetting';
+        } & Pick<ProductThankYouPageSetting, 'id' | 'url'>)>;
     });
 });
-export declare type UpdateServiceThankYouPageSettingMutationVariables = Exact<{
+export declare type UpdateProductThankYouPageSettingMutationVariables = Exact<{
     setting_id: Scalars['ID'];
     url: Scalars['String'];
 }>;
-export declare type UpdateServiceThankYouPageSettingMutation = ({
+export declare type UpdateProductThankYouPageSettingMutation = ({
     __typename?: 'Mutation';
 } & {
-    update_service_thank_you_page_setting: ({
-        __typename?: 'ServiceThankYouPageSettingMutationResult';
-    } & Pick<ServiceThankYouPageSettingMutationResult, 'success' | 'message'> & {
+    update_product_thank_you_page_setting: ({
+        __typename?: 'ProductThankYouPageSettingMutationResult';
+    } & Pick<ProductThankYouPageSettingMutationResult, 'success' | 'message'> & {
         setting?: Maybe<({
-            __typename?: 'ServiceThankYouPageSetting';
-        } & Pick<ServiceThankYouPageSetting, 'id' | 'url'>)>;
+            __typename?: 'ProductThankYouPageSetting';
+        } & Pick<ProductThankYouPageSetting, 'id' | 'url'>)>;
     });
 });
-export declare type DeleteServiceThankYouPageSettingMutationVariables = Exact<{
+export declare type DeleteProductThankYouPageSettingMutationVariables = Exact<{
     setting_id: Scalars['ID'];
 }>;
-export declare type DeleteServiceThankYouPageSettingMutation = ({
+export declare type DeleteProductThankYouPageSettingMutation = ({
     __typename?: 'Mutation';
 } & {
-    delete_service_thank_you_page_setting: ({
-        __typename?: 'ServiceThankYouPageSettingMutationResult';
-    } & Pick<ServiceThankYouPageSettingMutationResult, 'success' | 'message'> & {
+    delete_product_thank_you_page_setting: ({
+        __typename?: 'ProductThankYouPageSettingMutationResult';
+    } & Pick<ProductThankYouPageSettingMutationResult, 'success' | 'message'> & {
         setting?: Maybe<({
-            __typename?: 'ServiceThankYouPageSetting';
-        } & Pick<ServiceThankYouPageSetting, 'id' | 'url'>)>;
+            __typename?: 'ProductThankYouPageSetting';
+        } & Pick<ProductThankYouPageSetting, 'id' | 'url'>)>;
     });
 });
 export declare type UpdatePageMutationVariables = Exact<{
@@ -1589,6 +1576,7 @@ export declare type ServicesAgreementQuery = ({
 });
 export declare type AgencyStripeAccountUpdateUrlQueryVariables = Exact<{
     agency_id: Scalars['ID'];
+    livemode: Scalars['Boolean'];
 }>;
 export declare type AgencyStripeAccountUpdateUrlQuery = ({
     __typename?: 'Query';
@@ -1607,6 +1595,7 @@ export declare type AgencyStripeAccountUpdateUrlQuery = ({
 });
 export declare type AgencyStripeAccountBalanceQueryVariables = Exact<{
     agency_id: Scalars['ID'];
+    livemode: Scalars['Boolean'];
 }>;
 export declare type AgencyStripeAccountBalanceQuery = ({
     __typename?: 'Query';
@@ -1647,6 +1636,7 @@ export declare type AgencyStripeAccountBalanceQuery = ({
 });
 export declare type AgencyStripeAccountBalanceTransactionsQueryVariables = Exact<{
     agency_id: Scalars['ID'];
+    livemode: Scalars['Boolean'];
     created?: Maybe<Scalars['Date']>;
     starting_after_id?: Maybe<Scalars['String']>;
     ending_before_id?: Maybe<Scalars['String']>;
@@ -1669,6 +1659,7 @@ export declare type AgencyStripeAccountBalanceTransactionsQuery = ({
 });
 export declare type AgencyStripeAccountPaymentIntentsQueryVariables = Exact<{
     agency_id: Scalars['ID'];
+    livemode: Scalars['Boolean'];
     created?: Maybe<Scalars['Date']>;
     starting_after_id?: Maybe<Scalars['String']>;
     ending_before_id?: Maybe<Scalars['String']>;
@@ -1691,6 +1682,7 @@ export declare type AgencyStripeAccountPaymentIntentsQuery = ({
 });
 export declare type AgencyStripeAccountCustomersQueryVariables = Exact<{
     agency_id: Scalars['ID'];
+    livemode: Scalars['Boolean'];
     created?: Maybe<Scalars['Date']>;
     starting_after_id?: Maybe<Scalars['String']>;
     ending_before_id?: Maybe<Scalars['String']>;
@@ -1781,45 +1773,45 @@ export declare type SubdomainPublicQuery = ({
         });
     })>>;
 });
-export declare type AgencyServicesQueryVariables = Exact<{
+export declare type AgencyProductsQueryVariables = Exact<{
     agency_id: Scalars['ID'];
 }>;
-export declare type AgencyServicesQuery = ({
+export declare type AgencyProductsQuery = ({
     __typename?: 'Query';
 } & {
     agency?: Maybe<({
         __typename?: 'Agency';
     } & Pick<Agency, 'id'> & {
-        services?: Maybe<Array<({
-            __typename?: 'Service';
-        } & ServiceFragment)>>;
+        products?: Maybe<Array<({
+            __typename?: 'Product';
+        } & ProductFragment)>>;
     })>;
 });
-export declare type ServiceQueryVariables = Exact<{
-    service_id: Scalars['ID'];
+export declare type ProductQueryVariables = Exact<{
+    product_id: Scalars['ID'];
 }>;
-export declare type ServiceQuery = ({
+export declare type ProductQuery = ({
     __typename?: 'Query';
 } & {
-    service?: Maybe<({
-        __typename?: 'Service';
-    } & ServiceFragment)>;
+    product?: Maybe<({
+        __typename?: 'Product';
+    } & ProductFragment)>;
 });
-export declare type ServicesQueryVariables = Exact<{
-    filter: ServiceFilter;
+export declare type ProductsQueryVariables = Exact<{
+    filter: ProductFilter;
 }>;
-export declare type ServicesQuery = ({
+export declare type ProductsQuery = ({
     __typename?: 'Query';
 } & {
-    services?: Maybe<Array<({
-        __typename?: 'Service';
-    } & ServiceFragment)>>;
+    products?: Maybe<Array<({
+        __typename?: 'Product';
+    } & ProductFragment)>>;
 });
-export declare type ServiceAndAgencyFromUrlPartsQueryVariables = Exact<{
+export declare type ProductAndAgencyFromUrlPartsQueryVariables = Exact<{
     subdomain_name: Scalars['String'];
-    service_url_name: Scalars['String'];
+    product_url_name: Scalars['String'];
 }>;
-export declare type ServiceAndAgencyFromUrlPartsQuery = ({
+export declare type ProductAndAgencyFromUrlPartsQuery = ({
     __typename?: 'Query';
 } & {
     subdomains?: Maybe<Array<({
@@ -1828,13 +1820,13 @@ export declare type ServiceAndAgencyFromUrlPartsQuery = ({
         agency: ({
             __typename?: 'Agency';
         } & Pick<Agency, 'id'> & {
-            services?: Maybe<Array<({
-                __typename?: 'Service';
+            products?: Maybe<Array<({
+                __typename?: 'Product';
             } & {
                 agency: ({
                     __typename?: 'Agency';
                 } & AgencyFragment);
-            } & ServiceFragment)>>;
+            } & ProductFragment)>>;
         });
     })>>;
 });
@@ -1850,14 +1842,15 @@ export declare type SubdomainAgencyQuery = ({
         agency: ({
             __typename?: 'Agency';
         } & {
-            services?: Maybe<Array<({
-                __typename?: 'Service';
-            } & ServiceFragment)>>;
+            products?: Maybe<Array<({
+                __typename?: 'Product';
+            } & ProductFragment)>>;
         } & AgencyFragment);
     })>>;
 });
 export declare type SubdomainAgencyStripeAccountUpdateUrlQueryVariables = Exact<{
     subdomain_name: Scalars['String'];
+    livemode: Scalars['Boolean'];
 }>;
 export declare type SubdomainAgencyStripeAccountUpdateUrlQuery = ({
     __typename?: 'Query';
@@ -1896,21 +1889,21 @@ export declare type AgencyThankYouPageSettingQuery = ({
         });
     })>;
 });
-export declare type ServiceThankYouPageSettingQueryVariables = Exact<{
-    service_id: Scalars['ID'];
+export declare type ProductThankYouPageSettingQueryVariables = Exact<{
+    product_id: Scalars['ID'];
 }>;
-export declare type ServiceThankYouPageSettingQuery = ({
+export declare type ProductThankYouPageSettingQuery = ({
     __typename?: 'Query';
 } & {
-    service?: Maybe<({
-        __typename?: 'Service';
-    } & Pick<Service, 'id'> & {
+    product?: Maybe<({
+        __typename?: 'Product';
+    } & Pick<Product, 'id'> & {
         settings: ({
-            __typename?: 'ServiceSettings';
-        } & Pick<ServiceSettings, 'id'> & {
+            __typename?: 'ProductSettings';
+        } & Pick<ProductSettings, 'id'> & {
             thank_you_page_setting?: Maybe<({
-                __typename?: 'ServiceThankYouPageSetting';
-            } & Pick<ServiceThankYouPageSetting, 'id' | 'url'>)>;
+                __typename?: 'ProductThankYouPageSetting';
+            } & Pick<ProductThankYouPageSetting, 'id' | 'url'>)>;
         });
     })>;
 });
@@ -1925,11 +1918,11 @@ export declare type AgencyPagesQuery = ({
         __typename?: 'Page';
     } & PageFragment)>>;
 });
-export declare type ServicePagesQueryVariables = Exact<{
-    service_id: Scalars['ID'];
+export declare type ProductPagesQueryVariables = Exact<{
+    product_id: Scalars['ID'];
     page_definition_id?: Maybe<Scalars['ID']>;
 }>;
-export declare type ServicePagesQuery = ({
+export declare type ProductPagesQuery = ({
     __typename?: 'Query';
 } & {
     pages?: Maybe<Array<({
@@ -2025,8 +2018,9 @@ export declare const Payment_IntentFragmentDoc: DocumentNode<Payment_IntentFragm
 export declare const PriceFragmentDoc: DocumentNode<PriceFragment, unknown>;
 export declare const ImageFragmentDoc: DocumentNode<ImageFragment, unknown>;
 export declare const MarkdownFragmentDoc: DocumentNode<MarkdownFragment, unknown>;
-export declare const Service_VariantFragmentDoc: DocumentNode<Service_VariantFragment, unknown>;
-export declare const ServiceFragmentDoc: DocumentNode<ServiceFragment, unknown>;
+export declare const ProductFragmentDoc: DocumentNode<ProductFragment, unknown>;
+export declare const Transaction_FeeFragmentDoc: DocumentNode<Transaction_FeeFragment, unknown>;
+export declare const Subscription_PlanFragmentDoc: DocumentNode<Subscription_PlanFragment, unknown>;
 export declare const ThemeFragmentDoc: DocumentNode<ThemeFragment, unknown>;
 export declare const AgencyFragmentDoc: DocumentNode<AgencyFragment, unknown>;
 export declare const UserFragmentDoc: DocumentNode<UserFragment, unknown>;
@@ -2046,16 +2040,16 @@ export declare const VerifySignUpDocument: DocumentNode<VerifySignUpMutation, Ve
 export declare const StartPasswordResetDocument: DocumentNode<StartPasswordResetMutation, StartPasswordResetMutationVariables>;
 export declare const StartSignUpDocument: DocumentNode<StartSignUpMutation, StartSignUpMutationVariables>;
 export declare const CreateAgencyDocument: DocumentNode<CreateAgencyMutation, CreateAgencyMutationVariables>;
-export declare const CreateServiceDocument: DocumentNode<CreateServiceMutation, CreateServiceMutationVariables>;
-export declare const UpdateServiceDocument: DocumentNode<UpdateServiceMutation, UpdateServiceMutationVariables>;
-export declare const DeleteServiceDocument: DocumentNode<DeleteServiceMutation, DeleteServiceMutationVariables>;
+export declare const CreateProductDocument: DocumentNode<CreateProductMutation, CreateProductMutationVariables>;
+export declare const UpdateProductDocument: DocumentNode<UpdateProductMutation, UpdateProductMutationVariables>;
+export declare const DeleteProductDocument: DocumentNode<DeleteProductMutation, DeleteProductMutationVariables>;
 export declare const CreatePriceDocument: DocumentNode<CreatePriceMutation, CreatePriceMutationVariables>;
 export declare const CreateAgencyThankYouPageSettingDocument: DocumentNode<CreateAgencyThankYouPageSettingMutation, CreateAgencyThankYouPageSettingMutationVariables>;
 export declare const UpdateAgencyThankYouPageSettingDocument: DocumentNode<UpdateAgencyThankYouPageSettingMutation, UpdateAgencyThankYouPageSettingMutationVariables>;
 export declare const DeleteAgencyThankYouPageSettingDocument: DocumentNode<DeleteAgencyThankYouPageSettingMutation, DeleteAgencyThankYouPageSettingMutationVariables>;
-export declare const CreateServiceThankYouPageSettingDocument: DocumentNode<CreateServiceThankYouPageSettingMutation, CreateServiceThankYouPageSettingMutationVariables>;
-export declare const UpdateServiceThankYouPageSettingDocument: DocumentNode<UpdateServiceThankYouPageSettingMutation, UpdateServiceThankYouPageSettingMutationVariables>;
-export declare const DeleteServiceThankYouPageSettingDocument: DocumentNode<DeleteServiceThankYouPageSettingMutation, DeleteServiceThankYouPageSettingMutationVariables>;
+export declare const CreateProductThankYouPageSettingDocument: DocumentNode<CreateProductThankYouPageSettingMutation, CreateProductThankYouPageSettingMutationVariables>;
+export declare const UpdateProductThankYouPageSettingDocument: DocumentNode<UpdateProductThankYouPageSettingMutation, UpdateProductThankYouPageSettingMutationVariables>;
+export declare const DeleteProductThankYouPageSettingDocument: DocumentNode<DeleteProductThankYouPageSettingMutation, DeleteProductThankYouPageSettingMutationVariables>;
 export declare const UpdatePageDocument: DocumentNode<UpdatePageMutation, UpdatePageMutationVariables>;
 export declare const CreatePageBlockDocument: DocumentNode<CreatePageBlockMutation, CreatePageBlockMutationVariables>;
 export declare const UpdatePageBlockDocument: DocumentNode<UpdatePageBlockMutation, UpdatePageBlockMutationVariables>;
@@ -2072,16 +2066,16 @@ export declare const AgencyDocument: DocumentNode<AgencyQuery, AgencyQueryVariab
 export declare const AgenciesDocument: DocumentNode<AgenciesQuery, AgenciesQueryVariables>;
 export declare const CurrentUserAgenciesDocument: DocumentNode<CurrentUserAgenciesQuery, CurrentUserAgenciesQueryVariables>;
 export declare const SubdomainPublicDocument: DocumentNode<SubdomainPublicQuery, SubdomainPublicQueryVariables>;
-export declare const AgencyServicesDocument: DocumentNode<AgencyServicesQuery, AgencyServicesQueryVariables>;
-export declare const ServiceDocument: DocumentNode<ServiceQuery, ServiceQueryVariables>;
-export declare const ServicesDocument: DocumentNode<ServicesQuery, ServicesQueryVariables>;
-export declare const ServiceAndAgencyFromUrlPartsDocument: DocumentNode<ServiceAndAgencyFromUrlPartsQuery, ServiceAndAgencyFromUrlPartsQueryVariables>;
+export declare const AgencyProductsDocument: DocumentNode<AgencyProductsQuery, AgencyProductsQueryVariables>;
+export declare const ProductDocument: DocumentNode<ProductQuery, ProductQueryVariables>;
+export declare const ProductsDocument: DocumentNode<ProductsQuery, ProductsQueryVariables>;
+export declare const ProductAndAgencyFromUrlPartsDocument: DocumentNode<ProductAndAgencyFromUrlPartsQuery, ProductAndAgencyFromUrlPartsQueryVariables>;
 export declare const SubdomainAgencyDocument: DocumentNode<SubdomainAgencyQuery, SubdomainAgencyQueryVariables>;
 export declare const SubdomainAgencyStripeAccountUpdateUrlDocument: DocumentNode<SubdomainAgencyStripeAccountUpdateUrlQuery, SubdomainAgencyStripeAccountUpdateUrlQueryVariables>;
 export declare const AgencyThankYouPageSettingDocument: DocumentNode<AgencyThankYouPageSettingQuery, AgencyThankYouPageSettingQueryVariables>;
-export declare const ServiceThankYouPageSettingDocument: DocumentNode<ServiceThankYouPageSettingQuery, ServiceThankYouPageSettingQueryVariables>;
+export declare const ProductThankYouPageSettingDocument: DocumentNode<ProductThankYouPageSettingQuery, ProductThankYouPageSettingQueryVariables>;
 export declare const AgencyPagesDocument: DocumentNode<AgencyPagesQuery, AgencyPagesQueryVariables>;
-export declare const ServicePagesDocument: DocumentNode<ServicePagesQuery, ServicePagesQueryVariables>;
+export declare const ProductPagesDocument: DocumentNode<ProductPagesQuery, ProductPagesQueryVariables>;
 export declare const PageDocument: DocumentNode<PageQuery, PageQueryVariables>;
 export declare const PageByUrlDocument: DocumentNode<PageByUrlQuery, PageByUrlQueryVariables>;
 export declare const PageBlockDocument: DocumentNode<PageBlockQuery, PageBlockQueryVariables>;
