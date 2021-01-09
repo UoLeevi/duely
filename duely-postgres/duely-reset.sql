@@ -5,10 +5,14 @@
 \set QUIET true
 \set ON_ERROR_STOP true
 
-DO 
-LANGUAGE plpgsql
-$_RESET_$
+CREATE FUNCTION pg_temp.start_reset_(_service_account_password text) RETURNS void
+    LANGUAGE plpgsql
+    AS $_RESET_$
 BEGIN
+
+  IF _service_account_password IS NULL OR _service_account_password = '' THEN
+    RAISE EXCEPTION 'Service account password was not provided';
+  END IF;
 
   IF NOT EXISTS (
     SELECT 1
@@ -35,8 +39,15 @@ BEGIN
 
   END IF;
 
+EXCEPTION WHEN OTHERS THEN
+
+  RAISE NOTICE 'DATABASE RESET FAILED';
+  RAISE;
+
 END;
 $_RESET_$;
+
+SELECT pg_temp.start_reset_(:service_account_password);
 
 DROP DATABASE IF EXISTS duely;
 CREATE DATABASE duely;

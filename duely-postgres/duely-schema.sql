@@ -595,7 +595,7 @@ BEGIN
 
   EXECUTE '
     DROP TRIGGER tr_after_insert_resource_insert_ ON ' || _table || ';
-    DROP TRIGGER tr_after_insert_resource_insert_ ON ' || _table || ';
+    DROP TRIGGER tr_after_update_resource_update_ ON ' || _table || ';
     DROP TRIGGER tr_after_delete_resource_delete_ ON ' || _table || ';
   ';
 END
@@ -1465,6 +1465,28 @@ $$;
 ALTER FUNCTION internal_.resource_update_sign_up_() OWNER TO postgres;
 
 --
+-- Name: set_subscription_plan_to_basic_plan_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.set_subscription_plan_to_basic_plan_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _subscription_plan_uuid uuid;
+BEGIN
+  SELECT uuid_ INTO _subscription_plan_uuid
+  FROM internal_.subscription_plan_
+  WHERE name_ = 'Basic plan';
+
+  NEW.subscription_plan_uuid_ := _subscription_plan_uuid;
+  RETURN NEW;
+END
+$$;
+
+
+ALTER FUNCTION internal_.set_subscription_plan_to_basic_plan_() OWNER TO postgres;
+
+--
 -- Name: setup_auditing_(regclass); Type: PROCEDURE; Schema: internal_; Owner: postgres
 --
 
@@ -2096,6 +2118,7 @@ CREATE TABLE application_.agency_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     subdomain_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
+    subscription_plan_uuid_ uuid NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -3868,6 +3891,25 @@ $$;
 ALTER FUNCTION operation_.update_resource_(_id text, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: agent_can_query_agency_subscription_plan_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.agent_can_query_agency_subscription_plan_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
+    RETURN '{uuid_, subscription_plan_uuid_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.agent_can_query_agency_subscription_plan_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: agent_can_query_agency_thank_you_page_setting_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4242,6 +4284,25 @@ $$;
 
 
 ALTER FUNCTION policy_.anyone_can_query_subdomain_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: anyone_can_query_subscription_plan_basic_fields_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_query_subscription_plan_basic_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, name_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_query_subscription_plan_basic_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: anyone_can_query_theme_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5245,15 +5306,15 @@ $$;
 ALTER FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
--- Name: serviceaccount_can_query_agency_price_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+-- Name: serviceaccount_can_query_agency_subscription_plan_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
-CREATE FUNCTION policy_.serviceaccount_can_query_agency_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+CREATE FUNCTION policy_.serviceaccount_can_query_agency_subscription_plan_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, name_, stripe_id_ext_, livemode_, data_}'::text[];
+    RETURN '{uuid_, subscription_plan_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5261,26 +5322,7 @@ END
 $$;
 
 
-ALTER FUNCTION policy_.serviceaccount_can_query_agency_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
-
---
--- Name: serviceaccount_can_query_agency_subscription_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
---
-
-CREATE FUNCTION policy_.serviceaccount_can_query_agency_subscription_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, name_, stripe_id_ext_, livemode_, data_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-
-ALTER FUNCTION policy_.serviceaccount_can_query_agency_subscription_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+ALTER FUNCTION policy_.serviceaccount_can_query_agency_subscription_plan_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: serviceaccount_can_query_agency_thank_you_page_setting_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5359,6 +5401,25 @@ $$;
 ALTER FUNCTION policy_.serviceaccount_can_query_stripe_account_for_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: serviceaccount_can_query_subscription_plan_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_query_subscription_plan_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_query_subscription_plan_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: serviceaccount_can_query_transaction_fee_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -5367,7 +5428,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_transaction_fee_(_resource_defi
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, agency_subscription_uuid_, numerator_, denominator_, fixed_amout_, currency_, transaction_amount_upper_bound_, data_}'::text[];
+    RETURN '{uuid_, subscription_plan_uuid_, numerator_, denominator_, fixed_amout_, currency_, transaction_amount_upper_bound_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -6546,6 +6607,7 @@ CREATE TABLE application__audit_.agency_ (
     uuid_ uuid,
     subdomain_uuid_ uuid,
     name_ text,
+    subscription_plan_uuid_ uuid,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -6903,40 +6965,6 @@ CREATE TABLE application__audit_.user_notification_setting_ (
 ALTER TABLE application__audit_.user_notification_setting_ OWNER TO postgres;
 
 --
--- Name: agency_price_; Type: TABLE; Schema: internal_; Owner: postgres
---
-
-CREATE TABLE internal_.agency_price_ (
-    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
-    name_ text NOT NULL,
-    stripe_id_ext_ text NOT NULL,
-    livemode_ boolean NOT NULL,
-    data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE internal_.agency_price_ OWNER TO postgres;
-
---
--- Name: agency_subscription_; Type: TABLE; Schema: internal_; Owner: postgres
---
-
-CREATE TABLE internal_.agency_subscription_ (
-    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
-    name_ text NOT NULL,
-    stripe_id_ext_ text NOT NULL,
-    livemode_ boolean NOT NULL,
-    data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
-    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
-);
-
-
-ALTER TABLE internal_.agency_subscription_ OWNER TO postgres;
-
---
 -- Name: form_; Type: TABLE; Schema: internal_; Owner: postgres
 --
 
@@ -7001,12 +7029,29 @@ CREATE TABLE internal_.page_definition_ (
 ALTER TABLE internal_.page_definition_ OWNER TO postgres;
 
 --
+-- Name: subscription_plan_; Type: TABLE; Schema: internal_; Owner: postgres
+--
+
+CREATE TABLE internal_.subscription_plan_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    name_ text NOT NULL,
+    stripe_prod_id_ext_live_ text,
+    stripe_prod_id_ext_test_ text,
+    data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE internal_.subscription_plan_ OWNER TO postgres;
+
+--
 -- Name: transaction_fee_; Type: TABLE; Schema: internal_; Owner: postgres
 --
 
 CREATE TABLE internal_.transaction_fee_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
-    agency_subscription_uuid_ uuid NOT NULL,
+    subscription_plan_uuid_ uuid NOT NULL,
     numerator_ integer DEFAULT 0 NOT NULL,
     denominator_ integer DEFAULT 10000 NOT NULL,
     fixed_amout_ integer DEFAULT 0 NOT NULL,
@@ -7019,42 +7064,6 @@ CREATE TABLE internal_.transaction_fee_ (
 
 
 ALTER TABLE internal_.transaction_fee_ OWNER TO postgres;
-
---
--- Name: agency_price_; Type: TABLE; Schema: internal__audit_; Owner: postgres
---
-
-CREATE TABLE internal__audit_.agency_price_ (
-    uuid_ uuid,
-    name_ text,
-    stripe_id_ext_ text,
-    livemode_ boolean,
-    data_ jsonb,
-    audit_at_ timestamp with time zone,
-    audit_session_uuid_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE internal__audit_.agency_price_ OWNER TO postgres;
-
---
--- Name: agency_subscription_; Type: TABLE; Schema: internal__audit_; Owner: postgres
---
-
-CREATE TABLE internal__audit_.agency_subscription_ (
-    uuid_ uuid,
-    name_ text,
-    stripe_id_ext_ text,
-    livemode_ boolean,
-    data_ jsonb,
-    audit_at_ timestamp with time zone,
-    audit_session_uuid_ uuid,
-    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
-);
-
-
-ALTER TABLE internal__audit_.agency_subscription_ OWNER TO postgres;
 
 --
 -- Name: form_; Type: TABLE; Schema: internal__audit_; Owner: postgres
@@ -7125,12 +7134,30 @@ CREATE TABLE internal__audit_.page_definition_ (
 ALTER TABLE internal__audit_.page_definition_ OWNER TO postgres;
 
 --
+-- Name: subscription_plan_; Type: TABLE; Schema: internal__audit_; Owner: postgres
+--
+
+CREATE TABLE internal__audit_.subscription_plan_ (
+    uuid_ uuid,
+    name_ text,
+    stripe_prod_id_ext_live_ text,
+    stripe_prod_id_ext_test_ text,
+    data_ jsonb,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE internal__audit_.subscription_plan_ OWNER TO postgres;
+
+--
 -- Name: transaction_fee_; Type: TABLE; Schema: internal__audit_; Owner: postgres
 --
 
 CREATE TABLE internal__audit_.transaction_fee_ (
     uuid_ uuid,
-    agency_subscription_uuid_ uuid,
+    subscription_plan_uuid_ uuid,
     numerator_ integer,
     denominator_ integer,
     fixed_amout_ integer,
@@ -7540,24 +7567,6 @@ ALTER TABLE ONLY application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT gen_random
 
 
 --
--- Data for Name: agency_price_; Type: TABLE DATA; Schema: internal_; Owner: postgres
---
-
-COPY internal_.agency_price_ (uuid_, name_, stripe_id_ext_, livemode_, data_, audit_at_, audit_session_uuid_) FROM stdin;
-9c491e2e-306c-4b24-a1bb-cb97fee062f6	Basic plan small payout fee	price_1I6diAJ63WXDoaGF7SJ5pRSH	f	{"threshold": 30000}	2021-01-08 16:01:47.135695+00	00000000-0000-0000-0000-000000000000
-\.
-
-
---
--- Data for Name: agency_subscription_; Type: TABLE DATA; Schema: internal_; Owner: postgres
---
-
-COPY internal_.agency_subscription_ (uuid_, name_, stripe_id_ext_, livemode_, data_, audit_at_, audit_session_uuid_) FROM stdin;
-78398031-4e95-4cca-a960-03c6f8029002	Basic plan	prod_Ii3pSbiBAIHaY3	f	{}	2021-01-08 16:01:47.135695+00	00000000-0000-0000-0000-000000000000
-\.
-
-
---
 -- Data for Name: form_; Type: TABLE DATA; Schema: internal_; Owner: postgres
 --
 
@@ -7598,32 +7607,21 @@ e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	{}	/services/:service_url_name	2021
 
 
 --
+-- Data for Name: subscription_plan_; Type: TABLE DATA; Schema: internal_; Owner: postgres
+--
+
+COPY internal_.subscription_plan_ (uuid_, name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, data_, audit_at_, audit_session_uuid_) FROM stdin;
+d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	Basic plan	\N	\N	{}	2021-01-09 09:00:57.943771+00	00000000-0000-0000-0000-000000000000
+\.
+
+
+--
 -- Data for Name: transaction_fee_; Type: TABLE DATA; Schema: internal_; Owner: postgres
 --
 
-COPY internal_.transaction_fee_ (uuid_, agency_subscription_uuid_, numerator_, denominator_, fixed_amout_, currency_, transaction_amount_upper_bound_, data_, audit_at_, audit_session_uuid_) FROM stdin;
-c7d70fbf-7dc0-4e8d-ac2f-6b78857b11f3	78398031-4e95-4cca-a960-03c6f8029002	100	10000	100	eur	10000	{}	2021-01-09 07:30:24.768181+00	00000000-0000-0000-0000-000000000000
-8ed3e8f3-befb-4528-bd56-310fdc2352c3	78398031-4e95-4cca-a960-03c6f8029002	100	10000	0	eur	\N	{}	2021-01-09 07:30:24.768181+00	00000000-0000-0000-0000-000000000000
-\.
-
-
---
--- Data for Name: agency_price_; Type: TABLE DATA; Schema: internal__audit_; Owner: postgres
---
-
-COPY internal__audit_.agency_price_ (uuid_, name_, stripe_id_ext_, livemode_, data_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
-9c491e2e-306c-4b24-a1bb-cb97fee062f6	Free plan small payout fee	price_1I6diAJ63WXDoaGF7SJ5pRSH	f	{"threshold": 30000}	2021-01-06 15:42:45.821603+00	00000000-0000-0000-0000-000000000000	I
-9c491e2e-306c-4b24-a1bb-cb97fee062f6	Basic plan small payout fee	price_1I6diAJ63WXDoaGF7SJ5pRSH	f	{"threshold": 30000}	2021-01-08 16:01:47.135695+00	00000000-0000-0000-0000-000000000000	U
-\.
-
-
---
--- Data for Name: agency_subscription_; Type: TABLE DATA; Schema: internal__audit_; Owner: postgres
---
-
-COPY internal__audit_.agency_subscription_ (uuid_, name_, stripe_id_ext_, livemode_, data_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
-78398031-4e95-4cca-a960-03c6f8029002	Free plan	prod_Ii3pSbiBAIHaY3	f	{}	2021-01-06 15:58:32.029648+00	00000000-0000-0000-0000-000000000000	I
-78398031-4e95-4cca-a960-03c6f8029002	Basic plan	prod_Ii3pSbiBAIHaY3	f	{}	2021-01-08 16:01:47.135695+00	00000000-0000-0000-0000-000000000000	U
+COPY internal_.transaction_fee_ (uuid_, subscription_plan_uuid_, numerator_, denominator_, fixed_amout_, currency_, transaction_amount_upper_bound_, data_, audit_at_, audit_session_uuid_) FROM stdin;
+76a44284-0f69-4fca-bf3d-f3c79252efbd	d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	100	10000	100	eur	10000	{}	2021-01-09 09:00:57.943771+00	00000000-0000-0000-0000-000000000000
+623002cf-076b-447d-b393-d296bf3459dc	d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	100	10000	0	eur	\N	{}	2021-01-09 09:00:57.943771+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7669,12 +7667,21 @@ e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	{}	/services/:service_url_name	2021
 
 
 --
+-- Data for Name: subscription_plan_; Type: TABLE DATA; Schema: internal__audit_; Owner: postgres
+--
+
+COPY internal__audit_.subscription_plan_ (uuid_, name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, data_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	Basic plan	\N	\N	{}	2021-01-09 09:00:57.943771+00	00000000-0000-0000-0000-000000000000	I
+\.
+
+
+--
 -- Data for Name: transaction_fee_; Type: TABLE DATA; Schema: internal__audit_; Owner: postgres
 --
 
-COPY internal__audit_.transaction_fee_ (uuid_, agency_subscription_uuid_, numerator_, denominator_, fixed_amout_, currency_, transaction_amount_upper_bound_, data_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
-c7d70fbf-7dc0-4e8d-ac2f-6b78857b11f3	78398031-4e95-4cca-a960-03c6f8029002	100	10000	100	eur	10000	{}	2021-01-09 07:30:24.768181+00	00000000-0000-0000-0000-000000000000	I
-8ed3e8f3-befb-4528-bd56-310fdc2352c3	78398031-4e95-4cca-a960-03c6f8029002	100	10000	0	eur	\N	{}	2021-01-09 07:30:24.768181+00	00000000-0000-0000-0000-000000000000	I
+COPY internal__audit_.transaction_fee_ (uuid_, subscription_plan_uuid_, numerator_, denominator_, fixed_amout_, currency_, transaction_amount_upper_bound_, data_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+76a44284-0f69-4fca-bf3d-f3c79252efbd	d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	100	10000	100	eur	10000	{}	2021-01-09 09:00:57.943771+00	00000000-0000-0000-0000-000000000000	I
+623002cf-076b-447d-b393-d296bf3459dc	d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	100	10000	0	eur	\N	{}	2021-01-09 09:00:57.943771+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -7750,7 +7757,6 @@ COPY security_.password_reset_ (uuid_, user_uuid_, data_, started_at_, expires_a
 COPY security_.policy_ (uuid_, resource_definition_uuid_, function_, operation_type_, after_uuid_) FROM stdin;
 4834193b-9666-4dbe-89d7-980fd4bab17a	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_create_subdomain_(security_.resource_definition_,jsonb)	create	\N
 5285f600-fb00-4861-8485-7b198c5a90c6	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_create_agency_(security_.resource_definition_,jsonb)	create	\N
-1eea3d78-a0e3-48b1-86b0-b09249dab127	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.anyone_can_query_basic_agency_fields_(security_.resource_definition_,application_.resource_)	query	\N
 e84918a7-9e8e-4522-b400-4d258d8e1346	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 cdc2d6a0-b00e-4763-bad3-d2b43bf0c3c0	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 72066618-a466-4b71-965f-891edcb33c6f	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
@@ -7832,9 +7838,12 @@ cacf6b3b-c992-4f31-bcb4-43f3d157249d	c042e657-0005-42a1-b3c2-6ee25d62fb33	policy
 15cc0e4e-c216-4410-b1ea-bd6a550353ca	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.can_query_page_block_based_on_page_access_level_(security_.resource_definition_,application_.resource_)	query	\N
 2859ef7b-837f-4b6d-97ff-0e10c3d9acc1	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.owner_can_change_page_block_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 d0c11115-cef1-41c8-a9ca-5b57b0fa6dd3	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.owner_can_create_page_block_(security_.resource_definition_,jsonb)	create	\N
-f01f0e1c-6449-4dcd-b622-9b8eae178019	3ad07e0d-69ed-478d-ac8f-04f64043dce9	policy_.serviceaccount_can_query_agency_price_(security_.resource_definition_,application_.resource_)	query	\N
-4373c3c9-4bef-4cd8-87e0-f9db0fd090d3	09788539-be6e-4804-847c-6d0022912ac8	policy_.serviceaccount_can_query_agency_subscription_(security_.resource_definition_,application_.resource_)	query	\N
-82f5f30b-ff6f-41cc-ac80-107824fb1c5a	e8737139-3358-4046-9d51-34d9337a0de3	policy_.serviceaccount_can_query_transaction_fee_(security_.resource_definition_,application_.resource_)	query	\N
+e4afc5be-e025-4485-9591-094891ede563	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	policy_.anyone_can_query_subscription_plan_basic_fields_(security_.resource_definition_,application_.resource_)	query	\N
+2ed2bb80-6df7-477c-bb03-5c61b696d8bc	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	policy_.serviceaccount_can_query_subscription_plan_(security_.resource_definition_,application_.resource_)	query	e4afc5be-e025-4485-9591-094891ede563
+1eea3d78-a0e3-48b1-86b0-b09249dab127	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.anyone_can_query_basic_agency_fields_(security_.resource_definition_,application_.resource_)	query	1b6b5685-c684-46a8-9e3a-bbe277cbde31
+10d53e80-8f00-4af3-9bf3-c23cb47958c5	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.agent_can_query_agency_subscription_plan_(security_.resource_definition_,application_.resource_)	query	\N
+1b6b5685-c684-46a8-9e3a-bbe277cbde31	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.serviceaccount_can_query_agency_subscription_plan_(security_.resource_definition_,application_.resource_)	query	10d53e80-8f00-4af3-9bf3-c23cb47958c5
+4b67f569-b5a9-4377-b5c3-a623de78ed2b	76b04264-d560-48af-b49b-4440e96d3fc3	policy_.serviceaccount_can_query_transaction_fee_(security_.resource_definition_,application_.resource_)	query	\N
 \.
 
 
@@ -7939,12 +7948,11 @@ e61bae44-071d-4f80-9f53-c639f9b48661	pblkdef	page block definition	internal_.pag
 34f873e1-b837-4f1f-94d7-7bacf9c43d8d	set	service thank you page setting	application_.service_thank_you_page_setting_	d50773b3-5779-4333-8bc3-6ef32d488d72	{uuid_,service_uuid_,url_}
 c042e657-0005-42a1-b3c2-6ee25d62fb33	formfld	form field	internal_.form_field_	8248bebc-96c3-4f72-83df-ad4c68184470	{uuid_,name_,form_uuid_}
 bc2e81b9-be64-4068-ad32-3ed89151bbfa	pblk	page block	application_.page_block_	08b16cec-4d78-499a-a092-91fc2d360f86	{uuid_,page_block_definition_uuid_,page_uuid_}
+76b04264-d560-48af-b49b-4440e96d3fc3	txnfee	transaction fee	internal_.transaction_fee_	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	{uuid_,subscription_plan_uuid_,transaction_amount_upper_bound_}
 cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_definition_	\N	{uuid_,name_,url_path_}
 08b16cec-4d78-499a-a092-91fc2d360f86	page	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,service_uuid_,url_path_}
-3ad07e0d-69ed-478d-ac8f-04f64043dce9	agcyprice	agency price	internal_.agency_price_	\N	{uuid_,name_,stripe_id_ext_,livemode_}
-09788539-be6e-4804-847c-6d0022912ac8	agcyprod	agency subscription	internal_.agency_subscription_	\N	{uuid_,name_,stripe_id_ext_,livemode_}
 3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,stripe_id_ext_,livemode_}
-e8737139-3358-4046-9d51-34d9337a0de3	fee	transaction fee	internal_.transaction_fee_	\N	{uuid_,agency_subscription_uuid_,transaction_amount_upper_bound_}
+35bee174-fde7-4ae2-9cb2-4469b3eb8de5	subplan	subscription plan	internal_.subscription_plan_	\N	{uuid_,name_,stripe_prod_id_ext_live_,stripe_prod_id_ext_test_}
 \.
 
 
@@ -8486,38 +8494,6 @@ ALTER TABLE ONLY application_.user_notification_setting_
 
 
 --
--- Name: agency_price_ agency_price__name__livemode__key; Type: CONSTRAINT; Schema: internal_; Owner: postgres
---
-
-ALTER TABLE ONLY internal_.agency_price_
-    ADD CONSTRAINT agency_price__name__livemode__key UNIQUE (name_, livemode_);
-
-
---
--- Name: agency_price_ agency_price__pkey; Type: CONSTRAINT; Schema: internal_; Owner: postgres
---
-
-ALTER TABLE ONLY internal_.agency_price_
-    ADD CONSTRAINT agency_price__pkey PRIMARY KEY (uuid_);
-
-
---
--- Name: agency_subscription_ agency_subscription__name__livemode__key; Type: CONSTRAINT; Schema: internal_; Owner: postgres
---
-
-ALTER TABLE ONLY internal_.agency_subscription_
-    ADD CONSTRAINT agency_subscription__name__livemode__key UNIQUE (name_, livemode_);
-
-
---
--- Name: agency_subscription_ agency_subscription__pkey; Type: CONSTRAINT; Schema: internal_; Owner: postgres
---
-
-ALTER TABLE ONLY internal_.agency_subscription_
-    ADD CONSTRAINT agency_subscription__pkey PRIMARY KEY (uuid_);
-
-
---
 -- Name: form_ form__pkey; Type: CONSTRAINT; Schema: internal_; Owner: postgres
 --
 
@@ -8590,11 +8566,19 @@ ALTER TABLE ONLY internal_.page_definition_
 
 
 --
--- Name: transaction_fee_ transaction_fee__agency_subscription_uuid__transaction_amou_key; Type: CONSTRAINT; Schema: internal_; Owner: postgres
+-- Name: subscription_plan_ subscription_plan__name__key; Type: CONSTRAINT; Schema: internal_; Owner: postgres
 --
 
-ALTER TABLE ONLY internal_.transaction_fee_
-    ADD CONSTRAINT transaction_fee__agency_subscription_uuid__transaction_amou_key UNIQUE (agency_subscription_uuid_, transaction_amount_upper_bound_);
+ALTER TABLE ONLY internal_.subscription_plan_
+    ADD CONSTRAINT subscription_plan__name__key UNIQUE (name_);
+
+
+--
+-- Name: subscription_plan_ subscription_plan__pkey; Type: CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.subscription_plan_
+    ADD CONSTRAINT subscription_plan__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -8603,6 +8587,14 @@ ALTER TABLE ONLY internal_.transaction_fee_
 
 ALTER TABLE ONLY internal_.transaction_fee_
     ADD CONSTRAINT transaction_fee__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: transaction_fee_ transaction_fee__subscription_plan_uuid__transaction_amount_key; Type: CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.transaction_fee_
+    ADD CONSTRAINT transaction_fee__subscription_plan_uuid__transaction_amount_key UNIQUE (subscription_plan_uuid_, transaction_amount_upper_bound_);
 
 
 --
@@ -9910,6 +9902,13 @@ CREATE TRIGGER tr_before_insert_or_update_update_page_block_linked_list_ BEFORE 
 
 
 --
+-- Name: agency_ tr_before_insert_set_subscription_plan_to_basic_plan_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_insert_set_subscription_plan_to_basic_plan_ BEFORE INSERT ON application_.agency_ FOR EACH ROW EXECUTE FUNCTION internal_.set_subscription_plan_to_basic_plan_();
+
+
+--
 -- Name: agency_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -10092,20 +10091,6 @@ CREATE TRIGGER tr_instead_of_update_try_verify_sign_up_ INSTEAD OF UPDATE ON app
 
 
 --
--- Name: agency_price_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON internal_.agency_price_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
-
-
---
--- Name: agency_subscription_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON internal_.agency_subscription_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
-
-
---
 -- Name: form_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
@@ -10134,24 +10119,17 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON internal_.page_defi
 
 
 --
+-- Name: subscription_plan_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON internal_.subscription_plan_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
 -- Name: transaction_fee_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON internal_.transaction_fee_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
-
-
---
--- Name: agency_price_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON internal_.agency_price_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
-
-
---
--- Name: agency_subscription_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON internal_.agency_subscription_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
 
 
 --
@@ -10183,24 +10161,17 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON internal_.page_d
 
 
 --
+-- Name: subscription_plan_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON internal_.subscription_plan_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: transaction_fee_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON internal_.transaction_fee_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
-
-
---
--- Name: agency_price_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON internal_.agency_price_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
-
-
---
--- Name: agency_subscription_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON internal_.agency_subscription_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -10232,24 +10203,17 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON internal_
 
 
 --
+-- Name: subscription_plan_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON internal_.subscription_plan_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
 -- Name: transaction_fee_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON internal_.transaction_fee_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
-
-
---
--- Name: agency_price_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON internal_.agency_price_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
-
-
---
--- Name: agency_subscription_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON internal_.agency_subscription_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
 
 
 --
@@ -10281,24 +10245,17 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON internal_.page_d
 
 
 --
+-- Name: subscription_plan_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON internal_.subscription_plan_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: transaction_fee_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON internal_.transaction_fee_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
-
-
---
--- Name: agency_price_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON internal_.agency_price_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
-
-
---
--- Name: agency_subscription_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON internal_.agency_subscription_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -10330,24 +10287,17 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON internal_
 
 
 --
+-- Name: subscription_plan_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON internal_.subscription_plan_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
 -- Name: transaction_fee_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON internal_.transaction_fee_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
-
-
---
--- Name: agency_price_ tr_after_update_resource_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON internal_.agency_price_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
-
-
---
--- Name: agency_subscription_ tr_after_update_resource_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON internal_.agency_subscription_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
@@ -10379,6 +10329,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON internal_.page_d
 
 
 --
+-- Name: subscription_plan_ tr_after_update_resource_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON internal_.subscription_plan_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
 -- Name: transaction_fee_ tr_after_update_resource_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
@@ -10397,20 +10354,6 @@ CREATE TRIGGER tr_before_insert_insert_form_ BEFORE INSERT ON internal_.page_blo
 --
 
 CREATE TRIGGER tr_before_insert_or_update_update_form_field_linked_list_ BEFORE INSERT OR UPDATE ON internal_.form_field_ FOR EACH ROW EXECUTE FUNCTION internal_.update_form_field_linked_list_();
-
-
---
--- Name: agency_price_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON internal_.agency_price_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
-
-
---
--- Name: agency_subscription_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: internal_; Owner: postgres
---
-
-CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON internal_.agency_subscription_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
@@ -10439,6 +10382,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON internal_.page_blo
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON internal_.page_definition_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: subscription_plan_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON internal_.subscription_plan_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
@@ -10947,6 +10897,14 @@ ALTER TABLE ONLY application_.agency_
 
 
 --
+-- Name: agency_ agency__subscription_plan_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.agency_
+    ADD CONSTRAINT agency__subscription_plan_uuid__fkey FOREIGN KEY (subscription_plan_uuid_) REFERENCES internal_.subscription_plan_(uuid_);
+
+
+--
 -- Name: agency_thank_you_page_setting_ agency_thank_you_page_setting__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -11291,11 +11249,11 @@ ALTER TABLE ONLY internal_.page_block_definition_
 
 
 --
--- Name: transaction_fee_ transaction_fee__agency_subscription_uuid__fkey; Type: FK CONSTRAINT; Schema: internal_; Owner: postgres
+-- Name: transaction_fee_ transaction_fee__subscription_plan_uuid__fkey; Type: FK CONSTRAINT; Schema: internal_; Owner: postgres
 --
 
 ALTER TABLE ONLY internal_.transaction_fee_
-    ADD CONSTRAINT transaction_fee__agency_subscription_uuid__fkey FOREIGN KEY (agency_subscription_uuid_) REFERENCES internal_.agency_subscription_(uuid_);
+    ADD CONSTRAINT transaction_fee__subscription_plan_uuid__fkey FOREIGN KEY (subscription_plan_uuid_) REFERENCES internal_.subscription_plan_(uuid_) ON DELETE CASCADE;
 
 
 --

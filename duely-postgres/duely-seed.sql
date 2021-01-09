@@ -7,7 +7,7 @@
 
 CREATE FUNCTION pg_temp.seed_data_(_service_account_password text) RETURNS void
     LANGUAGE plpgsql
-    AS $$
+    AS $_SEED_$
 DECLARE
   _visitor_jwt text;
   _data jsonb;
@@ -59,7 +59,7 @@ BEGIN
   PERFORM operation_.end_session_();
 
 END;
-$$;
+$_SEED_$;
 
 SELECT pg_temp.seed_data_(:service_account_password);
 
