@@ -3937,7 +3937,7 @@ CREATE FUNCTION policy_.agent_can_query_price_(_resource_definition security_.re
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, service_variant_uuid_, stripe_id_ext_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+    RETURN '{uuid_, service_variant_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3994,7 +3994,7 @@ CREATE FUNCTION policy_.agent_can_query_service_variant_(_resource_definition se
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, service_uuid_, stripe_id_ext_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, service_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4138,7 +4138,7 @@ BEGIN
     FROM application_.price_
     WHERE uuid_ = _resource.uuid_
   ) THEN
-    RETURN '{uuid_, service_variant_uuid_, stripe_id_ext_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+    RETURN '{uuid_, service_variant_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4184,7 +4184,7 @@ BEGIN
     FROM application_.service_variant_
     WHERE uuid_ = _resource.uuid_
   ) THEN
-    RETURN '{uuid_, service_uuid_, stripe_id_ext_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, service_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4988,7 +4988,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{service_variant_uuid_, stripe_id_ext_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+    RETURN '{service_variant_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5054,7 +5054,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{service_uuid_, stripe_id_ext_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{service_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -6415,13 +6415,14 @@ ALTER TABLE application_.password_reset_ OWNER TO postgres;
 CREATE TABLE application_.price_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     service_variant_uuid_ uuid NOT NULL,
-    stripe_id_ext_ text NOT NULL,
     type_ text GENERATED ALWAYS AS (application_.price_type_(recurring_interval_)) STORED,
     unit_amount_ integer NOT NULL,
     currency_ text NOT NULL,
     recurring_interval_ text,
     recurring_interval_count_ integer,
     status_ text DEFAULT 'draft'::text NOT NULL,
+    stripe_price_id_ext_live_ text,
+    stripe_price_id_ext_test_ text,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6527,7 +6528,8 @@ CREATE TABLE application_.service_variant_ (
     image_hero_uuid_ uuid,
     default_price_uuid_ uuid,
     markdown_description_uuid_ uuid,
-    stripe_id_ext_ text NOT NULL,
+    stripe_prod_id_ext_live_ text,
+    stripe_prod_id_ext_test_ text,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6718,13 +6720,14 @@ ALTER TABLE application__audit_.page_block_ OWNER TO postgres;
 CREATE TABLE application__audit_.price_ (
     uuid_ uuid,
     service_variant_uuid_ uuid,
-    stripe_id_ext_ text,
     type_ text,
     unit_amount_ integer,
     currency_ text,
     recurring_interval_ text,
     recurring_interval_count_ integer,
     status_ text,
+    stripe_price_id_ext_live_ text,
+    stripe_price_id_ext_test_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -6874,7 +6877,8 @@ CREATE TABLE application__audit_.service_variant_ (
     image_hero_uuid_ uuid,
     default_price_uuid_ uuid,
     markdown_description_uuid_ uuid,
-    stripe_id_ext_ text,
+    stripe_prod_id_ext_live_ text,
+    stripe_prod_id_ext_test_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -8286,14 +8290,6 @@ ALTER TABLE ONLY application_.price_
 
 
 --
--- Name: price_ price__stripe_id_ext__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.price_
-    ADD CONSTRAINT price__stripe_id_ext__key UNIQUE (stripe_id_ext_);
-
-
---
 -- Name: resource_ resource__id__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -8411,14 +8407,6 @@ ALTER TABLE ONLY application_.service_variant_
 
 ALTER TABLE ONLY application_.service_variant_
     ADD CONSTRAINT service_variant__service_uuid__name__key UNIQUE (service_uuid_, name_);
-
-
---
--- Name: service_variant_ service_variant__stripe_id_ext__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.service_variant_
-    ADD CONSTRAINT service_variant__stripe_id_ext__key UNIQUE (stripe_id_ext_);
 
 
 --
