@@ -33,7 +33,8 @@ BEGIN
   _data := '{
     "name": "test",
     "agency": {
-      "name": "Test Agency"
+      "name": "Test Agency",
+      "livemode": false
     }
   }';
   SELECT * INTO _result_0 FROM operation_.create_resource_('subdomain', _data);

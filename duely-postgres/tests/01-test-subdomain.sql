@@ -45,11 +45,12 @@ BEGIN
   _data := '{
     "name": "test",
     "agency": {
-      "name": "Test Agency"
+      "name": "Test Agency",
+      "livemode": false
     }
   }';
   SELECT * INTO _result_0 FROM operation_.create_resource_(_resource_name, _data);
-  -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
+  -- RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_0;
   ASSERT _result_0 ?& '{ id, name, agency }';
 
   -- TEST INVALID QUERY OPERATION

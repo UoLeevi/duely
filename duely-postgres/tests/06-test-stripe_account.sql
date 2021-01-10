@@ -33,7 +33,8 @@ BEGIN
   _data := '{
     "name": "test",
     "agency": {
-      "name": "Test Agency"
+      "name": "Test Agency",
+      "livemode": false
     }
   }';
   SELECT * INTO _result_0 FROM operation_.create_resource_('subdomain', _data);
@@ -54,12 +55,23 @@ BEGIN
 
   -- TEST VALID CREATE OPERATION
   _data := '{
-    "stripe_id_ext": "acct_123456"
+    "stripe_id_ext": "acct_123456",
+    "livemode": false
   }';
   _data := jsonb_set(_data, '{agency_id}', _result_0->'agency'->'id');
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
   --RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
-  ASSERT _result_1 ?& '{ id, stripe_id_ext, agency_id }';
+  ASSERT _result_1 ?& '{ id, stripe_id_ext, agency_id, livemode }';
+  
+  -- TEST VALID CREATE OPERATION
+  _data := '{
+    "stripe_id_ext": "acct_234567",
+    "livemode": true
+  }';
+  _data := jsonb_set(_data, '{agency_id}', _result_0->'agency'->'id');
+  SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
+  --RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
+  ASSERT _result_1 ?& '{ id, stripe_id_ext, agency_id, livemode }';
 
 
   -- TEST INVALID QUERY OPERATION

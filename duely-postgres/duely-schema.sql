@@ -2662,7 +2662,7 @@ ALTER FUNCTION policy_.anyone_can_create_sign_up_(_resource_definition security_
 CREATE FUNCTION policy_.anyone_can_query_basic_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
-  SELECT '{uuid_, subdomain_uuid_, name_}'::text[];
+  SELECT '{uuid_, subdomain_uuid_, name_, livemode_}'::text[];
 $$;
 
 
@@ -2812,7 +2812,7 @@ ALTER FUNCTION policy_.anyone_can_query_page_definition_(_resource_definition se
 CREATE FUNCTION policy_.anyone_can_query_stripe_account_for_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
-  SELECT '{uuid_, agency_uuid_, stripe_id_ext_}'::text[];
+  SELECT '{uuid_, agency_uuid_, stripe_id_ext_, livemode_}'::text[];
 $$;
 
 
@@ -3401,7 +3401,7 @@ BEGIN
     WHERE name_ = 'owner'
       AND subdomain_uuid_ = (_data->>'subdomain_uuid_')::uuid
   ) THEN
-    RETURN '{uuid_, subdomain_uuid_, name_}'::text[];
+    RETURN '{uuid_, subdomain_uuid_, name_, livemode_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3577,7 +3577,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{agency_uuid_, stripe_id_ext_}'::text[];
+    RETURN '{agency_uuid_, stripe_id_ext_, livemode_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3659,7 +3659,7 @@ CREATE FUNCTION policy_.owner_can_query_stripe_account_(_resource_definition sec
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{uuid_, agency_uuid_, stripe_id_ext_}'::text[];
+    RETURN '{uuid_, agency_uuid_, stripe_id_ext_, livemode_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3874,7 +3874,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_stripe_account_for_agency_(_res
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, agency_uuid_, stripe_id_ext_}'::text[];
+    RETURN '{uuid_, agency_uuid_, stripe_id_ext_, livemode_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4711,6 +4711,7 @@ CREATE TABLE application_.agency_ (
     subdomain_uuid_ uuid NOT NULL,
     name_ text NOT NULL,
     subscription_plan_uuid_ uuid NOT NULL,
+    livemode_ boolean NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -5118,6 +5119,7 @@ CREATE TABLE application__audit_.agency_ (
     subdomain_uuid_ uuid,
     name_ text,
     subscription_plan_uuid_ uuid,
+    livemode_ boolean,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
