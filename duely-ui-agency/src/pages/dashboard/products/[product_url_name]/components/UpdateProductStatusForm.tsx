@@ -1,4 +1,4 @@
-import { service_Q, update_service_M, useMutation, useQuery } from '@duely/client';
+import { product_Q, update_product_M, useMutation, useQuery } from '@duely/client';
 import {
   Form,
   FormButton,
@@ -8,18 +8,18 @@ import {
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
-type ServiceProps = {
-  service_id: string;
+type ProductProps = {
+  product_id: string;
 };
 
-type UpdateServiceStatusFormFields = {
+type UpdateProductStatusFormFields = {
   status: string;
 };
 
-export function UpdateServiceStatusForm({ service_id }: ServiceProps) {
-  const form = useForm<UpdateServiceStatusFormFields>();
-  const { data: service, loading: serviceLoading } = useQuery(service_Q, { service_id });
-  const [updateService, stateUpdate] = useMutation(update_service_M);
+export function UpdateProductStatusForm({ product_id }: ProductProps) {
+  const form = useForm<UpdateProductStatusFormFields>();
+  const { data: product, loading: productLoading } = useQuery(product_Q, { product_id });
+  const [updateProduct, stateUpdate] = useMutation(update_product_M);
   const {
     infoMessage,
     setInfoMessage,
@@ -30,26 +30,26 @@ export function UpdateServiceStatusForm({ service_id }: ServiceProps) {
   } = useFormMessages();
 
   const state = {
-    loading: serviceLoading || stateUpdate.loading
+    loading: productLoading || stateUpdate.loading
   };
 
   const reset = form.reset;
 
   useEffect(() => {
-    if (!service) return;
+    if (!product) return;
     reset({
-      status: service.default_variant.status
+      status: product.status
     });
-  }, [reset, service]);
+  }, [reset, product]);
 
-  async function onSubmit({ status }: UpdateServiceStatusFormFields) {
-    if (status === service?.default_variant.status) {
+  async function onSubmit({ status }: UpdateProductStatusFormFields) {
+    if (status === product?.status) {
       setInfoMessage('No changes to be saved');
       form.reset();
       return;
     }
 
-    const res = await updateService({ service_id, status });
+    const res = await updateProduct({ product_id, status });
 
     if (res?.success) {
       setSuccessMessage('Saved');

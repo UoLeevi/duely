@@ -30,7 +30,8 @@ import {
   PageByUrlDocument,
   ProductsDocument,
   AgencyDocument,
-  AgenciesDocument
+  AgenciesDocument,
+  CalculateTransactionFeeDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -286,3 +287,8 @@ export const page_block_definition_by_name_Q = {
   query: PageBlockDefinitionsByNameDocument,
   result: (d: ResultOf<typeof PageBlockDefinitionsByNameDocument>) => d?.page_block_definitions?.[0]
 };
+
+export const calculate_transaction_fee_Q = {
+  query: CalculateTransactionFeeDocument,
+  result: (d: ResultOf<typeof CalculateTransactionFeeDocument>) => d?.subscription_plan?.calculate_fee
+}

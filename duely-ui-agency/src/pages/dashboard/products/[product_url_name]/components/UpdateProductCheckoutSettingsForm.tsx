@@ -1,11 +1,11 @@
 import {
   agency_thank_you_page_settings_Q,
-  create_service_thank_you_page_setting_M,
+  create_product_thank_you_page_setting_M,
   current_agency_Q,
-  delete_service_thank_you_page_setting_M,
-  service_Q,
-  service_thank_you_page_settings_Q,
-  update_service_thank_you_page_setting_M,
+  delete_product_thank_you_page_setting_M,
+  product_Q,
+  product_thank_you_page_settings_Q,
+  update_product_thank_you_page_setting_M,
   useMutation,
   useQuery
 } from '@duely/client';
@@ -14,20 +14,20 @@ import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
-type ServiceProps = {
-  service_id: string;
+type ProductProps = {
+  product_id: string;
 };
 
-type UpdateServiceCheckoutSettingsFormFields = { url: string };
+type UpdateProductCheckoutSettingsFormFields = { url: string };
 
-export function UpdateServiceCheckoutSettingsForm({ service_id }: ServiceProps) {
-  const form = useForm<UpdateServiceCheckoutSettingsFormFields>();
-  const { loading: serviceLoading } = useQuery(service_Q, { service_id });
+export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) {
+  const form = useForm<UpdateProductCheckoutSettingsFormFields>();
+  const { loading: productLoading } = useQuery(product_Q, { product_id });
 
   const {
-    data: service_thank_you_page_settings,
+    data: product_thank_you_page_settings,
     loading: settingsLoading
-  } = useQuery(service_thank_you_page_settings_Q, { service_id });
+  } = useQuery(product_thank_you_page_settings_Q, { product_id });
 
   const { data: current_agency } = useQuery(current_agency_Q);
 
@@ -36,9 +36,9 @@ export function UpdateServiceCheckoutSettingsForm({ service_id }: ServiceProps) 
     loading: agencySettingsLoading
   } = useQuery(agency_thank_you_page_settings_Q, { agency_id: current_agency!.id });
 
-  const [createSetting, stateCreate] = useMutation(create_service_thank_you_page_setting_M);
-  const [updateSetting, stateUpdate] = useMutation(update_service_thank_you_page_setting_M);
-  const [deleteSetting, stateDelete] = useMutation(delete_service_thank_you_page_setting_M);
+  const [createSetting, stateCreate] = useMutation(create_product_thank_you_page_setting_M);
+  const [updateSetting, stateUpdate] = useMutation(update_product_thank_you_page_setting_M);
+  const [deleteSetting, stateDelete] = useMutation(delete_product_thank_you_page_setting_M);
 
   const {
     infoMessage,
@@ -51,7 +51,7 @@ export function UpdateServiceCheckoutSettingsForm({ service_id }: ServiceProps) 
 
   const state = {
     loading:
-      serviceLoading ||
+      productLoading ||
       agencySettingsLoading ||
       settingsLoading ||
       stateUpdate.loading ||
@@ -62,20 +62,20 @@ export function UpdateServiceCheckoutSettingsForm({ service_id }: ServiceProps) 
   const reset = form.reset;
 
   useEffect(() => {
-    if (!service_thank_you_page_settings) return;
+    if (!product_thank_you_page_settings) return;
     reset({
-      url: service_thank_you_page_settings?.url?.replace('https://', '')
+      url: product_thank_you_page_settings?.url?.replace('https://', '')
     });
-  }, [reset, service_thank_you_page_settings]);
+  }, [reset, product_thank_you_page_settings]);
 
-  async function onSubmit({ url }: UpdateServiceCheckoutSettingsFormFields) {
+  async function onSubmit({ url }: UpdateProductCheckoutSettingsFormFields) {
     url = url.trim();
 
     if (url === '') {
-      if (service_thank_you_page_settings == null) {
+      if (product_thank_you_page_settings == null) {
         return;
       } else {
-        await deleteSetting({ setting_id: service_thank_you_page_settings.id });
+        await deleteSetting({ setting_id: product_thank_you_page_settings.id });
       }
     } else {
       url = `https://${url}`;
@@ -88,10 +88,10 @@ export function UpdateServiceCheckoutSettingsForm({ service_id }: ServiceProps) 
 
       let res: MutationResult | null | undefined;
 
-      if (service_thank_you_page_settings == null) {
-        res = await createSetting({ url, service_id });
+      if (product_thank_you_page_settings == null) {
+        res = await createSetting({ url, product_id });
       } else {
-        res = await updateSetting({ url, setting_id: service_thank_you_page_settings.id });
+        res = await updateSetting({ url, setting_id: product_thank_you_page_settings.id });
       }
 
       if (res?.success) {
@@ -116,7 +116,7 @@ export function UpdateServiceCheckoutSettingsForm({ service_id }: ServiceProps) 
           loading={settingsLoading}
           hint={
             <span>
-              Set a thank you page URL for this service. Your customers will be redirected here
+              Set a thank you page URL for this product. Your customers will be redirected here
               after successful checkout.
             </span>
           }

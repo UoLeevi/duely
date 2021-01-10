@@ -36,6 +36,7 @@ export declare type Query = {
     page_block_definition?: Maybe<PageBlockDefinition>;
     page_block_definitions?: Maybe<Array<PageBlockDefinition>>;
     country_codes?: Maybe<Array<Scalars['String']>>;
+    exchange_rate?: Maybe<ExchangeRate>;
     current_user?: Maybe<User>;
     user?: Maybe<User>;
     users?: Maybe<Array<User>>;
@@ -90,6 +91,9 @@ export declare type QueryPage_Block_DefinitionArgs = {
 };
 export declare type QueryPage_Block_DefinitionsArgs = {
     filter: PageBlockDefinitionFilter;
+};
+export declare type QueryExchange_RateArgs = {
+    currency: Scalars['String'];
 };
 export declare type QueryUserArgs = {
     id: Scalars['ID'];
@@ -576,6 +580,12 @@ export declare type LogInResult = MutationResult & {
     message?: Maybe<Scalars['String']>;
     jwt?: Maybe<Scalars['String']>;
 };
+export declare type ExchangeRate = {
+    __typename?: 'ExchangeRate';
+    date: Scalars['Date'];
+    currency: Scalars['String'];
+    rate_eur: Scalars['Float'];
+};
 export declare type User = Node & {
     __typename?: 'User';
     id: Scalars['ID'];
@@ -889,6 +899,11 @@ export declare type SubscriptionPlan = {
     id: Scalars['ID'];
     name: Scalars['String'];
     transaction_fees: Array<TransactionFee>;
+    calculate_fee: Scalars['Int'];
+};
+export declare type SubscriptionPlanCalculate_FeeArgs = {
+    amount: Scalars['Int'];
+    currency: Scalars['String'];
 };
 export declare type SubscriptionPlanFilter = {
     name?: Maybe<Scalars['String']>;
@@ -2023,6 +2038,18 @@ export declare type PageBlockDefinitionsByNameQuery = ({
         __typename?: 'PageBlockDefinition';
     } & Page_Block_DefinitionFragment)>>;
 });
+export declare type CalculateTransactionFeeQueryVariables = Exact<{
+    subscription_plan_id: Scalars['ID'];
+    amount: Scalars['Int'];
+    currency: Scalars['String'];
+}>;
+export declare type CalculateTransactionFeeQuery = ({
+    __typename?: 'Query';
+} & {
+    subscription_plan?: Maybe<({
+        __typename?: 'SubscriptionPlan';
+    } & Pick<SubscriptionPlan, 'id' | 'calculate_fee'>)>;
+});
 export declare const Stripe_AccountFragmentDoc: DocumentNode<Stripe_AccountFragment, unknown>;
 export declare const Balance_TransactionFragmentDoc: DocumentNode<Balance_TransactionFragment, unknown>;
 export declare const AddressFragmentDoc: DocumentNode<AddressFragment, unknown>;
@@ -2099,3 +2126,4 @@ export declare const PageBlockDefinitionDocument: DocumentNode<PageBlockDefiniti
 export declare const PageDefinitionsByNameDocument: DocumentNode<PageDefinitionsByNameQuery, PageDefinitionsByNameQueryVariables>;
 export declare const PageDefinitionByUrlPathDocument: DocumentNode<PageDefinitionByUrlPathQuery, PageDefinitionByUrlPathQueryVariables>;
 export declare const PageBlockDefinitionsByNameDocument: DocumentNode<PageBlockDefinitionsByNameQuery, PageBlockDefinitionsByNameQueryVariables>;
+export declare const CalculateTransactionFeeDocument: DocumentNode<CalculateTransactionFeeQuery, CalculateTransactionFeeQueryVariables>;

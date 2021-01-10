@@ -74,6 +74,11 @@ spec:
             secretKeyRef:
               name: duely-graphql-secret
               key: stripe-sk_live
+        - name: DUELY_SERVICE_ACCOUNT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: duely-graphql-secret
+              key: duely-serviceaccount-password
         livenessProbe:
           httpGet:
             path: /.well-known/server-health

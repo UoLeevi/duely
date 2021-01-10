@@ -1,4 +1,4 @@
-import { agency_pages_Q, current_agency_Q, service_Q, useQuery } from '@duely/client';
+import { agency_pages_Q, current_agency_Q, product_Q, useQuery } from '@duely/client';
 import {
   Card,
   useBreakpoints,
@@ -18,19 +18,19 @@ type TItem = NonNullable<ReturnType<typeof agency_pages_Q.result>> extends reado
   : never;
 
 function PageColumn(page: TItem) {
-  const isServiceLevelPage = !!page.service?.id;
-  const { data: service, loading: serviceLoading } = useQuery(
-    service_Q,
-    { service_id: page.service?.id! },
-    { skip: !isServiceLevelPage }
+  const isProductLevelPage = !!page.product?.id;
+  const { data: product, loading: productLoading } = useQuery(
+    product_Q,
+    { product_id: page.product?.id! },
+    { skip: !isProductLevelPage }
   );
   let path;
-  const loading = serviceLoading;
+  const loading = productLoading;
 
   if (page.definition.name === 'Home') {
     path = '/';
-  } else if (page.definition.name === 'Service') {
-    path = `/services/${service?.url_name}`;
+  } else if (page.definition.name === 'Product') {
+    path = `/products/${product?.url_name}`;
   } else {
     path = null;
   }

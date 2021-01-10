@@ -1,27 +1,27 @@
 import React, { useCallback } from 'react';
-import { useQuery, useMutation, service_Q, delete_service_M } from '@duely/client';
+import { useQuery, useMutation, product_Q, delete_product_M } from '@duely/client';
 import { Modal, Button, SkeletonParagraph } from '@duely/react';
 import { BsExclamationTriangle } from 'react-icons/bs';
 import { useHistory, useLocation } from 'react-router-dom';
 import produce from 'immer';
 import { usePrevious } from 'hooks';
 
-export function ConfirmServiceDeletionModal() {
-  // Get service id from url query string and replace history entry if cancelled
+export function ConfirmProductDeletionModal() {
+  // Get product id from url query string and replace history entry if cancelled
   const history = useHistory();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  let service_id = searchParams.get('delete_service');
-  const show = service_id != null;
-  const prev = usePrevious(service_id);
-  service_id = service_id ?? prev;
+  let product_id = searchParams.get('delete_product');
+  const show = product_id != null;
+  const prev = usePrevious(product_id);
+  product_id = product_id ?? prev;
 
-  const { data: service, loading: loadingService } = useQuery(service_Q, { service_id }, { skip: !service_id });
-  const [deleteService, { loading }] = useMutation(delete_service_M);
+  const { data: product, loading: loadingProduct } = useQuery(product_Q, { product_id }, { skip: !product_id });
+  const [deleteProduct, { loading }] = useMutation(delete_product_M);
 
   const close = useCallback(() => {
     const searchParams = new URLSearchParams(history.location.search);
-    searchParams.delete('delete_service');
+    searchParams.delete('delete_product');
 
     const location = produce(history.location, location => {
       const search = '?' + searchParams.toString();
@@ -33,7 +33,7 @@ export function ConfirmServiceDeletionModal() {
 
   async function confirmDeletion(e) {
     e.preventDefault();
-    const res = await deleteService({ service_id });
+    const res = await deleteProduct({ product_id });
     if (res.success) close();
   };
 
@@ -44,10 +44,10 @@ export function ConfirmServiceDeletionModal() {
           <BsExclamationTriangle />
         </div>
         <div className="flex flex-col flex-1 space-y-4 w-96 min-w-min">
-          <span className="text-xl font-medium">Delete service</span>
+          <span className="text-xl font-medium">Delete product</span>
 
-          {loadingService ? <SkeletonParagraph className="text-sm" /> : (
-            <p className="text-sm text-gray-600">Are you sure you want to delete service <span className="font-semibold">{service?.name}</span>? The service will be permanently removed. This action cannot be undone.</p>
+          {loadingProduct ? <SkeletonParagraph className="text-sm" /> : (
+            <p className="text-sm text-gray-600">Are you sure you want to delete product <span className="font-semibold">{product?.name}</span>? The product will be permanently removed. This action cannot be undone.</p>
           )}
         </div>
       </div>

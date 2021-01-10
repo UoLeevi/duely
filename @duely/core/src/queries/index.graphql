@@ -353,3 +353,10 @@ query PageBlockDefinitionsByName($name: String!) {
     ...page_block_definition
   }
 }
+
+query CalculateTransactionFee($subscription_plan_id: ID!, $amount: Int!, $currency: String!) {
+  subscription_plan(id: $subscription_plan_id) {
+    id
+    calculate_fee(amount: $amount, currency: $currency)
+  }
+}

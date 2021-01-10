@@ -1,5 +1,5 @@
 export * from './DashboardFlexGrid';
-export * from './DashboardCardGetStartedCreateServices';
+export * from './DashboardCardGetStartedCreateProducts';
 export * from './DashboardCardGetStartedEnablePayouts';
 export * from './DashboardCardBalance';
 export * from './DashboardOverviewCard';

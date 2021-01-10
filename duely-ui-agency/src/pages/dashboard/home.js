@@ -2,7 +2,7 @@ import React from 'react';
 import { Util, Table, Card } from '@duely/react';
 import {
   DashboardFlexGrid,
-  DashboardCardGetStartedCreateServices,
+  DashboardCardGetStartedCreateProducts,
   DashboardCardGetStartedEnablePayouts,
   DashboardCardBalance,
   DashboardOverviewCard,
@@ -58,7 +58,7 @@ export default function DashboardHome() {
       <DashboardSection title="Get started">
         <DashboardFlexGrid>
           <DashboardCardGetStartedEnablePayouts />
-          <DashboardCardGetStartedCreateServices />
+          <DashboardCardGetStartedCreateProducts />
         </DashboardFlexGrid>
       </DashboardSection>
 

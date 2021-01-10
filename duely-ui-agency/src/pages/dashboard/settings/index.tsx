@@ -98,7 +98,7 @@ function SettingsCheckoutSettingsForm() {
           <span>
             Your customers will be redirected here after successful checkout.
             <br />
-            This defalt URL can also be overriden on per service level in service settings.
+            This defalt URL can also be overriden on per product level in product settings.
           </span>
         }
       />
@@ -126,7 +126,7 @@ export default function DashboardSettings() {
             description={
               <span>
                 By default, after a successful checkout, customers will be redirected to a default thank you page hosted on Duely. Alternatively, you can set custom URLs for the thank you pages.<br/><br/>
-                Custom thank you page URL can be set on both agency level and on service level. If the thank you page URL is set on both agency level and service level, the service level setting will be used. To set the thank you page URL on the service level, please edit an individual service settings.
+                Custom thank you page URL can be set on both agency level and on product level. If the thank you page URL is set on both agency level and product level, the product level setting will be used. To set the thank you page URL on the product level, please edit an individual product settings.
               </span>
             }
           >

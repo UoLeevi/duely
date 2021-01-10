@@ -1,39 +1,39 @@
-import { current_subdomain_Q, service_and_agency_from_url_parts_Q, useQuery } from '@duely/client';
+import { current_subdomain_Q, product_and_agency_from_url_parts_Q, useQuery } from '@duely/client';
 import { Card, FormSection } from '@duely/react';
 import { Link, useParams } from 'react-router-dom';
 import { DashboardSection } from '../../components';
-import { UpdateServiceBasicInfoForm } from './components';
-import { UpdateServiceCheckoutSettingsForm } from './components/UpdateServiceCheckoutSettingsForm';
-import { UpdateServicePricingForm } from './components/UpdateServicePricingForm';
-import { UpdateServiceStatusForm } from './components/UpdateServiceStatusForm';
+import { UpdateProductBasicInfoForm } from './components';
+import { UpdateProductCheckoutSettingsForm } from './components/UpdateProductCheckoutSettingsForm';
+import { UpdateProductPricingForm } from './components/UpdateProductPricingForm';
+import { UpdateProductStatusForm } from './components/UpdateProductStatusForm';
 
-export default function DashboardServicesEditService() {
-  const { service_url_name } = useParams<{ service_url_name: string }>();
+export default function DashboardProductsEditProduct() {
+  const { product_url_name } = useParams<{ product_url_name: string }>();
 
   const { data: current_subdomain } = useQuery(current_subdomain_Q);
-  const { data: service, loading: serviceLoading } = useQuery(service_and_agency_from_url_parts_Q, {
+  const { data: product, loading: productLoading } = useQuery(product_and_agency_from_url_parts_Q, {
     subdomain_name: current_subdomain?.name!,
-    service_url_name
+    product_url_name
   });
 
   return (
     <>
-      <DashboardSection title={service?.name} loading={serviceLoading}>
+      <DashboardSection title={product?.name} loading={productLoading}>
         <Card>
           <FormSection
             title="Basic information"
-            description="Name, description, image and URL name for the service."
+            description="Name, description, image and URL name for the product."
           >
-            {service && <UpdateServiceBasicInfoForm service_id={service.id} />}
+            {product && <UpdateProductBasicInfoForm product_id={product.id} />}
           </FormSection>
         </Card>
 
         <Card>
           <FormSection
             title="Pricing"
-            description="Service pricing can be set to either a one-time payment or a subscription."
+            description="Product pricing can be set to either a one-time payment or a subscription."
           >
-            {service && <UpdateServicePricingForm service_id={service.id} />}
+            {product && <UpdateProductPricingForm product_id={product.id} />}
           </FormSection>
         </Card>
 
@@ -47,8 +47,8 @@ export default function DashboardServicesEditService() {
                 you pages.
                 <br />
                 <br />
-                Custom thank you page URL can be set on both agency level and on service level. If
-                the thank you page URL is set on both agency level and service level, the service
+                Custom thank you page URL can be set on both agency level and on product level. If
+                the thank you page URL is set on both agency level and product level, the product
                 level setting will be used. To set the thank you page URL on the agency level,
                 please see the{' '}
                 <Link className="text-indigo-600" to="/dashboard/settings#checkout">
@@ -59,7 +59,7 @@ export default function DashboardServicesEditService() {
               </span>
             }
           >
-            {service && <UpdateServiceCheckoutSettingsForm service_id={service.id} />}
+            {product && <UpdateProductCheckoutSettingsForm product_id={product.id} />}
           </FormSection>
         </Card>
 
@@ -68,13 +68,13 @@ export default function DashboardServicesEditService() {
             title="Status"
             description={
               <span>
-                Service can be published by setting the status as{' '}
+                Product can be published by setting the status as{' '}
                 <span className="italic">live</span> or unpublished by setting the status as{' '}
                 <span className="italic">draft</span>.
               </span>
             }
           >
-            {service && <UpdateServiceStatusForm service_id={service.id} />}
+            {product && <UpdateProductStatusForm product_id={product.id} />}
           </FormSection>
         </Card>
       </DashboardSection>

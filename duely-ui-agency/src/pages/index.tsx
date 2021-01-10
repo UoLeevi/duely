@@ -2,7 +2,7 @@ import { Route, Switch, useLocation } from 'react-router-dom';
 import Dashboard from './dashboard';
 import ThankYouPage from './orders/thank-you';
 import NotFound from './not-found';
-import { page_by_url_Q, current_subdomain_Q, useQuery, agency_Q, service_Q } from '@duely/client';
+import { page_by_url_Q, current_subdomain_Q, useQuery, agency_Q, product_Q } from '@duely/client';
 import { useMemo } from 'react';
 import { pageBlockComponents } from 'components/page-blocks';
 import { ErrorScreen, LoadingScreen } from '@duely/react';
@@ -50,13 +50,13 @@ function DynamicPage() {
     { skip: !page }
   );
 
-  const { data: service, loading: serviceLoading } = useQuery(
-    service_Q,
-    { service_id: page?.service?.id! },
-    { skip: !page || !page?.service }
+  const { data: product, loading: productLoading } = useQuery(
+    product_Q,
+    { product_id: page?.product?.id! },
+    { skip: !page || !page?.product }
   );
 
-  const loading = pageLoading || agencyLoading || serviceLoading;
+  const loading = pageLoading || agencyLoading || productLoading;
 
   const element = useMemo(
     () =>
@@ -67,12 +67,12 @@ function DynamicPage() {
             const Component = pageBlockComponents[definition.name];
             const data = JSON.parse(block.data);
             return (
-              <Component key={block.id} page={page} agency={agency} service={service} {...data} />
+              <Component key={block.id} page={page} agency={agency} product={product} {...data} />
             );
           })}
         </>
       ),
-    [agency, loading, page, service]
+    [agency, loading, page, product]
   );
 
   if (loading) return <LoadingScreen />;

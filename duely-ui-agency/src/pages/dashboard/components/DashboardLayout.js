@@ -16,9 +16,9 @@ const sidebarLinks = [
     to: '/dashboard/projects',
   },
   {
-    text: "Services",
+    text: "Products",
     icon: BsBriefcase,
-    to: '/dashboard/services',
+    to: '/dashboard/products',
   },
   {
     text: "Clients",

@@ -62,7 +62,7 @@ export default function CreateBrandForm({ className }) {
           <span className="whitespace-nowrap">created succesfully</span>
         </h3>
         <p className="font-medium text-gray-600">
-          Next you can start setting up your services and{' '}
+          Next you can start setting up your products and{' '}
           <a
             href={stripe_verification_url}
             target="_blank"

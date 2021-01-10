@@ -7,7 +7,7 @@ import { routes as siteRoutes } from './site';
 import DashboardHome from './home';
 import DashboardPayments from './payments';
 import DashboardProjects from './projects';
-import { routes as serviceRoutes } from './services';
+import { routes as productRoutes } from './products';
 import DashboardSettings from './settings';
 
 const routes = [
@@ -15,7 +15,7 @@ const routes = [
     path: '/dashboard/projects',
     component: DashboardProjects
   },
-  ...serviceRoutes,
+  ...productRoutes,
   ...siteRoutes,
   {
     path: '/dashboard/clients',

@@ -4,13 +4,13 @@ import {
   useQuery,
   page_Q,
   agency_Q,
-  service_Q
+  product_Q
 } from '@duely/client';
 import {
   AgencyFragment,
   PageFragment,
   Page_BlockFragment,
-  ServiceFragment
+  ProductFragment
 } from '@duely/core';
 import {
   Card,
@@ -31,7 +31,7 @@ import { useParams } from 'react-router-dom';
 type PageEditorContextValue = {
   page: PageFragment;
   agency: AgencyFragment;
-  service?: ServiceFragment;
+  product?: ProductFragment;
   selectedBlock: Page_BlockFragment | null;
   selectBlock(block: Page_BlockFragment): void;
   goBackToBlockList(): void;
@@ -109,7 +109,7 @@ type PageBlockPreviewProps = {
 };
 
 function PageBlockPreview({ block }: PageBlockPreviewProps) {
-  const { selectedBlock, selectBlock, page, agency, service, editBlockForm } = usePageEditor();
+  const { selectedBlock, selectBlock, page, agency, product, editBlockForm } = usePageEditor();
   const className = Util.createClassName(block === selectedBlock && 'overlay-ring');
   const data = useMemo(() => JSON.parse(block.data), [block.data]);
   const values = block === selectedBlock ? editBlockForm.watch() : data;
@@ -120,7 +120,7 @@ function PageBlockPreview({ block }: PageBlockPreviewProps) {
   return (
     <div className={className} onClick={() => selectBlock(block)}>
       <div className="pointer-events-none">
-        <Component key={block.id} page={page} agency={agency} service={service} {...values} />
+        <Component key={block.id} page={page} agency={agency} product={product} {...values} />
       </div>
     </div>
   );
@@ -239,23 +239,23 @@ export function PageEditor() {
     { skip: !page }
   );
 
-  const { data: service, loading: serviceLoading } = useQuery(
-    service_Q,
-    { service_id: page?.service?.id! },
-    { skip: !page || !page?.service }
+  const { data: product, loading: productLoading } = useQuery(
+    product_Q,
+    { product_id: page?.product?.id! },
+    { skip: !page || !page?.product }
   );
-  const loading = pageLoading || agencyLoading || serviceLoading;
+  const loading = pageLoading || agencyLoading || productLoading;
 
   const element = useMemo(
     () =>
-      loading || !page || agencyLoading || serviceLoading || page.blocks.length === 0 ? null : (
+      loading || !page || agencyLoading || productLoading || page.blocks.length === 0 ? null : (
         <>
           {page.blocks.map((block) => (
             <PageBlockPreview key={block.id} block={block} />
           ))}
         </>
       ),
-    [agencyLoading, loading, page, serviceLoading]
+    [agencyLoading, loading, page, productLoading]
   );
 
   if (loading) return <LoadingScreen />;
@@ -273,7 +273,7 @@ export function PageEditor() {
         },
         goBackToBlockList: () => setSelectedBlock(null),
         agency,
-        service: service ?? undefined,
+        product: product ?? undefined,
         page,
         editBlockForm
       }}

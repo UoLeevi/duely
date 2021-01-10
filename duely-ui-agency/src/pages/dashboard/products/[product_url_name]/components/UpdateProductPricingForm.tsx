@@ -1,4 +1,4 @@
-import { service_Q, create_price_M, update_service_M, useMutation, useQuery } from '@duely/client';
+import { product_Q, create_price_M, update_product_M, useMutation, useQuery } from '@duely/client';
 import { Currency } from '@duely/core';
 import {
   Form,
@@ -11,19 +11,19 @@ import {
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
-type ServiceProps = {
-  service_id: string;
+type ProductProps = {
+  product_id: string;
 };
 
-type UpdateServicePricingFormFields = {
+type UpdateProductPricingFormFields = {
   payment_type: string;
   unit_amount_major: string;
   frequency?: string;
 };
 
-export function UpdateServicePricingForm({ service_id }: ServiceProps) {
-  const form = useForm<UpdateServicePricingFormFields>();
-  const { data: service, loading: serviceLoading } = useQuery(service_Q, { service_id });
+export function UpdateProductPricingForm({ product_id }: ProductProps) {
+  const form = useForm<UpdateProductPricingFormFields>();
+  const { data: product, loading: productLoading } = useQuery(product_Q, { product_id });
 
   const {
     infoMessage,
@@ -35,17 +35,16 @@ export function UpdateServicePricingForm({ service_id }: ServiceProps) {
   } = useFormMessages();
 
   const [createPrice, statePrice] = useMutation(create_price_M);
-  const [updateService, stateUpdate] = useMutation(update_service_M);
+  const [updateProduct, stateUpdate] = useMutation(update_product_M);
 
   const state = {
-    loading: serviceLoading || stateUpdate.loading || statePrice.loading
+    loading: productLoading || stateUpdate.loading || statePrice.loading
   };
 
   const reset = form.reset;
 
   useEffect(() => {
-    const default_variant = service?.default_variant;
-    const default_price = default_variant?.default_price;
+    const default_price = product?.default_price;
     if (!default_price) return;
 
     reset({
@@ -59,15 +58,14 @@ export function UpdateServicePricingForm({ service_id }: ServiceProps) {
           ? undefined
           : `${default_price.recurring_interval_count}:${default_price.recurring_interval}`
     });
-  }, [reset, service]);
+  }, [reset, product]);
 
   async function onSubmit({
     unit_amount_major,
     payment_type,
     frequency
-  }: UpdateServicePricingFormFields) {
-    const default_variant = service?.default_variant;
-    const default_price = default_variant?.default_price;
+  }: UpdateProductPricingFormFields) {
+    const default_price = product?.default_price;
     if (!default_price) return;
 
     const currency = default_price.currency;
@@ -107,7 +105,7 @@ export function UpdateServicePricingForm({ service_id }: ServiceProps) {
     }
 
     const res_price = await createPrice({
-      service_variant_id: default_variant!.id,
+      product_id: product!.id,
       unit_amount,
       currency,
       status: 'live',
@@ -120,9 +118,9 @@ export function UpdateServicePricingForm({ service_id }: ServiceProps) {
     }
 
     const { price } = res_price;
-    await updateService({ service_id: service!.id, default_price_id: price!.id, status: 'live' });
+    await updateProduct({ product_id: product!.id, default_price_id: price!.id, status: 'live' });
 
-    const res = await updateService({ service_id, ...update });
+    const res = await updateProduct({ product_id, ...update });
 
     if (res?.success) {
       setSuccessMessage('Saved');
@@ -163,7 +161,7 @@ export function UpdateServicePricingForm({ service_id }: ServiceProps) {
               <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
                 <FormField
                   form={form}
-                  label="Price of service"
+                  label="Price of product"
                   name="unit_amount_major"
                   type="text"
                   inputMode="numeric"

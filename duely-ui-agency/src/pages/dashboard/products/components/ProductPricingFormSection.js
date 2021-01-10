@@ -1,7 +1,7 @@
 import { FormField } from '@duely/react';
 
 
-export function ServicePricingFormSection({ form }) {
+export function ProductPricingFormSection({ form }) {
   const payment_type = form.watch('payment_type');
   return (
     <>
@@ -14,7 +14,7 @@ export function ServicePricingFormSection({ form }) {
         <>
           <div className="flex flex-col -m-2 sm:flex-row">
             <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-              <FormField form={form} label="Price of service" name="unit_amount_major" type="text" inputMode="numeric" prefix="$" registerOptions={{ required: true }} />
+              <FormField form={form} label="Price of product" name="unit_amount_major" type="text" inputMode="numeric" prefix="$" registerOptions={{ required: true }} />
             </div>
           </div>
         </>

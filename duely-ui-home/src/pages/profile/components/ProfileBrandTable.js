@@ -6,12 +6,14 @@ const wrap = {
   columns: 1,
   spans: [
     1,
+    1,
     1
   ]
 };
 
 const headers = [
   'Brand',
+  'Plan',
   'Action required'
 ];
 
@@ -24,14 +26,24 @@ function BrandColumn({ agency }) {
 
   return (
     <div className="flex items-center space-x-3">
-      <img className="rounded-full h-16 w-16 sm:h-18 sm:w-18 object-contain" src={agency.theme.image_logo.data} alt={`${agency.name} logo`} />
+      <img className="object-contain w-16 h-16 rounded-full sm:h-18 sm:w-18" src={agency.theme.image_logo.data} alt={`${agency.name} logo`} />
       <a className="flex flex-col justify-center space-y-1" onClick={passAccessToken} href={`https://${agency.subdomain.name}.duely.app/dashboard`}>
         <div className="font-medium whitespace-nowrap">{agency.name}</div>
-        <div className="flex space-x-2 text-gray-400 text-sm items-center">
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
           <BsPeopleFill className="text-gray-300" />
           <span className="text-xs font-medium">{members.join(', ')}</span>
         </div>
       </a>
+    </div>
+  );
+}
+
+function PlanColumn({ agency }) {
+  const plan = agency.subscription_plan;
+
+  return (
+    <div className="flex items-center space-x-3">
+      {plan.name}
     </div>
   );
 }
@@ -42,10 +54,10 @@ function StatusColumn({ agency }) {
   if (!agency.stripe_account.charges_enabled) {
     return (
       <div className="flex items-center space-x-5">
-        <BsCreditCard className="block w-7 text-4xl text-indigo-500" />
+        <BsCreditCard className="block text-4xl text-indigo-500 w-7" />
         <div className="flex flex-col space-y-1">
           <span className="text-sm font-medium text-gray-500">Update your information to enable charges</span>
-          <a href="https://connect.stripe.com/setup/c/xxxxxxxxxxxx" onClick={navigateToStripeAccountUpdate} className="text-sm tracking-wide text-indigo-500 font-semibold">Continue to Stripe</a>
+          <a href="https://connect.stripe.com/setup/c/xxxxxxxxxxxx" onClick={navigateToStripeAccountUpdate} className="text-sm font-semibold tracking-wide text-indigo-500">Continue to Stripe</a>
         </div>
       </div>
     );
@@ -54,10 +66,10 @@ function StatusColumn({ agency }) {
   if (!agency.stripe_account.payouts_enabled) {
     return (
       <div className="flex items-center space-x-5">
-        <BsCreditCard className="block w-7 text-4xl text-indigo-500" />
+        <BsCreditCard className="block text-4xl text-indigo-500 w-7" />
         <div className="flex flex-col space-y-1">
           <span className="text-sm font-medium text-gray-500">Update your information to enable payouts</span>
-          <a href="https://connect.stripe.com/setup/c/xxxxxxxxxxxx" onClick={navigateToStripeAccountUpdate} className="text-sm tracking-wide text-indigo-500 font-semibold">Continue to Stripe</a>
+          <a href="https://connect.stripe.com/setup/c/xxxxxxxxxxxx" onClick={navigateToStripeAccountUpdate} className="text-sm font-semibold tracking-wide text-indigo-500">Continue to Stripe</a>
         </div>
       </div>
     );
@@ -65,8 +77,8 @@ function StatusColumn({ agency }) {
 
   return (
     <div className="flex items-center space-x-5">
-      <BsCheck className="block w-7 text-4xl text-green-500" />
-      <div className="flex flex-col space-y-1 items-center">
+      <BsCheck className="block text-4xl text-green-500 w-7" />
+      <div className="flex flex-col items-center space-y-1">
         <span className="text-sm font-medium text-gray-500">All set up.<br/>No actions required.</span>
       </div>
     </div>
@@ -82,6 +94,9 @@ export function ProfileBrandTable() {
   const columns = [
     // Brand
     agency => <BrandColumn agency={agency} />,
+
+    // Plan
+    agency => <PlanColumn agency={agency} />,
 
     // Action required
     agency => <StatusColumn agency={agency} />

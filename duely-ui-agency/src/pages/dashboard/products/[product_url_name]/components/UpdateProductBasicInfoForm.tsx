@@ -1,4 +1,4 @@
-import { service_Q, update_service_M, useMutation, useQuery } from '@duely/client';
+import { product_Q, update_product_M, useMutation, useQuery } from '@duely/client';
 import {
   Form,
   FormButton,
@@ -11,21 +11,21 @@ import {
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
-type ServiceProps = {
-  service_id: string;
+type ProductProps = {
+  product_id: string;
 };
 
-type UpdateServiceBasicInfoFormFields = {
+type UpdateProductBasicInfoFormFields = {
   name: string;
   description: string;
   url_name: string;
   image_logo_file_list: FileList;
 };
 
-export function UpdateServiceBasicInfoForm({ service_id }: ServiceProps) {
-  const form = useForm<UpdateServiceBasicInfoFormFields>();
-  const { data: service, loading: serviceLoading } = useQuery(service_Q, { service_id });
-  const [updateService, stateUpdate] = useMutation(update_service_M);
+export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
+  const form = useForm<UpdateProductBasicInfoFormFields>();
+  const { data: product, loading: productLoading } = useQuery(product_Q, { product_id });
+  const [updateProduct, stateUpdate] = useMutation(update_product_M);
   const {
     infoMessage,
     setInfoMessage,
@@ -36,11 +36,11 @@ export function UpdateServiceBasicInfoForm({ service_id }: ServiceProps) {
   } = useFormMessages();
 
   const state = {
-    loading: serviceLoading || stateUpdate.loading
+    loading: productLoading || stateUpdate.loading
   };
 
   // image logo
-  const current_image_logo = service?.default_variant.image_logo;
+  const current_image_logo = product?.image_logo;
 
   const image_logo_file_list = form.watch('image_logo_file_list');
   const { image: image_logo, loading: imageLogoLoading } = useImageInputFromFileList(
@@ -50,21 +50,20 @@ export function UpdateServiceBasicInfoForm({ service_id }: ServiceProps) {
   const reset = form.reset;
 
   useEffect(() => {
-    if (!service) return;
+    if (!product) return;
     reset({
-      name: service.name,
-      description: service.default_variant.description ?? undefined,
-      url_name: service.url_name
+      name: product.name,
+      description: product.description ?? undefined,
+      url_name: product.url_name
     });
-  }, [reset, service]);
+  }, [reset, product]);
 
-  async function onSubmit({ image_logo_file_list, ...data }: UpdateServiceBasicInfoFormFields) {
+  async function onSubmit({ image_logo_file_list, ...data }: UpdateProductBasicInfoFormFields) {
     const update = {
-      ...Util.diff(Util.pick(data, service!), service!),
-      ...Util.diff(Util.pick(data, service?.default_variant!), service?.default_variant!)
+      ...Util.diff(Util.pick(data, product!), product!)
     };
 
-    if (image_logo && image_logo?.data !== service?.default_variant.image_logo?.data) {
+    if (image_logo && image_logo?.data !== product?.image_logo?.data) {
       update.image_logo = image_logo;
     }
 
@@ -74,7 +73,7 @@ export function UpdateServiceBasicInfoForm({ service_id }: ServiceProps) {
       return;
     }
 
-    const res = await updateService({ service_id, ...update });
+    const res = await updateProduct({ product_id, ...update });
 
     if (res?.success) {
       setSuccessMessage('Saved');
@@ -89,7 +88,7 @@ export function UpdateServiceBasicInfoForm({ service_id }: ServiceProps) {
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
         <FormField
           form={form}
-          label="Service name"
+          label="Product name"
           className="max-w-xl"
           name="name"
           type="text"
@@ -101,10 +100,10 @@ export function UpdateServiceBasicInfoForm({ service_id }: ServiceProps) {
           className="max-w-xl"
           name="url_name"
           type="text"
-          prefix="/services/"
+          prefix="/products/"
           hint={
             <span>
-              <span>How service name should appear in URLs.</span>
+              <span>How product name should appear in URLs.</span>
               <br />
               <svg
                 xmlns="http://www.w3.org/2000/svg"

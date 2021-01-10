@@ -179,8 +179,8 @@ function HeroNavBar() {
             </div>
           </div>
           <div className="hidden md:block md:ml-10 md:pr-4 md:space-x-8">
-            <Link to="#services" className="font-medium text-gray-500 hover:text-gray-900">
-              Services
+            <Link to="#products" className="font-medium text-gray-500 hover:text-gray-900">
+              Products
             </Link>
 
             <Link to="#about-us" className="font-medium text-gray-500 hover:text-gray-900">
@@ -256,11 +256,11 @@ function HeroNavBar() {
             <div role="menu" aria-orientation="vertical" aria-labelledby="main-menu">
               <div className="px-2 pt-2 pb-3 space-y-1" role="none">
                 <Link
-                  to="#services"
+                  to="#products"
                   className="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:text-gray-900 hover:bg-gray-50"
                   role="menuitem"
                 >
-                  Services
+                  Products
                 </Link>
 
                 <Link

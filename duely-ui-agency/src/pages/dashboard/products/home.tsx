@@ -2,10 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, current_agency_Q } from '@duely/client';
 import { Util, useBreakpoints, Table, DropMenu, Card, useDynamicNavigation } from '@duely/react';
-import { ConfirmServiceDeletionModal } from './components';
+import { ConfirmProductDeletionModal } from './components';
 import {
   DashboardFlexGrid,
-  DashboardCardGetStartedCreateServices,
+  DashboardCardGetStartedCreateProducts,
   DashboardSection
 } from '../components';
 import { BsPencilSquare, BsTrash } from 'react-icons/bs';
@@ -22,48 +22,46 @@ const wrap = {
   spans: [5, 2, 3]
 };
 
-const headers = ['Service', 'Status', 'Action'];
+const headers = ['Product', 'Status', 'Action'];
 
-export default function DashboardServicesHome() {
+export default function DashboardProductsHome() {
   const { data: agency } = useQuery(current_agency_Q);
   const { sm } = useBreakpoints();
   const passAccessToken = useDynamicNavigation({ passAccessToken: true });
 
   const rows =
-    agency?.services?.map((service) => {
-      const { default_variant } = service;
-      const { default_price } = default_variant;
+    agency?.products?.map((product) => {
+      const { default_price } = product;
 
       return {
-        key: service.id,
-        service,
-        variant: default_variant,
+        key: product.id,
+        product,
         price: default_price
       };
     }) ?? [];
 
-  // type TItem = ReturnType<typeof getServiceRow>;
+  // type TItem = ReturnType<typeof getProductRow>;
 
   type TItem = typeof rows extends readonly (infer T)[] ? T : never;
 
   const columns = [
-    // service name & description
+    // product name & description
     (item: TItem) => (
       <div className="flex space-x-6">
-        {item.variant.image_logo ? (
+        {item.product.image_logo ? (
           <img
             className="object-cover w-32 h-20 rounded-lg flex-shrink-1"
-            src={item.variant.image_logo.data}
-            alt={`${item.variant.name} logo`}
+            src={item.product.image_logo.data}
+            alt={`${item.product.name} logo`}
           />
         ) : (
           <div className="w-32 h-20 bg-gray-200 rounded-lg flex-shrink-1"></div>
         )}
 
         <div className="flex flex-col space-y-1">
-          <span className="font-medium">{item.service.name}</span>
+          <span className="font-medium">{item.product.name}</span>
           <p className="flex-1 text-xs text-gray-500">
-            {Util.truncate(item.variant.description ?? '', 120)}
+            {Util.truncate(item.product.description ?? '', 120)}
           </p>
           <div className="flex items-center pb-1 space-x-3 text-xs text-gray-500">
             {item.price && (
@@ -75,8 +73,8 @@ export default function DashboardServicesHome() {
             <a
               className="px-1 rounded-sm hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600"
               onClick={passAccessToken}
-              target={`preview ${item.service.url_name}`}
-              href={`https://${agency?.subdomain.name}.duely.app/checkout/${item.service.url_name}?preview`}
+              target={`preview ${item.product.url_name}`}
+              href={`https://${agency?.subdomain.name}.duely.app/checkout/${item.product.url_name}?preview`}
             >
               preview checkout
             </a>
@@ -85,9 +83,9 @@ export default function DashboardServicesHome() {
       </div>
     ),
 
-    // service variant status
+    // product product status
     (item: TItem) => (
-      <ColoredChip color={statusColors} text={item.variant.status} />
+      <ColoredChip color={statusColors} text={item.product.status} />
     ),
 
     // actions
@@ -103,7 +101,7 @@ export default function DashboardServicesHome() {
               <span>Edit</span>
             </div>
           ),
-          to: `services/${item.service.url_name}/edit`
+          to: `products/${item.product.url_name}/edit`
         },
         {
           key: 'delete',
@@ -115,7 +113,7 @@ export default function DashboardServicesHome() {
               <span>Delete</span>
             </div>
           ),
-          to: '?delete_service=' + item.service.id
+          to: '?delete_product=' + item.product.id
         }
       ];
 
@@ -139,11 +137,11 @@ export default function DashboardServicesHome() {
     <>
       <DashboardSection title="Get started">
         <DashboardFlexGrid>
-          <DashboardCardGetStartedCreateServices />
+          <DashboardCardGetStartedCreateProducts />
         </DashboardFlexGrid>
       </DashboardSection>
 
-      <DashboardSection title="Services">
+      <DashboardSection title="Products">
         <Card className="max-w-screen-lg">
           <Table
             className="px-6 py-4"
@@ -155,7 +153,7 @@ export default function DashboardServicesHome() {
         </Card>
       </DashboardSection>
 
-      <ConfirmServiceDeletionModal />
+      <ConfirmProductDeletionModal />
     </>
   );
 }
