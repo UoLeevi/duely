@@ -32,8 +32,8 @@ export const TransactionFee = {
   resolvers: {
     TransactionFee: {
       ...createResolverForReferencedResource({ name: 'subscription_plan' }),
-      percentage(source: { numerator_: number; denominator_: number }) {
-        return source.numerator_ / source.denominator_;
+      percentage(source: { numerator: number; denominator: number }) {
+        return source.numerator / source.denominator;
       }
     },
     Query: {

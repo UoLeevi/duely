@@ -1,5 +1,22 @@
 import { Client, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
+import fs from 'fs';
+
+if (!process.env.DUELY_SERVICE_ACCOUNT_PASSWORD) {
+  if (!process.env.SERVICEACCOUNTCONFIGFILE) {
+    throw new Error('Invalid configuration.');
+  }
+  
+  const config = JSON.parse(fs.readFileSync(process.env.SERVICEACCOUNTCONFIGFILE, 'utf8'));
+  process.env = {
+    ...config.env,
+    ...process.env
+  };
+
+  if (!process.env.DUELY_SERVICE_ACCOUNT_PASSWORD) {
+    throw new Error('Invalid configuration.');
+  }
+}
 
 const RECONNECTION_TIMEOUT = 30000;
 const RECONNECTION_RETRY_COUNT = 3;
@@ -83,6 +100,35 @@ export async function addBackgroundJob(
   return removeBackgroundJob;
 }
 
+async function logInServiceAccount() {
+  const client = await pool.connect();
+  try {
+    const res = await client.query('SELECT * FROM operation_.begin_visit_() jwt_');
+    const visit_jwt = res.rows[0].jwt_;
+    await client.query('SELECT operation_.begin_session_($1::text)', [visit_jwt]);
+
+    try {
+      await client.query('BEGIN');
+      const res = await client.query('SELECT operation_.log_in_user_($1::text, $2::text) jwt_', [
+        'serviceaccount@duely.app',
+        process.env.DUELY_SERVICE_ACCOUNT_PASSWORD
+      ]);
+      await client.query('COMMIT');
+      return { jwt: res.rows[0].jwt_ };
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      await client.query('SELECT operation_.end_session_()');
+    }
+  } finally {
+    client.release();
+  }
+}
+
+const serviceAccountContextPromise = logInServiceAccount();
+export const fetchServiceAccountContext = () => serviceAccountContextPromise;
+
 type WithSessionCallback<R = any> = (functions: ReturnType<typeof useFunctions>) => Promise<R>;
 type WithConnectionCallback<R = any> = (
   withSession: (callback: WithSessionCallback) => Promise<R>
@@ -94,9 +140,7 @@ export async function withConnection<R = any>(
 ) {
   const client = await pool.connect();
 
-  async function withSession<RSession = any> (
-    callback: WithSessionCallback
-  ): Promise<RSession> {
+  async function withSession<RSession = any>(callback: WithSessionCallback): Promise<RSession> {
     const functions = useFunctions(client);
     await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [
       context.jwt,

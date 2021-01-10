@@ -38,6 +38,7 @@ services:
       PGPASSFILE: /workspace/duely-secret/.pgpass
       GSERVICEACCOUNTFILE: /workspace/duely-secret/duely-gserviceaccount.json
       STRIPECONFIGFILE: /workspace/duely-secret/duely-stripe.json
+      SERVICEACCOUNTCONFIGFILE: /workspace/duely-secret/duely-serviceaccount.json
 
   # Note: The PostgreSQL host name is "duely-postgres", not "localhost"
   duely-postgres:

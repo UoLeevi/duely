@@ -33,6 +33,7 @@ query AgencyStripeAccountUpdateUrl($agency_id: ID!, $livemode: Boolean!) {
 
 query AgencyStripeAccountBalance($agency_id: ID!, $livemode: Boolean!) {
   agency(id: $agency_id) {
+    id
     stripe_account(livemode: $livemode) {
       id
       balance {
@@ -74,6 +75,7 @@ query AgencyStripeAccountBalanceTransactions(
   $limit: Int
 ) {
   agency(id: $agency_id) {
+    id
     stripe_account(livemode: $livemode) {
       id
       balance_transactions(
@@ -97,6 +99,7 @@ query AgencyStripeAccountPaymentIntents(
   $limit: Int
 ) {
   agency(id: $agency_id) {
+    id
     stripe_account(livemode: $livemode) {
       id
       payment_intents(
@@ -120,6 +123,7 @@ query AgencyStripeAccountCustomers(
   $limit: Int
 ) {
   agency(id: $agency_id) {
+    id
     stripe_account(livemode: $livemode) {
       id
       customers(
@@ -130,6 +134,17 @@ query AgencyStripeAccountCustomers(
       ) {
         ...customer
       }
+    }
+  }
+}
+
+query AgencySubscriptionPlan(
+  $agency_id: ID!
+) {
+  agency(id: $agency_id) {
+    id
+    subscription_plan {
+      ...subscription_plan
     }
   }
 }
@@ -242,6 +257,7 @@ query SubdomainAgencyStripeAccountUpdateUrl($subdomain_name: String!, $livemode:
     id
     name
     agency {
+      id
       stripe_account(livemode: $livemode) {
         account_update_url {
           url
@@ -337,4 +353,3 @@ query PageBlockDefinitionsByName($name: String!) {
     ...page_block_definition
   }
 }
-

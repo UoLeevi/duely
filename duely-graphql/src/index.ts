@@ -5,6 +5,9 @@ import schema from './graphql/schema';
 import { getContext } from './graphql/context';
 // import subscriptions from './graphql/subscriptions';
 
+// let's fail fast
+process.on('unhandledRejection', up => { throw up; });
+
 const app = express();
 app.set('trust proxy', true);
 app.use(cors());

@@ -4,6 +4,7 @@ import {
   createResolverForReferencedResource
 } from '../../util';
 import stripe from '../../../stripe';
+import { calculateTransactionFee } from '../SubscriptionPlan';
 
 const resource = {
   name: 'price',
@@ -326,11 +327,16 @@ export const Price = {
                 cancel_url = context.referer ?? `https://${subdomain.name}.duely.app`;
               }
 
-              const application_fee_percent = 1;
+              const application_fee_amount = await calculateTransactionFee(
+                agency.subscription_plan_id,
+                price.unit_amount,
+                price.currency
+              );
 
               // create stripe checkout session
               // see: https://stripe.com/docs/connect/creating-a-payments-page
               // see: https://stripe.com/docs/payments/checkout/custom-success-page
+              // see: https://stripe.com/docs/api/checkout/sessions/create
               const stripe_checkout_session_args = {
                 mode: price.type === 'recurring' ? 'subscription' : 'payment',
                 payment_method_types: ['card'],
@@ -347,21 +353,20 @@ export const Price = {
 
               if (price.type === 'recurring') {
                 stripe_checkout_session_args.subscription_data = {
-                  application_fee_percent
+                  application_fee_percent: (application_fee_amount / price.unit_amount) * 100
                 };
               } else {
                 stripe_checkout_session_args.payment_intent_data = {
-                  application_fee_amount: Math.round(
-                    (price.unit_amount * application_fee_percent) / 100
-                  )
+                  application_fee_amount
                 };
               }
 
-              const checkout_session = await stripe[
-                stripe_env
-              ].checkout.sessions.create(stripe_checkout_session_args, {
-                stripeAccount: stripe_account.stripe_id_ext
-              });
+              const checkout_session = await stripe[stripe_env].checkout.sessions.create(
+                stripe_checkout_session_args,
+                {
+                  stripeAccount: stripe_account.stripe_id_ext
+                }
+              );
 
               // success
               return {

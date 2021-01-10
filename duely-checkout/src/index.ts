@@ -175,10 +175,11 @@ async function get_checkout(req: Request, res: Response) {
   }
 
   let checkout_session_id;
-  const requestArgs: [string, { price_id: string, livemode: boolean }, { authorization: string }?] = [
-    gql_create_stripe_checkout_session,
-    { price_id, livemode }
-  ];
+  const requestArgs: [
+    string,
+    { price_id: string; livemode: boolean },
+    { authorization: string }?
+  ] = [gql_create_stripe_checkout_session, { price_id, livemode }];
   const { access_token } = req.query ?? {};
 
   if (access_token) {

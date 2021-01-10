@@ -32,6 +32,7 @@ import { Json } from './Json';
 import { Theme } from './Theme';
 import { Price } from './Price';
 import { BalanceTransaction } from './BalanceTransaction';
+import { ExchangeRate } from './ExchangeRate';
 
 const types = [
   {
@@ -60,6 +61,7 @@ const types = [
   SignUp,
   PasswordReset,
   Country,
+  ExchangeRate,
   User,
   Agency,
   AgencySettings,

@@ -1602,7 +1602,7 @@ export declare type AgencyStripeAccountBalanceQuery = ({
 } & {
     agency?: Maybe<({
         __typename?: 'Agency';
-    } & {
+    } & Pick<Agency, 'id'> & {
         stripe_account: ({
             __typename?: 'StripeAccount';
         } & Pick<StripeAccount, 'id'> & {
@@ -1647,7 +1647,7 @@ export declare type AgencyStripeAccountBalanceTransactionsQuery = ({
 } & {
     agency?: Maybe<({
         __typename?: 'Agency';
-    } & {
+    } & Pick<Agency, 'id'> & {
         stripe_account: ({
             __typename?: 'StripeAccount';
         } & Pick<StripeAccount, 'id'> & {
@@ -1670,7 +1670,7 @@ export declare type AgencyStripeAccountPaymentIntentsQuery = ({
 } & {
     agency?: Maybe<({
         __typename?: 'Agency';
-    } & {
+    } & Pick<Agency, 'id'> & {
         stripe_account: ({
             __typename?: 'StripeAccount';
         } & Pick<StripeAccount, 'id'> & {
@@ -1693,7 +1693,7 @@ export declare type AgencyStripeAccountCustomersQuery = ({
 } & {
     agency?: Maybe<({
         __typename?: 'Agency';
-    } & {
+    } & Pick<Agency, 'id'> & {
         stripe_account: ({
             __typename?: 'StripeAccount';
         } & Pick<StripeAccount, 'id'> & {
@@ -1701,6 +1701,20 @@ export declare type AgencyStripeAccountCustomersQuery = ({
                 __typename?: 'StripeCustomer';
             } & CustomerFragment)>;
         });
+    })>;
+});
+export declare type AgencySubscriptionPlanQueryVariables = Exact<{
+    agency_id: Scalars['ID'];
+}>;
+export declare type AgencySubscriptionPlanQuery = ({
+    __typename?: 'Query';
+} & {
+    agency?: Maybe<({
+        __typename?: 'Agency';
+    } & Pick<Agency, 'id'> & {
+        subscription_plan: ({
+            __typename?: 'SubscriptionPlan';
+        } & Subscription_PlanFragment);
     })>;
 });
 export declare type AgencyQueryVariables = Exact<{
@@ -1860,7 +1874,7 @@ export declare type SubdomainAgencyStripeAccountUpdateUrlQuery = ({
     } & Pick<Subdomain, 'id' | 'name'> & {
         agency: ({
             __typename?: 'Agency';
-        } & {
+        } & Pick<Agency, 'id'> & {
             stripe_account: ({
                 __typename?: 'StripeAccount';
             } & {
@@ -2062,6 +2076,7 @@ export declare const AgencyStripeAccountBalanceDocument: DocumentNode<AgencyStri
 export declare const AgencyStripeAccountBalanceTransactionsDocument: DocumentNode<AgencyStripeAccountBalanceTransactionsQuery, AgencyStripeAccountBalanceTransactionsQueryVariables>;
 export declare const AgencyStripeAccountPaymentIntentsDocument: DocumentNode<AgencyStripeAccountPaymentIntentsQuery, AgencyStripeAccountPaymentIntentsQueryVariables>;
 export declare const AgencyStripeAccountCustomersDocument: DocumentNode<AgencyStripeAccountCustomersQuery, AgencyStripeAccountCustomersQueryVariables>;
+export declare const AgencySubscriptionPlanDocument: DocumentNode<AgencySubscriptionPlanQuery, AgencySubscriptionPlanQueryVariables>;
 export declare const AgencyDocument: DocumentNode<AgencyQuery, AgencyQueryVariables>;
 export declare const AgenciesDocument: DocumentNode<AgenciesQuery, AgenciesQueryVariables>;
 export declare const CurrentUserAgenciesDocument: DocumentNode<CurrentUserAgenciesQuery, CurrentUserAgenciesQueryVariables>;

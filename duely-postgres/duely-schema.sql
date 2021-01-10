@@ -2839,11 +2839,7 @@ CREATE FUNCTION policy_.anyone_can_query_subscription_plan_basic_fields_(_resour
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, name_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
+  RETURN '{uuid_, name_}'::text[];
 END
 $$;
 
@@ -3916,7 +3912,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_transaction_fee_(_resource_defi
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, subscription_plan_uuid_, numerator_, denominator_, fixed_amout_, currency_, transaction_amount_upper_bound_, data_}'::text[];
+    RETURN '{uuid_, subscription_plan_uuid_, numerator_, denominator_, fixed_amount_, currency_, transaction_amount_upper_bound_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5442,7 +5438,7 @@ CREATE TABLE internal_.transaction_fee_ (
     subscription_plan_uuid_ uuid NOT NULL,
     numerator_ integer DEFAULT 0 NOT NULL,
     denominator_ integer DEFAULT 10000 NOT NULL,
-    fixed_amout_ integer DEFAULT 0 NOT NULL,
+    fixed_amount_ integer DEFAULT 0 NOT NULL,
     currency_ text NOT NULL,
     transaction_amount_upper_bound_ integer,
     data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
@@ -5548,7 +5544,7 @@ CREATE TABLE internal__audit_.transaction_fee_ (
     subscription_plan_uuid_ uuid,
     numerator_ integer,
     denominator_ integer,
-    fixed_amout_ integer,
+    fixed_amount_ integer,
     currency_ text,
     transaction_amount_upper_bound_ integer,
     data_ jsonb,
@@ -6044,7 +6040,7 @@ d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	Basic plan	\N	\N	{}	2021-01-09 09:00:57.943
 -- Data for Name: transaction_fee_; Type: TABLE DATA; Schema: internal_; Owner: postgres
 --
 
-COPY internal_.transaction_fee_ (uuid_, subscription_plan_uuid_, numerator_, denominator_, fixed_amout_, currency_, transaction_amount_upper_bound_, data_, audit_at_, audit_session_uuid_) FROM stdin;
+COPY internal_.transaction_fee_ (uuid_, subscription_plan_uuid_, numerator_, denominator_, fixed_amount_, currency_, transaction_amount_upper_bound_, data_, audit_at_, audit_session_uuid_) FROM stdin;
 76a44284-0f69-4fca-bf3d-f3c79252efbd	d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	100	10000	100	eur	10000	{}	2021-01-09 09:00:57.943771+00	00000000-0000-0000-0000-000000000000
 623002cf-076b-447d-b393-d296bf3459dc	d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	100	10000	0	eur	\N	{}	2021-01-09 09:00:57.943771+00	00000000-0000-0000-0000-000000000000
 \.
@@ -6104,7 +6100,7 @@ d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	Basic plan	\N	\N	{}	2021-01-09 09:00:57.943
 -- Data for Name: transaction_fee_; Type: TABLE DATA; Schema: internal__audit_; Owner: postgres
 --
 
-COPY internal__audit_.transaction_fee_ (uuid_, subscription_plan_uuid_, numerator_, denominator_, fixed_amout_, currency_, transaction_amount_upper_bound_, data_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+COPY internal__audit_.transaction_fee_ (uuid_, subscription_plan_uuid_, numerator_, denominator_, fixed_amount_, currency_, transaction_amount_upper_bound_, data_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 76a44284-0f69-4fca-bf3d-f3c79252efbd	d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	100	10000	100	eur	10000	{}	2021-01-09 09:00:57.943771+00	00000000-0000-0000-0000-000000000000	I
 623002cf-076b-447d-b393-d296bf3459dc	d1f741a6-1c1f-49c2-a87d-3cbbf18d5a2f	100	10000	0	eur	\N	{}	2021-01-09 09:00:57.943771+00	00000000-0000-0000-0000-000000000000	I
 \.

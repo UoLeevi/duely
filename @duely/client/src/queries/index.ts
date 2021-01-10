@@ -19,6 +19,7 @@ import {
   ProductThankYouPageSettingDocument,
   ProductAndAgencyFromUrlPartsDocument,
   AgencyPagesDocument,
+  AgencySubscriptionPlanDocument,
   PageDocument,
   PageBlockDocument,
   PageDefinitionDocument,
@@ -239,6 +240,11 @@ export const product_thank_you_page_settings_Q = {
 export const agency_pages_Q = {
   query: AgencyPagesDocument,
   result: (d: ResultOf<typeof AgencyPagesDocument>) => d?.pages
+};
+
+export const agency_subscription_plan_Q = {
+  query: AgencySubscriptionPlanDocument,
+  result: (d: ResultOf<typeof AgencySubscriptionPlanDocument>) => d?.agency?.subscription_plan
 };
 
 export const page_Q = {
