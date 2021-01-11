@@ -1,5 +1,6 @@
 import type { GraphQLResolveInfo } from 'graphql';
 import { withConnection } from '../db';
+import { DuelyQqlContext } from './context';
 
 // Not yet used
 export async function withCache<TKey, TValue>(
@@ -38,7 +39,7 @@ type CreateDefaultQueryResolversForResourceArgs = {
 export function createDefaultQueryResolversForResource<
   TResult,
   TSource extends { id?: string },
-  TContext extends { jwt?: string; ip?: string },
+  TContext extends DuelyQqlContext,
   TFilterArg
 >({ table_name, name, plural }: CreateDefaultQueryResolversForResourceArgs) {
   return {
@@ -91,7 +92,7 @@ type CreateResolverForReferencedResourceArgs = {
 export function createResolverForReferencedResource<
   TResult,
   TSource extends { id?: string },
-  TContext extends { jwt?: string; ip?: string },
+  TContext extends DuelyQqlContext,
   TFilterArg
 >({ name, resource_name, column_name, reverse }: CreateResolverForReferencedResourceArgs) {
   column_name = column_name ?? `${name}_id`;

@@ -1,3 +1,4 @@
+import gql from 'graphql-tag';
 import { withConnection } from '../../../db';
 import {
   createDefaultQueryResolversForResource,
@@ -10,7 +11,7 @@ const resource = {
 };
 
 export const User = {
-  typeDef: `
+  typeDef: gql`
     type User implements Node {
       id: ID!
       name: String!

@@ -1,8 +1,9 @@
 import { GraphQLScalarType } from 'graphql';
+import gql from 'graphql-tag';
 import { Kind } from 'graphql/language';
 
 export const Date = {
-  typeDef: `
+  typeDef: gql`
     scalar Date
   `,
   resolvers: {

@@ -1,4 +1,4 @@
-import { makeExecutableSchema } from '@graphql-tools/schema';
+import { IExecutableSchemaDefinition, makeExecutableSchema } from '@graphql-tools/schema';
 import { interfaces } from './interfaces';
 import { AccessLevel } from './AccessLevel';
 import { Address } from './Address';
@@ -33,10 +33,14 @@ import { Theme } from './Theme';
 import { Price } from './Price';
 import { BalanceTransaction } from './BalanceTransaction';
 import { ExchangeRate } from './ExchangeRate';
+import type { DuelyQqlContext } from '../context';
+import gql from 'graphql-tag';
+import { GqlTypeDefinition, GqlResolver } from '../types';
+import { DocumentNode } from 'graphql';
 
-const types = [
+const types: GqlTypeDefinition[] = [
   {
-    typeDef: `
+    typeDef: gql`
       type Query
       type Mutation
 
@@ -82,16 +86,13 @@ const types = [
   Json
 ];
 
-const schema = {
-  typeDefs: types.map((t) => t.typeDef ?? '').join(''),
-  resolvers: {}
+const schema: IExecutableSchemaDefinition<DuelyQqlContext> = {
+  typeDefs: types
+    .map((t) => t.typeDef)
+    .filter((d): d is DocumentNode => d !== undefined),
+  resolvers: types
+    .map((t) => t.resolvers)
+    .filter((r): r is Record<string, GqlResolver> => r !== undefined)
 };
 
-for (const [t, resolvers] of types.flatMap((t) => Object.entries(t.resolvers ?? {}))) {
-  schema.resolvers[t] = {
-    ...schema.resolvers[t],
-    ...resolvers
-  };
-}
-
-export default makeExecutableSchema(schema);
+export default makeExecutableSchema<DuelyQqlContext>(schema);

@@ -2,11 +2,12 @@ import { withConnection } from '../../../db';
 import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
 import validator from 'validator';
+import gql from 'graphql-tag';
 
 const resource_name = 'password reset';
 
 export const PasswordReset = {
-  typeDef: `
+  typeDef: gql`
     extend type Mutation {
       start_password_reset(email_address: String!, redirect_url: String): SimpleResult!
       verify_password_reset(verification_code: String!, password: String!): SimpleResult!

@@ -1,8 +1,10 @@
 // see: https://stripe.com/docs/api/balance_transactions/object
 // see also: https://stripe.com/docs/reports/reporting-categories
 
+import gql from 'graphql-tag';
+
 export const BalanceTransaction = {
-  typeDef: `
+  typeDef: gql`
     type BalanceTransaction {
       id: ID!
       id_ext: ID!

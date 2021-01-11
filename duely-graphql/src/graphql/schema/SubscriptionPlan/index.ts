@@ -1,3 +1,4 @@
+import gql from 'graphql-tag';
 import { fetchServiceAccountContext, withConnection } from '../../../db';
 import {
   createDefaultQueryResolversForResource,
@@ -68,7 +69,7 @@ export async function calculateTransactionFee(
 }
 
 export const SubscriptionPlan = {
-  typeDef: `
+  typeDef: gql`
     type SubscriptionPlan {
       id: ID!
       name: String!

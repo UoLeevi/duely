@@ -1,3 +1,4 @@
+import gql from 'graphql-tag';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
@@ -10,7 +11,7 @@ const resource = {
 };
 
 export const Subdomain = {
-  typeDef: `
+  typeDef: gql`
     type Subdomain implements Node {
       id: ID!
       name: String!

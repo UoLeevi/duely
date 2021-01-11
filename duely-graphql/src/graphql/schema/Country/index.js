@@ -1,3 +1,4 @@
+import gql from 'graphql-tag';
 import stripe from '../../../stripe';
 
 let countryCodesPromise = null;
@@ -21,7 +22,7 @@ async function fetchCountryCodes() {
 }
 
 export const Country = {
-  typeDef: `
+  typeDef: gql`
     extend type Query {
       country_codes: [String!]
     }

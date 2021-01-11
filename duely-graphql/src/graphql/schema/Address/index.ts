@@ -1,5 +1,8 @@
-export const Address = {
-  typeDef: `
+import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
+
+export const Address: GqlTypeDefinition = {
+  typeDef: gql`
     type Address {
       city: String
       country: String

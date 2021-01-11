@@ -7,13 +7,14 @@ import {
 import validator from 'validator';
 import stripe from '../../../stripe';
 import { validateAndReadDataUrlAsBuffer } from '../Image';
+import gql from 'graphql-tag';
 
 const resource = {
   name: 'product'
 };
 
 export const Product = {
-  typeDef: `
+  typeDef: gql`
     type Product implements Node {
       id: ID!
       name: String!
@@ -150,7 +151,7 @@ export const Product = {
                 test: null
               };
 
-              for (const stripe_env of ['test', 'live']) {
+              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
                 const stripe_account = await queryResource('stripe account', {
                   livemode: stripe_env === 'live',
                   agency_id: agency.id
@@ -260,7 +261,7 @@ export const Product = {
               stripe_product_args.description = description;
               stripe_product_args.active = status === 'live';
 
-              for (const stripe_env of ['test', 'live']) {
+              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
                 const stripe_account = await queryResource('stripe account', {
                   livemode: stripe_env === 'live',
                   agency_id
@@ -298,7 +299,7 @@ export const Product = {
           return await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource, deleteResource }) => {
               const product = await deleteResource(product_id);
-
+              
               if (product == null) {
                 return {
                   // error
@@ -308,7 +309,9 @@ export const Product = {
                 };
               }
 
-              for (const stripe_env of ['test', 'live']) {
+              const agency = await deleteResource(product.agency_id);
+
+              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
                 const stripe_account = await queryResource('stripe account', {
                   livemode: stripe_env === 'live',
                   agency_id: product.agency_id

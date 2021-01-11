@@ -1,7 +1,8 @@
 import { GraphQLScalarType } from 'graphql';
+import gql from 'graphql-tag';
 
 export const Json = {
-  typeDef: `
+  typeDef: gql`
     scalar Json
   `,
   resolvers: {

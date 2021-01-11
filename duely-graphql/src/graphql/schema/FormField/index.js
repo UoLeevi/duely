@@ -1,5 +1,7 @@
+import gql from 'graphql-tag';
+
 export const FormField = {
-  typeDef: `
+  typeDef: gql`
     type FormField implements Node {
       id: ID!
       name: String!

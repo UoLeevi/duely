@@ -7,17 +7,21 @@ import {
 import validator from 'validator';
 import stripe from '../../../stripe';
 import { validateAndReadDataUrlAsBuffer } from '../Image';
+import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
+import Stripe from 'stripe';
 
 const resource = {
   name: 'agency',
   plural: 'agencies'
 };
 
-export const Agency = {
-  typeDef: `
+export const Agency: GqlTypeDefinition = {
+  typeDef: gql`
     type Agency implements Node {
       id: ID!
       name: String!
+      livemode: Boolean!
       stripe_account(livemode: Boolean!): StripeAccount!
       subdomain: Subdomain!
       theme: Theme!
@@ -37,7 +41,14 @@ export const Agency = {
     }
 
     extend type Mutation {
-      create_agency(name: String!, subdomain_name: String!, country_code: String!, image_logo: ImageInput!, return_url: String!): CreateAgencyResult!
+      create_agency(
+        name: String!
+        livemode: Boolean!
+        subdomain_name: String!
+        country_code: String!
+        image_logo: ImageInput!
+        return_url: String!
+      ): CreateAgencyResult!
       delete_agency(agency_id: ID!): DeleteAgencyResult!
     }
 
@@ -101,9 +112,8 @@ export const Agency = {
     Mutation: {
       async create_agency(
         obj,
-        { name, subdomain_name, country_code, image_logo, return_url },
-        context,
-        info
+        { name, livemode, subdomain_name, country_code, image_logo, return_url },
+        context
       ) {
         if (!context.jwt) throw new Error('Unauthorized');
 
@@ -159,7 +169,7 @@ export const Agency = {
               // create subdomain and agency on database
               const subdomain = await createResource('subdomain', {
                 name: subdomain_name,
-                agency: { name }
+                agency: { name, livemode }
               });
               const agency = subdomain.agency;
 
@@ -180,7 +190,7 @@ export const Agency = {
               // create stripe custom account for agency
               // see: https://stripe.com/docs/api/accounts/create
 
-              const createStripeAccountArgs = {
+              const createStripeAccountArgs: Stripe.AccountCreateParams = {
                 type: 'custom',
                 email: user.email_address,
                 country: country_code,
@@ -200,16 +210,25 @@ export const Agency = {
                 },
                 settings: {
                   branding: {
-                    logo: null
+                    logo: undefined
                   }
                 }
               };
 
-              if (validator.isIP(context.ip)) {
-                createStripeAccountArgs.tos_acceptance.ip = context.ip;
+              if (context.ip && validator.isIP(context.ip)) {
+                createStripeAccountArgs.tos_acceptance!.ip = context.ip;
               }
 
-              for (const stripe_env of ['test', 'live']) {
+              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+                ? ['test', 'live']
+                : ['test'];
+
+              const accounts: Record<keyof typeof stripe, Stripe.Account | undefined> = {
+                test: undefined,
+                live: undefined
+              };
+
+              for (const stripe_env of stripe_envs) {
                 // upload logo image to stripe
                 const logo_upload = await stripe[stripe_env].files.create({
                   file: {
@@ -220,9 +239,10 @@ export const Agency = {
                   purpose: 'business_logo'
                 });
 
-                createStripeAccountArgs.settings.branding.logo = logo_upload.id;
+                createStripeAccountArgs.settings!.branding!.logo = logo_upload.id;
 
                 const account = await stripe[stripe_env].accounts.create(createStripeAccountArgs);
+                accounts[stripe_env] = account;
 
                 // store stripe custom account id to database
                 await createResource('stripe account', {
@@ -236,8 +256,10 @@ export const Agency = {
               // see: https://stripe.com/docs/api/account_links/create
               let accountLink;
               try {
-                accountLink = await stripe['live'].accountLinks.create({
-                  account: account.id,
+                const stripe_env = agency.livemode ? 'live' : 'test';
+
+                accountLink = await stripe[stripe_env].accountLinks.create({
+                  account: accounts[stripe_env]!.id,
                   refresh_url: return_url,
                   return_url,
                   type: 'account_onboarding',
@@ -271,7 +293,7 @@ export const Agency = {
           };
         }
       },
-      async delete_agency(obj, { agency_id }, context, info) {
+      async delete_agency(obj, { agency_id }, context) {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
@@ -288,7 +310,11 @@ export const Agency = {
                 };
               }
 
-              for (const stripe_env of ['live', 'test']) {
+              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+                ? ['test', 'live']
+                : ['test'];
+
+              for (const stripe_env of stripe_envs) {
                 // query stripe account from database
                 const stripe_account = await queryResource('stripe account', {
                   agency_id,
@@ -297,11 +323,11 @@ export const Agency = {
 
                 // delete stripe custom account for agency
                 // see: https://stripe.com/docs/api/accounts/delete
-                const deleted = await stripe[stripe_env].accounts.del(stripe_account.stripe_id_ext);
+                await stripe[stripe_env].accounts.del(stripe_account.stripe_id_ext);
               }
 
               // delete subdomain from database, will cascade to agency, theme, subject assignment and stripe account tables
-              const subdomain = await deleteResource(agency.subdomain_id);
+              await deleteResource(agency.subdomain_id);
 
               // success
               return {

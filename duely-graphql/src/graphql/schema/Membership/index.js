@@ -1,3 +1,4 @@
+import gql from 'graphql-tag';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -8,7 +9,7 @@ const resource = {
 };
 
 export const Membership = {
-  typeDef: `
+  typeDef: gql`
     type Membership implements Node {
       id: ID!
       name: String!

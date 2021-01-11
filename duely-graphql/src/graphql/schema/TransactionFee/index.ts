@@ -1,3 +1,4 @@
+import gql from 'graphql-tag';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -9,7 +10,7 @@ const resource = {
 };
 
 export const TransactionFee = {
-  typeDef: `
+  typeDef: gql`
     type TransactionFee {
       id: ID!
       subscription_plan: SubscriptionPlan!

@@ -4,13 +4,14 @@ import {
   createResolverForReferencedResource
 } from '../../util';
 import md from '../../../markdown-it';
+import gql from 'graphql-tag';
 
 const resource = {
   name: 'markdown'
 };
 
 export const Markdown = {
-  typeDef: `
+  typeDef: gql`
     type Markdown implements Node {
       id: ID!
       name: String!

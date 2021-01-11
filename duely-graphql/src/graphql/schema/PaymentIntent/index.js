@@ -1,11 +1,12 @@
 // see: https://stripe.com/docs/api/payment_intents/object
 
 import { parseResolveInfo } from 'graphql-parse-resolve-info';
+import gql from 'graphql-tag';
 import stripe from '../../../stripe';
 import { withStripeAccountProperty } from '../../util';
 
 export const PaymentIntent = {
-  typeDef: `
+  typeDef: gql`
     type PaymentIntent {
       id: ID!
       id_ext: ID!

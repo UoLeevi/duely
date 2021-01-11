@@ -2,9 +2,10 @@ import { agencyCreated, agencyUpdated, agencyDeleted } from './agencySubscriptio
 import { serviceCreated, serviceUpdated, serviceDeleted } from './serviceSubscriptions';
 import { serviceStepCreated, serviceStepUpdated, serviceStepDeleted } from './serviceStepSubscriptions';
 import { inviteCreated, inviteUpdated, inviteDeleted } from './inviteSubscriptions';
+import gql from 'graphql-tag';
 
 export default {
-  typeDef: `
+  typeDef: gql`
     type Subscription {
       agencyCreated: Agency!
       agencyUpdated(agencyUuids: [ID!]!): Agency!

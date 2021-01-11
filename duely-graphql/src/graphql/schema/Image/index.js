@@ -4,6 +4,7 @@ import {
   createResolverForReferencedResource
 } from '../../util';
 import validator from 'validator';
+import gql from 'graphql-tag';
 
 const resource = {
   name: 'image'
@@ -60,7 +61,7 @@ export function validateAndReadDataUrlAsBuffer(dataUrl, options) {
 }
 
 export const Image = {
-  typeDef: `
+  typeDef: gql`
     type Image implements Node {
       id: ID!
       name: String!

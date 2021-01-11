@@ -1,3 +1,4 @@
+import gql from 'graphql-tag';
 import { withConnection } from '../../../db';
 import {
   createDefaultQueryResolversForResource,
@@ -10,7 +11,7 @@ const resource = {
 };
 
 export const PageBlock = {
-  typeDef: `
+  typeDef: gql`
     type PageBlock {
       id: ID!
       page: Page!

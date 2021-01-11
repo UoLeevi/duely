@@ -1,6 +1,7 @@
 import { Client, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
+import { DuelyQqlContext } from '../graphql/context';
 
 if (!process.env.DUELY_SERVICE_ACCOUNT_PASSWORD) {
   if (!process.env.SERVICEACCOUNTCONFIGFILE) {
@@ -135,7 +136,7 @@ type WithConnectionCallback<R = any> = (
 ) => Promise<R>;
 
 export async function withConnection<R = any>(
-  context: { jwt?: string; ip?: string },
+  context: DuelyQqlContext,
   callback: WithConnectionCallback<R>
 ) {
   const client = await pool.connect();

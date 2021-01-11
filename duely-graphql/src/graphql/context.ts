@@ -9,7 +9,15 @@ function parseIp(req: IncomingMessage) {
   );
 }
 
-export function getContext(req: IncomingMessage) {
+export type DuelyQqlContext = {
+  ip?: string;
+  referer?: string;
+  user_agent?: string;
+  jwt?: string | null;
+  cache?: Map<any, any>;
+};
+
+export function getContext(req: IncomingMessage): DuelyQqlContext {
   const authorization = req.headers.authorization || null;
   const jwt =
     authorization && authorization.startsWith('Bearer ') ? authorization.substring(7) : null;

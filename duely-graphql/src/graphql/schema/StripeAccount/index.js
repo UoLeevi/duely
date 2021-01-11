@@ -1,10 +1,11 @@
+import gql from 'graphql-tag';
 import { withConnection } from '../../../db';
 import stripe from '../../../stripe';
 
 // see: https://stripe.com/docs/api/accounts/object
 
 export const StripeAccount = {
-  typeDef: `
+  typeDef: gql`
     type StripeAccount {
       id: ID!
       id_ext: ID!

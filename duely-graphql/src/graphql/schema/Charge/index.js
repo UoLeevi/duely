@@ -3,9 +3,10 @@
 import stripe from '../../../stripe';
 import { parseResolveInfo } from 'graphql-parse-resolve-info';
 import { withStripeAccountProperty } from '../../util';
+import gql from 'graphql-tag';
 
 export const Charge = {
-  typeDef: `
+  typeDef: gql`
     type Charge {
       id: ID!
       id_ext: ID!

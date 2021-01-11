@@ -1,5 +1,8 @@
-export const interfaces = {
-  typeDef: `
+import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
+
+export const interfaces: GqlTypeDefinition = {
+  typeDef: gql`
     interface Node {
       id: ID!
       name: String!
@@ -21,22 +24,22 @@ export const interfaces = {
   `,
   resolvers: {
     Node: {
-      __resolveType(node, context, info) {
+      __resolveType(node: { type: string }) {
         return node.type;
       }
     },
     MutationResult: {
-      __resolveType(mutationResult, context, info) {
+      __resolveType(mutationResult: { type: string }) {
         return mutationResult.type;
       }
     },
     Connection: {
-      __resolveType(connection, context, info) {
+      __resolveType(connection: { type: string }) {
         return connection.type;
       }
     },
     Edge: {
-      __resolveType(edge, context, info) {
+      __resolveType(edge: { type: string }) {
         return edge.type;
       }
     }

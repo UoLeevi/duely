@@ -2,11 +2,12 @@ import { withConnection } from '../../../db';
 import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
 import validator from 'validator';
+import gql from 'graphql-tag';
 
 const resource_name = 'sign up';
 
 export const SignUp = {
-  typeDef: `
+  typeDef: gql`
     extend type Mutation {
       start_sign_up(email_address: String!, password: String!, name: String!, redirect_url: String): SimpleResult!
       verify_sign_up(verification_code: String!): SimpleResult!

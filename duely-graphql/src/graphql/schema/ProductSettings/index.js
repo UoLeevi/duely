@@ -1,8 +1,9 @@
+import gql from 'graphql-tag';
 import { withConnection } from '../../../db';
 import { createResolverForReferencedResource } from '../../util';
 
 export const ProductSettings = {
-  typeDef: `
+  typeDef: gql`
     type ProductSettings {
       id: ID!
       thank_you_page_setting: ProductThankYouPageSetting

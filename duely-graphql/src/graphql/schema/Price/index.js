@@ -5,6 +5,7 @@ import {
 } from '../../util';
 import stripe from '../../../stripe';
 import { calculateTransactionFee } from '../SubscriptionPlan';
+import gql from 'graphql-tag';
 
 const resource = {
   name: 'price',
@@ -12,7 +13,7 @@ const resource = {
 };
 
 export const Price = {
-  typeDef: `
+  typeDef: gql`
     type Price implements Node {
       id: ID!
       name: String!
@@ -92,10 +93,10 @@ export const Price = {
               const product = await queryResource(args.product_id);
 
               if (product == null) {
-                throw Error('Service variant not found');
+                throw Error('Product not found');
               }
 
-              const service = await queryResource(product.service_id);
+              const agency = await queryResource(product.agency_id);
 
               const {
                 status,
@@ -124,9 +125,9 @@ export const Price = {
                 test: null
               };
 
-              for (const stripe_env of ['test', 'live']) {
+              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
                 const stripe_account = await queryResource('stripe account', {
-                  agency_id: service.agency_id,
+                  agency_id: agency.id,
                   livemode: stripe_env === 'live'
                 });
 
@@ -172,16 +173,16 @@ export const Price = {
               // update price resource
               const price = await updateResource(price_id, args);
               const product = await queryResource(price.product_id);
-              const service = await queryResource(product.service_id);
+              const agency = await queryResource(product.agency_id);
               const { status } = price;
 
               const stripe_price_args = {
                 active: status === 'live'
               };
 
-              for (const stripe_env of ['test', 'live']) {
+              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
                 const stripe_account = await queryResource('stripe account', {
-                  agency_id: service.agency_id,
+                  agency_id: agency.id,
                   livemode: stripe_env === 'live'
                 });
 
@@ -228,11 +229,11 @@ export const Price = {
               }
 
               const product = await queryResource(price.product_id);
-              const service = await queryResource(product.service_id);
+              const agency = await queryResource(product.agency_id);
 
-              for (const stripe_env of ['test', 'live']) {
+              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
                 const stripe_account = await queryResource('stripe account', {
-                  agency_id: service.agency_id,
+                  agency_id: agency.id,
                   livemode: stripe_env === 'live'
                 });
 

@@ -1,3 +1,4 @@
+import gql from 'graphql-tag';
 import { withConnection } from '../../../db';
 import {
   createDefaultQueryResolversForResource,
@@ -9,7 +10,7 @@ const resource = {
 };
 
 export const Theme = {
-  typeDef: `
+  typeDef: gql`
     type Theme implements Node {
       id: ID!
       agency: Agency!

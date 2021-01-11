@@ -1,7 +1,8 @@
+import gql from 'graphql-tag';
 import { pool, withConnection } from '../../../db';
 
 export const Visit = {
-  typeDef: `
+  typeDef: gql`
     extend type Mutation {
       begin_visit: BeginVisitResult!
       end_visit: SimpleResult!

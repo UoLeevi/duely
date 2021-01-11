@@ -1,8 +1,9 @@
+import gql from 'graphql-tag';
 import { withConnection } from '../../../db';
 import { createResolverForReferencedResource } from '../../util';
 
 export const AgencySettings = {
-  typeDef: `
+  typeDef: gql`
     type AgencySettings {
       id: ID!
       thank_you_page_setting: AgencyThankYouPageSetting

@@ -1,7 +1,9 @@
 // see: https://stripe.com/docs/api/customers/object
 
+import gql from 'graphql-tag';
+
 export const StripeCustomer = {
-  typeDef: `
+  typeDef: gql`
     type StripeCustomer {
       id: ID!
       id_ext: ID!

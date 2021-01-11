@@ -1,5 +1,8 @@
-export const AccessLevel = {
-  typeDef: `
+import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
+
+export const AccessLevel: GqlTypeDefinition = {
+  typeDef: gql`
     enum AccessLevel {
       OWNER
       MANAGER
