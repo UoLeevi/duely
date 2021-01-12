@@ -1,15 +1,16 @@
 import { GraphQLScalarType } from 'graphql';
 import gql from 'graphql-tag';
 import { Kind } from 'graphql/language';
+import { GqlTypeDefinition } from '../../types';
 
-export const Date = {
+export const DateTime: GqlTypeDefinition = {
   typeDef: gql`
-    scalar Date
+    scalar DateTime
   `,
   resolvers: {
-    Date: new GraphQLScalarType({
-      name: 'Date',
-      description: 'Date custom scalar type',
+    DateTime: new GraphQLScalarType({
+      name: 'DateTime',
+      description: 'DateTime custom scalar type',
       parseValue(value) {
         return new Date(value);
       },

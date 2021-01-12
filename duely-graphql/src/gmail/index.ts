@@ -5,17 +5,20 @@ import base64url from 'base64url';
 
 const templatesPath = 'dist/gmail/templates';
 
-let accountInfo;
-const templates = {};
+let accountInfo: {
+  client_email: string;
+  private_key: string;
+};
+const templates: Record<string, string> = {};
 
-async function loadTemplate(template = 'default') {
+async function loadTemplate(template: string = 'default') {
   await new Promise((resolve, reject) => {
     readFile(`${templatesPath}/${template}.html`, 'utf8', function (error, data) {
       if (error) {
         reject(error);
       } else {
         templates[template] = data;
-        resolve();
+        resolve(data);
       }
     });
   });
@@ -23,35 +26,40 @@ async function loadTemplate(template = 'default') {
 
 async function updateAccountInfo() {
   await new Promise((resolve, reject) => {
+    if (!process.env.GSERVICEACCOUNTFILE) {
+      throw new Error('Invalid configuration.');
+    }
+
     readFile(process.env.GSERVICEACCOUNTFILE, 'utf8', function (error, data) {
       if (error) {
         reject(error);
       } else {
         accountInfo = JSON.parse(data);
-        resolve();
+        resolve(accountInfo);
       }
     });
   });
 }
 
 async function issueJwtForAdminDuelyGmailSend() {
-  if (!accountInfo)
-    await updateAccountInfo();
+  if (!accountInfo) await updateAccountInfo();
 
   const iat = Math.floor(Date.now() / 1000);
 
-  return jwt.sign({
-    iss: accountInfo.client_email,
-    sub: 'admin@duely.app',
-    scope: 'https://www.googleapis.com/auth/gmail.send',
-    aud: 'https://www.googleapis.com/oauth2/v4/token',
-    exp: iat + 3600,
-    iat
-  },
-  accountInfo.private_key,
-  {
-    algorithm: 'RS256'
-  });
+  return jwt.sign(
+    {
+      iss: accountInfo.client_email,
+      sub: 'admin@duely.app',
+      scope: 'https://www.googleapis.com/auth/gmail.send',
+      aud: 'https://www.googleapis.com/oauth2/v4/token',
+      exp: iat + 3600,
+      iat
+    },
+    accountInfo.private_key,
+    {
+      algorithm: 'RS256'
+    }
+  );
 }
 
 function requestAccessTokenForAdminDuelyGmailSend() {
@@ -69,11 +77,11 @@ function requestAccessTokenForAdminDuelyGmailSend() {
         'Content-Length': body.length
       }
     };
-    
-    const req = https.request(options, res => {
+
+    const req = https.request(options, (res) => {
       let body = '';
       res.setEncoding('utf8');
-      res.on('data', data => body += data );
+      res.on('data', (data) => (body += data));
       res.on('end', () => {
         const { access_token } = JSON.parse(body);
         resolve(access_token);
@@ -87,13 +95,17 @@ function requestAccessTokenForAdminDuelyGmailSend() {
 }
 
 export default {
-  sendEmailAsAdminDuely ({ to, subject, body } = {}) {
+  sendEmailAsAdminDuely({
+    to,
+    subject,
+    body
+  }: { to?: string; subject?: string; body?: string } = {}): Promise<{ id: string }> {
     return new Promise(async (resolve, reject) => {
       if (!templates.default) {
         await loadTemplate('default');
       }
 
-      body = templates.default.replace('<!-- {BODY} -->', body);
+      body = templates.default.replace('<!-- {BODY} -->', body ?? '');
 
       const message = [
         `To: <${to}>`,
@@ -108,7 +120,7 @@ export default {
       ].join('\r\n');
 
       {
-        const body = JSON.stringify({ raw: base64url.encode(message)});
+        const body = JSON.stringify({ raw: base64url.encode(message) });
         const access_token = await requestAccessTokenForAdminDuelyGmailSend();
 
         const options = {
@@ -117,20 +129,20 @@ export default {
           path: '/gmail/v1/users/admin%40duely.app/messages/send',
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${access_token}`,
-            'Accept': 'application/json',
+            Authorization: `Bearer ${access_token}`,
+            Accept: 'application/json',
             'Content-Type': 'application/json',
             'Content-Length': body.length
           }
         };
-        
-        const req = https.request(options, res => {
+
+        const req = https.request(options, (res) => {
           let body = '';
           res.setEncoding('utf8');
-          res.on('data', data => body += data );
+          res.on('data', (data) => (body += data));
           res.on('end', () => resolve(JSON.parse(body)));
         });
-        
+
         req.on('error', reject);
         req.write(body);
         req.end();

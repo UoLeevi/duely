@@ -22,7 +22,7 @@ export const Agency: GqlTypeDefinition = {
       id: ID!
       name: String!
       livemode: Boolean!
-      stripe_account(livemode: Boolean!): StripeAccount!
+      stripe_account(livemode: Boolean): StripeAccount!
       subdomain: Subdomain!
       theme: Theme!
       products(filter: ProductFilter): [Product!]
@@ -70,6 +70,7 @@ export const Agency: GqlTypeDefinition = {
       async stripe_account(source, { livemode }, context, info) {
         if (!context.jwt) throw new Error('Unauthorized');
 
+        livemode = livemode ?? source.livemode;
         const stripe_env = livemode ? 'live' : 'test';
 
         try {

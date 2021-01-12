@@ -1,5 +1,6 @@
 import axios from 'axios';
 import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
 
 let updateDateString: string | null = null;
 let exchangeRatesPromise: Promise<Record<string, number> | null> | null = null;
@@ -44,10 +45,10 @@ function fetchExhangeRates() {
   return exchangeRatesPromise;
 }
 
-export const ExchangeRate = {
+export const ExchangeRate: GqlTypeDefinition = {
   typeDef: gql`
     type ExchangeRate {
-      date: Date!
+      date: DateTime!
       currency: String!
       rate_eur: Float!
     }

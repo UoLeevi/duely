@@ -6,6 +6,7 @@ import {
 import stripe from '../../../stripe';
 import { calculateTransactionFee } from '../SubscriptionPlan';
 import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
 
 const resource = {
   name: 'price',

@@ -1,7 +1,8 @@
 import gql from 'graphql-tag';
 import { withConnection } from '../../../db';
+import { GqlTypeDefinition } from '../../types';
 
-export const LogIn = {
+export const LogIn: GqlTypeDefinition = {
   typeDef: gql`
     extend type Mutation {
       log_in(email_address: String!, password: String!): LogInResult!

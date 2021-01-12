@@ -9,7 +9,7 @@ export const StripeCustomer = {
       id_ext: ID!
       address: Address
       balance: Int
-      created: Date
+      created: DateTime
       currency: String
       delinquent: Boolean
       description: String

@@ -1,7 +1,8 @@
 import { GraphQLScalarType } from 'graphql';
 import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
 
-export const Json = {
+export const Json: GqlTypeDefinition = {
   typeDef: gql`
     scalar Json
   `,

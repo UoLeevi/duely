@@ -2,15 +2,16 @@
 // see also: https://stripe.com/docs/reports/reporting-categories
 
 import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
 
-export const BalanceTransaction = {
+export const BalanceTransaction: GqlTypeDefinition = {
   typeDef: gql`
     type BalanceTransaction {
       id: ID!
       id_ext: ID!
       amount: Int!
-      available_on: Date!
-      created: Date!
+      available_on: DateTime!
+      created: DateTime!
       exchange_rate: Float
       currency: String!
       description: String

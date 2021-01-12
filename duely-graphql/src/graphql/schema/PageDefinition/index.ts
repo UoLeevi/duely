@@ -1,4 +1,6 @@
 import gql from 'graphql-tag';
+import { withConnection } from '../../../db';
+import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResourceAll
@@ -9,7 +11,7 @@ const resource = {
   table_name: 'page_definition'
 };
 
-export const PageDefinition = {
+export const PageDefinition: GqlTypeDefinition = {
   typeDef: gql`
     type PageDefinition implements Node {
       id: ID!

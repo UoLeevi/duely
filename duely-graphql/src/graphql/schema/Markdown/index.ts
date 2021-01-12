@@ -5,12 +5,13 @@ import {
 } from '../../util';
 import md from '../../../markdown-it';
 import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
 
 const resource = {
   name: 'markdown'
 };
 
-export const Markdown = {
+export const Markdown: GqlTypeDefinition = {
   typeDef: gql`
     type Markdown implements Node {
       id: ID!

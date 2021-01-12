@@ -27,7 +27,7 @@ import { Country } from './Country';
 import { Image } from './Image';
 import { Markdown } from './Markdown';
 import { Membership } from './Membership';
-import { Date } from './Date';
+import { DateTime } from './DateTime';
 import { Json } from './Json';
 import { Theme } from './Theme';
 import { Price } from './Price';
@@ -82,7 +82,7 @@ const types: GqlTypeDefinition[] = [
   Markdown,
   Membership,
   Theme,
-  Date,
+  DateTime,
   Json
 ];
 

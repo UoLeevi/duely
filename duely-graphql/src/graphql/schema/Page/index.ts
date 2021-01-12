@@ -1,5 +1,6 @@
 import gql from 'graphql-tag';
 import { withConnection } from '../../../db';
+import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
@@ -10,7 +11,7 @@ const resource = {
   name: 'page'
 };
 
-export const Page = {
+export const Page: GqlTypeDefinition = {
   typeDef: gql`
     type Page {
       id: ID!
@@ -68,14 +69,14 @@ export const Page = {
 
         try {
           url = new URL(args.url);
-          if (url == null) throw new Error(error.message);
+          if (url == null) throw new Error('URL is invalid');
         } catch (error) {
           throw new Error(error.message);
         }
 
         const domain = url.hostname.toLowerCase();
         const path = url.pathname.toLowerCase();
-        let subdomain_name = null;
+        let subdomain_name: string | null = null;
 
         if (domain.endsWith('.duely.app')) {
           subdomain_name = domain.slice(0, -'.duely.app'.length);

@@ -1,11 +1,12 @@
 // see: https://stripe.com/docs/api/charges/object
 
 import stripe from '../../../stripe';
-import { parseResolveInfo } from 'graphql-parse-resolve-info';
+import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import { withStripeAccountProperty } from '../../util';
 import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
 
-export const Charge = {
+export const Charge: GqlTypeDefinition = {
   typeDef: gql`
     type Charge {
       id: ID!
@@ -19,7 +20,7 @@ export const Charge = {
       billing_details: BillingDetails
       calculated_statement_descriptor: String
       captured: Boolean
-      created: Date
+      created: DateTime
       currency: String
       customer: StripeCustomer
       description: String
@@ -100,7 +101,8 @@ export const Charge = {
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
-        const fields = Object.keys(Object.values(parseResolveInfo(info).fieldsByTypeName)[0]);
+        const resolveTree = parseResolveInfo(info) as ResolveTree;
+        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
         if (fields.length === 1 && fields[0] === 'id') return { id: source.payment_intent };
 
         const payment_intent = await stripe[
@@ -114,7 +116,8 @@ export const Charge = {
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
-        const fields = Object.keys(Object.values(parseResolveInfo(info).fieldsByTypeName)[0]);
+        const resolveTree = parseResolveInfo(info) as ResolveTree;
+        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
         if (fields.length === 1 && fields[0] === 'id') return { id: source.customer };
 
         const customer = await stripe[stripe_env].customers.retrieve(source.customer, {

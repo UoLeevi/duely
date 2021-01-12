@@ -1,8 +1,9 @@
 import gql from 'graphql-tag';
 import { withConnection } from '../../../db';
+import { GqlTypeDefinition } from '../../types';
 import { createResolverForReferencedResource } from '../../util';
 
-export const AgencySettings = {
+export const AgencySettings: GqlTypeDefinition = {
   typeDef: gql`
     type AgencySettings {
       id: ID!
@@ -37,7 +38,7 @@ export const AgencySettings = {
       })
     },
     Mutation: {
-      async create_agency_thank_you_page_setting(obj, args, context, info) {
+      async create_agency_thank_you_page_setting(obj, args, context) {
         if (!context.jwt) throw new Error('Unauthorized');
 
         let url;

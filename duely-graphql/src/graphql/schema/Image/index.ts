@@ -5,6 +5,7 @@ import {
 } from '../../util';
 import validator from 'validator';
 import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
 
 const resource = {
   name: 'image'
@@ -15,7 +16,7 @@ const defaultValidationOptions = {
   maxSize: 512000
 };
 
-function formatFileSize(size) {
+function formatFileSize(size: number) {
   if (size < 1000) return `${size}B`;
 
   size /= 1000;
@@ -28,7 +29,7 @@ function formatFileSize(size) {
   if (size < 1000) return `${size.toPrecision(3)}GB`;
 }
 
-export function validateAndReadDataUrlAsBuffer(dataUrl, options) {
+export function validateAndReadDataUrlAsBuffer(dataUrl: string, options?: typeof defaultValidationOptions) {
   options = {
     ...defaultValidationOptions,
     ...options
@@ -60,7 +61,7 @@ export function validateAndReadDataUrlAsBuffer(dataUrl, options) {
   }
 }
 
-export const Image = {
+export const Image: GqlTypeDefinition = {
   typeDef: gql`
     type Image implements Node {
       id: ID!

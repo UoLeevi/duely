@@ -3,10 +3,11 @@ import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
 import validator from 'validator';
 import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
 
 const resource_name = 'password reset';
 
-export const PasswordReset = {
+export const PasswordReset: GqlTypeDefinition = {
   typeDef: gql`
     extend type Mutation {
       start_password_reset(email_address: String!, redirect_url: String): SimpleResult!

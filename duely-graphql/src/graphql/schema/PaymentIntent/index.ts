@@ -1,11 +1,12 @@
 // see: https://stripe.com/docs/api/payment_intents/object
 
-import { parseResolveInfo } from 'graphql-parse-resolve-info';
+import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import gql from 'graphql-tag';
 import stripe from '../../../stripe';
+import { GqlTypeDefinition } from '../../types';
 import { withStripeAccountProperty } from '../../util';
 
-export const PaymentIntent = {
+export const PaymentIntent: GqlTypeDefinition = {
   typeDef: gql`
     type PaymentIntent {
       id: ID!
@@ -14,12 +15,12 @@ export const PaymentIntent = {
       amount_capturable: Int
       amount_received: Int
       application_fee_amount: Int
-      canceled_at: Date
+      canceled_at: DateTime
       cancellation_reason: String
       capture_method: String
       charges: [Charge]
       confirmation_method: String
-      created: Date
+      created: DateTime
       currency: String
       customer: StripeCustomer
       description: String
@@ -56,7 +57,8 @@ export const PaymentIntent = {
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
-        const fields = Object.keys(Object.values(parseResolveInfo(info).fieldsByTypeName)[0]);
+        const resolveTree = parseResolveInfo(info) as ResolveTree;
+        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
         if (fields.length === 1 && fields[0] === 'id') return { id: source.customer };
 
         const customer = await stripe[stripe_env].customers.retrieve(source.customer, {

@@ -12,9 +12,9 @@ export const StripeAccount = {
       livemode: Boolean!
       account_update_url: StripeAccountLink!
       balance: StripeBalance!
-      balance_transactions(payout_id: ID, type: String, available_on: Date, created: Date, currency: String, starting_after_id: String, ending_before_id: String, limit: Int): [BalanceTransaction!]!
-      payment_intents(customer_id: ID, created: Date, starting_after_id: String, ending_before_id: String, limit: Int): [PaymentIntent!]!
-      customers(email: String, created: Date, starting_after_id: String, ending_before_id: String, limit: Int): [StripeCustomer!]!
+      balance_transactions(payout_id: ID, type: String, available_on: DateTime, created: DateTime, currency: String, starting_after_id: String, ending_before_id: String, limit: Int): [BalanceTransaction!]!
+      payment_intents(customer_id: ID, created: DateTime, starting_after_id: String, ending_before_id: String, limit: Int): [PaymentIntent!]!
+      customers(email: String, created: DateTime, starting_after_id: String, ending_before_id: String, limit: Int): [StripeCustomer!]!
       business_profile: BusinessProfile!
       business_type: String
       capabilities: StripeCapabilities!
@@ -22,7 +22,7 @@ export const StripeAccount = {
       settings: StripeSettings!
       charges_enabled: Boolean!
       country: String!
-      created: Date!
+      created: DateTime!
       default_currency: String
       details_submitted: Boolean!
       email: String
@@ -72,8 +72,8 @@ export const StripeAccount = {
     type StripeAccountLink {
       type: String!
       url: String!
-      created: Date!
-      expires_at: Date!
+      created: DateTime!
+      expires_at: DateTime!
     }
 
     type StripeBalance {
