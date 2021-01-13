@@ -8,12 +8,14 @@ import validator from 'validator';
 import stripe from '../../../stripe';
 import { validateAndReadDataUrlAsBuffer } from '../Image';
 import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
+import Stripe from 'stripe';
 
 const resource = {
   name: 'product'
 };
 
-export const Product = {
+export const Product: GqlTypeDefinition = {
   typeDef: gql`
     type Product implements Node {
       id: ID!
@@ -44,8 +46,31 @@ export const Product = {
     }
 
     extend type Mutation {
-      create_product(agency_id: ID!, name: String!, url_name: String!, description: String, duration: String, markdown_description_id: ID, image_logo: ImageInput, image_logo_id: ID, image_hero: ImageInput, status: String): ProductMutationResult!
-      update_product(product_id: ID!, name: String, url_name: String, description: String, duration: String, default_price_id: ID, markdown_description_id: ID, image_logo: ImageInput, image_logo_id: ID, image_hero: ImageInput, status: String): ProductMutationResult!
+      create_product(
+        agency_id: ID!
+        name: String!
+        url_name: String!
+        description: String
+        duration: String
+        markdown_description_id: ID
+        image_logo: ImageInput
+        image_logo_id: ID
+        image_hero: ImageInput
+        status: String
+      ): ProductMutationResult!
+      update_product(
+        product_id: ID!
+        name: String
+        url_name: String
+        description: String
+        duration: String
+        default_price_id: ID
+        markdown_description_id: ID
+        image_logo: ImageInput
+        image_logo_id: ID
+        image_hero: ImageInput
+        status: String
+      ): ProductMutationResult!
       delete_product(product_id: ID!): ProductMutationResult!
     }
 
@@ -95,7 +120,7 @@ export const Product = {
               const subdomain = await queryResource(agency.subdomain_id);
 
               const { status, name, description } = args;
-              const stripe_product_args = {
+              const stripe_product_args: Stripe.ProductCreateParams = {
                 name,
                 description,
                 active: status === 'live'
@@ -146,12 +171,16 @@ export const Product = {
                 args.image_hero_id = image.id;
               }
 
-              const stripe_product = {
-                live: null,
-                test: null
+              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+                ? ['test', 'live']
+                : ['test'];
+
+              const stripe_product: Record<keyof typeof stripe, Stripe.Product | undefined> = {
+                test: undefined,
+                live: undefined
               };
 
-              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
+              for (const stripe_env of stripe_envs) {
                 const stripe_account = await queryResource('stripe account', {
                   livemode: stripe_env === 'live',
                   agency_id: agency.id
@@ -169,8 +198,8 @@ export const Product = {
               // create product resource
               const product = await createResource('product', {
                 ...args,
-                stripe_prod_id_ext_live: stripe_product.live.id,
-                stripe_prod_id_ext_test: stripe_product.test.id
+                stripe_prod_id_ext_live: stripe_product.live?.id,
+                stripe_prod_id_ext_test: stripe_product.test?.id
               });
 
               // success
@@ -206,7 +235,7 @@ export const Product = {
               const { agency_id } = await queryResource(product_id);
               const agency = await queryResource(agency_id);
               const subdomain = await queryResource(agency.subdomain_id);
-              const stripe_product_args = {};
+              const stripe_product_args: Stripe.ProductUpdateParams = {};
 
               if (image_logo) {
                 // validate and read logo image
@@ -261,7 +290,11 @@ export const Product = {
               stripe_product_args.description = description;
               stripe_product_args.active = status === 'live';
 
-              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
+              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+                ? ['test', 'live']
+                : ['test'];
+
+              for (const stripe_env of stripe_envs) {
                 const stripe_account = await queryResource('stripe account', {
                   livemode: stripe_env === 'live',
                   agency_id
@@ -299,7 +332,7 @@ export const Product = {
           return await withConnection(context, async (withSession) => {
             return await withSession(async ({ queryResource, deleteResource }) => {
               const product = await deleteResource(product_id);
-              
+
               if (product == null) {
                 return {
                   // error
@@ -311,7 +344,11 @@ export const Product = {
 
               const agency = await deleteResource(product.agency_id);
 
-              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
+              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+                ? ['test', 'live']
+                : ['test'];
+
+              for (const stripe_env of stripe_envs) {
                 const stripe_account = await queryResource('stripe account', {
                   livemode: stripe_env === 'live',
                   agency_id: product.agency_id

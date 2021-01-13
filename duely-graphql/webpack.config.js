@@ -30,6 +30,7 @@ module.exports = {
   },
   output: {
     filename: 'index.js',
+    globalObject: 'this',
     path: path.resolve(__dirname, 'dist')
   }
 };

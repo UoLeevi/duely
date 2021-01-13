@@ -70,6 +70,7 @@ mutation StartSignUp(
 
 mutation CreateAgency(
   $name: String!
+  $livemode: Boolean!
   $subdomain_name: String!
   $country_code: String!
   $image_logo: ImageInput!
@@ -77,6 +78,7 @@ mutation CreateAgency(
 ) {
   create_agency(
     name: $name
+    livemode: $livemode
     subdomain_name: $subdomain_name
     country_code: $country_code
     image_logo: $image_logo

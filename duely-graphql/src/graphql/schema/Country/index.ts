@@ -40,7 +40,7 @@ export const Country: GqlTypeDefinition = {
       supported_payment_currencies: [String!]!
       supported_payment_methods: [String!]!
       supported_transfer_countries: [String!]!
-      verification_fields: CountrySpecVerificationFields;
+      verification_fields: CountrySpecVerificationFields
     }
 
     type CountrySpecVerificationFields {
@@ -49,17 +49,17 @@ export const Country: GqlTypeDefinition = {
     }
 
     type CountrySpecVerificationFieldsCompany {
-      additional: String[]!
-      minimum: String[]!
+      additional: [String!]!
+      minimum: [String!]!
     }
 
     type CountrySpecVerificationFieldsIndividual {
-      additional: String[]!
-      minimum: String[]!
+      additional: [String!]!
+      minimum: [String!]!
     }
 
     extend type Query {
-      country_codes: [String!]
+      country_codes: [String!]!
       country_spec(country_code: ID!): CountrySpec
     }
   `,

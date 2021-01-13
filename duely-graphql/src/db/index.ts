@@ -7,7 +7,7 @@ if (!process.env.DUELY_SERVICE_ACCOUNT_PASSWORD) {
   if (!process.env.SERVICEACCOUNTCONFIGFILE) {
     throw new Error('Invalid configuration.');
   }
-  
+
   const config = JSON.parse(fs.readFileSync(process.env.SERVICEACCOUNTCONFIGFILE, 'utf8'));
   process.env = {
     ...config.env,

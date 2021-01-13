@@ -240,6 +240,7 @@ export declare type MutationVerify_Password_ResetArgs = {
 };
 export declare type MutationCreate_AgencyArgs = {
     name: Scalars['String'];
+    livemode: Scalars['Boolean'];
     subdomain_name: Scalars['String'];
     country_code: Scalars['String'];
     image_logo: ImageInput;
@@ -604,6 +605,7 @@ export declare type Agency = Node & {
     __typename?: 'Agency';
     id: Scalars['ID'];
     name: Scalars['String'];
+    livemode: Scalars['Boolean'];
     stripe_account: StripeAccount;
     subdomain: Subdomain;
     theme: Theme;
@@ -1313,6 +1315,7 @@ export declare type StartSignUpMutation = ({
 });
 export declare type CreateAgencyMutationVariables = Exact<{
     name: Scalars['String'];
+    livemode: Scalars['Boolean'];
     subdomain_name: Scalars['String'];
     country_code: Scalars['String'];
     image_logo: ImageInput;

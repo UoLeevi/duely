@@ -36,7 +36,7 @@ declare function hex2rgb(hex: string): [number, number, number, number];
 declare function hex2hsl(hex: string): (number | undefined)[];
 declare function rgb2hsl(r: number, g: number, b: number, a?: number): (number | undefined)[];
 declare function createClassName(...classNames: any[]): string;
-declare function formatDate(d: Date): string;
+declare function formatDate(d: DateTime): string;
 declare function formatFileSize(size: number): string | undefined;
 declare function findFirstFocusableChild(parent: ParentNode): Element | null;
 declare function getNameInitials(name: string): string;

@@ -186,7 +186,7 @@ const shortMonthNames = [
   'Dec'
 ];
 
-function formatDate(d: Date) {
+function formatDate(d: DateTime) {
   return `${d.getUTCDate()} ${
     shortMonthNames[d.getUTCMonth()]
   } ${d.getUTCFullYear()} ${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;

@@ -1,8 +1,9 @@
 // see: https://stripe.com/docs/api/customers/object
 
 import gql from 'graphql-tag';
+import { GqlTypeDefinition } from '../../types';
 
-export const StripeCustomer = {
+export const StripeCustomer: GqlTypeDefinition = {
   typeDef: gql`
     type StripeCustomer {
       id: ID!

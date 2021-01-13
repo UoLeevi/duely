@@ -7,13 +7,16 @@ import stripe from '../../../stripe';
 import { calculateTransactionFee } from '../SubscriptionPlan';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
+import { Currency, Price as TPrice } from '@duely/core';
+import Stripe from 'stripe';
+import { URL } from 'url';
 
 const resource = {
   name: 'price',
   table_name: 'price'
 };
 
-export const Price = {
+export const Price: GqlTypeDefinition = {
   typeDef: gql`
     type Price implements Node {
       id: ID!
@@ -37,10 +40,22 @@ export const Price = {
     }
 
     extend type Mutation {
-      create_price(product_id: ID!, unit_amount: Int!, currency: String!, recurring_interval: String, recurring_interval_count: Int, status: String): PriceMutationResult!
+      create_price(
+        product_id: ID!
+        unit_amount: Int!
+        currency: String!
+        recurring_interval: String
+        recurring_interval_count: Int
+        status: String
+      ): PriceMutationResult!
       update_price(price_id: ID!, status: String!): PriceMutationResult!
       delete_price(price_id: ID!): PriceMutationResult!
-      create_stripe_checkout_session(price_id: ID!, livemode: Boolean!, success_url: String, cancel_url: String): CreateStripeCheckoutSessionResult!
+      create_stripe_checkout_session(
+        price_id: ID!
+        livemode: Boolean!
+        success_url: String
+        cancel_url: String
+      ): CreateStripeCheckoutSessionResult!
     }
 
     type PriceMutationResult implements MutationResult {
@@ -48,7 +63,7 @@ export const Price = {
       message: String
       price: Price
     }
-    
+
     type CreateStripeCheckoutSessionResult implements MutationResult {
       success: Boolean!
       message: String
@@ -57,27 +72,8 @@ export const Price = {
   `,
   resolvers: {
     Price: {
-      name(price) {
-        let text = formatCurrency(price.unit_amount / 100, price.currency);
-
-        if (price.type === 'recurring') {
-          const count = price.recurring_interval_count;
-          text +=
-            count > 1
-              ? ` every ${count} ${price.recurring_interval}s`
-              : ` every ${price.recurring_interval}`;
-        }
-
-        return text;
-
-        function formatCurrency(amount, currency, country_code) {
-          currency = currency.toUpperCase();
-          country_code = country_code ?? 'US';
-          return new Intl.NumberFormat('en-' + country_code, {
-            currency,
-            style: 'currency'
-          }).format(amount);
-        }
+      name(price: TPrice) {
+        return Currency.format(price.unit_amount, price.currency as Currency);
       },
       ...createResolverForReferencedResource({ name: 'product' })
     },
@@ -107,7 +103,7 @@ export const Price = {
                 recurring_interval_count: interval_count
               } = args;
 
-              const stripe_price_args = {
+              const stripe_price_args: Stripe.PriceCreateParams = {
                 unit_amount,
                 currency,
                 product: product.stripe_id_ext,
@@ -121,12 +117,16 @@ export const Price = {
                 };
               }
 
-              const stripe_price = {
-                live: null,
-                test: null
+              const stripe_price: Record<keyof typeof stripe, Stripe.Price | undefined> = {
+                test: undefined,
+                live: undefined
               };
 
-              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
+              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+                ? ['test', 'live']
+                : ['test'];
+
+              for (const stripe_env of stripe_envs) {
                 const stripe_account = await queryResource('stripe account', {
                   agency_id: agency.id,
                   livemode: stripe_env === 'live'
@@ -144,8 +144,8 @@ export const Price = {
               // create price resource
               const price = await createResource('price', {
                 ...args,
-                stripe_id_ext_live: stripe_price.live.id,
-                stripe_id_ext_test: stripe_price.test.id
+                stripe_id_ext_live: stripe_price.live?.id,
+                stripe_id_ext_test: stripe_price.test?.id
               });
 
               // success
@@ -177,11 +177,15 @@ export const Price = {
               const agency = await queryResource(product.agency_id);
               const { status } = price;
 
-              const stripe_price_args = {
+              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+                ? ['test', 'live']
+                : ['test'];
+
+              const stripe_price_args: Stripe.PriceUpdateParams = {
                 active: status === 'live'
               };
 
-              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
+              for (const stripe_env of stripe_envs) {
                 const stripe_account = await queryResource('stripe account', {
                   agency_id: agency.id,
                   livemode: stripe_env === 'live'
@@ -232,7 +236,11 @@ export const Price = {
               const product = await queryResource(price.product_id);
               const agency = await queryResource(product.agency_id);
 
-              for (const stripe_env of agency.livemode ? ['test', 'live'] : ['test']) {
+              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+                ? ['test', 'live']
+                : ['test'];
+
+              for (const stripe_env of stripe_envs) {
                 const stripe_account = await queryResource('stripe account', {
                   agency_id: agency.id,
                   livemode: stripe_env === 'live'
@@ -339,7 +347,7 @@ export const Price = {
               // see: https://stripe.com/docs/connect/creating-a-payments-page
               // see: https://stripe.com/docs/payments/checkout/custom-success-page
               // see: https://stripe.com/docs/api/checkout/sessions/create
-              const stripe_checkout_session_args = {
+              const stripe_checkout_session_args: Stripe.Checkout.SessionCreateParams = {
                 mode: price.type === 'recurring' ? 'subscription' : 'payment',
                 payment_method_types: ['card'],
                 line_items: [

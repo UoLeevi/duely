@@ -1,10 +1,11 @@
 import gql from 'graphql-tag';
 import { withConnection } from '../../../db';
 import stripe from '../../../stripe';
+import { GqlTypeDefinition } from '../../types';
 
 // see: https://stripe.com/docs/api/accounts/object
 
-export const StripeAccount = {
+export const StripeAccount: GqlTypeDefinition = {
   typeDef: gql`
     type StripeAccount {
       id: ID!
@@ -236,7 +237,6 @@ export const StripeAccount = {
             stripeAccount: source.stripe_id_ext
           });
           return list.data?.map((pi) => ({
-            livemode: source.livemode,
             stripeAccount: source.stripe_id_ext,
             ...pi
           }));
@@ -269,11 +269,10 @@ export const StripeAccount = {
           }
 
           // see: https://stripe.com/docs/api/customers/list
-          const list = await stripe[stripe_env].paymentIntents.list(args, {
+          const list = await stripe[stripe_env].customers.list(args, {
             stripeAccount: source.stripe_id_ext
           });
           return list.data?.map((cus) => ({
-            livemode: source.livemode,
             stripeAccount: source.stripe_id_ext,
             ...cus
           }));

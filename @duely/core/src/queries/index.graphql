@@ -69,7 +69,7 @@ query AgencyStripeAccountBalance($agency_id: ID!, $livemode: Boolean!) {
 query AgencyStripeAccountBalanceTransactions(
   $agency_id: ID!
   $livemode: Boolean!
-  $created: Date
+  $created: DateTime
   $starting_after_id: String
   $ending_before_id: String
   $limit: Int
@@ -93,7 +93,7 @@ query AgencyStripeAccountBalanceTransactions(
 query AgencyStripeAccountPaymentIntents(
   $agency_id: ID!
   $livemode: Boolean!
-  $created: Date
+  $created: DateTime
   $starting_after_id: String
   $ending_before_id: String
   $limit: Int
@@ -117,7 +117,7 @@ query AgencyStripeAccountPaymentIntents(
 query AgencyStripeAccountCustomers(
   $agency_id: ID!
   $livemode: Boolean!
-  $created: Date
+  $created: DateTime
   $starting_after_id: String
   $ending_before_id: String
   $limit: Int

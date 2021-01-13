@@ -4,6 +4,7 @@ import { p, br, strong, em, a } from '../../../gmail/utilities';
 import validator from 'validator';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
+import { URL } from 'url';
 
 const resource_name = 'password reset';
 

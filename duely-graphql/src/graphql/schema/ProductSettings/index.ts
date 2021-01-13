@@ -1,8 +1,10 @@
 import gql from 'graphql-tag';
+import { URL } from 'url';
 import { withConnection } from '../../../db';
+import { GqlTypeDefinition } from '../../types';
 import { createResolverForReferencedResource } from '../../util';
 
-export const ProductSettings = {
+export const ProductSettings: GqlTypeDefinition = {
   typeDef: gql`
     type ProductSettings {
       id: ID!
