@@ -31,7 +31,8 @@ import {
   ProductsDocument,
   AgencyDocument,
   AgenciesDocument,
-  CalculateTransactionFeeDocument
+  CalculateTransactionFeeDocument,
+  CountrySpecDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -84,6 +85,12 @@ export const countries_Q = {
   query: CountriesDocument,
   result: (d: ResultOf<typeof CountriesDocument>) =>
     d?.country_codes?.map((code) => CountryUtil.fromCode(code as CountryCode))
+};
+
+export const country_spec_Q = {
+  query: CountrySpecDocument,
+  result: (d: ResultOf<typeof CountrySpecDocument>) =>
+    d?.country_spec
 };
 
 export const services_agreement_Q = {

@@ -18,8 +18,8 @@ export declare type Scalars = {
     Boolean: boolean;
     Int: number;
     Float: number;
-    /** Date custom scalar type */
-    Date: any;
+    /** DateTime custom scalar type */
+    DateTime: any;
     /** Json custom scalar type */
     Json: any;
 };
@@ -35,7 +35,8 @@ export declare type Query = {
     page_definitions?: Maybe<Array<PageDefinition>>;
     page_block_definition?: Maybe<PageBlockDefinition>;
     page_block_definitions?: Maybe<Array<PageBlockDefinition>>;
-    country_codes?: Maybe<Array<Scalars['String']>>;
+    country_codes: Array<Scalars['String']>;
+    country_spec?: Maybe<CountrySpec>;
     exchange_rate?: Maybe<ExchangeRate>;
     current_user?: Maybe<User>;
     user?: Maybe<User>;
@@ -91,6 +92,9 @@ export declare type QueryPage_Block_DefinitionArgs = {
 };
 export declare type QueryPage_Block_DefinitionsArgs = {
     filter: PageBlockDefinitionFilter;
+};
+export declare type QueryCountry_SpecArgs = {
+    country_code: Scalars['ID'];
 };
 export declare type QueryExchange_RateArgs = {
     currency: Scalars['String'];
@@ -479,7 +483,7 @@ export declare type Charge = {
     billing_details?: Maybe<BillingDetails>;
     calculated_statement_descriptor?: Maybe<Scalars['String']>;
     captured?: Maybe<Scalars['Boolean']>;
-    created?: Maybe<Scalars['Date']>;
+    created?: Maybe<Scalars['DateTime']>;
     currency?: Maybe<Scalars['String']>;
     customer?: Maybe<StripeCustomer>;
     description?: Maybe<Scalars['String']>;
@@ -540,12 +544,12 @@ export declare type PaymentIntent = {
     amount_capturable?: Maybe<Scalars['Int']>;
     amount_received?: Maybe<Scalars['Int']>;
     application_fee_amount?: Maybe<Scalars['Int']>;
-    canceled_at?: Maybe<Scalars['Date']>;
+    canceled_at?: Maybe<Scalars['DateTime']>;
     cancellation_reason?: Maybe<Scalars['String']>;
     capture_method?: Maybe<Scalars['String']>;
     charges?: Maybe<Array<Maybe<Charge>>>;
     confirmation_method?: Maybe<Scalars['String']>;
-    created?: Maybe<Scalars['Date']>;
+    created?: Maybe<Scalars['DateTime']>;
     currency?: Maybe<Scalars['String']>;
     customer?: Maybe<StripeCustomer>;
     description?: Maybe<Scalars['String']>;
@@ -581,9 +585,33 @@ export declare type LogInResult = MutationResult & {
     message?: Maybe<Scalars['String']>;
     jwt?: Maybe<Scalars['String']>;
 };
+export declare type CountrySpec = {
+    __typename?: 'CountrySpec';
+    id: Scalars['ID'];
+    default_currency: Scalars['String'];
+    supported_payment_currencies: Array<Scalars['String']>;
+    supported_payment_methods: Array<Scalars['String']>;
+    supported_transfer_countries: Array<Scalars['String']>;
+    verification_fields?: Maybe<CountrySpecVerificationFields>;
+};
+export declare type CountrySpecVerificationFields = {
+    __typename?: 'CountrySpecVerificationFields';
+    company?: Maybe<CountrySpecVerificationFieldsCompany>;
+    individual?: Maybe<CountrySpecVerificationFieldsIndividual>;
+};
+export declare type CountrySpecVerificationFieldsCompany = {
+    __typename?: 'CountrySpecVerificationFieldsCompany';
+    additional: Array<Scalars['String']>;
+    minimum: Array<Scalars['String']>;
+};
+export declare type CountrySpecVerificationFieldsIndividual = {
+    __typename?: 'CountrySpecVerificationFieldsIndividual';
+    additional: Array<Scalars['String']>;
+    minimum: Array<Scalars['String']>;
+};
 export declare type ExchangeRate = {
     __typename?: 'ExchangeRate';
-    date: Scalars['Date'];
+    date: Scalars['DateTime'];
     currency: Scalars['String'];
     rate_eur: Scalars['Float'];
 };
@@ -615,7 +643,7 @@ export declare type Agency = Node & {
     subscription_plan: SubscriptionPlan;
 };
 export declare type AgencyStripe_AccountArgs = {
-    livemode: Scalars['Boolean'];
+    livemode?: Maybe<Scalars['Boolean']>;
 };
 export declare type AgencyProductsArgs = {
     filter?: Maybe<ProductFilter>;
@@ -699,7 +727,7 @@ export declare type StripeAccount = {
     settings: StripeSettings;
     charges_enabled: Scalars['Boolean'];
     country: Scalars['String'];
-    created: Scalars['Date'];
+    created: Scalars['DateTime'];
     default_currency?: Maybe<Scalars['String']>;
     details_submitted: Scalars['Boolean'];
     email?: Maybe<Scalars['String']>;
@@ -708,8 +736,8 @@ export declare type StripeAccount = {
 export declare type StripeAccountBalance_TransactionsArgs = {
     payout_id?: Maybe<Scalars['ID']>;
     type?: Maybe<Scalars['String']>;
-    available_on?: Maybe<Scalars['Date']>;
-    created?: Maybe<Scalars['Date']>;
+    available_on?: Maybe<Scalars['DateTime']>;
+    created?: Maybe<Scalars['DateTime']>;
     currency?: Maybe<Scalars['String']>;
     starting_after_id?: Maybe<Scalars['String']>;
     ending_before_id?: Maybe<Scalars['String']>;
@@ -717,14 +745,14 @@ export declare type StripeAccountBalance_TransactionsArgs = {
 };
 export declare type StripeAccountPayment_IntentsArgs = {
     customer_id?: Maybe<Scalars['ID']>;
-    created?: Maybe<Scalars['Date']>;
+    created?: Maybe<Scalars['DateTime']>;
     starting_after_id?: Maybe<Scalars['String']>;
     ending_before_id?: Maybe<Scalars['String']>;
     limit?: Maybe<Scalars['Int']>;
 };
 export declare type StripeAccountCustomersArgs = {
     email?: Maybe<Scalars['String']>;
-    created?: Maybe<Scalars['Date']>;
+    created?: Maybe<Scalars['DateTime']>;
     starting_after_id?: Maybe<Scalars['String']>;
     ending_before_id?: Maybe<Scalars['String']>;
     limit?: Maybe<Scalars['Int']>;
@@ -769,8 +797,8 @@ export declare type StripeAccountLink = {
     __typename?: 'StripeAccountLink';
     type: Scalars['String'];
     url: Scalars['String'];
-    created: Scalars['Date'];
-    expires_at: Scalars['Date'];
+    created: Scalars['DateTime'];
+    expires_at: Scalars['DateTime'];
 };
 export declare type StripeBalance = {
     __typename?: 'StripeBalance';
@@ -796,7 +824,7 @@ export declare type StripeCustomer = {
     id_ext: Scalars['ID'];
     address?: Maybe<Address>;
     balance?: Maybe<Scalars['Int']>;
-    created?: Maybe<Scalars['Date']>;
+    created?: Maybe<Scalars['DateTime']>;
     currency?: Maybe<Scalars['String']>;
     delinquent?: Maybe<Scalars['Boolean']>;
     description?: Maybe<Scalars['String']>;
@@ -812,8 +840,8 @@ export declare type BalanceTransaction = {
     id: Scalars['ID'];
     id_ext: Scalars['ID'];
     amount: Scalars['Int'];
-    available_on: Scalars['Date'];
-    created: Scalars['Date'];
+    available_on: Scalars['DateTime'];
+    created: Scalars['DateTime'];
     exchange_rate?: Maybe<Scalars['Float']>;
     currency: Scalars['String'];
     description?: Maybe<Scalars['String']>;
@@ -1582,6 +1610,16 @@ export declare type CountriesQueryVariables = Exact<{
 export declare type CountriesQuery = ({
     __typename?: 'Query';
 } & Pick<Query, 'country_codes'>);
+export declare type CountrySpecQueryVariables = Exact<{
+    country_code: Scalars['ID'];
+}>;
+export declare type CountrySpecQuery = ({
+    __typename?: 'Query';
+} & {
+    country_spec?: Maybe<({
+        __typename?: 'CountrySpec';
+    } & Pick<CountrySpec, 'id' | 'default_currency' | 'supported_payment_currencies' | 'supported_payment_methods' | 'supported_transfer_countries'>)>;
+});
 export declare type ServicesAgreementQueryVariables = Exact<{
     [key: string]: never;
 }>;
@@ -1594,7 +1632,6 @@ export declare type ServicesAgreementQuery = ({
 });
 export declare type AgencyStripeAccountUpdateUrlQueryVariables = Exact<{
     agency_id: Scalars['ID'];
-    livemode: Scalars['Boolean'];
 }>;
 export declare type AgencyStripeAccountUpdateUrlQuery = ({
     __typename?: 'Query';
@@ -1613,7 +1650,6 @@ export declare type AgencyStripeAccountUpdateUrlQuery = ({
 });
 export declare type AgencyStripeAccountBalanceQueryVariables = Exact<{
     agency_id: Scalars['ID'];
-    livemode: Scalars['Boolean'];
 }>;
 export declare type AgencyStripeAccountBalanceQuery = ({
     __typename?: 'Query';
@@ -1654,8 +1690,7 @@ export declare type AgencyStripeAccountBalanceQuery = ({
 });
 export declare type AgencyStripeAccountBalanceTransactionsQueryVariables = Exact<{
     agency_id: Scalars['ID'];
-    livemode: Scalars['Boolean'];
-    created?: Maybe<Scalars['Date']>;
+    created?: Maybe<Scalars['DateTime']>;
     starting_after_id?: Maybe<Scalars['String']>;
     ending_before_id?: Maybe<Scalars['String']>;
     limit?: Maybe<Scalars['Int']>;
@@ -1677,8 +1712,7 @@ export declare type AgencyStripeAccountBalanceTransactionsQuery = ({
 });
 export declare type AgencyStripeAccountPaymentIntentsQueryVariables = Exact<{
     agency_id: Scalars['ID'];
-    livemode: Scalars['Boolean'];
-    created?: Maybe<Scalars['Date']>;
+    created?: Maybe<Scalars['DateTime']>;
     starting_after_id?: Maybe<Scalars['String']>;
     ending_before_id?: Maybe<Scalars['String']>;
     limit?: Maybe<Scalars['Int']>;
@@ -1700,8 +1734,7 @@ export declare type AgencyStripeAccountPaymentIntentsQuery = ({
 });
 export declare type AgencyStripeAccountCustomersQueryVariables = Exact<{
     agency_id: Scalars['ID'];
-    livemode: Scalars['Boolean'];
-    created?: Maybe<Scalars['Date']>;
+    created?: Maybe<Scalars['DateTime']>;
     starting_after_id?: Maybe<Scalars['String']>;
     ending_before_id?: Maybe<Scalars['String']>;
     limit?: Maybe<Scalars['Int']>;
@@ -1882,7 +1915,6 @@ export declare type SubdomainAgencyQuery = ({
 });
 export declare type SubdomainAgencyStripeAccountUpdateUrlQueryVariables = Exact<{
     subdomain_name: Scalars['String'];
-    livemode: Scalars['Boolean'];
 }>;
 export declare type SubdomainAgencyStripeAccountUpdateUrlQuery = ({
     __typename?: 'Query';
@@ -2100,6 +2132,7 @@ export declare const UpdatePageBlockDocument: DocumentNode<UpdatePageBlockMutati
 export declare const DeletePageBlockDocument: DocumentNode<DeletePageBlockMutation, DeletePageBlockMutationVariables>;
 export declare const CurrentUserDocument: DocumentNode<CurrentUserQuery, CurrentUserQueryVariables>;
 export declare const CountriesDocument: DocumentNode<CountriesQuery, CountriesQueryVariables>;
+export declare const CountrySpecDocument: DocumentNode<CountrySpecQuery, CountrySpecQueryVariables>;
 export declare const ServicesAgreementDocument: DocumentNode<ServicesAgreementQuery, ServicesAgreementQueryVariables>;
 export declare const AgencyStripeAccountUpdateUrlDocument: DocumentNode<AgencyStripeAccountUpdateUrlQuery, AgencyStripeAccountUpdateUrlQueryVariables>;
 export declare const AgencyStripeAccountBalanceDocument: DocumentNode<AgencyStripeAccountBalanceQuery, AgencyStripeAccountBalanceQueryVariables>;

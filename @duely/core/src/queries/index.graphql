@@ -13,16 +13,26 @@ query Countries {
   country_codes
 }
 
+query CountrySpec($country_code: ID!) {
+  country_spec(country_code: $country_code) {
+    id
+    default_currency
+    supported_payment_currencies
+    supported_payment_methods
+    supported_transfer_countries
+  }
+}
+
 query ServicesAgreement {
   markdowns(filter: { name: "Services Agreement", agency_id: null }) {
     ...markdown
   }
 }
 
-query AgencyStripeAccountUpdateUrl($agency_id: ID!, $livemode: Boolean!) {
+query AgencyStripeAccountUpdateUrl($agency_id: ID!) {
   agency(id: $agency_id) {
     id
-    stripe_account(livemode: $livemode) {
+    stripe_account {
       id
       account_update_url {
         url
@@ -31,10 +41,10 @@ query AgencyStripeAccountUpdateUrl($agency_id: ID!, $livemode: Boolean!) {
   }
 }
 
-query AgencyStripeAccountBalance($agency_id: ID!, $livemode: Boolean!) {
+query AgencyStripeAccountBalance($agency_id: ID!) {
   agency(id: $agency_id) {
     id
-    stripe_account(livemode: $livemode) {
+    stripe_account {
       id
       balance {
         available {
@@ -68,7 +78,6 @@ query AgencyStripeAccountBalance($agency_id: ID!, $livemode: Boolean!) {
 
 query AgencyStripeAccountBalanceTransactions(
   $agency_id: ID!
-  $livemode: Boolean!
   $created: DateTime
   $starting_after_id: String
   $ending_before_id: String
@@ -76,7 +85,7 @@ query AgencyStripeAccountBalanceTransactions(
 ) {
   agency(id: $agency_id) {
     id
-    stripe_account(livemode: $livemode) {
+    stripe_account {
       id
       balance_transactions(
         created: $created
@@ -92,7 +101,6 @@ query AgencyStripeAccountBalanceTransactions(
 
 query AgencyStripeAccountPaymentIntents(
   $agency_id: ID!
-  $livemode: Boolean!
   $created: DateTime
   $starting_after_id: String
   $ending_before_id: String
@@ -100,7 +108,7 @@ query AgencyStripeAccountPaymentIntents(
 ) {
   agency(id: $agency_id) {
     id
-    stripe_account(livemode: $livemode) {
+    stripe_account {
       id
       payment_intents(
         created: $created
@@ -116,7 +124,6 @@ query AgencyStripeAccountPaymentIntents(
 
 query AgencyStripeAccountCustomers(
   $agency_id: ID!
-  $livemode: Boolean!
   $created: DateTime
   $starting_after_id: String
   $ending_before_id: String
@@ -124,7 +131,7 @@ query AgencyStripeAccountCustomers(
 ) {
   agency(id: $agency_id) {
     id
-    stripe_account(livemode: $livemode) {
+    stripe_account {
       id
       customers(
         created: $created
@@ -252,13 +259,13 @@ query SubdomainAgency($subdomain_name: String!) {
   }
 }
 
-query SubdomainAgencyStripeAccountUpdateUrl($subdomain_name: String!, $livemode: Boolean!) {
+query SubdomainAgencyStripeAccountUpdateUrl($subdomain_name: String!) {
   subdomains(filter: { name: $subdomain_name }) {
     id
     name
     agency {
       id
-      stripe_account(livemode: $livemode) {
+      stripe_account {
         account_update_url {
           url
         }
