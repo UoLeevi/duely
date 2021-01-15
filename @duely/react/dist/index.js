@@ -1699,7 +1699,7 @@ function StartPasswordResetForm({ className, redirectUrl }) {
                     react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M5 13l4 4L19 7" }))),
             react_1.default.createElement("p", { className: "font-semibold" },
                 react_1.default.createElement("span", null, "Password reset verification link sent to "),
-                react_1.default.createElement("span", { className: "font-bold whitespace-nowrap" }, form.getValues('email_address')),
+                react_1.default.createElement("span", { className: "font-bold whitespace-nowrap" }, form.watch('email_address')),
                 react_1.default.createElement("span", null, "."),
                 react_1.default.createElement("br", null),
                 react_1.default.createElement("span", null, "Please check your inbox.")),
@@ -1840,7 +1840,7 @@ function SignUpForm({ className, redirectUrl }) {
                     react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M5 13l4 4L19 7" }))),
             react_1.default.createElement("p", { className: "font-semibold" },
                 react_1.default.createElement("span", null, "Sign up verification link sent to "),
-                react_1.default.createElement("span", { className: "font-bold whitespace-nowrap" }, form.getValues('email_address')),
+                react_1.default.createElement("span", { className: "font-bold whitespace-nowrap" }, form.watch('email_address')),
                 react_1.default.createElement("span", null, "."),
                 react_1.default.createElement("br", null),
                 react_1.default.createElement("span", null, "Please check your inbox.")),
@@ -1960,6 +1960,7 @@ function Table({ rows: items, columns, headers, className, dense, breakpoint, wr
         : `repeat(${(_c = wrapOptions === null || wrapOptions === void 0 ? void 0 : wrapOptions.columns) !== null && _c !== void 0 ? _c : 1}, auto)`;
     className = util_1.Util.createClassName(className, 'grid auto-rows-auto gap-x-6');
     loading = !!loading;
+    items = items !== null && items !== void 0 ? items : [];
     if (isNotWrapped) {
         if (error) {
             headers = [

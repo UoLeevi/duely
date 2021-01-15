@@ -4,17 +4,21 @@ import { BsCreditCard, BsGear, BsHouseDoor } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 // import TopBar from 'components/TopBar';
 
-function ProfileUserInfo({ className }) {
+type ProfileUserInfoProps = {
+  className?: string;
+};
+
+function ProfileUserInfo({ className }: ProfileUserInfoProps) {
   className = Util.createClassName(className, 'flex flex-col items-center');
   const { data: current_user } = useQuery(current_user_Q);
   return (
     <div className={className}>
-      <div className="w-16 h-16 mb-3 bg-indigo-500 ring-2 ring-indigo-500 ring-offset-4 grid self-center shadow place-items-center tracking-wider text-3xl rounded-full text-white">
-        {Util.getNameInitials(current_user.name)}
+      <div className="grid self-center w-16 h-16 mb-3 text-3xl tracking-wider text-white bg-indigo-500 rounded-full shadow ring-2 ring-indigo-500 ring-offset-4 place-items-center">
+        {Util.getNameInitials(current_user!.name)}
       </div>
-      <span className="pt-1 font-medium">{current_user.name}</span>
-      <span className="text-xs truncate w-44 text-center">{current_user.email_address}</span>
-      <Link to="#" className="rounded font-medium text-xs mt-4 bg-gray-50 border text-gray-600 border-gray-300 px-3 leading-6 shadow-sm">Edit</Link>
+      <span className="pt-1 font-medium">{current_user!.name}</span>
+      <span className="text-xs text-center truncate w-44">{current_user!.email_address}</span>
+      <Link to="#" className="px-3 mt-4 text-xs font-medium leading-6 text-gray-600 border border-gray-300 rounded shadow-sm bg-gray-50">Edit</Link>
     </div>
   );
 }
@@ -38,7 +42,11 @@ const sidebarLinks = [
   },
 ];
 
-export function ProfileLayout({ children }) {
+type ProfileLayoutProps = {
+  children?: React.ReactNode;
+};
+
+export function ProfileLayout({ children }: ProfileLayoutProps) {
   useClassName(document.documentElement, 'bg-gray-25');
 
   return (
@@ -48,7 +56,7 @@ export function ProfileLayout({ children }) {
         topContent={<ProfileUserInfo className="pt-16 pb-6" />}
       />
       
-      <div className="pb-20 md:pb-0 md:pl-48 xl:pl-64 w-full box-border">
+      <div className="box-border w-full pb-20 md:pb-0 md:pl-48 xl:pl-64">
         <div className="flex flex-col p-4 space-y-8">
           {children}
         </div>

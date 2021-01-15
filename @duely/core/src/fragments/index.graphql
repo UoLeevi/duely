@@ -316,6 +316,7 @@ fragment subscription_plan on SubscriptionPlan {
 fragment agency on Agency {
   id
   name
+  livemode
   subdomain {
     id
     name

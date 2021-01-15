@@ -40,8 +40,6 @@ export default function DashboardProductsHome() {
       };
     }) ?? [];
 
-  // type TItem = ReturnType<typeof getProductRow>;
-
   type TItem = typeof rows extends readonly (infer T)[] ? T : never;
 
   const columns = [

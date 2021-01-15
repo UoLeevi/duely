@@ -4,7 +4,7 @@ import { useBreakpoints } from '../../hooks';
 import { LoadingSpinner } from '../LoadingSpinner';
 
 type TableProps<TItem> = {
-  rows: TItem[];
+  rows: TItem[] | undefined | null;
   columns: (
     | ((item: TItem, column: number) => React.ReactNode)
     | ((item: TItem) => React.ReactNode)
@@ -43,6 +43,7 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
 
   className = Util.createClassName(className, 'grid auto-rows-auto gap-x-6');
   loading = !!loading;
+  items = items ?? [];
 
   if (isNotWrapped) {
     if (error) {
@@ -107,7 +108,7 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
           wrapColSpanSum={wrapColSpanSum}
           isNotWrapped={isNotWrapped}
           first={i === 0}
-          last={i === items.length - 1}
+          last={i === items!.length - 1}
         />
       );
     });

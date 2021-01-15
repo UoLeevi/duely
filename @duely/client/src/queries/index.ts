@@ -110,46 +110,31 @@ export const agencies_Q = {
 
 export const agency_stripe_account_update_url_Q = {
   query: AgencyStripeAccountUpdateUrlDocument,
-  variables: {
-    livemode: true
-  },
   fetchPolicy: 'no-cache',
   result: (d: ResultOf<typeof AgencyStripeAccountUpdateUrlDocument>) =>
     d?.agency?.stripe_account?.account_update_url?.url
-};
+} as const;
 
 export const agency_stripe_account_balance_Q = {
   query: AgencyStripeAccountBalanceDocument,
-  variables: {
-    livemode: true
-  },
   result: (d: ResultOf<typeof AgencyStripeAccountBalanceDocument>) =>
     d?.agency?.stripe_account?.balance
 };
 
 export const agency_stripe_account_balance_transactions_Q = {
   query: AgencyStripeAccountBalanceTransactionsDocument,
-  variables: {
-    livemode: true
-  },
   result: (d: ResultOf<typeof AgencyStripeAccountBalanceTransactionsDocument>) =>
     d?.agency?.stripe_account?.balance_transactions
 };
 
 export const agency_stripe_account_payment_intents_Q = {
   query: AgencyStripeAccountPaymentIntentsDocument,
-  variables: {
-    livemode: true
-  },
   result: (d: ResultOf<typeof AgencyStripeAccountPaymentIntentsDocument>) =>
     d?.agency?.stripe_account?.payment_intents
 };
 
 export const agency_stripe_account_customers_Q = {
   query: AgencyStripeAccountCustomersDocument,
-  variables: {
-    livemode: true
-  },
   result: (d: ResultOf<typeof AgencyStripeAccountCustomersDocument>) =>
     d?.agency?.stripe_account?.customers
 };
@@ -227,13 +212,10 @@ export const current_agency_Q = {
 export const current_agency_stripe_account_update_url_Q = {
   ...current_subdomain_Q,
   query: SubdomainAgencyStripeAccountUpdateUrlDocument,
-  variables: {
-    livemode: true
-  },
   fetchPolicy: 'no-cache',
   result: (d: ResultOf<typeof SubdomainAgencyStripeAccountUpdateUrlDocument>) =>
     d?.subdomains?.[0]?.agency?.stripe_account?.account_update_url?.url
-};
+} as const;
 
 export const agency_thank_you_page_settings_Q = {
   query: AgencyThankYouPageSettingDocument,

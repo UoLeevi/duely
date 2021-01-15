@@ -145,9 +145,7 @@ query AgencyStripeAccountCustomers(
   }
 }
 
-query AgencySubscriptionPlan(
-  $agency_id: ID!
-) {
+query AgencySubscriptionPlan($agency_id: ID!) {
   agency(id: $agency_id) {
     id
     subscription_plan {
@@ -179,8 +177,11 @@ query CurrentUserAgencies {
         name
         agency {
           ...agency
-          stripe_account(livemode: true) {
+          stripe_account {
             ...stripe_account
+          }
+          subscription_plan {
+            ...subscription_plan
           }
         }
         memberships {
@@ -228,7 +229,6 @@ query Products($filter: ProductFilter!) {
     ...product
   }
 }
-
 
 query ProductAndAgencyFromUrlParts($subdomain_name: String!, $product_url_name: String!) {
   subdomains(filter: { name: $subdomain_name }) {
@@ -299,7 +299,6 @@ query ProductThankYouPageSetting($product_id: ID!) {
     }
   }
 }
-
 
 query AgencyPages($agency_id: ID!, $page_definition_id: ID) {
   pages(filter: { agency_id: $agency_id, page_definition_id: $page_definition_id }) {

@@ -57,7 +57,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
         </div>
         <p className="font-semibold">
           <span>Sign up verification link sent to </span>
-          <span className="font-bold whitespace-nowrap">{form.getValues('email_address')}</span>
+          <span className="font-bold whitespace-nowrap">{form.watch('email_address')}</span>
           <span>.</span>
           <br />
           <span>Please check your inbox.</span>

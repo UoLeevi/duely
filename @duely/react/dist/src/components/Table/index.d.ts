@@ -1,7 +1,7 @@
 import React from 'react';
 import { useBreakpoints } from '../../hooks';
 declare type TableProps<TItem> = {
-    rows: TItem[];
+    rows: TItem[] | undefined | null;
     columns: (((item: TItem, column: number) => React.ReactNode) | ((item: TItem) => React.ReactNode))[];
     headers: React.ReactNode[];
     dense?: boolean;

@@ -9,7 +9,7 @@ export default function Home() {
       <BsExclamationDiamond className="text-orange-600" />
       <span className="text-sm">Duely is still in development</span>
     </div>
-  , { autoHideMs: 6000, show: true });
+  );
 
   return (
     <div className="page-container">

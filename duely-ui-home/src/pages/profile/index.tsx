@@ -20,10 +20,14 @@ export default function Profile() {
 
   if (current_user == null) {
     return (
-      <div className="grid h-full w-full place-items-center">
-        <div className="flex flex-col m-3 space-y-1 items-center">
-          <span className="font-medium text text-gray-700">You need to log in before you can access your profile</span>
-          <Link className="font-medium text-lg text-indigo-600" to="/log-in">Go to log in page</Link>
+      <div className="grid w-full h-full place-items-center">
+        <div className="flex flex-col items-center m-3 space-y-1">
+          <span className="font-medium text-gray-700 text">
+            You need to log in before you can access your profile
+          </span>
+          <Link className="text-lg font-medium text-indigo-600" to="/log-in">
+            Go to log in page
+          </Link>
         </div>
       </div>
     );
@@ -32,7 +36,9 @@ export default function Profile() {
   return (
     <ProfileLayout>
       <Switch>
-        {routes.map((route, i) => <Route key={i} {...route} />)}
+        {routes.map((route, i) => (
+          <Route key={i} {...route} />
+        ))}
       </Switch>
     </ProfileLayout>
   );

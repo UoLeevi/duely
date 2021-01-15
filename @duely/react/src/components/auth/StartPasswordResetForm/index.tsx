@@ -54,7 +54,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
         </div>
         <p className="font-semibold">
           <span>Password reset verification link sent to </span>
-          <span className="font-bold whitespace-nowrap">{form.getValues('email_address')}</span>
+          <span className="font-bold whitespace-nowrap">{form.watch('email_address')}</span>
           <span>.</span>
           <br />
           <span>Please check your inbox.</span>

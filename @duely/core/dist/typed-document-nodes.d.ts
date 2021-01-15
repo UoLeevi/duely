@@ -1192,7 +1192,7 @@ export declare type Subscription_PlanFragment = ({
 });
 export declare type AgencyFragment = ({
     __typename?: 'Agency';
-} & Pick<Agency, 'id' | 'name'> & {
+} & Pick<Agency, 'id' | 'name' | 'livemode'> & {
     subdomain: ({
         __typename?: 'Subdomain';
     } & Pick<Subdomain, 'id' | 'name'>);
@@ -1809,6 +1809,9 @@ export declare type CurrentUserAgenciesQuery = ({
                     stripe_account: ({
                         __typename?: 'StripeAccount';
                     } & Stripe_AccountFragment);
+                    subscription_plan: ({
+                        __typename?: 'SubscriptionPlan';
+                    } & Subscription_PlanFragment);
                 } & AgencyFragment);
                 memberships: Array<({
                     __typename?: 'Membership';
