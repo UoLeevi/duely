@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 import { withConnection } from '../../../db';
 import stripe from '../../../stripe';
 import { GqlTypeDefinition } from '../../types';
+import { createResolverForReferencedResourceAll } from '../../util';
 
 // see: https://stripe.com/docs/api/accounts/object
 
@@ -13,9 +14,24 @@ export const StripeAccount: GqlTypeDefinition = {
       livemode: Boolean!
       account_update_url: StripeAccountLink!
       balance: StripeBalance!
-      balance_transactions(payout_id: ID, type: String, available_on: DateTime, created: DateTime, currency: String, starting_after_id: String, ending_before_id: String, limit: Int): [BalanceTransaction!]!
-      payment_intents(customer_id: ID, created: DateTime, starting_after_id: String, ending_before_id: String, limit: Int): [PaymentIntent!]!
-      customers(email: String, created: DateTime, starting_after_id: String, ending_before_id: String, limit: Int): [StripeCustomer!]!
+      balance_transactions(
+        payout_id: ID
+        type: String
+        available_on: DateTime
+        created: DateTime
+        currency: String
+        starting_after_id: String
+        ending_before_id: String
+        limit: Int
+      ): [BalanceTransaction!]!
+      payment_intents(
+        customer_id: ID
+        created: DateTime
+        starting_after_id: String
+        ending_before_id: String
+        limit: Int
+      ): [PaymentIntent!]!
+      customers(filter: CustomerFilter): [Customer!]!
       business_profile: BusinessProfile!
       business_type: String
       capabilities: StripeCapabilities!
@@ -99,6 +115,11 @@ export const StripeAccount: GqlTypeDefinition = {
     StripeAccount: {
       id_ext: (source) => source.stripe_id_ext,
       created: (source) => new Date(source.created * 1000),
+      ...createResolverForReferencedResourceAll({
+        name: 'customers',
+        resource_name: 'customer',
+        column_name: 'stripe_account_id'
+      }),
       async account_update_url(source, args, context, info) {
         if (!context.jwt) throw new Error('Unauthorized');
 
@@ -239,42 +260,6 @@ export const StripeAccount: GqlTypeDefinition = {
           return list.data?.map((pi) => ({
             stripeAccount: source.stripe_id_ext,
             ...pi
-          }));
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      },
-      async customers(source, { starting_after_id, ending_before_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
-
-        const stripe_env = source.livemode ? 'live' : 'test';
-
-        try {
-          const access = await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResourceAccess }) => {
-              return await queryResourceAccess(source.id);
-            });
-          });
-
-          if (access !== 'owner') {
-            throw new Error('Only owner can access this information');
-          }
-
-          if (starting_after_id) {
-            args.starting_after = starting_after_id;
-          }
-
-          if (ending_before_id) {
-            args.ending_before = ending_before_id;
-          }
-
-          // see: https://stripe.com/docs/api/customers/list
-          const list = await stripe[stripe_env].customers.list(args, {
-            stripeAccount: source.stripe_id_ext
-          });
-          return list.data?.map((cus) => ({
-            stripeAccount: source.stripe_id_ext,
-            ...cus
           }));
         } catch (error) {
           throw new Error(error.message);

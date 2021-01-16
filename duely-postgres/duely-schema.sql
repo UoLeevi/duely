@@ -2517,6 +2517,25 @@ $$;
 ALTER FUNCTION policy_.agent_can_query_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: agent_can_query_customer_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.agent_can_query_customer_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
+    RETURN '{uuid_, name_, email_address_, default_stripe_id_ext_, stripe_account_uuid_, user_uuid_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.agent_can_query_customer_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: agent_can_query_price_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3198,6 +3217,25 @@ $$;
 ALTER FUNCTION policy_.owner_can_change_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_customer_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_customer_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{name_, email_address_, default_stripe_id_ext_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_customer_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: owner_can_change_image_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3432,6 +3470,28 @@ $$;
 
 
 ALTER FUNCTION policy_.owner_can_create_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: owner_can_create_customer_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_customer_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
+    RETURN '{name_, email_address_, default_stripe_id_ext_, stripe_account_uuid_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_customer_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: owner_can_create_image_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3750,6 +3810,25 @@ END
 ALTER FUNCTION policy_.product_status_is_live_(_arg anyelement) OWNER TO postgres;
 
 --
+-- Name: serviceaccount_can_change_customer_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_change_customer_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{name_, email_address_, default_stripe_id_ext_, user_uuid_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_change_customer_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: serviceaccount_can_change_markdown_without_agency_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3767,6 +3846,25 @@ $$;
 
 
 ALTER FUNCTION policy_.serviceaccount_can_change_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_create_customer_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_create_customer_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{name_, email_address_, default_stripe_id_ext_, stripe_account_uuid_, user_uuid_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_create_customer_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: serviceaccount_can_create_markdown_without_agency_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3826,6 +3924,25 @@ $$;
 
 
 ALTER FUNCTION policy_.serviceaccount_can_query_agency_thank_you_page_setting_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_query_customer_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_query_customer_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, name_, email_address_, default_stripe_id_ext_, stripe_account_uuid_, user_uuid_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_query_customer_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: serviceaccount_can_query_markdown_without_agency_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4735,6 +4852,24 @@ CREATE TABLE application_.agency_thank_you_page_setting_ (
 ALTER TABLE application_.agency_thank_you_page_setting_ OWNER TO postgres;
 
 --
+-- Name: customer_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.customer_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    name_ text,
+    email_address_ text NOT NULL,
+    default_stripe_id_ext_ text,
+    stripe_account_uuid_ uuid NOT NULL,
+    user_uuid_ uuid,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.customer_ OWNER TO postgres;
+
+--
 -- Name: image_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
@@ -5143,6 +5278,25 @@ CREATE TABLE application__audit_.agency_thank_you_page_setting_ (
 
 
 ALTER TABLE application__audit_.agency_thank_you_page_setting_ OWNER TO postgres;
+
+--
+-- Name: customer_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.customer_ (
+    uuid_ uuid,
+    name_ text,
+    email_address_ text,
+    default_stripe_id_ext_ text,
+    stripe_account_uuid_ uuid,
+    user_uuid_ uuid,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.customer_ OWNER TO postgres;
 
 --
 -- Name: notification_definition_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -6222,6 +6376,13 @@ e4afc5be-e025-4485-9591-094891ede563	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	policy
 10d53e80-8f00-4af3-9bf3-c23cb47958c5	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.agent_can_query_agency_subscription_plan_(security_.resource_definition_,application_.resource_)	query	\N
 1b6b5685-c684-46a8-9e3a-bbe277cbde31	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.serviceaccount_can_query_agency_subscription_plan_(security_.resource_definition_,application_.resource_)	query	10d53e80-8f00-4af3-9bf3-c23cb47958c5
 4b67f569-b5a9-4377-b5c3-a623de78ed2b	76b04264-d560-48af-b49b-4440e96d3fc3	policy_.serviceaccount_can_query_transaction_fee_(security_.resource_definition_,application_.resource_)	query	\N
+fd0f32d1-1c12-483c-9563-1141abcf042d	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.owner_can_create_customer_(security_.resource_definition_,jsonb)	create	\N
+cd333795-a077-4e13-a0ab-4d79253c937c	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.serviceaccount_can_create_customer_(security_.resource_definition_,jsonb)	create	fd0f32d1-1c12-483c-9563-1141abcf042d
+f1a07913-fd07-45e9-b5ce-7fc49bd82280	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.agent_can_query_customer_(security_.resource_definition_,application_.resource_)	query	\N
+80345f82-f4f2-4580-bf4b-8653661bc391	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.serviceaccount_can_query_customer_(security_.resource_definition_,application_.resource_)	query	f1a07913-fd07-45e9-b5ce-7fc49bd82280
+3dd797d2-e9f0-428e-a205-72c1115819cd	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.owner_can_change_customer_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
+6d262149-75c1-460d-aa1f-37742c1eb59d	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.serviceaccount_can_change_customer_(security_.resource_definition_,application_.resource_,jsonb)	update	3dd797d2-e9f0-428e-a205-72c1115819cd
+6cb5b5bd-e93f-425c-b3f3-fa8623d95cd7	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
@@ -6274,6 +6435,7 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 08b16cec-4d78-499a-a092-91fc2d360f86	page	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,product_uuid_,url_path_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
 3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,stripe_id_ext_,livemode_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
 35bee174-fde7-4ae2-9cb2-4469b3eb8de5	subplan	subscription plan	internal_.subscription_plan_	\N	{uuid_,name_,stripe_prod_id_ext_live_,stripe_prod_id_ext_test_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
+3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	2021-01-16 08:33:30.381138+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -6373,6 +6535,7 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 08b16cec-4d78-499a-a092-91fc2d360f86	page	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,product_uuid_,url_path_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
 3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,stripe_id_ext_,livemode_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
 35bee174-fde7-4ae2-9cb2-4469b3eb8de5	subplan	subscription plan	internal_.subscription_plan_	\N	{uuid_,name_,stripe_prod_id_ext_live_,stripe_prod_id_ext_test_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
+3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	2021-01-16 08:33:30.381138+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -6436,6 +6599,30 @@ ALTER TABLE ONLY application_.agency_thank_you_page_setting_
 
 ALTER TABLE ONLY application_.agency_thank_you_page_setting_
     ADD CONSTRAINT agency_thank_you_page_setting__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: customer_ customer__default_stripe_id_ext__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.customer_
+    ADD CONSTRAINT customer__default_stripe_id_ext__key UNIQUE (default_stripe_id_ext_);
+
+
+--
+-- Name: customer_ customer__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.customer_
+    ADD CONSTRAINT customer__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: customer_ customer__stripe_account_uuid__email_address__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.customer_
+    ADD CONSTRAINT customer__stripe_account_uuid__email_address__key UNIQUE (stripe_account_uuid_, email_address_);
 
 
 --
@@ -7055,6 +7242,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency
 
 
 --
+-- Name: customer_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.customer_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
 -- Name: notification_definition_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7174,6 +7368,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.age
 
 
 --
+-- Name: customer_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.customer_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: image_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7262,6 +7463,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.agency_thank_you_page_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: customer_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.customer_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -7405,6 +7613,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.age
 
 
 --
+-- Name: customer_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.customer_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: image_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7493,6 +7708,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.agency_thank_you_page_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: customer_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.customer_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -7615,6 +7837,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.age
 
 
 --
+-- Name: customer_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.customer_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
 -- Name: image_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7724,6 +7953,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agenc
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agency_thank_you_page_setting_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: customer_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.customer_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
@@ -8686,6 +8922,22 @@ ALTER TABLE ONLY application_.agency_
 
 ALTER TABLE ONLY application_.agency_thank_you_page_setting_
     ADD CONSTRAINT agency_thank_you_page_setting__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+
+
+--
+-- Name: customer_ customer__stripe_account_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.customer_
+    ADD CONSTRAINT customer__stripe_account_uuid__fkey FOREIGN KEY (stripe_account_uuid_) REFERENCES application_.stripe_account_(uuid_) ON DELETE CASCADE;
+
+
+--
+-- Name: customer_ customer__user_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.customer_
+    ADD CONSTRAINT customer__user_uuid__fkey FOREIGN KEY (user_uuid_) REFERENCES security_.user_(uuid_) ON DELETE SET NULL;
 
 
 --

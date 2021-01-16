@@ -342,7 +342,7 @@ export const Product: GqlTypeDefinition = {
                 };
               }
 
-              const agency = await deleteResource(product.agency_id);
+              const agency = await queryResource(product.agency_id);
 
               const stripe_envs: (keyof typeof stripe)[] = agency.livemode
                 ? ['test', 'live']

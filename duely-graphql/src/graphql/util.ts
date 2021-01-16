@@ -20,7 +20,7 @@ export async function withCache<TKey, TValue>(
 
 export function withStripeAccountProperty<TData>(
   data: TData | Iterable<TData>,
-  source: { livemode: boolean, stripeAccount?: string; stripe_id_ext?: string }
+  source: { livemode: boolean; stripeAccount?: string; stripe_id_ext?: string }
 ) {
   if (data == null) return data;
   const stripeAccount = source.stripeAccount ?? source.stripe_id_ext;
@@ -86,6 +86,7 @@ type CreateResolverForReferencedResourceArgs = {
   name: string;
   resource_name?: string;
   column_name?: string;
+  reverse_column_name?: string;
   reverse?: boolean;
 };
 
@@ -94,7 +95,13 @@ export function createResolverForReferencedResource<
   TSource extends { id?: string },
   TContext extends DuelyQqlContext,
   TFilterArg
->({ name, resource_name, column_name, reverse }: CreateResolverForReferencedResourceArgs) {
+>({
+  name,
+  resource_name,
+  column_name,
+  reverse_column_name,
+  reverse
+}: CreateResolverForReferencedResourceArgs) {
   column_name = column_name ?? `${name}_id`;
   resource_name = resource_name ?? name;
   const createQueryArgs: (
@@ -103,7 +110,12 @@ export function createResolverForReferencedResource<
   ) => [string, Record<string, any>?] = reverse
     ? (source, args) => [
         resource_name!,
-        { ...args.filter, [column_name!]: source.id ?? source[column_name! as keyof TSource] }
+        {
+          ...args.filter,
+          [column_name!]: reverse_column_name
+            ? source[reverse_column_name as keyof TSource]
+            : source.id ?? source[column_name! as keyof TSource]
+        }
       ]
     : (source, args) => [(source[column_name! as keyof TSource]! as unknown) as string];
 
@@ -141,7 +153,12 @@ export function createResolverForReferencedResourceAll<
   TSource extends { id?: string },
   TContext extends { jwt?: string; ip?: string },
   TFilterArg
->({ name, resource_name, column_name, reverse_column_name }: CreateResolverForReferencedResourceAllArgs) {
+>({
+  name,
+  resource_name,
+  column_name,
+  reverse_column_name
+}: CreateResolverForReferencedResourceAllArgs) {
   column_name = column_name ?? `${name}_id`;
   resource_name = resource_name ?? name;
 
@@ -159,9 +176,9 @@ export function createResolverForReferencedResourceAll<
           return await withSession(async ({ queryResourceAll }) => {
             return await queryResourceAll<TResult>(resource_name!, {
               ...args.filter,
-              [column_name!]: reverse_column_name 
-                ? (source[reverse_column_name as keyof TSource])
-                : (source.id ?? source[column_name! as keyof TSource])
+              [column_name!]: reverse_column_name
+                ? source[reverse_column_name as keyof TSource]
+                : source.id ?? source[column_name! as keyof TSource]
             });
           });
         });

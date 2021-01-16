@@ -2,6 +2,7 @@
 
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
+import { createResolverForReferencedResource } from '../../util';
 
 export const StripeCustomer: GqlTypeDefinition = {
   typeDef: gql`
@@ -20,12 +21,19 @@ export const StripeCustomer: GqlTypeDefinition = {
       next_invoice_sequence: Int
       phone: String
       preferred_locales: [String]
+      customer: Customer
     }
   `,
   resolvers: {
     StripeCustomer: {
       id_ext: (source) => source.id,
-      created: (source) => new Date(source.created * 1000)
+      created: (source) => new Date(source.created * 1000),
+      ...createResolverForReferencedResource({
+        name: 'customer',
+        reverse: true,
+        reverse_column_name: 'email',
+        column_name: 'email_address'
+      })
     }
   }
 };

@@ -37,6 +37,7 @@ import type { DuelyQqlContext } from '../context';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition, GqlResolver } from '../types';
 import { DocumentNode } from 'graphql';
+import { Customer } from './Customer';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -67,6 +68,7 @@ const types: GqlTypeDefinition[] = [
   Country,
   ExchangeRate,
   User,
+  Customer,
   Agency,
   AgencySettings,
   Price,
