@@ -9,11 +9,14 @@ import {
   AgencyThankYouPageSettingDocument,
   CreateAgencyDocument,
   CreateAgencyThankYouPageSettingDocument,
+  CreateCustomerDocument,
   CreatePageBlockDocument,
   CreatePriceDocument,
   CreateProductDocument,
   CreateProductThankYouPageSettingDocument,
+  CustomerFragmentDoc,
   DeleteAgencyThankYouPageSettingDocument,
+  DeleteCustomerDocument,
   DeletePageBlockDocument,
   DeleteProductDocument,
   DeleteProductThankYouPageSettingDocument,
@@ -25,6 +28,7 @@ import {
   StartPasswordResetDocument,
   StartSignUpDocument,
   UpdateAgencyThankYouPageSettingDocument,
+  UpdateCustomerDocument,
   UpdatePageBlockDocument,
   UpdatePageDocument,
   UpdateProductDocument,
@@ -204,6 +208,62 @@ export const delete_product_M = {
     if (!result?.success || !result.product) return;
 
     const id = cache.identify(result.product);
+    cache.evict({ id });
+    cache.gc();
+  }
+};
+
+const create_customer_R = (d: ResultOf<typeof CreateCustomerDocument>) => d?.create_customer;
+export const create_customer_M = {
+  mutation: CreateCustomerDocument,
+  result: create_customer_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof create_customer_R> | null
+  ) {
+    if (!result?.success || !result.customer) return;
+
+    const { customer } = result;
+
+    cache.modify({
+      id: cache.identify(customer.stripe_account),
+      fields: {
+        customers(customersRefs: Reference[] = [], { readField }) {
+          const newCustomerRef = cache.writeFragment({
+            data: customer,
+            fragment: CustomerFragmentDoc,
+            fragmentName: 'customer'
+          });
+
+          // Quick safety check - if the new customer is already
+          // present in the cache, we don't need to add it again.
+          if (customersRefs.some((ref) => readField('id', ref) === customer.id)) {
+            return customersRefs;
+          }
+
+          return [...customersRefs, newCustomerRef];
+        }
+      }
+    });
+  }
+};
+
+export const update_customer_M = {
+  mutation: UpdateCustomerDocument,
+  result: (d: ResultOf<typeof UpdateCustomerDocument>) => d?.update_customer
+};
+
+const delete_customer_R = (d: ResultOf<typeof DeleteCustomerDocument>) => d?.delete_customer;
+export const delete_customer_M = {
+  mutation: DeleteCustomerDocument,
+  result: delete_customer_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof delete_customer_R> | null
+  ) {
+    if (!result?.success || !result.customer) return;
+
+    const id = cache.identify(result.customer);
     cache.evict({ id });
     cache.gc();
   }

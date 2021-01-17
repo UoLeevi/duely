@@ -8,7 +8,7 @@ import {
   AgencyStripeAccountBalanceDocument,
   AgencyStripeAccountBalanceTransactionsDocument,
   AgencyStripeAccountPaymentIntentsDocument,
-  AgencyStripeAccountCustomersDocument,
+  AgencyCustomersDocument,
   CurrentUserAgenciesDocument,
   SubdomainPublicDocument,
   AgencyProductsDocument,
@@ -32,7 +32,8 @@ import {
   AgencyDocument,
   AgenciesDocument,
   CalculateTransactionFeeDocument,
-  CountrySpecDocument
+  CountrySpecDocument,
+  CustomerDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -133,10 +134,15 @@ export const agency_stripe_account_payment_intents_Q = {
     d?.agency?.stripe_account?.payment_intents
 };
 
-export const agency_stripe_account_customers_Q = {
-  query: AgencyStripeAccountCustomersDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountCustomersDocument>) =>
+export const agency_customers_Q = {
+  query: AgencyCustomersDocument,
+  result: (d: ResultOf<typeof AgencyCustomersDocument>) =>
     d?.agency?.stripe_account?.customers
+};
+
+export const customer_Q = {
+  query: CustomerDocument,
+  result: (d: ResultOf<typeof CustomerDocument>) => d?.customer
 };
 
 export const current_user_agencies_Q = {

@@ -190,6 +190,40 @@ mutation CreatePrice(
   }
 }
 
+mutation CreateCustomer($stripe_account_id: ID!, $email_address: String!, $name: String!) {
+  create_customer(
+    stripe_account_id: $stripe_account_id
+    email_address: $email_address
+    name: $name
+  ) {
+    success
+    message
+    customer {
+      ...customer
+    }
+  }
+}
+
+mutation UpdateCustomer($customer_id: ID!, $name: String, $email_address: String) {
+  update_customer(customer_id: $customer_id, name: $name, email_address: $email_address) {
+    success
+    message
+    customer {
+      ...customer
+    }
+  }
+}
+
+mutation DeleteCustomer($customer_id: ID!) {
+  delete_customer(customer_id: $customer_id) {
+    success
+    message
+    customer {
+      id
+    }
+  }
+}
+
 mutation CreateAgencyThankYouPageSetting($agency_id: ID!, $url: String!) {
   create_agency_thank_you_page_setting(agency_id: $agency_id, url: $url) {
     success

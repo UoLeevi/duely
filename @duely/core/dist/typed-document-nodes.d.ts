@@ -41,6 +41,8 @@ export declare type Query = {
     current_user?: Maybe<User>;
     user?: Maybe<User>;
     users?: Maybe<Array<User>>;
+    customer?: Maybe<Customer>;
+    customers?: Maybe<Array<Customer>>;
     agency?: Maybe<Agency>;
     agencies?: Maybe<Array<Agency>>;
     price?: Maybe<Price>;
@@ -104,6 +106,12 @@ export declare type QueryUserArgs = {
 };
 export declare type QueryUsersArgs = {
     filter: UserFilter;
+};
+export declare type QueryCustomerArgs = {
+    id: Scalars['ID'];
+};
+export declare type QueryCustomersArgs = {
+    filter: CustomerFilter;
 };
 export declare type QueryAgencyArgs = {
     id: Scalars['ID'];
@@ -182,6 +190,9 @@ export declare type Mutation = {
     verify_sign_up: SimpleResult;
     start_password_reset: SimpleResult;
     verify_password_reset: SimpleResult;
+    create_customer: CustomerMutationResult;
+    update_customer: CustomerMutationResult;
+    delete_customer: CustomerMutationResult;
     create_agency: CreateAgencyResult;
     delete_agency: DeleteAgencyResult;
     create_agency_thank_you_page_setting: AgencyThankYouPageSettingMutationResult;
@@ -241,6 +252,19 @@ export declare type MutationStart_Password_ResetArgs = {
 export declare type MutationVerify_Password_ResetArgs = {
     verification_code: Scalars['String'];
     password: Scalars['String'];
+};
+export declare type MutationCreate_CustomerArgs = {
+    stripe_account_id: Scalars['ID'];
+    email_address: Scalars['String'];
+    name?: Maybe<Scalars['String']>;
+};
+export declare type MutationUpdate_CustomerArgs = {
+    customer_id: Scalars['ID'];
+    name?: Maybe<Scalars['String']>;
+    email_address?: Maybe<Scalars['String']>;
+};
+export declare type MutationDelete_CustomerArgs = {
+    customer_id: Scalars['ID'];
 };
 export declare type MutationCreate_AgencyArgs = {
     name: Scalars['String'];
@@ -629,6 +653,33 @@ export declare type UserFilter = {
     name?: Maybe<Scalars['String']>;
     email_address?: Maybe<Scalars['String']>;
 };
+export declare type Customer = {
+    __typename?: 'Customer';
+    id: Scalars['ID'];
+    name?: Maybe<Scalars['String']>;
+    email_address: Scalars['String'];
+    default_stripe_customer: StripeCustomer;
+    stripe_customers: Array<StripeCustomer>;
+    user?: Maybe<User>;
+    stripe_account: StripeAccount;
+};
+export declare type CustomerStripe_CustomersArgs = {
+    created?: Maybe<Scalars['DateTime']>;
+    starting_after_id?: Maybe<Scalars['String']>;
+    ending_before_id?: Maybe<Scalars['String']>;
+    limit?: Maybe<Scalars['Int']>;
+};
+export declare type CustomerFilter = {
+    stripe_account_id?: Maybe<Scalars['ID']>;
+    email_address?: Maybe<Scalars['String']>;
+    default_stripe_customer_id_ext?: Maybe<Scalars['ID']>;
+};
+export declare type CustomerMutationResult = MutationResult & {
+    __typename?: 'CustomerMutationResult';
+    success: Scalars['Boolean'];
+    message?: Maybe<Scalars['String']>;
+    customer?: Maybe<Customer>;
+};
 export declare type Agency = Node & {
     __typename?: 'Agency';
     id: Scalars['ID'];
@@ -719,7 +770,7 @@ export declare type StripeAccount = {
     balance: StripeBalance;
     balance_transactions: Array<BalanceTransaction>;
     payment_intents: Array<PaymentIntent>;
-    customers: Array<StripeCustomer>;
+    customers: Array<Customer>;
     business_profile: BusinessProfile;
     business_type?: Maybe<Scalars['String']>;
     capabilities: StripeCapabilities;
@@ -751,11 +802,7 @@ export declare type StripeAccountPayment_IntentsArgs = {
     limit?: Maybe<Scalars['Int']>;
 };
 export declare type StripeAccountCustomersArgs = {
-    email?: Maybe<Scalars['String']>;
-    created?: Maybe<Scalars['DateTime']>;
-    starting_after_id?: Maybe<Scalars['String']>;
-    ending_before_id?: Maybe<Scalars['String']>;
-    limit?: Maybe<Scalars['Int']>;
+    filter?: Maybe<CustomerFilter>;
 };
 export declare type BusinessProfile = {
     __typename?: 'BusinessProfile';
@@ -834,6 +881,7 @@ export declare type StripeCustomer = {
     next_invoice_sequence?: Maybe<Scalars['Int']>;
     phone?: Maybe<Scalars['String']>;
     preferred_locales?: Maybe<Array<Maybe<Scalars['String']>>>;
+    customer?: Maybe<Customer>;
 };
 export declare type BalanceTransaction = {
     __typename?: 'BalanceTransaction';
@@ -1083,12 +1131,15 @@ export declare type Balance_TransactionFragment = ({
         __typename?: 'BalanceTransactionFeeDetails';
     } & Pick<BalanceTransactionFeeDetails, 'amount' | 'application' | 'currency' | 'description' | 'type'>)>>;
 });
-export declare type CustomerFragment = ({
+export declare type Stripe_CustomerFragment = ({
     __typename?: 'StripeCustomer';
 } & Pick<StripeCustomer, 'id' | 'id_ext' | 'balance' | 'created' | 'currency' | 'delinquent' | 'description' | 'email' | 'invoice_prefix' | 'name' | 'next_invoice_sequence' | 'phone' | 'preferred_locales'> & {
     address?: Maybe<({
         __typename?: 'Address';
     } & AddressFragment)>;
+    customer?: Maybe<({
+        __typename?: 'Customer';
+    } & Pick<Customer, 'id'>)>;
 });
 export declare type ChargeFragment = ({
     __typename?: 'Charge';
@@ -1128,7 +1179,7 @@ export declare type Payment_IntentFragment = ({
     } & ChargeFragment)>>>;
     customer?: Maybe<({
         __typename?: 'StripeCustomer';
-    } & CustomerFragment)>;
+    } & Stripe_CustomerFragment)>;
     shipping?: Maybe<({
         __typename?: 'Shipping';
     } & Pick<Shipping, 'carrier' | 'name' | 'phone' | 'tracking_number'> & {
@@ -1202,6 +1253,22 @@ export declare type AgencyFragment = ({
     settings: ({
         __typename?: 'AgencySettings';
     } & Pick<AgencySettings, 'id'>);
+});
+export declare type CustomerFragment = ({
+    __typename?: 'Customer';
+} & Pick<Customer, 'id' | 'name' | 'email_address'> & {
+    stripe_account: ({
+        __typename?: 'StripeAccount';
+    } & Pick<StripeAccount, 'id'>);
+    default_stripe_customer: ({
+        __typename?: 'StripeCustomer';
+    } & Stripe_CustomerFragment);
+    stripe_customers: Array<({
+        __typename?: 'StripeCustomer';
+    } & Stripe_CustomerFragment)>;
+    user?: Maybe<({
+        __typename?: 'User';
+    } & UserFragment)>;
 });
 export declare type SubdomainFragment = ({
     __typename?: 'Subdomain';
@@ -1438,6 +1505,52 @@ export declare type CreatePriceMutation = ({
         price?: Maybe<({
             __typename?: 'Price';
         } & PriceFragment)>;
+    });
+});
+export declare type CreateCustomerMutationVariables = Exact<{
+    stripe_account_id: Scalars['ID'];
+    email_address: Scalars['String'];
+    name: Scalars['String'];
+}>;
+export declare type CreateCustomerMutation = ({
+    __typename?: 'Mutation';
+} & {
+    create_customer: ({
+        __typename?: 'CustomerMutationResult';
+    } & Pick<CustomerMutationResult, 'success' | 'message'> & {
+        customer?: Maybe<({
+            __typename?: 'Customer';
+        } & CustomerFragment)>;
+    });
+});
+export declare type UpdateCustomerMutationVariables = Exact<{
+    customer_id: Scalars['ID'];
+    name?: Maybe<Scalars['String']>;
+    email_address?: Maybe<Scalars['String']>;
+}>;
+export declare type UpdateCustomerMutation = ({
+    __typename?: 'Mutation';
+} & {
+    update_customer: ({
+        __typename?: 'CustomerMutationResult';
+    } & Pick<CustomerMutationResult, 'success' | 'message'> & {
+        customer?: Maybe<({
+            __typename?: 'Customer';
+        } & CustomerFragment)>;
+    });
+});
+export declare type DeleteCustomerMutationVariables = Exact<{
+    customer_id: Scalars['ID'];
+}>;
+export declare type DeleteCustomerMutation = ({
+    __typename?: 'Mutation';
+} & {
+    delete_customer: ({
+        __typename?: 'CustomerMutationResult';
+    } & Pick<CustomerMutationResult, 'success' | 'message'> & {
+        customer?: Maybe<({
+            __typename?: 'Customer';
+        } & Pick<Customer, 'id'>)>;
     });
 });
 export declare type CreateAgencyThankYouPageSettingMutationVariables = Exact<{
@@ -1732,14 +1845,21 @@ export declare type AgencyStripeAccountPaymentIntentsQuery = ({
         });
     })>;
 });
-export declare type AgencyStripeAccountCustomersQueryVariables = Exact<{
-    agency_id: Scalars['ID'];
-    created?: Maybe<Scalars['DateTime']>;
-    starting_after_id?: Maybe<Scalars['String']>;
-    ending_before_id?: Maybe<Scalars['String']>;
-    limit?: Maybe<Scalars['Int']>;
+export declare type CustomerQueryVariables = Exact<{
+    customer_id: Scalars['ID'];
 }>;
-export declare type AgencyStripeAccountCustomersQuery = ({
+export declare type CustomerQuery = ({
+    __typename?: 'Query';
+} & {
+    customer?: Maybe<({
+        __typename?: 'Customer';
+    } & CustomerFragment)>;
+});
+export declare type AgencyCustomersQueryVariables = Exact<{
+    agency_id: Scalars['ID'];
+    filter?: Maybe<CustomerFilter>;
+}>;
+export declare type AgencyCustomersQuery = ({
     __typename?: 'Query';
 } & {
     agency?: Maybe<({
@@ -1749,7 +1869,7 @@ export declare type AgencyStripeAccountCustomersQuery = ({
             __typename?: 'StripeAccount';
         } & Pick<StripeAccount, 'id'> & {
             customers: Array<({
-                __typename?: 'StripeCustomer';
+                __typename?: 'Customer';
             } & CustomerFragment)>;
         });
     })>;
@@ -2092,7 +2212,7 @@ export declare const Stripe_AccountFragmentDoc: DocumentNode<Stripe_AccountFragm
 export declare const Balance_TransactionFragmentDoc: DocumentNode<Balance_TransactionFragment, unknown>;
 export declare const AddressFragmentDoc: DocumentNode<AddressFragment, unknown>;
 export declare const ChargeFragmentDoc: DocumentNode<ChargeFragment, unknown>;
-export declare const CustomerFragmentDoc: DocumentNode<CustomerFragment, unknown>;
+export declare const Stripe_CustomerFragmentDoc: DocumentNode<Stripe_CustomerFragment, unknown>;
 export declare const Payment_IntentFragmentDoc: DocumentNode<Payment_IntentFragment, unknown>;
 export declare const PriceFragmentDoc: DocumentNode<PriceFragment, unknown>;
 export declare const ImageFragmentDoc: DocumentNode<ImageFragment, unknown>;
@@ -2100,9 +2220,10 @@ export declare const MarkdownFragmentDoc: DocumentNode<MarkdownFragment, unknown
 export declare const ProductFragmentDoc: DocumentNode<ProductFragment, unknown>;
 export declare const Transaction_FeeFragmentDoc: DocumentNode<Transaction_FeeFragment, unknown>;
 export declare const Subscription_PlanFragmentDoc: DocumentNode<Subscription_PlanFragment, unknown>;
+export declare const UserFragmentDoc: DocumentNode<UserFragment, unknown>;
+export declare const CustomerFragmentDoc: DocumentNode<CustomerFragment, unknown>;
 export declare const ThemeFragmentDoc: DocumentNode<ThemeFragment, unknown>;
 export declare const AgencyFragmentDoc: DocumentNode<AgencyFragment, unknown>;
-export declare const UserFragmentDoc: DocumentNode<UserFragment, unknown>;
 export declare const MembershipFragmentDoc: DocumentNode<MembershipFragment, unknown>;
 export declare const SubdomainFragmentDoc: DocumentNode<SubdomainFragment, unknown>;
 export declare const Page_DefinitionFragmentDoc: DocumentNode<Page_DefinitionFragment, unknown>;
@@ -2123,6 +2244,9 @@ export declare const CreateProductDocument: DocumentNode<CreateProductMutation, 
 export declare const UpdateProductDocument: DocumentNode<UpdateProductMutation, UpdateProductMutationVariables>;
 export declare const DeleteProductDocument: DocumentNode<DeleteProductMutation, DeleteProductMutationVariables>;
 export declare const CreatePriceDocument: DocumentNode<CreatePriceMutation, CreatePriceMutationVariables>;
+export declare const CreateCustomerDocument: DocumentNode<CreateCustomerMutation, CreateCustomerMutationVariables>;
+export declare const UpdateCustomerDocument: DocumentNode<UpdateCustomerMutation, UpdateCustomerMutationVariables>;
+export declare const DeleteCustomerDocument: DocumentNode<DeleteCustomerMutation, DeleteCustomerMutationVariables>;
 export declare const CreateAgencyThankYouPageSettingDocument: DocumentNode<CreateAgencyThankYouPageSettingMutation, CreateAgencyThankYouPageSettingMutationVariables>;
 export declare const UpdateAgencyThankYouPageSettingDocument: DocumentNode<UpdateAgencyThankYouPageSettingMutation, UpdateAgencyThankYouPageSettingMutationVariables>;
 export declare const DeleteAgencyThankYouPageSettingDocument: DocumentNode<DeleteAgencyThankYouPageSettingMutation, DeleteAgencyThankYouPageSettingMutationVariables>;
@@ -2141,7 +2265,8 @@ export declare const AgencyStripeAccountUpdateUrlDocument: DocumentNode<AgencySt
 export declare const AgencyStripeAccountBalanceDocument: DocumentNode<AgencyStripeAccountBalanceQuery, AgencyStripeAccountBalanceQueryVariables>;
 export declare const AgencyStripeAccountBalanceTransactionsDocument: DocumentNode<AgencyStripeAccountBalanceTransactionsQuery, AgencyStripeAccountBalanceTransactionsQueryVariables>;
 export declare const AgencyStripeAccountPaymentIntentsDocument: DocumentNode<AgencyStripeAccountPaymentIntentsQuery, AgencyStripeAccountPaymentIntentsQueryVariables>;
-export declare const AgencyStripeAccountCustomersDocument: DocumentNode<AgencyStripeAccountCustomersQuery, AgencyStripeAccountCustomersQueryVariables>;
+export declare const CustomerDocument: DocumentNode<CustomerQuery, CustomerQueryVariables>;
+export declare const AgencyCustomersDocument: DocumentNode<AgencyCustomersQuery, AgencyCustomersQueryVariables>;
 export declare const AgencySubscriptionPlanDocument: DocumentNode<AgencySubscriptionPlanQuery, AgencySubscriptionPlanQueryVariables>;
 export declare const AgencyDocument: DocumentNode<AgencyQuery, AgencyQueryVariables>;
 export declare const AgenciesDocument: DocumentNode<AgenciesQuery, AgenciesQueryVariables>;

@@ -122,23 +122,18 @@ query AgencyStripeAccountPaymentIntents(
   }
 }
 
-query AgencyStripeAccountCustomers(
-  $agency_id: ID!
-  $created: DateTime
-  $starting_after_id: String
-  $ending_before_id: String
-  $limit: Int
-) {
+query Customer($customer_id: ID!) {
+  customer(id: $customer_id) {
+    ...customer
+  }
+}
+
+query AgencyCustomers($agency_id: ID!, $filter: CustomerFilter) {
   agency(id: $agency_id) {
     id
     stripe_account {
       id
-      customers(
-        created: $created
-        starting_after_id: $starting_after_id
-        ending_before_id: $ending_before_id
-        limit: $limit
-      ) {
+      customers(filter: $filter) {
         ...customer
       }
     }

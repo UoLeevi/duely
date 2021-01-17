@@ -121,7 +121,7 @@ fragment balance_transaction on BalanceTransaction {
   source
 }
 
-fragment customer on StripeCustomer {
+fragment stripe_customer on StripeCustomer {
   id
   id_ext
   address {
@@ -138,6 +138,9 @@ fragment customer on StripeCustomer {
   next_invoice_sequence
   phone
   preferred_locales
+  customer {
+    id
+  }
 }
 
 fragment charge on Charge {
@@ -223,7 +226,7 @@ fragment payment_intent on PaymentIntent {
   created
   currency
   customer {
-    ...customer
+    ...stripe_customer
   }
   description
   invoice
@@ -326,6 +329,24 @@ fragment agency on Agency {
   }
   settings {
     id
+  }
+}
+
+fragment customer on Customer {
+  id
+  name
+  email_address
+  stripe_account {
+    id
+  }
+  default_stripe_customer {
+    ...stripe_customer
+  }
+  stripe_customers {
+    ...stripe_customer
+  }
+  user {
+    ...user
   }
 }
 
