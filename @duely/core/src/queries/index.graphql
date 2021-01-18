@@ -29,6 +29,15 @@ query ServicesAgreement {
   }
 }
 
+query AgencyStripeAccount($agency_id: ID!) {
+  agency(id: $agency_id) {
+    id
+    stripe_account {
+      ...stripe_account
+    }
+  }
+}
+
 query AgencyStripeAccountUpdateUrl($agency_id: ID!) {
   agency(id: $agency_id) {
     id

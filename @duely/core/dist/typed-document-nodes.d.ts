@@ -1743,6 +1743,20 @@ export declare type ServicesAgreementQuery = ({
         __typename?: 'Markdown';
     } & MarkdownFragment)>>;
 });
+export declare type AgencyStripeAccountQueryVariables = Exact<{
+    agency_id: Scalars['ID'];
+}>;
+export declare type AgencyStripeAccountQuery = ({
+    __typename?: 'Query';
+} & {
+    agency?: Maybe<({
+        __typename?: 'Agency';
+    } & Pick<Agency, 'id'> & {
+        stripe_account: ({
+            __typename?: 'StripeAccount';
+        } & Stripe_AccountFragment);
+    })>;
+});
 export declare type AgencyStripeAccountUpdateUrlQueryVariables = Exact<{
     agency_id: Scalars['ID'];
 }>;
@@ -2261,6 +2275,7 @@ export declare const CurrentUserDocument: DocumentNode<CurrentUserQuery, Current
 export declare const CountriesDocument: DocumentNode<CountriesQuery, CountriesQueryVariables>;
 export declare const CountrySpecDocument: DocumentNode<CountrySpecQuery, CountrySpecQueryVariables>;
 export declare const ServicesAgreementDocument: DocumentNode<ServicesAgreementQuery, ServicesAgreementQueryVariables>;
+export declare const AgencyStripeAccountDocument: DocumentNode<AgencyStripeAccountQuery, AgencyStripeAccountQueryVariables>;
 export declare const AgencyStripeAccountUpdateUrlDocument: DocumentNode<AgencyStripeAccountUpdateUrlQuery, AgencyStripeAccountUpdateUrlQueryVariables>;
 export declare const AgencyStripeAccountBalanceDocument: DocumentNode<AgencyStripeAccountBalanceQuery, AgencyStripeAccountBalanceQueryVariables>;
 export declare const AgencyStripeAccountBalanceTransactionsDocument: DocumentNode<AgencyStripeAccountBalanceTransactionsQuery, AgencyStripeAccountBalanceTransactionsQueryVariables>;

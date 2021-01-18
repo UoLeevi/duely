@@ -145,7 +145,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
             {
               value: 'one_time',
               element: 'Single payment',
-              description: 'Clients pay a one-time fee'
+              description: 'Customers pay a one-time fee'
             },
             {
               value: 'recurring',

@@ -33,7 +33,8 @@ import {
   AgenciesDocument,
   CalculateTransactionFeeDocument,
   CountrySpecDocument,
-  CustomerDocument
+  CustomerDocument,
+  AgencyStripeAccountDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -107,6 +108,12 @@ export const agency_Q = {
 export const agencies_Q = {
   query: AgenciesDocument,
   result: (d: ResultOf<typeof AgenciesDocument>) => d?.agencies
+};
+
+export const agency_stripe_account_Q = {
+  query: AgencyStripeAccountDocument,
+  result: (d: ResultOf<typeof AgencyStripeAccountDocument>) =>
+    d?.agency?.stripe_account
 };
 
 export const agency_stripe_account_update_url_Q = {

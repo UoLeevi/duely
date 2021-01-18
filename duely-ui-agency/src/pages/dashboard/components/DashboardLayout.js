@@ -21,9 +21,9 @@ const sidebarLinks = [
     to: '/dashboard/products',
   },
   {
-    text: "Clients",
+    text: "Customers",
     icon: BsPeople,
-    to: '/dashboard/clients',
+    to: '/dashboard/customers',
   },
   {
     text: "Payments",

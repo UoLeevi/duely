@@ -2,7 +2,7 @@ import { Link, Route, Switch } from 'react-router-dom';
 import { useQuery, current_agency_Q, current_user_Q } from '@duely/client';
 import { LoadingScreen, ErrorScreen } from '@duely/react';
 import { DashboardLayout } from './components';
-import DashboardClients from './clients';
+import { routes as customerRoutes } from './customers';
 import { routes as siteRoutes } from './site';
 import DashboardHome from './home';
 import DashboardPayments from './payments';
@@ -17,10 +17,7 @@ const routes = [
   },
   ...productRoutes,
   ...siteRoutes,
-  {
-    path: '/dashboard/clients',
-    component: DashboardClients
-  },
+  ...customerRoutes,
   {
     path: '/dashboard/payments',
     component: DashboardPayments

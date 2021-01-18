@@ -1,8 +1,0 @@
-.chip {
-  min-width: 10ch;
-  padding: var(--spacing-1);
-  border-radius: var(--radius-1-rel);
-  display: grid;
-  place-items: center;
-  width: max-content;
-}
