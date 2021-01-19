@@ -3,6 +3,7 @@ import React from 'react';
 
 type DashboardSectionProps = {
   title?: string;
+  actions?: React.ReactNode;
   loading?: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
 
@@ -10,6 +11,7 @@ export function DashboardSection({
   title,
   loading,
   children,
+  actions,
   className,
   ...props
 }: DashboardSectionProps) {
@@ -19,18 +21,25 @@ export function DashboardSection({
 
   return (
     <section className={className} {...props}>
-      {loading && (
-        <h2 className="text-xl font-semibold text-center text-gray-900 sm:text-left">
-          <SkeletonText />
-        </h2>
-      )}
+      <div className="flex flex-row items-center justify-between h-8 space-x-2">
+        {loading && (
+          <h2 className="text-xl font-semibold text-gray-900">
+            <SkeletonText />
+          </h2>
+        )}
 
-      {!loading && title && (
-        <h2 ref={linkRef} className="self-center text-xl font-semibold text-gray-900 sm:self-start">
-          {title}
-          {hashLink}
-        </h2>
-      )}
+        {!loading && title && (
+          <h2
+            ref={linkRef}
+            className="text-xl font-semibold text-gray-900"
+          >
+            {title}
+            {hashLink}
+          </h2>
+        )}
+
+        {!loading && actions}
+      </div>
 
       <div className="flex flex-col space-y-8">{children}</div>
     </section>

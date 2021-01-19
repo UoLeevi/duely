@@ -1,7 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, current_agency_Q, agency_customers_Q } from '@duely/client';
-import { useBreakpoints, Table, DropMenu, Card, LoadingScreen, ErrorScreen } from '@duely/react';
+import {
+  useBreakpoints,
+  Table,
+  DropMenu,
+  Card,
+  LoadingScreen,
+  ErrorScreen,
+  Button
+} from '@duely/react';
 import { ConfirmCustomerDeletionModal } from './components';
 import { DashboardSection } from '../components';
 import { BsPencilSquare, BsTrash } from 'react-icons/bs';
@@ -86,7 +94,32 @@ export default function DashboardCustomersHome() {
 
   return (
     <>
-      <DashboardSection title="Customers">
+      <DashboardSection
+        title="Customers"
+        actions={
+          <div className="flex flex-row justify-end">
+            <Button dense className="text-sm text-white bg-green-500">
+              <Link to="customers/new-customer" className="flex space-x-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  className="w-5 h-5 -ml-1.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                <span>New customer</span>
+              </Link>
+            </Button>
+          </div>
+        }
+      >
         <Card className="max-w-screen-lg">
           <Table
             className="px-6 py-4"
