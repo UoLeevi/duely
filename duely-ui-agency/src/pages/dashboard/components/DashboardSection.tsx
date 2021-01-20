@@ -19,27 +19,28 @@ export function DashboardSection({
 
   const [linkRef, hashLink] = useHashScrolling<HTMLHeadingElement>();
 
+  const hasTitle = loading || title || actions;
+
   return (
     <section className={className} {...props}>
-      <div className="flex flex-row items-center justify-between h-8 space-x-2">
-        {loading && (
-          <h2 className="text-xl font-semibold text-gray-900">
-            <SkeletonText />
-          </h2>
-        )}
+      {hasTitle && (
+        <div className="flex flex-row items-center justify-between h-8 space-x-2">
+          {loading && (
+            <h2 className="text-xl font-semibold text-gray-900">
+              <SkeletonText />
+            </h2>
+          )}
 
-        {!loading && title && (
-          <h2
-            ref={linkRef}
-            className="text-xl font-semibold text-gray-900"
-          >
-            {title}
-            {hashLink}
-          </h2>
-        )}
+          {!loading && title && (
+            <h2 ref={linkRef} className="text-xl font-semibold text-gray-900">
+              {title}
+              {hashLink}
+            </h2>
+          )}
 
-        {!loading && actions}
-      </div>
+          {!loading && actions}
+        </div>
+      )}
 
       <div className="flex flex-col space-y-8">{children}</div>
     </section>

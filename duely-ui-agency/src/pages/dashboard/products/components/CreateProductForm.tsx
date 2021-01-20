@@ -6,7 +6,9 @@ import {
   current_subdomain_Q,
   create_product_M,
   create_price_M,
-  update_product_M
+  update_product_M,
+  agency_stripe_account_Q,
+  current_agency_Q
 } from '@duely/client';
 import { BsCheck } from 'react-icons/bs';
 import { ProductBasicInfoFormSection } from './ProductBasicInfoFormSection';
@@ -35,6 +37,12 @@ export function CreateProductForm() {
   const [createPrice, statePrice] = useMutation(create_price_M);
   const [updateProduct, stateUpdate] = useMutation(update_product_M);
   const { data: current_subdomain } = useQuery(current_subdomain_Q);
+  const { data: agency } = useQuery(current_agency_Q);
+  const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
+    agency_stripe_account_Q,
+    { agency_id: agency!.id },
+    { skip: !agency }
+  );
 
   const state = {
     loading: stateProduct.loading || statePrice.loading || stateUpdate.loading,
@@ -62,8 +70,8 @@ export function CreateProductForm() {
 
     const { product } = res_product;
     const { unit_amount_major, payment_type, frequency } = data;
-    const currency = 'usd'; // TODO: have an input or use default currency
-    const unit_amount = Currency.numberToMinorCurrencyAmount(+unit_amount_major, currency);
+    const currency = stripe_account?.default_currency ?? 'usd'; // TODO: have an input or use default currency
+    const unit_amount = Currency.numberToMinorCurrencyAmount(+unit_amount_major, currency as Currency);
 
     const recurring:{
       recurring_interval_count?: number;

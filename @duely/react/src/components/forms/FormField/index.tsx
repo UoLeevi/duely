@@ -5,7 +5,7 @@ import { Util } from '../../../util';
 import { LoadingBar } from '../../LoadingBar';
 
 type FormFieldBaseProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
-  name: keyof TFieldValues;
+  name: string & keyof TFieldValues;
   form: UseFormMethods<TFieldValues>;
   label?: React.ReactNode;
   registerOptions?: RegisterOptions;
@@ -13,8 +13,8 @@ type FormFieldBaseProps<TFieldValues extends Record<string, any> = Record<string
   loading?: boolean;
 };
 
-type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
-  name: keyof TFieldValues;
+type FormFieldPropsPartial<TFieldValues extends Record<string, any> = Record<string, any>> = {
+  name: string & keyof TFieldValues;
   form: UseFormMethods<TFieldValues>;
   label?: React.ReactNode;
   registerOptions?: RegisterOptions;
@@ -33,14 +33,16 @@ type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, an
         className?: string;
       }
   )[];
-} & Omit<
+};
+
+type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, any>> = FormFieldPropsPartial<TFieldValues> & Omit<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> &
     React.DetailedHTMLProps<
       React.TextareaHTMLAttributes<HTMLTextAreaElement>,
       HTMLTextAreaElement
     > &
     React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>,
-  'form'
+  keyof FormFieldPropsPartial<TFieldValues>
 >;
 
 export function FormField<TFieldValues extends Record<string, any> = Record<string, any>>({

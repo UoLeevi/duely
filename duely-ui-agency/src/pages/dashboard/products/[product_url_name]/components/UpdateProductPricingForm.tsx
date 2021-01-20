@@ -25,6 +25,10 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
   const form = useForm<UpdateProductPricingFormFields>();
   const { data: product, loading: productLoading } = useQuery(product_Q, { product_id });
 
+  const currencyPrefix: React.ReactNode = (
+    <span className="pr-1">{product?.default_price?.currency?.toUpperCase()}</span>
+  );
+
   const {
     infoMessage,
     setInfoMessage,
@@ -165,7 +169,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
                   name="unit_amount_major"
                   type="text"
                   inputMode="numeric"
-                  prefix="$"
+                  prefix={currencyPrefix}
                   registerOptions={{ required: true }}
                 />
               </div>
@@ -183,7 +187,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
                   name="unit_amount_major"
                   type="text"
                   inputMode="numeric"
-                  prefix="$"
+                  prefix={currencyPrefix}
                   registerOptions={{ required: true }}
                 />
               </div>
