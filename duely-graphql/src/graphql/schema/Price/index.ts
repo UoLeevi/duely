@@ -86,12 +86,15 @@ export const Price: GqlTypeDefinition = {
 
         try {
           return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ createResource, queryResource }) => {
+            return await withSession(async ({ queryResource, createResource, updateResource }) => {
               const product = await queryResource(args.product_id);
 
               if (product == null) {
                 throw Error('Product not found');
               }
+
+              // create price resource
+              let price = await createResource('price', args);
 
               const agency = await queryResource(product.agency_id);
 
@@ -142,11 +145,10 @@ export const Price: GqlTypeDefinition = {
                 );
               }
 
-              // create price resource
-              const price = await createResource('price', {
-                ...args,
-                stripe_id_ext_live: stripe_price.live?.id,
-                stripe_id_ext_test: stripe_price.test?.id
+              // update price resource
+              price = await updateResource(price.id, {
+                stripe_price_id_ext_live: stripe_price.live?.id,
+                stripe_price_id_ext_test: stripe_price.test?.id
               });
 
               // success
