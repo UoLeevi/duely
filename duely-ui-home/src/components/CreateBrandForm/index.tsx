@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { FormButton, FormErrorInfo, useImageInputFromFileList, Util } from '@duely/react';
+import { FormButton, FormInfoMessage, useImageInputFromFileList, Util } from '@duely/react';
 import { useMemo, useRef } from 'react';
 import { useModal } from 'hooks';
 import { FormField, useDynamicNavigation } from '@duely/react';
@@ -171,7 +171,7 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           </FormButton>
         </div>
         <div className="flex flex-col items-center h-24 pt-4">
-          <FormErrorInfo error={state.error} />
+          <FormInfoMessage error={state.error} />
         </div>
       </form>
     </>

@@ -30,7 +30,7 @@ __webpack_require__(1);
 __exportStar(__webpack_require__(4), exports);
 __exportStar(__webpack_require__(5), exports);
 __exportStar(__webpack_require__(9), exports);
-__exportStar(__webpack_require__(27), exports);
+__exportStar(__webpack_require__(26), exports);
 
 
 /***/ }),
@@ -180,6 +180,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Util = void 0;
 exports.Util = {
+    hasProperty,
     readFileAsDataUrl,
     readFileAsImageInput,
     estimateImageColor,
@@ -205,6 +206,9 @@ exports.Util = {
     get,
     template
 };
+function hasProperty(obj, propertyName) {
+    return typeof (obj) === 'object' && Object.prototype.hasOwnProperty.call(obj, propertyName);
+}
 // see: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
 function readFileAsDataUrl(file) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -265,7 +269,7 @@ function estimateImageColor(url) {
     });
 }
 function dataUriFromSvg(svg) {
-    return ('data:image/svg+xml;base64,' + btoa(svg));
+    return 'data:image/svg+xml;base64,' + btoa(svg);
 }
 function byteToHex(x) {
     const hex = x.toString(16);
@@ -555,13 +559,13 @@ __exportStar(__webpack_require__(12), exports);
 __exportStar(__webpack_require__(14), exports);
 __exportStar(__webpack_require__(15), exports);
 __exportStar(__webpack_require__(20), exports);
+__exportStar(__webpack_require__(38), exports);
 __exportStar(__webpack_require__(39), exports);
 __exportStar(__webpack_require__(40), exports);
-__exportStar(__webpack_require__(41), exports);
+__exportStar(__webpack_require__(42), exports);
 __exportStar(__webpack_require__(43), exports);
-__exportStar(__webpack_require__(44), exports);
-__exportStar(__webpack_require__(47), exports);
-__exportStar(__webpack_require__(37), exports);
+__exportStar(__webpack_require__(46), exports);
+__exportStar(__webpack_require__(36), exports);
 
 
 /***/ }),
@@ -794,8 +798,8 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __exportStar(__webpack_require__(16), exports);
-__exportStar(__webpack_require__(36), exports);
-__exportStar(__webpack_require__(38), exports);
+__exportStar(__webpack_require__(35), exports);
+__exportStar(__webpack_require__(37), exports);
 
 
 /***/ }),
@@ -917,8 +921,7 @@ __exportStar(__webpack_require__(22), exports);
 __exportStar(__webpack_require__(23), exports);
 __exportStar(__webpack_require__(24), exports);
 __exportStar(__webpack_require__(25), exports);
-__exportStar(__webpack_require__(26), exports);
-__exportStar(__webpack_require__(34), exports);
+__exportStar(__webpack_require__(33), exports);
 
 
 /***/ }),
@@ -1157,7 +1160,7 @@ function FormButton(_a) {
     var { form, children, type, disabled, loading, spinner, dense, className } = _a, props = __rest(_a, ["form", "children", "type", "disabled", "loading", "spinner", "dense", "className"]);
     spinner = spinner || loading;
     disabled = !!(disabled || loading || !form.formState.isDirty);
-    className = util_1.Util.createClassName('relative flex justify-center tracking-wide items-center border appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm', type === 'reset'
+    className = util_1.Util.createClassName('relative flex justify-center tracking-wide items-center border whitespace-nowrap appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm', type === 'reset'
         ? 'bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100'
         : 'bg-indigo-500 text-white border-transparent hover:bg-indigo-600', spinner ? (dense ? 'px-9 py-1.5' : 'px-12 py-2.5') : dense ? 'px-4 py-1.5' : 'px-7 py-2.5', !loading && 'disabled:opacity-50', className);
     return (react_1.default.createElement("button", Object.assign({ type: type, disabled: disabled, className: className }, props),
@@ -1187,20 +1190,30 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FormErrorInfo = void 0;
+exports.FormInfoMessage = void 0;
 const react_1 = __importDefault(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-function FormErrorInfo(_a) {
-    var { error, className } = _a, props = __rest(_a, ["error", "className"]);
-    if (!error)
-        return null;
-    className = util_1.Util.createClassName('flex flex-row items-center justify-center text-red-400 space-x-3 font-semibold', className);
+function FormInfoMessage(_a) {
+    var { success, info, error, children, className } = _a, props = __rest(_a, ["success", "info", "error", "children", "className"]);
+    className = util_1.Util.createClassName('flex flex-row items-center justify-center space-x-2 font-medium', error ? 'text-red-400' : 'text-gray-500', className);
+    if (children) {
+        return (react_1.default.createElement("div", Object.assign({ className: className }, props), children));
+    }
     return (react_1.default.createElement("div", Object.assign({ className: className }, props),
-        react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
-            react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" })),
-        react_1.default.createElement("p", { className: "text-sm text-center" }, typeof error === 'string' ? error : error === null || error === void 0 ? void 0 : error.message)));
+        error && (react_1.default.createElement(react_1.default.Fragment, null,
+            react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", className: "w-5 h-5" },
+                react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" })),
+            react_1.default.createElement("p", { className: "text-sm text-center" }, util_1.Util.hasProperty(error, 'message') ? error.message : error))),
+        !error && success && (react_1.default.createElement(react_1.default.Fragment, null,
+            react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", className: "w-5 h-5 text-green-600" },
+                react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" })),
+            react_1.default.createElement("p", { className: "text-sm text-center" }, success))),
+        !error && !success && info && (react_1.default.createElement(react_1.default.Fragment, null,
+            react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", className: "w-5 h-5" },
+                react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" })),
+            react_1.default.createElement("p", { className: "text-sm text-center" }, info)))));
 }
-exports.FormErrorInfo = FormErrorInfo;
+exports.FormInfoMessage = FormInfoMessage;
 
 
 /***/ }),
@@ -1223,52 +1236,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FormInfoMessage = void 0;
-const react_1 = __importDefault(__webpack_require__(7));
-const util_1 = __webpack_require__(4);
-function FormInfoMessage(_a) {
-    var { success, info, error, className } = _a, props = __rest(_a, ["success", "info", "error", "className"]);
-    className = util_1.Util.createClassName('flex flex-row items-center justify-center space-x-2 font-medium', error ? 'text-red-400' : 'text-gray-500', className);
-    return (react_1.default.createElement("div", Object.assign({ className: className }, props),
-        error && (react_1.default.createElement(react_1.default.Fragment, null,
-            react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", className: "h-5" },
-                react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" })),
-            react_1.default.createElement("p", { className: "text-sm text-center" }, typeof error === 'string' ? error : error === null || error === void 0 ? void 0 : error.message))),
-        !error && success && (react_1.default.createElement(react_1.default.Fragment, null,
-            react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", className: "h-5 text-green-600" },
-                react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" })),
-            react_1.default.createElement("p", { className: "text-sm text-center" }, success))),
-        !error && !success && info && (react_1.default.createElement(react_1.default.Fragment, null,
-            react_1.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", className: "h-5" },
-                react_1.default.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" })),
-            react_1.default.createElement("p", { className: "text-sm text-center" }, info)))));
-}
-exports.FormInfoMessage = FormInfoMessage;
-
-
-/***/ }),
-/* 26 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FormSection = void 0;
 const react_1 = __importDefault(__webpack_require__(7));
-const hooks_1 = __webpack_require__(27);
+const hooks_1 = __webpack_require__(26);
 const util_1 = __webpack_require__(4);
 function FormSection(_a) {
     var { title, description, children, className, id } = _a, props = __rest(_a, ["title", "description", "children", "className", "id"]);
@@ -1288,7 +1258,7 @@ exports.FormSection = FormSection;
 
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1303,16 +1273,16 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__webpack_require__(27), exports);
 __exportStar(__webpack_require__(28), exports);
 __exportStar(__webpack_require__(29), exports);
 __exportStar(__webpack_require__(30), exports);
 __exportStar(__webpack_require__(31), exports);
 __exportStar(__webpack_require__(32), exports);
-__exportStar(__webpack_require__(33), exports);
 
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1331,7 +1301,7 @@ exports.useClassName = useClassName;
 
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1401,7 +1371,7 @@ exports.useDynamicNavigation = useDynamicNavigation;
 
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1424,7 +1394,7 @@ exports.useBreakpoints = useBreakpoints;
 
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1492,7 +1462,7 @@ exports.useHashScrolling = useHashScrolling;
 
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1534,7 +1504,7 @@ exports.useImageInputFromFileList = useImageInputFromFileList;
 
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1576,7 +1546,7 @@ exports.useTemporaryValue = useTemporaryValue;
 
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1591,17 +1561,17 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(35), exports);
+__exportStar(__webpack_require__(34), exports);
 
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.useFormMessages = void 0;
-const hooks_1 = __webpack_require__(27);
+const hooks_1 = __webpack_require__(26);
 function useFormMessages() {
     const { value: infoMessage, setValue: setInfoMessage, reset: resetInfoMessage } = hooks_1.useTemporaryValue(4000);
     const { value: successMessage, setValue: setSuccessMessage, reset: resetSuccessMessage } = hooks_1.useTemporaryValue(4000);
@@ -1631,7 +1601,7 @@ exports.useFormMessages = useFormMessages;
 
 
 /***/ }),
-/* 36 */
+/* 35 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1670,7 +1640,7 @@ const react_router_dom_1 = __webpack_require__(17);
 const react_hook_form_1 = __webpack_require__(18);
 const client_1 = __webpack_require__(19);
 const forms_1 = __webpack_require__(20);
-const Button_1 = __webpack_require__(37);
+const Button_1 = __webpack_require__(36);
 const util_1 = __webpack_require__(4);
 function StartPasswordResetForm({ className, redirectUrl }) {
     const form = react_hook_form_1.useForm();
@@ -1724,7 +1694,7 @@ exports.StartPasswordResetForm = StartPasswordResetForm;
 
 
 /***/ }),
-/* 37 */
+/* 36 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1751,7 +1721,7 @@ function Button(_a) {
     var { children, disabled, loading, spinner, dense, className } = _a, props = __rest(_a, ["children", "disabled", "loading", "spinner", "dense", "className"]);
     spinner = spinner || loading;
     disabled = !!(disabled || loading);
-    className = util_1.Util.createClassName('relative flex justify-center tracking-wide items-center border appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm', spinner ? (dense ? 'px-9 py-1.5' : 'px-12 py-2.5') : dense ? 'px-4 py-1.5' : 'px-7 py-2.5', !loading && 'disabled:opacity-50', className);
+    className = util_1.Util.createClassName('relative flex justify-center tracking-wide whitespace-nowrap items-center border appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm', spinner ? (dense ? 'px-9 py-1.5' : 'px-12 py-2.5') : dense ? 'px-4 py-1.5' : 'px-7 py-2.5', !loading && 'disabled:opacity-50', className);
     return (react_1.default.createElement("button", Object.assign({ disabled: disabled, className: className }, props),
         spinner && (react_1.default.createElement(LoadingSpinner_1.LoadingSpinner, { loading: loading, className: `absolute left-0 ${dense ? 'h-5 ml-2' : 'h-6 ml-3'}` })),
         children));
@@ -1760,7 +1730,7 @@ exports.Button = Button;
 
 
 /***/ }),
-/* 38 */
+/* 37 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1810,7 +1780,7 @@ const react_router_dom_1 = __webpack_require__(17);
 const react_hook_form_1 = __webpack_require__(18);
 const client_1 = __webpack_require__(19);
 const forms_1 = __webpack_require__(20);
-const Button_1 = __webpack_require__(37);
+const Button_1 = __webpack_require__(36);
 const util_1 = __webpack_require__(4);
 function SignUpForm({ className, redirectUrl }) {
     const form = react_hook_form_1.useForm();
@@ -1871,7 +1841,7 @@ exports.SignUpForm = SignUpForm;
 
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1893,7 +1863,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Sidebar = void 0;
 const react_1 = __importDefault(__webpack_require__(7));
 const react_router_dom_1 = __webpack_require__(17);
-const hooks_1 = __webpack_require__(27);
+const hooks_1 = __webpack_require__(26);
 const util_1 = __webpack_require__(4);
 function Sidebar(_a) {
     var { className, links, topContent, bottomContent } = _a, props = __rest(_a, ["className", "links", "topContent", "bottomContent"]);
@@ -1919,7 +1889,7 @@ function SidebarLink({ text, icon, to, exact, className }) {
 
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1946,7 +1916,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Table = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-const hooks_1 = __webpack_require__(27);
+const hooks_1 = __webpack_require__(26);
 const LoadingSpinner_1 = __webpack_require__(11);
 function Table({ rows: items, columns, headers, className, dense, breakpoint, wrap: wrapOptions, loading, error }) {
     var _a, _b, _c;
@@ -2073,7 +2043,7 @@ function TableErrorRow({ row, message, wrapColCount, wrapColSpanSum, isNotWrappe
 
 
 /***/ }),
-/* 41 */
+/* 40 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2110,7 +2080,7 @@ var __rest = (this && this.__rest) || function (s, e) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DropMenu = void 0;
 const react_1 = __importStar(__webpack_require__(7));
-const react_2 = __webpack_require__(42);
+const react_2 = __webpack_require__(41);
 function DropMenu({ children, button }) {
     const [isOpen, setIsOpen] = react_1.useState(false);
     const ref = react_1.useRef(null);
@@ -2145,7 +2115,7 @@ function DropMenuItems(_a) {
 
 
 /***/ }),
-/* 42 */
+/* 41 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -4141,7 +4111,7 @@ function resolvePropValue$2(property, bag) {
 
 
 /***/ }),
-/* 43 */
+/* 42 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4172,7 +4142,7 @@ exports.Card = Card;
 
 
 /***/ }),
-/* 44 */
+/* 43 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4187,12 +4157,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__webpack_require__(44), exports);
 __exportStar(__webpack_require__(45), exports);
-__exportStar(__webpack_require__(46), exports);
 
 
 /***/ }),
-/* 45 */
+/* 44 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4227,7 +4197,7 @@ exports.SkeletonText = SkeletonText;
 
 
 /***/ }),
-/* 46 */
+/* 45 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4254,7 +4224,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SkeletonParagraph = void 0;
 const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
-const SkeletonText_1 = __webpack_require__(45);
+const SkeletonText_1 = __webpack_require__(44);
 function SkeletonParagraph({ className, words, seed }) {
     words || (words = 20);
     const wordLengths = react_1.useMemo(() => Array.from(generateWordLengths(words, seed)), [words, seed]);
@@ -4274,7 +4244,7 @@ function* generateWordLengths(count, seed) {
 
 
 /***/ }),
-/* 47 */
+/* 46 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4306,7 +4276,7 @@ const react_1 = __importStar(__webpack_require__(7));
 const util_1 = __webpack_require__(4);
 const contexts_1 = __webpack_require__(5);
 const react_dom_1 = __importDefault(__webpack_require__(13));
-const react_2 = __webpack_require__(42);
+const react_2 = __webpack_require__(41);
 function Modal({ children, show, close, openerRef, className }) {
     const screenOverlayRef = react_1.useContext(contexts_1.ScreenOverlayContext);
     if (!(screenOverlayRef === null || screenOverlayRef === void 0 ? void 0 : screenOverlayRef.current))

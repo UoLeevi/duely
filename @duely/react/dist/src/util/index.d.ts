@@ -1,5 +1,6 @@
 import type { ImageInput } from '@duely/core';
 export declare const Util: {
+    hasProperty: typeof hasProperty;
     readFileAsDataUrl: typeof readFileAsDataUrl;
     readFileAsImageInput: typeof readFileAsImageInput;
     estimateImageColor: typeof estimateImageColor;
@@ -25,6 +26,7 @@ export declare const Util: {
     get: typeof get;
     template: typeof template;
 };
+declare function hasProperty<T, TKey extends PropertyKey>(obj: T, propertyName: TKey): obj is T & Record<TKey, unknown>;
 declare function readFileAsDataUrl(file: File | null | undefined): Promise<string | null>;
 declare function readFileAsImageInput(file: File | null | undefined): Promise<ImageInput | null>;
 declare function estimateImageColor(url: string): Promise<string>;

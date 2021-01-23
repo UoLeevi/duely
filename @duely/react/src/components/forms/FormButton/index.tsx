@@ -27,7 +27,7 @@ export function FormButton<TFieldValues extends Record<string, any> = Record<str
   spinner = spinner || loading;
   disabled = !!(disabled || loading || !form.formState.isDirty);
   className = Util.createClassName(
-    'relative flex justify-center tracking-wide items-center border appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm',
+    'relative flex justify-center tracking-wide items-center border whitespace-nowrap appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm',
     type === 'reset'
       ? 'bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100'
       : 'bg-indigo-500 text-white border-transparent hover:bg-indigo-600',

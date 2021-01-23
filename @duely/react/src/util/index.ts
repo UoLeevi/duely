@@ -1,6 +1,7 @@
 import type { ImageInput } from '@duely/core';
 
 export const Util = {
+  hasProperty,
   readFileAsDataUrl,
   readFileAsImageInput,
   estimateImageColor,
@@ -26,6 +27,13 @@ export const Util = {
   get,
   template
 };
+
+function hasProperty<T, TKey extends PropertyKey>(
+  obj: T,
+  propertyName: TKey
+): obj is T & Record<TKey, unknown> {
+  return typeof(obj) === 'object' && Object.prototype.hasOwnProperty.call(obj, propertyName);
+}
 
 // see: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
 async function readFileAsDataUrl(file: File | null | undefined): Promise<string | null> {
@@ -87,7 +95,7 @@ function estimateImageColor(url: string): Promise<string> {
 }
 
 function dataUriFromSvg(svg: string): string {
-  return ('data:image/svg+xml;base64,' + btoa(svg));
+  return 'data:image/svg+xml;base64,' + btoa(svg);
 }
 
 function byteToHex(x: number) {
@@ -264,17 +272,23 @@ function diff(fromObject: object, omitObject: object) {
 }
 
 type NestedDictionary = {
-  [key: string]: NestedDictionary | any
+  [key: string]: NestedDictionary | any;
 };
 
-function get(obj: NestedDictionary, path: string): string| null | undefined {
-  return path
+function get(obj: NestedDictionary, path: string): string | null | undefined {
+  return (path
     .replace(/\[(\w+)\]/g, '.$1')
     .replace(/^\./, '')
     .split('.')
-    .reduce((prev, key) => (prev as NestedDictionary)?.[key] as NestedDictionary, obj) as unknown as string | null | undefined;
+    .reduce(
+      (prev, key) => (prev as NestedDictionary)?.[key] as NestedDictionary,
+      obj
+    ) as unknown) as string | null | undefined;
 }
 
 function template(template: string, variables: Record<string, any>) {
-  return template.replace(/{(.*?)}/g, (_, placeholder) => get(variables, placeholder)?.toString() ?? placeholder);
+  return template.replace(
+    /{(.*?)}/g,
+    (_, placeholder) => get(variables, placeholder)?.toString() ?? placeholder
+  );
 }

@@ -5,15 +5,16 @@ type FormInfoMessageProps = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
   HTMLDivElement
 > & {
-  success?: string | null;
-  info?: string | null;
-  error?: Error | string | null | { message?: string | null };
+  success?: React.ReactNode;
+  info?: React.ReactNode;
+  error?: Error | React.ReactNode | { message?: string | null };
 };
 
 export function FormInfoMessage({
   success,
   info,
   error,
+  children,
   className,
   ...props
 }: FormInfoMessageProps) {
@@ -22,6 +23,14 @@ export function FormInfoMessage({
     error ? 'text-red-400' : 'text-gray-500',
     className
   );
+
+  if (children) {
+    return (
+      <div className={className} {...props}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div className={className} {...props}>
@@ -32,7 +41,7 @@ export function FormInfoMessage({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            className="h-5"
+            className="w-5 h-5"
           >
             <path
               strokeLinecap="round"
@@ -42,7 +51,7 @@ export function FormInfoMessage({
             />
           </svg>
           <p className="text-sm text-center">
-            {typeof error === 'string' ? error : error?.message}
+            {Util.hasProperty(error, 'message') ? error.message : error}
           </p>
         </>
       )}
@@ -54,7 +63,7 @@ export function FormInfoMessage({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            className="h-5 text-green-600"
+            className="w-5 h-5 text-green-600"
           >
             <path
               strokeLinecap="round"
@@ -74,7 +83,7 @@ export function FormInfoMessage({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            className="h-5"
+            className="w-5 h-5"
           >
             <path
               strokeLinecap="round"

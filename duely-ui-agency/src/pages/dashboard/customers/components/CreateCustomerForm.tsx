@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { FormButton, FormErrorInfo, FormField } from '@duely/react';
+import { FormButton, FormInfoMessage, FormField } from '@duely/react';
 import { useMutation, useQuery, create_customer_M, current_agency_Q, agency_stripe_account_Q } from '@duely/client';
 import { BsCheck } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
@@ -77,7 +77,7 @@ export function CreateCustomerForm() {
           <FormButton form={form} spinner loading={state.loading}>
             Create customer
           </FormButton>
-          <FormErrorInfo error={state.error} />
+          <FormInfoMessage error={state.error} />
         </div>
       </form>
     </>

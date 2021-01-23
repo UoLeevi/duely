@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { FormButton, FormErrorInfo, FormField, useImageInputFromFileList } from '@duely/react';
+import { FormButton, FormInfoMessage, FormField, useImageInputFromFileList } from '@duely/react';
 import {
   useMutation,
   useQuery,
@@ -71,9 +71,12 @@ export function CreateProductForm() {
     const { product } = res_product;
     const { unit_amount_major, payment_type, frequency } = data;
     const currency = stripe_account?.default_currency ?? 'usd'; // TODO: have an input or use default currency
-    const unit_amount = Currency.numberToMinorCurrencyAmount(+unit_amount_major, currency as Currency);
+    const unit_amount = Currency.numberToMinorCurrencyAmount(
+      +unit_amount_major,
+      currency as Currency
+    );
 
-    const recurring:{
+    const recurring: {
       recurring_interval_count?: number;
       recurring_interval?: 'week' | 'month' | 'year';
     } = {};
@@ -140,7 +143,7 @@ export function CreateProductForm() {
           <FormButton form={form} spinner loading={state.loading}>
             Create product
           </FormButton>
-          <FormErrorInfo error={state.error} />
+          <FormInfoMessage error={state.error} />
         </div>
       </form>
     </>
