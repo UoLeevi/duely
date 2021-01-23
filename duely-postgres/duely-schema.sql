@@ -3358,7 +3358,17 @@ CREATE FUNCTION policy_.owner_can_change_product_(_resource_definition security_
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    IF EXISTS (
+      SELECT 1
+      FROM application_.product_
+      WHERE uuid_ = _resource.uuid_
+        AND stripe_prod_id_ext_live_ IS NULL
+        AND stripe_prod_id_ext_test_ IS NULL
+    ) THEN
+      RETURN '{name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    ELSE
+      RETURN '{name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    END IF;
   ELSE
     RETURN '{}'::text[];
   END IF;
