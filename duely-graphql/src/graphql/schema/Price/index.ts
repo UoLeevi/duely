@@ -99,7 +99,6 @@ export const Price: GqlTypeDefinition = {
               const agency = await queryResource(product.agency_id);
 
               const {
-                status,
                 unit_amount,
                 currency,
                 recurring_interval: interval,
@@ -108,8 +107,7 @@ export const Price: GqlTypeDefinition = {
 
               const stripe_price_args: Stripe.PriceCreateParams = {
                 unit_amount,
-                currency,
-                active: status === 'live'
+                currency
               };
 
               if (interval) {
@@ -173,34 +171,9 @@ export const Price: GqlTypeDefinition = {
 
         try {
           return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, updateResource }) => {
+            return await withSession(async ({ updateResource }) => {
               // update price resource
               const price = await updateResource(price_id, args);
-              const product = await queryResource(price.product_id);
-              const agency = await queryResource(product.agency_id);
-              const { status } = price;
-
-              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
-                ? ['test', 'live']
-                : ['test'];
-
-              const stripe_price_args: Stripe.PriceUpdateParams = {
-                active: status === 'live'
-              };
-
-              for (const stripe_env of stripe_envs) {
-                const stripe_account = await queryResource('stripe account', {
-                  agency_id: agency.id,
-                  livemode: stripe_env === 'live'
-                });
-
-                // update price object at stripe
-                const stripe_price = await stripe[stripe_env].prices.update(
-                  price[`stripe_price_id_ext_${stripe_env}`],
-                  stripe_price_args,
-                  { stripeAccount: stripe_account.stripe_id_ext }
-                );
-              }
 
               // success
               return {
