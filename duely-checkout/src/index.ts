@@ -25,7 +25,7 @@ const gql_log_in_serviceaccount = gql`
 `;
 
 const gql_subdomain = gql`
-  query($subdomain_name: String!, livemode: Boolean!) {
+  query($subdomain_name: String!, $livemode: Boolean) {
     subdomains(filter: { name: $subdomain_name }) {
       id
       agency {
@@ -33,6 +33,7 @@ const gql_subdomain = gql`
         stripe_account(livemode: $livemode) {
           id
           id_ext
+          livemode
         }
       }
     }
@@ -122,8 +123,6 @@ function setupEnvironment() {
 
 async function get_checkout(req: Request, res: Response) {
   let subdomain_name = req.params.subdomain_name;
-  const livemode = !req.query?.preview;
-  const stripe_pk = process.env[livemode ? 'STRIPE_PK_LIVE' : 'STRIPE_PK_TEST'];
 
   if (subdomain_name == null) {
     const domain = req.hostname;
@@ -135,11 +134,14 @@ async function get_checkout(req: Request, res: Response) {
     subdomain_name = req.hostname.split('.duely.app')[0];
   }
 
-  let agency_id;
-  let stripe_id_ext;
+  let agency_id: string;
+  let stripe_id_ext: string;
+  let livemode: boolean;
+
+  const preview = req.query?.preview;
 
   try {
-    const { subdomains } = await client.request(gql_subdomain, { subdomain_name, livemode });
+    const { subdomains } = await client.request(gql_subdomain, { subdomain_name, livemode: preview ? true : null });
 
     if (subdomains.length != 1) {
       res.sendStatus(404);
@@ -150,11 +152,14 @@ async function get_checkout(req: Request, res: Response) {
 
     agency_id = agency.id;
     stripe_id_ext = agency.stripe_account.id_ext;
+    livemode = agency.stripe_account.livemode;
   } catch (error) {
     console.error(error);
     res.sendStatus(404);
     return;
   }
+
+  const stripe_pk = process.env[livemode ? 'STRIPE_PK_LIVE' : 'STRIPE_PK_TEST'];
 
   let price_id;
   const product_url_name = req.params.product_url_name;
