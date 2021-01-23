@@ -19,23 +19,7 @@ CREATE OR REPLACE FUNCTION policy_.agent_can_query_product_(_resource_definition
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-CREATE OR REPLACE FUNCTION policy_.anyone_can_query_live_product_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF (
-    SELECT status_ = 'live'
-    FROM application_.product_
-    WHERE uuid_ = _resource.uuid_
-  ) THEN
-    RETURN '{uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_ stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
