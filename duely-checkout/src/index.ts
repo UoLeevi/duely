@@ -52,7 +52,7 @@ const gql_product = gql`
 `;
 
 const gql_create_stripe_checkout_session = gql`
-  mutation($price_id: ID!, $livemode: Boolean) {
+  mutation($price_id: ID!, $livemode: Boolean!) {
     create_stripe_checkout_session(livemode: $livemode, price_id: $price_id) {
       success
       message
