@@ -106,7 +106,6 @@ export const Price: GqlTypeDefinition = {
               const stripe_price_args: Stripe.PriceCreateParams = {
                 unit_amount,
                 currency,
-                product: product.stripe_id_ext,
                 active: status === 'live'
               };
 
@@ -131,6 +130,8 @@ export const Price: GqlTypeDefinition = {
                   agency_id: agency.id,
                   livemode: stripe_env === 'live'
                 });
+
+                stripe_price_args.product = product[`stripe_prod_id_ext_${stripe_env}`];
 
                 // create price object at stripe
                 stripe_price[stripe_env] = await stripe[stripe_env].prices.create(
@@ -193,7 +194,7 @@ export const Price: GqlTypeDefinition = {
 
                 // update price object at stripe
                 const stripe_price = await stripe[stripe_env].prices.update(
-                  price.stripe_id_ext,
+                  price[`stripe_price_id_ext_${stripe_env}`],
                   stripe_price_args,
                   { stripeAccount: stripe_account.stripe_id_ext }
                 );
@@ -249,7 +250,7 @@ export const Price: GqlTypeDefinition = {
                 try {
                   // try deactivate price at stripe
                   await stripe[stripe_env].prices.update(
-                    price.stripe_id_ext,
+                    price[`stripe_price_id_ext_${stripe_env}`],
                     { active: false },
                     { stripeAccount: stripe_account.stripe_id_ext }
                   );

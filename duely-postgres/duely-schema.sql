@@ -3339,7 +3339,17 @@ CREATE FUNCTION policy_.owner_can_change_price_(_resource_definition security_.r
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+    IF EXISTS (
+      SELECT 1
+      FROM application_.price_
+      WHERE uuid_ = _resource.uuid_
+        AND stripe_price_id_ext_live_ IS NULL
+        AND stripe_price_id_ext_test_ IS NULL
+    ) THEN
+      RETURN '{stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+    ELSE
+      RETURN '{unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+    END IF;
   ELSE
     RETURN '{}'::text[];
   END IF;
