@@ -115,7 +115,7 @@ export const Product: GqlTypeDefinition = {
 
         try {
           return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, createResource }) => {
+            return await withSession(async ({ queryResource, createResource, updateResource }) => {
               const agency = await queryResource(args.agency_id);
               const subdomain = await queryResource(agency.subdomain_id);
 
@@ -171,6 +171,9 @@ export const Product: GqlTypeDefinition = {
                 args.image_hero_id = image.id;
               }
 
+              // create product resource
+              let product = await createResource('product', args);
+
               const stripe_envs: (keyof typeof stripe)[] = agency.livemode
                 ? ['test', 'live']
                 : ['test'];
@@ -195,9 +198,8 @@ export const Product: GqlTypeDefinition = {
                 );
               }
 
-              // create product resource
-              const product = await createResource('product', {
-                ...args,
+              // update product resource
+              product = await updateResource(product.id, {
                 stripe_prod_id_ext_live: stripe_product.live?.id,
                 stripe_prod_id_ext_test: stripe_product.test?.id
               });
