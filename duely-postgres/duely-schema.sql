@@ -3593,7 +3593,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{product_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4859,7 +4859,7 @@ CREATE TABLE application_.customer_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     name_ text,
     email_address_ text NOT NULL,
-    default_stripe_id_ext_ text,
+    default_stripe_id_ext_ text NOT NULL,
     stripe_account_uuid_ uuid NOT NULL,
     user_uuid_ uuid,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
