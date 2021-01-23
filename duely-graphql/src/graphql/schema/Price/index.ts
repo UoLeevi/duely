@@ -294,26 +294,25 @@ export const Price: GqlTypeDefinition = {
               // get resources
               const price = await queryResource(price_id);
               const product = await queryResource(price.product_id);
-              const service = await queryResource(product.service_id);
               const stripe_account = await queryResource('stripe account', {
-                agency_id: service.agency_id,
+                agency_id: product.agency_id,
                 livemode
               });
-              const agency = await queryResource(service.agency_id);
+              const agency = await queryResource(product.agency_id);
               const subdomain = await queryResource(agency.subdomain_id);
 
               if (!success_url) {
-                const service_thank_you_page_setting = await queryResource(
-                  'service thank you page setting',
-                  { service_id: service.id }
+                const product_thank_you_page_setting = await queryResource(
+                  'product thank you page setting',
+                  { product_id: product.id }
                 );
-                success_url = service_thank_you_page_setting?.url;
+                success_url = product_thank_you_page_setting?.url;
               }
 
               if (!success_url) {
                 const agency_thank_you_page_setting = await queryResource(
                   'agency thank you page setting',
-                  { agency_id: service.agency_id }
+                  { agency_id: product.agency_id }
                 );
                 success_url = agency_thank_you_page_setting?.url;
               }
@@ -355,8 +354,7 @@ export const Price: GqlTypeDefinition = {
                 payment_method_types: ['card'],
                 line_items: [
                   {
-                    price:
-                      price[livemode ? 'stripe_price_id_ext_live' : 'stripe_price_id_ext_test'],
+                    price: price[`stripe_price_id_ext_${stripe_env}`],
                     quantity: 1
                   }
                 ],

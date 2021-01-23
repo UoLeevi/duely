@@ -83,7 +83,6 @@ async function main() {
 async function createGraphQLClient() {
   const endpoint = 'https://api.duely.app/graphql';
   const client = new GraphQLClient(endpoint);
-
   const { begin_visit } = await client.request(gql_begin_visit);
 
   if (!begin_visit.success) {
@@ -101,7 +100,6 @@ async function createGraphQLClient() {
   }
 
   client.setHeader('authorization', `Bearer ${log_in.jwt}`);
-
   return client;
 }
 
@@ -137,11 +135,13 @@ async function get_checkout(req: Request, res: Response) {
   let agency_id: string;
   let stripe_id_ext: string;
   let livemode: boolean;
-
   const preview = req.query?.preview;
 
   try {
-    const { subdomains } = await client.request(gql_subdomain, { subdomain_name, livemode: preview ? true : null });
+    const { subdomains } = await client.request(gql_subdomain, {
+      subdomain_name,
+      livemode: preview ? true : null
+    });
 
     if (subdomains.length != 1) {
       res.sendStatus(404);
@@ -149,7 +149,6 @@ async function get_checkout(req: Request, res: Response) {
     }
 
     const { agency } = subdomains[0];
-
     agency_id = agency.id;
     stripe_id_ext = agency.stripe_account.id_ext;
     livemode = agency.stripe_account.livemode;
@@ -160,13 +159,11 @@ async function get_checkout(req: Request, res: Response) {
   }
 
   const stripe_pk = process.env[livemode ? 'STRIPE_PK_LIVE' : 'STRIPE_PK_TEST'];
-
   let price_id;
   const product_url_name = req.params.product_url_name;
 
   try {
     const { products } = await client.request(gql_product, { agency_id, product_url_name });
-
     if (products.length != 1) {
       res.sendStatus(404);
       return;
@@ -179,12 +176,12 @@ async function get_checkout(req: Request, res: Response) {
     return;
   }
 
-  let checkout_session_id;
   const requestArgs: [
     string,
     { price_id: string; livemode: boolean },
     { authorization: string }?
   ] = [gql_create_stripe_checkout_session, { price_id, livemode }];
+
   const { access_token } = req.query ?? {};
 
   if (access_token) {
@@ -192,6 +189,8 @@ async function get_checkout(req: Request, res: Response) {
       authorization: `Bearer ${access_token}`
     });
   }
+
+  let checkout_session_id;
 
   try {
     const { create_stripe_checkout_session: result } = await client.request(...requestArgs);
