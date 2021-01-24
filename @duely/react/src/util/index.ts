@@ -1,4 +1,5 @@
 import type { ImageInput } from '@duely/core';
+import { DocumentNode, print as printGqlQuery } from 'graphql';
 
 export const Util = {
   hasProperty,
@@ -25,14 +26,50 @@ export const Util = {
   pick,
   diff,
   get,
-  template
+  template,
+  createGraphQLPlaygroundUrl
 };
+
+// see: https://github.com/graphql/graphql-playground/issues/1018#issuecomment-762935106
+function createGraphQLPlaygroundUrl(
+  query?: DocumentNode,
+  variables?: object,
+  tabName?: string
+): URL {
+  const jwt = localStorage.getItem('user-jwt') ?? localStorage.getItem('visitor-jwt');
+  const baseUrl = 'https://api.duely.app';
+
+  // tabs must be an array
+  const tabsData = [
+    {
+      endpoint: baseUrl + '/graphql',
+      name: tabName,
+      // tab variables, NOTE: variables are unique in that they must be passed to the VariableEditor as a String, hence JSON.stringify
+      variables: JSON.stringify(variables),
+      headers: { authorization: `Bearer ${jwt}` },
+      // tab query
+      query: query && printGqlQuery(query)
+    }
+  ].map(removeUndefined);
+
+  // create tabsQueryParam
+  const tabsQueryParam = new URLSearchParams({
+    tabs: JSON.stringify(tabsData)
+  }).toString();
+
+  // concat with baseUrl
+  return new URL(`${baseUrl}?${tabsQueryParam}`);
+}
+
+function removeUndefined<T extends object>(obj: T) {
+  return Object.fromEntries(Object.entries(obj).filter((entry) => entry[1] !== undefined));
+}
 
 function hasProperty<T, TKey extends PropertyKey>(
   obj: T,
   propertyName: TKey
 ): obj is T & Record<TKey, unknown> {
-  return typeof(obj) === 'object' && Object.prototype.hasOwnProperty.call(obj, propertyName);
+  return typeof obj === 'object' && Object.prototype.hasOwnProperty.call(obj, propertyName);
 }
 
 // see: https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL
