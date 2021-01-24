@@ -3,6 +3,7 @@ import cors from 'cors';
 import { graphqlHTTP } from 'express-graphql';
 import schema from './graphql/schema';
 import { getContext } from './graphql/context';
+import expressPlayground from 'graphql-playground-middleware-express';
 // import subscriptions from './graphql/subscriptions';
 
 // let's fail fast
@@ -17,14 +18,12 @@ app.use(
   graphqlHTTP(async (req) => {
     return {
       schema,
-      context: getContext(req),
-      graphiql: {
-        headerEditorEnabled: true
-      }
+      context: getContext(req)
     };
   })
 );
 
+app.get('/', expressPlayground({ endpoint: '/graphql' }));
 app.get('/.well-known/server-health', (req, res) => res.send('ok'));
 
 app.listen(process.env.PORT, () => {
