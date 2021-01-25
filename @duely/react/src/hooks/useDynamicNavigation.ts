@@ -23,18 +23,14 @@ export function useDynamicNavigation<T>({
 
   return useCallback(
     async (e) => {
+      e?.preventDefault();
       const a = isAnchorElement(e?.currentTarget) ? e?.currentTarget : null;
       let url: string | URL | null = null;
-      let shouldRelyOnDefault = false;
 
       if (typeof resolveUrl === 'function') {
-        e?.preventDefault();
         url = await resolveUrl();
       } else if (a) {
         url = a.href;
-        shouldRelyOnDefault = true;
-      } else {
-        e?.preventDefault();
       }
 
       if (url == null) throw new Error('resolveUrl returned null or undefined');
@@ -57,10 +53,10 @@ export function useDynamicNavigation<T>({
       if (local) {
         const to = href.split(url.host)[1];
         history[replace ? 'replace' : 'push'](to);
-      } else if (a && shouldRelyOnDefault) {
-        const originalHref = a.href;
-        a.href = href;
-        setTimeout(() => (a.href = originalHref), 0);
+      } else if (a) {
+        const clonedAnchor = a.cloneNode() as HTMLAnchorElement;
+        clonedAnchor.href = href;
+        clonedAnchor.click();
       } else {
         window.location[replace ? 'replace' : 'assign'](href);
       }

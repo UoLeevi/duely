@@ -1982,6 +1982,11 @@ html, body, #root {
   color: rgba(67, 65, 144, var(--tw-text-opacity));
 }
 
+.group:hover .group-hover\:text-gray-700 {
+  --tw-text-opacity: 1;
+  color: rgba(51, 65, 85, var(--tw-text-opacity));
+}
+
 .group:hover .group-hover\:text-indigo-600 {
   --tw-text-opacity: 1;
   color: rgba(90, 103, 216, var(--tw-text-opacity));
