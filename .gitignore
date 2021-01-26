@@ -21,6 +21,9 @@ yarn-error.log*
 *.sln
 *.sw?
 
+# Misc
+.eslintcache
+
 # Exceptions
 !.vscode/*.code-snippets
 .gitsecret/keys/random_seed
