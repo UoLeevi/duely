@@ -91,7 +91,7 @@ export function CreateProductForm() {
       product_id: product!.id,
       unit_amount,
       currency,
-      status,
+      status: 'live',
       ...recurring
     });
 

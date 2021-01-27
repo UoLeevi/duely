@@ -6199,7 +6199,7 @@ COPY internal_.page_block_definition_ (uuid_, name_, page_definition_uuid_, form
 
 COPY internal_.page_definition_ (uuid_, name_, default_block_uuids_, url_path_, audit_at_, audit_session_uuid_) FROM stdin;
 ab02480a-efd0-4aac-b54c-b800b08f0c02	Home	{3b91df48-2d20-4161-8528-4f47fb54208d}	/	2021-01-01 10:57:09.10212+00	00000000-0000-0000-0000-000000000000
-e5448fd9-d6e3-4ff5-af25-752d973134d8	Service	{}	/products/:product_url_name	2021-01-01 10:57:09.10212+00	00000000-0000-0000-0000-000000000000
+e5448fd9-d6e3-4ff5-af25-752d973134d8	Product	{}	/products/:product_url_name	2021-01-01 10:57:09.10212+00	00000000-0000-0000-0000-000000000000
 \.
 
 
