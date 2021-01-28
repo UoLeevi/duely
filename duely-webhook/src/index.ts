@@ -1,8 +1,9 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import stripe from './stripe';
 import { GraphQLClient, gql } from 'graphql-request';
+import Stripe from 'stripe';
 
 const gql_begin_visit = gql`
   mutation {
@@ -104,15 +105,18 @@ async function createGraphQLClient() {
 }
 
 // see: https://stripe.com/docs/webhooks
-async function handle_webhook_platform(req, res) {
-  const sig = req.headers['stripe-signature'];
-
-  let event;
+async function handle_webhook_platform(req: Request, res: Response) {
+  const { livemode }: { livemode: boolean } = JSON.parse(req.body);
+  const stripe_env = livemode ? 'live' : 'test';
+  const secret = process.env[livemode ? 'STRIPE_WHSEC_PLATFORM_LIVE' : 'STRIPE_WHSEC_PLATFORM_TEST']!;
+  const sig = req.headers['stripe-signature']!;
+  let event: Stripe.Event;
 
   try {
-    event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, process.env.STRIPE_WHSEC_PLATFORM_TEST);
+    event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, secret);
   } catch (err) {
     res.status(400).send(`Webhook Error: ${err.message}`);
+    return;
   }
 
   // Handle the event
@@ -124,15 +128,18 @@ async function handle_webhook_platform(req, res) {
   res.json({ received: true });
 }
 
-async function handle_webhook_agency(req, res) {
-  const sig = req.headers['stripe-signature'];
-
-  let event;
+async function handle_webhook_agency(req: Request, res: Response) {
+  const { livemode }: { livemode: boolean } = JSON.parse(req.body);
+  const stripe_env = livemode ? 'live' : 'test';
+  const secret = process.env[livemode ? 'STRIPE_WHSEC_AGENCY_LIVE' : 'STRIPE_WHSEC_AGENCY_TEST']!;
+  const sig = req.headers['stripe-signature']!;
+  let event: Stripe.Event;
 
   try {
-    event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, process.env.STRIPE_WHSEC_AGENCY_TEST);
+    event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, secret);
   } catch (err) {
     res.status(400).send(`Webhook Error: ${err.message}`);
+    return;
   }
 
   // Handle the event
