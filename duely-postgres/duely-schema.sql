@@ -141,6 +141,20 @@ CREATE TYPE public.operation_type_ AS ENUM (
 ALTER TYPE public.operation_type_ OWNER TO postgres;
 
 --
+-- Name: processing_state_; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.processing_state_ AS ENUM (
+    'pending',
+    'processing',
+    'processed',
+    'failed'
+);
+
+
+ALTER TYPE public.processing_state_ OWNER TO postgres;
+
+--
 -- Name: verification_status_; Type: TYPE; Schema: public; Owner: postgres
 --
 
@@ -3027,6 +3041,21 @@ $$;
 ALTER FUNCTION policy_.can_query_page_block_based_on_page_access_level_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: delete_forbidden_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.delete_forbidden_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  RAISE 'Unauthorized.' USING ERRCODE = '42501';
+END
+$$;
+
+
+ALTER FUNCTION policy_.delete_forbidden_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: invitee_of_user_invite_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3868,6 +3897,25 @@ $$;
 ALTER FUNCTION policy_.serviceaccount_can_change_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: serviceaccount_can_change_webhook_event_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_change_webhook_event_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{state_, error_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_change_webhook_event_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: serviceaccount_can_create_customer_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3906,6 +3954,25 @@ $$;
 
 
 ALTER FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_create_webhook_event_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_create_webhook_event_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{id_ext_, source_, data_, state_, error_, agency_uuid_, event_at_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_create_webhook_event_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: serviceaccount_can_query_agency_subscription_plan_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4058,6 +4125,25 @@ $$;
 
 
 ALTER FUNCTION policy_.serviceaccount_can_query_transaction_fee_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_query_webhook_event_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_query_webhook_event_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, id_ext_, source_, data_, state_, error_, agency_uuid_, event_at_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_query_webhook_event_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: sign_up_can_be_queried_by_initiator_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5266,6 +5352,24 @@ CREATE TABLE application_.user_notification_setting_ (
 ALTER TABLE application_.user_notification_setting_ OWNER TO postgres;
 
 --
+-- Name: webhook_event_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.webhook_event_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    id_ext_ text NOT NULL,
+    source_ text NOT NULL,
+    data_ jsonb NOT NULL,
+    state_ public.processing_state_ NOT NULL,
+    error_ text,
+    agency_uuid_ uuid,
+    event_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE application_.webhook_event_ OWNER TO postgres;
+
+--
 -- Name: agency_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -6403,6 +6507,10 @@ f1a07913-fd07-45e9-b5ce-7fc49bd82280	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy
 3dd797d2-e9f0-428e-a205-72c1115819cd	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.owner_can_change_customer_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 6d262149-75c1-460d-aa1f-37742c1eb59d	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.serviceaccount_can_change_customer_(security_.resource_definition_,application_.resource_,jsonb)	update	3dd797d2-e9f0-428e-a205-72c1115819cd
 6cb5b5bd-e93f-425c-b3f3-fa8623d95cd7	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+e0877c45-1207-44cc-ba7a-3c1cc9dde4a7	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.serviceaccount_can_query_webhook_event_(security_.resource_definition_,application_.resource_)	query	\N
+77aa3647-a327-452d-9703-77268b1c8826	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.serviceaccount_can_create_webhook_event_(security_.resource_definition_,jsonb)	create	\N
+cee806e5-9134-4ebe-bae6-fd232c61200b	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.serviceaccount_can_change_webhook_event_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
+63b8e82d-58c3-464b-8fdc-fc8f213ba352	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.delete_forbidden_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
@@ -6456,6 +6564,7 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,stripe_id_ext_,livemode_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
 35bee174-fde7-4ae2-9cb2-4469b3eb8de5	subplan	subscription plan	internal_.subscription_plan_	\N	{uuid_,name_,stripe_prod_id_ext_live_,stripe_prod_id_ext_test_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
 3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	2021-01-16 08:33:30.381138+00	00000000-0000-0000-0000-000000000000
+58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,agency_uuid_}	2021-01-29 16:58:45.009777+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -6556,6 +6665,8 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,stripe_id_ext_,livemode_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
 35bee174-fde7-4ae2-9cb2-4469b3eb8de5	subplan	subscription plan	internal_.subscription_plan_	\N	{uuid_,name_,stripe_prod_id_ext_live_,stripe_prod_id_ext_test_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
 3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	2021-01-16 08:33:30.381138+00	00000000-0000-0000-0000-000000000000	I
+58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook_event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,agency_uuid_}	2021-01-29 16:56:51.091526+00	00000000-0000-0000-0000-000000000000	I
+58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,agency_uuid_}	2021-01-29 16:58:45.009777+00	00000000-0000-0000-0000-000000000000	U
 \.
 
 
@@ -6859,6 +6970,22 @@ ALTER TABLE ONLY application_.user_notification_setting_
 
 ALTER TABLE ONLY application_.user_notification_setting_
     ADD CONSTRAINT user_notification_setting__user_uuid__subdomain_uuid__notif_key UNIQUE (user_uuid_, subdomain_uuid_, notification_definition_uuid_);
+
+
+--
+-- Name: webhook_event_ webhook_event__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.webhook_event_
+    ADD CONSTRAINT webhook_event__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: webhook_event_ webhook_event__source__id_ext__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.webhook_event_
+    ADD CONSTRAINT webhook_event__source__id_ext__key UNIQUE (source_, id_ext_);
 
 
 --
@@ -7472,6 +7599,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.use
 
 
 --
+-- Name: webhook_event_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.webhook_event_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: agency_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7717,6 +7851,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.use
 
 
 --
+-- Name: webhook_event_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.webhook_event_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: agency_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7938,6 +8079,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.the
 --
 
 CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.user_notification_setting_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
+-- Name: webhook_event_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.webhook_event_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
@@ -9166,6 +9314,14 @@ ALTER TABLE ONLY application_.user_notification_setting_
 
 ALTER TABLE ONLY application_.user_notification_setting_
     ADD CONSTRAINT user_notification_setting__user_uuid__fkey FOREIGN KEY (user_uuid_) REFERENCES security_.user_(uuid_);
+
+
+--
+-- Name: webhook_event_ webhook_event__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.webhook_event_
+    ADD CONSTRAINT webhook_event__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
 
 
 --
