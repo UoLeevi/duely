@@ -1,4 +1,4 @@
-import { withConnection } from '../../../db';
+import { withSession } from '../../../db';
 import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
 import validator from 'validator';
@@ -11,7 +11,12 @@ const resource_name = 'sign up';
 export const SignUp: GqlTypeDefinition = {
   typeDef: gql`
     extend type Mutation {
-      start_sign_up(email_address: String!, password: String!, name: String!, redirect_url: String): SimpleResult!
+      start_sign_up(
+        email_address: String!
+        password: String!
+        name: String!
+        redirect_url: String
+      ): SimpleResult!
       verify_sign_up(verification_code: String!): SimpleResult!
     }
   `,
@@ -68,14 +73,12 @@ export const SignUp: GqlTypeDefinition = {
         let sign_up;
 
         try {
-          sign_up = await withConnection(context, async (withSession) => {
-            return await withSession(async ({ createResource }) => {
-              return await createResource(resource_name, {
-                name,
-                password,
-                email_address,
-                data: { redirect_url: redirect_url.href }
-              });
+          sign_up = await withSession(context, async ({ createResource }) => {
+            return await createResource(resource_name, {
+              name,
+              password,
+              email_address,
+              data: { redirect_url: redirect_url.href }
             });
           });
         } catch (error) {
@@ -126,25 +129,23 @@ export const SignUp: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, updateResource }) => {
-              let sign_up = await queryResource(resource_name, { verification_code });
+          return await withSession(context, async ({ queryResource, updateResource }) => {
+            let sign_up = await queryResource(resource_name, { verification_code });
 
-              if (!sign_up?.id) {
-                return {
-                  success: false,
-                  message: 'Verification code is incorrect',
-                  type: 'SimpleResult'
-                };
-              }
-
-              sign_up = await updateResource(sign_up.id, { verification_code, verified: true });
-
+            if (!sign_up?.id) {
               return {
-                success: true,
+                success: false,
+                message: 'Verification code is incorrect',
                 type: 'SimpleResult'
               };
-            });
+            }
+
+            sign_up = await updateResource(sign_up.id, { verification_code, verified: true });
+
+            return {
+              success: true,
+              type: 'SimpleResult'
+            };
           });
         } catch (error) {
           return {

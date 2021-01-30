@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { withConnection } from '../../../db';
+import { withSession } from '../../../db';
 import { GqlTypeDefinition } from '../../types';
 
 export const LogIn: GqlTypeDefinition = {
@@ -21,18 +21,16 @@ export const LogIn: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ client }) => {
-              const res = await client.query(
-                'SELECT operation_.log_in_user_($1::text, $2::text) jwt_',
-                [email_address, password]
-              );
-              return {
-                success: true,
-                jwt: res.rows[0].jwt_,
-                type: 'LogInResult'
-              };
-            });
+          return await withSession(context, async ({ client }) => {
+            const res = await client.query(
+              'SELECT operation_.log_in_user_($1::text, $2::text) jwt_',
+              [email_address, password]
+            );
+            return {
+              success: true,
+              jwt: res.rows[0].jwt_,
+              type: 'LogInResult'
+            };
           });
         } catch (error) {
           return {
@@ -46,14 +44,12 @@ export const LogIn: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ client }) => {
-              const res = await client.query('SELECT operation_.log_out_user_()');
-              return {
-                success: true,
-                type: 'SimpleResult'
-              };
-            });
+          return await withSession(context, async ({ client }) => {
+            const res = await client.query('SELECT operation_.log_out_user_()');
+            return {
+              success: true,
+              type: 'SimpleResult'
+            };
           });
         } catch (error) {
           return {

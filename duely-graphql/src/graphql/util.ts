@@ -1,5 +1,5 @@
 import type { GraphQLResolveInfo } from 'graphql';
-import { withConnection } from '../db';
+import { withSession } from '../db';
 import { DuelyQqlContext } from './context';
 
 // Not yet used
@@ -52,11 +52,10 @@ export function createDefaultQueryResolversForResource<
       if (!context.jwt) throw new Error('Unauthorized');
 
       try {
-        return await withConnection<TResult>(context, async (withSession) => {
-          return await withSession(async ({ queryResource }) => {
-            return await queryResource(args.id);
-          });
-        });
+        return await withSession(
+          context,
+          async ({ queryResource }) => await queryResource(args.id)
+        );
       } catch (error) {
         throw new Error(error.message);
       }
@@ -70,11 +69,10 @@ export function createDefaultQueryResolversForResource<
       if (!context.jwt) throw new Error('Unauthorized');
 
       try {
-        return await withConnection<TResult[]>(context, async (withSession) => {
-          return await withSession(async ({ queryResourceAll }) => {
-            return await queryResourceAll(name, args.filter);
-          });
-        });
+        return await withSession(
+          context,
+          async ({ queryResourceAll }) => await queryResourceAll(name, args.filter)
+        );
       } catch (error) {
         throw new Error(error.message);
       }
@@ -129,11 +127,11 @@ export function createResolverForReferencedResource<
       if (!context.jwt) throw new Error('Unauthorized');
 
       try {
-        return await withConnection(context, async (withSession) => {
-          return await withSession(async ({ queryResource }) => {
-            return await queryResource<TResult>(...createQueryArgs(source, args));
-          });
-        });
+        return await withSession(
+          context,
+          async ({ queryResource }) =>
+            await queryResource<TResult>(...createQueryArgs(source, args))
+        );
       } catch (error) {
         throw new Error(error.message);
       }
@@ -172,16 +170,16 @@ export function createResolverForReferencedResourceAll<
       if (!context.jwt) throw new Error('Unauthorized');
 
       try {
-        return await withConnection<TResult[]>(context, async (withSession) => {
-          return await withSession(async ({ queryResourceAll }) => {
-            return await queryResourceAll<TResult>(resource_name!, {
+        return await withSession(
+          context,
+          async ({ queryResourceAll }) =>
+            await queryResourceAll<TResult>(resource_name!, {
               ...args.filter,
               [column_name!]: reverse_column_name
                 ? source[reverse_column_name as keyof TSource]
                 : source.id ?? source[column_name! as keyof TSource]
-            });
-          });
-        });
+            })
+        );
       } catch (error) {
         throw new Error(error.message);
       }

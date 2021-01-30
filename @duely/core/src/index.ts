@@ -2,6 +2,7 @@ import { DocumentNode } from 'graphql';
 import * as tdn from './typed-document-nodes';
 
 export * from './typed-document-nodes';
+export * from './util';
 export * from './Country';
 export * from './Currency';
 export * from './DataUrl';
