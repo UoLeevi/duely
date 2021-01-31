@@ -1,7 +1,7 @@
 import { ClientBase, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
-import { ResolvableValue, Tail, Util } from '@duely/core';
+import { ResolvableValue, Util } from '@duely/core';
 
 if (!process.env.DUELY_SERVICE_ACCOUNT_PASSWORD) {
   if (!process.env.SERVICEACCOUNTCONFIGFILE) {
@@ -116,7 +116,7 @@ export async function withConnection<R = any>(
 }
 
 function isClient(contextOrClient: Context | ClientBase): contextOrClient is ClientBase {
-  return Util.hasProperty(contextOrClient, 'query') && typeof contextOrClient.query === 'function';
+  return Util.hasMethod(contextOrClient, 'query');
 }
 
 export async function queryAll<R = any, I extends any[] = any[]>(
@@ -310,8 +310,7 @@ function useFunctions(client: ClientBase) {
     ): Promise<R> {
       return await query(client, sql, ...parameters);
     },
-    queryResourceAccess: (...args: Tail<Parameters<typeof queryResourceAccess>>) =>
-      queryResourceAccess(client, ...args),
+    queryResourceAccess: Util.partial(queryResourceAccess, client),
     async queryResource<R = any, F extends Record<string, any> = Record<string, any>>(
       id_or_resource_name: string,
       filter?: F

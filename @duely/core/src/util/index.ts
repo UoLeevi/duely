@@ -6,15 +6,36 @@ export type ResolvableValue<R = any, TArgs extends any[] = any[]> =
 
 export type ResolvedType<T> = T extends ResolvableValue<infer U, unknown[]> ? U : never;
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
+export type ElementType<T extends unknown[]> = T extends readonly (infer U)[] ? U : never;
 export type Head<T extends unknown[]> = T extends [infer U, ...unknown[]] ? U : never;
 export type Tail<T extends unknown[]> = T extends [unknown, ...infer U] ? U : never;
+export type Concat<T extends unknown[], U extends unknown[]> = U extends []
+  ? T
+  : Concat<[...T, Head<U>], Tail<U>>;
+
+export type ExcludingLast<T extends unknown[]> = T extends [...infer U, unknown] ? U : never;
+export type LeadingTypes<T extends unknown[]> = T extends []
+  ? T
+  : T | LeadingTypes<ExcludingLast<T>>;
+
+export type TrailingTypes<T extends unknown[]> = T extends [] ? T : T | TrailingTypes<Tail<T>>;
+export type PartialApplication<
+  T extends unknown[],
+  TPartials extends LeadingTypes<T>
+> = TPartials extends []
+  ? T
+  : Head<TPartials> extends Head<T>
+  ? Tail<TPartials> extends LeadingTypes<Tail<T>>
+    ? PartialApplication<Tail<T>, Tail<TPartials>>
+    : never
+  : never;
 
 export namespace Util {
-  export function hasProperty<T, TKey extends PropertyKey>(
+  export function hasOwnProperty<T, TKey extends PropertyKey>(
     obj: T,
     propertyName: TKey
   ): obj is T & Record<TKey, unknown> {
-    return typeof obj === 'object' && Object.prototype.hasOwnProperty.call(obj, propertyName);
+    return obj === Object(obj) && Object.prototype.hasOwnProperty.call(obj, propertyName);
   }
 
   export function isFunction<R = any, TArgs extends any[] = any[]>(
@@ -23,7 +44,14 @@ export namespace Util {
     return typeof value === 'function';
   }
 
-  export async function resolve<R = any, TArgs extends any[] = any[]>(
+  export function hasMethod<T, TKey extends PropertyKey>(
+    obj: T,
+    methodName: TKey
+  ): obj is T & Record<TKey, Function> {
+    return typeof (obj as any)?.[methodName] === 'function';
+  }
+
+  export async function resolve<R = any, TArgs extends unknown[] = any[]>(
     value: ResolvableValue<R, TArgs>,
     ...args: TArgs
   ): Promise<R> {
@@ -34,10 +62,14 @@ export namespace Util {
     return arg;
   }
 
-  export function partial<R = any, TPartials extends any[] = any[], TRest extends any[] = any[]>(
-    func: GenericFunction<R, [...TPartials, ...TRest]>,
+  export function partial<R, TPartials extends unknown[], TRest extends unknown[]>(
+    func: GenericFunction<R, Concat<TPartials, TRest>>,
     ...partials: TPartials
   ): GenericFunction<R, TRest> {
-    return (...rest) => func(...partials, ...rest);
+    return (...rest: TRest) => {
+      // typing does not work like I would like so let's use help of `any`.
+      const args: Concat<TPartials, TRest> = [...partials, ...rest] as any;
+      return func(...args);
+    };
   }
 }
