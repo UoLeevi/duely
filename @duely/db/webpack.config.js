@@ -1,25 +1,23 @@
 const path = require('path');
-const CopyPlugin = require('copy-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
   devtool: 'source-map',
-  target: 'node',
   entry: './src/index.ts',
+  target: 'node',
   mode: 'none',
   module: {
     rules: [
       {
-        test: /\.[jt]s$/,
+        test: /\.ts$/,
         use: 'ts-loader',
         include: [path.resolve(__dirname, 'src')]
       }
     ]
   },
   plugins: [
-    // see: https://webpack.js.org/plugins/copy-webpack-plugin/
-    new CopyPlugin({
-      patterns: [{ from: 'src/gmail/templates', to: 'gmail/templates' }]
-    })
+    // see: https://github.com/brianc/node-postgres/issues/838
+    new webpack.IgnorePlugin({ resourceRegExp: /^pg-native$/ })
   ],
   resolve: {
     extensions: ['.ts', '.js']
@@ -27,6 +25,8 @@ module.exports = {
   output: {
     filename: 'index.js',
     globalObject: 'this',
-    path: path.resolve(__dirname, 'dist')
+    path: path.resolve(__dirname, 'dist'),
+    library: '@duely/db',
+    libraryTarget: 'umd'
   }
-};
+}

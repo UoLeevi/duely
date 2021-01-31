@@ -1,5 +1,5 @@
 import type { GraphQLResolveInfo } from 'graphql';
-import { withSession } from '../db';
+import { withSession } from '@duely/db';
 import { DuelyQqlContext } from './context';
 
 // Not yet used

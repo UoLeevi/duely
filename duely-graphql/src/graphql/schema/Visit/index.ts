@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { pool, withConnection } from '../../../db';
+import { pool, withConnection } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 
 export const Visit: GqlTypeDefinition = {

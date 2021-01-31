@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { fetchServiceAccountContext, withConnection } from '../../../db';
+import { fetchServiceAccountContext, withConnection } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResourceAll

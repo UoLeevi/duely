@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { withConnection } from '../../../db';
+import { withConnection } from '@duely/db';
 import stripe from '../../../stripe';
 import { GqlTypeDefinition } from '../../types';
 import { createResolverForReferencedResourceAll } from '../../util';

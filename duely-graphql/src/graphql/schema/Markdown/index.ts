@@ -1,4 +1,4 @@
-import { withConnection } from '../../../db';
+import { withConnection } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource

@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { withConnection } from '../../../db';
+import { withConnection } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,

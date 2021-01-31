@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   devtool: 'source-map',
   entry: './src/index.ts',
-  externals: ['react', '@apollo/client'],
+  externals: ['react', '@apollo/client', '@duely/core'],
   mode: 'none',
   module: {
     rules: [

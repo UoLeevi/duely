@@ -1,4 +1,4 @@
-import { withConnection } from '../../../db';
+import { withConnection } from '@duely/db';
 import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
 import validator from 'validator';

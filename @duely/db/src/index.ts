@@ -152,17 +152,15 @@ export async function queryAll<R = any, I extends any[] = any[]>(
 }
 
 export async function query<R = any, I extends any[] = any[]>(
-  client: ClientBase,
-  sql: string | QueryConfig<I>,
-  ...parameters: I
-): Promise<R>;
-
-export async function query<R = any, I extends any[] = any[]>(
   context: Context,
   sql: string | QueryConfig<I>,
   ...parameters: I
 ): Promise<R>;
-
+export async function query<R = any, I extends any[] = any[]>(
+  client: ClientBase,
+  sql: string | QueryConfig<I>,
+  ...parameters: I
+): Promise<R>;
 export async function query<R = any, I extends any[] = any[]>(
   arg: Context | ClientBase,
   sql: string | QueryConfig<I>,
@@ -172,8 +170,8 @@ export async function query<R = any, I extends any[] = any[]>(
   return res[0];
 }
 
-export async function queryResourceAccess(client: ClientBase, id: string): Promise<string>;
 export async function queryResourceAccess(context: Context, id: string): Promise<string>;
+export async function queryResourceAccess(client: ClientBase, id: string): Promise<string>;
 export async function queryResourceAccess(arg: Context | ClientBase, id: string): Promise<string> {
   return await query<string, [string]>(
     arg as any /* Context | ClientBase */,
@@ -183,17 +181,15 @@ export async function queryResourceAccess(arg: Context | ClientBase, id: string)
 }
 
 export async function queryResource<R = any, F extends Record<string, any> = Record<string, any>>(
-  client: ClientBase,
-  id_or_resource_name: string,
-  filter?: F
-): Promise<R>;
-
-export async function queryResource<R = any, F extends Record<string, any> = Record<string, any>>(
   context: Context,
   id_or_resource_name: string,
   filter?: F
 ): Promise<R>;
-
+export async function queryResource<R = any, F extends Record<string, any> = Record<string, any>>(
+  client: ClientBase,
+  id_or_resource_name: string,
+  filter?: F
+): Promise<R>;
 export async function queryResource<R = any, F extends Record<string, any> = Record<string, any>>(
   arg: Context | ClientBase,
   id_or_resource_name: string,
@@ -220,12 +216,10 @@ export async function queryResourceAll<
   R = any,
   F extends Record<string, any> = Record<string, any>
 >(client: ClientBase, resource_name: string, filter?: F): Promise<R[]>;
-
 export async function queryResourceAll<
   R = any,
   F extends Record<string, any> = Record<string, any>
 >(context: Context, resource_name: string, filter?: F): Promise<R[]>;
-
 export async function queryResourceAll<
   R = any,
   F extends Record<string, any> = Record<string, any>
@@ -233,22 +227,21 @@ export async function queryResourceAll<
   return await queryAll(
     arg as any /* Context | ClientBase */,
     'SELECT * FROM operation_.query_resource_all_($1::text, $2::jsonb)',
-    resource_name, filter
+    resource_name,
+    filter
   );
 }
-
-export async function createResource<R = any, I extends Record<string, any> = Record<string, any>>(
-  client: ClientBase,
-  resource_name: string,
-  data: I
-): Promise<R>;
 
 export async function createResource<R = any, I extends Record<string, any> = Record<string, any>>(
   context: Context,
   resource_name: string,
   data: I
 ): Promise<R>;
-
+export async function createResource<R = any, I extends Record<string, any> = Record<string, any>>(
+  client: ClientBase,
+  resource_name: string,
+  data: I
+): Promise<R>;
 export async function createResource<R = any, I extends Record<string, any> = Record<string, any>>(
   arg: Context | ClientBase,
   resource_name: string,
@@ -257,22 +250,21 @@ export async function createResource<R = any, I extends Record<string, any> = Re
   return await query<R, [string, I]>(
     arg as any /* Context | ClientBase */,
     'SELECT * FROM operation_.create_resource_($1::text, $2::jsonb)',
-    resource_name, data
+    resource_name,
+    data
   );
 }
-
-export async function updateResource<R = any, I extends Record<string, any> = Record<string, any>>(
-  client: ClientBase,
-  id: string,
-  data: I
-): Promise<R>;
 
 export async function updateResource<R = any, I extends Record<string, any> = Record<string, any>>(
   context: Context,
   id: string,
   data: I
 ): Promise<R>;
-
+export async function updateResource<R = any, I extends Record<string, any> = Record<string, any>>(
+  client: ClientBase,
+  id: string,
+  data: I
+): Promise<R>;
 export async function updateResource<R = any, I extends Record<string, any> = Record<string, any>>(
   arg: Context | ClientBase,
   id: string,
@@ -281,12 +273,13 @@ export async function updateResource<R = any, I extends Record<string, any> = Re
   return await query<R, [string, I]>(
     arg as any /* Context | ClientBase */,
     'SELECT * FROM operation_.update_resource_($1::text, $2::jsonb)',
-    id, data
+    id,
+    data
   );
 }
 
-export async function deleteResource<R = any>(client: ClientBase, id: string): Promise<R>;
 export async function deleteResource<R = any>(context: Context, id: string): Promise<R>;
+export async function deleteResource<R = any>(client: ClientBase, id: string): Promise<R>;
 export async function deleteResource<R = any>(arg: Context | ClientBase, id: string): Promise<R> {
   return await query<R, [string]>(
     arg as any /* Context | ClientBase */,

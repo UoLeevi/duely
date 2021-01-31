@@ -62,13 +62,13 @@ export namespace Util {
     return arg;
   }
 
-  export function partial<R, TPartials extends unknown[], TRest extends unknown[]>(
-    func: GenericFunction<R, Concat<TPartials, TRest>>,
-    ...partials: TPartials
-  ): GenericFunction<R, TRest> {
-    return (...rest: TRest) => {
-      // typing does not work like I would like so let's use help of `any`.
-      const args: Concat<TPartials, TRest> = [...partials, ...rest] as any;
+  export function partial<R, TParams extends unknown[]>(
+    func: GenericFunction<R, TParams>,
+    ...partials: LeadingTypes<TParams>
+  ): GenericFunction<R, PartialApplication<Parameters<typeof func>, typeof partials>> {
+    return (...rest) => {
+      // TODO: unable to make the typing work so let's use help of `any`.
+      const args: TParams = [...partials, ...rest] as any;
       return func(...args);
     };
   }

@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { withSession } from '../../../db';
+import { withSession } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 
 export const LogIn: GqlTypeDefinition = {

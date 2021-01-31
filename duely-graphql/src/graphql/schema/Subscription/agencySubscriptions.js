@@ -1,5 +1,5 @@
 import { withFilter } from 'apollo-server-express';
-import { addBackgroundJob, pool } from '../../../db';
+import { addBackgroundJob, pool } from '@duely/db';
 import pubsub from '../../pubsub';
 
 const AGENCY_CREATED = 'AGENCY_CREATED';

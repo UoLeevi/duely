@@ -4,7 +4,7 @@
     "prefix": "gqlt",
     "description": "Boilerplate for GraphQL schema for a type.",
     "body": [
-      "import { withConnection } from '../../../db';",
+      "import { withConnection } from '@duely/db';",
       "import { AuthenticationError } from 'apollo-server-core';",
       "",
       "const resource_name = '${TM_DIRECTORY/^.+\\/(.*)$/${1:/downcase}/}';",
