@@ -3964,7 +3964,7 @@ CREATE FUNCTION policy_.serviceaccount_can_create_webhook_event_(_resource_defin
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{id_ext_, source_, data_, state_, error_, agency_uuid_, event_at_}'::text[];
+    RETURN '{id_ext_, source_, livemode_, data_, state_, error_, agency_uuid_, event_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4135,7 +4135,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_webhook_event_(_resource_defini
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, id_ext_, source_, data_, state_, error_, agency_uuid_, event_at_}'::text[];
+    RETURN '{uuid_, id_ext_, source_, livemode_, data_, state_, error_, agency_uuid_, event_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5363,7 +5363,8 @@ CREATE TABLE application_.webhook_event_ (
     state_ public.processing_state_ NOT NULL,
     error_ text,
     agency_uuid_ uuid,
-    event_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    event_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    livemode_ boolean NOT NULL
 );
 
 
@@ -6564,7 +6565,7 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,stripe_id_ext_,livemode_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
 35bee174-fde7-4ae2-9cb2-4469b3eb8de5	subplan	subscription plan	internal_.subscription_plan_	\N	{uuid_,name_,stripe_prod_id_ext_live_,stripe_prod_id_ext_test_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
 3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	2021-01-16 08:33:30.381138+00	00000000-0000-0000-0000-000000000000
-58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,agency_uuid_}	2021-01-29 16:58:45.009777+00	00000000-0000-0000-0000-000000000000
+58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	2021-02-01 17:32:21.189865+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -6667,6 +6668,7 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	2021-01-16 08:33:30.381138+00	00000000-0000-0000-0000-000000000000	I
 58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook_event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,agency_uuid_}	2021-01-29 16:56:51.091526+00	00000000-0000-0000-0000-000000000000	I
 58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,agency_uuid_}	2021-01-29 16:58:45.009777+00	00000000-0000-0000-0000-000000000000	U
+58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	2021-02-01 17:32:21.189865+00	00000000-0000-0000-0000-000000000000	U
 \.
 
 

@@ -1,80 +1,26 @@
 import express, { Request, Response } from 'express';
-import bodyParser from 'body-parser';
 import cors from 'cors';
 import stripe from './stripe';
-import { GraphQLClient, gql } from 'graphql-request';
+import { GraphQLClient } from 'graphql-request';
 import Stripe from 'stripe';
+import { createResource, fetchServiceAccountContext, queryResource } from '@duely/db';
 
-const gql_begin_visit = gql`
-  mutation {
-    begin_visit {
-      success
-      jwt
-      message
-    }
-  }
-`;
-
-const gql_log_in_serviceaccount = gql`
-  mutation($password: String!) {
-    log_in(email_address: "serviceaccount@duely.app", password: $password) {
-      success
-      jwt
-      message
-    }
-  }
-`;
-
-const gql_subdomain = gql`
-  query($subdomain_name: String!) {
-    subdomains(filter: { name: $subdomain_name }) {
-      id
-      agency {
-        id
-        stripe_account {
-          id
-          id_ext
-        }
-      }
-    }
-  }
-`;
-
-const gql_service = gql`
-  query($agency_id: ID!, $service_url_name: String!) {
-    services(filter: { url_name: $service_url_name, agency_id: $agency_id }) {
-      id
-      default_variant {
-        id
-        default_price {
-          id
-        }
-      }
-    }
-  }
-`;
-
-const gql_create_stripe_checkout_session = gql`
-  mutation($price_id: ID!) {
-    create_stripe_checkout_session(price_id: $price_id) {
-      success
-      message
-      checkout_session_id
-    }
-  }
-`;
+let client: GraphQLClient;
+let context: {
+  jwt: string;
+};
 
 main();
 
-let client;
-
 async function main() {
+  context = await fetchServiceAccountContext();
   client = await createGraphQLClient();
   const app = express();
   app.set('trust proxy', true);
   app.use(cors());
-  app.post('/webhook/platform', bodyParser.raw({ type: 'application/json' }), handle_webhook_platform);
-  app.post('/webhook/agency', bodyParser.raw({ type: 'application/json' }), handle_webhook_agency);
+  app.use('/webhook/', express.raw({ type: 'application/json' }));
+  app.post('/webhook/:source', handle_webhook);
+  app.get('/.well-known/server-health', (req, res) => res.send('ok'));
 
   app.listen({ port: process.env.PORT }, () => {
     console.log(`🚀 Server ready at http://localhost:${process.env.PORT}`);
@@ -83,62 +29,76 @@ async function main() {
 
 async function createGraphQLClient() {
   const endpoint = 'https://api.duely.app/graphql';
-  const client = new GraphQLClient(endpoint);
-
-  const { begin_visit } = await client.request(gql_begin_visit);
-
-  if (!begin_visit.success) {
-    throw new Error("Unable to get access token.");
-  }
-
-  client.setHeader('authorization', `Bearer ${begin_visit.jwt}`);
-
-  const { log_in } = await client.request(gql_log_in_serviceaccount, { password: process.env.DUELY_SERVICE_ACCOUNT_PASSWORD });
-
-  if (!log_in.success) {
-    throw new Error("Unable to get access token.");
-  }
-
-  client.setHeader('authorization', `Bearer ${log_in.jwt}`);
-
-  return client;
+  return new GraphQLClient(endpoint, {
+    headers: {
+      authorization: `Bearer ${context.jwt}`
+    }
+  });
 }
 
 // see: https://stripe.com/docs/webhooks
-async function handle_webhook_platform(req: Request, res: Response) {
+
+async function handle_webhook(req: Request, res: Response) {
+  const { source } = req.params;
   const { livemode }: { livemode: boolean } = JSON.parse(req.body);
-  const stripe_env = livemode ? 'live' : 'test';
-  const secret = process.env[livemode ? 'STRIPE_WHSEC_PLATFORM_LIVE' : 'STRIPE_WHSEC_PLATFORM_TEST']!;
-  const sig = req.headers['stripe-signature']!;
   let event: Stripe.Event;
+  let agency_id = null;
 
   try {
-    event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, secret);
+    switch (source) {
+      case 'stripe-agency': {
+        const secret = process.env[
+          livemode ? 'STRIPE_WHSEC_AGENCY_LIVE' : 'STRIPE_WHSEC_AGENCY_TEST'
+        ]!;
+        const stripe_env = livemode ? 'live' : 'test';
+        const sig = req.headers['stripe-signature']!;
+        event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, secret);
+        break;
+      }
+
+      case 'stripe-platform': {
+        const secret = process.env[
+          livemode ? 'STRIPE_WHSEC_PLATFORM_LIVE' : 'STRIPE_WHSEC_PLATFORM_TEST'
+        ]!;
+        const stripe_env = livemode ? 'live' : 'test';
+        const sig = req.headers['stripe-signature']!;
+        event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, secret);
+        break;
+      }
+
+      default: {
+        throw new Error(`Event source '${source}' is unknown.`);
+      }
+    }
   } catch (err) {
     res.status(400).send(`Webhook Error: ${err.message}`);
     return;
   }
 
-  // Handle the event
-  switch (event.type) {
-    default:
-      console.log(`Unhandled event type ${event.type}`);
+  if (source === 'stripe-agency') {
+    try {
+      const stripe_account: {
+        agency_id: string;
+      } = await queryResource(context, 'stripe account', {
+        id_ext: event.account
+      });
+      agency_id = stripe_account.agency_id;
+    } catch (err) {
+      res.status(400).send(`Error while querying agency: ${err.message}`);
+    }
   }
 
-  res.json({ received: true });
-}
-
-async function handle_webhook_agency(req: Request, res: Response) {
-  const { livemode }: { livemode: boolean } = JSON.parse(req.body);
-  const stripe_env = livemode ? 'live' : 'test';
-  const secret = process.env[livemode ? 'STRIPE_WHSEC_AGENCY_LIVE' : 'STRIPE_WHSEC_AGENCY_TEST']!;
-  const sig = req.headers['stripe-signature']!;
-  let event: Stripe.Event;
-
   try {
-    event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, secret);
+    await createResource(context, 'webhook event', {
+      id_ext: event.id,
+      source,
+      livemode,
+      data: event,
+      state: 'pending',
+      agency_id
+    });
   } catch (err) {
-    res.status(400).send(`Webhook Error: ${err.message}`);
+    res.status(400).send(`Error while storing the event: ${err.message}`);
     return;
   }
 

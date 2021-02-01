@@ -32,7 +32,7 @@ spec:
           secretName: duely-webhook-secret
       containers:
       - name: duely-webhook
-        image: uoleevi/duely-webhook:v0.0.2
+        image: uoleevi/duely-webhook:v0.0.3
         resources:
           requests:
             memory: 64Mi
@@ -42,6 +42,16 @@ spec:
         env:
         - name: PORT
           value: "8080"
+        - name: PGUSER
+          value: duely
+        - name: PGDATABASE
+          value: duely
+        - name: PGPASSWORD
+          value: duely
+        - name: PGHOST
+          value: duely-postgres-master-service
+        - name: PGPORT
+          value: "5432"
         - name: STRIPE_PK_TEST
           valueFrom:
             secretKeyRef:
@@ -77,21 +87,21 @@ spec:
             secretKeyRef:
               name: duely-webhook-secret
               key: duely-serviceaccount-password
-        # livenessProbe:
-        #   httpGet:
-        #     path: /.well-known/apollo/server-health
-        #     port: 8080
-        #   failureThreshold: 6
-        #   initialDelaySeconds: 60
-        #   periodSeconds: 10
-        #   successThreshold: 1
-        #   timeoutSeconds: 5
-        # readinessProbe:
-        #   httpGet:
-        #     path: /.well-known/apollo/server-health
-        #     port: 8080
-        #   failureThreshold: 3
-        #   initialDelaySeconds: 5
-        #   periodSeconds: 5
-        #   successThreshold: 1
-        #   timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /.well-known/server-health
+            port: 8080
+          failureThreshold: 6
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /.well-known/server-health
+            port: 8080
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
