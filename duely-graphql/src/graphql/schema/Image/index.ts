@@ -1,4 +1,4 @@
-import { withConnection } from '@duely/db';
+import { withSession } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -29,7 +29,10 @@ function formatFileSize(size: number) {
   if (size < 1000) return `${size.toPrecision(3)}GB`;
 }
 
-export function validateAndReadDataUrlAsBuffer(dataUrl: string, options?: typeof defaultValidationOptions) {
+export function validateAndReadDataUrlAsBuffer(
+  dataUrl: string,
+  options?: typeof defaultValidationOptions
+) {
   options = {
     ...defaultValidationOptions,
     ...options
@@ -89,8 +92,20 @@ export const Image: GqlTypeDefinition = {
     }
 
     extend type Mutation {
-      create_image(agency_id: ID, name: String!, data: String!, color: String!, access: AccessLevel): ImageMutationResult!
-      update_image(image_id: ID!, name: String, data: String, color: String, access: AccessLevel): ImageMutationResult!
+      create_image(
+        agency_id: ID
+        name: String!
+        data: String!
+        color: String!
+        access: AccessLevel
+      ): ImageMutationResult!
+      update_image(
+        image_id: ID!
+        name: String
+        data: String
+        color: String
+        access: AccessLevel
+      ): ImageMutationResult!
     }
 
     type ImageMutationResult implements MutationResult {
@@ -123,18 +138,16 @@ export const Image: GqlTypeDefinition = {
         }
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ createResource }) => {
-              // create image resource
-              const image = await createResource(resource.name, args);
+          return await withSession(context, async ({ createResource }) => {
+            // create image resource
+            const image = await createResource(resource.name, args);
 
-              // success
-              return {
-                success: true,
-                image,
-                type: 'ImageMutationResult'
-              };
-            });
+            // success
+            return {
+              success: true,
+              image,
+              type: 'ImageMutationResult'
+            };
           });
         } catch (error) {
           return {
@@ -161,18 +174,16 @@ export const Image: GqlTypeDefinition = {
         }
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ updateResource }) => {
-              // update image resource
-              const image = await updateResource(image_id, args);
+          return await withSession(context, async ({ updateResource }) => {
+            // update image resource
+            const image = await updateResource(image_id, args);
 
-              // success
-              return {
-                success: true,
-                image,
-                type: 'ImageMutationResult'
-              };
-            });
+            // success
+            return {
+              success: true,
+              image,
+              type: 'ImageMutationResult'
+            };
           });
         } catch (error) {
           return {

@@ -1,4 +1,4 @@
-import { withConnection } from '@duely/db';
+import { createResource, withSession } from '@duely/db';
 import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
 import validator from 'validator';
@@ -68,13 +68,9 @@ export const PasswordReset: GqlTypeDefinition = {
         let password_reset;
 
         try {
-          password_reset = await withConnection(context, async (withSession) => {
-            return await withSession(async ({ createResource }) => {
-              return await createResource(resource_name, {
-                email_address,
-                data: { redirect_url: redirect_url.href }
-              });
-            });
+          password_reset = await createResource(context, resource_name, {
+            email_address,
+            data: { redirect_url: redirect_url.href }
           });
 
           if (!password_reset) {
@@ -133,29 +129,27 @@ export const PasswordReset: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, updateResource }) => {
-              let password_reset = await queryResource(resource_name, { verification_code });
+          return await withSession(context, async ({ queryResource, updateResource }) => {
+            let password_reset = await queryResource(resource_name, { verification_code });
 
-              if (!password_reset?.id) {
-                return {
-                  success: false,
-                  message: 'Verification code is incorrect',
-                  type: 'SimpleResult'
-                };
-              }
-
-              password_reset = await updateResource(password_reset.id, {
-                verification_code,
-                password,
-                verified: true
-              });
-
+            if (!password_reset?.id) {
               return {
-                success: true,
+                success: false,
+                message: 'Verification code is incorrect',
                 type: 'SimpleResult'
               };
+            }
+
+            password_reset = await updateResource(password_reset.id, {
+              verification_code,
+              password,
+              verified: true
             });
+
+            return {
+              success: true,
+              type: 'SimpleResult'
+            };
           });
         } catch (error) {
           return {

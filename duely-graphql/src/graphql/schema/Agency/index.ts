@@ -1,4 +1,4 @@
-import { withConnection } from '@duely/db';
+import { queryResource, withConnection, withSession } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
@@ -74,12 +74,10 @@ export const Agency: GqlTypeDefinition = {
         const stripe_env = livemode ? 'live' : 'test';
 
         try {
-          const stripe_account = await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource('stripe account', { agency_id: source.id, livemode });
-            });
+          const stripe_account = await queryResource(context, 'stripe account', {
+            agency_id: source.id,
+            livemode
           });
-
           const { id, object, ...stripe_account_ext } = await stripe[stripe_env].accounts.retrieve(
             stripe_account.stripe_id_ext
           );
@@ -162,128 +160,126 @@ export const Agency: GqlTypeDefinition = {
           };
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ query, createResource }) => {
-              // get current user
-              const user = await query('SELECT * FROM operation_.query_current_user_()');
+          return await withSession(context, async ({ query, createResource }) => {
+            // get current user
+            const user = await query('SELECT * FROM operation_.query_current_user_()');
 
-              // create subdomain and agency on database
-              const subdomain = await createResource('subdomain', {
-                name: subdomain_name,
-                agency: { name, livemode }
-              });
-              const agency = subdomain.agency;
+            // create subdomain and agency on database
+            const subdomain = await createResource('subdomain', {
+              name: subdomain_name,
+              agency: { name, livemode }
+            });
+            const agency = subdomain.agency;
 
-              // create logo image
-              const image = await createResource('image', {
-                ...image_logo,
-                agency_id: agency.id,
-                access: 'public'
-              });
+            // create logo image
+            const image = await createResource('image', {
+              ...image_logo,
+              agency_id: agency.id,
+              access: 'public'
+            });
 
-              // create theme
-              const theme = await createResource('theme', {
+            // create theme
+            const theme = await createResource('theme', {
+              name,
+              image_logo_id: image.id,
+              agency_id: agency.id
+            });
+
+            // create stripe custom account for agency
+            // see: https://stripe.com/docs/api/accounts/create
+
+            const createStripeAccountArgs: Stripe.AccountCreateParams = {
+              type: 'custom',
+              email: user.email_address,
+              country: country_code,
+              capabilities: {
+                card_payments: { requested: true },
+                transfers: { requested: true }
+              },
+              business_profile: {
                 name,
-                image_logo_id: image.id,
+                url: `${subdomain.name}.duely.app`
+              },
+              tos_acceptance: {
+                date: Math.floor(Date.now() / 1000)
+              },
+              metadata: {
                 agency_id: agency.id
+              },
+              settings: {
+                branding: {
+                  logo: undefined
+                }
+              }
+            };
+
+            if (context.ip && validator.isIP(context.ip)) {
+              createStripeAccountArgs.tos_acceptance!.ip = context.ip;
+            }
+
+            const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+              ? ['test', 'live']
+              : ['test'];
+
+            const accounts: Record<keyof typeof stripe, Stripe.Account | undefined> = {
+              test: undefined,
+              live: undefined
+            };
+
+            for (const stripe_env of stripe_envs) {
+              // upload logo image to stripe
+              const logo_upload = await stripe[stripe_env].files.create({
+                file: {
+                  data: image_buffer,
+                  name: image_logo.name,
+                  type: 'application/octet-stream'
+                },
+                purpose: 'business_logo'
               });
 
-              // create stripe custom account for agency
-              // see: https://stripe.com/docs/api/accounts/create
+              createStripeAccountArgs.settings!.branding!.logo = logo_upload.id;
 
-              const createStripeAccountArgs: Stripe.AccountCreateParams = {
-                type: 'custom',
-                email: user.email_address,
-                country: country_code,
-                capabilities: {
-                  card_payments: { requested: true },
-                  transfers: { requested: true }
-                },
-                business_profile: {
-                  name,
-                  url: `${subdomain.name}.duely.app`
-                },
-                tos_acceptance: {
-                  date: Math.floor(Date.now() / 1000)
-                },
-                metadata: {
-                  agency_id: agency.id
-                },
-                settings: {
-                  branding: {
-                    logo: undefined
-                  }
-                }
-              };
+              const account = await stripe[stripe_env].accounts.create(createStripeAccountArgs);
+              accounts[stripe_env] = account;
 
-              if (context.ip && validator.isIP(context.ip)) {
-                createStripeAccountArgs.tos_acceptance!.ip = context.ip;
-              }
+              // store stripe custom account id to database
+              await createResource('stripe account', {
+                agency_id: agency.id,
+                stripe_id_ext: account.id,
+                livemode: stripe_env === 'live'
+              });
+            }
 
-              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
-                ? ['test', 'live']
-                : ['test'];
+            // create stripe account verification url
+            // see: https://stripe.com/docs/api/account_links/create
+            let accountLink;
+            try {
+              const stripe_env = agency.livemode ? 'live' : 'test';
 
-              const accounts: Record<keyof typeof stripe, Stripe.Account | undefined> = {
-                test: undefined,
-                live: undefined
-              };
-
-              for (const stripe_env of stripe_envs) {
-                // upload logo image to stripe
-                const logo_upload = await stripe[stripe_env].files.create({
-                  file: {
-                    data: image_buffer,
-                    name: image_logo.name,
-                    type: 'application/octet-stream'
-                  },
-                  purpose: 'business_logo'
-                });
-
-                createStripeAccountArgs.settings!.branding!.logo = logo_upload.id;
-
-                const account = await stripe[stripe_env].accounts.create(createStripeAccountArgs);
-                accounts[stripe_env] = account;
-
-                // store stripe custom account id to database
-                await createResource('stripe account', {
-                  agency_id: agency.id,
-                  stripe_id_ext: account.id,
-                  livemode: stripe_env === 'live'
-                });
-              }
-
-              // create stripe account verification url
-              // see: https://stripe.com/docs/api/account_links/create
-              let accountLink;
-              try {
-                const stripe_env = agency.livemode ? 'live' : 'test';
-
-                accountLink = await stripe[stripe_env].accountLinks.create({
-                  account: accounts[stripe_env]!.id,
-                  refresh_url: return_url,
-                  return_url,
-                  type: 'account_onboarding',
-                  collect: 'eventually_due'
-                });
-              } catch (error) {
-                return {
-                  // something went wrong during account verification link creation
-                  success: true,
-                  message: error.message,
-                  agency,
-                  type: 'CreateAgencyResult'
-                };
-              }
-
-              // success
+              accountLink = await stripe[stripe_env].accountLinks.create({
+                account: accounts[stripe_env]!.id,
+                refresh_url: return_url,
+                return_url,
+                type: 'account_onboarding',
+                collect: 'eventually_due'
+              });
+            } catch (error) {
               return {
+                // something went wrong during account verification link creation
                 success: true,
+                message: error.message,
                 agency,
-                stripe_verification_url: accountLink.url,
                 type: 'CreateAgencyResult'
               };
-            });
+            }
+
+            // success
+            return {
+              success: true,
+              agency,
+              stripe_verification_url: accountLink.url,
+              type: 'CreateAgencyResult'
+            };
           });
         } catch (error) {
           return {
@@ -298,45 +294,43 @@ export const Agency: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, deleteResource }) => {
-              const agency = await queryResource(agency_id);
+          return await withSession(context, async ({ queryResource, deleteResource }) => {
+            const agency = await queryResource(agency_id);
 
-              if (agency == null) {
-                return {
-                  // error
-                  success: false,
-                  message: 'Agency not found',
-                  type: 'DeleteAgencyResult'
-                };
-              }
-
-              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
-                ? ['test', 'live']
-                : ['test'];
-
-              for (const stripe_env of stripe_envs) {
-                // query stripe account from database
-                const stripe_account = await queryResource('stripe account', {
-                  agency_id,
-                  livemode: stripe_env === 'live'
-                });
-
-                // delete stripe custom account for agency
-                // see: https://stripe.com/docs/api/accounts/delete
-                await stripe[stripe_env].accounts.del(stripe_account.stripe_id_ext);
-              }
-
-              // delete subdomain from database, will cascade to agency, theme, subject assignment and stripe account tables
-              await deleteResource(agency.subdomain_id);
-
-              // success
+            if (agency == null) {
               return {
-                success: true,
-                agency,
+                // error
+                success: false,
+                message: 'Agency not found',
                 type: 'DeleteAgencyResult'
               };
-            });
+            }
+
+            const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+              ? ['test', 'live']
+              : ['test'];
+
+            for (const stripe_env of stripe_envs) {
+              // query stripe account from database
+              const stripe_account = await queryResource('stripe account', {
+                agency_id,
+                livemode: stripe_env === 'live'
+              });
+
+              // delete stripe custom account for agency
+              // see: https://stripe.com/docs/api/accounts/delete
+              await stripe[stripe_env].accounts.del(stripe_account.stripe_id_ext);
+            }
+
+            // delete subdomain from database, will cascade to agency, theme, subject assignment and stripe account tables
+            await deleteResource(agency.subdomain_id);
+
+            // success
+            return {
+              success: true,
+              agency,
+              type: 'DeleteAgencyResult'
+            };
           });
         } catch (error) {
           return {

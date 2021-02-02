@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { withConnection } from '@duely/db';
+import { queryResource, queryResourceAccess } from '@duely/db';
 import stripe from '../../../stripe';
 import { GqlTypeDefinition } from '../../types';
 import { createResolverForReferencedResourceAll } from '../../util';
@@ -126,11 +126,7 @@ export const StripeAccount: GqlTypeDefinition = {
         const stripe_env = source.livemode ? 'live' : 'test';
 
         try {
-          const access = await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResourceAccess }) => {
-              return await queryResourceAccess(source.id);
-            });
-          });
+          const access = await queryResourceAccess(context, source.id);
 
           if (access !== 'owner') {
             throw new Error('Only owner can access this information');
@@ -157,11 +153,7 @@ export const StripeAccount: GqlTypeDefinition = {
         const stripe_env = source.livemode ? 'live' : 'test';
 
         try {
-          const access = await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResourceAccess }) => {
-              return await queryResourceAccess(source.id);
-            });
-          });
+          const access = await queryResourceAccess(context, source.id);
 
           if (access !== 'owner') {
             throw new Error('Only owner can access this information');
@@ -185,11 +177,7 @@ export const StripeAccount: GqlTypeDefinition = {
         const stripe_env = source.livemode ? 'live' : 'test';
 
         try {
-          const access = await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResourceAccess }) => {
-              return await queryResourceAccess(source.id);
-            });
-          });
+          const access = await queryResourceAccess(context, source.id);
 
           if (access !== 'owner') {
             throw new Error('Only owner can access this information');
@@ -231,11 +219,7 @@ export const StripeAccount: GqlTypeDefinition = {
         const stripe_env = source.livemode ? 'live' : 'test';
 
         try {
-          const access = await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResourceAccess }) => {
-              return await queryResourceAccess(source.id);
-            });
-          });
+          const access = await queryResourceAccess(context, source.id);
 
           if (access !== 'owner') {
             throw new Error('Only owner can access this information');
@@ -275,12 +259,7 @@ export const StripeAccount: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          const stripe_account = await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource(args.id);
-            });
-          });
-
+          const stripe_account = await queryResource(context, args.id);
           const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
           const { id, object, ...stripe_account_ext } = await stripe[stripe_env].accounts.retrieve(

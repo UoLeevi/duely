@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { fetchServiceAccountContext, withConnection } from '@duely/db';
+import { fetchServiceAccountContext, queryResourceAll } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResourceAll
@@ -19,25 +19,15 @@ export async function calculateTransactionFee(
   const context = await fetchServiceAccountContext();
   if (!context.jwt) throw new Error('Unauthorized');
 
-  let transaction_fees: {
+  const transaction_fees: {
     numerator: number;
     denominator: number;
     fixed_amount: number;
     currency: string;
     transaction_amount_upper_bound: number;
-  }[];
-
-  try {
-    transaction_fees = await withConnection(context, async (withSession) => {
-      return await withSession(async ({ queryResourceAll }) => {
-        return await queryResourceAll('transaction fee', {
-          subscription_plan_id
-        });
-      });
-    });
-  } catch (error) {
-    throw new Error(error.message);
-  }
+  }[] = await queryResourceAll(context, 'transaction fee', {
+    subscription_plan_id
+  });
 
   // let's fallback to lowest possible percentage fee
   let application_fee_percent = Math.min(

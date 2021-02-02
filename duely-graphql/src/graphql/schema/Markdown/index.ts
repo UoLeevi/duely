@@ -1,4 +1,4 @@
-import { withConnection } from '@duely/db';
+import { createResource, updateResource } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -32,8 +32,18 @@ export const Markdown: GqlTypeDefinition = {
     }
 
     extend type Mutation {
-      create_markdown(agency_id: ID, name: String!, data: String!, access: AccessLevel): MarkdownMutationResult!
-      update_markdown(markdown_id: ID!, name: String, data: String, access: AccessLevel): MarkdownMutationResult!
+      create_markdown(
+        agency_id: ID
+        name: String!
+        data: String!
+        access: AccessLevel
+      ): MarkdownMutationResult!
+      update_markdown(
+        markdown_id: ID!
+        name: String
+        data: String
+        access: AccessLevel
+      ): MarkdownMutationResult!
     }
 
     type MarkdownMutationResult implements MutationResult {
@@ -66,19 +76,15 @@ export const Markdown: GqlTypeDefinition = {
         }
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ createResource }) => {
-              // create markdown resource
-              const markdown = await createResource(resource.name, args);
+          // create markdown resource
+          const markdown = await createResource(context, resource.name, args);
 
-              // success
-              return {
-                success: true,
-                markdown,
-                type: 'MarkdownMutationResult'
-              };
-            });
-          });
+          // success
+          return {
+            success: true,
+            markdown,
+            type: 'MarkdownMutationResult'
+          };
         } catch (error) {
           return {
             // error
@@ -106,19 +112,15 @@ export const Markdown: GqlTypeDefinition = {
         }
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ updateResource }) => {
-              // update markdown resource
-              const markdown = await updateResource(markdown_id, args);
+          // update markdown resource
+          const markdown = await updateResource(context, markdown_id, args);
 
-              // success
-              return {
-                success: true,
-                markdown,
-                type: 'MarkdownMutationResult'
-              };
-            });
-          });
+          // success
+          return {
+            success: true,
+            markdown,
+            type: 'MarkdownMutationResult'
+          };
         } catch (error) {
           return {
             // error

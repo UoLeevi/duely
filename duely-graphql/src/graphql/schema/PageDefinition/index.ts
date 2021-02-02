@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { withConnection } from '@duely/db';
+import { queryResource } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
@@ -43,16 +43,7 @@ export const PageDefinition: GqlTypeDefinition = {
       ...createDefaultQueryResolversForResource(resource),
       async page_definition_by_url_path(source, args, context, info) {
         if (!context.jwt) throw new Error('Unauthorized');
-
-        try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource }) => {
-              return await queryResource('page definition', { url_path: args.url_path });
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
+        return await queryResource(context, 'page definition', { url_path: args.url_path });
       }
     }
   }

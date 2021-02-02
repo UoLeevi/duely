@@ -1,4 +1,4 @@
-import { withConnection } from '@duely/db';
+import { withSession } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -85,8 +85,9 @@ export const Price: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, createResource, updateResource }) => {
+          return await withSession(
+            context,
+            async ({ queryResource, createResource, updateResource }) => {
               const product = await queryResource(args.product_id);
 
               if (product == null) {
@@ -155,8 +156,8 @@ export const Price: GqlTypeDefinition = {
                 price,
                 type: 'PriceMutationResult'
               };
-            });
-          });
+            }
+          );
         } catch (error) {
           return {
             // error
@@ -170,18 +171,16 @@ export const Price: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ updateResource }) => {
-              // update price resource
-              const price = await updateResource(price_id, args);
+          return await withSession(context, async ({ updateResource }) => {
+            // update price resource
+            const price = await updateResource(price_id, args);
 
-              // success
-              return {
-                success: true,
-                price,
-                type: 'PriceMutationResult'
-              };
-            });
+            // success
+            return {
+              success: true,
+              price,
+              type: 'PriceMutationResult'
+            };
           });
         } catch (error) {
           return {
@@ -196,51 +195,49 @@ export const Price: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, deleteResource }) => {
-              const price = await deleteResource(price_id);
+          return await withSession(context, async ({ queryResource, deleteResource }) => {
+            const price = await deleteResource(price_id);
 
-              if (price == null) {
-                return {
-                  // error
-                  success: false,
-                  message: 'Price not found',
-                  type: 'PriceMutationResult'
-                };
-              }
-
-              const product = await queryResource(price.product_id);
-              const agency = await queryResource(product.agency_id);
-
-              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
-                ? ['test', 'live']
-                : ['test'];
-
-              for (const stripe_env of stripe_envs) {
-                const stripe_account = await queryResource('stripe account', {
-                  agency_id: agency.id,
-                  livemode: stripe_env === 'live'
-                });
-
-                try {
-                  // try deactivate price at stripe
-                  await stripe[stripe_env].prices.update(
-                    price[`stripe_price_id_ext_${stripe_env}`],
-                    { active: false },
-                    { stripeAccount: stripe_account.stripe_id_ext }
-                  );
-                } catch {
-                  // ignore error
-                }
-              }
-
-              // success
+            if (price == null) {
               return {
-                success: true,
-                price,
+                // error
+                success: false,
+                message: 'Price not found',
                 type: 'PriceMutationResult'
               };
-            });
+            }
+
+            const product = await queryResource(price.product_id);
+            const agency = await queryResource(product.agency_id);
+
+            const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+              ? ['test', 'live']
+              : ['test'];
+
+            for (const stripe_env of stripe_envs) {
+              const stripe_account = await queryResource('stripe account', {
+                agency_id: agency.id,
+                livemode: stripe_env === 'live'
+              });
+
+              try {
+                // try deactivate price at stripe
+                await stripe[stripe_env].prices.update(
+                  price[`stripe_price_id_ext_${stripe_env}`],
+                  { active: false },
+                  { stripeAccount: stripe_account.stripe_id_ext }
+                );
+              } catch {
+                // ignore error
+              }
+            }
+
+            // success
+            return {
+              success: true,
+              price,
+              type: 'PriceMutationResult'
+            };
           });
         } catch (error) {
           return {
@@ -262,103 +259,101 @@ export const Price: GqlTypeDefinition = {
         const stripe_env = livemode ? 'live' : 'test';
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource }) => {
-              // get resources
-              const price = await queryResource(price_id);
-              const product = await queryResource(price.product_id);
-              const stripe_account = await queryResource('stripe account', {
-                agency_id: product.agency_id,
-                livemode
-              });
-              const agency = await queryResource(product.agency_id);
-              const subdomain = await queryResource(agency.subdomain_id);
+          return await withSession(context, async ({ queryResource }) => {
+            // get resources
+            const price = await queryResource(price_id);
+            const product = await queryResource(price.product_id);
+            const stripe_account = await queryResource('stripe account', {
+              agency_id: product.agency_id,
+              livemode
+            });
+            const agency = await queryResource(product.agency_id);
+            const subdomain = await queryResource(agency.subdomain_id);
 
-              if (!success_url) {
-                const product_thank_you_page_setting = await queryResource(
-                  'product thank you page setting',
-                  { product_id: product.id }
-                );
-                success_url = product_thank_you_page_setting?.url;
-              }
-
-              if (!success_url) {
-                const agency_thank_you_page_setting = await queryResource(
-                  'agency thank you page setting',
-                  { agency_id: product.agency_id }
-                );
-                success_url = agency_thank_you_page_setting?.url;
-              }
-
-              if (!success_url) {
-                success_url = `https://${subdomain.name}.duely.app/orders/thank-you`;
-              }
-
-              try {
-                // validate and normalize url
-                const url = new URL(success_url);
-                url.searchParams.append('session_id', '{CHECKOUT_SESSION_ID}');
-                success_url = url.href.replace('%7B', '{').replace('%7D', '}');
-              } catch (error) {
-                return {
-                  // error
-                  success: false,
-                  message: error.message,
-                  type: 'CreateStripeCheckoutSessionResult'
-                };
-              }
-
-              if (!cancel_url) {
-                cancel_url = context.referer ?? `https://${subdomain.name}.duely.app`;
-              }
-
-              const application_fee_amount = await calculateTransactionFee(
-                agency.subscription_plan_id,
-                price.unit_amount,
-                price.currency
+            if (!success_url) {
+              const product_thank_you_page_setting = await queryResource(
+                'product thank you page setting',
+                { product_id: product.id }
               );
+              success_url = product_thank_you_page_setting?.url;
+            }
 
-              // create stripe checkout session
-              // see: https://stripe.com/docs/connect/creating-a-payments-page
-              // see: https://stripe.com/docs/payments/checkout/custom-success-page
-              // see: https://stripe.com/docs/api/checkout/sessions/create
-              const stripe_checkout_session_args: Stripe.Checkout.SessionCreateParams = {
-                mode: price.type === 'recurring' ? 'subscription' : 'payment',
-                payment_method_types: ['card'],
-                line_items: [
-                  {
-                    price: price[`stripe_price_id_ext_${stripe_env}`],
-                    quantity: 1
-                  }
-                ],
-                success_url,
-                cancel_url
-              };
-
-              if (price.type === 'recurring') {
-                stripe_checkout_session_args.subscription_data = {
-                  application_fee_percent: (application_fee_amount / price.unit_amount) * 100
-                };
-              } else {
-                stripe_checkout_session_args.payment_intent_data = {
-                  application_fee_amount
-                };
-              }
-
-              const checkout_session = await stripe[stripe_env].checkout.sessions.create(
-                stripe_checkout_session_args,
-                {
-                  stripeAccount: stripe_account.stripe_id_ext
-                }
+            if (!success_url) {
+              const agency_thank_you_page_setting = await queryResource(
+                'agency thank you page setting',
+                { agency_id: product.agency_id }
               );
+              success_url = agency_thank_you_page_setting?.url;
+            }
 
-              // success
+            if (!success_url) {
+              success_url = `https://${subdomain.name}.duely.app/orders/thank-you`;
+            }
+
+            try {
+              // validate and normalize url
+              const url = new URL(success_url);
+              url.searchParams.append('session_id', '{CHECKOUT_SESSION_ID}');
+              success_url = url.href.replace('%7B', '{').replace('%7D', '}');
+            } catch (error) {
               return {
-                success: true,
-                checkout_session_id: checkout_session.id,
+                // error
+                success: false,
+                message: error.message,
                 type: 'CreateStripeCheckoutSessionResult'
               };
-            });
+            }
+
+            if (!cancel_url) {
+              cancel_url = context.referer ?? `https://${subdomain.name}.duely.app`;
+            }
+
+            const application_fee_amount = await calculateTransactionFee(
+              agency.subscription_plan_id,
+              price.unit_amount,
+              price.currency
+            );
+
+            // create stripe checkout session
+            // see: https://stripe.com/docs/connect/creating-a-payments-page
+            // see: https://stripe.com/docs/payments/checkout/custom-success-page
+            // see: https://stripe.com/docs/api/checkout/sessions/create
+            const stripe_checkout_session_args: Stripe.Checkout.SessionCreateParams = {
+              mode: price.type === 'recurring' ? 'subscription' : 'payment',
+              payment_method_types: ['card'],
+              line_items: [
+                {
+                  price: price[`stripe_price_id_ext_${stripe_env}`],
+                  quantity: 1
+                }
+              ],
+              success_url,
+              cancel_url
+            };
+
+            if (price.type === 'recurring') {
+              stripe_checkout_session_args.subscription_data = {
+                application_fee_percent: (application_fee_amount / price.unit_amount) * 100
+              };
+            } else {
+              stripe_checkout_session_args.payment_intent_data = {
+                application_fee_amount
+              };
+            }
+
+            const checkout_session = await stripe[stripe_env].checkout.sessions.create(
+              stripe_checkout_session_args,
+              {
+                stripeAccount: stripe_account.stripe_id_ext
+              }
+            );
+
+            // success
+            return {
+              success: true,
+              checkout_session_id: checkout_session.id,
+              type: 'CreateStripeCheckoutSessionResult'
+            };
           });
         } catch (error) {
           return {

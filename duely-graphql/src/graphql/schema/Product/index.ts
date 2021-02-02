@@ -1,4 +1,4 @@
-import { withConnection } from '@duely/db';
+import { withSession } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
@@ -114,8 +114,9 @@ export const Product: GqlTypeDefinition = {
           };
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, createResource, updateResource }) => {
+          return await withSession(
+            context,
+            async ({ queryResource, createResource, updateResource }) => {
               const agency = await queryResource(args.agency_id);
               const subdomain = await queryResource(agency.subdomain_id);
 
@@ -210,8 +211,8 @@ export const Product: GqlTypeDefinition = {
                 product,
                 type: 'ProductMutationResult'
               };
-            });
-          });
+            }
+          );
         } catch (error) {
           return {
             // error
@@ -232,8 +233,9 @@ export const Product: GqlTypeDefinition = {
           };
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, createResource, updateResource }) => {
+          return await withSession(
+            context,
+            async ({ queryResource, createResource, updateResource }) => {
               const { agency_id } = await queryResource(product_id);
               const agency = await queryResource(agency_id);
               const subdomain = await queryResource(agency.subdomain_id);
@@ -316,8 +318,8 @@ export const Product: GqlTypeDefinition = {
                 product,
                 type: 'ProductMutationResult'
               };
-            });
-          });
+            }
+          );
         } catch (error) {
           return {
             // error
@@ -331,55 +333,50 @@ export const Product: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, deleteResource }) => {
-              const product = await deleteResource(product_id);
+          return await withSession(context, async ({ queryResource, deleteResource }) => {
+            const product = await deleteResource(product_id);
 
-              if (product == null) {
-                return {
-                  // error
-                  success: false,
-                  message: 'Product not found',
-                  type: 'ProductMutationResult'
-                };
-              }
-
-              const agency = await queryResource(product.agency_id);
-
-              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
-                ? ['test', 'live']
-                : ['test'];
-
-              for (const stripe_env of stripe_envs) {
-                const stripe_account = await queryResource('stripe account', {
-                  livemode: stripe_env === 'live',
-                  agency_id: product.agency_id
-                });
-
-                // delete or deactivate product from stripe
-                try {
-                  await stripe[stripe_env].products.del(
-                    product[`stripe_prod_id_ext_${stripe_env}`],
-                    {
-                      stripeAccount: stripe_account.stripe_id_ext
-                    }
-                  );
-                } catch {
-                  await stripe[stripe_env].products.update(
-                    product[`stripe_prod_id_ext_${stripe_env}`],
-                    { active: false },
-                    { stripeAccount: stripe_account.stripe_id_ext }
-                  );
-                }
-              }
-
-              // success
+            if (product == null) {
               return {
-                success: true,
-                product,
+                // error
+                success: false,
+                message: 'Product not found',
                 type: 'ProductMutationResult'
               };
-            });
+            }
+
+            const agency = await queryResource(product.agency_id);
+
+            const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+              ? ['test', 'live']
+              : ['test'];
+
+            for (const stripe_env of stripe_envs) {
+              const stripe_account = await queryResource('stripe account', {
+                livemode: stripe_env === 'live',
+                agency_id: product.agency_id
+              });
+
+              // delete or deactivate product from stripe
+              try {
+                await stripe[stripe_env].products.del(product[`stripe_prod_id_ext_${stripe_env}`], {
+                  stripeAccount: stripe_account.stripe_id_ext
+                });
+              } catch {
+                await stripe[stripe_env].products.update(
+                  product[`stripe_prod_id_ext_${stripe_env}`],
+                  { active: false },
+                  { stripeAccount: stripe_account.stripe_id_ext }
+                );
+              }
+            }
+
+            // success
+            return {
+              success: true,
+              product,
+              type: 'ProductMutationResult'
+            };
           });
         } catch (error) {
           return {

@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { URL } from 'url';
-import { withConnection } from '@duely/db';
+import { createResource, deleteResource, updateResource } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import { createResolverForReferencedResource } from '../../util';
 
@@ -17,9 +17,17 @@ export const ProductSettings: GqlTypeDefinition = {
     }
 
     extend type Mutation {
-      create_product_thank_you_page_setting(product_id: ID!, url: String!): ProductThankYouPageSettingMutationResult!
-      update_product_thank_you_page_setting(setting_id: ID!, url: String!): ProductThankYouPageSettingMutationResult!
-      delete_product_thank_you_page_setting(setting_id: ID!): ProductThankYouPageSettingMutationResult!
+      create_product_thank_you_page_setting(
+        product_id: ID!
+        url: String!
+      ): ProductThankYouPageSettingMutationResult!
+      update_product_thank_you_page_setting(
+        setting_id: ID!
+        url: String!
+      ): ProductThankYouPageSettingMutationResult!
+      delete_product_thank_you_page_setting(
+        setting_id: ID!
+      ): ProductThankYouPageSettingMutationResult!
     }
 
     type ProductThankYouPageSettingMutationResult implements MutationResult {
@@ -68,19 +76,15 @@ export const ProductSettings: GqlTypeDefinition = {
         args.url = url.href;
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ createResource }) => {
-              // create resource
-              const setting = await createResource('product thank you page setting', args);
+          // create resource
+          const setting = await createResource(context, 'product thank you page setting', args);
 
-              // success
-              return {
-                success: true,
-                setting,
-                type: 'ProductThankYouPageSettingMutationResult'
-              };
-            });
-          });
+          // success
+          return {
+            success: true,
+            setting,
+            type: 'ProductThankYouPageSettingMutationResult'
+          };
         } catch (error) {
           return {
             // error
@@ -119,19 +123,15 @@ export const ProductSettings: GqlTypeDefinition = {
         args.url = url.href;
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ updateResource }) => {
-              // update resource
-              const setting = await updateResource(setting_id, args);
+          // update resource
+          const setting = await updateResource(context, setting_id, args);
 
-              // success
-              return {
-                success: true,
-                setting,
-                type: 'ProductThankYouPageSettingMutationResult'
-              };
-            });
-          });
+          // success
+          return {
+            success: true,
+            setting,
+            type: 'ProductThankYouPageSettingMutationResult'
+          };
         } catch (error) {
           return {
             // error
@@ -145,19 +145,15 @@ export const ProductSettings: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ deleteResource }) => {
-              // delete resource
-              const setting = await deleteResource(setting_id);
+          // delete resource
+          const setting = await deleteResource(context, setting_id);
 
-              // success
-              return {
-                success: true,
-                setting,
-                type: 'ProductThankYouPageSettingMutationResult'
-              };
-            });
-          });
+          // success
+          return {
+            success: true,
+            setting,
+            type: 'ProductThankYouPageSettingMutationResult'
+          };
         } catch (error) {
           return {
             // error

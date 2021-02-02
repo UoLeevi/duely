@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { withConnection } from '@duely/db';
+import { createResource, deleteResource, updateResource } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
@@ -31,7 +31,12 @@ export const PageBlock: GqlTypeDefinition = {
     }
 
     extend type Mutation {
-      create_page_block(page_id: ID!, page_block_definition_id: ID!, data: Json!, after_id: ID): PageBlockMutationResult!
+      create_page_block(
+        page_id: ID!
+        page_block_definition_id: ID!
+        data: Json!
+        after_id: ID
+      ): PageBlockMutationResult!
       update_page_block(page_block_id: ID!, data: Json, after_id: ID): PageBlockMutationResult!
       delete_page_block(page_block_id: ID!): PageBlockMutationResult!
     }
@@ -58,19 +63,15 @@ export const PageBlock: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ createResource }) => {
-              // create page block resource
-              const page_block = await createResource(resource.name, args);
+          // create page block resource
+          const page_block = await createResource(context, resource.name, args);
 
-              // success
-              return {
-                success: true,
-                page_block,
-                type: 'PageBlockMutationResult'
-              };
-            });
-          });
+          // success
+          return {
+            success: true,
+            page_block,
+            type: 'PageBlockMutationResult'
+          };
         } catch (error) {
           return {
             // error
@@ -84,19 +85,15 @@ export const PageBlock: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ updateResource }) => {
-              // update page_block resource
-              const page_block = await updateResource(page_block_id, args);
+          // update page_block resource
+          const page_block = await updateResource(context, page_block_id, args);
 
-              // success
-              return {
-                success: true,
-                page_block,
-                type: 'PageBlockMutationResult'
-              };
-            });
-          });
+          // success
+          return {
+            success: true,
+            page_block,
+            type: 'PageBlockMutationResult'
+          };
         } catch (error) {
           return {
             // error
@@ -110,18 +107,14 @@ export const PageBlock: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ deleteResource }) => {
-              const page_block = await deleteResource(page_block_id);
+          const page_block = await deleteResource(context, page_block_id);
 
-              // success
-              return {
-                success: true,
-                page_block,
-                type: 'PageBlockMutationResult'
-              };
-            });
-          });
+          // success
+          return {
+            success: true,
+            page_block,
+            type: 'PageBlockMutationResult'
+          };
         } catch (error) {
           return {
             // error

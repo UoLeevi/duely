@@ -1,5 +1,5 @@
 import type { GraphQLResolveInfo } from 'graphql';
-import { withSession } from '@duely/db';
+import { queryResource, queryResourceAll } from '@duely/db';
 import { DuelyQqlContext } from './context';
 
 // Not yet used
@@ -50,15 +50,7 @@ export function createDefaultQueryResolversForResource<
       info: GraphQLResolveInfo
     ) {
       if (!context.jwt) throw new Error('Unauthorized');
-
-      try {
-        return await withSession(
-          context,
-          async ({ queryResource }) => await queryResource(args.id)
-        );
-      } catch (error) {
-        throw new Error(error.message);
-      }
+      return await queryResource(context, args.id);
     },
     async [plural ?? (table_name ?? name) + 's'](
       source: TSource,
@@ -67,15 +59,7 @@ export function createDefaultQueryResolversForResource<
       info: GraphQLResolveInfo
     ) {
       if (!context.jwt) throw new Error('Unauthorized');
-
-      try {
-        return await withSession(
-          context,
-          async ({ queryResourceAll }) => await queryResourceAll(name, args.filter)
-        );
-      } catch (error) {
-        throw new Error(error.message);
-      }
+      return await queryResourceAll(context, name, args.filter);
     }
   };
 }
@@ -125,16 +109,7 @@ export function createResolverForReferencedResource<
       info: GraphQLResolveInfo
     ) {
       if (!context.jwt) throw new Error('Unauthorized');
-
-      try {
-        return await withSession(
-          context,
-          async ({ queryResource }) =>
-            await queryResource<TResult>(...createQueryArgs(source, args))
-        );
-      } catch (error) {
-        throw new Error(error.message);
-      }
+      return await queryResource<TResult>(context, ...createQueryArgs(source, args));
     }
   };
 }
@@ -168,21 +143,12 @@ export function createResolverForReferencedResourceAll<
       info: GraphQLResolveInfo
     ): Promise<TResult[]> {
       if (!context.jwt) throw new Error('Unauthorized');
-
-      try {
-        return await withSession(
-          context,
-          async ({ queryResourceAll }) =>
-            await queryResourceAll<TResult>(resource_name!, {
-              ...args.filter,
-              [column_name!]: reverse_column_name
-                ? source[reverse_column_name as keyof TSource]
-                : source.id ?? source[column_name! as keyof TSource]
-            })
-        );
-      } catch (error) {
-        throw new Error(error.message);
-      }
+      return await queryResourceAll<TResult>(context, resource_name!, {
+        ...args.filter,
+        [column_name!]: reverse_column_name
+          ? source[reverse_column_name as keyof TSource]
+          : source.id ?? source[column_name! as keyof TSource]
+      });
     }
   };
 }

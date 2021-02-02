@@ -1,4 +1,4 @@
-import { withConnection } from '@duely/db';
+import { queryResource, withSession } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -69,13 +69,7 @@ export const Customer: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          const stripe_account = await withConnection(
-            context,
-            async (withSession) =>
-              await withSession(
-                async ({ queryResource }) => await queryResource(source.stripe_account_id)
-              )
-          );
+          const stripe_account = await queryResource(context, source.stripe_account_id);
 
           const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
@@ -104,13 +98,7 @@ export const Customer: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          const stripe_account = await withConnection(
-            context,
-            async (withSession) =>
-              await withSession(
-                async ({ queryResource }) => await queryResource(source.stripe_account_id)
-              )
-          );
+          const stripe_account = await queryResource(context, source.stripe_account_id);
 
           const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
@@ -154,8 +142,7 @@ export const Customer: GqlTypeDefinition = {
         email_address = validator.normalizeEmail(email_address);
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, createResource }) => {
+            return await withSession(context, async ({ queryResource, createResource }) => {
               const stripe_account = await queryResource(stripe_account_id);
 
               const stripe_customer_args: Stripe.CustomerCreateParams = {
@@ -191,7 +178,6 @@ export const Customer: GqlTypeDefinition = {
                 type: 'CustomerMutationResult'
               };
             });
-          });
         } catch (error) {
           return {
             // error
@@ -216,8 +202,7 @@ export const Customer: GqlTypeDefinition = {
         }
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, createResource, updateResource }) => {
+          return await withSession(context, async ({ queryResource, updateResource }) => {
               const { stripe_account_id } = await queryResource(customer_id);
 
               if (stripe_account_id == null) {
@@ -254,7 +239,6 @@ export const Customer: GqlTypeDefinition = {
                 type: 'CustomerMutationResult'
               };
             });
-          });
         } catch (error) {
           return {
             // error
@@ -268,8 +252,7 @@ export const Customer: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource, deleteResource }) => {
+            return await withSession(context, async ({ queryResource, deleteResource }) => {
               const customer = await deleteResource(customer_id);
 
               if (customer == null) {
@@ -297,7 +280,6 @@ export const Customer: GqlTypeDefinition = {
                 type: 'CustomerMutationResult'
               };
             });
-          });
         } catch (error) {
           return {
             // error

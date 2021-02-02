@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { withConnection } from '@duely/db';
+import { updateResource } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
@@ -21,7 +21,7 @@ export const Theme: GqlTypeDefinition = {
       color_primary: String
       color_secondary: String
       color_accent: String
-      color_background: String,
+      color_background: String
       color_surface: String
       color_error: String
       color_success: String
@@ -38,7 +38,18 @@ export const Theme: GqlTypeDefinition = {
     }
 
     extend type Mutation {
-      update_theme(theme_id: ID!, image_logo_id: ID, image_hero_id: ID, color_primary: String, color_secondary: String, color_accent: String, color_background: String, color_surface: String, color_error: String, color_success: String): UpdateThemeResult!
+      update_theme(
+        theme_id: ID!
+        image_logo_id: ID
+        image_hero_id: ID
+        color_primary: String
+        color_secondary: String
+        color_accent: String
+        color_background: String
+        color_surface: String
+        color_error: String
+        color_success: String
+      ): UpdateThemeResult!
     }
 
     type UpdateThemeResult implements MutationResult {
@@ -61,19 +72,15 @@ export const Theme: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ updateResource }) => {
-              // update theme resource
-              const theme = await updateResource(theme_id, args);
+          // update theme resource
+          const theme = await updateResource(context, theme_id, args);
 
-              // success
-              return {
-                success: true,
-                theme,
-                type: 'UpdateThemeResult'
-              };
-            });
-          });
+          // success
+          return {
+            success: true,
+            theme,
+            type: 'UpdateThemeResult'
+          };
         } catch (error) {
           return {
             // error

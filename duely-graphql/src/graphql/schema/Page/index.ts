@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { URL } from 'url';
-import { withConnection } from '@duely/db';
+import { updateResource, withSession } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
@@ -87,14 +87,12 @@ export const Page: GqlTypeDefinition = {
         }
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ queryResource }) => {
-              const subdomain = await queryResource('subdomain', { name: subdomain_name });
-              if (!subdomain) return null;
-              const agency = await queryResource('agency', { subdomain_id: subdomain.id });
-              if (!agency) return null;
-              return await queryResource('page', { agency_id: agency.id, url_path: path });
-            });
+          return await withSession(context, async ({ queryResource }) => {
+            const subdomain = await queryResource('subdomain', { name: subdomain_name });
+            if (!subdomain) return null;
+            const agency = await queryResource('agency', { subdomain_id: subdomain.id });
+            if (!agency) return null;
+            return await queryResource('page', { agency_id: agency.id, url_path: path });
           });
         } catch (error) {
           throw new Error(error.message);
@@ -106,19 +104,15 @@ export const Page: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ updateResource }) => {
-              // update page resource
-              const page = await updateResource(page_id, args);
+          // update page resource
+          const page = await updateResource(context, page_id, args);
 
-              // success
-              return {
-                success: true,
-                page,
-                type: 'PageMutationResult'
-              };
-            });
-          });
+          // success
+          return {
+            success: true,
+            page,
+            type: 'PageMutationResult'
+          };
         } catch (error) {
           return {
             // error

@@ -1,4 +1,4 @@
-import { withSession } from '@duely/db';
+import { createResource, withSession } from '@duely/db';
 import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
 import validator from 'validator';
@@ -73,13 +73,11 @@ export const SignUp: GqlTypeDefinition = {
         let sign_up;
 
         try {
-          sign_up = await withSession(context, async ({ createResource }) => {
-            return await createResource(resource_name, {
-              name,
-              password,
-              email_address,
-              data: { redirect_url: redirect_url.href }
-            });
+          sign_up = await createResource(context, resource_name, {
+            name,
+            password,
+            email_address,
+            data: { redirect_url: redirect_url.href }
           });
         } catch (error) {
           return {
