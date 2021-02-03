@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { withSession } from '@duely/db';
+import { logIn, logOut } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 
 export const LogIn: GqlTypeDefinition = {
@@ -21,17 +21,11 @@ export const LogIn: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withSession(context, async ({ client }) => {
-            const res = await client.query(
-              'SELECT operation_.log_in_user_($1::text, $2::text) jwt_',
-              [email_address, password]
-            );
-            return {
-              success: true,
-              jwt: res.rows[0].jwt_,
-              type: 'LogInResult'
-            };
-          });
+          return {
+            success: true,
+            jwt: await logIn(context, email_address, password),
+            type: 'LogInResult'
+          };
         } catch (error) {
           return {
             success: false,
@@ -44,13 +38,11 @@ export const LogIn: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withSession(context, async ({ client }) => {
-            const res = await client.query('SELECT operation_.log_out_user_()');
-            return {
-              success: true,
-              type: 'SimpleResult'
-            };
-          });
+          await logOut(context);
+          return {
+            success: true,
+            type: 'SimpleResult'
+          };
         } catch (error) {
           return {
             success: false,

@@ -2,6 +2,9 @@ import { ClientBase, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
 import { ResolvableValue, Util } from '@duely/core';
+import { type } from 'os';
+
+export * from './errors';
 
 if (!process.env.DUELY_SERVICE_ACCOUNT_PASSWORD) {
   if (!process.env.SERVICEACCOUNTCONFIGFILE) {
@@ -34,6 +37,64 @@ type Context = {
   ip?: string | null;
   jwt?: string | null;
 };
+
+export async function beginVisit(): Promise<string> {
+  const client = await pool.connect();
+  try {
+    const res = await client.query('SELECT * FROM operation_.begin_visit_() jwt_');
+    return res.rows[0].jwt_;
+  } finally {
+    client.release();
+  }
+}
+
+export async function endVisit(context: Context): Promise<void>;
+export async function endVisit(client: ClientBase): Promise<void>;
+export async function endVisit(arg: Context | ClientBase): Promise<void> {
+  await query(arg as any /* Context | ClientBase */, 'SELECT operation_.end_visit_()');
+}
+
+export async function logIn(
+  context: Context,
+  email_address: string,
+  password: string
+): Promise<string>;
+export async function logIn(
+  client: ClientBase,
+  email_address: string,
+  password: string
+): Promise<string>;
+export async function logIn(
+  arg: Context | ClientBase,
+  email_address: string,
+  password: string
+): Promise<string> {
+  const res = await query(
+    arg as any /* Context | ClientBase */,
+    'SELECT operation_.log_in_user_($1::text, $2::text) jwt_',
+    email_address,
+    password
+  );
+  return res.jwt_;
+}
+
+export async function logOut(context: Context): Promise<void>;
+export async function logOut(client: ClientBase): Promise<void>;
+export async function logOut(arg: Context | ClientBase): Promise<void> {
+  await query(arg as any /* Context | ClientBase */, 'SELECT operation_.log_out_user_()');
+}
+
+type CurrentUser = {
+  id: string;
+  name: string;
+  email_address: string;
+};
+
+export async function queryCurrentUser(context: Context): Promise<CurrentUser | null>;
+export async function queryCurrentUser(client: ClientBase): Promise<CurrentUser | null>;
+export async function queryCurrentUser(arg: Context | ClientBase): Promise<CurrentUser | null> {
+  return await query(arg as any /* Context | ClientBase */, 'SELECT * FROM operation_.query_current_user_()');
+}
 
 export async function withSessionEx<TArg = any, R = any>(
   context: ResolvableValue<Context, [ClientBase]>,

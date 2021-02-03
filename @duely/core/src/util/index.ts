@@ -38,6 +38,13 @@ export namespace Util {
     return obj === Object(obj) && Object.prototype.hasOwnProperty.call(obj, propertyName);
   }
 
+  export function hasProperty<T, TKey extends PropertyKey>(
+    obj: T,
+    propertyName: TKey
+  ): obj is T & Record<TKey, unknown> {
+    return obj === Object(obj) && propertyName in obj;
+  }
+
   export function isFunction<R = any, TArgs extends any[] = any[]>(
     value: NotFunction<R> | GenericFunction<R, TArgs>
   ): value is GenericFunction<R, TArgs> {

@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { withConnection } from '@duely/db';
+import { queryCurrentUser } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
@@ -42,16 +42,7 @@ export const User: GqlTypeDefinition = {
     Query: {
       async current_user(source, args, context, info) {
         if (!context.jwt) throw new Error('Unauthorized');
-
-        try {
-          return await withConnection(context, async (withSession) => {
-            return await withSession(async ({ query }) => {
-              return await query('SELECT * FROM operation_.query_current_user_()');
-            });
-          });
-        } catch (error) {
-          throw new Error(error.message);
-        }
+        return await queryCurrentUser(context);
       },
       ...createDefaultQueryResolversForResource(resource)
     }
