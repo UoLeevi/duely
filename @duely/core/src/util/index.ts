@@ -79,4 +79,55 @@ export namespace Util {
       return func(...args);
     };
   }
+
+  export function memo<R, TParams extends unknown[]>(
+    func: GenericFunction<R, TParams>
+  ): typeof func {
+    const cache = new Map();
+    return (...args) => {
+      let node = cache;
+      const last = args.length - 1;
+
+      if (last === -1) {
+        if (node.has(last)) {
+          return node.get(last);
+        } else {
+          const result = func(...args);
+          node.set(last, result);
+          return result;
+        }
+      }
+
+      let nextNode = node.get(last);
+
+      if (nextNode === undefined) {
+        nextNode = new Map();
+        node.set(last, nextNode);
+      }
+
+      node = nextNode;
+
+      for (let i = 0; i < last; ++i) {
+        const arg = args[i];
+        nextNode = node.get(arg);
+
+        if (nextNode === undefined) {
+          nextNode = new Map();
+          node.set(arg, nextNode);
+        }
+
+        node = nextNode;
+      }
+
+      const arg = args[last];
+
+      if (node.has(arg)) {
+        return node.get(arg);
+      } else {
+        const result = func(...args);
+        node.set(arg, result);
+        return result;
+      }
+    };
+  }
 }

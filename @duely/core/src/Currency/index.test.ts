@@ -1,6 +1,6 @@
 import { Currency } from '.';
 
-test('properly converts to minor currency amount', () => {
+test('Currency.numberToMinorCurrencyAmount', () => {
   // upper case currency code
   expect(Currency.numberToMinorCurrencyAmount(5, 'USD')).toBe(500);
   expect(Currency.numberToMinorCurrencyAmount(5.01, 'USD')).toBe(501);
@@ -13,7 +13,7 @@ test('properly converts to minor currency amount', () => {
   expect(Currency.numberToMinorCurrencyAmount(1234, 'jpy')).toBe(1234);
 });
 
-test('properly converts from minor currency amount', () => {
+test('Currency.minorCurrencyAmountToNumber', () => {
   // upper case currency code
   expect(Currency.minorCurrencyAmountToNumber(500, 'USD')).toBe(5);
   expect(Currency.minorCurrencyAmountToNumber(501, 'USD')).toBe(5.01);
@@ -26,7 +26,7 @@ test('properly converts from minor currency amount', () => {
   expect(Currency.minorCurrencyAmountToNumber(1234, 'jpy')).toBe(1234);
 });
 
-test('properly converts from minor currency amount', () => {
+test('Currency.format', () => {
   // upper case currency code
   expect(Currency.format(500, 'USD')).toBeDefined();
   expect(Currency.format(501, 'USD')).toBeDefined();
