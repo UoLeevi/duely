@@ -136,32 +136,51 @@ export namespace Util {
     ...args: TParams
   ): R {
     let isInitialized = false;
-    let value: R;
+    let result: R;
+    const methods = new Map();
 
-    function getValue(): R {
+    function getResult(): R {
       if (!isInitialized) {
         isInitialized = true;
-        value = initializer(...args);
+        result = initializer(...args);
       }
 
-      return value;
+      return result;
     }
 
     return new Proxy<GenericFunction<R, TParams>, R>(initializer, {
-      apply: (_, ...args) => Reflect.apply(getValue() as Function, ...args),
-      construct: (_, ...args) => Reflect.construct(getValue() as Function, ...args),
-      defineProperty: (_, ...args) => Reflect.defineProperty(getValue(), ...args),
-      deleteProperty: (_, ...args) => Reflect.deleteProperty(getValue(), ...args),
-      get: (_, ...args) => Reflect.get(getValue(), ...args),
+      get(target, p, receiver) {
+        const result = getResult();
+        const value = Reflect.get(result, p, receiver === target ? result : receiver);
+        if (typeof value !== 'function') return value;
+        let method = methods.get(value);
+
+        if (method === undefined) {
+          method = value.bind(result);
+          methods.set(value, method);
+        }
+
+        return method;
+      },
+      set(target, p, value, receiver) {
+        const result = getResult();
+        return Reflect.set(result, p, value, receiver === target ? result : receiver);
+      },
+      apply(target, thisArg, ...args) {
+        const result = getResult();
+        Reflect.apply(result as Function, thisArg === target ? result : thisArg, ...args);
+      },
+      construct: (_, ...args) => Reflect.construct(getResult() as Function, ...args),
+      defineProperty: (_, ...args) => Reflect.defineProperty(getResult(), ...args),
+      deleteProperty: (_, ...args) => Reflect.deleteProperty(getResult(), ...args),
       getOwnPropertyDescriptor: (_, ...args) =>
-        Reflect.getOwnPropertyDescriptor(getValue(), ...args),
-      getPrototypeOf: (_, ...args) => Reflect.getPrototypeOf(getValue(), ...args),
-      has: (_, ...args) => Reflect.has(getValue(), ...args),
-      isExtensible: (_, ...args) => Reflect.isExtensible(getValue(), ...args),
-      ownKeys: (_, ...args) => Reflect.ownKeys(getValue(), ...args),
-      preventExtensions: (_, ...args) => Reflect.preventExtensions(getValue(), ...args),
-      set: (_, ...args) => Reflect.set(getValue(), ...args),
-      setPrototypeOf: (_, ...args) => Reflect.setPrototypeOf(getValue(), ...args)
+        Reflect.getOwnPropertyDescriptor(getResult(), ...args),
+      getPrototypeOf: (_, ...args) => Reflect.getPrototypeOf(getResult(), ...args),
+      has: (_, ...args) => Reflect.has(getResult(), ...args),
+      isExtensible: (_, ...args) => Reflect.isExtensible(getResult(), ...args),
+      ownKeys: (_, ...args) => Reflect.ownKeys(getResult(), ...args),
+      preventExtensions: (_, ...args) => Reflect.preventExtensions(getResult(), ...args),
+      setPrototypeOf: (_, ...args) => Reflect.setPrototypeOf(getResult(), ...args)
     });
   }
 }

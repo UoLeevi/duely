@@ -18,7 +18,7 @@ test('Util.memo', () => {
   expect(createObject(arg0)).not.toBe(createObject(arg1));
 });
 
-test('Util.lazy', () => {
+test('Util.lazy', async () => {
   let i = 0;
   const lazyObject = Util.lazy(() => {
     ++i;
@@ -30,7 +30,11 @@ test('Util.lazy', () => {
   expect(i).toBe(0);
   expect(lazyObject.i).toBe(1);
   expect(i).toBe(1);
-  lazyObject.i = 2
+  lazyObject.i = 2;
   expect(i).toBe(1);
   expect(lazyObject.i).toBe(2);
+
+  const obj = {};
+  const fetchObject = Util.lazy(() => new Promise((resolve) => setTimeout(() => resolve(obj), 1)));
+  expect(await fetchObject).toBe(obj);
 });
