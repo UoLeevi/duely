@@ -170,7 +170,7 @@ export async function withConnection<R = any>(
 ) {
   const client = await pool.connect();
   try {
-    return await callback((callback) => withSession(context, callback, client));
+    return await callback(async (callback) => await withSession(context, callback, client));
   } finally {
     client.release();
   }
@@ -209,7 +209,7 @@ export async function queryAll<R = any, I extends any[] = any[]>(
 
   const callback = async (client: ClientBase) => await queryAll(client, sql, ...parameters);
   const context = arg;
-  return withSessionEx(context, callback, Util.identity);
+  return await withSessionEx(context, callback, Util.identity);
 }
 
 export async function query<R = any, I extends any[] = any[]>(
