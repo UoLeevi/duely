@@ -2,7 +2,6 @@ import { ClientBase, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
 import { ResolvableValue, Util } from '@duely/core';
-import { type } from 'os';
 
 export * from './errors';
 
@@ -93,7 +92,10 @@ type CurrentUser = {
 export async function queryCurrentUser(context: Context): Promise<CurrentUser | null>;
 export async function queryCurrentUser(client: ClientBase): Promise<CurrentUser | null>;
 export async function queryCurrentUser(arg: Context | ClientBase): Promise<CurrentUser | null> {
-  return await query(arg as any /* Context | ClientBase */, 'SELECT * FROM operation_.query_current_user_()');
+  return await query(
+    arg as any /* Context | ClientBase */,
+    'SELECT * FROM operation_.query_current_user_()'
+  );
 }
 
 export async function withSessionEx<TArg = any, R = any>(
@@ -143,26 +145,24 @@ export async function withSession<R = any>(
 }
 
 async function logInServiceAccount() {
-  const context = async (client: ClientBase) => {
-    const res = await client.query('SELECT * FROM operation_.begin_visit_() jwt_');
-    return {
-      jwt: res.rows[0].jwt_
-    };
+  const context = {
+    jwt: await beginVisit()
   };
 
   const callback = async (client: ClientBase) => {
-    const res = await client.query('SELECT operation_.log_in_user_($1::text, $2::text) jwt_', [
-      'serviceaccount@duely.app',
-      process.env.DUELY_SERVICE_ACCOUNT_PASSWORD
-    ]);
-    return { jwt: res.rows[0].jwt_ };
+    return {
+      jwt: await logIn(
+        client,
+        'serviceaccount@duely.app',
+        process.env.DUELY_SERVICE_ACCOUNT_PASSWORD!
+      )
+    };
   };
 
   return await withSessionEx(context, callback, Util.identity);
 }
 
-const serviceAccountContextPromise = logInServiceAccount();
-export const fetchServiceAccountContext = () => serviceAccountContextPromise;
+export const serviceAccountContextPromise = Util.lazy(logInServiceAccount);
 
 export async function withConnection<R = any>(
   context: Context,

@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { fetchServiceAccountContext, queryResourceAll } from '@duely/db';
+import { queryResourceAll, serviceAccountContextPromise } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResourceAll
@@ -16,7 +16,7 @@ export async function calculateTransactionFee(
   amount: number,
   currency: string
 ) {
-  const context = await fetchServiceAccountContext();
+  const context = await serviceAccountContextPromise;
   if (!context.jwt) throw new Error('Unauthorized');
 
   const transaction_fees: {
