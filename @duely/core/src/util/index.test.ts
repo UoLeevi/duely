@@ -1,7 +1,6 @@
 import { Util } from '.';
 
 test('Util.memo', () => {
-  // upper case currency code
   const createObject = Util.memo((...args: any[]) => new Object());
   expect(createObject()).toBe(createObject());
   expect(createObject(1)).toBe(createObject(1));
@@ -19,3 +18,19 @@ test('Util.memo', () => {
   expect(createObject(arg0)).not.toBe(createObject(arg1));
 });
 
+test('Util.lazy', () => {
+  let i = 0;
+  const lazyObject = Util.lazy(() => {
+    ++i;
+    return {
+      i
+    };
+  });
+
+  expect(i).toBe(0);
+  expect(lazyObject.i).toBe(1);
+  expect(i).toBe(1);
+  lazyObject.i = 2
+  expect(i).toBe(1);
+  expect(lazyObject.i).toBe(2);
+});

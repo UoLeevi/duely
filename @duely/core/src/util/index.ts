@@ -130,4 +130,47 @@ export namespace Util {
       }
     };
   }
+
+  export function lazy<R extends object, TParams extends unknown[]>(
+    initializer: GenericFunction<R, TParams>,
+    ...args: TParams
+  ): R {
+    let isInitialized = false;
+    let value: R;
+
+    function getValue(): R {
+      if (!isInitialized) {
+        isInitialized = true;
+        value = initializer(...args);
+      }
+
+      return value;
+    }
+
+    return new Proxy<GenericFunction<R, TParams>, R>(initializer, {
+      apply: (_, ...args) => Reflect.apply(getValue() as Function, ...args),
+      construct: (_, ...args) => Reflect.construct(getValue() as Function, ...args),
+      defineProperty: (_, ...args) => Reflect.defineProperty(getValue(), ...args),
+      deleteProperty: (_, ...args) => Reflect.deleteProperty(getValue(), ...args),
+      get: (_, ...args) => Reflect.get(getValue(), ...args),
+      getOwnPropertyDescriptor: (_, ...args) =>
+        Reflect.getOwnPropertyDescriptor(getValue(), ...args),
+      getPrototypeOf: (_, ...args) => Reflect.getPrototypeOf(getValue(), ...args),
+      has: (_, ...args) => Reflect.has(getValue(), ...args),
+      isExtensible: (_, ...args) => Reflect.isExtensible(getValue(), ...args),
+      ownKeys: (_, ...args) => Reflect.ownKeys(getValue(), ...args),
+      preventExtensions: (_, ...args) => Reflect.preventExtensions(getValue(), ...args),
+      set: (_, ...args) => Reflect.set(getValue(), ...args),
+      setPrototypeOf: (_, ...args) => Reflect.setPrototypeOf(getValue(), ...args)
+    });
+  }
+}
+
+declare global {
+  interface ProxyConstructor {
+    new <TSource extends object, TTarget extends object>(
+      target: TSource,
+      handler: ProxyHandler<TSource>
+    ): TTarget;
+  }
 }
