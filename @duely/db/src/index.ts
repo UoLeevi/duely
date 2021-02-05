@@ -68,13 +68,12 @@ export async function logIn(
   email_address: string,
   password: string
 ): Promise<string> {
-  const res = await query(
+  return await query(
     arg as any /* Context | ClientBase */,
-    'SELECT operation_.log_in_user_($1::text, $2::text) jwt_',
+    'SELECT operation_.log_in_user_($1::text, $2::text)',
     email_address,
     password
   );
-  return res.jwt_;
 }
 
 export async function logOut(context: Context): Promise<void>;
