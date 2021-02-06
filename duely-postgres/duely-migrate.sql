@@ -13,490 +13,253 @@ DECLARE
 
 BEGIN
 -- MIGRATION CODE START
+CALL internal_.drop_auditing_('security_.resource_definition_');
+ALTER TABLE security_.resource_definition_ ADD upsert_keys_ text[];
+CALL internal_.setup_auditing_('security_.resource_definition_');
 
-CREATE OR REPLACE FUNCTION operation_.begin_session_(_jwt text, _tag text DEFAULT NULL::text) RETURNS security_.session_
+ALTER TABLE security_.resource_definition_
+ADD CHECK (upsert_keys_ IS NULL OR upsert_keys_ <> '{}'::text[] AND search_ @> upsert_keys_);
+
+CREATE FUNCTION operation_.upsert_resource_(_resource_name text, _data jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _claims jsonb;
-  _token_uuid uuid;
-  _subject_uuid uuid;
-  _session security_.session_;
+  _resource_definition security_.resource_definition_;
+  _resource application_.resource_;
+  _uuid uuid;
+  _id text;
+  _owned_resources_data jsonb;
 BEGIN
-  UPDATE security_.session_
-  SET
-    nesting_ = nesting_ + 1
-  WHERE uuid_ = current_setting('security_.session_.uuid_'::text, true)::uuid
-  RETURNING * INTO _session;
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_ WHERE name_ = _resource_name;
 
-  IF _session IS NULL THEN
-    SELECT internal_.jwt_verify_hs256_(_jwt, x.value_) INTO _claims
-    FROM security_.secret_ x
-    WHERE x.name_ = 'jwt_hs256';
-
-    IF _claims IS NULL THEN
-      RAISE 'Invalid JWT.' USING ERRCODE = 'D0JWT';
-    END IF;
-
-    SELECT t.uuid_, t.subject_uuid_ INTO _token_uuid, _subject_uuid
-    FROM security_.token_ t
-    WHERE t.uuid_ = (_claims->>'jti')::uuid
-      AND t.revoked_at_ IS NULL;
-
-    IF _token_uuid IS NULL THEN
-      RAISE 'Invalid JWT.' USING ERRCODE = 'D0JWT';
-    END IF;
-
-    INSERT INTO security_.session_ (token_uuid_, tag_)
-    VALUES (_token_uuid, _tag)
-    RETURNING * INTO _session;
-
-    PERFORM set_config('security_.token_.subject_uuid_', _subject_uuid::text, 'f');
-    PERFORM set_config('security_.session_.uuid_', _session.uuid_::text, 'f');
+  IF _resource_definition.upsert_keys_ IS NULL THEN
+    RAISE 'Upsert is not supported for this resource.' USING ERRCODE = 'DUPSE';
   END IF;
 
-  RETURN _session;
-END
-$$;
+  _data := jsonb_strip_nulls(_data);
 
-CREATE OR REPLACE FUNCTION operation_.begin_visit_() RETURNS text
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-DECLARE
-  _uuid uuid := gen_random_uuid();
-  _iat bigint := FLOOR(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP));
-  _subject_uuid uuid;
-  _secret bytea;
-BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid <> '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'Active session already exists.' USING ERRCODE = 'DEXSE';
-  END IF;
+  SELECT owner_, owned_ INTO _data, _owned_resources_data
+  FROM internal_.extract_referenced_resources_jsonb_(_resource_definition.uuid_, _data);
 
-  INSERT INTO security_.subject_ (type_)
-  VALUES ('visitor')
-  RETURNING uuid_ INTO _subject_uuid;
+  _data := internal_.convert_to_internal_format_(_data);
 
-  SELECT x.value_ INTO _secret
-  FROM security_.secret_ x
-  WHERE x.name_ = 'jwt_hs256';
+  WITH
+    _keys as (
+      SELECT jsonb_object_agg(k, _data->k) data_
+      FROM unnest(_resource_definition.upsert_keys_) k
+    )
+  SELECT r INTO _resource
+  FROM application_.resource_ r
+  WHERE r.definition_uuid_ = _resource_definition.uuid_
+    AND r.search_ @> _keys.data_;
 
-  IF _secret IS NULL THEN
-    RAISE 'Invalid secret configuration.' USING ERRCODE = 'DCONF';
-  END IF;
+  IF _resource.uuid_ IS NULL THEN
+    PERFORM security_.control_create_(_resource_definition, _data);
 
-  INSERT INTO security_.token_ (uuid_, subject_uuid_)
-  VALUES (_uuid, _subject_uuid);
+    _uuid := internal_.dynamic_insert_(_resource_definition.table_, _data);
 
-  RETURN 
-    internal_.jwt_sign_hs256_(
-      jsonb_build_object(
-        'iss', 'duely.app',
-        'sub', _subject_uuid,
-        'jti', _uuid,
-        'iat', _iat
-      ),
-      _secret
-    );
-END
-$$;
-
-CREATE OR REPLACE FUNCTION operation_.end_session_() RETURNS security_.session_
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-DECLARE
-  _session security_.session_;
-BEGIN
-  SELECT * INTO _session
-  FROM security_.session_
-  WHERE uuid_ = current_setting('security_.session_.uuid_'::text, true)::uuid
-  FOR UPDATE;
-
-  IF _session IS NULL THEN
-    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
-  ELSEIF _session.nesting_ > 0 THEN
-    UPDATE security_.session_
-    SET
-      nesting_ = nesting_ - 1
-    WHERE uuid_ = _session.uuid_
-    RETURNING * INTO _session;
+    SELECT id_ INTO _id FROM application_.resource_ WHERE uuid_ = _uuid;
   ELSE
-    UPDATE security_.session_
-    SET
-      end_at_ = CURRENT_TIMESTAMP
-    WHERE uuid_ = _session.uuid_
-    RETURNING * INTO _session;
+    _data = _data - _resource_definition.upsert_keys_;
 
-    PERFORM set_config('security_.token_.subject_uuid_', '00000000-0000-0000-0000-000000000000', 'f');
-    PERFORM set_config('security_.session_.uuid_', '00000000-0000-0000-0000-000000000000', 'f');
+    PERFORM security_.control_update_(_resource_definition, _resource, _data);
+    PERFORM internal_.dynamic_update_(_resource_definition.table_, _resource.uuid_, _data);
   END IF;
 
-  RETURN _session;
+  _data := operation_.query_resource_(_id);
+
+  SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.table_, _id, r.key, r.value)) INTO _owned_resources_data
+  FROM jsonb_each(_owned_resources_data) r;
+
+  RETURN _data || COALESCE(_owned_resources_data, '{}'::jsonb);
 END
 $$;
 
-CREATE OR REPLACE FUNCTION operation_.end_visit_() RETURNS security_.token_
+CREATE OR REPLACE FUNCTION operation_.create_resource_(_resource_name text, _data jsonb) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _token security_.token_;
+  _resource_definition security_.resource_definition_;
+  _uuid uuid;
+  _id text;
+  _owned_resources_data jsonb;
 BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_ WHERE name_ = _resource_name;
+
+  _data := jsonb_strip_nulls(_data);
+
+  SELECT owner_, owned_ INTO _data, _owned_resources_data
+  FROM internal_.extract_referenced_resources_jsonb_(_resource_definition.uuid_, _data);
+
+  _data := internal_.convert_to_internal_format_(_data);
+
+  PERFORM security_.control_create_(_resource_definition, _data);
+
+  _uuid := internal_.dynamic_insert_(_resource_definition.table_, _data);
+
+  SELECT id_ INTO _id FROM application_.resource_ WHERE uuid_ = _uuid;
+
+  _data := operation_.query_resource_(_id);
+
+  SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.table_, _id, r.key, r.value)) INTO _owned_resources_data
+  FROM jsonb_each(_owned_resources_data) r;
+
+  RETURN _data || COALESCE(_owned_resources_data, '{}'::jsonb);
+END
+$$;
+
+CREATE OR REPLACE FUNCTION operation_.update_resource_(_id text, _data jsonb) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _resource application_.resource_;
+  _resource_definition security_.resource_definition_;
+  _owned_resources_data jsonb;
+BEGIN
+  SELECT * INTO _resource
+  FROM application_.resource_ WHERE id_ = _id;
+
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_ WHERE uuid_ = _resource.definition_uuid_;
+
+  SELECT owner_, owned_ INTO _data, _owned_resources_data
+  FROM internal_.extract_referenced_resources_jsonb_(_resource_definition.uuid_, _data);
+
+  _data := internal_.convert_to_internal_format_(_data);
+
+  PERFORM security_.control_update_(_resource_definition, _resource, _data);
+  PERFORM internal_.dynamic_update_(_resource_definition.table_, _resource.uuid_, _data);
+
+  _data := operation_.query_resource_(_id);
+
+  SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.table_, _id, r.key, r.value)) INTO _owned_resources_data
+  FROM jsonb_each(_owned_resources_data) r;
+
+  RETURN _data || COALESCE(_owned_resources_data, '{}'::jsonb);
+END
+$$;
+
+CREATE OR REPLACE FUNCTION internal_.resource_insert_(_resource_definition security_.resource_definition_, _record jsonb) RETURNS application_.resource_
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  _resource application_.resource_;
+  _owner_resource_definition security_.resource_definition_;
+  _owner_resource_table_name name;
+  _uuid uuid;
+  _owner_uuid uuid;
+  _select_list text;
+  _search jsonb DEFAULT '{}'::jsonb;
+  _id_len int := 6;
+BEGIN
+  SELECT * INTO _owner_resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource_definition.owner_uuid_;
+
+  IF _owner_resource_definition.uuid_ IS NOT NULL THEN
+    SELECT c.relname INTO _owner_resource_table_name
+    FROM pg_catalog.pg_class AS c
+    WHERE c.oid = _owner_resource_definition.table_;
+
+    EXECUTE format('
+      SELECT ($1->>%1$L)::uuid;
+    ',
+    _owner_resource_table_name || 'uuid_')
+    INTO _owner_uuid
+    USING _record;
   END IF;
 
-  UPDATE security_.token_ t
+  IF _resource_definition.search_ <> '{}'::text[] THEN
+    SELECT string_agg(format('
+      $1->%1$L %1$I
+    ', k), ',') INTO _select_list
+    FROM unnest(_resource_definition.search_) k;
+
+    EXECUTE '
+      WITH
+        r AS (
+          SELECT ' || _select_list || '
+        )
+      SELECT to_jsonb(r)
+      FROM r;
+    '
+    INTO _search
+    USING _record;
+  END IF;
+
+  LOOP
+    BEGIN
+      INSERT INTO application_.resource_ (uuid_, search_, owner_uuid_, definition_uuid_, id_)
+      SELECT (_record->>'uuid_')::uuid, _search, _owner_uuid, _resource_definition.uuid_, _resource_definition.id_prefix_ || '_' || substring(replace(_record->>'uuid_', '-', '' ) FOR _id_len)
+      RETURNING * INTO _resource;
+      EXIT;
+    EXCEPTION WHEN unique_violation THEN
+      _id_len := _id_len + 2;
+    END;
+  END LOOP;
+
+  RETURN _resource;
+END
+$_$;
+
+CREATE OR REPLACE FUNCTION internal_.resource_update_(_resource_definition security_.resource_definition_, _record jsonb) RETURNS application_.resource_
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE
+  _resource application_.resource_;
+  _owner_resource_definition security_.resource_definition_;
+  _owner_resource_table_name name;
+  _uuid uuid;
+  _owner_uuid uuid;
+  _select_list text;
+  _search jsonb DEFAULT '{}'::jsonb;
+BEGIN
+  SELECT * INTO _owner_resource_definition
+  FROM security_.resource_definition_
+  WHERE uuid_ = _resource_definition.owner_uuid_;
+
+  IF _owner_resource_definition.uuid_ IS NOT NULL THEN
+
+    SELECT c.relname INTO _owner_resource_table_name
+    FROM pg_catalog.pg_class AS c
+    WHERE c.oid = _owner_resource_definition.table_;
+
+    EXECUTE format('
+      SELECT ($1->>%1$L)::uuid;
+    ',
+    _owner_resource_table_name || 'uuid_')
+    INTO _owner_uuid
+    USING _record;
+  END IF;
+
+  IF _resource_definition.search_ <> '{}'::text[] THEN
+    SELECT string_agg(format('
+      $1->%1$L %1$I
+    ', k), ',') INTO _select_list
+    FROM unnest(_resource_definition.search_) k;
+
+    EXECUTE '
+      WITH
+        r AS (
+          SELECT ' || _select_list || '
+        )
+      SELECT to_jsonb(r)
+      FROM r;
+    '
+    INTO _search
+    USING _record;
+  END IF;
+
+  UPDATE application_.resource_ r
   SET
-    revoked_at_ = CURRENT_TIMESTAMP
-  FROM security_.session_ se
-  CROSS JOIN security_.subject_ s
-  WHERE t.uuid_ = se.token_uuid_
-  AND t.revoked_at_ IS NULL
-  AND s.uuid_ = t.subject_uuid_
-  AND s.type_ = 'visitor'
-  AND se.uuid_ = current_setting('security_.session_.uuid_'::text, false)::uuid
-  RETURNING * INTO _token;
+    search_ = _search,
+    owner_uuid_ = _owner_uuid
+  WHERE r.uuid_ = (_record->>'uuid_')::uuid
+  RETURNING * INTO _resource;
 
-  RETURN _token;
-END
-$$;
-
-CREATE OR REPLACE FUNCTION operation_.log_in_user_(_email_address text, _password text) RETURNS text
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-DECLARE
-  _uuid uuid := gen_random_uuid();
-  _iat bigint := FLOOR(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP));
-  _subject_uuid uuid;
-  _secret bytea;
-  _arg RECORD;
-BEGIN
-  SELECT _email_address email_address_ INTO _arg; 
-  PERFORM security_.control_operation_('log_in_user_', _arg);
-
-  SELECT u.uuid_ INTO _subject_uuid
-  FROM security_.user_ u
-  WHERE u.email_address_ = _email_address
-    AND u.password_hash_ = pgcrypto_.crypt(_password, u.password_hash_);
-
-  IF _subject_uuid IS NULL THEN
-    RAISE 'Email address and password do not match.' USING ERRCODE = 'DPASS';
-  END IF;
-
-  SELECT x.value_ INTO _secret
-  FROM security_.secret_ x
-  WHERE x.name_ = 'jwt_hs256';
-
-  IF _secret IS NULL THEN
-    RAISE 'Invalid secret configuration.' USING ERRCODE = 'DCONF';
-  END IF;
-
-  INSERT INTO security_.token_ (uuid_, subject_uuid_)
-  VALUES (_uuid, _subject_uuid);
-
-  RETURN 
-    internal_.jwt_sign_hs256_(
-      jsonb_build_object(
-        'iss', 'duely.app',
-        'sub', _subject_uuid,
-        'jti', _uuid,
-        'iat', _iat
-      ),
-      _secret
-    );
-END
-$$;
-
-CREATE OR REPLACE FUNCTION policy_.delete_forbidden_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
-END
-$$;
-
-CREATE OR REPLACE FUNCTION policy_.only_owner_can_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF NOT internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
-  END IF;
-END
-$$;
-
-CREATE OR REPLACE FUNCTION policy_.user_can_delete_only_themselves_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-    FROM security_.active_subject_ s
-    WHERE s.type_ = 'user'
-      AND s.uuid_ = _resource.uuid_
-  ) THEN
-    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
-  END IF;
-END
-$$;
-
-CREATE OR REPLACE FUNCTION security_.control_create_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS void
-    LANGUAGE plpgsql
-    AS $_$
-DECLARE
-  _policy_uuid uuid;
-  _policy_function regprocedure;
-  _keys text[];
-  _unauthorized_data jsonb;
-  _fields_list text;
-BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
-  END IF;
-
-  IF _data IS NULL OR _data = '{}'::jsonb THEN
-    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
-  END IF;
-
-  _unauthorized_data := internal_.jsonb_strip_values_(_data);
-
-  LOOP
-    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
-    FROM security_.policy_
-    WHERE resource_definition_uuid_ = _resource_definition.uuid_
-      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
-      AND operation_type_ = 'create';
-
-    IF _policy_function IS NULL THEN
-      EXIT;
-    END IF;
-
-    EXECUTE '
-      SELECT ' || _policy_function::regproc || '($1, $2);
-    '
-    INTO _keys
-    USING _resource_definition, _data;
-
-    _unauthorized_data := _unauthorized_data - COALESCE(_keys, '{}');
-
-    IF _unauthorized_data = '{}'::jsonb THEN
-      -- Result: authorized
-      INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, data_)
-      VALUES ('create', _resource_definition.uuid_, _data);
-      RETURN;
-    END IF;
-  END LOOP;
-
-  -- Result: not authorized
-
-  _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
-
-  SELECT string_agg(k, ', ') INTO _fields_list
-  FROM jsonb_object_keys(_unauthorized_data) k;
-
-  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = 'DUNAU';
-END
-$_$;
-
-CREATE OR REPLACE FUNCTION security_.control_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
-    LANGUAGE plpgsql
-    AS $_$
-DECLARE
-  _policy_uuid uuid;
-  _policy_function regprocedure;
-BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = '20000';
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1
-    FROM security_.policy_
-    WHERE resource_definition_uuid_ = _resource_definition.uuid_
-      AND operation_type_ = 'delete'
-  ) THEN
-    RAISE 'Unauthorized. No access policies defined.' USING ERRCODE = 'DUNAU';
-  END IF;
-
-  LOOP
-    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
-    FROM security_.policy_
-    WHERE resource_definition_uuid_ = _resource_definition.uuid_
-      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
-      AND operation_type_ = 'delete';
-
-    IF _policy_function IS NULL THEN
-      EXIT;
-    END IF;
-
-    EXECUTE '
-      SELECT ' || _policy_function::regproc || '($1, $2);
-    '
-    USING _resource_definition, _resource;
-  END LOOP;
-
-  INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_)
-  VALUES ('delete', _resource_definition.uuid_, _resource.uuid_);
-END
-$_$;
-
-CREATE OR REPLACE FUNCTION security_.control_operation_(_operation_name text, _arg anyelement DEFAULT NULL::text) RETURNS security_.event_
-    LANGUAGE plpgsql
-    AS $_$
-DECLARE
-  _event security_.event_;
-  _policy text;
-  _deny boolean := 'f';
-  _allow boolean := 'f';
-BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
-  END IF;
-
-  FOR _policy IN
-    SELECT p.policy_name_
-    FROM security_.policy_assignment_ p
-    JOIN security_.operation_ o ON p.operation_uuid_ = o.uuid_
-    WHERE o.name_ = _operation_name
-      AND p.type_ = 'deny'
-  LOOP
-    EXECUTE format('SELECT policy_.%1$I($1)', _policy) INTO _deny USING _arg;
-    IF _deny THEN
-      RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
-    END IF;
-  END LOOP;
-
-  FOR _policy IN
-    SELECT p.policy_name_
-    FROM security_.policy_assignment_ p
-    JOIN security_.operation_ o ON p.operation_uuid_ = o.uuid_
-    WHERE o.name_ = _operation_name
-      AND p.type_ = 'allow'
-  LOOP
-    EXECUTE format('SELECT policy_.%1$I($1)', _policy) INTO _allow USING _arg;
-    IF _allow THEN
-      EXIT;
-    END IF;
-  END LOOP;
-
-  IF NOT _allow THEN
-    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
-  END IF;
-
-  IF (
-    SELECT o.log_events_
-    FROM security_.operation_ o
-    WHERE o.name_ = _operation_name
-  ) THEN
-    INSERT INTO security_.event_ (operation_uuid_, arg_)
-    SELECT o.uuid_, _arg::text
-    FROM security_.operation_ o
-    WHERE o.name_ = _operation_name
-    RETURNING * INTO _event;
-  END IF;
-
-  RETURN _event;
-END
-$_$;
-
-CREATE OR REPLACE FUNCTION security_.control_query_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE plpgsql
-    AS $_$
-DECLARE
-  _policy_uuid uuid;
-  _policy_function regprocedure;
-  _keys text[];
-  _authorized_keys text[] := '{}'::text[];
-BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
-  END IF;
-
-  LOOP
-    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
-    FROM security_.policy_
-    WHERE resource_definition_uuid_ = _resource_definition.uuid_
-      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
-      AND operation_type_ = 'query';
-
-    IF _policy_function IS NULL THEN
-      EXIT;
-    END IF;
-
-    EXECUTE '
-      SELECT ' || _policy_function::regproc || '($1, $2);
-    '
-    INTO _keys
-    USING _resource_definition, _resource;
-
-    _authorized_keys := array_cat(_authorized_keys, COALESCE(_keys, '{}'));
-  END LOOP;
-
-  IF array_length(COALESCE(_authorized_keys, '{}'), 1) = 0 THEN
-    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
-  END IF;
-
-  SELECT array_agg(DISTINCT k) INTO _authorized_keys
-  FROM unnest(_authorized_keys) k;
-
-  RETURN _authorized_keys;
-END
-$_$;
-
-CREATE OR REPLACE FUNCTION security_.control_update_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS void
-    LANGUAGE plpgsql
-    AS $_$
-DECLARE
-  _policy_uuid uuid;
-  _policy_function regprocedure;
-  _keys text[];
-  _unauthorized_data jsonb;
-  _fields_list text;
-BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
-  END IF;
-
-  IF _data IS NULL OR _data = '{}'::jsonb THEN
-    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
-  END IF;
-
-  _unauthorized_data := internal_.jsonb_strip_values_(_data);
-
-  LOOP
-    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
-    FROM security_.policy_
-    WHERE resource_definition_uuid_ = _resource_definition.uuid_
-      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
-      AND operation_type_ = 'update';
-
-    IF _policy_function IS NULL THEN
-      EXIT;
-    END IF;
-
-    EXECUTE '
-      SELECT ' || _policy_function::regproc || '($1, $2, $3);
-    '
-    INTO _keys
-    USING _resource_definition, _resource, _data;
-
-    _unauthorized_data := _unauthorized_data - COALESCE(_keys, '{}');
-
-    IF _unauthorized_data = '{}'::jsonb THEN
-      -- Result: authorized
-      INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_, data_)
-      VALUES ('update', _resource_definition.uuid_, _resource.uuid_, _data);
-      RETURN;
-    END IF;
-  END LOOP;
-
-  -- Result: not authorized
-
-  _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
-
-  SELECT string_agg(k, ', ') INTO _fields_list
-  FROM jsonb_object_keys(_unauthorized_data) k;
-
-  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = 'DUNAU';
+  RETURN _resource;
 END
 $_$;
 

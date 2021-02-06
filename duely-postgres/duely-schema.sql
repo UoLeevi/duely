@@ -379,8 +379,10 @@ CREATE TABLE security_.resource_definition_ (
     table_ regclass NOT NULL,
     owner_uuid_ uuid,
     search_ text[] DEFAULT '{uuid_,name_}'::text[] NOT NULL,
+    upsert_keys_ text[],
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL,
+    CONSTRAINT resource_definition__check CHECK (((upsert_keys_ IS NULL) OR ((upsert_keys_ <> '{}'::text[]) AND (search_ @> upsert_keys_))))
 );
 
 
@@ -1153,11 +1155,11 @@ BEGIN
   FROM security_.resource_definition_
   WHERE uuid_ = _resource_definition.owner_uuid_;
 
-  SELECT c.relname INTO _owner_resource_table_name
-  FROM pg_catalog.pg_class AS c
-  WHERE c.oid = _owner_resource_definition.table_;
-
   IF _owner_resource_definition.uuid_ IS NOT NULL THEN
+    SELECT c.relname INTO _owner_resource_table_name
+    FROM pg_catalog.pg_class AS c
+    WHERE c.oid = _owner_resource_definition.table_;
+
     EXECUTE format('
       SELECT ($1->>%1$L)::uuid;
     ',
@@ -1351,11 +1353,12 @@ BEGIN
   FROM security_.resource_definition_
   WHERE uuid_ = _resource_definition.owner_uuid_;
 
-  SELECT c.relname INTO _owner_resource_table_name
-  FROM pg_catalog.pg_class AS c
-  WHERE c.oid = _owner_resource_definition.table_;
-
   IF _owner_resource_definition.uuid_ IS NOT NULL THEN
+
+    SELECT c.relname INTO _owner_resource_table_name
+    FROM pg_catalog.pg_class AS c
+    WHERE c.oid = _owner_resource_definition.table_;
+
     EXECUTE format('
       SELECT ($1->>%1$L)::uuid;
     ',
@@ -1951,7 +1954,7 @@ BEGIN
     WHERE x.name_ = 'jwt_hs256';
 
     IF _claims IS NULL THEN
-      RAISE 'Invalid JWT.' USING ERRCODE = '20000';
+      RAISE 'Invalid JWT.' USING ERRCODE = 'D0JWT';
     END IF;
 
     SELECT t.uuid_, t.subject_uuid_ INTO _token_uuid, _subject_uuid
@@ -1960,7 +1963,7 @@ BEGIN
       AND t.revoked_at_ IS NULL;
 
     IF _token_uuid IS NULL THEN
-      RAISE 'Invalid JWT.' USING ERRCODE = '20000';
+      RAISE 'Invalid JWT.' USING ERRCODE = 'D0JWT';
     END IF;
 
     INSERT INTO security_.session_ (token_uuid_, tag_)
@@ -1992,7 +1995,7 @@ DECLARE
   _secret bytea;
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid <> '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'Active session already exists.' USING ERRCODE = '20000';
+    RAISE 'Active session already exists.' USING ERRCODE = 'DEXSE';
   END IF;
 
   INSERT INTO security_.subject_ (type_)
@@ -2004,7 +2007,7 @@ BEGIN
   WHERE x.name_ = 'jwt_hs256';
 
   IF _secret IS NULL THEN
-    RAISE 'Invalid secret configuration.' USING ERRCODE = '55000';
+    RAISE 'Invalid secret configuration.' USING ERRCODE = 'DCONF';
   END IF;
 
   INSERT INTO security_.token_ (uuid_, subject_uuid_)
@@ -2035,8 +2038,6 @@ CREATE FUNCTION operation_.create_resource_(_resource_name text, _data jsonb) RE
     AS $$
 DECLARE
   _resource_definition security_.resource_definition_;
-  _column_list text;
-  _select_list text;
   _uuid uuid;
   _id text;
   _owned_resources_data jsonb;
@@ -2116,7 +2117,7 @@ BEGIN
   FOR UPDATE;
 
   IF _session IS NULL THEN
-    RAISE 'No active session.' USING ERRCODE = '20000';
+    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
   ELSEIF _session.nesting_ > 0 THEN
     UPDATE security_.session_
     SET
@@ -2166,7 +2167,7 @@ DECLARE
   _token security_.token_;
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = '20000';
+    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
   END IF;
 
   UPDATE security_.token_ t
@@ -2211,7 +2212,7 @@ BEGIN
     AND u.password_hash_ = pgcrypto_.crypt(_password, u.password_hash_);
 
   IF _subject_uuid IS NULL THEN
-    RAISE 'Email address and password do not match.' USING ERRCODE = '20000';
+    RAISE 'Email address and password do not match.' USING ERRCODE = 'DPASS';
   END IF;
 
   SELECT x.value_ INTO _secret
@@ -2219,7 +2220,7 @@ BEGIN
   WHERE x.name_ = 'jwt_hs256';
 
   IF _secret IS NULL THEN
-    RAISE 'Invalid secret configuration.' USING ERRCODE = '55000';
+    RAISE 'Invalid secret configuration.' USING ERRCODE = 'DCONF';
   END IF;
 
   INSERT INTO security_.token_ (uuid_, subject_uuid_)
@@ -2463,7 +2464,6 @@ CREATE FUNCTION operation_.update_resource_(_id text, _data jsonb) RETURNS jsonb
 DECLARE
   _resource application_.resource_;
   _resource_definition security_.resource_definition_;
-  _update_list text;
   _owned_resources_data jsonb;
 BEGIN
   SELECT * INTO _resource
@@ -2491,6 +2491,69 @@ $$;
 
 
 ALTER FUNCTION operation_.update_resource_(_id text, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: upsert_resource_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.upsert_resource_(_resource_name text, _data jsonb) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _resource_definition security_.resource_definition_;
+  _resource application_.resource_;
+  _uuid uuid;
+  _id text;
+  _owned_resources_data jsonb;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_ WHERE name_ = _resource_name;
+
+  IF _resource_definition.upsert_keys_ IS NULL THEN
+    RAISE 'Upsert is not supported for this resource.' USING ERRCODE = 'DUPSE';
+  END IF;
+
+  _data := jsonb_strip_nulls(_data);
+
+  SELECT owner_, owned_ INTO _data, _owned_resources_data
+  FROM internal_.extract_referenced_resources_jsonb_(_resource_definition.uuid_, _data);
+
+  _data := internal_.convert_to_internal_format_(_data);
+
+  WITH
+    _keys as (
+      SELECT jsonb_object_agg(k, _data->k) data_
+      FROM unnest(_resource_definition.upsert_keys_) k
+    )
+  SELECT r INTO _resource
+  FROM application_.resource_ r
+  WHERE r.definition_uuid_ = _resource_definition.uuid_
+    AND r.search_ @> _keys.data_;
+
+  IF _resource.uuid_ IS NULL THEN
+    PERFORM security_.control_create_(_resource_definition, _data);
+
+    _uuid := internal_.dynamic_insert_(_resource_definition.table_, _data);
+
+    SELECT id_ INTO _id FROM application_.resource_ WHERE uuid_ = _uuid;
+  ELSE
+    _data = _data - _resource_definition.upsert_keys_;
+
+    PERFORM security_.control_update_(_resource_definition, _resource, _data);
+    PERFORM internal_.dynamic_update_(_resource_definition.table_, _resource.uuid_, _data);
+  END IF;
+
+  _data := operation_.query_resource_(_id);
+
+  SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.table_, _id, r.key, r.value)) INTO _owned_resources_data
+  FROM jsonb_each(_owned_resources_data) r;
+
+  RETURN _data || COALESCE(_owned_resources_data, '{}'::jsonb);
+END
+$$;
+
+
+ALTER FUNCTION operation_.upsert_resource_(_resource_name text, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: agent_can_query_agency_subscription_plan_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3048,7 +3111,7 @@ CREATE FUNCTION policy_.delete_forbidden_(_resource_definition security_.resourc
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  RAISE 'Unauthorized.' USING ERRCODE = '42501';
+  RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
 END
 $$;
 
@@ -3218,7 +3281,7 @@ CREATE FUNCTION policy_.only_owner_can_delete_(_resource_definition security_.re
     AS $$
 BEGIN
   IF NOT internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
   END IF;
 END
 $$;
@@ -4275,7 +4338,7 @@ BEGIN
     WHERE s.type_ = 'user'
       AND s.uuid_ = _resource.uuid_
   ) THEN
-    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
   END IF;
 END
 $$;
@@ -4388,11 +4451,11 @@ DECLARE
   _fields_list text;
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = '20000';
+    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
   END IF;
 
   IF _data IS NULL OR _data = '{}'::jsonb THEN
-    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
   END IF;
 
   _unauthorized_data := internal_.jsonb_strip_values_(_data);
@@ -4431,7 +4494,7 @@ BEGIN
   SELECT string_agg(k, ', ') INTO _fields_list
   FROM jsonb_object_keys(_unauthorized_data) k;
 
-  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = '42501';
+  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = 'DUNAU';
 END
 $_$;
 
@@ -4459,7 +4522,7 @@ BEGIN
     WHERE resource_definition_uuid_ = _resource_definition.uuid_
       AND operation_type_ = 'delete'
   ) THEN
-    RAISE 'Unauthorized. No access policies defined.' USING ERRCODE = '42501';
+    RAISE 'Unauthorized. No access policies defined.' USING ERRCODE = 'DUNAU';
   END IF;
 
   LOOP
@@ -4516,7 +4579,7 @@ DECLARE
   _allow boolean := 'f';
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = '20000';
+    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
   END IF;
 
   FOR _policy IN
@@ -4528,7 +4591,7 @@ BEGIN
   LOOP
     EXECUTE format('SELECT policy_.%1$I($1)', _policy) INTO _deny USING _arg;
     IF _deny THEN
-      RAISE 'Unauthorized.' USING ERRCODE = '42501';
+      RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
     END IF;
   END LOOP;
 
@@ -4546,7 +4609,7 @@ BEGIN
   END LOOP;
 
   IF NOT _allow THEN
-    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
   END IF;
 
   IF (
@@ -4582,7 +4645,7 @@ DECLARE
   _authorized_keys text[] := '{}'::text[];
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = '20000';
+    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
   END IF;
 
   LOOP
@@ -4606,7 +4669,7 @@ BEGIN
   END LOOP;
 
   IF array_length(COALESCE(_authorized_keys, '{}'), 1) = 0 THEN
-    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
   END IF;
 
   SELECT array_agg(DISTINCT k) INTO _authorized_keys
@@ -4634,11 +4697,11 @@ DECLARE
   _fields_list text;
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = '20000';
+    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
   END IF;
 
   IF _data IS NULL OR _data = '{}'::jsonb THEN
-    RAISE 'Unauthorized.' USING ERRCODE = '42501';
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
   END IF;
 
   _unauthorized_data := internal_.jsonb_strip_values_(_data);
@@ -4677,7 +4740,7 @@ BEGIN
   SELECT string_agg(k, ', ') INTO _fields_list
   FROM jsonb_object_keys(_unauthorized_data) k;
 
-  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = '42501';
+  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = 'DUNAU';
 END
 $_$;
 
@@ -6119,6 +6182,7 @@ CREATE TABLE security__audit_.resource_definition_ (
     table_ regclass,
     owner_uuid_ uuid,
     search_ text[],
+    upsert_keys_ text[],
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -6539,33 +6603,33 @@ da286841-dd4c-4a92-a772-253bce497514	visitor_	9506e0e9-ee4a-4442-968a-76d9de05d2
 -- Data for Name: resource_definition_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.resource_definition_ (uuid_, id_prefix_, name_, table_, owner_uuid_, search_, audit_at_, audit_session_uuid_) FROM stdin;
-e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	{uuid_,name_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,name_,subdomain_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	img	image	application_.image_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,email_address_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-3b56d171-3e69-41ca-9a98-d1a3abc9170b	su	sign up	application_.sign_up_	\N	{verification_code_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_reset_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{verification_code_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-7f589215-bdc7-4664-99c6-b7745349c352	prod	product	application_.product_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,url_name_,agency_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-d8f70962-229d-49eb-a99e-7c35a55719d5	md	markdown	application_.markdown_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-b54431c5-bbc4-47b6-9810-0a627e49cfe5	member	membership	application_.membership_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,user_uuid_,subdomain_uuid_,access_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,product_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	notidef	notification definition	application_.notification_definition_	\N	{uuid_,name_,stripe_event_,feed_notification_enabled_,email_notifications_enabled_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-f8e2c163-8ebf-45dc-90b8-b850e1590c7c	set	user notification setting	application_.user_notification_setting_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{uuid_,user_uuid_,subdomain_uuid_,notification_definition_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-8248bebc-96c3-4f72-83df-ad4c68184470	form	form	internal_.form_	\N	{uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-6549cc83-4ce3-423d-88e1-263ac227608d	set	agency thank you page setting	application_.agency_thank_you_page_setting_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,url_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-e61bae44-071d-4f80-9f53-c639f9b48661	pblkdef	page block definition	internal_.page_block_definition_	cbe96769-7f38-4220-82fb-c746c634bc99	{uuid_,name_,page_definition_uuid_,form_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-34f873e1-b837-4f1f-94d7-7bacf9c43d8d	set	product thank you page setting	application_.product_thank_you_page_setting_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,product_uuid_,url_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-c042e657-0005-42a1-b3c2-6ee25d62fb33	formfld	form field	internal_.form_field_	8248bebc-96c3-4f72-83df-ad4c68184470	{uuid_,name_,form_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-bc2e81b9-be64-4068-ad32-3ed89151bbfa	pblk	page block	application_.page_block_	08b16cec-4d78-499a-a092-91fc2d360f86	{uuid_,page_block_definition_uuid_,page_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-76b04264-d560-48af-b49b-4440e96d3fc3	txnfee	transaction fee	internal_.transaction_fee_	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	{uuid_,subscription_plan_uuid_,transaction_amount_upper_bound_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_definition_	\N	{uuid_,name_,url_path_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-08b16cec-4d78-499a-a092-91fc2d360f86	page	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,product_uuid_,url_path_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,stripe_id_ext_,livemode_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-35bee174-fde7-4ae2-9cb2-4469b3eb8de5	subplan	subscription plan	internal_.subscription_plan_	\N	{uuid_,name_,stripe_prod_id_ext_live_,stripe_prod_id_ext_test_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000
-3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	2021-01-16 08:33:30.381138+00	00000000-0000-0000-0000-000000000000
-58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	2021-02-01 17:32:21.189865+00	00000000-0000-0000-0000-000000000000
+COPY security_.resource_definition_ (uuid_, id_prefix_, name_, table_, owner_uuid_, search_, upsert_keys_, audit_at_, audit_session_uuid_) FROM stdin;
+e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	{uuid_,name_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,name_,subdomain_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	img	image	application_.image_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,email_address_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+3b56d171-3e69-41ca-9a98-d1a3abc9170b	su	sign up	application_.sign_up_	\N	{verification_code_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_reset_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{verification_code_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+7f589215-bdc7-4664-99c6-b7745349c352	prod	product	application_.product_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,url_name_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+d8f70962-229d-49eb-a99e-7c35a55719d5	md	markdown	application_.markdown_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+b54431c5-bbc4-47b6-9810-0a627e49cfe5	member	membership	application_.membership_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,user_uuid_,subdomain_uuid_,access_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,product_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	notidef	notification definition	application_.notification_definition_	\N	{uuid_,name_,stripe_event_,feed_notification_enabled_,email_notifications_enabled_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+f8e2c163-8ebf-45dc-90b8-b850e1590c7c	set	user notification setting	application_.user_notification_setting_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{uuid_,user_uuid_,subdomain_uuid_,notification_definition_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+8248bebc-96c3-4f72-83df-ad4c68184470	form	form	internal_.form_	\N	{uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+6549cc83-4ce3-423d-88e1-263ac227608d	set	agency thank you page setting	application_.agency_thank_you_page_setting_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,url_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+e61bae44-071d-4f80-9f53-c639f9b48661	pblkdef	page block definition	internal_.page_block_definition_	cbe96769-7f38-4220-82fb-c746c634bc99	{uuid_,name_,page_definition_uuid_,form_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+34f873e1-b837-4f1f-94d7-7bacf9c43d8d	set	product thank you page setting	application_.product_thank_you_page_setting_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,product_uuid_,url_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+c042e657-0005-42a1-b3c2-6ee25d62fb33	formfld	form field	internal_.form_field_	8248bebc-96c3-4f72-83df-ad4c68184470	{uuid_,name_,form_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+bc2e81b9-be64-4068-ad32-3ed89151bbfa	pblk	page block	application_.page_block_	08b16cec-4d78-499a-a092-91fc2d360f86	{uuid_,page_block_definition_uuid_,page_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+76b04264-d560-48af-b49b-4440e96d3fc3	txnfee	transaction fee	internal_.transaction_fee_	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	{uuid_,subscription_plan_uuid_,transaction_amount_upper_bound_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_definition_	\N	{uuid_,name_,url_path_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+08b16cec-4d78-499a-a092-91fc2d360f86	page	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,product_uuid_,url_path_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,stripe_id_ext_,livemode_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+35bee174-fde7-4ae2-9cb2-4469b3eb8de5	subplan	subscription plan	internal_.subscription_plan_	\N	{uuid_,name_,stripe_prod_id_ext_live_,stripe_prod_id_ext_test_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
+58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -6640,35 +6704,33 @@ da286841-dd4c-4a92-a772-253bce497514	visitor_	9506e0e9-ee4a-4442-968a-76d9de05d2
 -- Data for Name: resource_definition_; Type: TABLE DATA; Schema: security__audit_; Owner: postgres
 --
 
-COPY security__audit_.resource_definition_ (uuid_, id_prefix_, name_, table_, owner_uuid_, search_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
-e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	{uuid_,name_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,name_,subdomain_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	img	image	application_.image_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,email_address_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-3b56d171-3e69-41ca-9a98-d1a3abc9170b	su	sign up	application_.sign_up_	\N	{verification_code_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_reset_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{verification_code_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-7f589215-bdc7-4664-99c6-b7745349c352	prod	product	application_.product_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,url_name_,agency_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-d8f70962-229d-49eb-a99e-7c35a55719d5	md	markdown	application_.markdown_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-b54431c5-bbc4-47b6-9810-0a627e49cfe5	member	membership	application_.membership_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,user_uuid_,subdomain_uuid_,access_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,product_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	notidef	notification definition	application_.notification_definition_	\N	{uuid_,name_,stripe_event_,feed_notification_enabled_,email_notifications_enabled_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-f8e2c163-8ebf-45dc-90b8-b850e1590c7c	set	user notification setting	application_.user_notification_setting_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{uuid_,user_uuid_,subdomain_uuid_,notification_definition_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-8248bebc-96c3-4f72-83df-ad4c68184470	form	form	internal_.form_	\N	{uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-6549cc83-4ce3-423d-88e1-263ac227608d	set	agency thank you page setting	application_.agency_thank_you_page_setting_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,url_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-e61bae44-071d-4f80-9f53-c639f9b48661	pblkdef	page block definition	internal_.page_block_definition_	cbe96769-7f38-4220-82fb-c746c634bc99	{uuid_,name_,page_definition_uuid_,form_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-34f873e1-b837-4f1f-94d7-7bacf9c43d8d	set	product thank you page setting	application_.product_thank_you_page_setting_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,product_uuid_,url_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-c042e657-0005-42a1-b3c2-6ee25d62fb33	formfld	form field	internal_.form_field_	8248bebc-96c3-4f72-83df-ad4c68184470	{uuid_,name_,form_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-bc2e81b9-be64-4068-ad32-3ed89151bbfa	pblk	page block	application_.page_block_	08b16cec-4d78-499a-a092-91fc2d360f86	{uuid_,page_block_definition_uuid_,page_uuid_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-76b04264-d560-48af-b49b-4440e96d3fc3	txnfee	transaction fee	internal_.transaction_fee_	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	{uuid_,subscription_plan_uuid_,transaction_amount_upper_bound_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_definition_	\N	{uuid_,name_,url_path_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-08b16cec-4d78-499a-a092-91fc2d360f86	page	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,product_uuid_,url_path_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,stripe_id_ext_,livemode_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-35bee174-fde7-4ae2-9cb2-4469b3eb8de5	subplan	subscription plan	internal_.subscription_plan_	\N	{uuid_,name_,stripe_prod_id_ext_live_,stripe_prod_id_ext_test_}	2021-01-09 12:44:40.096254+00	00000000-0000-0000-0000-000000000000	I
-3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	2021-01-16 08:33:30.381138+00	00000000-0000-0000-0000-000000000000	I
-58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook_event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,agency_uuid_}	2021-01-29 16:56:51.091526+00	00000000-0000-0000-0000-000000000000	I
-58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,agency_uuid_}	2021-01-29 16:58:45.009777+00	00000000-0000-0000-0000-000000000000	U
-58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	2021-02-01 17:32:21.189865+00	00000000-0000-0000-0000-000000000000	U
+COPY security__audit_.resource_definition_ (uuid_, id_prefix_, name_, table_, owner_uuid_, search_, upsert_keys_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
+e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	{uuid_,name_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+957c84e9-e472-4ec3-9dc6-e1a828f6d07f	agcy	agency	application_.agency_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,name_,subdomain_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+88bcb8b1-3826-4bcd-81af-ce4f683c5285	theme	theme	application_.theme_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	img	image	application_.image_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,email_address_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+3b56d171-3e69-41ca-9a98-d1a3abc9170b	su	sign up	application_.sign_up_	\N	{verification_code_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_reset_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{verification_code_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+7f589215-bdc7-4664-99c6-b7745349c352	prod	product	application_.product_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,url_name_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+d8f70962-229d-49eb-a99e-7c35a55719d5	md	markdown	application_.markdown_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+b54431c5-bbc4-47b6-9810-0a627e49cfe5	member	membership	application_.membership_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,user_uuid_,subdomain_uuid_,access_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,product_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	notidef	notification definition	application_.notification_definition_	\N	{uuid_,name_,stripe_event_,feed_notification_enabled_,email_notifications_enabled_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+f8e2c163-8ebf-45dc-90b8-b850e1590c7c	set	user notification setting	application_.user_notification_setting_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{uuid_,user_uuid_,subdomain_uuid_,notification_definition_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+8248bebc-96c3-4f72-83df-ad4c68184470	form	form	internal_.form_	\N	{uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+6549cc83-4ce3-423d-88e1-263ac227608d	set	agency thank you page setting	application_.agency_thank_you_page_setting_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,url_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+e61bae44-071d-4f80-9f53-c639f9b48661	pblkdef	page block definition	internal_.page_block_definition_	cbe96769-7f38-4220-82fb-c746c634bc99	{uuid_,name_,page_definition_uuid_,form_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+34f873e1-b837-4f1f-94d7-7bacf9c43d8d	set	product thank you page setting	application_.product_thank_you_page_setting_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,product_uuid_,url_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+c042e657-0005-42a1-b3c2-6ee25d62fb33	formfld	form field	internal_.form_field_	8248bebc-96c3-4f72-83df-ad4c68184470	{uuid_,name_,form_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+bc2e81b9-be64-4068-ad32-3ed89151bbfa	pblk	page block	application_.page_block_	08b16cec-4d78-499a-a092-91fc2d360f86	{uuid_,page_block_definition_uuid_,page_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+76b04264-d560-48af-b49b-4440e96d3fc3	txnfee	transaction fee	internal_.transaction_fee_	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	{uuid_,subscription_plan_uuid_,transaction_amount_upper_bound_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_definition_	\N	{uuid_,name_,url_path_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+08b16cec-4d78-499a-a092-91fc2d360f86	page	page	application_.page_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,product_uuid_,url_path_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+3c7e93d6-b141-423a-a7e9-e11a734b3474	stripe	stripe account	application_.stripe_account_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,stripe_id_ext_,livemode_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+35bee174-fde7-4ae2-9cb2-4469b3eb8de5	subplan	subscription plan	internal_.subscription_plan_	\N	{uuid_,name_,stripe_prod_id_ext_live_,stripe_prod_id_ext_test_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
+58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
