@@ -1,6 +1,6 @@
 {
   "name": "@duely/db",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Client for querying duely-postgres database.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",

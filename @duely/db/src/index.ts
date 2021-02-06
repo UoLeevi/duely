@@ -315,6 +315,29 @@ export async function createResource<R = any, I extends Record<string, any> = Re
   );
 }
 
+export async function upsertResource<R = any, I extends Record<string, any> = Record<string, any>>(
+  context: Context,
+  resource_name: string,
+  data: I
+): Promise<R>;
+export async function upsertResource<R = any, I extends Record<string, any> = Record<string, any>>(
+  client: ClientBase,
+  resource_name: string,
+  data: I
+): Promise<R>;
+export async function upsertResource<R = any, I extends Record<string, any> = Record<string, any>>(
+  arg: Context | ClientBase,
+  resource_name: string,
+  data: I
+): Promise<R> {
+  return await query<R, [string, I]>(
+    arg as any /* Context | ClientBase */,
+    'SELECT * FROM operation_.upsert_resource_($1::text, $2::jsonb)',
+    resource_name,
+    data
+  );
+}
+
 export async function updateResource<R = any, I extends Record<string, any> = Record<string, any>>(
   context: Context,
   id: string,
@@ -381,6 +404,12 @@ function useFunctions(client: ClientBase) {
       data: I
     ): Promise<R> {
       return await createResource(client, resource_name, data);
+    },
+    async upsertResource<R = any, I extends Record<string, any> = Record<string, any>>(
+      resource_name: string,
+      data: I
+    ): Promise<R> {
+      return await upsertResource(client, resource_name, data);
     },
     async updateResource<R = any, I extends Record<string, any> = Record<string, any>>(
       id: string,

@@ -3,7 +3,44 @@ import cors from 'cors';
 import stripe from './stripe';
 import { GraphQLClient } from 'graphql-request';
 import Stripe from 'stripe';
-import { createResource, serviceAccountContextPromise, queryResource } from '@duely/db';
+import {
+  createResource,
+  serviceAccountContextPromise,
+  queryResource,
+  getDbErrorCode,
+  updateResource,
+  withSession
+} from '@duely/db';
+import { Awaited } from '@duely/core';
+
+type ProcessingState = 'pending' | 'processing' | 'processed' | 'failed';
+
+async function updateWebhookEventState(
+  context: Awaited<typeof serviceAccountContextPromise>,
+  webhook_event_id: string,
+  state: ProcessingState
+): Promise<void>;
+async function updateWebhookEventState(
+  context: Awaited<typeof serviceAccountContextPromise>,
+  webhook_event_id: string,
+  err: Error
+): Promise<void>;
+async function updateWebhookEventState(
+  context: Awaited<typeof serviceAccountContextPromise>,
+  webhook_event_id: string,
+  arg: ProcessingState | Error
+): Promise<void> {
+  if (typeof arg === 'string') {
+    const state = arg;
+    await updateResource(context, webhook_event_id, { state });
+  } else {
+    const err = arg;
+    await updateResource(context, webhook_event_id, {
+      state: 'failed',
+      error: err.toString()
+    });
+  }
+}
 
 let client: GraphQLClient;
 let context: {
@@ -37,12 +74,12 @@ async function createGraphQLClient() {
 }
 
 // see: https://stripe.com/docs/webhooks
-
+// see: https://stripe.com/docs/api/events/types
 async function handle_webhook(req: Request, res: Response) {
   const { source } = req.params;
   const { livemode }: { livemode: boolean } = JSON.parse(req.body);
   let event: Stripe.Event;
-  let agency_id = null;
+  let agency_id: string | null = null;
 
   try {
     switch (source) {
@@ -88,8 +125,18 @@ async function handle_webhook(req: Request, res: Response) {
     }
   }
 
+  let webhook_event: {
+    id: string;
+    id_ext: string;
+    source: string;
+    livemode: boolean;
+    data: object;
+    state: string;
+    agency_id?: string | null;
+  };
+
   try {
-    await createResource(context, 'webhook event', {
+    webhook_event = await createResource(context, 'webhook event', {
       id_ext: event.id,
       source,
       livemode,
@@ -98,15 +145,81 @@ async function handle_webhook(req: Request, res: Response) {
       agency_id
     });
   } catch (err) {
-    res.status(400).send(`Error while storing the event: ${err.message}`);
+    if (getDbErrorCode(err) === 'unique_violation') {
+      console.log(`Duplicate webhook event received: source: ${source}, id_ext: ${event.id}`);
+      res.json({ received: true, message: 'already processed' });
+    } else {
+      res.status(400).send(`Error while storing the event: ${err.message}`);
+    }
     return;
   }
 
-  // Handle the event
-  switch (event.type) {
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
-
+  // Send OK response
   res.json({ received: true });
+
+  // Handle the event
+  switch (source) {
+    case 'stripe-agency': {
+      switch (event.type) {
+        case 'customer.created': {
+          const stripe_customer = event.data.object as Stripe.Customer;
+          // check if customer creation is already processed
+          if (stripe_customer.metadata.creation_mode === 'api') {
+            await updateWebhookEventState(context, webhook_event.id, 'processed');
+            break;
+          }
+
+          const email_address = stripe_customer.email;
+
+          if (!email_address) {
+            await updateWebhookEventState(context, webhook_event.id, 'processed');
+            break;
+          }
+
+          try {
+            await updateWebhookEventState(context, webhook_event.id, 'processing');
+            await withSession(context, async ({ queryResource, createResource }) => {
+              const { id: stripe_account_id } = await queryResource('stripe account', {
+                stripe_id_ext: event.account,
+                livemode
+              });
+
+              const customer = await queryResource('customer', {
+                stripe_account_id,
+                email_address
+              });
+
+              if (customer) return;
+
+              await createResource('customer', {
+                stripe_account_id,
+                email_address,
+                name: stripe_customer.name,
+                default_stripe_id_ext: stripe_customer.id
+              });
+            });
+            await updateWebhookEventState(context, webhook_event.id, 'processed');
+          } catch (err) {
+            await updateWebhookEventState(context, webhook_event.id, err);
+          }
+
+          break;
+        }
+
+        default:
+          console.log(`Unhandled event type ${event.type}`);
+          await updateWebhookEventState(context, webhook_event.id, 'processed');
+      }
+      break;
+    }
+
+    case 'stripe-platform': {
+      switch (event.type) {
+        default:
+          console.log(`Unhandled event type ${event.type}`);
+          await updateWebhookEventState(context, webhook_event.id, 'processed');
+      }
+      break;
+    }
+  }
 }

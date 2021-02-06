@@ -38,6 +38,8 @@ export function getDbErrorCode(err: Error) {
       return 'duely__incorrect_password';
     case 'DUNAU': // Unauthorized.
       return 'duely__unauthorized';
+    case 'DUPSE': // Upsert is not allowed for this resource.
+      return 'duely__upsert_not_allowed'
 
     // Unhandled cases
     default:
