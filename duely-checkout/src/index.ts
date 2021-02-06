@@ -3,26 +3,7 @@ import cors from 'cors';
 import fs from 'fs';
 import validator from 'validator';
 import { GraphQLClient, gql } from 'graphql-request';
-
-const gql_begin_visit = gql`
-  mutation {
-    begin_visit {
-      success
-      jwt
-      message
-    }
-  }
-`;
-
-const gql_log_in_serviceaccount = gql`
-  mutation($password: String!) {
-    log_in(email_address: "serviceaccount@duely.app", password: $password) {
-      success
-      jwt
-      message
-    }
-  }
-`;
+import { serviceAccountContextPromise } from '@duely/db';
 
 const gql_subdomain = gql`
   query($subdomain_name: String!, $livemode: Boolean) {
@@ -65,8 +46,12 @@ setupEnvironment();
 main();
 
 let client: GraphQLClient;
+let context: {
+    jwt: string;
+  };
 
 async function main() {
+  context = await serviceAccountContextPromise;
   client = await createGraphQLClient();
   const app = express();
   app.set('trust proxy', true);
@@ -81,26 +66,12 @@ async function main() {
 }
 
 async function createGraphQLClient() {
-  const endpoint = 'https://api.duely.app/graphql';
-  const client = new GraphQLClient(endpoint);
-  const { begin_visit } = await client.request(gql_begin_visit);
-
-  if (!begin_visit.success) {
-    throw new Error('Unable to get access token.');
-  }
-
-  client.setHeader('authorization', `Bearer ${begin_visit.jwt}`);
-
-  const { log_in } = await client.request(gql_log_in_serviceaccount, {
-    password: process.env.DUELY_SERVICE_ACCOUNT_PASSWORD
-  });
-
-  if (!log_in.success) {
-    throw new Error('Unable to get access token.');
-  }
-
-  client.setHeader('authorization', `Bearer ${log_in.jwt}`);
-  return client;
+    const endpoint = 'https://api.duely.app/graphql';
+    return new GraphQLClient(endpoint, {
+      headers: {
+        authorization: `Bearer ${context.jwt}`
+      }
+    });
 }
 
 function setupEnvironment() {

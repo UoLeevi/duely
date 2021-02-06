@@ -3,7 +3,7 @@ import cors from 'cors';
 import stripe from './stripe';
 import { GraphQLClient } from 'graphql-request';
 import Stripe from 'stripe';
-import { createResource, fetchServiceAccountContext, queryResource } from '@duely/db';
+import { createResource, serviceAccountContextPromise, queryResource } from '@duely/db';
 
 let client: GraphQLClient;
 let context: {
@@ -13,7 +13,7 @@ let context: {
 main();
 
 async function main() {
-  context = await fetchServiceAccountContext();
+  context = await serviceAccountContextPromise;
   client = await createGraphQLClient();
   const app = express();
   app.set('trust proxy', true);
