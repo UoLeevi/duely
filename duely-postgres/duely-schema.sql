@@ -3929,7 +3929,7 @@ CREATE FUNCTION policy_.serviceaccount_can_change_customer_(_resource_definition
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
     RETURN '{name_, email_address_, default_stripe_id_ext_, user_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
@@ -3967,7 +3967,7 @@ CREATE FUNCTION policy_.serviceaccount_can_change_webhook_event_(_resource_defin
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
     RETURN '{state_, error_}'::text[];
   ELSE
     RETURN '{}'::text[];

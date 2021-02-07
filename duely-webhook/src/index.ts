@@ -200,6 +200,7 @@ async function handle_webhook(req: Request, res: Response) {
             });
             await updateWebhookEventState(context, webhook_event.id, 'processed');
           } catch (err) {
+            console.error(`Webhook event processing failed:\n${err}`);
             await updateWebhookEventState(context, webhook_event.id, err);
           }
 
