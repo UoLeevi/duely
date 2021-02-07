@@ -8,7 +8,7 @@ export const routes = [
     component: DashboardCustomersCreateCustomer
   },
   {
-    path: '/dashboard/customers/:customer_url_name/edit',
+    path: '/dashboard/customers/:customer_id/edit',
     component: DashboardCustomersEditCustomer
   },
   {
