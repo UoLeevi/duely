@@ -2373,7 +2373,8 @@ BEGIN
       )
     SELECT internal_.convert_from_internal_format_(all_.data_) query_resource_all_
     FROM all_
-    WHERE all_.data_ @> _containing;
+    WHERE all_.data_ @> _containing
+    ORDER BY (all_.data_->>'sort_key_')::real;
 END
 $$;
 

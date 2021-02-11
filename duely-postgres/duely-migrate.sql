@@ -14,55 +14,37 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-DROP TRIGGER tr_before_insert_or_update_update_form_field_linked_list_ ON internal_.form_field_;
-DROP FUNCTION internal_.update_form_field_linked_list_;
-
-CALL internal_.drop_auditing_('internal_.form_field_');
-ALTER TABLE internal_.form_field_ DROP COLUMN after_uuid_;
-ALTER TABLE internal_.form_field_ ADD COLUMN sort_key_ real;
-
-WITH
-  s AS (
-    SELECT s.uuid_, ROW_NUMBER() OVER (PARTITION BY s.form_uuid_) sort_key_
-    FROM internal_.form_field_ s
-    ORDER BY s.uuid_
-  )
-UPDATE internal_.form_field_ f
-SET sort_key_ = s.sort_key_
-FROM s
-WHERE s.uuid_ = f.uuid_;
-
-ALTER TABLE internal_.form_field_ ADD UNIQUE (form_uuid_, sort_key_);
-
-CREATE FUNCTION internal_.set_form_field_sort_key_() RETURNS trigger
-    LANGUAGE plpgsql
+CREATE OR REPLACE FUNCTION operation_.query_resource_all_(_resource_name text, _containing jsonb) RETURNS SETOF jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
     AS $$
-DECLARE
-  _sort_key real;
 BEGIN
-  IF NEW.sort_key_ IS NULL THEN
-    SELECT MAX(s.sort_key_) + 1 INTO _sort_key
-    FROM internal_.form_field_ s
-    WHERE s.form_uuid_ = NEW.form_uuid_;
-
-    NEW.sort_key_ = _sort_key;
+  IF _containing = '{}'::jsonb THEN
+    RETURN;
   END IF;
 
-  RETURN NEW;
+  IF _containing - 'id' = '{}'::jsonb THEN
+    RETURN QUERY
+      SELECT operation_.query_resource_(_containing->>'id');
+  END IF;
+
+  _containing := internal_.convert_to_internal_format_(_containing);
+
+  RETURN QUERY
+    WITH
+      all_ AS (
+        SELECT internal_.dynamic_select_(d.table_, r.uuid_, keys_) data_
+        FROM application_.resource_ r
+        JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+        CROSS JOIN security_.control_query_(d, r) keys_
+        WHERE d.name_ = _resource_name
+          AND r.search_ @> _containing
+      )
+    SELECT internal_.convert_from_internal_format_(all_.data_) query_resource_all_
+    FROM all_
+    WHERE all_.data_ @> _containing
+    ORDER BY (all_.data_->>'sort_key_')::real;
 END
 $$;
-
-CREATE TRIGGER tr_before_insert_set_sort_key_ BEFORE INSERT ON internal_.form_field_ FOR EACH ROW EXECUTE FUNCTION internal_.set_form_field_sort_key_();
-
-CALL internal_.setup_auditing_('internal_.form_field_');
-
-CREATE OR REPLACE FUNCTION policy_.anyone_can_query_form_field_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE sql STABLE SECURITY DEFINER
-    AS $$
-  SELECT '{uuid_, name_, label_, type_, form_uuid_, sort_key_, default_}'::text[];
-$$;
-
-ALTER TABLE internal_.form_field_ ALTER COLUMN sort_key_ SET NOT NULL;
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
