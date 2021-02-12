@@ -53,7 +53,7 @@ export default function DashboardCustomersHome() {
         {
           key: 'edit',
           className:
-            'className="text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
+            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
           children: (
             <div className="flex items-center space-x-2">
               <BsPencilSquare />
@@ -65,7 +65,7 @@ export default function DashboardCustomersHome() {
         {
           key: 'delete',
           className:
-            'className="text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
+            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
           children: (
             <div className="flex items-center space-x-2">
               <BsTrash />

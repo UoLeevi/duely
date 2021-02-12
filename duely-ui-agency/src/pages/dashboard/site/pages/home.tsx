@@ -12,6 +12,7 @@ import { BsPencilSquare } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 import { DashboardSection } from '../../components';
 import { ColoredChip } from '../../components/ColoredChip';
+import { ConfirmPagePublishModal } from './components';
 
 type TItem = NonNullable<ReturnType<typeof agency_pages_Q.result>> extends readonly (infer T)[]
   ? T
@@ -40,7 +41,11 @@ function PageColumn(page: TItem) {
       <div className="flex flex-col space-y-1">
         <span className="font-medium">{page.definition.name} page</span>
         {loading && <SkeletonText className="text-sm" />}
-        {!loading && <Link to={path!} className="text-sm font-medium text-gray-500">{path}</Link>}
+        {!loading && (
+          <Link to={path!} className="text-sm font-medium text-gray-500">
+            {path}
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -91,7 +96,7 @@ export default function DashboardSitePagesHome() {
         {
           key: 'edit',
           className:
-            'className="text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
+            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
           children: (
             <div className="flex items-center space-x-2">
               <BsPencilSquare />
@@ -99,6 +104,37 @@ export default function DashboardSitePagesHome() {
             </div>
           ),
           to: `pages/${page.id}`
+        },
+        {
+          key: 'publish',
+          className:
+            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
+          children: (
+            <div className="flex items-center space-x-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+              <span>{page.access === 'PUBLIC' ? 'Unpublish' : 'Publish'}</span>
+            </div>
+          ),
+          to: (page.access === 'PUBLIC' ? '?unpublish=' : '?publish=') + page.id
         }
       ];
 
@@ -125,6 +161,8 @@ export default function DashboardSitePagesHome() {
           <Table rows={rows} columns={columns} headers={headers} wrap={wrap} />
         </Card>
       </DashboardSection>
+
+      <ConfirmPagePublishModal />
     </>
   );
 }
