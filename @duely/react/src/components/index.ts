@@ -9,5 +9,5 @@ export * from './Table';
 export * from './DropMenu';
 export * from './Card';
 export * from './skeletons';
-export * from './Modal';
-export * from './Button';
+export * from './modals';
+export * from './buttons';

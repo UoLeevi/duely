@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useMutation, start_password_reset_M } from '@duely/client';
 import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '../../forms';
-import { Button } from '../../Button';
+import { Button } from '../../buttons';
 import { Util } from '../../../util';
 
 type StartPasswordResetFormValues = {

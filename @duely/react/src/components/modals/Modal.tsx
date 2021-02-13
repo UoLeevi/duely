@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef } from 'react';
-import { Util } from '../util';
-import { ScreenOverlayContext } from '../contexts';
+import { Util } from '../../util';
+import { ScreenOverlayContext } from '../../contexts';
 import ReactDOM from 'react-dom';
 import { Transition } from '@headlessui/react';
 
