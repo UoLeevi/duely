@@ -98,7 +98,7 @@ export default function DashboardCustomersHome() {
         title="Customers"
         actions={
           <div className="flex flex-row justify-end">
-            <Button dense className="text-sm text-white bg-green-500">
+            <Button dense color="green" className="text-sm">
               <Link to="customers/new-customer" className="flex space-x-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

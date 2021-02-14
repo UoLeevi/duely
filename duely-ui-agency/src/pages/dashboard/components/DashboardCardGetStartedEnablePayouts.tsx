@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, useDynamicNavigation } from '@duely/react';
+import { AnchorButton, Card, useDynamicNavigation } from '@duely/react';
 import {
   agency_stripe_account_update_url_Q,
   current_agency_Q,
@@ -24,13 +24,15 @@ export function DashboardCardGetStartedEnablePayouts() {
       <p className="flex-1 text-sm font-medium text-gray-600">
         To receive payouts, set up your payment details at Stripe.
       </p>
-      <a
+      <AnchorButton
+        dense
         href="https://connect.stripe.com/setup/c/xxxxxxxxxxxx"
         onClick={navigateToStripeAccountUpdate}
-        className="px-6 py-2 font-medium text-white bg-indigo-500 rounded-md shadow-sm"
+        color="indigo"
+        className="text-sm"
       >
         Set up payments
-      </a>
+      </AnchorButton>
     </Card>
   );
 }

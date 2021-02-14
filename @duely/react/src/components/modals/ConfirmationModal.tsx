@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { Modal } from './Modal';
 import { Button } from '../buttons';
 import { SkeletonParagraph } from '../skeletons';
@@ -9,18 +9,33 @@ type ConfirmationModalProps = {
   children: React.ReactNode;
   icon?: React.ReactNode;
   loading?: boolean;
-  confirm: (e: React.MouseEvent) => void;
+  confirm: (e: React.MouseEvent) => void | Promise<void>;
   cancel: (e: React.MouseEvent) => void;
-  confirmClassName?: string;
   confirmText?: React.ReactNode;
+  color?: 'indigo' | 'red' | 'green'
 };
 
-export function ConfirmationModal({ show, heading, icon, children, loading, confirm, cancel, confirmClassName, confirmText }: ConfirmationModalProps) {
+const iconCircleClassName = {
+  indigo: 'text-indigo-600 bg-indigo-100',
+  red: 'text-red-700 bg-red-100', 
+  green: 'text-green-600 bg-green-100'
+}
+
+export function ConfirmationModal({ show, heading, color, icon, children, loading, confirm, cancel, confirmText }: ConfirmationModalProps) {
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const confirmCallback = useCallback(async (e: React.MouseEvent) => {
+    setConfirmLoading(true);
+    await confirm(e);
+    setConfirmLoading(false);
+  }, [confirm]);
+
+  color = color ?? 'indigo';
+  
   return (
     <Modal show={show} className="max-w-lg rounded-lg">
       <div className="flex p-6 space-x-4 bg-white rounded-t-lg">
         {icon && (
-          <div className="grid w-10 h-10 text-xl rounded-full place-items-center">
+          <div className={`grid w-10 h-10 text-xl rounded-full place-items-center ${iconCircleClassName[color]}`}>
             {icon}
           </div>
         )}
@@ -36,11 +51,11 @@ export function ConfirmationModal({ show, heading, icon, children, loading, conf
       <div className="flex flex-row-reverse px-6 py-4 space-x-4 space-x-reverse text-sm font-medium text-white rounded-b-lg bg-gray-50">
         <Button
           type="button"
-          onClick={confirm}
+          onClick={confirmCallback}
           dense
-          loading={loading}
+          loading={confirmLoading}
           spinner
-          className={confirmClassName ?? 'bg-indigo-600 hover:bg-indigo-700'}
+          color={color}
         >
           { confirmText ?? 'Confirm' }
         </Button>
@@ -48,7 +63,7 @@ export function ConfirmationModal({ show, heading, icon, children, loading, conf
           type="button"
           onClick={cancel}
           dense
-          className="text-gray-600 border-gray-300 bg-gray-50 hover:bg-gray-100"
+          color="gray"
         >
           Cancel
         </Button>
