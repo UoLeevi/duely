@@ -162,48 +162,12 @@ async function handle_webhook(req: Request, res: Response) {
     case 'stripe-agency': {
       switch (event.type) {
         case 'customer.created': {
-          const stripe_customer = event.data.object as Stripe.Customer;
-          // check if customer creation is already processed
-          if (stripe_customer.metadata.creation_mode === 'api') {
-            await updateWebhookEventState(context, webhook_event.id, 'processed');
-            break;
-          }
+          await handle_event_stripe_agency_customer_created(webhook_event.id, event);
+          break;
+        }
 
-          const email_address = stripe_customer.email;
-
-          if (!email_address) {
-            await updateWebhookEventState(context, webhook_event.id, 'processed');
-            break;
-          }
-
-          try {
-            await updateWebhookEventState(context, webhook_event.id, 'processing');
-            await withSession(context, async ({ queryResource, createResource }) => {
-              const { id: stripe_account_id } = await queryResource('stripe account', {
-                stripe_id_ext: event.account,
-                livemode
-              });
-
-              const customer = await queryResource('customer', {
-                stripe_account_id,
-                email_address
-              });
-
-              if (customer) return;
-
-              await createResource('customer', {
-                stripe_account_id,
-                email_address,
-                name: stripe_customer.name,
-                default_stripe_id_ext: stripe_customer.id
-              });
-            });
-            await updateWebhookEventState(context, webhook_event.id, 'processed');
-          } catch (err) {
-            console.error(`Webhook event processing failed:\n${err}`);
-            await updateWebhookEventState(context, webhook_event.id, err);
-          }
-
+        case 'checkout.session.completed': {
+          await handle_event_stripe_agency_checkout_session_completed(webhook_event.id, event);
           break;
         }
 
@@ -223,4 +187,59 @@ async function handle_webhook(req: Request, res: Response) {
       break;
     }
   }
+}
+
+async function handle_event_stripe_agency_customer_created(webhook_event_id: string, event: Stripe.Event) {
+  const stripe_customer = event.data.object as Stripe.Customer;
+  // check if customer creation is already processed
+  if (stripe_customer.metadata.creation_mode === 'api') {
+    await updateWebhookEventState(context, webhook_event_id, 'processed');
+    return;
+  }
+
+  const email_address = stripe_customer.email;
+
+  if (!email_address) {
+    await updateWebhookEventState(context, webhook_event_id, 'processed');
+    return;
+  }
+
+  try {
+    await updateWebhookEventState(context, webhook_event_id, 'processing');
+    await withSession(context, async ({ queryResource, createResource }) => {
+      const { id: stripe_account_id } = await queryResource('stripe account', {
+        stripe_id_ext: event.account,
+        livemode: event.livemode
+      });
+
+      const customer = await queryResource('customer', {
+        stripe_account_id,
+        email_address
+      });
+
+      if (customer) return;
+
+      await createResource('customer', {
+        stripe_account_id,
+        email_address,
+        name: stripe_customer.name,
+        default_stripe_id_ext: stripe_customer.id
+      });
+    });
+    await updateWebhookEventState(context, webhook_event_id, 'processed');
+  } catch (err) {
+    console.error(`Webhook event processing failed:\n${err}`);
+    await updateWebhookEventState(context, webhook_event_id, err);
+  }
+}
+
+// https://stripe.com/docs/payments/checkout/fulfill-orders
+// TODO:
+// 1. get customer and purchased products
+// 2. create order
+// 3. wait that payment has succeeded
+// 4. start whatever happens then
+async function handle_event_stripe_agency_checkout_session_completed(webhook_event_id: string, event: Stripe.Event) {
+  const session = event.data.object as Stripe.Checkout.Session;
+  await updateWebhookEventState(context, webhook_event_id, 'processed');
 }
