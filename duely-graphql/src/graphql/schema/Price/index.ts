@@ -32,6 +32,8 @@ export const Price: GqlTypeDefinition = {
 
     input PriceFilter {
       product_id: ID
+      stripe_price_id_ext_live: String
+      stripe_price_id_ext_test: String
     }
 
     extend type Query {
