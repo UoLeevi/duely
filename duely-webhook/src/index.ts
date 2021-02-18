@@ -258,7 +258,7 @@ async function handle_event_stripe_agency_checkout_session_completed(
         { stripeAccount: event.account }
       );
 
-      if (lineItems.data.length !== 1) {
+      if (lineItems.data.length !== 1 || !lineItems.data[0].price) {
         throw new Error("Processing orders with multiple line items is not implemented.");
       }
 
@@ -268,7 +268,7 @@ async function handle_event_stripe_agency_checkout_session_completed(
       });
 
       const price = await queryResource('price', {
-        [`stripe_price_id_ext_${stripe_env}`]: lineItems.data[0].id
+        [`stripe_price_id_ext_${stripe_env}`]: lineItems.data[0].price.id
       });
 
       const product = await queryResource(price.product_id);
