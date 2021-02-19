@@ -162,12 +162,12 @@ async function handle_webhook(req: Request, res: Response) {
     case 'stripe-agency': {
       switch (event.type) {
         case 'customer.created': {
-          await handle_event_stripe_agency_customer_created(webhook_event.id, event);
+          await handle_event_stripe_agency_customer_created(webhook_event.id);
           break;
         }
 
         case 'checkout.session.completed': {
-          await handle_event_stripe_agency_checkout_session_completed(webhook_event.id, event);
+          await handle_event_stripe_agency_checkout_session_completed(webhook_event.id);
           break;
         }
 
@@ -189,10 +189,8 @@ async function handle_webhook(req: Request, res: Response) {
   }
 }
 
-async function handle_event_stripe_agency_customer_created(
-  webhook_event_id: string,
-  event: Stripe.Event
-) {
+async function handle_event_stripe_agency_customer_created(webhook_event_id: string) {
+  const event: Stripe.Event = await queryResource(context, webhook_event_id);
   const stripe_customer = event.data.object as Stripe.Customer;
   // check if customer creation is already processed
   if (stripe_customer.metadata.creation_mode === 'api') {
@@ -242,10 +240,8 @@ async function handle_event_stripe_agency_customer_created(
 // 2. create order
 // 3. wait that payment has succeeded
 // 4. start whatever happens then
-async function handle_event_stripe_agency_checkout_session_completed(
-  webhook_event_id: string,
-  event: Stripe.Event
-) {
+async function handle_event_stripe_agency_checkout_session_completed(webhook_event_id: string) {
+  const event: Stripe.Event = await queryResource(context, webhook_event_id);
   const session = event.data.object as Stripe.Checkout.Session;
   const stripe_env = event.livemode ? 'live' : 'test';
 
@@ -259,7 +255,7 @@ async function handle_event_stripe_agency_checkout_session_completed(
       );
 
       if (lineItems.data.length !== 1 || !lineItems.data[0].price) {
-        throw new Error("Processing orders with multiple line items is not implemented.");
+        throw new Error('Processing orders with multiple line items is not implemented.');
       }
 
       const { id: stripe_account_id, agency_id } = await queryResource('stripe account', {
@@ -274,7 +270,7 @@ async function handle_event_stripe_agency_checkout_session_completed(
       const product = await queryResource(price.product_id);
 
       if (!session.customer_details?.email) {
-        throw new Error("Processing orders without customer email address is not implemented");
+        throw new Error('Processing orders without customer email address is not implemented');
       }
 
       const customer = await queryResource('customer', {
@@ -283,7 +279,9 @@ async function handle_event_stripe_agency_checkout_session_completed(
       });
 
       // TODO: do the rest
-      console.log(`Info for stripe webhook event 'checkout.session.completed': checkout session: ${session.id}, price: ${price.id}, product: ${product.id}, customer: ${customer.id}`);
+      console.log(
+        `Info for stripe webhook event 'checkout.session.completed': checkout session: ${session.id}, price: ${price.id}, product: ${product.id}, customer: ${customer.id}`
+      );
     });
     await updateWebhookEventState(context, webhook_event_id, 'processed');
   } catch (err) {
