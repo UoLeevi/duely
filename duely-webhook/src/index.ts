@@ -190,7 +190,8 @@ async function handle_webhook(req: Request, res: Response) {
 }
 
 async function handle_event_stripe_agency_customer_created(webhook_event_id: string) {
-  const event: Stripe.Event = await queryResource(context, webhook_event_id);
+  const webhook_event = await queryResource(context, webhook_event_id);
+  const event = webhook_event.data as Stripe.Event;
   const stripe_customer = event.data.object as Stripe.Customer;
   // check if customer creation is already processed
   if (stripe_customer.metadata.creation_mode === 'api') {
@@ -241,7 +242,8 @@ async function handle_event_stripe_agency_customer_created(webhook_event_id: str
 // 3. wait that payment has succeeded
 // 4. start whatever happens then
 async function handle_event_stripe_agency_checkout_session_completed(webhook_event_id: string) {
-  const event: Stripe.Event = await queryResource(context, webhook_event_id);
+  const webhook_event = await queryResource(context, webhook_event_id);
+  const event = webhook_event.data as Stripe.Event;
   const session = event.data.object as Stripe.Checkout.Session;
   const stripe_env = event.livemode ? 'live' : 'test';
 
