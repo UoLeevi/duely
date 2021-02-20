@@ -2610,6 +2610,25 @@ $$;
 ALTER FUNCTION policy_.agent_can_query_customer_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: agent_can_query_order_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.agent_can_query_order_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
+    RETURN '{uuid_, customer_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.agent_can_query_order_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: agent_can_query_price_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3382,6 +3401,25 @@ $$;
 ALTER FUNCTION policy_.owner_can_change_name_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_order_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_order_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{state_, error_, prosessed_at_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_order_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: owner_can_change_page_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3645,6 +3683,28 @@ $$;
 
 
 ALTER FUNCTION policy_.owner_can_create_markdown_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: owner_can_create_order_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_order_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
+    RETURN '{customer_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_order_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: owner_can_create_page_block_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -3957,6 +4017,25 @@ $$;
 ALTER FUNCTION policy_.serviceaccount_can_change_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: serviceaccount_can_change_order_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_change_order_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{state_, error_, prosessed_at_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_change_order_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: serviceaccount_can_change_webhook_event_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4014,6 +4093,25 @@ $$;
 
 
 ALTER FUNCTION policy_.serviceaccount_can_create_markdown_without_agency_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_create_order_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_create_order_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{customer_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_create_order_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: serviceaccount_can_create_webhook_event_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4109,6 +4207,25 @@ $$;
 
 
 ALTER FUNCTION policy_.serviceaccount_can_query_markdown_without_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_query_order_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_query_order_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, customer_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_query_order_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: serviceaccount_can_query_product_thank_you_page_setting_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5147,6 +5264,24 @@ CREATE TABLE application_.notification_definition_ (
 
 
 ALTER TABLE application_.notification_definition_ OWNER TO postgres;
+
+--
+-- Name: order_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.order_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    customer_uuid_ uuid,
+    stripe_account_uuid_ uuid,
+    stripe_checkout_session_id_ext_ text,
+    state_ public.processing_state_ NOT NULL,
+    error_ text,
+    ordered_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    prosessed_at_ timestamp with time zone
+);
+
+
+ALTER TABLE application_.order_ OWNER TO postgres;
 
 --
 -- Name: page_; Type: TABLE; Schema: application_; Owner: postgres
@@ -6572,6 +6707,13 @@ e0877c45-1207-44cc-ba7a-3c1cc9dde4a7	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy
 77aa3647-a327-452d-9703-77268b1c8826	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.serviceaccount_can_create_webhook_event_(security_.resource_definition_,jsonb)	create	\N
 cee806e5-9134-4ebe-bae6-fd232c61200b	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.serviceaccount_can_change_webhook_event_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 63b8e82d-58c3-464b-8fdc-fc8f213ba352	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.delete_forbidden_(security_.resource_definition_,application_.resource_)	delete	\N
+6cdcc14c-c341-4da4-917f-3ff050c3183b	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.agent_can_query_order_(security_.resource_definition_,application_.resource_)	query	\N
+f03f8ac4-170e-4d35-a00c-f93d407bd605	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.serviceaccount_can_query_order_(security_.resource_definition_,application_.resource_)	query	6cdcc14c-c341-4da4-917f-3ff050c3183b
+09810f00-aee9-4e1f-a38b-20d55db0fd9d	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.owner_can_create_order_(security_.resource_definition_,jsonb)	create	\N
+f091ac1c-d855-4948-a1f7-c666346fae0c	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.serviceaccount_can_create_order_(security_.resource_definition_,jsonb)	create	09810f00-aee9-4e1f-a38b-20d55db0fd9d
+6b5534b5-5bca-460e-9c51-a37b4a8b1f45	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.owner_can_change_order_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
+cc9d3837-7b8c-4940-b62e-b378ac6605c7	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.serviceaccount_can_change_order_(security_.resource_definition_,application_.resource_,jsonb)	update	6b5534b5-5bca-460e-9c51-a37b4a8b1f45
+6374e460-0c1f-4519-8c47-1441d41c67ed	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 \.
 
 
@@ -6626,6 +6768,7 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{product_uuid_,stripe_price_id_ext_live_,stripe_price_id_ext_test_}	\N	2021-02-17 14:48:13.97898+00	00000000-0000-0000-0000-000000000000
+20c1d214-27e8-4805-b645-2e5a00f32486	ord	order	application_.order_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,customer_uuid_,stripe_account_uuid_,stripe_checkout_session_id_ext_}	\N	2021-02-20 18:02:47.892503+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -6728,6 +6871,7 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
 58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000	I
 f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{product_uuid_,stripe_price_id_ext_live_,stripe_price_id_ext_test_}	\N	2021-02-17 14:48:13.97898+00	00000000-0000-0000-0000-000000000000	U
+20c1d214-27e8-4805-b645-2e5a00f32486	ord	order	application_.order_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,customer_uuid_,stripe_account_uuid_,stripe_checkout_session_id_ext_}	\N	2021-02-20 18:02:47.892503+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -6855,6 +6999,14 @@ ALTER TABLE ONLY application_.notification_definition_
 
 ALTER TABLE ONLY application_.notification_definition_
     ADD CONSTRAINT notification_definition__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: order_ order__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.order_
+    ADD CONSTRAINT order__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -7604,6 +7756,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.not
 
 
 --
+-- Name: order_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.order_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: page_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -7856,6 +8015,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.not
 
 
 --
+-- Name: order_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.order_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: page_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -8084,6 +8250,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.mar
 --
 
 CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.notification_definition_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
+-- Name: order_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.order_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
@@ -9175,6 +9348,22 @@ ALTER TABLE ONLY application_.customer_
 
 ALTER TABLE ONLY application_.image_
     ADD CONSTRAINT image__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_) ON DELETE CASCADE;
+
+
+--
+-- Name: order_ order__customer_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.order_
+    ADD CONSTRAINT order__customer_uuid__fkey FOREIGN KEY (customer_uuid_) REFERENCES application_.customer_(uuid_) ON DELETE CASCADE;
+
+
+--
+-- Name: order_ order__stripe_account_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.order_
+    ADD CONSTRAINT order__stripe_account_uuid__fkey FOREIGN KEY (stripe_account_uuid_) REFERENCES application_.stripe_account_(uuid_) ON DELETE CASCADE;
 
 
 --
