@@ -280,10 +280,14 @@ async function handle_event_stripe_agency_checkout_session_completed(webhook_eve
         email_address: session.customer_details?.email
       });
 
-      // TODO: do the rest
-      console.log(
-        `Info for stripe webhook event 'checkout.session.completed': checkout session: ${session.id}, price: ${price.id}, product: ${product.id}, customer: ${customer.id}`
-      );
+      const order = await createResource('order', {
+        customer_id: customer.id,
+        stripe_account_id: stripe_account_id,
+        stripe_checkout_session_id_ext: session.id,
+        state: 'pending'
+      });
+
+      console.log(`Info: Order created:\n${JSON.stringify(order)}`);
     });
     await updateWebhookEventState(context, webhook_event_id, 'processed');
   } catch (err) {
