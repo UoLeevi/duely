@@ -38,6 +38,8 @@ import gql from 'graphql-tag';
 import { GqlTypeDefinition, GqlResolver } from '../types';
 import { DocumentNode } from 'graphql';
 import { Customer } from './Customer';
+import { Order } from './Order';
+import { StripeCheckoutSession } from './StripeCheckoutSession';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -74,6 +76,7 @@ const types: GqlTypeDefinition[] = [
   Price,
   StripeAccount,
   StripeCustomer,
+  StripeCheckoutSession,
   BalanceTransaction,
   ProductSettings,
   Product,
@@ -84,6 +87,7 @@ const types: GqlTypeDefinition[] = [
   Markdown,
   Membership,
   Theme,
+  Order,
   DateTime,
   Json
 ];
