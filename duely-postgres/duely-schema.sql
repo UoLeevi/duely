@@ -2618,7 +2618,7 @@ CREATE FUNCTION policy_.agent_can_query_order_(_resource_definition security_.re
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, customer_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+    RETURN '{uuid_, customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3696,7 +3696,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{customer_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+    RETURN '{customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4103,7 +4103,7 @@ CREATE FUNCTION policy_.serviceaccount_can_create_order_(_resource_definition se
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{customer_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+    RETURN '{customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4217,7 +4217,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_order_(_resource_definition sec
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, customer_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+    RETURN '{uuid_, customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
