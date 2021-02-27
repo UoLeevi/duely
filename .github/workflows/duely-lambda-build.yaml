@@ -1,0 +1,30 @@
+name: duely-lambda-build
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.detect-version-change.outputs.version }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - id: detect-version-change
+        run: git diff -U0 -G'version' ${{ github.sha }}^ ${{ github.sha }} ./duely-lambda/package.json | sed -rn 's/^.*\+\s+"version":\s*"(.+)".*/::set-output name=version::v\1/p'
+  build:
+    needs: [check-version]
+    if: needs.check-version.outputs.version != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: docker/build-push-action@v1
+        with:
+          username: uoleevi
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: uoleevi/duely-lambda
+          tags: ${{ needs.check-version.outputs.version }}
+          path: duely-lambda

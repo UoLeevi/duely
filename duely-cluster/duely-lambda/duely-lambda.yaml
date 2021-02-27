@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: duely-lambda-service
+spec:
+  type: ClusterIP
+  selector:
+    app: duely-lambda
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: duely-lambda-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: duely-lambda
+  template:
+    metadata:
+      labels:
+        app: duely-lambda
+    spec:
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: duely-lambda-secret
+        secret:
+          secretName: duely-lambda-secret
+      containers:
+      - name: duely-lambda
+        image: uoleevi/duely-lambda:v0.0.1
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 20m
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "8080"
+        - name: PGUSER
+          value: duely
+        - name: PGDATABASE
+          value: duely
+        - name: PGPASSWORD
+          value: duely
+        - name: PGHOST
+          value: duely-postgres-master-service
+        - name: PGPORT
+          value: "5432"
+        - name: STRIPE_PK_TEST
+          valueFrom:
+            secretKeyRef:
+              name: duely-lambda-secret
+              key: stripe-pk_test
+        - name: STRIPE_SK_TEST
+          valueFrom:
+            secretKeyRef:
+              name: duely-lambda-secret
+              key: stripe-sk_test
+        - name: STRIPE_PK_LIVE
+          valueFrom:
+            secretKeyRef:
+              name: duely-lambda-secret
+              key: stripe-pk_live
+        - name: STRIPE_SK_LIVE
+          valueFrom:
+            secretKeyRef:
+              name: duely-lambda-secret
+              key: stripe-sk_live
+        - name: DUELY_SERVICE_ACCOUNT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: duely-lambda-secret
+              key: duely-serviceaccount-password
+        livenessProbe:
+          httpGet:
+            path: /.well-known/server-health
+            port: 8080
+          failureThreshold: 6
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /.well-known/server-health
+            port: 8080
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
