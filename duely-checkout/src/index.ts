@@ -47,8 +47,8 @@ main();
 
 let client: GraphQLClient;
 let context: {
-    jwt: string;
-  };
+  jwt: string;
+};
 
 async function main() {
   context = await serviceAccountContextPromise;
@@ -66,12 +66,12 @@ async function main() {
 }
 
 async function createGraphQLClient() {
-    const endpoint = 'https://api.duely.app/graphql';
-    return new GraphQLClient(endpoint, {
-      headers: {
-        authorization: `Bearer ${context.jwt}`
-      }
-    });
+  const endpoint = 'https://api.duely.app/graphql';
+  return new GraphQLClient(endpoint, {
+    headers: {
+      authorization: `Bearer ${context.jwt}`
+    }
+  });
 }
 
 function setupEnvironment() {
