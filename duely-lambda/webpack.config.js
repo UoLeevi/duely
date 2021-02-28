@@ -5,7 +5,11 @@ module.exports = {
   target: 'node',
   entry: {
     index: { import: './src/index.ts', filename: 'index.js' },
-    echo: { import: './src/jobs/echo/index.ts', filename: 'jobs/echo/index.js' }
+    echo: { import: './src/jobs/echo/index.ts', filename: 'jobs/echo/index.js' },
+    'webhook-event/stripe-agency/checkout.session.completed': {
+      import: './src/jobs/webhook-event/stripe-agency/checkout.session.completed/index.ts',
+      filename: 'jobs/webhook-event/stripe-agency/checkout.session.completed/index.js'
+    }
   },
   mode: 'none',
   module: {

@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import axios from 'axios';
 import cors from 'cors';
 import stripe from './stripe';
 import { GraphQLClient } from 'graphql-request';
@@ -40,6 +41,13 @@ async function updateWebhookEventState(
       error: err.toString()
     });
   }
+}
+
+function createLambdaUrl(job: string, ...args: string[]) {
+  return (
+    `http://duely-lambda-service:8080/run/${encodeURIComponent(job)}` +
+    args.map((arg) => `/${encodeURIComponent(arg)}`).join('')
+  );
 }
 
 let client: GraphQLClient;
@@ -167,7 +175,11 @@ async function handle_webhook(req: Request, res: Response) {
         }
 
         case 'checkout.session.completed': {
-          await handle_event_stripe_agency_checkout_session_completed(webhook_event.id);
+          const url = createLambdaUrl(
+            'webhook-event/stripe-agency/checkout.session.completed',
+            webhook_event.id
+          );
+          await axios.post(url);
           break;
         }
 
@@ -227,67 +239,6 @@ async function handle_event_stripe_agency_customer_created(webhook_event_id: str
         name: stripe_customer.name,
         default_stripe_id_ext: stripe_customer.id
       });
-    });
-    await updateWebhookEventState(context, webhook_event_id, 'processed');
-  } catch (err) {
-    console.error(`Webhook event processing failed:\n${err}`);
-    await updateWebhookEventState(context, webhook_event_id, err);
-  }
-}
-
-// https://stripe.com/docs/payments/checkout/fulfill-orders
-// TODO:
-// 1. get customer and purchased products
-// 2. create order
-// 3. wait that payment has succeeded
-// 4. start whatever happens then
-async function handle_event_stripe_agency_checkout_session_completed(webhook_event_id: string) {
-  const webhook_event = await queryResource(context, webhook_event_id);
-  const event = webhook_event.data as Stripe.Event;
-  const session = event.data.object as Stripe.Checkout.Session;
-  const stripe_env = event.livemode ? 'live' : 'test';
-
-  try {
-    await updateWebhookEventState(context, webhook_event_id, 'processing');
-    await withSession(context, async ({ queryResource, createResource }) => {
-      const lineItems = await stripe[stripe_env].checkout.sessions.listLineItems(
-        session.id,
-        { limit: 100 },
-        { stripeAccount: event.account }
-      );
-
-      if (lineItems.data.length !== 1 || !lineItems.data[0].price) {
-        throw new Error('Processing orders with multiple line items is not implemented.');
-      }
-
-      const { id: stripe_account_id, agency_id } = await queryResource('stripe account', {
-        stripe_id_ext: event.account,
-        livemode: event.livemode
-      });
-
-      const price = await queryResource('price', {
-        [`stripe_price_id_ext_${stripe_env}`]: lineItems.data[0].price.id
-      });
-
-      const product = await queryResource(price.product_id);
-
-      if (!session.customer_details?.email) {
-        throw new Error('Processing orders without customer email address is not implemented');
-      }
-
-      const customer = await queryResource('customer', {
-        stripe_account_id,
-        email_address: session.customer_details?.email
-      });
-
-      const order = await createResource('order', {
-        customer_id: customer.id,
-        stripe_account_id: stripe_account_id,
-        stripe_checkout_session_id_ext: session.id,
-        state: 'pending'
-      });
-
-      console.log(`Info: Order created:\n${JSON.stringify(order)}`);
     });
     await updateWebhookEventState(context, webhook_event_id, 'processed');
   } catch (err) {
