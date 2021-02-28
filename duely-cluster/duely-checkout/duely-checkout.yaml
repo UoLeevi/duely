@@ -42,6 +42,16 @@ spec:
         env:
         - name: PORT
           value: "8080"
+        - name: PGUSER
+          value: duely
+        - name: PGDATABASE
+          value: duely
+        - name: PGPASSWORD
+          value: duely
+        - name: PGHOST
+          value: duely-postgres-master-service
+        - name: PGPORT
+          value: "5432"
         - name: STRIPE_PK_TEST
           valueFrom:
             secretKeyRef:
