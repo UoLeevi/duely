@@ -9,6 +9,10 @@ module.exports = {
     'webhook-event/stripe-agency/checkout.session.completed': {
       import: './src/jobs/webhook-event/stripe-agency/checkout.session.completed/index.ts',
       filename: 'jobs/webhook-event/stripe-agency/checkout.session.completed/index.js'
+    },
+    'webhook-event/stripe-agency/customer.created': {
+      import: './src/jobs/webhook-event/stripe-agency/customer.created/index.ts',
+      filename: 'jobs/webhook-event/stripe-agency/customer.created/index.js'
     }
   },
   mode: 'none',

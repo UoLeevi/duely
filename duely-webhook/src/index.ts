@@ -170,7 +170,11 @@ async function handle_webhook(req: Request, res: Response) {
     case 'stripe-agency': {
       switch (event.type) {
         case 'customer.created': {
-          await handle_event_stripe_agency_customer_created(webhook_event.id);
+          const url = createLambdaUrl(
+            'webhook-event/stripe-agency/customer.created',
+            webhook_event.id
+          );
+          await axios.post(url);
           break;
         }
 
@@ -198,51 +202,5 @@ async function handle_webhook(req: Request, res: Response) {
       }
       break;
     }
-  }
-}
-
-async function handle_event_stripe_agency_customer_created(webhook_event_id: string) {
-  const webhook_event = await queryResource(context, webhook_event_id);
-  const event = webhook_event.data as Stripe.Event;
-  const stripe_customer = event.data.object as Stripe.Customer;
-  // check if customer creation is already processed
-  if (stripe_customer.metadata.creation_mode === 'api') {
-    await updateWebhookEventState(context, webhook_event_id, 'processed');
-    return;
-  }
-
-  const email_address = stripe_customer.email;
-
-  if (!email_address) {
-    await updateWebhookEventState(context, webhook_event_id, 'processed');
-    return;
-  }
-
-  try {
-    await updateWebhookEventState(context, webhook_event_id, 'processing');
-    await withSession(context, async ({ queryResource, createResource }) => {
-      const { id: stripe_account_id } = await queryResource('stripe account', {
-        stripe_id_ext: event.account,
-        livemode: event.livemode
-      });
-
-      const customer = await queryResource('customer', {
-        stripe_account_id,
-        email_address
-      });
-
-      if (customer) return;
-
-      await createResource('customer', {
-        stripe_account_id,
-        email_address,
-        name: stripe_customer.name,
-        default_stripe_id_ext: stripe_customer.id
-      });
-    });
-    await updateWebhookEventState(context, webhook_event_id, 'processed');
-  } catch (err) {
-    console.error(`Webhook event processing failed:\n${err}`);
-    await updateWebhookEventState(context, webhook_event_id, err);
   }
 }
