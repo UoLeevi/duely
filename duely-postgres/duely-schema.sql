@@ -3645,7 +3645,10 @@ CREATE FUNCTION policy_.owner_can_create_credential_(_resource_definition securi
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
     RETURN '{agency_uuid_, type_, key_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
