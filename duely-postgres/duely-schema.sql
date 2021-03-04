@@ -3649,7 +3649,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{agency_uuid_, type_, key_, data_}'::text[];
+    RETURN '{agency_uuid_, type_, name_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3910,7 +3910,7 @@ CREATE FUNCTION policy_.owner_can_query_credential_(_resource_definition securit
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{uuid_, agency_uuid_, type_, key_, data_}'::text[];
+    RETURN '{uuid_, agency_uuid_, type_, name_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4239,7 +4239,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_credential_(_resource_definitio
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, agency_uuid_, type_, key_, data_}'::text[];
+    RETURN '{uuid_, agency_uuid_, type_, name_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5220,7 +5220,7 @@ ALTER TABLE application_.agency_thank_you_page_setting_ OWNER TO postgres;
 CREATE TABLE application_.credential_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     agency_uuid_ uuid,
-    key_ text NOT NULL,
+    name_ text NOT NULL,
     type_ text NOT NULL,
     data_ jsonb NOT NULL
 );
@@ -6868,7 +6868,7 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{product_uuid_,stripe_price_id_ext_live_,stripe_price_id_ext_test_}	\N	2021-02-17 14:48:13.97898+00	00000000-0000-0000-0000-000000000000
 20c1d214-27e8-4805-b645-2e5a00f32486	ord	order	application_.order_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,customer_uuid_,stripe_account_uuid_,stripe_checkout_session_id_ext_}	\N	2021-02-20 18:02:47.892503+00	00000000-0000-0000-0000-000000000000
-38d32095-8cfa-4e0e-92f8-079fb73002eb	cred	credential	application_.credential_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,type_,key_}	\N	2021-03-02 15:13:00.997849+00	00000000-0000-0000-0000-000000000000
+38d32095-8cfa-4e0e-92f8-079fb73002eb	cred	credential	application_.credential_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,type_,name_}	\N	2021-03-04 14:04:59.110539+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -6973,6 +6973,7 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{product_uuid_,stripe_price_id_ext_live_,stripe_price_id_ext_test_}	\N	2021-02-17 14:48:13.97898+00	00000000-0000-0000-0000-000000000000	U
 20c1d214-27e8-4805-b645-2e5a00f32486	ord	order	application_.order_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,customer_uuid_,stripe_account_uuid_,stripe_checkout_session_id_ext_}	\N	2021-02-20 18:02:47.892503+00	00000000-0000-0000-0000-000000000000	I
 38d32095-8cfa-4e0e-92f8-079fb73002eb	cred	credential	application_.credential_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,type_,key_}	\N	2021-03-02 15:13:00.997849+00	00000000-0000-0000-0000-000000000000	I
+38d32095-8cfa-4e0e-92f8-079fb73002eb	cred	credential	application_.credential_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,type_,name_}	\N	2021-03-04 14:04:59.110539+00	00000000-0000-0000-0000-000000000000	U
 \.
 
 
@@ -7039,11 +7040,11 @@ ALTER TABLE ONLY application_.agency_thank_you_page_setting_
 
 
 --
--- Name: credential_ credential__agency_uuid__key__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+-- Name: credential_ credential__agency_uuid__name__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
 ALTER TABLE ONLY application_.credential_
-    ADD CONSTRAINT credential__agency_uuid__key__key UNIQUE (agency_uuid_, key_);
+    ADD CONSTRAINT credential__agency_uuid__name__key UNIQUE (agency_uuid_, name_);
 
 
 --

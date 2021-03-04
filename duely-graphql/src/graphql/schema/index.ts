@@ -40,6 +40,7 @@ import { DocumentNode } from 'graphql';
 import { Customer } from './Customer';
 import { Order } from './Order';
 import { StripeCheckoutSession } from './StripeCheckoutSession';
+import { Credential } from './Credential';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -55,6 +56,7 @@ const types: GqlTypeDefinition[] = [
   },
   interfaces,
   AccessLevel,
+  Credential,
   FormField,
   Page,
   PageBlock,
