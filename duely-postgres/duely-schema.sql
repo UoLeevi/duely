@@ -2656,7 +2656,7 @@ CREATE FUNCTION policy_.agent_can_query_product_(_resource_definition security_.
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3540,9 +3540,9 @@ BEGIN
         AND stripe_prod_id_ext_live_ IS NULL
         AND stripe_prod_id_ext_test_ IS NULL
     ) THEN
-      RETURN '{name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+      RETURN '{name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
     ELSE
-      RETURN '{name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+      RETURN '{name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
     END IF;
   ELSE
     RETURN '{}'::text[];
@@ -3844,7 +3844,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4384,6 +4384,25 @@ $$;
 
 
 ALTER FUNCTION policy_.serviceaccount_can_query_order_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_query_product_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_query_product_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_query_product_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: serviceaccount_can_query_product_thank_you_page_setting_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5589,6 +5608,7 @@ CREATE TABLE application_.product_ (
     markdown_description_uuid_ uuid,
     stripe_prod_id_ext_live_ text,
     stripe_prod_id_ext_test_ text,
+    integration_uuid_ uuid,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -5907,6 +5927,7 @@ CREATE TABLE application__audit_.product_ (
     markdown_description_uuid_ uuid,
     stripe_prod_id_ext_live_ text,
     stripe_prod_id_ext_test_ text,
+    integration_uuid_ uuid,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -6827,7 +6848,6 @@ b2257097-cb6d-4edc-a2b3-997e185dc415	edc5f82c-c991-494c-90f0-cf6163902f40	policy
 ffbdd939-d23b-4703-b0a3-78baa975133f	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_create_stripe_account_(security_.resource_definition_,jsonb)	create	\N
 be2e2434-7bb8-4b17-87bc-5a7bd97fdd13	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_change_stripe_account_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 1526bb13-417f-481f-981c-913d5f93dd0e	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-95c81a39-4ede-4ebd-9485-502ba1ad9a68	7f589215-bdc7-4664-99c6-b7745349c352	policy_.anyone_can_query_live_product_(security_.resource_definition_,application_.resource_)	query	\N
 ab3fa4a3-413f-449b-bfb5-ed4981ba1de2	7f589215-bdc7-4664-99c6-b7745349c352	policy_.agent_can_query_product_(security_.resource_definition_,application_.resource_)	query	95c81a39-4ede-4ebd-9485-502ba1ad9a68
 0be43a88-13df-4bb2-8794-159800b90670	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_create_product_(security_.resource_definition_,jsonb)	create	\N
 37978625-4f1f-4c1a-a9da-0571a3e91fd4	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_change_product_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
@@ -6912,6 +6932,8 @@ d1acaebc-ceab-4120-a4bd-58132426171a	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy
 2db0ef77-7432-42f5-8def-e3491bd3d26d	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.owner_can_query_integration_(security_.resource_definition_,application_.resource_)	query	\N
 c3a5aaf2-d9a0-481b-98ec-ce34c2c65cd3	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.serviceaccount_can_query_integration_(security_.resource_definition_,application_.resource_)	query	2db0ef77-7432-42f5-8def-e3491bd3d26d
 09e2dde5-d0ef-4c9d-9154-1b89b10c9bf5	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+cecd71c9-7e74-46ad-8fba-6aa5ac8ec3ca	7f589215-bdc7-4664-99c6-b7745349c352	policy_.serviceaccount_can_query_product_(security_.resource_definition_,application_.resource_)	query	\N
+95c81a39-4ede-4ebd-9485-502ba1ad9a68	7f589215-bdc7-4664-99c6-b7745349c352	policy_.anyone_can_query_live_product_(security_.resource_definition_,application_.resource_)	query	cecd71c9-7e74-46ad-8fba-6aa5ac8ec3ca
 \.
 
 
@@ -9745,6 +9767,14 @@ ALTER TABLE ONLY application_.product_
 
 ALTER TABLE ONLY application_.product_
     ADD CONSTRAINT product__image_logo_uuid__fkey FOREIGN KEY (image_logo_uuid_) REFERENCES application_.image_(uuid_);
+
+
+--
+-- Name: product_ product__integration_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.product_
+    ADD CONSTRAINT product__integration_uuid__fkey FOREIGN KEY (integration_uuid_) REFERENCES application_.integration_(uuid_);
 
 
 --
