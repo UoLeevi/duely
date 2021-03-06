@@ -41,6 +41,7 @@ import { Customer } from './Customer';
 import { Order } from './Order';
 import { StripeCheckoutSession } from './StripeCheckoutSession';
 import { Credential } from './Credential';
+import { Integration } from './Integration';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -90,6 +91,7 @@ const types: GqlTypeDefinition[] = [
   Membership,
   Theme,
   Order,
+  Integration,
   DateTime,
   Json
 ];
