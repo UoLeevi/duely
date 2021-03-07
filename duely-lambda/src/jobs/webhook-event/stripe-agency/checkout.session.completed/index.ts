@@ -7,6 +7,7 @@ import {
   withSession
 } from '@duely/db';
 import { Awaited } from '@duely/core';
+import axios from 'axios';
 
 type ProcessingState = 'pending' | 'processing' | 'processed' | 'failed';
 
@@ -37,6 +38,13 @@ async function updateWebhookEventState(
   }
 }
 
+function createLambdaUrl(job: string, ...args: string[]) {
+  return (
+    `http://duely-lambda-service:8080/run/${encodeURIComponent(job)}` +
+    args.map((arg) => `/${encodeURIComponent(arg)}`).join('')
+  );
+}
+
 const context = { jwt: process.argv[2] };
 const webhook_event_id = process.argv[3];
 
@@ -57,26 +65,10 @@ async function main() {
   try {
     await updateWebhookEventState(context, webhook_event_id, 'processing');
     await withSession(context, async ({ queryResource, createResource }) => {
-      const lineItems = await stripe[stripe_env].checkout.sessions.listLineItems(
-        session.id,
-        { limit: 100 },
-        { stripeAccount: event.account }
-      );
-
-      if (lineItems.data.length !== 1 || !lineItems.data[0].price) {
-        throw new Error('Processing orders with multiple line items is not implemented.');
-      }
-
-      const { id: stripe_account_id, agency_id } = await queryResource('stripe account', {
+      const { id: stripe_account_id } = await queryResource('stripe account', {
         stripe_id_ext: event.account,
         livemode: event.livemode
       });
-
-      const price = await queryResource('price', {
-        [`stripe_price_id_ext_${stripe_env}`]: lineItems.data[0].price.id
-      });
-
-      const product = await queryResource(price.product_id);
 
       if (!session.customer_details?.email) {
         throw new Error('Processing orders without customer email address is not implemented');
@@ -87,6 +79,7 @@ async function main() {
         email_address: session.customer_details?.email
       });
 
+      // Create order
       const order = await createResource('order', {
         customer_id: customer.id,
         stripe_account_id: stripe_account_id,
@@ -94,7 +87,39 @@ async function main() {
         state: 'pending'
       });
 
+      // Create order items
+
+      const lineItemsList = await stripe[stripe_env].checkout.sessions.listLineItems(
+        session.id,
+        { limit: 100 },
+        { stripeAccount: event.account }
+      );
+
+      for (const lineItem of lineItemsList.data) {
+        if (!lineItem.price) {
+          throw new Error('Line item did not have price associated with it.');
+        }
+
+        const price = await queryResource('price', {
+          [`stripe_price_id_ext_${stripe_env}`]: lineItem.price.id
+        });
+
+        await createResource('order item', {
+          order_id: order.id,
+          price_id: price.id,
+          stripe_line_item_id_ext: lineItem.id,
+          state: 'pending'
+        });
+      }
+
       console.log(`Info: Order created:\n${JSON.stringify(order)}`);
+
+      const url = createLambdaUrl(
+        'process-order',
+        order.id
+      );
+
+      await axios.post(url);
     });
     await updateWebhookEventState(context, webhook_event_id, 'processed');
   } catch (err) {

@@ -6,6 +6,10 @@ module.exports = {
   entry: {
     index: { import: './src/index.ts', filename: 'index.js' },
     echo: { import: './src/jobs/echo/index.ts', filename: 'jobs/echo/index.js' },
+    'process-order': {
+      import: './src/jobs/process-order/index.ts',
+      filename: 'jobs/process-order/index.js'
+    },
     'webhook-event/stripe-agency/checkout.session.completed': {
       import: './src/jobs/webhook-event/stripe-agency/checkout.session.completed/index.ts',
       filename: 'jobs/webhook-event/stripe-agency/checkout.session.completed/index.js'
