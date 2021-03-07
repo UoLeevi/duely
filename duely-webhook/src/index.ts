@@ -9,39 +9,8 @@ import {
   serviceAccountContextPromise,
   queryResource,
   getDbErrorCode,
-  updateResource,
-  withSession
+  updateProcessingState
 } from '@duely/db';
-import { Awaited } from '@duely/core';
-
-type ProcessingState = 'pending' | 'processing' | 'processed' | 'failed';
-
-async function updateWebhookEventState(
-  context: Awaited<typeof serviceAccountContextPromise>,
-  webhook_event_id: string,
-  state: ProcessingState
-): Promise<void>;
-async function updateWebhookEventState(
-  context: Awaited<typeof serviceAccountContextPromise>,
-  webhook_event_id: string,
-  err: Error
-): Promise<void>;
-async function updateWebhookEventState(
-  context: Awaited<typeof serviceAccountContextPromise>,
-  webhook_event_id: string,
-  arg: ProcessingState | Error
-): Promise<void> {
-  if (typeof arg === 'string') {
-    const state = arg;
-    await updateResource(context, webhook_event_id, { state });
-  } else {
-    const err = arg;
-    await updateResource(context, webhook_event_id, {
-      state: 'failed',
-      error: err.toString()
-    });
-  }
-}
 
 function createLambdaUrl(job: string, ...args: string[]) {
   return (
@@ -189,7 +158,7 @@ async function handle_webhook(req: Request, res: Response) {
 
         default:
           console.log(`Unhandled event type ${event.type}`);
-          await updateWebhookEventState(context, webhook_event.id, 'processed');
+          await updateProcessingState(context, webhook_event.id, 'processed');
       }
       break;
     }
@@ -198,7 +167,7 @@ async function handle_webhook(req: Request, res: Response) {
       switch (event.type) {
         default:
           console.log(`Unhandled event type ${event.type}`);
-          await updateWebhookEventState(context, webhook_event.id, 'processed');
+          await updateProcessingState(context, webhook_event.id, 'processed');
       }
       break;
     }

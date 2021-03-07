@@ -1,7 +1,7 @@
 import { ClientBase, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
-import { ResolvableValue, Util } from '@duely/core';
+import { Awaited, ResolvableValue, Util } from '@duely/core';
 
 export * from './errors';
 
@@ -421,4 +421,33 @@ function useFunctions(client: ClientBase) {
       return await deleteResource(client, id);
     }
   };
+}
+
+export type ProcessingState = 'pending' | 'processing' | 'processed' | 'failed';
+
+export async function updateProcessingState(
+  context: Awaited<typeof serviceAccountContextPromise>,
+  id: string,
+  state: ProcessingState
+): Promise<void>;
+export async function updateProcessingState(
+  context: Awaited<typeof serviceAccountContextPromise>,
+  id: string,
+  err: Error
+): Promise<void>;
+export async function updateProcessingState(
+  context: Awaited<typeof serviceAccountContextPromise>,
+  id: string,
+  arg: ProcessingState | Error
+): Promise<void> {
+  if (typeof arg === 'string') {
+    const state = arg;
+    await updateResource(context, id, { state });
+  } else {
+    const err = arg;
+    await updateResource(context, id, {
+      state: 'failed',
+      error: err.toString()
+    });
+  }
 }

@@ -32,7 +32,7 @@ spec:
           secretName: duely-lambda-secret
       containers:
       - name: duely-lambda
-        image: uoleevi/duely-lambda:v0.0.4
+        image: uoleevi/duely-lambda:v0.0.5
         resources:
           requests:
             memory: 64Mi

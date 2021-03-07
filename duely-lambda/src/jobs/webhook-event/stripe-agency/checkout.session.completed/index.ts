@@ -1,42 +1,7 @@
 import stripe from '../../../../stripe';
 import Stripe from 'stripe';
-import {
-  serviceAccountContextPromise,
-  queryResource,
-  updateResource,
-  withSession
-} from '@duely/db';
-import { Awaited } from '@duely/core';
+import { queryResource, withSession, updateProcessingState } from '@duely/db';
 import axios from 'axios';
-
-type ProcessingState = 'pending' | 'processing' | 'processed' | 'failed';
-
-async function updateWebhookEventState(
-  context: Awaited<typeof serviceAccountContextPromise>,
-  webhook_event_id: string,
-  state: ProcessingState
-): Promise<void>;
-async function updateWebhookEventState(
-  context: Awaited<typeof serviceAccountContextPromise>,
-  webhook_event_id: string,
-  err: Error
-): Promise<void>;
-async function updateWebhookEventState(
-  context: Awaited<typeof serviceAccountContextPromise>,
-  webhook_event_id: string,
-  arg: ProcessingState | Error
-): Promise<void> {
-  if (typeof arg === 'string') {
-    const state = arg;
-    await updateResource(context, webhook_event_id, { state });
-  } else {
-    const err = arg;
-    await updateResource(context, webhook_event_id, {
-      state: 'failed',
-      error: err.toString()
-    });
-  }
-}
 
 function createLambdaUrl(job: string, ...args: string[]) {
   return (
@@ -63,7 +28,7 @@ async function main() {
   const stripe_env = event.livemode ? 'live' : 'test';
 
   try {
-    await updateWebhookEventState(context, webhook_event_id, 'processing');
+    await updateProcessingState(context, webhook_event_id, 'processing');
     await withSession(context, async ({ queryResource, createResource }) => {
       const { id: stripe_account_id } = await queryResource('stripe account', {
         stripe_id_ext: event.account,
@@ -114,16 +79,13 @@ async function main() {
 
       console.log(`Info: Order created:\n${JSON.stringify(order)}`);
 
-      const url = createLambdaUrl(
-        'process-order',
-        order.id
-      );
+      const url = createLambdaUrl('process-order', order.id);
 
       await axios.post(url);
     });
-    await updateWebhookEventState(context, webhook_event_id, 'processed');
+    await updateProcessingState(context, webhook_event_id, 'processed');
   } catch (err) {
     console.error(`Webhook event processing failed:\n${err}`);
-    await updateWebhookEventState(context, webhook_event_id, err);
+    await updateProcessingState(context, webhook_event_id, err);
   }
 }
