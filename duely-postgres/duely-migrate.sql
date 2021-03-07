@@ -14,74 +14,72 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CALL internal_.drop_auditing_('application_.product_');
+CREATE TABLE application_.order_item_ (
+    uuid_ uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    order_uuid_ uuid REFERENCES application_.order_ (uuid_) ON DELETE CASCADE,
+    price_uuid_ uuid REFERENCES application_.price_ (uuid_),
+    stripe_line_item_id_ext_ text NULL UNIQUE,
+    state_ processing_state_ NOT NULL,
+    error_ text NULL,
+    prosessed_at_ timestamp with time zone NULL
+);
+CALL internal_.setup_resource_('application_.order_item_', 'order item', 'orditm', '{uuid_, order_uuid_, stripe_line_item_id_ext_}', 'application_.order_');
 
-ALTER TABLE application_.product_ ADD COLUMN integration_uuid_ uuid REFERENCES application_.integration_ (uuid_);
-
-CALL internal_.setup_auditing_('application_.product_');
-
-CREATE OR REPLACE FUNCTION policy_.agent_can_query_product_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-CREATE OR REPLACE FUNCTION policy_.owner_can_change_product_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    IF EXISTS (
-      SELECT 1
-      FROM application_.product_
-      WHERE uuid_ = _resource.uuid_
-        AND stripe_prod_id_ext_live_ IS NULL
-        AND stripe_prod_id_ext_test_ IS NULL
-    ) THEN
-      RETURN '{name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
-    ELSE
-      RETURN '{name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
-    END IF;
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-CREATE OR REPLACE FUNCTION policy_.owner_can_create_product_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF (
-    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
-    FROM internal_.query_owner_resource_(_resource_definition, _data)
-  ) THEN
-    RETURN '{agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_query_product_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_query_order_item_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
+    RETURN '{uuid_, order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, prosessed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
 END
 $$;
 
-PERFORM security_.register_policy_('application_.product_', 'query', 'policy_.serviceaccount_can_query_product_');
+PERFORM security_.register_policy_('application_.order_item_', 'query', 'policy_.serviceaccount_can_query_order_item_');
+
+CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_create_order_item_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, prosessed_at_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+PERFORM security_.register_policy_('application_.order_item_', 'create', 'policy_.serviceaccount_can_create_order_item_');
+
+CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_change_order_item_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{state_, error_, prosessed_at_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+PERFORM security_.register_policy_('application_.order_item_', 'update', 'policy_.serviceaccount_can_change_order_item_');
+
+CREATE OR REPLACE FUNCTION policy_.owner_can_query_order_item_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{uuid_, order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, prosessed_at_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+PERFORM security_.register_policy_('application_.order_item_', 'query', 'policy_.owner_can_query_order_item_');
 
 
 -- MIGRATION CODE END
