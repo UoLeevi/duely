@@ -1,14 +1,7 @@
 import stripe from '../../../../stripe';
 import Stripe from 'stripe';
 import { queryResource, withSession, updateProcessingState } from '@duely/db';
-import axios from 'axios';
-
-function createLambdaUrl(job: string, ...args: string[]) {
-  return (
-    `http://duely-lambda-service:8080/run/${encodeURIComponent(job)}` +
-    args.map((arg) => `/${encodeURIComponent(arg)}`).join('')
-  );
-}
+import { runLambda } from '@duely/lambda';
 
 const context = { jwt: process.argv[2] };
 const webhook_event_id = process.argv[3];
@@ -78,10 +71,8 @@ async function main() {
       }
 
       console.log(`Info: Order created:\n${JSON.stringify(order)}`);
-
-      const url = createLambdaUrl('process-order', order.id);
-
-      await axios.post(url);
+      
+      await runLambda('process-order', order.id);
     });
     await updateProcessingState(context, webhook_event_id, 'processed');
   } catch (err) {

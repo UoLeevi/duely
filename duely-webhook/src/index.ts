@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import axios from 'axios';
 import cors from 'cors';
 import stripe from './stripe';
 import { GraphQLClient } from 'graphql-request';
@@ -11,15 +10,8 @@ import {
   getDbErrorCode,
   updateProcessingState
 } from '@duely/db';
+import { runLambda } from '@duely/lambda';
 
-function createLambdaUrl(job: string, ...args: string[]) {
-  return (
-    `http://duely-lambda-service:8080/run/${encodeURIComponent(job)}` +
-    args.map((arg) => `/${encodeURIComponent(arg)}`).join('')
-  );
-}
-
-let client: GraphQLClient;
 let context: {
   jwt: string;
 };
@@ -28,7 +20,6 @@ main();
 
 async function main() {
   context = await serviceAccountContextPromise;
-  client = await createGraphQLClient();
   const app = express();
   app.set('trust proxy', true);
   app.use(cors());
@@ -139,20 +130,15 @@ async function handle_webhook(req: Request, res: Response) {
     case 'stripe-agency': {
       switch (event.type) {
         case 'customer.created': {
-          const url = createLambdaUrl(
-            'webhook-event/stripe-agency/customer.created',
-            webhook_event.id
-          );
-          await axios.post(url);
+          await runLambda('webhook-event/stripe-agency/customer.created', webhook_event.id);
           break;
         }
 
         case 'checkout.session.completed': {
-          const url = createLambdaUrl(
+          await runLambda(
             'webhook-event/stripe-agency/checkout.session.completed',
             webhook_event.id
           );
-          await axios.post(url);
           break;
         }
 

@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
 import { serviceAccountContextPromise } from '@duely/db';
+import type { LambdaResult } from '@duely/lambda';
 
 const scriptDirpath = path.resolve(__dirname, 'jobs');
 
@@ -51,6 +52,10 @@ async function handle_run(req: Request, res: Response) {
   let invoked = false;
   const process = childProcess.fork(scriptPath, [context.jwt, ...args]);
 
+  // listen for message which is used to set the result of the lambda
+  let result: LambdaResult | null = null;
+  process.on('message', (message) => (result = message as LambdaResult));
+
   // listen for errors as they may prevent the exit event from firing
   process.on('error', function (err) {
     if (invoked) return;
@@ -66,7 +71,11 @@ async function handle_run(req: Request, res: Response) {
     invoked = true;
     console.log(`Job '${job}' exited with code ${code}`);
     if (code === 0) {
-      res.send('ok');
+      if (!result) {
+        result = { success: true };
+      }
+
+      res.send(result);
     } else {
       res.sendStatus(400);
     }
