@@ -1,6 +1,6 @@
 {
   "name": "duely-lambda",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Web server for running lambda function like jobs.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -16,6 +16,7 @@
     "@duely/core": "0.0.56",
     "@duely/db": "0.0.13",
     "@duely/lambda": "0.0.1",
+    "axios": "^0.21.1",
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "stripe": "^8.135.0"
