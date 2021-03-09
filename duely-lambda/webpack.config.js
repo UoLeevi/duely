@@ -10,6 +10,10 @@ module.exports = {
       import: './src/jobs/process-order/index.ts',
       filename: 'jobs/process-order/index.js'
     },
+    'integration/teachable/enroll': {
+      import: './src/jobs/integration/teachable/enroll/index.ts',
+      filename: 'jobs/integration/teachable/enroll/index.js'
+    },
     'webhook-event/stripe-agency/checkout.session.completed': {
       import: './src/jobs/webhook-event/stripe-agency/checkout.session.completed/index.ts',
       filename: 'jobs/webhook-event/stripe-agency/checkout.session.completed/index.js'

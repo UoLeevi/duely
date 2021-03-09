@@ -3,8 +3,7 @@ import { setResult } from '@duely/lambda';
 import axios from 'axios';
 
 const context = { jwt: process.argv[2] };
-const price_id = process.argv[3];
-const customer_id = process.argv[4];
+const order_item_id = process.argv[3];
 
 main();
 
@@ -13,9 +12,10 @@ main();
 async function main() {
   try {
     await withSession(context, async ({ queryResource }) => {
-      const price = await queryResource(price_id);
+      const order_item = await queryResource(order_item_id);
+      const price = await queryResource(order_item.price_id);
       const product = await queryResource(price.product_id);
-      const customer = await queryResource(customer_id);
+      const customer = await queryResource(order_item.customer_id);
       const integration = await queryResource(product.integration_id);
 
       if (!integration || integration.name != 'teachable/enroll') {
@@ -24,8 +24,8 @@ async function main() {
 
       const credential = await queryResource(integration.credential_id);
 
-      if (!credential) {
-        throw new Error(`No credentials found for integration ${integration.id}`);
+      if (!credential || credential.type != 'basic') {
+        throw new Error(`No credentials with basic type found for integration ${integration.id}`);
       }
 
       const url = new URL('/api/v1/sales', `https://${integration.data.school_domain}`).toString();
@@ -36,7 +36,8 @@ async function main() {
           email: customer.email_address,
           price: price.unit_amount,
           product_id: integration.data.product_id,
-          name: integration.data.name
+          name: customer.name,
+          src: order_item_id
         },
         {
           auth: {
