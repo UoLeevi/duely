@@ -42,6 +42,7 @@ import { Order } from './Order';
 import { StripeCheckoutSession } from './StripeCheckoutSession';
 import { Credential } from './Credential';
 import { Integration } from './Integration';
+import { OrderItem } from './OrderItem';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -91,6 +92,7 @@ const types: GqlTypeDefinition[] = [
   Membership,
   Theme,
   Order,
+  OrderItem,
   Integration,
   DateTime,
   Json

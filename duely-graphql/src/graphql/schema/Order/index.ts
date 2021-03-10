@@ -1,7 +1,8 @@
 import { queryResource, queryResourceAccess, updateResource } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
-  createResolverForReferencedResource
+  createResolverForReferencedResource,
+  createResolverForReferencedResourceAll
 } from '../../util';
 import stripe from '../../../stripe';
 import gql from 'graphql-tag';
@@ -16,6 +17,7 @@ export const Order: GqlTypeDefinition = {
     type Order {
       id: ID!
       customer: Customer!
+      items: [OrderItem!]!
       stripe_account: StripeAccount!
       stripe_checkout_session: StripeCheckoutSession!
       state: String!
@@ -48,6 +50,11 @@ export const Order: GqlTypeDefinition = {
     Order: {
       ...createResolverForReferencedResource({ name: 'customer' }),
       ...createResolverForReferencedResource({ name: 'stripe_account' }),
+      ...createResolverForReferencedResourceAll({
+        name: 'items',
+        resource_name: 'order item',
+        column_name: 'order_id'
+      }),
       async stripe_checkout_session(order, args, context) {
         if (!context.jwt) throw new Error('Unauthorized');
 
