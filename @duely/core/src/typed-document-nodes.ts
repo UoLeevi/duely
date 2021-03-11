@@ -18,6 +18,8 @@ export type Scalars = {
 
 export type Query = {
   __typename?: 'Query';
+  credential?: Maybe<Credential>;
+  credentials?: Maybe<Array<Credential>>;
   page?: Maybe<Page>;
   page_by_url?: Maybe<Page>;
   pages?: Maybe<Array<Page>>;
@@ -57,6 +59,22 @@ export type Query = {
   memberships?: Maybe<Array<Membership>>;
   theme?: Maybe<Theme>;
   themes?: Maybe<Array<Theme>>;
+  order?: Maybe<Order>;
+  orders?: Maybe<Array<Order>>;
+  order_item?: Maybe<OrderItem>;
+  order_items?: Maybe<Array<OrderItem>>;
+  integration?: Maybe<Integration>;
+  integrations?: Maybe<Array<Integration>>;
+};
+
+
+export type QueryCredentialArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type QueryCredentialsArgs = {
+  filter: CredentialFilter;
 };
 
 
@@ -244,8 +262,40 @@ export type QueryThemesArgs = {
   filter: ThemeFilter;
 };
 
+
+export type QueryOrderArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type QueryOrdersArgs = {
+  filter: OrderFilter;
+};
+
+
+export type QueryOrder_ItemArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type QueryOrder_ItemsArgs = {
+  filter: OrderItemFilter;
+};
+
+
+export type QueryIntegrationArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type QueryIntegrationsArgs = {
+  filter: IntegrationFilter;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
+  create_credential: CredentialMutationResult;
+  update_credential: CredentialMutationResult;
   update_page: PageMutationResult;
   create_page_block: PageBlockMutationResult;
   update_page_block: PageBlockMutationResult;
@@ -281,6 +331,24 @@ export type Mutation = {
   create_markdown: MarkdownMutationResult;
   update_markdown: MarkdownMutationResult;
   update_theme: UpdateThemeResult;
+  update_order: OrderMutationResult;
+  update_order_item: OrderItemMutationResult;
+  create_integration: IntegrationMutationResult;
+  update_integration: IntegrationMutationResult;
+};
+
+
+export type MutationCreate_CredentialArgs = {
+  agency_id?: Maybe<Scalars['ID']>;
+  name: Scalars['String'];
+  data: Scalars['Json'];
+  type: Scalars['String'];
+};
+
+
+export type MutationUpdate_CredentialArgs = {
+  credential_id: Scalars['ID'];
+  data: Scalars['Json'];
 };
 
 
@@ -448,6 +516,7 @@ export type MutationCreate_ProductArgs = {
   image_logo?: Maybe<ImageInput>;
   image_logo_id?: Maybe<Scalars['ID']>;
   image_hero?: Maybe<ImageInput>;
+  integration_id?: Maybe<Scalars['ID']>;
   status?: Maybe<Scalars['String']>;
 };
 
@@ -463,6 +532,7 @@ export type MutationUpdate_ProductArgs = {
   image_logo?: Maybe<ImageInput>;
   image_logo_id?: Maybe<Scalars['ID']>;
   image_hero?: Maybe<ImageInput>;
+  integration_id?: Maybe<Scalars['ID']>;
   status?: Maybe<Scalars['String']>;
 };
 
@@ -519,6 +589,36 @@ export type MutationUpdate_ThemeArgs = {
   color_success?: Maybe<Scalars['String']>;
 };
 
+
+export type MutationUpdate_OrderArgs = {
+  order_id: Scalars['ID'];
+  state?: Maybe<Scalars['String']>;
+  processed_at?: Maybe<Scalars['DateTime']>;
+};
+
+
+export type MutationUpdate_Order_ItemArgs = {
+  order_item_id: Scalars['ID'];
+  state?: Maybe<Scalars['String']>;
+  processed_at?: Maybe<Scalars['DateTime']>;
+};
+
+
+export type MutationCreate_IntegrationArgs = {
+  agency_id: Scalars['ID'];
+  credential_id?: Maybe<Scalars['ID']>;
+  name: Scalars['String'];
+  data: Scalars['Json'];
+};
+
+
+export type MutationUpdate_IntegrationArgs = {
+  integration_id: Scalars['ID'];
+  credential_id?: Maybe<Scalars['ID']>;
+  name?: Maybe<Scalars['String']>;
+  data?: Maybe<Scalars['Json']>;
+};
+
 export type SimpleResult = MutationResult & {
   __typename?: 'SimpleResult';
   success: Scalars['Boolean'];
@@ -556,6 +656,27 @@ export enum AccessLevel {
   Client = 'CLIENT',
   Public = 'PUBLIC'
 }
+
+export type Credential = Node & {
+  __typename?: 'Credential';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  data: Scalars['Json'];
+  agency: Agency;
+  type: Scalars['String'];
+};
+
+export type CredentialFilter = {
+  name?: Maybe<Scalars['String']>;
+  agency_id?: Maybe<Scalars['ID']>;
+};
+
+export type CredentialMutationResult = MutationResult & {
+  __typename?: 'CredentialMutationResult';
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
+  credential?: Maybe<Credential>;
+};
 
 export type FormField = Node & {
   __typename?: 'FormField';
@@ -938,6 +1059,8 @@ export type Price = Node & {
 
 export type PriceFilter = {
   product_id?: Maybe<Scalars['ID']>;
+  stripe_price_id_ext_live?: Maybe<Scalars['String']>;
+  stripe_price_id_ext_test?: Maybe<Scalars['String']>;
 };
 
 export type PriceMutationResult = MutationResult & {
@@ -1093,6 +1216,47 @@ export type StripeCustomer = {
   customer?: Maybe<Customer>;
 };
 
+export type StripeCheckoutSession = {
+  __typename?: 'StripeCheckoutSession';
+  id: Scalars['ID'];
+  id_ext: Scalars['ID'];
+  allow_promotion_codes?: Maybe<Scalars['Boolean']>;
+  amount_subtotal?: Maybe<Scalars['Int']>;
+  amount_total?: Maybe<Scalars['Int']>;
+  billing_address_collection?: Maybe<Scalars['String']>;
+  cancel_url?: Maybe<Scalars['String']>;
+  client_reference_id?: Maybe<Scalars['String']>;
+  currency?: Maybe<Scalars['String']>;
+  customer?: Maybe<StripeCustomer>;
+  customer_email?: Maybe<Scalars['String']>;
+  line_items: Array<LineItem>;
+  livemode?: Maybe<Scalars['Boolean']>;
+  locale?: Maybe<Scalars['String']>;
+  mode?: Maybe<Scalars['String']>;
+  payment_method_types?: Maybe<Array<Maybe<Scalars['String']>>>;
+  payment_status?: Maybe<Scalars['String']>;
+  submit_type?: Maybe<Scalars['String']>;
+  success_url?: Maybe<Scalars['String']>;
+};
+
+
+export type StripeCheckoutSessionLine_ItemsArgs = {
+  starting_after_id?: Maybe<Scalars['String']>;
+  ending_before_id?: Maybe<Scalars['String']>;
+  limit?: Maybe<Scalars['Int']>;
+};
+
+export type LineItem = {
+  __typename?: 'LineItem';
+  id: Scalars['ID'];
+  amount_subtotal: Scalars['Int'];
+  amount_total: Scalars['Int'];
+  currency: Scalars['String'];
+  description: Scalars['String'];
+  price?: Maybe<Scalars['String']>;
+  quantity?: Maybe<Scalars['Int']>;
+};
+
 export type BalanceTransaction = {
   __typename?: 'BalanceTransaction';
   id: Scalars['ID'];
@@ -1154,6 +1318,7 @@ export type Product = Node & {
   image_logo?: Maybe<Image>;
   image_hero?: Maybe<Image>;
   markdown_description?: Maybe<Markdown>;
+  integration?: Maybe<Integration>;
   pages?: Maybe<Array<Page>>;
   settings: ProductSettings;
 };
@@ -1321,6 +1486,75 @@ export type UpdateThemeResult = MutationResult & {
   success: Scalars['Boolean'];
   message?: Maybe<Scalars['String']>;
   theme?: Maybe<Theme>;
+};
+
+export type Order = {
+  __typename?: 'Order';
+  id: Scalars['ID'];
+  customer: Customer;
+  items: Array<OrderItem>;
+  stripe_account: StripeAccount;
+  stripe_checkout_session: StripeCheckoutSession;
+  state: Scalars['String'];
+  error?: Maybe<Scalars['String']>;
+  ordered_at: Scalars['DateTime'];
+  processed_at?: Maybe<Scalars['DateTime']>;
+};
+
+export type OrderFilter = {
+  customer_id?: Maybe<Scalars['ID']>;
+  stripe_account_id?: Maybe<Scalars['ID']>;
+};
+
+export type OrderMutationResult = MutationResult & {
+  __typename?: 'OrderMutationResult';
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
+  order?: Maybe<Order>;
+};
+
+export type OrderItem = {
+  __typename?: 'OrderItem';
+  id: Scalars['ID'];
+  order: Order;
+  price: Price;
+  state: Scalars['String'];
+  stripe_line_item_id_ext: Scalars['String'];
+  error?: Maybe<Scalars['String']>;
+  processed_at?: Maybe<Scalars['DateTime']>;
+};
+
+export type OrderItemFilter = {
+  order_id?: Maybe<Scalars['ID']>;
+  stripe_line_item_id_ext?: Maybe<Scalars['ID']>;
+};
+
+export type OrderItemMutationResult = MutationResult & {
+  __typename?: 'OrderItemMutationResult';
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
+  order_item?: Maybe<OrderItem>;
+};
+
+export type Integration = Node & {
+  __typename?: 'Integration';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  data: Scalars['Json'];
+  agency: Agency;
+  credential?: Maybe<Credential>;
+};
+
+export type IntegrationFilter = {
+  name?: Maybe<Scalars['String']>;
+  agency_id?: Maybe<Scalars['ID']>;
+};
+
+export type IntegrationMutationResult = MutationResult & {
+  __typename?: 'IntegrationMutationResult';
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
+  integration?: Maybe<Integration>;
 };
 
 
