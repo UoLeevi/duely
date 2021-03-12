@@ -2,6 +2,7 @@ import { ClientBase, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
 import { Awaited, ResolvableValue, Util } from '@duely/core';
+import { ResourceTypes } from './types';
 
 export * from './errors';
 
@@ -240,6 +241,11 @@ export async function queryResourceAccess(arg: Context | ClientBase, id: string)
   );
 }
 
+export async function queryResource<K extends keyof ResourceTypes, F extends Record<string, any> = Record<string, any>>(
+  context: Context,
+  id_or_resource_name: K,
+  filter?: F
+): Promise<ResourceTypes[K]>;
 export async function queryResource<R = any, F extends Record<string, any> = Record<string, any>>(
   context: Context,
   id_or_resource_name: string,
@@ -387,10 +393,10 @@ function useFunctions(client: ClientBase) {
       return await query(client, sql, ...parameters);
     },
     queryResourceAccess: Util.partial(queryResourceAccess, client),
-    async queryResource<R = any, F extends Record<string, any> = Record<string, any>>(
-      id_or_resource_name: string,
+    async queryResource<K extends string, R = any, F extends Record<string, any> = Record<string, any>>(
+      id_or_resource_name: K,
       filter?: F
-    ): Promise<R> {
+    ): Promise<K extends keyof ResourceTypes ? ResourceTypes[K] : R> {
       return await queryResource(client, id_or_resource_name, filter);
     },
     async queryResourceAll<R = any, F extends Record<string, any> = Record<string, any>>(
