@@ -29,15 +29,15 @@ export type AgencyResource = {
 export type ThemeResource = {
   id: ResourceId<'theme'>;
   name: string;
-  image_logo_id: ResourceId<'image'>;
-  image_hero_id: ResourceId<'image'>;
-  color_primary: string;
-  color_secondary: string;
-  color_accent: string;
-  color_background: string;
-  color_surface: string;
-  color_error: string;
-  color_success: string;
+  image_logo_id?: ResourceId<'image'>;
+  image_hero_id?: ResourceId<'image'>;
+  color_primary?: string;
+  color_secondary?: string;
+  color_accent?: string;
+  color_background?: string;
+  color_surface?: string;
+  color_error?: string;
+  color_success?: string;
   agency_id: ResourceId<'agency'>;
 };
 
@@ -46,7 +46,7 @@ export type ImageResource = {
   name: string;
   data: string;
   color: string;
-  agency_id: ResourceId<'agency'>;
+  agency_id?: ResourceId<'agency'>;
   access: AccessLevel;
 };
 
@@ -77,20 +77,20 @@ export type ProductResource = {
   agency_id: ResourceId<'agency'>;
   name: string;
   url_name: string;
-  description: string;
-  duration: string;
-  image_logo_id: ResourceId<'image'>;
-  image_hero_id: ResourceId<'image'>;
-  default_price_id: ResourceId<'price'>;
-  markdown_description_id: ResourceId<'markdown'>;
-  stripe_prod_id_ext_live: string;
-  stripe_prod_id_ext_test: string;
-  integration_id: ResourceId<'integration'>;
+  description?: string;
+  duration?: string;
+  image_logo_id?: ResourceId<'image'>;
+  image_hero_id?: ResourceId<'image'>;
+  default_price_id?: ResourceId<'price'>;
+  markdown_description_id?: ResourceId<'markdown'>;
+  stripe_prod_id_ext_live?: string;
+  stripe_prod_id_ext_test?: string;
+  integration_id?: ResourceId<'integration'>;
 };
 
 export type MarkdownResource = {
   id: ResourceId<'markdown'>;
-  agency_id: ResourceId<'agency'>;
+  agency_id?: ResourceId<'agency'>;
   name: string;
   data: string;
   access: AccessLevel;
@@ -106,14 +106,14 @@ export type MembershipResource = {
 export type NotificationDefinitionResource = {
   id: ResourceId<'notification definition'>;
   name: string;
-  description: string;
-  stripe_event: string;
-  feed_template: string;
-  feed_notification_enabled: boolean;
-  feed_notification_default: boolean;
-  email_template: string;
-  email_notifications_enabled: boolean;
-  email_notifications_default: boolean;
+  description?: string;
+  stripe_event?: string;
+  feed_template?: string;
+  feed_notification_enabled?: boolean;
+  feed_notification_default?: boolean;
+  email_template?: string;
+  email_notifications_enabled?: boolean;
+  email_notifications_default?: boolean;
 };
 
 export type UserNotificationSettingResource = {
@@ -121,8 +121,8 @@ export type UserNotificationSettingResource = {
   user_id: ResourceId<'user'>;
   subdomain_id: ResourceId<'subdomain'>;
   notification_definition_id: ResourceId<'notification definition'>;
-  feed_notification: boolean;
-  email_notification: boolean;
+  feed_notification?: boolean;
+  email_notification?: boolean;
 };
 
 export type AgencyThankYouPageSettingResource = {
@@ -150,7 +150,7 @@ export type FormFieldResource = {
   name: string;
   type: string;
   label: string;
-  default: object;
+  default?: object;
   sort_key: number;
 };
 
@@ -159,11 +159,123 @@ export type PageBlockResource = {
   page_block_definition_id: ResourceId<'page block definition'>;
   page_id: ResourceId<'page'>;
   data: object;
-  after_id: ResourceId<'page block'>;
+  after_id?: ResourceId<'page block'>;
 };
 
 export type FormResource = {
   id: ResourceId<'form'>;
+};
+
+export type TransactionFeeResource = {
+  id: ResourceId<'transaction fee'>;
+  subscription_plan_id: ResourceId<'subscription plan'>;
+  numerator: number;
+  denominator: number;
+  fixed_amount: number;
+  currency: string;
+  transaction_amount_upper_bound?: number;
+  data: object;
+};
+
+export type PageDefinitionResource = {
+  id: ResourceId<'page definition'>;
+  name: string;
+  default_block_uuids: string[];
+  url_path: string;
+};
+
+export type PageResource = {
+  id: ResourceId<'page'>;
+  agency_id: ResourceId<'agency'>;
+  page_definition_id: ResourceId<'page definition'>;
+  access: AccessLevel;
+  product_id?: ResourceId<'product'>;
+  url_path: string;
+};
+
+export type StripeAccountResource = {
+  id: ResourceId<'stripe account'>;
+  agency_id: ResourceId<'agency'>;
+  stripe_id_ext: string;
+  livemode: boolean;
+};
+
+export type SubscriptionPlanResource = {
+  id: ResourceId<'subscription plan'>;
+  name: string;
+  stripe_prod_id_ext_live?: string;
+  stripe_prod_id_ext_test?: string;
+  data: object;
+};
+
+export type CustomerResource = {
+  id: ResourceId<'customer'>;
+  name?: string;
+  email_address: string;
+  default_stripe_id_ext: string;
+  stripe_account_id: ResourceId<'stripe account'>;
+  user_id?: ResourceId<'user'>;
+};
+
+export type WebhookEventResource = {
+  id: ResourceId<'webhook event'>;
+  id_ext: string;
+  source: string;
+  data: object;
+  state: ProcessingState;
+  error?: string;
+  agency_id: ResourceId<'agency'>;
+  event_at: Date;
+  livemode: boolean;
+};
+
+export type PriceResource = {
+  id: ResourceId<'price'>;
+  product_id: ResourceId<'product'>;
+  type: string;
+  unit_amount: number;
+  currency: string;
+  recurring_interal?: string;
+  recurring_inteval_count?: number;
+  stripe_price_id_ext_live?: string;
+  stripe_price_id_ext_test?: string;
+};
+
+export type OrderResource = {
+  id: ResourceId<'order'>;
+  customer_id: ResourceId<'customer'>;
+  stripe_account_id: ResourceId<'stripe account'>;
+  stripe_checkout_session_id_ext: string;
+  state: ProcessingState;
+  error?: string;
+  ordered_at: Date;
+  processed_at: Date;
+};
+
+export type CredentialResource = {
+  id: ResourceId<'credential'>;
+  name: string;
+  type: string;
+  agency_id: ResourceId<'agency'>;
+  data: object;
+};
+
+export type IntegrationResource = {
+  id: ResourceId<'integration'>;
+  name: string;
+  agency_id: ResourceId<'agency'>;
+  credential_id?: ResourceId<'credential'>;
+  data: object;
+};
+
+export type OrderItemResource = {
+  id: ResourceId<'order item'>;
+  order_id: ResourceId<'order'>;
+  price_id: ResourceId<'price'>;
+  stripe_line_item_id_ext: string;
+  state: ProcessingState;
+  error?: string;
+  processed_at: Date;
 };
 
 export type ResourceDefinitions = {
@@ -249,7 +361,7 @@ export type ResourceDefinitions = {
     name: 'agency thank you page setting';
     prefix: 'set';
     table_name: 'agency_thank_you_page_setting';
-    resource: AgencyThankYouPageSettingResource
+    resource: AgencyThankYouPageSettingResource;
   };
   'page block definition': {
     name: 'page block definition';
@@ -279,61 +391,73 @@ export type ResourceDefinitions = {
     name: 'transaction fee';
     prefix: 'txnfee';
     table_name: 'transaction_fee';
+    resource: TransactionFeeResource;
   };
   'page definition': {
     name: 'page definition';
     prefix: 'pagedef';
     table_name: 'page_definition';
+    resource: PageDefinitionResource;
   };
   page: {
     name: 'page';
     prefix: 'page';
     table_name: 'page';
+    resource: PageResource;
   };
   'stripe account': {
     name: 'stripe account';
     prefix: 'stripe';
     table_name: 'stripe_account';
+    resource: StripeAccountResource;
   };
   'subscription plan': {
     name: 'subscription plan';
     prefix: 'subplan';
     table_name: 'subscription_plan';
+    resource: SubscriptionPlanResource;
   };
   customer: {
     name: 'customer';
     prefix: 'cus';
     table_name: 'customer';
+    resource: CustomerResource;
   };
   'webhook event': {
     name: 'webhook event';
     prefix: 'whevt';
     table_name: 'webhook_event';
+    resource: WebhookEventResource;
   };
   price: {
     name: 'price';
     prefix: 'price';
     table_name: 'price';
+    resource: PriceResource;
   };
   order: {
     name: 'order';
     prefix: 'ord';
     table_name: 'order';
+    resource: OrderResource;
   };
   credential: {
     name: 'credential';
     prefix: 'cred';
     table_name: 'credential';
+    resource: CredentialResource;
   };
   integration: {
     name: 'integration';
     prefix: 'inte';
     table_name: 'integration';
+    resource: IntegrationResource;
   };
   'order item': {
     name: 'order item';
     prefix: 'orditm';
     table_name: 'order_item';
+    resource: OrderItemResource;
   };
 };
 

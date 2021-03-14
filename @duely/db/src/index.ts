@@ -2,7 +2,7 @@ import { ClientBase, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
 import { Awaited, ResolvableValue, Util } from '@duely/core';
-import { Resources } from './types';
+import { AccessLevel, Resources } from './types';
 
 export * from './errors';
 
@@ -231,50 +231,41 @@ export async function query<R = any, I extends any[] = any[]>(
   return res[0];
 }
 
-export async function queryResourceAccess(context: Context, id: string): Promise<string>;
-export async function queryResourceAccess(client: ClientBase, id: string): Promise<string>;
-export async function queryResourceAccess(arg: Context | ClientBase, id: string): Promise<string> {
-  return await query<string, [string]>(
+export async function queryResourceAccess(context: Context, id: string): Promise<AccessLevel>;
+export async function queryResourceAccess(client: ClientBase, id: string): Promise<AccessLevel>;
+export async function queryResourceAccess(
+  arg: Context | ClientBase,
+  id: string
+): Promise<AccessLevel> {
+  return await query<AccessLevel, [string]>(
     arg as any /* Context | ClientBase */,
     'SELECT * FROM operation_.query_resource_access_($1::text)',
     id
   );
 }
 
-export async function queryResource<K extends keyof Resources, F extends Record<string, any> = Record<string, any>>(
+export async function queryResource<K extends keyof Resources>(
   context: Context,
-  id_or_resource_name: K,
-  filter?: F
+  resource_name: K,
+  id_or_filter: string | Partial<Resources[K]>
 ): Promise<Resources[K]>;
-export async function queryResource<R = any, F extends Record<string, any> = Record<string, any>>(
-  context: Context,
-  id_or_resource_name: string,
-  filter?: F
-): Promise<R>;
-export async function queryResource<R = any, F extends Record<string, any> = Record<string, any>>(
+export async function queryResource<K extends keyof Resources>(
   client: ClientBase,
-  id_or_resource_name: string,
-  filter?: F
-): Promise<R>;
-export async function queryResource<R = any, F extends Record<string, any> = Record<string, any>>(
+  resource_name: K,
+  id_or_filter: string | Partial<Resources[K]>
+): Promise<Resources[K]>;
+export async function queryResource<K extends keyof Resources>(
   arg: Context | ClientBase,
-  id_or_resource_name: string,
-  filter?: F
-): Promise<R> {
-  if (filter) {
-    const resources = await queryResourceAll<R, F>(
-      arg as any /* Context | ClientBase */,
-      id_or_resource_name,
-      filter
-    );
-    return resources[0];
-  }
+  resource_name: K,
+  id_or_filter: string | Partial<Resources[K]>
+): Promise<Resources[K]> {
+  if (!arg || !resource_name || !id_or_filter) throw Error('Arguments are required');
 
-  const id = id_or_resource_name;
   return await query(
     arg as any /* Context | ClientBase */,
-    'SELECT * FROM operation_.query_resource_($1::text)',
-    id
+    'SELECT * FROM operation_.query_resource_($1::text, $2::jsonb)',
+    resource_name,
+    id_or_filter
   );
 }
 
@@ -393,11 +384,11 @@ function useFunctions(client: ClientBase) {
       return await query(client, sql, ...parameters);
     },
     queryResourceAccess: Util.partial(queryResourceAccess, client),
-    async queryResource<K extends string, R = any, F extends Record<string, any> = Record<string, any>>(
-      id_or_resource_name: K,
-      filter?: F
-    ): Promise<K extends keyof Resources ? Resources[K] : R> {
-      return await queryResource(client, id_or_resource_name, filter);
+    async queryResource<K extends keyof Resources>(
+      resource_name: K,
+      id_or_filter: string | Partial<Resources[K]>
+    ): Promise<Resources[K]> {
+      return await queryResource(client, resource_name, id_or_filter);
     },
     async queryResourceAll<R = any, F extends Record<string, any> = Record<string, any>>(
       resource_name: string,
