@@ -7,7 +7,7 @@ import {
 
 const resource = {
   name: 'membership'
-};
+} as const;
 
 export const Membership: GqlTypeDefinition = {
   typeDef: gql`

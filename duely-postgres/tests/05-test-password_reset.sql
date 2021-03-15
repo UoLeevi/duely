@@ -49,14 +49,14 @@ BEGIN
 
 
   -- TEST VALID QUERY OPERATION
-  SELECT * INTO _result_1 FROM operation_.query_resource_(_result_1->>'id');
-  --RAISE NOTICE E'query_resource_(text):\n%', _result_1;
+  SELECT * INTO _result_1 FROM operation_.query_resource_(_resource_name, _result_1->>'id');
+  --RAISE NOTICE E'query_resource_:\n%', _result_1;
 
   ASSERT _result_1 ?& '{ id, verification_code }';
 
   _data := jsonb_build_object('verification_code', _result_1->>'verification_code');
-  SELECT * INTO _result_1 FROM operation_.query_resource_all_(_resource_name, _data);
-  --RAISE NOTICE E'query_resource_(text):\n%', _result_1;
+  SELECT * INTO _result_1 FROM operation_.query_resource_(_resource_name, _data);
+  --RAISE NOTICE E'query_resource_:\n%', _result_1;
 
   ASSERT _result_1 ?& '{ id }';
 
@@ -93,11 +93,11 @@ BEGIN
   }';
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
   SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_1->>'id');
-  --RAISE NOTICE E'delete_resource_(text):\n%', _result_1;
+  --RAISE NOTICE E'delete_resource_:\n%', _result_1;
 
 
-  SELECT * INTO _result_1 FROM operation_.query_resource_all_('user', '{ "email_address": "test@duely.app" }');
-  --RAISE NOTICE E'query_resource_all_(text, jsonb):\n%', _result_1;
+  SELECT * INTO _result_1 FROM operation_.query_resource_('user', '{ "email_address": "test@duely.app" }');
+  --RAISE NOTICE E'query_resource_(text, jsonb):\n%', _result_1;
 
   ASSERT _result_1 IS NULL;
 

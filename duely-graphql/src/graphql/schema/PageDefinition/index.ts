@@ -9,7 +9,7 @@ import {
 const resource = {
   name: 'page definition',
   table_name: 'page_definition'
-};
+} as const;
 
 export const PageDefinition: GqlTypeDefinition = {
   typeDef: gql`

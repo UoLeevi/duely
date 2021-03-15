@@ -10,11 +10,12 @@ import { GqlTypeDefinition } from '../../types';
 import { Currency, Price as TPrice } from '@duely/core';
 import Stripe from 'stripe';
 import { URL } from 'url';
+import { PriceResource, ProductResource } from '@duely/db/dist/types';
 
 const resource = {
   name: 'price',
   table_name: 'price'
-};
+} as const;
 
 export const Price: GqlTypeDefinition = {
   typeDef: gql`
@@ -90,7 +91,7 @@ export const Price: GqlTypeDefinition = {
           return await withSession(
             context,
             async ({ queryResource, createResource, updateResource }) => {
-              const product = await queryResource(args.product_id);
+              const product = await queryResource('product', args.product_id);
 
               if (product == null) {
                 throw Error('Product not found');
@@ -99,7 +100,7 @@ export const Price: GqlTypeDefinition = {
               // create price resource
               let price = await createResource('price', args);
 
-              const agency = await queryResource(product.agency_id);
+              const agency = await queryResource('agency', product.agency_id);
 
               const {
                 unit_amount,
@@ -135,7 +136,8 @@ export const Price: GqlTypeDefinition = {
                   livemode: stripe_env === 'live'
                 });
 
-                stripe_price_args.product = product[`stripe_prod_id_ext_${stripe_env}`];
+                stripe_price_args.product =
+                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource];
 
                 // create price object at stripe
                 stripe_price[stripe_env] = await stripe[stripe_env].prices.create(
@@ -209,8 +211,8 @@ export const Price: GqlTypeDefinition = {
               };
             }
 
-            const product = await queryResource(price.product_id);
-            const agency = await queryResource(product.agency_id);
+            const product = await queryResource('product', price.product_id);
+            const agency = await queryResource('agency', product.agency_id);
 
             const stripe_envs: (keyof typeof stripe)[] = agency.livemode
               ? ['test', 'live']
@@ -263,14 +265,14 @@ export const Price: GqlTypeDefinition = {
         try {
           return await withSession(context, async ({ queryResource }) => {
             // get resources
-            const price = await queryResource(price_id);
-            const product = await queryResource(price.product_id);
+            const price = await queryResource('price', price_id);
+            const product = await queryResource('product', price.product_id);
             const stripe_account = await queryResource('stripe account', {
               agency_id: product.agency_id,
               livemode
             });
-            const agency = await queryResource(product.agency_id);
-            const subdomain = await queryResource(agency.subdomain_id);
+            const agency = await queryResource('agency', product.agency_id);
+            const subdomain = await queryResource('subdomain', agency.subdomain_id);
 
             if (!success_url) {
               const product_thank_you_page_setting = await queryResource(
@@ -325,7 +327,9 @@ export const Price: GqlTypeDefinition = {
               payment_method_types: ['card'],
               line_items: [
                 {
-                  price: price[`stripe_price_id_ext_${stripe_env}`],
+                  price: price[
+                    `stripe_price_id_ext_${stripe_env}` as keyof PriceResource
+                  ] as string,
                   quantity: 1
                 }
               ],

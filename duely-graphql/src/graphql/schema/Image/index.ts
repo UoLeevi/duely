@@ -9,7 +9,7 @@ import { GqlTypeDefinition } from '../../types';
 
 const resource = {
   name: 'image'
-};
+} as const;
 
 const defaultValidationOptions = {
   allowedMimeTypes: ['image/jpeg', 'image/png'],

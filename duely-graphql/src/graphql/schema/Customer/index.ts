@@ -11,7 +11,7 @@ import Stripe from 'stripe';
 
 const resource = {
   name: 'customer'
-};
+} as const;
 
 export const Customer: GqlTypeDefinition = {
   typeDef: gql`
@@ -63,13 +63,20 @@ export const Customer: GqlTypeDefinition = {
   `,
   resolvers: {
     Customer: {
-      ...createResolverForReferencedResource({ name: 'stripe_account' }),
+      ...createResolverForReferencedResource({
+        name: 'stripe_account',
+        resource_name: 'stripe account'
+      }),
       ...createResolverForReferencedResource({ name: 'user' }),
       async default_stripe_customer(source, args, context) {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          const stripe_account = await queryResource(context, source.stripe_account_id);
+          const stripe_account = await queryResource(
+            context,
+            'stripe account',
+            source.stripe_account_id
+          );
 
           const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
@@ -98,7 +105,11 @@ export const Customer: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          const stripe_account = await queryResource(context, source.stripe_account_id);
+          const stripe_account = await queryResource(
+            context,
+            'stripe account',
+            source.stripe_account_id
+          );
 
           const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
@@ -142,42 +153,42 @@ export const Customer: GqlTypeDefinition = {
         email_address = validator.normalizeEmail(email_address);
 
         try {
-            return await withSession(context, async ({ queryResource, createResource }) => {
-              const stripe_account = await queryResource(stripe_account_id);
+          return await withSession(context, async ({ queryResource, createResource }) => {
+            const stripe_account = await queryResource('stripe account', stripe_account_id);
 
-              const stripe_customer_args: Stripe.CustomerCreateParams = {
-                name,
-                email: email_address,
-                metadata: {
-                  creation_mode: 'api'
-                }
-              };
+            const stripe_customer_args: Stripe.CustomerCreateParams = {
+              name,
+              email: email_address,
+              metadata: {
+                creation_mode: 'api'
+              }
+            };
 
-              const stripe_env = stripe_account.livemode ? 'live' : 'test';
+            const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
-              // create customer at stripe
-              const stripe_customer = await stripe[stripe_env].customers.create(
-                stripe_customer_args,
-                {
-                  stripeAccount: stripe_account.stripe_id_ext
-                }
-              );
+            // create customer at stripe
+            const stripe_customer = await stripe[stripe_env].customers.create(
+              stripe_customer_args,
+              {
+                stripeAccount: stripe_account.stripe_id_ext
+              }
+            );
 
-              // create customer resource
-              const customer = await createResource('customer', {
-                stripe_account_id,
-                email_address,
-                name,
-                default_stripe_id_ext: stripe_customer.id
-              });
-
-              // success
-              return {
-                success: true,
-                customer,
-                type: 'CustomerMutationResult'
-              };
+            // create customer resource
+            const customer = await createResource('customer', {
+              stripe_account_id,
+              email_address,
+              name,
+              default_stripe_id_ext: stripe_customer.id
             });
+
+            // success
+            return {
+              success: true,
+              customer,
+              type: 'CustomerMutationResult'
+            };
+          });
         } catch (error) {
           return {
             // error
@@ -203,42 +214,42 @@ export const Customer: GqlTypeDefinition = {
 
         try {
           return await withSession(context, async ({ queryResource, updateResource }) => {
-              const { stripe_account_id } = await queryResource(customer_id);
+            const { stripe_account_id } = await queryResource('customer', customer_id);
 
-              if (stripe_account_id == null) {
-                return {
-                  // error
-                  success: false,
-                  message: 'Customer not found',
-                  type: 'CustomerMutationResult'
-                };
-              }
-
-              const stripe_account = await queryResource(stripe_account_id);
-              const stripe_customer_args: Stripe.CustomerUpdateParams = {};
-
-              // update customer resource
-              const customer = await updateResource(customer_id, args);
-
-              stripe_customer_args.name = customer.name;
-              stripe_customer_args.email = customer.email_address;
-
-              const stripe_env = stripe_account.livemode ? 'live' : 'test';
-
-              // update customer at stripe
-              await stripe[stripe_env].customers.update(
-                customer.default_stripe_id_ext,
-                stripe_customer_args,
-                { stripeAccount: stripe_account.stripe_id_ext }
-              );
-
-              // success
+            if (stripe_account_id == null) {
               return {
-                success: true,
-                customer,
+                // error
+                success: false,
+                message: 'Customer not found',
                 type: 'CustomerMutationResult'
               };
-            });
+            }
+
+            const stripe_account = await queryResource('stripe account', stripe_account_id);
+            const stripe_customer_args: Stripe.CustomerUpdateParams = {};
+
+            // update customer resource
+            const customer = await updateResource(customer_id, args);
+
+            stripe_customer_args.name = customer.name;
+            stripe_customer_args.email = customer.email_address;
+
+            const stripe_env = stripe_account.livemode ? 'live' : 'test';
+
+            // update customer at stripe
+            await stripe[stripe_env].customers.update(
+              customer.default_stripe_id_ext,
+              stripe_customer_args,
+              { stripeAccount: stripe_account.stripe_id_ext }
+            );
+
+            // success
+            return {
+              success: true,
+              customer,
+              type: 'CustomerMutationResult'
+            };
+          });
         } catch (error) {
           return {
             // error
@@ -252,34 +263,37 @@ export const Customer: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-            return await withSession(context, async ({ queryResource, deleteResource }) => {
-              const customer = await deleteResource(customer_id);
+          return await withSession(context, async ({ queryResource, deleteResource }) => {
+            const customer = await deleteResource(customer_id);
 
-              if (customer == null) {
-                return {
-                  // error
-                  success: false,
-                  message: 'Customer not found',
-                  type: 'CustomerMutationResult'
-                };
-              }
-
-              const stripe_account = await queryResource(customer.stripe_account_id);
-
-              const stripe_env = stripe_account.livemode ? 'live' : 'test';
-
-              // delete customer from stripe
-              await stripe[stripe_env].customers.del(customer.default_stripe_id_ext, {
-                stripeAccount: stripe_account.stripe_id_ext
-              });
-
-              // success
+            if (customer == null) {
               return {
-                success: true,
-                customer,
+                // error
+                success: false,
+                message: 'Customer not found',
                 type: 'CustomerMutationResult'
               };
+            }
+
+            const stripe_account = await queryResource(
+              'stripe account',
+              customer.stripe_account_id
+            );
+
+            const stripe_env = stripe_account.livemode ? 'live' : 'test';
+
+            // delete customer from stripe
+            await stripe[stripe_env].customers.del(customer.default_stripe_id_ext, {
+              stripeAccount: stripe_account.stripe_id_ext
             });
+
+            // success
+            return {
+              success: true,
+              customer,
+              type: 'CustomerMutationResult'
+            };
+          });
         } catch (error) {
           return {
             // error

@@ -9,7 +9,7 @@ import {
 const resource = {
   name: 'page block definition',
   table_name: 'page_block_definition'
-};
+} as const;
 
 export const PageBlockDefinition: GqlTypeDefinition = {
   typeDef: gql`
@@ -32,7 +32,11 @@ export const PageBlockDefinition: GqlTypeDefinition = {
   `,
   resolvers: {
     PageBlockDefinition: {
-      ...createResolverForReferencedResource({ name: 'page', column_name: 'page_definition_id' }),
+      ...createResolverForReferencedResource({
+        name: 'page',
+        resource_name: 'page definition',
+        column_name: 'page_definition_id'
+      }),
       ...createResolverForReferencedResourceAll({
         name: 'fields',
         resource_name: 'form field',

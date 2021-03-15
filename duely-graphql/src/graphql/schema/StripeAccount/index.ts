@@ -259,7 +259,7 @@ export const StripeAccount: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          const stripe_account = await queryResource(context, args.id);
+          const stripe_account = await queryResource(context, 'stripe account', args.id);
           const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
           const { id, object, ...stripe_account_ext } = await stripe[stripe_env].accounts.retrieve(

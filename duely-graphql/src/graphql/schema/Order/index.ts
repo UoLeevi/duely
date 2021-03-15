@@ -10,7 +10,7 @@ import { GqlTypeDefinition } from '../../types';
 
 const resource = {
   name: 'order'
-};
+} as const;
 
 export const Order: GqlTypeDefinition = {
   typeDef: gql`
@@ -49,7 +49,10 @@ export const Order: GqlTypeDefinition = {
   resolvers: {
     Order: {
       ...createResolverForReferencedResource({ name: 'customer' }),
-      ...createResolverForReferencedResource({ name: 'stripe_account' }),
+      ...createResolverForReferencedResource({
+        name: 'stripe_account',
+        resource_name: 'stripe account'
+      }),
       ...createResolverForReferencedResourceAll({
         name: 'items',
         resource_name: 'order item',
@@ -65,7 +68,11 @@ export const Order: GqlTypeDefinition = {
         }
 
         try {
-          const stripe_account = await queryResource(context, order.stripe_account_id);
+          const stripe_account = await queryResource(
+            context,
+            'stripe account',
+            order.stripe_account_id
+          );
           const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
           const { id, object, ...stripe_checkout_session } = await stripe[

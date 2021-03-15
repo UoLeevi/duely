@@ -60,6 +60,7 @@ export type SignUpResource = {
   id: ResourceId<'sign up'>;
   user_id: ResourceId<'user'>;
   name: string;
+  verification_code: string;
   data: object;
   email_address: string;
 };
@@ -68,6 +69,7 @@ export type PasswordResetResource = {
   id: ResourceId<'password reset'>;
   user_id: ResourceId<'user'>;
   name: string;
+  verification_code: string;
   data: object;
   email_address: string;
 };

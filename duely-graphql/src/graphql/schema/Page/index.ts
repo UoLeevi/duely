@@ -10,7 +10,7 @@ import {
 
 const resource = {
   name: 'page'
-};
+} as const;
 
 export const Page: GqlTypeDefinition = {
   typeDef: gql`
@@ -53,6 +53,7 @@ export const Page: GqlTypeDefinition = {
       ...createResolverForReferencedResource({ name: 'product' }),
       ...createResolverForReferencedResource({
         name: 'definition',
+        resource_name: 'page definition',
         column_name: 'page_definition_id'
       }),
       ...createResolverForReferencedResourceAll({
@@ -88,7 +89,7 @@ export const Page: GqlTypeDefinition = {
 
         try {
           return await withSession(context, async ({ queryResource }) => {
-            const subdomain = await queryResource('subdomain', { name: subdomain_name });
+            const subdomain = await queryResource('subdomain', { name: subdomain_name! });
             if (!subdomain) return null;
             const agency = await queryResource('agency', { subdomain_id: subdomain.id });
             if (!agency) return null;

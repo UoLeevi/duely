@@ -8,7 +8,7 @@ import { GqlTypeDefinition } from '../../types';
 
 const resource = {
   name: 'integration'
-};
+} as const;
 
 export const Integration: GqlTypeDefinition = {
   typeDef: gql`

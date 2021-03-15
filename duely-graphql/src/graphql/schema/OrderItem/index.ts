@@ -9,7 +9,7 @@ import { GqlTypeDefinition } from '../../types';
 const resource = {
   name: 'order item',
   table_name: 'order_item'
-};
+} as const;
 
 export const OrderItem: GqlTypeDefinition = {
   typeDef: gql`

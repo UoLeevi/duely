@@ -1,6 +1,8 @@
 import type { GraphQLResolveInfo } from 'graphql';
 import { queryResource, queryResourceAll } from '@duely/db';
 import { DuelyQqlContext } from './context';
+import { Resources } from '@duely/db/dist/types';
+import { Util } from '@duely/core';
 
 // Not yet used
 export async function withCache<TKey, TValue>(
@@ -30,18 +32,19 @@ export function withStripeAccountProperty<TData>(
     : { stripeAccount, livemode, ...data };
 }
 
-type CreateDefaultQueryResolversForResourceArgs = {
-  name: string;
+type CreateDefaultQueryResolversForResourceArgs<K extends keyof Resources> = {
+  name: K;
   table_name?: string;
   plural?: string;
 };
 
 export function createDefaultQueryResolversForResource<
-  TResult,
+  K extends keyof Resources,
   TSource extends { id?: string },
-  TContext extends DuelyQqlContext,
-  TFilterArg
->({ table_name, name, plural }: CreateDefaultQueryResolversForResourceArgs) {
+  TContext extends DuelyQqlContext
+>({ name, table_name, plural, ...rest }: CreateDefaultQueryResolversForResourceArgs<K>) {
+  const resource_name = (Util.hasProperty(rest, 'resource_name') ? rest.resource_name : name) as K;
+
   return {
     async [table_name ?? name](
       source: TSource,
@@ -50,11 +53,11 @@ export function createDefaultQueryResolversForResource<
       info: GraphQLResolveInfo
     ) {
       if (!context.jwt) throw new Error('Unauthorized');
-      return await queryResource(context, args.id);
+      return await queryResource(context, resource_name, args.id);
     },
     async [plural ?? (table_name ?? name) + 's'](
       source: TSource,
-      args: { filter?: TFilterArg },
+      args: { filter?: Partial<Resources[K]> },
       context: TContext,
       info: GraphQLResolveInfo
     ) {
@@ -64,86 +67,86 @@ export function createDefaultQueryResolversForResource<
   };
 }
 
-type CreateResolverForReferencedResourceArgs = {
-  name: string;
-  resource_name?: string;
+type CreateResolverForReferencedResourceArgs<K extends keyof Resources> = (
+  | { name: K }
+  | { name: string; resource_name: K }
+) & {
   column_name?: string;
   reverse_column_name?: string;
   reverse?: boolean;
 };
 
 export function createResolverForReferencedResource<
-  TResult,
+  K extends keyof Resources,
   TSource extends { id?: string },
-  TContext extends DuelyQqlContext,
-  TFilterArg
+  TContext extends DuelyQqlContext
 >({
   name,
-  resource_name,
   column_name,
   reverse_column_name,
-  reverse
-}: CreateResolverForReferencedResourceArgs) {
+  reverse,
+  ...rest
+}: CreateResolverForReferencedResourceArgs<K>) {
   column_name = column_name ?? `${name}_id`;
-  resource_name = resource_name ?? name;
-  const createQueryArgs: (
+  const resource_name = (Util.hasProperty(rest, 'resource_name') ? rest.resource_name : name) as K;
+
+  const createIdOrFilterArg: (
     source: TSource,
-    args: { filter?: TFilterArg }
-  ) => [string, Record<string, any>?] = reverse
-    ? (source, args) => [
-        resource_name!,
-        {
+    args: { filter?: Partial<Resources[K]> }
+  ) => string | Partial<Resources[K]> = reverse
+    ? (source, args) =>
+        ({
           ...args.filter,
-          [column_name!]: reverse_column_name
+          [column_name as keyof Resources[K]]: reverse_column_name
             ? source[reverse_column_name as keyof TSource]
             : source.id ?? source[column_name! as keyof TSource]
-        }
-      ]
-    : (source, args) => [(source[column_name! as keyof TSource]! as unknown) as string];
+        } as Partial<Resources[K]>)
+    : (source, args) => (source[column_name! as keyof TSource]! as unknown) as string;
 
   return {
     async [name](
       source: TSource,
-      args: { filter?: TFilterArg },
+      args: { filter?: Partial<Resources[K]> },
       context: TContext,
       info: GraphQLResolveInfo
     ) {
       if (!context.jwt) throw new Error('Unauthorized');
-      return await queryResource<TResult>(context, ...createQueryArgs(source, args));
+
+      return await queryResource(context, resource_name, createIdOrFilterArg(source, args));
     }
   };
 }
 
-type CreateResolverForReferencedResourceAllArgs = {
-  name: string;
-  resource_name?: string;
+type CreateResolverForReferencedResourceAllArgs<K extends keyof Resources> = (
+  | { name: K }
+  | { name: string; resource_name: K }
+) & {
   column_name?: string;
   reverse_column_name?: string;
 };
 
 export function createResolverForReferencedResourceAll<
-  TResult,
+  K extends keyof Resources,
   TSource extends { id?: string },
-  TContext extends { jwt?: string; ip?: string },
-  TFilterArg
+  TContext extends { jwt?: string; ip?: string }
 >({
   name,
-  resource_name,
   column_name,
-  reverse_column_name
-}: CreateResolverForReferencedResourceAllArgs) {
+  reverse_column_name,
+  ...rest
+}: CreateResolverForReferencedResourceAllArgs<K>) {
   column_name = column_name ?? `${name}_id`;
-  resource_name = resource_name ?? name;
+  const resource_name = (Util.hasProperty(rest, 'resource_name') ? rest.resource_name : name) as K;
 
   return {
     async [name](
       source: TSource,
-      args: { filter?: TFilterArg },
+      args: { filter?: Partial<Resources[K]> },
       context: TContext,
       info: GraphQLResolveInfo
-    ): Promise<TResult[]> {
+    ): Promise<Resources[K][]> {
       if (!context.jwt) throw new Error('Unauthorized');
-      return await queryResourceAll<TResult>(context, resource_name!, {
+      return await queryResourceAll(context, resource_name!, {
         ...args.filter,
         [column_name!]: reverse_column_name
           ? source[reverse_column_name as keyof TSource]

@@ -13,7 +13,7 @@ import Stripe from 'stripe';
 
 const resource = {
   name: 'product'
-};
+} as const;
 
 export const Product: GqlTypeDefinition = {
   typeDef: gql`
@@ -87,15 +87,18 @@ export const Product: GqlTypeDefinition = {
     Product: {
       ...createResolverForReferencedResource({ name: 'agency' }),
       ...createResolverForReferencedResource({ name: 'integration' }),
-      ...createResolverForReferencedResource({ name: 'default_price' }),
+      ...createResolverForReferencedResource({ name: 'default_price', resource_name: 'price' }),
       ...createResolverForReferencedResourceAll({
         name: 'prices',
         resource_name: 'price',
         column_name: 'product_id'
       }),
-      ...createResolverForReferencedResource({ name: 'image_logo' }),
-      ...createResolverForReferencedResource({ name: 'image_hero' }),
-      ...createResolverForReferencedResource({ name: 'markdown_description' }),
+      ...createResolverForReferencedResource({ name: 'image_logo', resource_name: 'image' }),
+      ...createResolverForReferencedResource({ name: 'image_hero', resource_name: 'image' }),
+      ...createResolverForReferencedResource({
+        name: 'markdown_description',
+        resource_name: 'markdown'
+      }),
       ...createResolverForReferencedResourceAll({
         name: 'pages',
         resource_name: 'page',
@@ -121,8 +124,8 @@ export const Product: GqlTypeDefinition = {
           return await withSession(
             context,
             async ({ queryResource, createResource, updateResource }) => {
-              const agency = await queryResource(args.agency_id);
-              const subdomain = await queryResource(agency.subdomain_id);
+              const agency = await queryResource('agency', args.agency_id);
+              const subdomain = await queryResource('subdomain', agency.subdomain_id);
 
               const { status, name, description } = args;
               const stripe_product_args: Stripe.ProductCreateParams = {
@@ -240,9 +243,9 @@ export const Product: GqlTypeDefinition = {
           return await withSession(
             context,
             async ({ queryResource, createResource, updateResource }) => {
-              const { agency_id } = await queryResource(product_id);
-              const agency = await queryResource(agency_id);
-              const subdomain = await queryResource(agency.subdomain_id);
+              const { agency_id } = await queryResource('product', product_id);
+              const agency = await queryResource('agency', agency_id);
+              const subdomain = await queryResource('subdomain', agency.subdomain_id);
               const stripe_product_args: Stripe.ProductUpdateParams = {};
 
               if (image_logo) {
@@ -349,7 +352,7 @@ export const Product: GqlTypeDefinition = {
               };
             }
 
-            const agency = await queryResource(product.agency_id);
+            const agency = await queryResource('agency', product.agency_id);
 
             const stripe_envs: (keyof typeof stripe)[] = agency.livemode
               ? ['test', 'live']

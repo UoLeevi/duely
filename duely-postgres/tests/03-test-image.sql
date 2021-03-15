@@ -68,7 +68,7 @@ BEGIN
 
   -- TEST INVALID QUERY OPERATION
   BEGIN
-    PERFORM operation_.query_resource_('img_0');
+    PERFORM operation_.query_resource_('image', 'img_0');
     RAISE EXCEPTION 'Exception should be raised if no matching record was found.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -76,8 +76,8 @@ BEGIN
 
 
   -- TEST VALID QUERY OPERATION
-  SELECT * INTO _result_1 FROM operation_.query_resource_(_result_1->>'id');
-  --RAISE NOTICE E'query_resource_(text):\n%', _result_1;
+  SELECT * INTO _result_1 FROM operation_.query_resource_('image', _result_1->>'id');
+  --RAISE NOTICE E'query_resource_:\n%', _result_1;
   ASSERT _result_1 ?& '{ id, name, data, color }';
 
 
@@ -113,7 +113,7 @@ BEGIN
 
   -- TEST VALID DELETE OPERATION
   SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_1->>'id');
-  --RAISE NOTICE E'delete_resource_(text):\n%', _result_1;
+  --RAISE NOTICE E'delete_resource_:\n%', _result_1;
   ASSERT _result_1 ?& '{ id, name, data, color }';
 
 

@@ -14,72 +14,79 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE TABLE application_.order_item_ (
-    uuid_ uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-    order_uuid_ uuid REFERENCES application_.order_ (uuid_) ON DELETE CASCADE,
-    price_uuid_ uuid REFERENCES application_.price_ (uuid_),
-    stripe_line_item_id_ext_ text NULL UNIQUE,
-    state_ processing_state_ NOT NULL,
-    error_ text NULL,
-    prosessed_at_ timestamp with time zone NULL
-);
-CALL internal_.setup_resource_('application_.order_item_', 'order item', 'orditm', '{uuid_, order_uuid_, stripe_line_item_id_ext_}', 'application_.order_');
+ALTER TABLE application_.order_item_ ALTER COLUMN order_uuid_ SET NOT NULL;
+ALTER TABLE application_.order_item_ ALTER COLUMN price_uuid_ SET NOT NULL;
+ALTER TABLE application_.order_ ALTER COLUMN stripe_account_uuid_ SET NOT NULL;
 
-CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_query_order_item_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+CREATE OR REPLACE FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb) RETURNS SETOF jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, prosessed_at_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
+  IF _resource_name IS NULL OR _filter IS NULL THEN
+    RETURN;
   END IF;
+
+  _filter := internal_.convert_to_internal_format_(_filter);
+
+  RETURN QUERY
+    WITH
+    all_ AS (
+        SELECT internal_.dynamic_select_(d.table_, r.uuid_, keys_) data_
+        FROM application_.resource_ r
+        JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+        CROSS JOIN security_.control_query_(d, r) keys_
+        WHERE d.name_ = _resource_name
+        AND r.search_ @> _filter
+    )
+    SELECT internal_.convert_from_internal_format_(all_.data_) query_resource_
+    FROM all_
+    WHERE all_.data_ @> _filter
+    ORDER BY (all_.data_->>'sort_key_')::real;
 END
 $$;
 
-PERFORM security_.register_policy_('application_.order_item_', 'query', 'policy_.serviceaccount_can_query_order_item_');
-
-CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_create_order_item_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+CREATE OR REPLACE FUNCTION operation_.query_resource_(_resource_name text, _id_or_filter text) RETURNS SETOF jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
+DECLARE
+  _id text;
+  _filter jsonb;
 BEGIN
-  IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, prosessed_at_}'::text[];
+  IF _resource_name IS NULL OR _id_or_filter IS NULL THEN
+    RETURN;
+  END IF;
+
+  IF starts_with(_id_or_filter, '{') THEN
+    _filter := _id_or_filter::jsonb;
+
+    IF _filter = '{}'::jsonb THEN
+      RETURN;
+    ELSEIF _filter - 'id' = '{}'::jsonb THEN
+      _id := _filter->>'id';
+    END IF;
+
   ELSE
-    RETURN '{}'::text[];
+    _id := _id_or_filter;
+  END IF;
+
+  IF _id IS NOT NULL THEN
+    -- Lookup by id
+    RETURN QUERY
+      SELECT internal_.convert_from_internal_format_(
+        internal_.dynamic_select_(d.table_, r.uuid_, keys_)
+      ) query_resource_
+      FROM application_.resource_ r
+      JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+      CROSS JOIN security_.control_query_(d, r) keys_
+      WHERE d.name_ = _resource_name
+        AND r.id_ = _id;
+  ELSE
+    -- Filter by fields
+    RETURN QUERY
+      SELECT operation_.query_resource_(_resource_name, _filter);
   END IF;
 END
 $$;
-
-PERFORM security_.register_policy_('application_.order_item_', 'create', 'policy_.serviceaccount_can_create_order_item_');
-
-CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_change_order_item_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{state_, error_, prosessed_at_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-PERFORM security_.register_policy_('application_.order_item_', 'update', 'policy_.serviceaccount_can_change_order_item_');
-
-CREATE OR REPLACE FUNCTION policy_.owner_can_query_order_item_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{uuid_, order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, prosessed_at_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-PERFORM security_.register_policy_('application_.order_item_', 'query', 'policy_.owner_can_query_order_item_');
 
 
 -- MIGRATION CODE END

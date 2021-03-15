@@ -14,7 +14,7 @@ import Stripe from 'stripe';
 const resource = {
   name: 'agency',
   plural: 'agencies'
-};
+} as const;
 
 export const Agency: GqlTypeDefinition = {
   typeDef: gql`
@@ -87,7 +87,10 @@ export const Agency: GqlTypeDefinition = {
         }
       },
       ...createResolverForReferencedResource({ name: 'subdomain' }),
-      ...createResolverForReferencedResource({ name: 'subscription_plan' }),
+      ...createResolverForReferencedResource({
+        name: 'subscription_plan',
+        resource_name: 'subscription plan'
+      }),
       ...createResolverForReferencedResource({
         name: 'theme',
         reverse: true,
@@ -295,7 +298,7 @@ export const Agency: GqlTypeDefinition = {
 
         try {
           return await withSession(context, async ({ queryResource, deleteResource }) => {
-            const agency = await queryResource(agency_id);
+            const agency = await queryResource('agency', agency_id);
 
             if (agency == null) {
               return {

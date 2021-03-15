@@ -8,7 +8,7 @@ import {
 
 const resource = {
   name: 'theme'
-};
+} as const;
 
 export const Theme: GqlTypeDefinition = {
   typeDef: gql`
@@ -61,8 +61,8 @@ export const Theme: GqlTypeDefinition = {
   resolvers: {
     Theme: {
       ...createResolverForReferencedResource({ name: 'agency' }),
-      ...createResolverForReferencedResource({ name: 'image_logo' }),
-      ...createResolverForReferencedResource({ name: 'image_hero' })
+      ...createResolverForReferencedResource({ name: 'image_logo', resource_name: 'image' }),
+      ...createResolverForReferencedResource({ name: 'image_hero', resource_name: 'image' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

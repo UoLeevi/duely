@@ -9,7 +9,7 @@ import {
 const resource = {
   table_name: 'subdomain',
   name: 'subdomain'
-};
+} as const;
 
 export const Subdomain: GqlTypeDefinition = {
   typeDef: gql`

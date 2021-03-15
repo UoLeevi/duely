@@ -7,7 +7,7 @@ import {
 const resource = {
   name: 'transaction fee',
   table_name: 'transaction_fee'
-};
+} as const;
 
 export const TransactionFee = {
   typeDef: gql`
@@ -32,7 +32,10 @@ export const TransactionFee = {
   `,
   resolvers: {
     TransactionFee: {
-      ...createResolverForReferencedResource({ name: 'subscription_plan' }),
+      ...createResolverForReferencedResource({
+        name: 'subscription_plan',
+        resource_name: 'subscription plan'
+      }),
       percentage(source: { numerator: number; denominator: number }) {
         return source.numerator / source.denominator;
       }

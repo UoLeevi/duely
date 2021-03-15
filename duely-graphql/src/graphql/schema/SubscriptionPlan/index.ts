@@ -9,7 +9,7 @@ import { convertCurrency } from '../ExchangeRate';
 const resource = {
   name: 'subscription plan',
   table_name: 'subscription_plan'
-};
+} as const;
 
 export async function calculateTransactionFee(
   subscription_plan_id: string,

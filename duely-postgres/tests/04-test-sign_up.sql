@@ -56,7 +56,7 @@ BEGIN
 
   -- TEST INVALID QUERY OPERATION
   BEGIN
-    PERFORM operation_.query_resource_('null_0');
+    PERFORM operation_.query_resource_('sign up', 'null_0');
     RAISE EXCEPTION 'Exception should be raised if no matching record was found.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -64,14 +64,14 @@ BEGIN
 
 
   -- TEST VALID QUERY OPERATION
-  SELECT * INTO _result_1 FROM operation_.query_resource_(_result_1->>'id');
-  --RAISE NOTICE E'query_resource_(text):\n%', _result_1;
+  SELECT * INTO _result_1 FROM operation_.query_resource_('sign up', _result_1->>'id');
+  --RAISE NOTICE E'query_resource_:\n%', _result_1;
 
   ASSERT _result_1 ?& '{ id, verification_code }';
 
   _data := jsonb_build_object('verification_code', _result_1->>'verification_code');
-  SELECT * INTO _result_1 FROM operation_.query_resource_all_(_resource_name, _data);
-  --RAISE NOTICE E'query_resource_(text):\n%', _result_1;
+  SELECT * INTO _result_1 FROM operation_.query_resource_(_resource_name, _data);
+  --RAISE NOTICE E'query_resource_:\n%', _result_1;
 
   ASSERT _result_1 ?& '{ id }';
 
@@ -108,11 +108,11 @@ BEGIN
   }';
   SELECT * INTO _result_1 FROM operation_.create_resource_(_resource_name, _data);
   SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_1->>'id');
-  --RAISE NOTICE E'delete_resource_(text):\n%', _result_1;
+  --RAISE NOTICE E'delete_resource_:\n%', _result_1;
 
 
-  SELECT * INTO _result_1 FROM operation_.query_resource_all_('user', '{ "email_address": "a@a" }');
-  --RAISE NOTICE E'query_resource_all_(text, jsonb):\n%', _result_1;
+  SELECT * INTO _result_1 FROM operation_.query_resource_('user', '{ "email_address": "a@a" }');
+  --RAISE NOTICE E'query_resource_(text, jsonb):\n%', _result_1;
 
   ASSERT _result_1 IS NULL;
 
@@ -123,8 +123,8 @@ BEGIN
 
   PERFORM operation_.begin_session_(_user_jwt);
 
-  SELECT * INTO _result_1 FROM operation_.query_resource_all_('user', '{ "email_address": "a@a" }');
-  --RAISE NOTICE E'query_resource_all_(text, jsonb):\n%', _result_1;
+  SELECT * INTO _result_1 FROM operation_.query_resource_('user', '{ "email_address": "a@a" }');
+  --RAISE NOTICE E'query_resource_(text, jsonb):\n%', _result_1;
 
   ASSERT _result_1 IS NULL;
 
@@ -139,8 +139,8 @@ BEGIN
 
   PERFORM operation_.begin_session_(_user_jwt);
 
-  SELECT * INTO _result_1 FROM operation_.query_resource_all_('user', '{ "email_address": "a@a" }');
-  -- RAISE NOTICE E'query_resource_all_(text, jsonb):\n%', _result_1;
+  SELECT * INTO _result_1 FROM operation_.query_resource_('user', '{ "email_address": "a@a" }');
+  -- RAISE NOTICE E'query_resource_(text, jsonb):\n%', _result_1;
 
   ASSERT _result_1 ?& '{ id, name, email_address }';
 

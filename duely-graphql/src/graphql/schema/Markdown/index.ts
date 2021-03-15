@@ -9,7 +9,7 @@ import { GqlTypeDefinition } from '../../types';
 
 const resource = {
   name: 'markdown'
-};
+} as const;
 
 export const Markdown: GqlTypeDefinition = {
   typeDef: gql`

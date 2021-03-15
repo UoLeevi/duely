@@ -2325,6 +2325,90 @@ $$;
 ALTER FUNCTION operation_.query_resource_(_id text) OWNER TO postgres;
 
 --
+-- Name: query_resource_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb) RETURNS SETOF jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF _resource_name IS NULL OR _filter IS NULL THEN
+    RETURN;
+  END IF;
+
+  _filter := internal_.convert_to_internal_format_(_filter);
+
+  RETURN QUERY
+    WITH
+    all_ AS (
+        SELECT internal_.dynamic_select_(d.table_, r.uuid_, keys_) data_
+        FROM application_.resource_ r
+        JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+        CROSS JOIN security_.control_query_(d, r) keys_
+        WHERE d.name_ = _resource_name
+        AND r.search_ @> _filter
+    )
+    SELECT internal_.convert_from_internal_format_(all_.data_) query_resource_
+    FROM all_
+    WHERE all_.data_ @> _filter
+    ORDER BY (all_.data_->>'sort_key_')::real;
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb) OWNER TO postgres;
+
+--
+-- Name: query_resource_(text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_resource_(_resource_name text, _id_or_filter text) RETURNS SETOF jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _id text;
+  _filter jsonb;
+BEGIN
+  IF _resource_name IS NULL OR _id_or_filter IS NULL THEN
+    RETURN;
+  END IF;
+
+  IF starts_with(_id_or_filter, '{') THEN
+    _filter := _id_or_filter::jsonb;
+
+    IF _filter = '{}'::jsonb THEN
+      RETURN;
+    ELSEIF _filter - 'id' = '{}'::jsonb THEN
+      _id := _filter->>'id';
+    END IF;
+
+  ELSE
+    _id := _id_or_filter;
+  END IF;
+
+  IF _id IS NOT NULL THEN
+    -- Lookup by id
+    RETURN QUERY
+      SELECT internal_.convert_from_internal_format_(
+        internal_.dynamic_select_(d.table_, r.uuid_, keys_)
+      ) query_resource_
+      FROM application_.resource_ r
+      JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+      CROSS JOIN security_.control_query_(d, r) keys_
+      WHERE d.name_ = _resource_name
+        AND r.id_ = _id;
+  ELSE
+    -- Filter by fields
+    RETURN QUERY
+      SELECT operation_.query_resource_(_resource_name, _filter);
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_resource_(_resource_name text, _id_or_filter text) OWNER TO postgres;
+
+--
 -- Name: query_resource_access_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -5555,7 +5639,7 @@ ALTER TABLE application_.notification_definition_ OWNER TO postgres;
 CREATE TABLE application_.order_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     customer_uuid_ uuid,
-    stripe_account_uuid_ uuid,
+    stripe_account_uuid_ uuid NOT NULL,
     stripe_checkout_session_id_ext_ text,
     state_ public.processing_state_ NOT NULL,
     error_ text,
@@ -5572,8 +5656,8 @@ ALTER TABLE application_.order_ OWNER TO postgres;
 
 CREATE TABLE application_.order_item_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
-    order_uuid_ uuid,
-    price_uuid_ uuid,
+    order_uuid_ uuid NOT NULL,
+    price_uuid_ uuid NOT NULL,
     stripe_line_item_id_ext_ text,
     state_ public.processing_state_ NOT NULL,
     error_ text,

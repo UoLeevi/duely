@@ -8,7 +8,7 @@ import { GqlTypeDefinition } from '../../types';
 
 const resource = {
   name: 'credential'
-};
+} as const;
 
 export const Credential: GqlTypeDefinition = {
   typeDef: gql`
@@ -37,10 +37,7 @@ export const Credential: GqlTypeDefinition = {
         data: Json!
         type: String!
       ): CredentialMutationResult!
-      update_credential(
-        credential_id: ID!
-        data: Json!
-      ): CredentialMutationResult!
+      update_credential(credential_id: ID!, data: Json!): CredentialMutationResult!
     }
 
     type CredentialMutationResult implements MutationResult {
