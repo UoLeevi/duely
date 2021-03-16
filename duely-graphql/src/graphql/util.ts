@@ -43,7 +43,6 @@ export function createDefaultQueryResolversForResource<
   TSource extends { id?: string },
   TContext extends DuelyQqlContext
 >({ name, table_name, plural, ...rest }: CreateDefaultQueryResolversForResourceArgs<K>) {
-  const resource_name = (Util.hasProperty(rest, 'resource_name') ? rest.resource_name : name) as K;
 
   return {
     async [table_name ?? name](
@@ -53,7 +52,7 @@ export function createDefaultQueryResolversForResource<
       info: GraphQLResolveInfo
     ) {
       if (!context.jwt) throw new Error('Unauthorized');
-      return await queryResource(context, resource_name, args.id);
+      return await queryResource(context, name, args.id);
     },
     async [plural ?? (table_name ?? name) + 's'](
       source: TSource,

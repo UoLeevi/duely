@@ -263,7 +263,9 @@ export async function queryResource<K extends keyof Resources>(
 
   return await query(
     arg as any /* Context | ClientBase */,
-    'SELECT * FROM operation_.query_resource_($1::text, $2::jsonb)',
+    `SELECT * FROM operation_.query_resource_($1::text, $2::${
+      typeof id_or_filter === 'string' ? 'text' : 'jsonb'
+    })`,
     resource_name,
     id_or_filter
   );
