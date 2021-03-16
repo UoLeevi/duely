@@ -43,7 +43,6 @@ export function createDefaultQueryResolversForResource<
   TSource extends { id?: string },
   TContext extends DuelyQqlContext
 >({ name, table_name, plural, ...rest }: CreateDefaultQueryResolversForResourceArgs<K>) {
-
   return {
     async [table_name ?? name](
       source: TSource,
@@ -111,7 +110,11 @@ export function createResolverForReferencedResource<
     ) {
       if (!context.jwt) throw new Error('Unauthorized');
 
-      return await queryResource(context, resource_name, createIdOrFilterArg(source, args));
+      const id_or_filter = createIdOrFilterArg(source, args);
+
+      if (!id_or_filter) return null;
+
+      return await queryResource(context, resource_name, id_or_filter);
     }
   };
 }
