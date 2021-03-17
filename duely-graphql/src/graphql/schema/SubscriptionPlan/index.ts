@@ -5,6 +5,7 @@ import {
   createResolverForReferencedResourceAll
 } from '../../util';
 import { convertCurrency } from '../ExchangeRate';
+import { Resources } from '@duely/db/dist/types';
 
 const resource = {
   name: 'subscription plan',
@@ -19,14 +20,8 @@ export async function calculateTransactionFee(
   const context = await serviceAccountContextPromise;
   if (!context.jwt) throw new Error('Unauthorized');
 
-  const transaction_fees: {
-    numerator: number;
-    denominator: number;
-    fixed_amount: number;
-    currency: string;
-    transaction_amount_upper_bound: number;
-  }[] = await queryResourceAll(context, 'transaction fee', {
-    subscription_plan_id
+  const transaction_fees = await queryResourceAll(context, 'transaction fee', {
+    subscription_plan_id: subscription_plan_id as Resources['subscription plan']['id']
   });
 
   // let's fallback to lowest possible percentage fee

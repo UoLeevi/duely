@@ -271,21 +271,24 @@ export async function queryResource<K extends keyof Resources>(
   );
 }
 
-export async function queryResourceAll<
-  R = any,
-  F extends Record<string, any> = Record<string, any>
->(client: ClientBase, resource_name: string, filter?: F): Promise<R[]>;
-export async function queryResourceAll<
-  R = any,
-  F extends Record<string, any> = Record<string, any>
->(context: Context, resource_name: string, filter?: F): Promise<R[]>;
-export async function queryResourceAll<
-  R = any,
-  F extends Record<string, any> = Record<string, any>
->(arg: Context | ClientBase, resource_name: string, filter?: F): Promise<R[]> {
+export async function queryResourceAll<K extends keyof Resources>(
+  client: ClientBase,
+  resource_name: K,
+  filter?: Partial<Resources[K]>
+): Promise<Resources[K][]>;
+export async function queryResourceAll<K extends keyof Resources>(
+  context: Context,
+  resource_name: K,
+  filter?: Partial<Resources[K]>
+): Promise<Resources[K][]>;
+export async function queryResourceAll<K extends keyof Resources>(
+  arg: Context | ClientBase,
+  resource_name: K,
+  filter?: Partial<Resources[K]>
+): Promise<Resources[K][]> {
   return await queryAll(
     arg as any /* Context | ClientBase */,
-    'SELECT * FROM operation_.query_resource_all_($1::text, $2::jsonb)',
+    'SELECT * FROM operation_.query_resource_($1::text, $2::jsonb)',
     resource_name,
     filter
   );
@@ -392,10 +395,10 @@ function useFunctions(client: ClientBase) {
     ): Promise<Resources[K]> {
       return await queryResource(client, resource_name, id_or_filter);
     },
-    async queryResourceAll<R = any, F extends Record<string, any> = Record<string, any>>(
-      resource_name: string,
-      filter?: F
-    ): Promise<R[]> {
+    async queryResourceAll<K extends keyof Resources>(
+      resource_name: K,
+      filter?: Partial<Resources[K]>
+    ): Promise<Resources[K][]> {
       return await queryResourceAll(client, resource_name, filter);
     },
     async createResource<R = any, I extends Record<string, any> = Record<string, any>>(

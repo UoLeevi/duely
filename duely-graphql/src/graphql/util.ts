@@ -153,7 +153,7 @@ export function createResolverForReferencedResourceAll<
         [column_name!]: reverse_column_name
           ? source[reverse_column_name as keyof TSource]
           : source.id ?? source[column_name! as keyof TSource]
-      });
+      } as Partial<Resources[K]>);
     }
   };
 }

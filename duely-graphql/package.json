@@ -1,6 +1,6 @@
 {
   "name": "duely-graphql",
-  "version": "0.104.49",
+  "version": "0.104.50",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
   "author": "Leevi Uotinen",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@duely/core": "0.0.56",
-    "@duely/db": "0.0.22",
+    "@duely/db": "0.0.23",
     "@graphql-tools/schema": "^7.1.3",
     "axios": "^0.21.1",
     "base64url": "^3.0.1",
