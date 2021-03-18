@@ -7,7 +7,7 @@ const webhook_event_id = process.argv[3];
 main();
 
 async function main() {
-  const webhook_event = await queryResource(context, webhook_event_id);
+  const webhook_event = await queryResource(context, 'webhook event', webhook_event_id);
   const event = webhook_event.data as Stripe.Event;
   const stripe_customer = event.data.object as Stripe.Customer;
   // check if customer creation is already processed

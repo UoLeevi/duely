@@ -15,7 +15,7 @@ main();
 // 3. wait that payment has succeeded
 // 4. start whatever happens then
 async function main() {
-  const webhook_event = await queryResource(context, webhook_event_id);
+  const webhook_event = await queryResource(context, 'webhook event', webhook_event_id);
   const event = webhook_event.data as Stripe.Event;
   const session = event.data.object as Stripe.Checkout.Session;
   const stripe_env = event.livemode ? 'live' : 'test';

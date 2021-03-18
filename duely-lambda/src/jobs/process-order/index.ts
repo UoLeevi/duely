@@ -10,20 +10,20 @@ async function main() {
   try {
     await updateProcessingState(context, order_id, 'processing');
     await withSession(context, async ({ queryResource, queryResourceAll }) => {
-      const order = await queryResource(order_id);
+      const order = await queryResource('order', order_id);
 
       if (!order) {
         throw new Error(`Order ${order_id} not found`);
       }
 
-      const items = await queryResourceAll('order item', { order_id });
+      const items = await queryResourceAll('order item', { order_id: order.id });
 
       for (const item of items) {
-        const price = await queryResource(item.price_id);
-        const product = await queryResource(price.product_id);
+        const price = await queryResource('price', item.price_id);
+        const product = await queryResource('product', price.product_id);
 
         if (product.integration_id) {
-          const integration = await queryResource(product.integration_id);
+          const integration = await queryResource('integration', product.integration_id);
           // TODO: start job related to integration
         }
       }

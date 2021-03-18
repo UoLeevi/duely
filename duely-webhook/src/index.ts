@@ -82,9 +82,7 @@ async function handle_webhook(req: Request, res: Response) {
 
   if (source === 'stripe-agency') {
     try {
-      const stripe_account: {
-        agency_id: string;
-      } = await queryResource(context, 'stripe account', {
+      const stripe_account = await queryResource(context, 'stripe account', {
         stripe_id_ext: event.account
       });
       agency_id = stripe_account.agency_id;
