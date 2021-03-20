@@ -2,7 +2,7 @@ import { ClientBase, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
 import { Awaited, ResolvableValue, Util } from '@duely/core';
-import { AccessLevel, Resources } from './types';
+import { AccessLevel, Resources, ResourcesWithState } from './types';
 
 export * from './errors';
 
@@ -294,22 +294,22 @@ export async function queryResourceAll<K extends keyof Resources>(
   );
 }
 
-export async function createResource<R = any, I extends Record<string, any> = Record<string, any>>(
+export async function createResource<K extends keyof Resources>(
   context: Context,
-  resource_name: string,
-  data: I
-): Promise<R>;
-export async function createResource<R = any, I extends Record<string, any> = Record<string, any>>(
+  resource_name: K,
+  data: Partial<Resources[K]>
+): Promise<Resources[K]>;
+export async function createResource<K extends keyof Resources>(
   client: ClientBase,
-  resource_name: string,
-  data: I
-): Promise<R>;
-export async function createResource<R = any, I extends Record<string, any> = Record<string, any>>(
+  resource_name: K,
+  data: Partial<Resources[K]>
+): Promise<Resources[K]>;
+export async function createResource<K extends keyof Resources>(
   arg: Context | ClientBase,
-  resource_name: string,
-  data: I
-): Promise<R> {
-  return await query<R, [string, I]>(
+  resource_name: K,
+  data: Partial<Resources[K]>
+): Promise<Resources[K]> {
+  return await query<Resources[K], [string, Partial<Resources[K]>]>(
     arg as any /* Context | ClientBase */,
     'SELECT * FROM operation_.create_resource_($1::text, $2::jsonb)',
     resource_name,
@@ -317,22 +317,22 @@ export async function createResource<R = any, I extends Record<string, any> = Re
   );
 }
 
-export async function upsertResource<R = any, I extends Record<string, any> = Record<string, any>>(
+export async function upsertResource<K extends keyof Resources>(
   context: Context,
-  resource_name: string,
-  data: I
-): Promise<R>;
-export async function upsertResource<R = any, I extends Record<string, any> = Record<string, any>>(
+  resource_name: K,
+  data: Partial<Resources[K]>
+): Promise<Resources[K]>;
+export async function upsertResource<K extends keyof Resources>(
   client: ClientBase,
-  resource_name: string,
-  data: I
-): Promise<R>;
-export async function upsertResource<R = any, I extends Record<string, any> = Record<string, any>>(
+  resource_name: K,
+  data: Partial<Resources[K]>
+): Promise<Resources[K]>;
+export async function upsertResource<K extends keyof Resources>(
   arg: Context | ClientBase,
-  resource_name: string,
-  data: I
-): Promise<R> {
-  return await query<R, [string, I]>(
+  resource_name: K,
+  data: Partial<Resources[K]>
+): Promise<Resources[K]> {
+  return await query(
     arg as any /* Context | ClientBase */,
     'SELECT * FROM operation_.upsert_resource_($1::text, $2::jsonb)',
     resource_name,
@@ -340,35 +340,52 @@ export async function upsertResource<R = any, I extends Record<string, any> = Re
   );
 }
 
-export async function updateResource<R = any, I extends Record<string, any> = Record<string, any>>(
+export async function updateResource<K extends keyof Resources>(
   context: Context,
+  resource_name: K,
   id: string,
-  data: I
-): Promise<R>;
-export async function updateResource<R = any, I extends Record<string, any> = Record<string, any>>(
+  data: Partial<Resources[K]>
+): Promise<Resources[K]>;
+export async function updateResource<K extends keyof Resources>(
   client: ClientBase,
+  resource_name: K,
   id: string,
-  data: I
-): Promise<R>;
-export async function updateResource<R = any, I extends Record<string, any> = Record<string, any>>(
+  data: Partial<Resources[K]>
+): Promise<Resources[K]>;
+export async function updateResource<K extends keyof Resources>(
   arg: Context | ClientBase,
+  resource_name: K,
   id: string,
-  data: I
-): Promise<R> {
-  return await query<R, [string, I]>(
+  data: Partial<Resources[K]>
+): Promise<Resources[K]> {
+  return await query(
     arg as any /* Context | ClientBase */,
-    'SELECT * FROM operation_.update_resource_($1::text, $2::jsonb)',
+    'SELECT * FROM operation_.update_resource_($1::text, $2::text, $3::jsonb)',
+    resource_name,
     id,
     data
   );
 }
 
-export async function deleteResource<R = any>(context: Context, id: string): Promise<R>;
-export async function deleteResource<R = any>(client: ClientBase, id: string): Promise<R>;
-export async function deleteResource<R = any>(arg: Context | ClientBase, id: string): Promise<R> {
-  return await query<R, [string]>(
+export async function deleteResource<K extends keyof Resources>(
+  context: Context,
+  resource_name: K,
+  id: string
+): Promise<Resources[K]>;
+export async function deleteResource<K extends keyof Resources>(
+  client: ClientBase,
+  resource_name: K,
+  id: string
+): Promise<Resources[K]>;
+export async function deleteResource<K extends keyof Resources>(
+  arg: Context | ClientBase,
+  resource_name: K,
+  id: string
+): Promise<Resources[K]> {
+  return await query(
     arg as any /* Context | ClientBase */,
-    'SELECT * FROM operation_.delete_resource_($1::text)',
+    'SELECT * FROM operation_.delete_resource_($1::text, $2::text)',
+    resource_name,
     id
   );
 }
@@ -401,26 +418,30 @@ function useFunctions(client: ClientBase) {
     ): Promise<Resources[K][]> {
       return await queryResourceAll(client, resource_name, filter);
     },
-    async createResource<R = any, I extends Record<string, any> = Record<string, any>>(
-      resource_name: string,
-      data: I
-    ): Promise<R> {
+    async createResource<K extends keyof Resources>(
+      resource_name: K,
+      data: Partial<Resources[K]>
+    ): Promise<Resources[K]> {
       return await createResource(client, resource_name, data);
     },
-    async upsertResource<R = any, I extends Record<string, any> = Record<string, any>>(
-      resource_name: string,
-      data: I
-    ): Promise<R> {
+    async upsertResource<K extends keyof Resources>(
+      resource_name: K,
+      data: Partial<Resources[K]>
+    ): Promise<Resources[K]> {
       return await upsertResource(client, resource_name, data);
     },
-    async updateResource<R = any, I extends Record<string, any> = Record<string, any>>(
+    async updateResource<K extends keyof Resources>(
+      resource_name: K,
       id: string,
-      data: I
-    ): Promise<R> {
-      return await updateResource(client, id, data);
+      data: Partial<Resources[K]>
+    ): Promise<Resources[K]> {
+      return await updateResource(client, resource_name, id, data);
     },
-    async deleteResource<R = any>(id: string): Promise<R> {
-      return await deleteResource(client, id);
+    async deleteResource<K extends keyof Resources>(
+      resource_name: K,
+      id: string
+    ): Promise<Resources[K]> {
+      return await deleteResource(client, resource_name, id);
     }
   };
 }
@@ -429,25 +450,28 @@ export type ProcessingState = 'pending' | 'processing' | 'processed' | 'failed';
 
 export async function updateProcessingState(
   context: Awaited<typeof serviceAccountContextPromise>,
+  resource_name: keyof ResourcesWithState,
   id: string,
   state: ProcessingState
 ): Promise<void>;
 export async function updateProcessingState(
   context: Awaited<typeof serviceAccountContextPromise>,
+  resource_name: keyof ResourcesWithState,
   id: string,
   err: Error
 ): Promise<void>;
 export async function updateProcessingState(
   context: Awaited<typeof serviceAccountContextPromise>,
+  resource_name: keyof ResourcesWithState,
   id: string,
   arg: ProcessingState | Error
 ): Promise<void> {
   if (typeof arg === 'string') {
     const state = arg;
-    await updateResource(context, id, { state });
+    await updateResource(context, resource_name, id, { state });
   } else {
     const err = arg;
-    await updateResource(context, id, {
+    await updateResource(context, resource_name, id, {
       state: 'failed',
       error: err.toString()
     });

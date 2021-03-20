@@ -91,7 +91,7 @@ BEGIN
     "agency_id": "agcy_0"
   }';
   BEGIN
-    PERFORM operation_.update_resource_(_result_1->>'id', _data);
+    PERFORM operation_.update_resource_(_resource_name, _result_1->>'id', _data);
     RAISE EXCEPTION 'Should not be able to update resource using these arguments.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -102,14 +102,14 @@ BEGIN
   _data := '{
     "color_primary": "#ffffff"
   }';
-  SELECT * INTO _result_1 FROM operation_.update_resource_(_result_1->>'id', _data);
+  SELECT * INTO _result_1 FROM operation_.update_resource_(_resource_name, _result_1->>'id', _data);
   --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result_1;
   ASSERT _result_1 ?& '{ id, name, color_primary, color_secondary, color_accent, color_background, color_surface, color_error, color_success, agency_id }';
 
 
   -- TEST INVALID DELETE OPERATION
   BEGIN
-    PERFORM operation_.delete_resource_('theme_0');
+    PERFORM operation_.delete_resource_(_resource_name, 'theme_0');
     RAISE EXCEPTION 'Exception should be raised if no record is deleted.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -117,7 +117,7 @@ BEGIN
 
 
   -- TEST VALID DELETE OPERATION
-  SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_1->>'id');
+  SELECT * INTO _result_1 FROM operation_.delete_resource_(_resource_name, _result_1->>'id');
   --RAISE NOTICE E'delete_resource_:\n%', _result_1;
   ASSERT _result_1 ?& '{ id, name, color_primary, color_secondary, color_accent, color_background, color_surface, color_error, color_success, agency_id }';
 

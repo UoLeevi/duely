@@ -2098,6 +2098,48 @@ $$;
 ALTER FUNCTION operation_.delete_resource_(_id text) OWNER TO postgres;
 
 --
+-- Name: delete_resource_(text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.delete_resource_(_resource_name text, _id text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _resource application_.resource_;
+  _resource_definition security_.resource_definition_;
+  _data jsonb;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE name_ = _resource_name;
+
+  IF _resource_definition.uuid_ IS NULL THEN
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+  END IF;
+
+  SELECT * INTO _resource
+  FROM application_.resource_
+  WHERE _resource_definition.uuid_ = definition_uuid_
+    AND id_ = _id;
+
+  IF _resource.uuid_ IS NULL THEN
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+  END IF;
+
+  PERFORM security_.control_delete_(_resource_definition, _resource);
+
+  _data := operation_.query_resource_(_resource_name, _id);
+
+  PERFORM internal_.dynamic_delete_(_resource_definition.table_, _resource.uuid_);
+
+  RETURN _data;
+END
+$$;
+
+
+ALTER FUNCTION operation_.delete_resource_(_resource_name text, _id text) OWNER TO postgres;
+
+--
 -- Name: end_session_(); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -2574,6 +2616,55 @@ $$;
 ALTER FUNCTION operation_.update_resource_(_id text, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: update_resource_(text, text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.update_resource_(_resource_name text, _id text, _data jsonb) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _resource application_.resource_;
+  _resource_definition security_.resource_definition_;
+  _owned_resources_data jsonb;
+BEGIN
+  SELECT * INTO _resource_definition
+  FROM security_.resource_definition_
+  WHERE name_ = _resource_name;
+
+  IF _resource_definition.uuid_ IS NULL THEN
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+  END IF;
+
+  SELECT * INTO _resource
+  FROM application_.resource_
+  WHERE _resource_definition.uuid_ = definition_uuid_
+    AND id_ = _id;
+
+  IF _resource.uuid_ IS NULL THEN
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+  END IF;
+
+  SELECT owner_, owned_ INTO _data, _owned_resources_data
+  FROM internal_.extract_referenced_resources_jsonb_(_resource_definition.uuid_, _data);
+
+  _data := internal_.convert_to_internal_format_(_data);
+
+  PERFORM security_.control_update_(_resource_definition, _resource, _data);
+  PERFORM internal_.dynamic_update_(_resource_definition.table_, _resource.uuid_, _data);
+
+  _data := operation_.query_resource_(_resource_name, _id);
+
+  SELECT jsonb_object_agg(r.key, internal_.create_or_update_owned_resource_(_resource_definition.table_, _id, r.key, r.value)) INTO _owned_resources_data
+  FROM jsonb_each(_owned_resources_data) r;
+
+  RETURN _data || COALESCE(_owned_resources_data, '{}'::jsonb);
+END
+$$;
+
+
+ALTER FUNCTION operation_.update_resource_(_resource_name text, _id text, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: upsert_resource_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -2702,7 +2793,7 @@ CREATE FUNCTION policy_.agent_can_query_order_(_resource_definition security_.re
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+    RETURN '{uuid_, customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, processed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3531,7 +3622,7 @@ CREATE FUNCTION policy_.owner_can_change_order_(_resource_definition security_.r
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{state_, error_, prosessed_at_}'::text[];
+    RETURN '{state_, error_, processed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3862,7 +3953,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+    RETURN '{customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, processed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4092,7 +4183,7 @@ CREATE FUNCTION policy_.owner_can_query_order_item_(_resource_definition securit
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{uuid_, order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, prosessed_at_}'::text[];
+    RETURN '{uuid_, order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, processed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4248,7 +4339,7 @@ CREATE FUNCTION policy_.serviceaccount_can_change_order_(_resource_definition se
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{state_, error_, prosessed_at_}'::text[];
+    RETURN '{state_, error_, processed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4267,7 +4358,7 @@ CREATE FUNCTION policy_.serviceaccount_can_change_order_item_(_resource_definiti
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{state_, error_, prosessed_at_}'::text[];
+    RETURN '{state_, error_, processed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4345,7 +4436,7 @@ CREATE FUNCTION policy_.serviceaccount_can_create_order_(_resource_definition se
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+    RETURN '{customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, processed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4364,7 +4455,7 @@ CREATE FUNCTION policy_.serviceaccount_can_create_order_item_(_resource_definiti
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, prosessed_at_}'::text[];
+    RETURN '{order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, processed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4516,7 +4607,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_order_(_resource_definition sec
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, prosessed_at_}'::text[];
+    RETURN '{uuid_, customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, processed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4535,7 +4626,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_order_item_(_resource_definitio
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, prosessed_at_}'::text[];
+    RETURN '{uuid_, order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, processed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5644,7 +5735,7 @@ CREATE TABLE application_.order_ (
     state_ public.processing_state_ NOT NULL,
     error_ text,
     ordered_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    prosessed_at_ timestamp with time zone
+    processed_at_ timestamp with time zone
 );
 
 
@@ -5661,7 +5752,7 @@ CREATE TABLE application_.order_item_ (
     stripe_line_item_id_ext_ text,
     state_ public.processing_state_ NOT NULL,
     error_ text,
-    prosessed_at_ timestamp with time zone
+    processed_at_ timestamp with time zone
 );
 
 
@@ -5944,7 +6035,8 @@ CREATE TABLE application_.webhook_event_ (
     error_ text,
     agency_uuid_ uuid,
     event_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    livemode_ boolean NOT NULL
+    livemode_ boolean NOT NULL,
+    processed_at_ timestamp with time zone
 );
 
 

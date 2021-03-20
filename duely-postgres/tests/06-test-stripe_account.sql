@@ -94,7 +94,7 @@ BEGIN
     "agency_id": "agcy_123123"
   }';
   BEGIN
-    PERFORM operation_.update_resource_(_result_1->>'id', _data);
+    PERFORM operation_.update_resource_(_resource_name, _result_1->>'id', _data);
     RAISE EXCEPTION 'Should not be able to update resource using these arguments.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -103,7 +103,7 @@ BEGIN
 
   -- TEST INVALID DELETE OPERATION
   BEGIN
-    PERFORM operation_.delete_resource_('stripe_0');
+    PERFORM operation_.delete_resource_(_resource_name, 'stripe_0');
     RAISE EXCEPTION 'Exception should be raised if no record is deleted.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -111,7 +111,7 @@ BEGIN
 
 
   -- TEST VALID DELETE OPERATION
-  SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_1->>'id');
+  SELECT * INTO _result_1 FROM operation_.delete_resource_(_resource_name, _result_1->>'id');
   --RAISE NOTICE E'delete_resource_:\n%', _result_1;
   ASSERT _result_1 ?& '{ id, stripe_id_ext, agency_id }';
 

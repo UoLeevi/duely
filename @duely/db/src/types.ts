@@ -7,11 +7,24 @@ export type Resources = {
   >]: ResourceDefinitions[K]['resource'];
 };
 
-export type Resource<K extends keyof Resources> = Resources[K];
+export type ResourcesWithState = {
+  [K in FilteredKeys<Resources, ResourceState>]: Resources[K];
+};
+
+export type Resource = Resources[keyof Resources];
+export type ResourceWithState = ResourcesWithState[keyof ResourcesWithState];
 
 export type ResourceId<
   K extends keyof ResourceDefinitions
 > = `${ResourceDefinitions[K]['prefix']}_${string}`;
+
+export type ResourceName<R extends Resource> = FilteredKeys<Resources, R>;
+
+export type ResourceState = {
+  state: ProcessingState;
+  error?: string;
+  processed_at: Date;
+};
 
 export type SubdomainResource = {
   id: ResourceId<'subdomain'>;
@@ -224,12 +237,10 @@ export type WebhookEventResource = {
   id_ext: string;
   source: string;
   data: object;
-  state: ProcessingState;
-  error?: string;
   agency_id: ResourceId<'agency'>;
   event_at: Date;
   livemode: boolean;
-};
+} & ResourceState;
 
 export type PriceResource = {
   id: ResourceId<'price'>;
@@ -248,11 +259,8 @@ export type OrderResource = {
   customer_id: ResourceId<'customer'>;
   stripe_account_id: ResourceId<'stripe account'>;
   stripe_checkout_session_id_ext: string;
-  state: ProcessingState;
-  error?: string;
   ordered_at: Date;
-  processed_at: Date;
-};
+} & ResourceState;
 
 export type CredentialResource = {
   id: ResourceId<'credential'>;
@@ -275,10 +283,7 @@ export type OrderItemResource = {
   order_id: ResourceId<'order'>;
   price_id: ResourceId<'price'>;
   stripe_line_item_id_ext: string;
-  state: ProcessingState;
-  error?: string;
-  processed_at: Date;
-};
+} & ResourceState;
 
 export type ResourceDefinitions = {
   subdomain: {

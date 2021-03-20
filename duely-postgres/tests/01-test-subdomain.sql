@@ -70,14 +70,14 @@ BEGIN
 
 
   SELECT * INTO _result_1 FROM operation_.query_resource_(_resource_name, '{ "name": "test" }');
-  --RAISE NOTICE E'query_resource_all_:\n%', _result_1;
+  --RAISE NOTICE E'query_resource_:\n%', _result_1;
   ASSERT _result_1 ?& '{ id, name }';
 
 
   -- TEST INVALID UPDATE OPERATION
   _data := '{"not existing key": "test"}';
   BEGIN
-    PERFORM operation_.update_resource_(_result_1->>'id', _data);
+    PERFORM operation_.update_resource_(_resource_name, _result_1->>'id', _data);
     RAISE EXCEPTION 'Should not be able to update resource using these arguments.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -86,14 +86,14 @@ BEGIN
 
   -- TEST VALID UPDATE OPERATION
   _data := '{"name": "test-123"}';
-  SELECT * INTO _result_1 FROM operation_.update_resource_(_result_1->>'id', _data);
+  SELECT * INTO _result_1 FROM operation_.update_resource_(_resource_name, _result_1->>'id', _data);
   --RAISE NOTICE E'update_resource_(text, jsonb):\n%', _result_1;
   ASSERT _result_1 ?& '{ id, name }';
 
 
   -- TEST INVALID DELETE OPERATION
   BEGIN
-    PERFORM operation_.delete_resource_('sub_0');
+    PERFORM operation_.delete_resource_(_resource_name, 'sub_0');
     RAISE EXCEPTION 'Exception should be raised if no record is deleted.';
   EXCEPTION WHEN OTHERS THEN
     -- EXPECTED ERROR
@@ -101,8 +101,8 @@ BEGIN
 
 
   -- TEST VALID DELETE OPERATION
-  SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_0->'agency'->>'id');
-  SELECT * INTO _result_1 FROM operation_.delete_resource_(_result_0->>'id');
+  SELECT * INTO _result_1 FROM operation_.delete_resource_('agency', _result_0->'agency'->>'id');
+  SELECT * INTO _result_1 FROM operation_.delete_resource_(_resource_name, _result_0->>'id');
   -- RAISE NOTICE E'delete_resource_:\n%', _result_1;
 
 
