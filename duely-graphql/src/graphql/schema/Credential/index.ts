@@ -81,7 +81,7 @@ export const Credential: GqlTypeDefinition = {
 
         try {
           // update credential resource
-          const credential = await updateResource(context, credential_id, args);
+          const credential = await updateResource(context, 'credential', credential_id, args);
 
           // success
           return {

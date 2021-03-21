@@ -149,7 +149,7 @@ export const Price: GqlTypeDefinition = {
               }
 
               // update price resource
-              price = await updateResource(price.id, {
+              price = await updateResource('price', price.id, {
                 stripe_price_id_ext_live: stripe_price.live?.id,
                 stripe_price_id_ext_test: stripe_price.test?.id
               });
@@ -177,7 +177,7 @@ export const Price: GqlTypeDefinition = {
         try {
           return await withSession(context, async ({ updateResource }) => {
             // update price resource
-            const price = await updateResource(price_id, args);
+            const price = await updateResource('price', price_id, args);
 
             // success
             return {
@@ -200,7 +200,7 @@ export const Price: GqlTypeDefinition = {
 
         try {
           return await withSession(context, async ({ queryResource, deleteResource }) => {
-            const price = await deleteResource(price_id);
+            const price = await deleteResource('price', price_id);
 
             if (price == null) {
               return {
@@ -227,7 +227,7 @@ export const Price: GqlTypeDefinition = {
               try {
                 // try deactivate price at stripe
                 await stripe[stripe_env].prices.update(
-                  price[`stripe_price_id_ext_${stripe_env}`],
+                  price[`stripe_price_id_ext_${stripe_env}` as keyof PriceResource] as string,
                   { active: false },
                   { stripeAccount: stripe_account.stripe_id_ext }
                 );

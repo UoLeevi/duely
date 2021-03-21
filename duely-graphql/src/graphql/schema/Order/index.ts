@@ -96,7 +96,7 @@ export const Order: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          const order = await updateResource(context, order_id, args);
+          const order = await updateResource(context, 'order', order_id, args);
 
           // success
           return {

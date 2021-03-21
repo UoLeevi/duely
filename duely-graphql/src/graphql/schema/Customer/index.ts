@@ -229,7 +229,7 @@ export const Customer: GqlTypeDefinition = {
             const stripe_customer_args: Stripe.CustomerUpdateParams = {};
 
             // update customer resource
-            const customer = await updateResource(customer_id, args);
+            const customer = await updateResource('customer', customer_id, args);
 
             stripe_customer_args.name = customer.name;
             stripe_customer_args.email = customer.email_address;
@@ -264,7 +264,7 @@ export const Customer: GqlTypeDefinition = {
 
         try {
           return await withSession(context, async ({ queryResource, deleteResource }) => {
-            const customer = await deleteResource(customer_id);
+            const customer = await deleteResource('customer', customer_id);
 
             if (customer == null) {
               return {

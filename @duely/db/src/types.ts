@@ -73,7 +73,9 @@ export type SignUpResource = {
   id: ResourceId<'sign up'>;
   user_id: ResourceId<'user'>;
   name: string;
-  verification_code: string;
+  verification_code?: string;
+  verified?: boolean;
+  password?: string;
   data: object;
   email_address: string;
 };
@@ -82,7 +84,9 @@ export type PasswordResetResource = {
   id: ResourceId<'password reset'>;
   user_id: ResourceId<'user'>;
   name: string;
-  verification_code: string;
+  verification_code?: string;
+  verified?: boolean;
+  password?: string;
   data: object;
   email_address: string;
 };
@@ -92,6 +96,7 @@ export type ProductResource = {
   agency_id: ResourceId<'agency'>;
   name: string;
   url_name: string;
+  status: string;
   description?: string;
   duration?: string;
   image_logo_id?: ResourceId<'image'>;

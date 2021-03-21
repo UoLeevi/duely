@@ -5,6 +5,7 @@ import validator from 'validator';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import { URL } from 'url';
+import { SignUpResource } from '@duely/db/dist/types';
 
 const resource_name = 'sign up';
 
@@ -104,7 +105,7 @@ export const SignUp: GqlTypeDefinition = {
               ]
             : [
                 p`Hi, ${validator.escape(name)}! 👋`,
-                p`Your sign up verification code is ${strong`${sign_up.verification_code}`}.`,
+                p`Your sign up verification code is ${strong`${sign_up.verification_code!}`}.`,
                 p`${em`This code expires in 24 hours and can only be used once. You can always request another verification code to be sent if this one has been used or is expired.`}`
               ]
           ).join('\r\n')
@@ -138,7 +139,7 @@ export const SignUp: GqlTypeDefinition = {
               };
             }
 
-            sign_up = await updateResource(sign_up.id, { verification_code, verified: true });
+            sign_up = await updateResource('sign up', sign_up.id, { verification_code, verified: true });
 
             return {
               success: true,

@@ -1,4 +1,4 @@
-import { queryResource, withConnection, withSession } from '@duely/db';
+import { queryResource, withSession } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
@@ -168,10 +168,10 @@ export const Agency: GqlTypeDefinition = {
             const user = await query('SELECT * FROM operation_.query_current_user_()');
 
             // create subdomain and agency on database
-            const subdomain = await createResource('subdomain', {
+            const subdomain = (await createResource('subdomain', {
               name: subdomain_name,
               agency: { name, livemode }
-            });
+            } as any)) as any; // TODO: Fix types
             const agency = subdomain.agency;
 
             // create logo image
@@ -326,7 +326,7 @@ export const Agency: GqlTypeDefinition = {
             }
 
             // delete subdomain from database, will cascade to agency, theme, subject assignment and stripe account tables
-            await deleteResource(agency.subdomain_id);
+            await deleteResource('subdomain', agency.subdomain_id);
 
             // success
             return {

@@ -10,6 +10,7 @@ import { validateAndReadDataUrlAsBuffer } from '../Image';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
+import { ProductResource } from '@duely/db/dist/types';
 
 const resource = {
   name: 'product'
@@ -207,7 +208,7 @@ export const Product: GqlTypeDefinition = {
               }
 
               // update product resource
-              product = await updateResource(product.id, {
+              product = await updateResource('product', product.id, {
                 stripe_prod_id_ext_live: stripe_product.live?.id,
                 stripe_prod_id_ext_test: stripe_product.test?.id
               });
@@ -294,7 +295,7 @@ export const Product: GqlTypeDefinition = {
               }
 
               // update product resource
-              const product = await updateResource(product_id, args);
+              const product = await updateResource('product', product_id, args);
 
               const { status, name, description } = product;
               stripe_product_args.name = name;
@@ -313,7 +314,7 @@ export const Product: GqlTypeDefinition = {
 
                 // update product at stripe
                 await stripe[stripe_env].products.update(
-                  product[`stripe_prod_id_ext_${stripe_env}`],
+                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] as string,
                   stripe_product_args,
                   { stripeAccount: stripe_account.stripe_id_ext }
                 );
@@ -341,7 +342,7 @@ export const Product: GqlTypeDefinition = {
 
         try {
           return await withSession(context, async ({ queryResource, deleteResource }) => {
-            const product = await deleteResource(product_id);
+            const product = await deleteResource('product', product_id);
 
             if (product == null) {
               return {
@@ -366,12 +367,15 @@ export const Product: GqlTypeDefinition = {
 
               // delete or deactivate product from stripe
               try {
-                await stripe[stripe_env].products.del(product[`stripe_prod_id_ext_${stripe_env}`], {
-                  stripeAccount: stripe_account.stripe_id_ext
-                });
+                await stripe[stripe_env].products.del(
+                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] as string,
+                  {
+                    stripeAccount: stripe_account.stripe_id_ext
+                  }
+                );
               } catch {
                 await stripe[stripe_env].products.update(
-                  product[`stripe_prod_id_ext_${stripe_env}`],
+                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] as string,
                   { active: false },
                   { stripeAccount: stripe_account.stripe_id_ext }
                 );

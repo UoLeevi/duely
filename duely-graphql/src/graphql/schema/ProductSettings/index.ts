@@ -124,7 +124,12 @@ export const ProductSettings: GqlTypeDefinition = {
 
         try {
           // update resource
-          const setting = await updateResource(context, setting_id, args);
+          const setting = await updateResource(
+            context,
+            'product thank you page setting',
+            setting_id,
+            args
+          );
 
           // success
           return {
@@ -146,7 +151,11 @@ export const ProductSettings: GqlTypeDefinition = {
 
         try {
           // delete resource
-          const setting = await deleteResource(context, setting_id);
+          const setting = await deleteResource(
+            context,
+            'product thank you page setting',
+            setting_id
+          );
 
           // success
           return {

@@ -87,7 +87,7 @@ export const PageBlock: GqlTypeDefinition = {
 
         try {
           // update page_block resource
-          const page_block = await updateResource(context, page_block_id, args);
+          const page_block = await updateResource(context, 'page block', page_block_id, args);
 
           // success
           return {
@@ -108,7 +108,7 @@ export const PageBlock: GqlTypeDefinition = {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          const page_block = await deleteResource(context, page_block_id);
+          const page_block = await deleteResource(context, 'page block', page_block_id);
 
           // success
           return {

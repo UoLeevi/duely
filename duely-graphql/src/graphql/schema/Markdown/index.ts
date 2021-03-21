@@ -113,7 +113,7 @@ export const Markdown: GqlTypeDefinition = {
 
         try {
           // update markdown resource
-          const markdown = await updateResource(context, markdown_id, args);
+          const markdown = await updateResource(context, 'markdown', markdown_id, args);
 
           // success
           return {

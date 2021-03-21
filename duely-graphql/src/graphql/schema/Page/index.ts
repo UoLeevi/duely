@@ -106,7 +106,7 @@ export const Page: GqlTypeDefinition = {
 
         try {
           // update page resource
-          const page = await updateResource(context, page_id, args);
+          const page = await updateResource(context, 'page', page_id, args);
 
           // success
           return {

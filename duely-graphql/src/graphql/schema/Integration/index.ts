@@ -87,7 +87,7 @@ export const Integration: GqlTypeDefinition = {
 
         try {
           // update integration resource
-          const integration = await updateResource(context, integration_id, args);
+          const integration = await updateResource(context, 'integration', integration_id, args);
 
           // success
           return {

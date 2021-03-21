@@ -73,7 +73,7 @@ export const Theme: GqlTypeDefinition = {
 
         try {
           // update theme resource
-          const theme = await updateResource(context, theme_id, args);
+          const theme = await updateResource(context, 'theme', theme_id, args);
 
           // success
           return {

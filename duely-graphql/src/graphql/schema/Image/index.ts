@@ -176,7 +176,7 @@ export const Image: GqlTypeDefinition = {
         try {
           return await withSession(context, async ({ updateResource }) => {
             // update image resource
-            const image = await updateResource(image_id, args);
+            const image = await updateResource('image', image_id, args);
 
             // success
             return {

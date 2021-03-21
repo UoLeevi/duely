@@ -106,7 +106,7 @@ export const PasswordReset: GqlTypeDefinition = {
               ]
             : [
                 p`Hi, 👋`,
-                p`Your password reset verification code is ${strong`${password_reset.verification_code}`}.`,
+                p`Your password reset verification code is ${strong`${password_reset.verification_code!}`}.`,
                 p`${em`This code expires in 24 hours and can only be used once. You can always request another verification code to be sent if this one has been used or is expired.`}`
               ]
           ).join('\r\n')
@@ -140,7 +140,7 @@ export const PasswordReset: GqlTypeDefinition = {
               };
             }
 
-            password_reset = await updateResource(password_reset.id, {
+            password_reset = await updateResource('password reset', password_reset.id, {
               verification_code,
               password,
               verified: true
