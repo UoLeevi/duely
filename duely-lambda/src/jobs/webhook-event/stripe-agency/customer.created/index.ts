@@ -12,19 +12,19 @@ async function main() {
   const stripe_customer = event.data.object as Stripe.Customer;
   // check if customer creation is already processed
   if (stripe_customer.metadata.creation_mode === 'api') {
-    await updateProcessingState(context, webhook_event_id, 'processed');
+    await updateProcessingState(context, 'webhook event', webhook_event_id, 'processed');
     return;
   }
 
   const email_address = stripe_customer.email;
 
   if (!email_address) {
-    await updateProcessingState(context, webhook_event_id, 'processed');
+    await updateProcessingState(context, 'webhook event', webhook_event_id, 'processed');
     return;
   }
 
   try {
-    await updateProcessingState(context, webhook_event_id, 'processing');
+    await updateProcessingState(context, 'webhook event', webhook_event_id, 'processing');
     await withSession(context, async ({ queryResource, createResource }) => {
       const { id: stripe_account_id } = await queryResource('stripe account', {
         stripe_id_ext: event.account,
@@ -45,9 +45,9 @@ async function main() {
         default_stripe_id_ext: stripe_customer.id
       });
     });
-    await updateProcessingState(context, webhook_event_id, 'processed');
+    await updateProcessingState(context, 'webhook event', webhook_event_id, 'processed');
   } catch (err) {
     console.error(`Webhook event processing failed:\n${err}`);
-    await updateProcessingState(context, webhook_event_id, err);
+    await updateProcessingState(context, 'webhook event', webhook_event_id, err);
   }
 }

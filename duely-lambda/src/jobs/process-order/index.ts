@@ -8,7 +8,7 @@ main();
 async function main() {
   console.log(`Order processing started for order: ${order_id}`);
   try {
-    await updateProcessingState(context, order_id, 'processing');
+    await updateProcessingState(context, 'order', order_id, 'processing');
     await withSession(context, async ({ queryResource, queryResourceAll }) => {
       const order = await queryResource('order', order_id);
 
@@ -28,9 +28,9 @@ async function main() {
         }
       }
     });
-    await updateProcessingState(context, order_id, 'processed');
+    await updateProcessingState(context, 'order', order_id, 'processed');
   } catch (err) {
     console.error(`Order processing failed:\n${err}`);
-    await updateProcessingState(context, order_id, err);
+    await updateProcessingState(context, 'order', order_id, err);
   }
 }

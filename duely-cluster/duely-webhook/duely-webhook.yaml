@@ -32,7 +32,7 @@ spec:
           secretName: duely-webhook-secret
       containers:
       - name: duely-webhook
-        image: uoleevi/duely-webhook:v0.0.18
+        image: uoleevi/duely-webhook:v0.0.19
         resources:
           requests:
             memory: 64Mi

@@ -22,7 +22,7 @@ export type ResourceName<R extends Resource> = FilteredKeys<Resources, R>;
 
 export type ResourceState = {
   state: ProcessingState;
-  error?: string;
+  error?: string | null;
   processed_at: Date;
 };
 
@@ -42,15 +42,15 @@ export type AgencyResource = {
 export type ThemeResource = {
   id: ResourceId<'theme'>;
   name: string;
-  image_logo_id?: ResourceId<'image'>;
-  image_hero_id?: ResourceId<'image'>;
-  color_primary?: string;
-  color_secondary?: string;
-  color_accent?: string;
-  color_background?: string;
-  color_surface?: string;
-  color_error?: string;
-  color_success?: string;
+  image_logo_id?: ResourceId<'image'> | null;
+  image_hero_id?: ResourceId<'image'> | null;
+  color_primary?: string | null;
+  color_secondary?: string | null;
+  color_accent?: string | null;
+  color_background?: string | null;
+  color_surface?: string | null;
+  color_error?: string | null;
+  color_success?: string | null;
   agency_id: ResourceId<'agency'>;
 };
 
@@ -59,7 +59,7 @@ export type ImageResource = {
   name: string;
   data: string;
   color: string;
-  agency_id?: ResourceId<'agency'>;
+  agency_id?: ResourceId<'agency'> | null;
   access: AccessLevel;
 };
 
@@ -73,9 +73,9 @@ export type SignUpResource = {
   id: ResourceId<'sign up'>;
   user_id: ResourceId<'user'>;
   name: string;
-  verification_code?: string;
-  verified?: boolean;
-  password?: string;
+  verification_code?: string | null;
+  verified?: boolean | null;
+  password?: string | null;
   data: object;
   email_address: string;
 };
@@ -84,9 +84,9 @@ export type PasswordResetResource = {
   id: ResourceId<'password reset'>;
   user_id: ResourceId<'user'>;
   name: string;
-  verification_code?: string;
-  verified?: boolean;
-  password?: string;
+  verification_code?: string | null;
+  verified?: boolean | null;
+  password?: string | null;
   data: object;
   email_address: string;
 };
@@ -97,20 +97,20 @@ export type ProductResource = {
   name: string;
   url_name: string;
   status: string;
-  description?: string;
-  duration?: string;
-  image_logo_id?: ResourceId<'image'>;
-  image_hero_id?: ResourceId<'image'>;
-  default_price_id?: ResourceId<'price'>;
-  markdown_description_id?: ResourceId<'markdown'>;
-  stripe_prod_id_ext_live?: string;
-  stripe_prod_id_ext_test?: string;
-  integration_id?: ResourceId<'integration'>;
+  description?: string | null;
+  duration?: string | null;
+  image_logo_id?: ResourceId<'image'> | null;
+  image_hero_id?: ResourceId<'image'> | null;
+  default_price_id?: ResourceId<'price'> | null;
+  markdown_description_id?: ResourceId<'markdown'> | null;
+  stripe_prod_id_ext_live?: string | null;
+  stripe_prod_id_ext_test?: string | null;
+  integration_id?: ResourceId<'integration'> | null;
 };
 
 export type MarkdownResource = {
   id: ResourceId<'markdown'>;
-  agency_id?: ResourceId<'agency'>;
+  agency_id?: ResourceId<'agency'> | null;
   name: string;
   data: string;
   access: AccessLevel;
@@ -126,14 +126,14 @@ export type MembershipResource = {
 export type NotificationDefinitionResource = {
   id: ResourceId<'notification definition'>;
   name: string;
-  description?: string;
-  stripe_event?: string;
-  feed_template?: string;
-  feed_notification_enabled?: boolean;
-  feed_notification_default?: boolean;
-  email_template?: string;
-  email_notifications_enabled?: boolean;
-  email_notifications_default?: boolean;
+  description?: string | null;
+  stripe_event?: string | null;
+  feed_template?: string | null;
+  feed_notification_enabled?: boolean | null;
+  feed_notification_default?: boolean | null;
+  email_template?: string | null;
+  email_notifications_enabled?: boolean | null;
+  email_notifications_default?: boolean | null;
 };
 
 export type UserNotificationSettingResource = {
@@ -141,8 +141,8 @@ export type UserNotificationSettingResource = {
   user_id: ResourceId<'user'>;
   subdomain_id: ResourceId<'subdomain'>;
   notification_definition_id: ResourceId<'notification definition'>;
-  feed_notification?: boolean;
-  email_notification?: boolean;
+  feed_notification?: boolean | null;
+  email_notification?: boolean | null;
 };
 
 export type AgencyThankYouPageSettingResource = {
@@ -170,7 +170,7 @@ export type FormFieldResource = {
   name: string;
   type: string;
   label: string;
-  default?: object;
+  default?: object | null;
   sort_key: number;
 };
 
@@ -179,7 +179,7 @@ export type PageBlockResource = {
   page_block_definition_id: ResourceId<'page block definition'>;
   page_id: ResourceId<'page'>;
   data: object;
-  after_id?: ResourceId<'page block'>;
+  after_id?: ResourceId<'page block'> | null;
 };
 
 export type FormResource = {
@@ -193,7 +193,7 @@ export type TransactionFeeResource = {
   denominator: number;
   fixed_amount: number;
   currency: string;
-  transaction_amount_upper_bound?: number;
+  transaction_amount_upper_bound?: number | null;
   data: object;
 };
 
@@ -209,7 +209,7 @@ export type PageResource = {
   agency_id: ResourceId<'agency'>;
   page_definition_id: ResourceId<'page definition'>;
   access: AccessLevel;
-  product_id?: ResourceId<'product'>;
+  product_id?: ResourceId<'product'> | null;
   url_path: string;
 };
 
@@ -223,18 +223,18 @@ export type StripeAccountResource = {
 export type SubscriptionPlanResource = {
   id: ResourceId<'subscription plan'>;
   name: string;
-  stripe_prod_id_ext_live?: string;
-  stripe_prod_id_ext_test?: string;
+  stripe_prod_id_ext_live?: string | null;
+  stripe_prod_id_ext_test?: string | null;
   data: object;
 };
 
 export type CustomerResource = {
   id: ResourceId<'customer'>;
-  name?: string;
+  name?: string | null;
   email_address: string;
   default_stripe_id_ext: string;
   stripe_account_id: ResourceId<'stripe account'>;
-  user_id?: ResourceId<'user'>;
+  user_id?: ResourceId<'user'> | null;
 };
 
 export type WebhookEventResource = {
@@ -253,10 +253,10 @@ export type PriceResource = {
   type: string;
   unit_amount: number;
   currency: string;
-  recurring_interal?: string;
-  recurring_inteval_count?: number;
-  stripe_price_id_ext_live?: string;
-  stripe_price_id_ext_test?: string;
+  recurring_interal?: string | null;
+  recurring_inteval_count?: number | null;
+  stripe_price_id_ext_live?: string | null;
+  stripe_price_id_ext_test?: string | null;
 };
 
 export type OrderResource = {
@@ -279,7 +279,7 @@ export type IntegrationResource = {
   id: ResourceId<'integration'>;
   name: string;
   agency_id: ResourceId<'agency'>;
-  credential_id?: ResourceId<'credential'>;
+  credential_id?: ResourceId<'credential'> | null;
   data: object;
 };
 

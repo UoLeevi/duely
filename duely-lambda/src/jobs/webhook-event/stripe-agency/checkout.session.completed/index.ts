@@ -21,7 +21,7 @@ async function main() {
   const stripe_env = event.livemode ? 'live' : 'test';
 
   try {
-    await updateProcessingState(context, webhook_event_id, 'processing');
+    await updateProcessingState(context, 'webhook event', webhook_event_id, 'processing');
     await withSession(context, async ({ queryResource, createResource }) => {
       const { id: stripe_account_id } = await queryResource('stripe account', {
         stripe_id_ext: event.account,
@@ -71,12 +71,12 @@ async function main() {
       }
 
       console.log(`Info: Order created:\n${JSON.stringify(order)}`);
-      
+
       await runLambda('process-order', order.id);
     });
-    await updateProcessingState(context, webhook_event_id, 'processed');
+    await updateProcessingState(context, 'webhook event', webhook_event_id, 'processed');
   } catch (err) {
     console.error(`Webhook event processing failed:\n${err}`);
-    await updateProcessingState(context, webhook_event_id, err);
+    await updateProcessingState(context, 'webhook event', webhook_event_id, err);
   }
 }

@@ -11,6 +11,7 @@ import {
   updateProcessingState
 } from '@duely/db';
 import { runLambda } from '@duely/lambda';
+import { WebhookEventResource } from '@duely/db/dist/types';
 
 let context: {
   jwt: string;
@@ -47,7 +48,7 @@ async function handle_webhook(req: Request, res: Response) {
   const { source } = req.params;
   const { livemode }: { livemode: boolean } = JSON.parse(req.body);
   let event: Stripe.Event;
-  let agency_id: string | null = null;
+  let agency_id = undefined;
 
   try {
     switch (source) {
@@ -91,15 +92,7 @@ async function handle_webhook(req: Request, res: Response) {
     }
   }
 
-  let webhook_event: {
-    id: string;
-    id_ext: string;
-    source: string;
-    livemode: boolean;
-    data: object;
-    state: string;
-    agency_id?: string | null;
-  };
+  let webhook_event: WebhookEventResource;
 
   try {
     webhook_event = await createResource(context, 'webhook event', {
@@ -142,7 +135,7 @@ async function handle_webhook(req: Request, res: Response) {
 
         default:
           console.log(`Unhandled event type ${event.type}`);
-          await updateProcessingState(context, webhook_event.id, 'processed');
+          await updateProcessingState(context, 'webhook event', webhook_event.id, 'processed');
       }
       break;
     }
@@ -151,7 +144,7 @@ async function handle_webhook(req: Request, res: Response) {
       switch (event.type) {
         default:
           console.log(`Unhandled event type ${event.type}`);
-          await updateProcessingState(context, webhook_event.id, 'processed');
+          await updateProcessingState(context, 'webhook event', webhook_event.id, 'processed');
       }
       break;
     }
