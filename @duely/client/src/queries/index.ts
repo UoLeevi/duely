@@ -13,6 +13,10 @@ import {
   SubdomainPublicDocument,
   AgencyProductsDocument,
   ProductDocument,
+  OrderDocument,
+  OrdersDocument,
+  OrderItemDocument,
+  OrderItemsDocument,
   SubdomainAgencyDocument,
   SubdomainAgencyStripeAccountUpdateUrlDocument,
   AgencyThankYouPageSettingDocument,
@@ -209,6 +213,26 @@ export const product_Q = {
 export const products_Q = {
   query: ProductsDocument,
   result: (d: ResultOf<typeof ProductsDocument>) => d?.products
+};
+
+export const order_Q = {
+  query: OrderDocument,
+  result: (d: ResultOf<typeof OrderDocument>) => d?.order
+};
+
+export const orders_Q = {
+  query: OrdersDocument,
+  result: (d: ResultOf<typeof OrdersDocument>) => d?.orders
+};
+
+export const order_item_Q = {
+  query: OrderItemDocument,
+  result: (d: ResultOf<typeof OrderItemDocument>) => d?.order_item
+};
+
+export const order_items_Q = {
+  query: OrderItemsDocument,
+  result: (d: ResultOf<typeof OrderItemsDocument>) => d?.order_items
 };
 
 export const product_and_agency_from_url_parts_Q = {

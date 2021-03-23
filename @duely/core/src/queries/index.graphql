@@ -234,6 +234,30 @@ query Products($filter: ProductFilter!) {
   }
 }
 
+query Order($order_id: ID!) {
+  order(id: $order_id) {
+    ...order
+  }
+}
+
+query Orders($filter: OrderFilter!) {
+  orders(filter: $filter) {
+    ...order
+  }
+}
+
+query OrderItem($order_item_id: ID!) {
+  order_item(id: $order_item_id) {
+    ...order_item
+  }
+}
+
+query OrderItems($filter: OrderItemFilter!) {
+  order_items(filter: $filter) {
+    ...order_item
+  }
+}
+
 query ProductAndAgencyFromUrlParts($subdomain_name: String!, $product_url_name: String!) {
   subdomains(filter: { name: $subdomain_name }) {
     id
