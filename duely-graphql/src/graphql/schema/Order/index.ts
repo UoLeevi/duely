@@ -29,6 +29,7 @@ export const Order: GqlTypeDefinition = {
     input OrderFilter {
       customer_id: ID
       stripe_account_id: ID
+      stripe_checkout_session_id_ext: ID
     }
 
     extend type Query {
