@@ -76,7 +76,7 @@ export const Order: GqlTypeDefinition = {
           );
           const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
-          const { id, object, ...stripe_checkout_session } = await stripe[
+          const { object, ...stripe_checkout_session } = await stripe[
             stripe_env
           ].checkout.sessions.retrieve(order.stripe_checkout_session_id_ext, {
             stripeAccount: stripe_account.stripe_id_ext
