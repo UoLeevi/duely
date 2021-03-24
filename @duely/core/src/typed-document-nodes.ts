@@ -1504,6 +1504,7 @@ export type Order = {
 export type OrderFilter = {
   customer_id?: Maybe<Scalars['ID']>;
   stripe_account_id?: Maybe<Scalars['ID']>;
+  stripe_checkout_session_id_ext?: Maybe<Scalars['ID']>;
 };
 
 export type OrderMutationResult = MutationResult & {
