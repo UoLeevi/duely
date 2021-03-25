@@ -1,14 +1,37 @@
-import { useQuery, current_agency_Q } from '@duely/client';
+import { useQuery, current_agency_Q, orders_Q } from '@duely/client';
 import { Currency } from '@duely/core';
 import { Card, LoadingScreen } from '@duely/react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import NotFound from '../../not-found';
 
 export default function ThankYouPage() {
-  const { data: current_agency, loading } = useQuery(current_agency_Q);
+  // Get stripe checkout session id from url query string
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const session_id = searchParams.get('session_id');
+
+  const { data: current_agency, loading: current_agencyLoading } = useQuery(current_agency_Q);
+  const { data: orders, loading: orderLoading } = useQuery(
+    orders_Q,
+    { filter: { stripe_checkout_session_id_ext: session_id } },
+    { skip: !session_id }
+  );
+
+  const loading = current_agencyLoading || orderLoading;
+
+  if (!session_id) {
+    return <NotFound />;
+  }
 
   if (loading) {
-    return <LoadingScreen />
+    return <LoadingScreen />;
   }
+
+  if (orders?.length !== 1) {
+    return <NotFound />;
+  }
+
+  // TODO: Show order info
 
   return (
     <>
@@ -44,7 +67,9 @@ export default function ThankYouPage() {
                   Keyword Research Service
                 </span>
               </div>
-              <div className="flex flex-row items-center justify-between text-xs">{Currency.format(150000, 'USD')}</div>
+              <div className="flex flex-row items-center justify-between text-xs">
+                {Currency.format(150000, 'USD')}
+              </div>
             </div>
           </Card>
 
