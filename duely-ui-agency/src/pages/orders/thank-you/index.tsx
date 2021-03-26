@@ -1,8 +1,15 @@
 import { useQuery, current_agency_Q, orders_Q } from '@duely/client';
-import { Currency } from '@duely/core';
-import { Card, LoadingScreen } from '@duely/react';
+import { Currency, ElementType } from '@duely/core';
+import { Card, LoadingScreen, Table } from '@duely/react';
 import { Link, useLocation } from 'react-router-dom';
 import NotFound from '../../not-found';
+
+const wrap = {
+  columns: 1,
+  spans: [1, 1]
+};
+
+const headers = ['Item', 'Amount'];
 
 export default function ThankYouPage() {
   // Get stripe checkout session id from url query string
@@ -30,6 +37,26 @@ export default function ThankYouPage() {
   if (orders?.length !== 1) {
     return <NotFound />;
   }
+
+  const order = orders[0];
+
+  const columns = [
+    // name
+    (order_item: ElementType<typeof order.items>) => (
+      <div className="flex flex-col space-y-2">
+        <span className="text-sm font-medium text-gray-800">{order_item.price.product.name}</span>
+      </div>
+    ),
+
+    // price
+    (order_item: ElementType<typeof order.items>) => (
+      <div className="flex flex-col space-y-2">
+        <span className="text-sm font-medium text-gray-800">
+          {Currency.format(order_item.price.unit_amount, order_item.price.currency as Currency)}
+        </span>
+      </div>
+    )
+  ];
 
   // TODO: Show order info
 
@@ -61,16 +88,13 @@ export default function ThankYouPage() {
           </div>
 
           <Card>
-            <div className="flex items-center justify-between px-6 py-5">
-              <div className="flex flex-col">
-                <span className="w-full text-sm font-bold tracking-wide">
-                  Keyword Research Service
-                </span>
-              </div>
-              <div className="flex flex-row items-center justify-between text-xs">
-                {Currency.format(150000, 'USD')}
-              </div>
-            </div>
+            <Table
+              className="px-6 py-4"
+              rows={order.items}
+              columns={columns}
+              headers={headers}
+              wrap={wrap}
+            />
           </Card>
 
           <div className="flex flex-col">

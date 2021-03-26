@@ -456,6 +456,9 @@ fragment order_item on OrderItem {
   }
   price {
     ...price
+    product {
+      ...product
+    }
   }
   state
   stripe_line_item_id_ext
