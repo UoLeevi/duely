@@ -275,9 +275,15 @@ export type CredentialResource = {
   data: object;
 };
 
+export type IntegrationTypeResource = {
+  id: ResourceId<'integration type'>;
+  name: string;
+  form_id: ResourceId<'form'>;
+};
+
 export type IntegrationResource = {
   id: ResourceId<'integration'>;
-  name: string;
+  integration_type_id: ResourceId<'integration type'>;
   agency_id: ResourceId<'agency'>;
   credential_id?: ResourceId<'credential'> | null;
   data: object;
@@ -458,6 +464,12 @@ export type ResourceDefinitions = {
     prefix: 'cred';
     table_name: 'credential';
     resource: CredentialResource;
+  };
+  'integration type': {
+    name: 'integration type';
+    prefix: 'intetype';
+    table_name: 'integration_type';
+    resource: IntegrationTypeResource;
   };
   integration: {
     name: 'integration';
