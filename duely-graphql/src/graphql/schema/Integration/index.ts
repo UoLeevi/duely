@@ -14,14 +14,14 @@ export const Integration: GqlTypeDefinition = {
   typeDef: gql`
     type Integration implements Node {
       id: ID!
-      name: String!
       data: Json!
       agency: Agency!
       credential: Credential
+      integration_type: IntegrationType!
     }
 
     input IntegrationFilter {
-      name: String
+      integration_type_id: ID
       agency_id: ID
     }
 
@@ -34,13 +34,13 @@ export const Integration: GqlTypeDefinition = {
       create_integration(
         agency_id: ID!
         credential_id: ID
-        name: String!
+        integration_type: ID!
         data: Json!
       ): IntegrationMutationResult!
       update_integration(
         integration_id: ID!
         credential_id: ID
-        name: String
+        integration_type: ID
         data: Json
       ): IntegrationMutationResult!
     }
@@ -54,7 +54,8 @@ export const Integration: GqlTypeDefinition = {
   resolvers: {
     Integration: {
       ...createResolverForReferencedResource({ name: 'agency' }),
-      ...createResolverForReferencedResource({ name: 'credential' })
+      ...createResolverForReferencedResource({ name: 'credential' }),
+      ...createResolverForReferencedResource({ name: 'integration type' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

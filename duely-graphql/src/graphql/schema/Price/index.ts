@@ -137,7 +137,7 @@ export const Price: GqlTypeDefinition = {
                 });
 
                 stripe_price_args.product =
-                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource];
+                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] ?? undefined;
 
                 // create price object at stripe
                 stripe_price[stripe_env] = await stripe[stripe_env].prices.create(

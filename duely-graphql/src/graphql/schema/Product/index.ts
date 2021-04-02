@@ -299,7 +299,7 @@ export const Product: GqlTypeDefinition = {
 
               const { status, name, description } = product;
               stripe_product_args.name = name;
-              stripe_product_args.description = description;
+              stripe_product_args.description = description ?? undefined;
               stripe_product_args.active = status === 'live';
 
               const stripe_envs: (keyof typeof stripe)[] = agency.livemode

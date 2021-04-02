@@ -231,7 +231,7 @@ export const Customer: GqlTypeDefinition = {
             // update customer resource
             const customer = await updateResource('customer', customer_id, args);
 
-            stripe_customer_args.name = customer.name;
+            stripe_customer_args.name = customer.name ?? undefined;
             stripe_customer_args.email = customer.email_address;
 
             const stripe_env = stripe_account.livemode ? 'live' : 'test';

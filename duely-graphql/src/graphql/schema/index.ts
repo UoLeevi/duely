@@ -43,6 +43,7 @@ import { StripeCheckoutSession } from './StripeCheckoutSession';
 import { Credential } from './Credential';
 import { Integration } from './Integration';
 import { OrderItem } from './OrderItem';
+import { IntegrationType } from './IntegrationType';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -94,14 +95,13 @@ const types: GqlTypeDefinition[] = [
   Order,
   OrderItem,
   Integration,
+  IntegrationType,
   DateTime,
   Json
 ];
 
 const schema: IExecutableSchemaDefinition<DuelyQqlContext> = {
-  typeDefs: types
-    .map((t) => t.typeDef)
-    .filter((d): d is DocumentNode => d !== undefined),
+  typeDefs: types.map((t) => t.typeDef).filter((d): d is DocumentNode => d !== undefined),
   resolvers: types
     .map((t) => t.resolvers)
     .filter((r): r is Record<string, GqlResolver> => r !== undefined)
