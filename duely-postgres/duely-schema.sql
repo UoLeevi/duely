@@ -2429,7 +2429,7 @@ BEGIN
   END IF;
 
   IF _id IS NOT NULL THEN
-    -- Lookup by id
+      -- Lookup by id
     RETURN QUERY
       SELECT internal_.convert_from_internal_format_(
         internal_.dynamic_select_(d.table_, r.uuid_, keys_)
@@ -2439,6 +2439,7 @@ BEGIN
       CROSS JOIN security_.control_query_(d, r) keys_
       WHERE d.name_ = _resource_name
         AND r.id_ = _id;
+
   ELSE
     -- Filter by fields
     RETURN QUERY
@@ -2449,6 +2450,93 @@ $$;
 
 
 ALTER FUNCTION operation_.query_resource_(_resource_name text, _id_or_filter text) OWNER TO postgres;
+
+--
+-- Name: query_resource_(text, jsonb, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb, _token text) RETURNS SETOF jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF _resource_name IS NULL OR _filter IS NULL THEN
+    RETURN;
+  END IF;
+
+  _filter := internal_.convert_to_internal_format_(_filter);
+
+  RETURN QUERY
+    WITH
+      all_ AS (
+        SELECT internal_.dynamic_select_(d.table_, r.uuid_, t.keys_) data_
+        FROM application_.resource_ r
+        JOIN security_.resource_token_ t ON r.uuid_ = t.resource_uuid_ AND r.uuid_ = t.resource_uuid_
+        JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+        WHERE d.name_ = _resource_name
+          AND t.token_ = _token
+          AND r.search_ @> _filter
+      )
+    SELECT internal_.convert_from_internal_format_(all_.data_) query_resource_
+    FROM all_
+    WHERE all_.data_ @> _filter
+    ORDER BY (all_.data_->>'sort_key_')::real;
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb, _token text) OWNER TO postgres;
+
+--
+-- Name: query_resource_(text, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.query_resource_(_resource_name text, _id_or_filter text, _token text) RETURNS SETOF jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _id text;
+  _filter jsonb;
+BEGIN
+  IF _resource_name IS NULL OR _id_or_filter IS NULL OR _token IS NULL THEN
+    RETURN;
+  END IF;
+
+  IF starts_with(_id_or_filter, '{') THEN
+    _filter := _id_or_filter::jsonb;
+
+    IF _filter = '{}'::jsonb THEN
+      RETURN;
+    ELSEIF _filter - 'id' = '{}'::jsonb THEN
+      _id := _filter->>'id';
+    END IF;
+
+  ELSE
+    _id := _id_or_filter;
+  END IF;
+
+  IF _id IS NOT NULL THEN
+    -- Lookup by id and resource token
+    RETURN QUERY
+      SELECT internal_.convert_from_internal_format_(
+          internal_.dynamic_select_(d.table_, r.uuid_, t.keys_)
+        ) query_resource_
+      FROM application_.resource_ r
+      JOIN security_.resource_token_ t ON r.uuid_ = t.resource_uuid_ AND r.uuid_ = t.resource_uuid_
+      JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+      WHERE d.name_ = _resource_name
+        AND t.token_ = _token
+        AND r.id_ = _id;
+
+  ELSE
+    -- Filter by fields
+    RETURN QUERY
+      SELECT operation_.query_resource_(_resource_name, _filter, _token);
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION operation_.query_resource_(_resource_name text, _id_or_filter text, _token text) OWNER TO postgres;
 
 --
 -- Name: query_resource_access_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -6690,6 +6778,20 @@ CREATE TABLE security_.operation_ (
 ALTER TABLE security_.operation_ OWNER TO postgres;
 
 --
+-- Name: resource_token_; Type: TABLE; Schema: security_; Owner: postgres
+--
+
+CREATE TABLE security_.resource_token_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    resource_uuid_ uuid,
+    token_ text NOT NULL,
+    keys_ text[] NOT NULL
+);
+
+
+ALTER TABLE security_.resource_token_ OWNER TO postgres;
+
+--
 -- Name: secret_; Type: TABLE; Schema: security_; Owner: postgres
 --
 
@@ -7302,6 +7404,14 @@ f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bd
 d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	\N	2021-03-05 15:24:22.112531+00	00000000-0000-0000-0000-000000000000
 677e43b0-6a66-4f84-b857-938f462fdf90	orditm	order item	application_.order_item_	20c1d214-27e8-4805-b645-2e5a00f32486	{uuid_,order_uuid_,stripe_line_item_id_ext_}	\N	2021-03-07 08:06:08.312786+00	00000000-0000-0000-0000-000000000000
 30e49b72-e52a-467d-8300-8b5051f32d9a	intetype	integration type	internal_.integration_type_	\N	{uuid_,form_uuid_,name_}	\N	2021-03-31 14:03:52.464206+00	00000000-0000-0000-0000-000000000000
+\.
+
+
+--
+-- Data for Name: resource_token_; Type: TABLE DATA; Schema: security_; Owner: postgres
+--
+
+COPY security_.resource_token_ (uuid_, resource_uuid_, token_, keys_) FROM stdin;
 \.
 
 
@@ -8009,6 +8119,22 @@ ALTER TABLE ONLY security_.resource_definition_
 
 ALTER TABLE ONLY security_.resource_definition_
     ADD CONSTRAINT resource_definition__table__key UNIQUE (table_);
+
+
+--
+-- Name: resource_token_ resource_token__pkey; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.resource_token_
+    ADD CONSTRAINT resource_token__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: resource_token_ resource_token__resource_uuid__token__key; Type: CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.resource_token_
+    ADD CONSTRAINT resource_token__resource_uuid__token__key UNIQUE (resource_uuid_, token_);
 
 
 --
@@ -10410,6 +10536,14 @@ ALTER TABLE ONLY security_.policy_assignment_
 
 ALTER TABLE ONLY security_.resource_definition_
     ADD CONSTRAINT resource_definition__owner_uuid__fkey FOREIGN KEY (owner_uuid_) REFERENCES security_.resource_definition_(uuid_);
+
+
+--
+-- Name: resource_token_ resource_token__resource_uuid__fkey; Type: FK CONSTRAINT; Schema: security_; Owner: postgres
+--
+
+ALTER TABLE ONLY security_.resource_token_
+    ADD CONSTRAINT resource_token__resource_uuid__fkey FOREIGN KEY (resource_uuid_) REFERENCES application_.resource_(uuid_) ON DELETE CASCADE;
 
 
 --
