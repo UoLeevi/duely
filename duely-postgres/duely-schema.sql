@@ -861,6 +861,45 @@ $$;
 ALTER FUNCTION internal_.insert_product_page_() OWNER TO postgres;
 
 --
+-- Name: insert_resource_token_for_order_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.insert_resource_token_for_order_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  INSERT INTO security_.resource_token_ (resource_uuid_, token_, keys_)
+  SELECT _order.uuid_, _order.stripe_checkout_session_id_ext_, '{uuid_, customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, processed_at_}'::text[]
+  FROM _order;
+
+  RETURN NULL;
+END
+$$;
+
+
+ALTER FUNCTION internal_.insert_resource_token_for_order_() OWNER TO postgres;
+
+--
+-- Name: insert_resource_token_for_order_item_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.insert_resource_token_for_order_item_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  INSERT INTO security_.resource_token_ (resource_uuid_, token_, keys_)
+  SELECT _order_item.uuid_, o.stripe_checkout_session_id_ext_, '{uuid_, order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, processed_at_}'::text[]
+  FROM _order_item
+  JOIN application_.order_ o ON o.uuid_ = _order_item.order_uuid_;
+
+  RETURN NULL;
+END
+$$;
+
+
+ALTER FUNCTION internal_.insert_resource_token_for_order_item_() OWNER TO postgres;
+
+--
 -- Name: insert_subject_for_user_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -8676,6 +8715,20 @@ CREATE TRIGGER tr_after_insert_insert_page_default_blocks_ AFTER INSERT ON appli
 --
 
 CREATE TRIGGER tr_after_insert_insert_product_page_ AFTER INSERT ON application_.product_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_product_page_();
+
+
+--
+-- Name: order_ tr_after_insert_insert_resource_token_for_order_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_insert_resource_token_for_order_ AFTER INSERT ON application_.order_ REFERENCING NEW TABLE AS _order FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_resource_token_for_order_();
+
+
+--
+-- Name: order_item_ tr_after_insert_insert_resource_token_for_order_item_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_insert_resource_token_for_order_item_ AFTER INSERT ON application_.order_item_ REFERENCING NEW TABLE AS _order_item FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_resource_token_for_order_item_();
 
 
 --
