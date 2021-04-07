@@ -247,50 +247,70 @@ export async function queryResourceAccess(
 export async function queryResource<K extends keyof Resources>(
   context: Context,
   resource_name: K,
-  id_or_filter: string | Partial<Resources[K]>
+  id_or_filter: string | Partial<Resources[K]>,
+  token?: string
 ): Promise<Resources[K]>;
 export async function queryResource<K extends keyof Resources>(
   client: ClientBase,
   resource_name: K,
-  id_or_filter: string | Partial<Resources[K]>
+  id_or_filter: string | Partial<Resources[K]>,
+  token?: string
 ): Promise<Resources[K]>;
 export async function queryResource<K extends keyof Resources>(
   arg: Context | ClientBase,
   resource_name: K,
-  id_or_filter: string | Partial<Resources[K]>
+  id_or_filter: string | Partial<Resources[K]>,
+  token?: string
 ): Promise<Resources[K]> {
   if (!arg || !resource_name || !id_or_filter) throw Error('Arguments are required');
 
+  const parameterPgTypes = ['text'];
+
+  parameterPgTypes.push(typeof id_or_filter === 'string' ? 'text' : 'jsonb');
+
+  if (token != undefined) parameterPgTypes.push('text');
+
+  const parametersSql = parameterPgTypes.map((t, i) => `$${i}::${t}`).join(', ');
+  const parameters = [resource_name, id_or_filter, token].slice(0, parameterPgTypes.length);
+
   return await query(
     arg as any /* Context | ClientBase */,
-    `SELECT * FROM operation_.query_resource_($1::text, $2::${
-      typeof id_or_filter === 'string' ? 'text' : 'jsonb'
-    })`,
-    resource_name,
-    id_or_filter
+    `SELECT * FROM operation_.query_resource_(${parametersSql})`,
+    ...parameters
   );
 }
 
 export async function queryResourceAll<K extends keyof Resources>(
   client: ClientBase,
   resource_name: K,
-  filter?: Partial<Resources[K]>
+  filter?: Partial<Resources[K]>,
+  token?: string
 ): Promise<Resources[K][]>;
 export async function queryResourceAll<K extends keyof Resources>(
   context: Context,
   resource_name: K,
-  filter?: Partial<Resources[K]>
+  filter?: Partial<Resources[K]>,
+  token?: string
 ): Promise<Resources[K][]>;
 export async function queryResourceAll<K extends keyof Resources>(
   arg: Context | ClientBase,
   resource_name: K,
-  filter?: Partial<Resources[K]>
+  filter?: Partial<Resources[K]>,
+  token?: string
 ): Promise<Resources[K][]> {
+  if (!arg || !resource_name || !filter) throw Error('Arguments are required');
+
+  const parameterPgTypes = ['text', 'jsonb'];
+
+  if (token != undefined) parameterPgTypes.push('text');
+
+  const parametersSql = parameterPgTypes.map((t, i) => `$${i}::${t}`).join(', ');
+  const parameters = [resource_name, filter, token].slice(0, parameterPgTypes.length);
+
   return await queryAll(
     arg as any /* Context | ClientBase */,
-    'SELECT * FROM operation_.query_resource_($1::text, $2::jsonb)',
-    resource_name,
-    filter
+    `SELECT * FROM operation_.query_resource_(${parametersSql})`,
+    ...parameters
   );
 }
 
@@ -408,15 +428,17 @@ function useFunctions(client: ClientBase) {
     queryResourceAccess: Util.partial(queryResourceAccess, client),
     async queryResource<K extends keyof Resources>(
       resource_name: K,
-      id_or_filter: string | Partial<Resources[K]>
+      id_or_filter: string | Partial<Resources[K]>,
+      token?: string
     ): Promise<Resources[K]> {
-      return await queryResource(client, resource_name, id_or_filter);
+      return await queryResource(client, resource_name, id_or_filter, token);
     },
     async queryResourceAll<K extends keyof Resources>(
       resource_name: K,
-      filter?: Partial<Resources[K]>
+      filter?: Partial<Resources[K]>,
+      token?: string
     ): Promise<Resources[K][]> {
-      return await queryResourceAll(client, resource_name, filter);
+      return await queryResourceAll(client, resource_name, filter, token);
     },
     async createResource<K extends keyof Resources>(
       resource_name: K,
