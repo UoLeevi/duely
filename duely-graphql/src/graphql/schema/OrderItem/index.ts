@@ -15,7 +15,7 @@ export const OrderItem: GqlTypeDefinition = {
   typeDef: gql`
     type OrderItem {
       id: ID!
-      order: Order!
+      order(token: String): Order!
       price: Price!
       state: String!
       stripe_line_item_id_ext: String!
@@ -29,8 +29,8 @@ export const OrderItem: GqlTypeDefinition = {
     }
 
     extend type Query {
-      order_item(id: ID!): OrderItem
-      order_items(filter: OrderItemFilter!): [OrderItem!]
+      order_item(id: ID!, token: String): OrderItem
+      order_items(filter: OrderItemFilter!, token: String): [OrderItem!]
     }
 
     extend type Mutation {

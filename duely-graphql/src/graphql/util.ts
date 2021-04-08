@@ -55,12 +55,15 @@ export function createDefaultQueryResolversForResource<
     },
     async [plural ?? (table_name ?? name) + 's'](
       source: TSource,
-      args: { filter?: Partial<Resources[K]> },
+      args: {
+        filter?: Partial<Resources[K]>;
+        token?: string;
+      },
       context: TContext,
       info: GraphQLResolveInfo
     ) {
       if (!context.jwt) throw new Error('Unauthorized');
-      return await queryResourceAll(context, name, args.filter);
+      return await queryResourceAll(context, name, args.filter, args.token);
     }
   };
 }
@@ -90,7 +93,10 @@ export function createResolverForReferencedResource<
 
   const createIdOrFilterArg: (
     source: TSource,
-    args: { filter?: Partial<Resources[K]> }
+    args: {
+      filter?: Partial<Resources[K]>;
+      token?: string;
+    }
   ) => string | Partial<Resources[K]> = reverse
     ? (source, args) =>
         ({
@@ -104,7 +110,10 @@ export function createResolverForReferencedResource<
   return {
     async [name](
       source: TSource,
-      args: { filter?: Partial<Resources[K]> },
+      args: {
+        filter?: Partial<Resources[K]>;
+        token?: string;
+      },
       context: TContext,
       info: GraphQLResolveInfo
     ) {
@@ -114,7 +123,7 @@ export function createResolverForReferencedResource<
 
       if (!id_or_filter) return null;
 
-      return await queryResource(context, resource_name, id_or_filter);
+      return await queryResource(context, resource_name, id_or_filter, args.token);
     }
   };
 }
@@ -143,17 +152,25 @@ export function createResolverForReferencedResourceAll<
   return {
     async [name](
       source: TSource,
-      args: { filter?: Partial<Resources[K]> },
+      args: {
+        filter?: Partial<Resources[K]>;
+        token?: string;
+      },
       context: TContext,
       info: GraphQLResolveInfo
     ): Promise<Resources[K][]> {
       if (!context.jwt) throw new Error('Unauthorized');
-      return await queryResourceAll(context, resource_name!, {
-        ...args.filter,
-        [column_name!]: reverse_column_name
-          ? source[reverse_column_name as keyof TSource]
-          : source.id ?? source[column_name! as keyof TSource]
-      } as Partial<Resources[K]>);
+      return await queryResourceAll(
+        context,
+        resource_name!,
+        {
+          ...args.filter,
+          [column_name!]: reverse_column_name
+            ? source[reverse_column_name as keyof TSource]
+            : source.id ?? source[column_name! as keyof TSource]
+        } as Partial<Resources[K]>,
+        args.token
+      );
     }
   };
 }

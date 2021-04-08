@@ -1,12 +1,14 @@
 import {
   createDefaultQueryResolversForResource,
-  createResolverForReferencedResource
+  createResolverForReferencedResource,
+  createResolverForReferencedResourceAll
 } from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 
 const resource = {
-  name: 'integration type'
+  name: 'integration type',
+  table_name: 'integration_type'
 } as const;
 
 export const IntegrationType: GqlTypeDefinition = {
@@ -14,7 +16,7 @@ export const IntegrationType: GqlTypeDefinition = {
     type IntegrationType implements Node {
       id: ID!
       name: String!
-      form: Form!
+      fields: [FormField!]
     }
 
     input IntegrationTypeFilter {
@@ -29,7 +31,12 @@ export const IntegrationType: GqlTypeDefinition = {
   `,
   resolvers: {
     IntegrationType: {
-      ...createResolverForReferencedResource({ name: 'form' })
+      ...createResolverForReferencedResourceAll({
+        name: 'fields',
+        resource_name: 'form field',
+        column_name: 'form_id',
+        reverse_column_name: 'form_id'
+      })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
