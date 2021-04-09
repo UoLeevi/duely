@@ -12,7 +12,7 @@ const resource = {
 
 export const Integration: GqlTypeDefinition = {
   typeDef: gql`
-    type Integration implements Node {
+    type Integration {
       id: ID!
       data: Json!
       agency: Agency!
