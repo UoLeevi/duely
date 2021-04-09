@@ -471,9 +471,6 @@ fragment order on Order {
   customer {
     id
   }
-  items {
-    ...order_item
-  }
   stripe_account {
     id
   }

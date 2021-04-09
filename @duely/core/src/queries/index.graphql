@@ -234,26 +234,32 @@ query Products($filter: ProductFilter!) {
   }
 }
 
-query Order($order_id: ID!) {
-  order(id: $order_id) {
+query Order($order_id: ID!, $token: String) {
+  order(id: $order_id, token: $token) {
     ...order
+    items(token: $token) {
+      ...order_item
+    }
   }
 }
 
-query Orders($filter: OrderFilter!) {
-  orders(filter: $filter) {
+query Orders($filter: OrderFilter!, $token: String) {
+  orders(filter: $filter, token: $token) {
     ...order
+    items(token: $token) {
+      ...order_item
+    }
   }
 }
 
-query OrderItem($order_item_id: ID!) {
-  order_item(id: $order_item_id) {
+query OrderItem($order_item_id: ID!, $token: String) {
+  order_item(id: $order_item_id, token: $token) {
     ...order_item
   }
 }
 
-query OrderItems($filter: OrderItemFilter!) {
-  order_items(filter: $filter) {
+query OrderItems($filter: OrderItemFilter!, $token: String) {
+  order_items(filter: $filter, token: $token) {
     ...order_item
   }
 }
