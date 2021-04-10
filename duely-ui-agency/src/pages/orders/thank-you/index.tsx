@@ -20,7 +20,10 @@ export default function ThankYouPage() {
   const { data: current_agency, loading: current_agencyLoading } = useQuery(current_agency_Q);
   const { data: orders, loading: orderLoading } = useQuery(
     orders_Q,
-    { filter: { stripe_checkout_session_id_ext: session_id } },
+    {
+      filter: { stripe_checkout_session_id_ext: session_id },
+      token: session_id
+    },
     { skip: !session_id }
   );
 

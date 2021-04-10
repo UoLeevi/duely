@@ -1,6 +1,6 @@
 {
   "name": "@duely/client",
-  "version": "0.0.103",
+  "version": "0.0.105",
   "description": "GraphQL client by Duely (wrapper for @apollo/client)",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -18,20 +18,20 @@
     "subscriptions-transport-ws": "^0.9.18"
   },
   "devDependencies": {
-    "@apollo/client": "^3.3.13",
-    "@duely/core": "0.0.63",
+    "@apollo/client": "^3.3.14",
+    "@duely/core": "0.0.64",
     "@graphql-typed-document-node/core": "^3.1.0",
     "@types/node": "^14.14.37",
     "@types/react": "^17.0.3",
     "react": "^17.0.2",
     "ts-loader": "^8.1.0",
-    "typescript": "^4.2.3",
-    "webpack": "^5.30.0",
+    "typescript": "^4.2.4",
+    "webpack": "^5.31.2",
     "webpack-cli": "^4.6.0"
   },
   "peerDependencies": {
-    "@apollo/client": "^3.3.4",
-    "@duely/core": "0.0.61",
+    "@apollo/client": "^3.3.14",
+    "@duely/core": "0.0.64",
     "react": "^17.0.1"
   }
 }
