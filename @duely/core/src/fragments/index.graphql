@@ -468,15 +468,6 @@ fragment order_item on OrderItem {
 
 fragment order on Order {
   id
-  customer {
-    id
-  }
-  stripe_account {
-    id
-  }
-  stripe_checkout_session {
-    id
-  }
   state
   error
   ordered_at
