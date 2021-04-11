@@ -1,6 +1,6 @@
 {
   "name": "duely-webhook",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "Web server handling webhook endpoints.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -13,24 +13,24 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@duely/core": "0.0.56",
-    "@duely/db": "0.0.28",
+    "@duely/core": "0.0.65",
+    "@duely/db": "0.0.32",
     "@duely/lambda": "0.0.1",
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "graphql": "^15.5.0",
     "graphql-request": "^3.4.0",
-    "stripe": "^8.137.0",
+    "stripe": "^8.142.0",
     "validator": "^13.5.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.9",
-    "@types/node": "^14.14.31",
+    "@types/node": "^14.14.37",
     "@types/validator": "^13.1.1",
-    "ts-loader": "^8.0.17",
-    "typescript": "^4.2.3",
-    "webpack": "^5.24.3",
-    "webpack-cli": "^4.5.0"
+    "ts-loader": "^8.1.0",
+    "typescript": "^4.2.4",
+    "webpack": "^5.31.2",
+    "webpack-cli": "^4.6.0"
   }
 }
