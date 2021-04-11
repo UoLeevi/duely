@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-home",
-  "version": "0.9.16",
+  "version": "0.9.17",
   "private": true,
   "scripts": {
     "build": "NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o public/styles/index.css && react-scripts build",
@@ -29,9 +29,9 @@
     ]
   },
   "dependencies": {
-    "@apollo/client": "^3.3.13",
-    "@duely/client": "0.0.102",
-    "@duely/core": "0.0.62",
+    "@apollo/client": "^3.3.14",
+    "@duely/client": "0.0.105",
+    "@duely/core": "0.0.65",
     "@duely/react": "^0.2.71",
     "@headlessui/react": "^0.2.0",
     "@tailwindcss/typography": "^0.3.1",
@@ -50,15 +50,15 @@
     "react-icons": "^3.11.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^4.0.3",
-    "typescript": "^4.2.3",
+    "typescript": "^4.2.4",
     "web-vitals": "^0.2.4"
   },
   "devDependencies": {
     "@types/react": "^17.0.3",
     "@types/react-router-dom": "^5.1.7",
     "autoprefixer": "^9.8.6",
-    "postcss": "^8.2.8",
+    "postcss": "^8.2.9",
     "postcss-cli": "^8.3.1",
-    "tailwindcss": "^2.0.4"
+    "tailwindcss": "^2.1.1"
   }
 }

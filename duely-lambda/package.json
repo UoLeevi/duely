@@ -1,6 +1,6 @@
 {
   "name": "duely-lambda",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Web server for running lambda function like jobs.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -13,21 +13,21 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@duely/core": "0.0.56",
-    "@duely/db": "0.0.28",
+    "@duely/core": "0.0.65",
+    "@duely/db": "0.0.32",
     "@duely/lambda": "0.0.1",
     "axios": "^0.21.1",
     "cors": "^2.8.5",
     "express": "^4.16.4",
-    "stripe": "^8.138.0"
+    "stripe": "^8.142.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.9",
-    "@types/node": "^14.14.35",
-    "ts-loader": "^8.0.18",
-    "typescript": "^4.2.3",
-    "webpack": "^5.26.3",
-    "webpack-cli": "^4.5.0"
+    "@types/node": "^14.14.37",
+    "ts-loader": "^8.1.0",
+    "typescript": "^4.2.4",
+    "webpack": "^5.31.2",
+    "webpack-cli": "^4.6.0"
   }
 }

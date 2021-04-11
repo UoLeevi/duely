@@ -19,7 +19,16 @@ async function main() {
       const customer = await queryResource('customer', order.customer_id);
       const integration = await queryResource('integration', product.integration_id!);
 
-      if (!integration || integration.name != 'teachable/enroll') {
+      if (!integration) {
+        throw new Error(`No teachable/enroll integration found for product ${product.id}`);
+      }
+
+      const integration_type = await queryResource(
+        'integration type',
+        integration.integration_type_id!
+      );
+
+      if (integration_type.name != 'teachable/enroll') {
         throw new Error(`No teachable/enroll integration found for product ${product.id}`);
       }
 
