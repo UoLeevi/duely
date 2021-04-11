@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import stripe from './stripe';
-import { GraphQLClient } from 'graphql-request';
 import Stripe from 'stripe';
 import {
   createResource,
@@ -30,15 +29,6 @@ async function main() {
 
   app.listen({ port: process.env.PORT }, () => {
     console.log(`🚀 Server ready at http://localhost:${process.env.PORT}`);
-  });
-}
-
-async function createGraphQLClient() {
-  const endpoint = 'https://api.duely.app/graphql';
-  return new GraphQLClient(endpoint, {
-    headers: {
-      authorization: `Bearer ${context.jwt}`
-    }
   });
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "duely-webhook",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Web server handling webhook endpoints.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -18,8 +18,6 @@
     "@duely/lambda": "0.0.1",
     "cors": "^2.8.5",
     "express": "^4.16.4",
-    "graphql": "^15.5.0",
-    "graphql-request": "^3.4.0",
     "stripe": "^8.142.0",
     "validator": "^13.5.2"
   },

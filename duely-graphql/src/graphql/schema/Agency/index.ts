@@ -48,8 +48,10 @@ export const Agency: GqlTypeDefinition = {
         country_code: String!
         image_logo: ImageInput!
         return_url: String!
+        default_currency: String
       ): CreateAgencyResult!
-      delete_agency(agency_id: ID!): DeleteAgencyResult!
+      update_agency(agency_id: ID!, default_currency: String): AgencyMutationResult!
+      delete_agency(agency_id: ID!): AgencyMutationResult!
     }
 
     type CreateAgencyResult implements MutationResult {
@@ -59,7 +61,7 @@ export const Agency: GqlTypeDefinition = {
       stripe_verification_url: String
     }
 
-    type DeleteAgencyResult implements MutationResult {
+    type AgencyMutationResult implements MutationResult {
       success: Boolean!
       message: String
       agency: Agency
@@ -293,6 +295,56 @@ export const Agency: GqlTypeDefinition = {
           };
         }
       },
+      async update_agency(obj, { agency_id, default_currency }, context) {
+        if (!context.jwt) throw new Error('Unauthorized');
+
+        try {
+          return await withSession(context, async ({ queryResource, deleteResource }) => {
+            const agency = await queryResource('agency', agency_id);
+
+            if (agency == null) {
+              return {
+                // error
+                success: false,
+                message: 'Agency not found',
+                type: 'AgencyMutationResult'
+              };
+            }
+
+            const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+              ? ['test', 'live']
+              : ['test'];
+
+            for (const stripe_env of stripe_envs) {
+              // query stripe account from database
+              const stripe_account = await queryResource('stripe account', {
+                agency_id,
+                livemode: stripe_env === 'live'
+              });
+
+              // update stripe custom account for agency
+              // see: https://stripe.com/docs/api/accounts/update
+              await stripe[stripe_env].accounts.update(stripe_account.stripe_id_ext, {
+                default_currency
+              });
+            }
+
+            // success
+            return {
+              success: true,
+              agency,
+              type: 'AgencyMutationResult'
+            };
+          });
+        } catch (error) {
+          return {
+            // error
+            success: false,
+            message: error.message,
+            type: 'AgencyMutationResult'
+          };
+        }
+      },
       async delete_agency(obj, { agency_id }, context) {
         if (!context.jwt) throw new Error('Unauthorized');
 
@@ -305,7 +357,7 @@ export const Agency: GqlTypeDefinition = {
                 // error
                 success: false,
                 message: 'Agency not found',
-                type: 'DeleteAgencyResult'
+                type: 'AgencyMutationResult'
               };
             }
 
@@ -332,7 +384,7 @@ export const Agency: GqlTypeDefinition = {
             return {
               success: true,
               agency,
-              type: 'DeleteAgencyResult'
+              type: 'AgencyMutationResult'
             };
           });
         } catch (error) {
@@ -340,7 +392,7 @@ export const Agency: GqlTypeDefinition = {
             // error
             success: false,
             message: error.message,
-            type: 'DeleteAgencyResult'
+            type: 'AgencyMutationResult'
           };
         }
       }
