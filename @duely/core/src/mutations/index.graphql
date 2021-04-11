@@ -98,6 +98,24 @@ mutation CreateAgency(
   }
 }
 
+mutation UpdateAgency(
+  $agency_id: ID!
+  $default_pricing_currency: String
+) {
+  update_agency(
+    agency_id: $agency_id
+    default_pricing_currency: $default_pricing_currency
+  ) {
+    message
+    success
+    agency {
+      id
+      name
+      default_pricing_currency
+    }
+  }
+}
+
 mutation CreateProduct(
   $agency_id: ID!
   $name: String!

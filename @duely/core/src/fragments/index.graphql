@@ -328,6 +328,7 @@ fragment agency on Agency {
   settings {
     id
   }
+  default_pricing_currency
 }
 
 fragment customer on Customer {

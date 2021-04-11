@@ -38,7 +38,8 @@ import {
   CalculateTransactionFeeDocument,
   CountrySpecDocument,
   CustomerDocument,
-  AgencyStripeAccountDocument
+  AgencyStripeAccountDocument,
+  SubdomainAgencyExtendedDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -244,6 +245,12 @@ export const current_agency_Q = {
   ...current_subdomain_Q,
   query: SubdomainAgencyDocument,
   result: (d: ResultOf<typeof SubdomainAgencyDocument>) => d?.subdomains?.[0]?.agency
+};
+
+export const current_agency_extended_Q = {
+  ...current_subdomain_Q,
+  query: SubdomainAgencyExtendedDocument,
+  result: (d: ResultOf<typeof SubdomainAgencyExtendedDocument>) => d?.subdomains?.[0]?.agency
 };
 
 export const current_agency_stripe_account_update_url_Q = {

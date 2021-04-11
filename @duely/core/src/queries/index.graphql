@@ -293,6 +293,21 @@ query SubdomainAgency($subdomain_name: String!) {
   }
 }
 
+
+query SubdomainAgencyExtended($subdomain_name: String!) {
+  subdomains(filter: { name: $subdomain_name }) {
+    id
+    name
+    agency {
+      ...agency
+      products {
+        ...product
+      }
+      supported_payment_currencies
+    }
+  }
+}
+
 query SubdomainAgencyStripeAccountUpdateUrl($subdomain_name: String!) {
   subdomains(filter: { name: $subdomain_name }) {
     id

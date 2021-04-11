@@ -27,8 +27,10 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
     { skip: !agency }
   );
 
+  const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency;
+
   const currencyPrefix: React.ReactNode = (
-    <span className="pr-1">{stripe_account?.default_currency?.toUpperCase()}</span>
+    <span className="pr-1">{currency?.toUpperCase()}</span>
   );
 
   const payment_type = form.watch('payment_type');

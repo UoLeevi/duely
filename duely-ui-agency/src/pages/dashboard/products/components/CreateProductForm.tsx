@@ -70,7 +70,7 @@ export function CreateProductForm() {
 
     const { product } = res_product;
     const { unit_amount_major, payment_type, frequency } = data;
-    const currency = stripe_account?.default_currency ?? 'usd'; // TODO: have an input or use default currency
+    const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency ?? 'usd'; // TODO: have an input or use default currency
     const unit_amount = Currency.numberToMinorCurrencyAmount(
       +unit_amount_major,
       currency as Currency

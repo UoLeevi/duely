@@ -5,7 +5,7 @@ import { GqlTypeDefinition } from '../../types';
 
 let countriesPromise: Promise<Map<string, Stripe.CountrySpec>> | null = null;
 let country_codes: string[];
-let countries: Map<string, Stripe.CountrySpec>;
+let countries: Map<string, Stripe.CountrySpec> | null = null;
 
 export async function fetchCountries() {
   if (countries !== null) return countries;
@@ -84,7 +84,7 @@ export const Country: GqlTypeDefinition = {
         }
 
         await countriesPromise;
-        return countries.get(country_code);
+        return countries!.get(country_code);
       }
     }
   }

@@ -27,6 +27,7 @@ import {
   ProductThankYouPageSettingDocument,
   StartPasswordResetDocument,
   StartSignUpDocument,
+  UpdateAgencyDocument,
   UpdateAgencyThankYouPageSettingDocument,
   UpdateCustomerDocument,
   UpdatePageBlockDocument,
@@ -155,6 +156,11 @@ export const start_sign_up_M = {
 export const create_agency_M = {
   mutation: CreateAgencyDocument,
   result: (d: ResultOf<typeof CreateAgencyDocument>) => d?.create_agency
+};
+
+export const update_agency_M = {
+  mutation: UpdateAgencyDocument,
+  result: (d: ResultOf<typeof UpdateAgencyDocument>) => d?.update_agency
 };
 
 const create_product_R = (d: ResultOf<typeof CreateProductDocument>) => d?.create_product;
