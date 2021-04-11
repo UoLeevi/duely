@@ -7,8 +7,9 @@ let countriesPromise: Promise<Map<string, Stripe.CountrySpec>> | null = null;
 let country_codes: string[];
 let countries: Map<string, Stripe.CountrySpec>;
 
+export async function fetchCountries() {
+  if (countries !== null) return countries;
 
-async function fetchCountries() {
   let has_more = true;
   let countrySpecs = new Map<string, Stripe.CountrySpec>();
   let starting_after = null;

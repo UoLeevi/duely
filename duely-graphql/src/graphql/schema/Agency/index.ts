@@ -10,6 +10,7 @@ import { validateAndReadDataUrlAsBuffer } from '../Image';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
+import { fetchCountries } from '../Country';
 
 const resource = {
   name: 'agency',
@@ -29,6 +30,8 @@ export const Agency: GqlTypeDefinition = {
       pages(filter: PageFilter): [Page!]
       settings: AgencySettings!
       subscription_plan: SubscriptionPlan!
+      default_pricing_currency: String
+      supported_payment_currencies: [String!]!
     }
 
     input AgencyFilter {
@@ -49,8 +52,13 @@ export const Agency: GqlTypeDefinition = {
         image_logo: ImageInput!
         return_url: String!
         default_currency: String
+        default_pricing_currency: String
       ): CreateAgencyResult!
-      update_agency(agency_id: ID!, default_currency: String): AgencyMutationResult!
+      update_agency(
+        agency_id: ID!
+        default_currency: String
+        default_pricing_currency: String
+      ): AgencyMutationResult!
       delete_agency(agency_id: ID!): AgencyMutationResult!
     }
 
@@ -108,7 +116,27 @@ export const Agency: GqlTypeDefinition = {
         resource_name: 'page',
         column_name: 'agency_id'
       }),
-      settings: (agency) => ({ agency_id: agency.id })
+      settings: (agency) => ({ agency_id: agency.id }),
+      async supported_payment_currencies(source, args, context, info) {
+        if (!context.jwt) throw new Error('Unauthorized');
+
+        const stripe_env = source.livemode ? 'live' : 'test';
+
+        try {
+          const stripe_account = await queryResource(context, 'stripe account', {
+            agency_id: source.id,
+            livemode: source.livemode
+          });
+          const { id, object, country } = await stripe[stripe_env].accounts.retrieve(
+            stripe_account.stripe_id_ext
+          );
+
+          const countries = await fetchCountries();
+          return countries.get(country)?.supported_payment_currencies;
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      }
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
@@ -116,7 +144,16 @@ export const Agency: GqlTypeDefinition = {
     Mutation: {
       async create_agency(
         obj,
-        { name, livemode, subdomain_name, country_code, image_logo, return_url },
+        {
+          name,
+          livemode,
+          subdomain_name,
+          country_code,
+          default_currency,
+          default_pricing_currency,
+          image_logo,
+          return_url
+        },
         context
       ) {
         if (!context.jwt) throw new Error('Unauthorized');
@@ -172,7 +209,7 @@ export const Agency: GqlTypeDefinition = {
             // create subdomain and agency on database
             const subdomain = (await createResource('subdomain', {
               name: subdomain_name,
-              agency: { name, livemode }
+              agency: { name, livemode, default_pricing_currency }
             } as any)) as any; // TODO: Fix types
             const agency = subdomain.agency;
 
@@ -197,6 +234,7 @@ export const Agency: GqlTypeDefinition = {
               type: 'custom',
               email: user.email_address,
               country: country_code,
+              default_currency,
               capabilities: {
                 card_payments: { requested: true },
                 transfers: { requested: true }
@@ -295,12 +333,12 @@ export const Agency: GqlTypeDefinition = {
           };
         }
       },
-      async update_agency(obj, { agency_id, default_currency }, context) {
+      async update_agency(obj, { agency_id, default_currency, ...args }, context) {
         if (!context.jwt) throw new Error('Unauthorized');
 
         try {
-          return await withSession(context, async ({ queryResource, deleteResource }) => {
-            const agency = await queryResource('agency', agency_id);
+          return await withSession(context, async ({ queryResource, updateResource }) => {
+            let agency = await queryResource('agency', agency_id);
 
             if (agency == null) {
               return {
@@ -311,22 +349,28 @@ export const Agency: GqlTypeDefinition = {
               };
             }
 
-            const stripe_envs: (keyof typeof stripe)[] = agency.livemode
-              ? ['test', 'live']
-              : ['test'];
+            if (Object.keys(args).length > 0) {
+              agency = await updateResource('agency', agency_id, args);
+            }
 
-            for (const stripe_env of stripe_envs) {
-              // query stripe account from database
-              const stripe_account = await queryResource('stripe account', {
-                agency_id,
-                livemode: stripe_env === 'live'
-              });
+            if (default_currency) {
+              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
+                ? ['test', 'live']
+                : ['test'];
 
-              // update stripe custom account for agency
-              // see: https://stripe.com/docs/api/accounts/update
-              await stripe[stripe_env].accounts.update(stripe_account.stripe_id_ext, {
-                default_currency
-              });
+              for (const stripe_env of stripe_envs) {
+                // query stripe account from database
+                const stripe_account = await queryResource('stripe account', {
+                  agency_id,
+                  livemode: stripe_env === 'live'
+                });
+
+                // update stripe custom account for agency
+                // see: https://stripe.com/docs/api/accounts/update
+                await stripe[stripe_env].accounts.update(stripe_account.stripe_id_ext, {
+                  default_currency
+                });
+              }
             }
 
             // success

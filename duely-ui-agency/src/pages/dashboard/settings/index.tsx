@@ -132,6 +132,14 @@ export default function DashboardSettings() {
           >
             <SettingsCheckoutSettingsForm />
           </FormSection>
+          <FormSection
+            title="Miscellaneous"
+            description={
+              <span>
+                You can change the default currency for your product prices here. The currency set will only affect newly created products and prices.</span>
+            }
+          >
+          </FormSection>
         </Card>
       </DashboardSection>
     </>

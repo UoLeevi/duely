@@ -37,6 +37,7 @@ export type AgencyResource = {
   livemode: boolean;
   subdomain_id: ResourceId<'subdomain'>;
   subscription_plan_id: ResourceId<'subscription plan'>;
+  default_pricing_currency: string;
 };
 
 export type ThemeResource = {

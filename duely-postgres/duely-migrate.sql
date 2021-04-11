@@ -14,35 +14,46 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE FUNCTION internal_.insert_resource_token_for_order_() RETURNS trigger
-    LANGUAGE plpgsql
+CREATE OR REPLACE FUNCTION policy_.anyone_can_query_basic_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE sql STABLE SECURITY DEFINER
+    AS $$
+  SELECT '{uuid_, subdomain_uuid_, name_, livemode_, default_pricing_currency_}'::text[];
+$$;
+
+CREATE FUNCTION policy_.owner_can_change_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  INSERT INTO security_.resource_token_ (resource_uuid_, token_, keys_)
-  SELECT _order.uuid_, _order.stripe_checkout_session_id_ext_, '{uuid_, customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, processed_at_}'::text[]
-  FROM _order;
-
-  RETURN NULL;
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{default_pricing_currency_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
 END
 $$;
 
-CREATE TRIGGER tr_after_insert_insert_resource_token_for_order_ AFTER INSERT ON application_.order_ REFERENCING NEW TABLE AS _order FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_resource_token_for_order_();
+PERFORM security_.register_policy_('application_.agency_', 'update', 'policy_.owner_can_change_agency_');
 
-
-CREATE FUNCTION internal_.insert_resource_token_for_order_item_() RETURNS trigger
-    LANGUAGE plpgsql
+CREATE OR REPLACE FUNCTION policy_.owner_can_create_agency_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  INSERT INTO security_.resource_token_ (resource_uuid_, token_, keys_)
-  SELECT _order_item.uuid_, o.stripe_checkout_session_id_ext_, '{uuid_, order_uuid_, price_uuid_, stripe_line_item_id_ext_, state_, error_, processed_at_}'::text[]
-  FROM _order_item
-  JOIN application_.order_ o ON o.uuid_ = _order_item.order_uuid_;
-
-  RETURN NULL;
+  IF EXISTS (
+    SELECT 1
+    FROM security_.active_role_
+    WHERE name_ = 'owner'
+      AND subdomain_uuid_ = (_data->>'subdomain_uuid_')::uuid
+  ) THEN
+    RETURN '{uuid_, subdomain_uuid_, name_, livemode_, default_pricing_currency_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
 END
 $$;
 
-CREATE TRIGGER tr_after_insert_insert_resource_token_for_order_item_ AFTER INSERT ON application_.order_item_ REFERENCING NEW TABLE AS _order_item FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_resource_token_for_order_item_();
+CALL internal_.drop_auditing_('application_.agency_');
+ALTER TABLE application_.agency_ ADD COLUMN default_pricing_currency_ text NULL;
+CALL internal_.setup_auditing_('application_.agency_');
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN

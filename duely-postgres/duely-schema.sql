@@ -3076,7 +3076,7 @@ ALTER FUNCTION policy_.anyone_can_create_sign_up_(_resource_definition security_
 CREATE FUNCTION policy_.anyone_can_query_basic_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
-  SELECT '{uuid_, subdomain_uuid_, name_, livemode_}'::text[];
+  SELECT '{uuid_, subdomain_uuid_, name_, livemode_, default_pricing_currency_}'::text[];
 $$;
 
 
@@ -3621,6 +3621,25 @@ $$;
 ALTER FUNCTION policy_.only_owner_can_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_agency_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{default_pricing_currency_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_agency_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: owner_can_change_agency_thank_you_page_setting_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3939,7 +3958,7 @@ BEGIN
     WHERE name_ = 'owner'
       AND subdomain_uuid_ = (_data->>'subdomain_uuid_')::uuid
   ) THEN
-    RETURN '{uuid_, subdomain_uuid_, name_, livemode_}'::text[];
+    RETURN '{uuid_, subdomain_uuid_, name_, livemode_, default_pricing_currency_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5680,6 +5699,7 @@ CREATE TABLE application_.agency_ (
     name_ text NOT NULL,
     subscription_plan_uuid_ uuid NOT NULL,
     livemode_ boolean NOT NULL,
+    default_pricing_currency_ text,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6192,6 +6212,7 @@ CREATE TABLE application__audit_.agency_ (
     name_ text,
     subscription_plan_uuid_ uuid,
     livemode_ boolean,
+    default_pricing_currency_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -7269,7 +7290,6 @@ COPY security_.policy_ (uuid_, resource_definition_uuid_, function_, operation_t
 5285f600-fb00-4861-8485-7b198c5a90c6	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_create_agency_(security_.resource_definition_,jsonb)	create	\N
 e84918a7-9e8e-4522-b400-4d258d8e1346	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 cdc2d6a0-b00e-4763-bad3-d2b43bf0c3c0	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-72066618-a466-4b71-965f-891edcb33c6f	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 69d40b30-226f-4dbf-8e86-564022464cc7	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 7fe3d163-1f55-4916-9f1f-f345c01e7773	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_create_theme_(security_.resource_definition_,jsonb)	create	\N
 95c5b9d6-3df7-4ace-961a-b817262783e4	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_change_theme_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
@@ -7377,6 +7397,7 @@ d1acaebc-ceab-4120-a4bd-58132426171a	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy
 c3a5aaf2-d9a0-481b-98ec-ce34c2c65cd3	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.serviceaccount_can_query_integration_(security_.resource_definition_,application_.resource_)	query	2db0ef77-7432-42f5-8def-e3491bd3d26d
 09e2dde5-d0ef-4c9d-9154-1b89b10c9bf5	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 cecd71c9-7e74-46ad-8fba-6aa5ac8ec3ca	7f589215-bdc7-4664-99c6-b7745349c352	policy_.serviceaccount_can_query_product_(security_.resource_definition_,application_.resource_)	query	\N
+72066618-a466-4b71-965f-891edcb33c6f	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	6f79da26-c71b-4560-91d0-cbd05150e062
 95c81a39-4ede-4ebd-9485-502ba1ad9a68	7f589215-bdc7-4664-99c6-b7745349c352	policy_.anyone_can_query_live_product_(security_.resource_definition_,application_.resource_)	query	cecd71c9-7e74-46ad-8fba-6aa5ac8ec3ca
 be8e7191-40dc-4a22-aced-d3d4416991f6	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.serviceaccount_can_create_order_item_(security_.resource_definition_,jsonb)	create	\N
 b509686c-6e80-4454-bb68-3ddaf855590d	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.serviceaccount_can_change_order_item_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
@@ -7384,6 +7405,7 @@ b509686c-6e80-4454-bb68-3ddaf855590d	677e43b0-6a66-4f84-b857-938f462fdf90	policy
 142ccd96-d14a-413e-abbc-d08f9c1d9ffb	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.serviceaccount_can_query_order_item_(security_.resource_definition_,application_.resource_)	query	1b999022-6a49-4fb2-bf34-3f507a0e5ddb
 92343770-3065-48f4-8de9-b48ce1a9257e	30e49b72-e52a-467d-8300-8b5051f32d9a	policy_.anyone_can_query_integration_type_(security_.resource_definition_,application_.resource_)	query	\N
 c9f182bb-10ac-40a0-b8dc-107ed4f88d1d	30e49b72-e52a-467d-8300-8b5051f32d9a	policy_.delete_forbidden_(security_.resource_definition_,application_.resource_)	delete	\N
+6f79da26-c71b-4560-91d0-cbd05150e062	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_agency_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 \.
 
 
