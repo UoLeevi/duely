@@ -270,7 +270,7 @@ export async function queryResource<K extends keyof Resources>(
 
   if (token != undefined) parameterPgTypes.push('text');
 
-  const parametersSql = parameterPgTypes.map((t, i) => `$${i}::${t}`).join(', ');
+  const parametersSql = parameterPgTypes.map((t, i) => `$${i + 1}::${t}`).join(', ');
   const parameters = [resource_name, id_or_filter, token].slice(0, parameterPgTypes.length);
 
   return await query(
@@ -304,7 +304,7 @@ export async function queryResourceAll<K extends keyof Resources>(
 
   if (token != undefined) parameterPgTypes.push('text');
 
-  const parametersSql = parameterPgTypes.map((t, i) => `$${i}::${t}`).join(', ');
+  const parametersSql = parameterPgTypes.map((t, i) => `$${i + 1}::${t}`).join(', ');
   const parameters = [resource_name, filter, token].slice(0, parameterPgTypes.length);
 
   return await queryAll(
