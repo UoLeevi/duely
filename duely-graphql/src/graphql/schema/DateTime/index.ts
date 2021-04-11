@@ -15,7 +15,11 @@ export const DateTime: GqlTypeDefinition = {
         return new Date(value);
       },
       serialize(value) {
-        return Number.isInteger(value) ? value : value.getTime();
+        return Number.isInteger(value)
+          ? value
+          : typeof value === 'string'
+            ? Date.parse(value)
+            : value.getTime();
       },
       parseLiteral(ast) {
         if (ast.kind === Kind.INT) return parseInt(ast.value, 10);
