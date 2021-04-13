@@ -4,17 +4,14 @@ import { LoadingScreen, ErrorScreen } from '@duely/react';
 import { DashboardLayout } from './components';
 import { routes as customerRoutes } from './customers';
 import { routes as siteRoutes } from './site';
+import { routes as orderRoutes } from './orders';
 import DashboardHome from './home';
 import DashboardPayments from './payments';
-import DashboardProjects from './projects';
 import { routes as productRoutes } from './products';
 import DashboardSettings from './settings';
 
 const routes = [
-  {
-    path: '/dashboard/projects',
-    component: DashboardProjects
-  },
+  ...orderRoutes,
   ...productRoutes,
   ...siteRoutes,
   ...customerRoutes,

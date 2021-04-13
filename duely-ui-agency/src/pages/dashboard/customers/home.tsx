@@ -42,7 +42,7 @@ export default function DashboardCustomersHome() {
     // customer name & email address
     (customer: TCustomer) => (
       <div className="flex flex-col space-y-2">
-        <span className="text-sm font-medium text-gray-800">{customer.name}</span>
+        <span className="text-sm font-medium text-gray-800">{customer.name ?? customer.email_address.split('@')[0]}</span>
         <span className="text-xs font-medium text-gray-800">{customer.email_address}</span>
       </div>
     ),
