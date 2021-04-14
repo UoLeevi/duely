@@ -12,13 +12,20 @@ import {
 import { DashboardSection } from '../components';
 import { BsPencilSquare } from 'react-icons/bs';
 import { Currency } from '@duely/core';
+import { ColoredChip } from '../components/ColoredChip';
 
 const wrap = {
-  columns: 1,
-  spans: [1, 1, 1, 1]
+  columns: 2,
+  spans: [2, 2, 1, 1, 1, 1]
 };
 
-const headers = ['Order', 'Customer', 'Amount', 'Action'];
+const statusColors = {
+  pending: 'orange',
+  failed: 'red',
+  processed: 'blue'
+}
+
+const headers = ['Order', 'Customer', 'Amount', 'Order date', 'Status', 'Action'];
 
 export default function DashboardOrdersHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
@@ -67,7 +74,9 @@ export default function DashboardOrdersHome() {
     // customer info
     (order: TOrder) => (
       <div className="flex flex-col space-y-2">
-        <span className="text-sm font-medium text-gray-800">{order.customer.name ?? order.customer.email_address.split('@')[0]}</span>
+        <span className="text-sm font-medium text-gray-800">
+          {order.customer.name ?? order.customer.email_address.split('@')[0]}
+        </span>
         <span className="text-xs text-gray-800">{order.customer.email_address}</span>
       </div>
     ),
@@ -82,6 +91,21 @@ export default function DashboardOrdersHome() {
           )}
         </span>
       </div>
+    ),
+
+    // date & time
+    (order: TOrder) => (
+      <div className="flex flex-col space-y-2">
+        <span className="text-xs text-gray-800">
+          {Util.formatDate(new Date(order.ordered_at))}
+        </span>
+      </div>
+    ),
+
+    
+    // product product status
+    (order: TOrder) => (
+      <ColoredChip color={statusColors} text={order.state} />
     ),
 
     // actions

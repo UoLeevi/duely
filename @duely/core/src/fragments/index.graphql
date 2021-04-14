@@ -469,11 +469,6 @@ fragment order_item on OrderItem {
 
 fragment order on Order {
   id
-  customer {
-    id
-    name
-    email_address
-  }
   state
   error
   ordered_at

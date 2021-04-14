@@ -240,6 +240,11 @@ query Order($order_id: ID!, $token: String) {
     items(token: $token) {
       ...order_item
     }
+    customer(token: $token) {
+      id
+      name
+      email_address
+    }
   }
 }
 
@@ -248,6 +253,11 @@ query Orders($filter: OrderFilter!, $token: String) {
     ...order
     items(token: $token) {
       ...order_item
+    }
+    customer(token: $token) {
+      id
+      name
+      email_address
     }
   }
 }
@@ -292,7 +302,6 @@ query SubdomainAgency($subdomain_name: String!) {
     }
   }
 }
-
 
 query SubdomainAgencyExtended($subdomain_name: String!) {
   subdomains(filter: { name: $subdomain_name }) {
