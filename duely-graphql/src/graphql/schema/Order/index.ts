@@ -16,7 +16,7 @@ export const Order: GqlTypeDefinition = {
   typeDef: gql`
     type Order {
       id: ID!
-      customer: Customer!
+      customer(token: String): Customer!
       items(filter: OrderItemFilter, token: String): [OrderItem!]!
       stripe_account: StripeAccount!
       stripe_checkout_session: StripeCheckoutSession!
