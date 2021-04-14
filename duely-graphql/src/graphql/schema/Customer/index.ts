@@ -37,8 +37,8 @@ export const Customer: GqlTypeDefinition = {
     }
 
     extend type Query {
-      customer(id: ID!): Customer
-      customers(filter: CustomerFilter!): [Customer!]
+      customer(id: ID!, token: String): Customer
+      customers(filter: CustomerFilter!, token: String): [Customer!]
     }
 
     extend type Mutation {

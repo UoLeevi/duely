@@ -872,6 +872,10 @@ BEGIN
   SELECT _order.uuid_, _order.stripe_checkout_session_id_ext_, '{uuid_, customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, processed_at_}'::text[]
   FROM _order;
 
+  INSERT INTO security_.resource_token_ (resource_uuid_, token_, keys_)
+  SELECT _order.customer_uuid_, _order.stripe_checkout_session_id_ext_, '{uuid_, name_, email_address_}'::text[]
+  FROM _order;
+
   RETURN NULL;
 END
 $$;
