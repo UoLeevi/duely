@@ -18,6 +18,8 @@ type SignUpFormProps = {
   redirectUrl?: string;
 };
 
+
+
 export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   const form = useForm<SignUpFormFields>();
   const [completed, setCompleted] = useState(false);
@@ -25,6 +27,8 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   const { infoMessage, setInfoMessage, errorMessage, setErrorMessage } = useFormMessages();
 
   async function onSubmit(data: SignUpFormFields) {
+    const score = await Util.processRecapthca();
+
     const { newsletter, ...sign_up_args } = data;
     const { success, message } =
       (await startSignUp({
