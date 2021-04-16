@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-home",
-  "version": "0.9.18",
+  "version": "0.9.19",
   "private": true,
   "scripts": {
     "build": "NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o public/styles/index.css && react-scripts build",
