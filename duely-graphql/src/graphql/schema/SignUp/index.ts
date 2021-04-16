@@ -6,6 +6,7 @@ import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import { URL } from 'url';
 import { SignUpResource } from '@duely/db/dist/types';
+import axios from 'axios';
 
 const resource_name = 'sign up';
 
@@ -16,14 +17,15 @@ export const SignUp: GqlTypeDefinition = {
         email_address: String!
         password: String!
         name: String!
-        redirect_url: String
+        redirect_url: String,
+        recaptcha_token: String
       ): SimpleResult!
       verify_sign_up(verification_code: String!): SimpleResult!
     }
   `,
   resolvers: {
     Mutation: {
-      async start_sign_up(source, { email_address, password, name, redirect_url }, context, info) {
+      async start_sign_up(source, { email_address, password, name, redirect_url, recaptcha_token }, context, info) {
         if (!context.jwt) throw new Error('Unauthorized');
 
         if (!validator.isEmail(email_address))
@@ -66,6 +68,38 @@ export const SignUp: GqlTypeDefinition = {
             return {
               success: false,
               message: `URL '${redirect_url}' is invalid.`,
+              type: 'SimpleResult'
+            };
+          }
+        }
+
+        if (recaptcha_token && process.env.RECAPTCHA_SECRET_KEY) {
+          // https://developers.google.com/recaptcha/docs/verify
+          const url = new URL('https://www.google.com/recaptcha/api/siteverify');
+          url.searchParams.set('secret', process.env.RECAPTCHA_SECRET_KEY);
+          url.searchParams.set('response', recaptcha_token);
+          
+          if (context.ip) {
+            url.searchParams.set('remoteip', context.ip);
+          }
+
+          const response = await axios.post(url.toString());
+
+          if (!response.data.success) {
+            return {
+              success: false,
+              message: 'reCAPTCHA token was invalid.',
+              type: 'SimpleResult'
+            };
+          }
+
+          const score = response.data.score;
+
+          // TODO: Use the score in better way
+          if (!score || score < 0.5) {
+            return {
+              success: false,
+              message: 'We are suspecting you are a bot and the sign up process was not started.',
               type: 'SimpleResult'
             };
           }

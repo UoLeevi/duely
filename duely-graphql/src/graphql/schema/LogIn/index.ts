@@ -1,11 +1,16 @@
 import gql from 'graphql-tag';
 import { logIn, logOut } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
+import { URL } from 'url';
+import axios from 'axios';
 
 export const LogIn: GqlTypeDefinition = {
   typeDef: gql`
     extend type Mutation {
-      log_in(email_address: String!, password: String!): LogInResult!
+      log_in(
+        email_address: String!,
+        password: String!,
+        recaptcha_token: String): LogInResult!
       log_out: SimpleResult!
     }
 
@@ -17,8 +22,40 @@ export const LogIn: GqlTypeDefinition = {
   `,
   resolvers: {
     Mutation: {
-      async log_in(obj, { email_address, password }, context, info) {
+      async log_in(obj, { email_address, password, recaptcha_token }, context, info) {
         if (!context.jwt) throw new Error('Unauthorized');
+
+        if (recaptcha_token && process.env.RECAPTCHA_SECRET_KEY) {
+          // https://developers.google.com/recaptcha/docs/verify
+          const url = new URL('https://www.google.com/recaptcha/api/siteverify');
+          url.searchParams.set('secret', process.env.RECAPTCHA_SECRET_KEY);
+          url.searchParams.set('response', recaptcha_token);
+          
+          if (context.ip) {
+            url.searchParams.set('remoteip', context.ip);
+          }
+
+          const response = await axios.post(url.toString());
+
+          if (!response.data.success) {
+            return {
+              success: false,
+              message: 'reCAPTCHA token was invalid.',
+              type: 'SimpleResult'
+            };
+          }
+
+          const score = response.data.score;
+
+          // TODO: Use the score in better way
+          if (!score || score < 0.5) {
+            return {
+              success: false,
+              message: 'We are suspecting you are a bot and the sign up process was not started.',
+              type: 'SimpleResult'
+            };
+          }
+        }
 
         try {
           return {

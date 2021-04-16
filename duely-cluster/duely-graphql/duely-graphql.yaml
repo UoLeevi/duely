@@ -32,7 +32,7 @@ spec:
           secretName: duely-graphql-secret
       containers:
       - name: duely-graphql
-        image: uoleevi/duely-graphql:v0.104.64
+        image: uoleevi/duely-graphql:v0.104.65
         resources:
           requests:
             memory: 64Mi
@@ -79,6 +79,11 @@ spec:
             secretKeyRef:
               name: duely-graphql-secret
               key: duely-serviceaccount-password
+        - name: RECAPTCHA_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: duely-graphql-secret
+              key: recaptcha-secret-key
         livenessProbe:
           httpGet:
             path: /.well-known/server-health
