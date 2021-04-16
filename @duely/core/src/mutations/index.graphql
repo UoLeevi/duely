@@ -15,8 +15,8 @@ mutation EndVisit {
   }
 }
 
-mutation LogIn($email_address: String!, $password: String!) {
-  log_in(email_address: $email_address, password: $password) {
+mutation LogIn($email_address: String!, $password: String!, $recaptcha_token: String) {
+  log_in(email_address: $email_address, password: $password, recaptcha_token: $recaptcha_token) {
     success
     message
     jwt
@@ -56,12 +56,14 @@ mutation StartSignUp(
   $password: String!
   $name: String!
   $redirect_url: String
+  $recaptcha_token: String
 ) {
   start_sign_up(
     email_address: $email_address
     password: $password
     name: $name
     redirect_url: $redirect_url
+    recaptcha_token: $recaptcha_token
   ) {
     success
     message
@@ -98,14 +100,8 @@ mutation CreateAgency(
   }
 }
 
-mutation UpdateAgency(
-  $agency_id: ID!
-  $default_pricing_currency: String
-) {
-  update_agency(
-    agency_id: $agency_id
-    default_pricing_currency: $default_pricing_currency
-  ) {
+mutation UpdateAgency($agency_id: ID!, $default_pricing_currency: String) {
+  update_agency(agency_id: $agency_id, default_pricing_currency: $default_pricing_currency) {
     message
     success
     agency {

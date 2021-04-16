@@ -28,7 +28,7 @@ export const Util = {
   get,
   template,
   createGraphQLPlaygroundUrl,
-  processRecapthca
+  fetchRecapthcaToken
 };
 
 // see: https://github.com/graphql/graphql-playground/issues/1018#issuecomment-762935106
@@ -340,14 +340,17 @@ declare global {
   }
 }
 
-async function processRecapthca(action?: string) {
-  if (window.__duely.reCAPTCHA_site_key) {
-    window.grecaptcha.ready(function() {
-      window.grecaptcha.execute(window.__duely.reCAPTCHA_site_key, { action: action ?? 'submit' })
+function fetchRecapthcaToken(action?: string) {
+  return new Promise((resolve) => {
+    if (!window.__duely.reCAPTCHA_site_key) {
+      resolve(undefined);
+    }
+
+    window.grecaptcha.ready(() => {
+      return window.grecaptcha.execute(window.__duely.reCAPTCHA_site_key, { action: action ?? 'submit' })
       .then(function(token: string) {
-          // Add your logic to submit to your backend server here.
-          console.log(`reCAPTCHA: ${token}`);
+        resolve(token);
       });
     });
-  }  
+  });
 }

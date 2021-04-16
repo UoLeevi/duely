@@ -18,8 +18,6 @@ type SignUpFormProps = {
   redirectUrl?: string;
 };
 
-
-
 export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   const form = useForm<SignUpFormFields>();
   const [completed, setCompleted] = useState(false);
@@ -27,13 +25,14 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   const { infoMessage, setInfoMessage, errorMessage, setErrorMessage } = useFormMessages();
 
   async function onSubmit(data: SignUpFormFields) {
-    const score = await Util.processRecapthca();
+    const recaptcha_token = await Util.fetchRecapthcaToken();
 
     const { newsletter, ...sign_up_args } = data;
     const { success, message } =
       (await startSignUp({
         ...sign_up_args,
-        redirect_url: redirectUrl ?? `${window.location.origin}/log-in`
+        redirect_url: redirectUrl ?? `${window.location.origin}/log-in`,
+        recaptcha_token
       })) ?? {};
 
     if (success) {

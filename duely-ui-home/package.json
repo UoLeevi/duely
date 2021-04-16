@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-home",
-  "version": "0.9.17",
+  "version": "0.9.18",
   "private": true,
   "scripts": {
     "build": "NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o public/styles/index.css && react-scripts build",
@@ -29,24 +29,24 @@
     ]
   },
   "dependencies": {
-    "@apollo/client": "^3.3.14",
-    "@duely/client": "0.0.105",
-    "@duely/core": "0.0.65",
-    "@duely/react": "^0.2.71",
+    "@apollo/client": "^3.3.15",
+    "@duely/client": "0.0.110",
+    "@duely/core": "0.0.69",
+    "@duely/react": "^0.2.72",
     "@headlessui/react": "^0.2.0",
     "@tailwindcss/typography": "^0.3.1",
     "@testing-library/jest-dom": "^5.11.10",
     "@testing-library/react": "^11.2.6",
     "@testing-library/user-event": "^12.8.3",
     "@types/jest": "^26.0.22",
-    "@types/node": "^14.14.37",
+    "@types/node": "^14.14.41",
     "@types/react-dom": "^17.0.3",
     "graphql": "^15.5.0",
     "immer": "^9.0.1",
     "markdown-to-jsx": "^7.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-hook-form": "^6.15.5",
+    "react-hook-form": "^6.15.6",
     "react-icons": "^3.11.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^4.0.3",
@@ -57,7 +57,7 @@
     "@types/react": "^17.0.3",
     "@types/react-router-dom": "^5.1.7",
     "autoprefixer": "^9.8.6",
-    "postcss": "^8.2.9",
+    "postcss": "^8.2.10",
     "postcss-cli": "^8.3.1",
     "tailwindcss": "^2.1.1"
   }

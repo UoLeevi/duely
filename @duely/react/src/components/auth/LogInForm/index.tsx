@@ -28,8 +28,8 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
   }, [history, redirectTo, user]);
 
   async function onSubmit(data: LogInFormFields) {
-    const score = await Util.processRecapthca();
-    const { success, message } = (await logIn(data)) ?? {};
+    const recaptcha_token = await Util.fetchRecapthcaToken();
+    const { success, message } = (await logIn({ recaptcha_token, ...data})) ?? {};
     if (success) {
       history.replace(redirectTo ?? '/');
     } else {
