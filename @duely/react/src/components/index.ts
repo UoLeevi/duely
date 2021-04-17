@@ -2,6 +2,7 @@ export * from './LoadingBar';
 export * from './LoadingSpinner';
 export * from './LoadingScreen';
 export * from './ErrorScreen';
+export * from './Head';
 export * from './auth';
 export * from './forms';
 export * from './Sidebar';

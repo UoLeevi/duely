@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-home",
-  "version": "0.9.19",
+  "version": "0.9.20",
   "private": true,
   "scripts": {
     "build": "NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o public/styles/index.css && react-scripts build",
@@ -32,7 +32,7 @@
     "@apollo/client": "^3.3.15",
     "@duely/client": "0.0.110",
     "@duely/core": "0.0.69",
-    "@duely/react": "^0.2.72",
+    "@duely/react": "^0.2.73",
     "@headlessui/react": "^0.2.0",
     "@tailwindcss/typography": "^0.3.1",
     "@testing-library/jest-dom": "^5.11.10",

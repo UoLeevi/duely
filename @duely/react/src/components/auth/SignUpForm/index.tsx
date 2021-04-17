@@ -5,6 +5,8 @@ import { useMutation, start_sign_up_M } from '@duely/client';
 import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '../../forms';
 import { Button } from '../../buttons';
 import { Util } from '../../../util';
+import { Head } from '../../Head';
+import { useRecaptcha } from '../../../hooks';
 
 type SignUpFormFields = {
   name: string;
@@ -23,9 +25,10 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   const [completed, setCompleted] = useState(false);
   const [startSignUp, { loading: startSignUpLoading }] = useMutation(start_sign_up_M);
   const { infoMessage, setInfoMessage, errorMessage, setErrorMessage } = useFormMessages();
+  const [recaptchaSiteKey, recaptchaScriptOnLoad, fetchRecapthcaToken] = useRecaptcha();
 
   async function onSubmit(data: SignUpFormFields) {
-    const recaptcha_token = await Util.fetchRecapthcaToken();
+    const recaptcha_token = await fetchRecapthcaToken();
 
     const { newsletter, ...sign_up_args } = data;
     const { success, message } =
@@ -85,51 +88,63 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   className = Util.createClassName('flex flex-col space-y-3', className);
 
   return (
-    <Form form={form} onSubmit={onSubmit} className={className}>
-      <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Sign up</h2>
-      <FormField
-        form={form}
-        label="Name"
-        name="name"
-        type="text"
-        registerOptions={{ required: true }}
-      />
-      <FormField
-        form={form}
-        label="Email address"
-        name="email_address"
-        type="email"
-        registerOptions={{ required: true }}
-      />
-      <FormField
-        form={form}
-        label="Password"
-        name="password"
-        type="password"
-        registerOptions={{ required: true }}
-      />
-      <div className="flex flex-col">
-        <label className="block font-bold text-gray-500">
-          <input name="newsletter" ref={form.register} className="mr-2" type="checkbox" />
-          <span className="text-sm font-medium leading-6 text-gray-700">
-            Send me your newsletter!
-          </span>
-        </label>
-      </div>
-      <div className="flex flex-col items-center pt-4">
-        <FormButton form={form} spinner loading={startSignUpLoading}>
-          Sign up
-        </FormButton>
-      </div>
-      <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
-        <span>Already have an account?</span>
-        <Link to="/log-in" className="font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none">
-          Log in
-        </Link>
-      </div>
-      <div className="flex flex-col items-center h-24 pt-4">
-        <FormInfoMessage info={infoMessage} error={errorMessage} />
-      </div>
-    </Form>
+    <>
+      <Head>
+        <script
+          src={`https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`}
+          async
+          onLoad={recaptchaScriptOnLoad}
+        ></script>
+      </Head>
+      <Form form={form} onSubmit={onSubmit} className={className}>
+        <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Sign up</h2>
+        <FormField
+          form={form}
+          label="Name"
+          name="name"
+          type="text"
+          registerOptions={{ required: true }}
+        />
+        <FormField
+          form={form}
+          label="Email address"
+          name="email_address"
+          type="email"
+          registerOptions={{ required: true }}
+        />
+        <FormField
+          form={form}
+          label="Password"
+          name="password"
+          type="password"
+          registerOptions={{ required: true }}
+        />
+        <div className="flex flex-col">
+          <label className="block font-bold text-gray-500">
+            <input name="newsletter" ref={form.register} className="mr-2" type="checkbox" />
+            <span className="text-sm font-medium leading-6 text-gray-700">
+              Send me your newsletter!
+            </span>
+          </label>
+        </div>
+        <div className="flex flex-col items-center pt-4">
+          <FormButton form={form} spinner loading={startSignUpLoading}>
+            Sign up
+          </FormButton>
+        </div>
+        <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
+          <span>Already have an account?</span>
+          <Link
+            to="/log-in"
+            className="font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none"
+          >
+            Log in
+          </Link>
+        </div>
+        <div className="flex flex-col items-center h-24 pt-4">
+          <FormInfoMessage info={infoMessage} error={errorMessage} />
+        </div>
+      </Form>
+    </>
   );
 }

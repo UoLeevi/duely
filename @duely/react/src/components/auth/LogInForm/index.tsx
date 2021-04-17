@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery, current_user_Q, useMutation, log_in_M } from '@duely/client';
 import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '../../forms';
 import { Util } from '../../../util';
+import { Head } from '../../Head';
+import { useRecaptcha } from '../../../hooks';
 
 type LogInFormFields = {
   email_address: string;
@@ -22,14 +24,15 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
   const history = useHistory();
   const loading = userLoading || logInLoading;
   const { errorMessage, setErrorMessage } = useFormMessages();
+  const [recaptchaSiteKey, recaptchaScriptOnLoad, fetchRecapthcaToken] = useRecaptcha();
 
   useEffect(() => {
     if (user) history.replace(redirectTo ?? '/');
   }, [history, redirectTo, user]);
 
   async function onSubmit(data: LogInFormFields) {
-    const recaptcha_token = await Util.fetchRecapthcaToken();
-    const { success, message } = (await logIn({ recaptcha_token, ...data})) ?? {};
+    const recaptcha_token = await fetchRecapthcaToken();
+    const { success, message } = (await logIn({ recaptcha_token, ...data })) ?? {};
     if (success) {
       history.replace(redirectTo ?? '/');
     } else {
@@ -40,45 +43,57 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
   className = Util.createClassName('flex flex-col space-y-3', className);
 
   return (
-    <Form form={form} onSubmit={onSubmit} className={className}>
-      <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Log in</h2>
-      <FormField
-        form={form}
-        label="Email address"
-        name="email_address"
-        type="email"
-        registerOptions={{ required: true }}
-      />
-      <FormField
-        form={form}
-        label="Password"
-        name="password"
-        type="password"
-        registerOptions={{ required: true }}
-        actions={
+    <>
+      <Head>
+        <script
+          src={`https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`}
+          async
+          onLoad={recaptchaScriptOnLoad}
+        ></script>
+      </Head>
+      <Form form={form} onSubmit={onSubmit} className={className}>
+        <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Log in</h2>
+        <FormField
+          form={form}
+          label="Email address"
+          name="email_address"
+          type="email"
+          registerOptions={{ required: true }}
+        />
+        <FormField
+          form={form}
+          label="Password"
+          name="password"
+          type="password"
+          registerOptions={{ required: true }}
+          actions={
+            <Link
+              to="/password-reset"
+              className="text-xs font-bold text-indigo-500 focus-visible:text-indigo-700 focus:outline-none"
+              tabIndex={10}
+            >
+              Reset password
+            </Link>
+          }
+        />
+        <div className="flex flex-col items-center pt-4">
+          <FormButton form={form} spinner loading={loading}>
+            Log in
+          </FormButton>
+        </div>
+        <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
+          <span>Don&apos;t have an account?</span>
           <Link
-            to="/password-reset"
-            className="text-xs font-bold text-indigo-500 focus-visible:text-indigo-700 focus:outline-none"
-            tabIndex={10}
+            to="/sign-up"
+            className="font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none"
           >
-            Reset password
+            Sign up
           </Link>
-        }
-      />
-      <div className="flex flex-col items-center pt-4">
-        <FormButton form={form} spinner loading={loading}>
-          Log in
-        </FormButton>
-      </div>
-      <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
-        <span>Don&apos;t have an account?</span>
-        <Link to="/sign-up" className="font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none">
-          Sign up
-        </Link>
-      </div>
-      <div className="flex flex-col items-center h-24 pt-4">
-        <FormInfoMessage error={errorMessage} />
-      </div>
-    </Form>
+        </div>
+        <div className="flex flex-col items-center h-24 pt-4">
+          <FormInfoMessage error={errorMessage} />
+        </div>
+      </Form>
+    </>
   );
 }
