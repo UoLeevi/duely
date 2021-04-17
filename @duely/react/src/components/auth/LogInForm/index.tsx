@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useQuery, current_user_Q, useMutation, log_in_M } from '@duely/client';
 import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '../../forms';
 import { Util } from '../../../util';
-import { useRecaptcha } from '../../../hooks';
+import { useClassName } from '../../../hooks';
 
 type LogInFormFields = {
   email_address: string;
@@ -23,14 +23,14 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
   const history = useHistory();
   const loading = userLoading || logInLoading;
   const { errorMessage, setErrorMessage } = useFormMessages();
-  const fetchRecapthcaToken = useRecaptcha();
+  useClassName(document.body, 'grecaptcha-show');
 
   useEffect(() => {
     if (user) history.replace(redirectTo ?? '/');
   }, [history, redirectTo, user]);
 
   async function onSubmit(data: LogInFormFields) {
-    const recaptcha_token = await fetchRecapthcaToken();
+    const recaptcha_token = await Util.fetchRecapthcaToken();
     const { success, message } = (await logIn({ recaptcha_token, ...data })) ?? {};
     if (success) {
       history.replace(redirectTo ?? '/');

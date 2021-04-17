@@ -5,7 +5,7 @@ import { useMutation, start_sign_up_M } from '@duely/client';
 import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '../../forms';
 import { Button } from '../../buttons';
 import { Util } from '../../../util';
-import { useRecaptcha } from '../../../hooks';
+import { useClassName } from '../../../hooks';
 
 type SignUpFormFields = {
   name: string;
@@ -24,10 +24,10 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   const [completed, setCompleted] = useState(false);
   const [startSignUp, { loading: startSignUpLoading }] = useMutation(start_sign_up_M);
   const { infoMessage, setInfoMessage, errorMessage, setErrorMessage } = useFormMessages();
-  const fetchRecapthcaToken = useRecaptcha();
+  useClassName(document.body, 'grecaptcha-show');
 
   async function onSubmit(data: SignUpFormFields) {
-    const recaptcha_token = await fetchRecapthcaToken();
+    const recaptcha_token = await Util.fetchRecapthcaToken();
 
     const { newsletter, ...sign_up_args } = data;
     const { success, message } =
