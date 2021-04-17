@@ -6,4 +6,5 @@ export * from './useImageInputFromFileList';
 export * from './useTemporaryValue';
 export * from './useOnce';
 export * from './usePromise';
+export * from './useScript';
 export * from './useRecaptcha';

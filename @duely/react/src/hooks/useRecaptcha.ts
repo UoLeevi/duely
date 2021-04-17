@@ -1,9 +1,9 @@
 import { useOnce } from './useOnce';
-import { usePromise } from './usePromise';
+import { useScript } from './useScript';
 
 const reCAPTCHA_site_key = '6LegEasaAAAAACd2R2EmRWV5VpCJ1QHu7QDPq5Oz';
 
-function createFetchToken(siteKey: string, recaptchaScriptLoaded: Promise<React.SyntheticEvent<HTMLScriptElement, Event>>) {
+function createFetchToken(recaptchaScriptLoaded: Promise<Event>) {
   return (action?: string): Promise<string> => {
     return new Promise(async (resolve) => {
       await recaptchaScriptLoaded;
@@ -18,12 +18,8 @@ function createFetchToken(siteKey: string, recaptchaScriptLoaded: Promise<React.
     });
   }
 }
-export function useRecaptcha(): [
-  siteKey: string,
-  recaptchaScriptOnLoad: React.ReactEventHandler<HTMLScriptElement>,
-  fetchToken: () => Promise<string>
-] {
-  const [promise, resolve] = usePromise<React.SyntheticEvent<HTMLScriptElement, Event>>();
-  const fetchToken = useOnce(() => createFetchToken(reCAPTCHA_site_key, promise));
-  return [reCAPTCHA_site_key, resolve, fetchToken];
+
+export function useRecaptcha(): () => Promise<string> {
+  const promise = useScript(`https://www.google.com/recaptcha/api.js?render=${reCAPTCHA_site_key}`);
+  return useOnce(() => createFetchToken(promise));
 }

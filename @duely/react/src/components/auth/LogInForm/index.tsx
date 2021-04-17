@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery, current_user_Q, useMutation, log_in_M } from '@duely/client';
 import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '../../forms';
 import { Util } from '../../../util';
-import { Head } from '../../Head';
 import { useRecaptcha } from '../../../hooks';
 
 type LogInFormFields = {
@@ -24,7 +23,7 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
   const history = useHistory();
   const loading = userLoading || logInLoading;
   const { errorMessage, setErrorMessage } = useFormMessages();
-  const [recaptchaSiteKey, recaptchaScriptOnLoad, fetchRecapthcaToken] = useRecaptcha();
+  const fetchRecapthcaToken = useRecaptcha();
 
   useEffect(() => {
     if (user) history.replace(redirectTo ?? '/');
@@ -43,14 +42,6 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
   className = Util.createClassName('flex flex-col space-y-3', className);
 
   return (
-    <>
-      <Head>
-        <script
-          src={`https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`}
-          async
-          onLoad={recaptchaScriptOnLoad}
-        ></script>
-      </Head>
       <Form form={form} onSubmit={onSubmit} className={className}>
         <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Log in</h2>
         <FormField
@@ -94,6 +85,5 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
           <FormInfoMessage error={errorMessage} />
         </div>
       </Form>
-    </>
   );
 }
