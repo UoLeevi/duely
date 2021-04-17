@@ -531,6 +531,8 @@ html, body, #root {
   height: 100%;
 }
 
+/* see: https://developers.google.com/recaptcha/docs/faq#id-like-to-hide-the-recaptcha-badge.-what-is-allowed */
+
 .container {
   width: 100%;
 }
@@ -2677,6 +2679,8 @@ html, body, #root {
   --tw-drop-shadow: var(--tw-empty,/*!*/ /*!*/);
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
+
+/* see: https://developers.google.com/recaptcha/docs/faq#id-like-to-hide-the-recaptcha-badge.-what-is-allowed */
 
 .bg-blur {
   -webkit-backdrop-filter: blur(2px);

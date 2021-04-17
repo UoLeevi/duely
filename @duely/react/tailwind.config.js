@@ -1,6 +1,9 @@
 module.exports = {
   presets: [require('./preset-duely')],
-  purge: [
-    './src/**/*!(stories).js'
-  ],
+  purge: {
+    content: ['./src/**/*!(stories).js'],
+    options: {
+      safelist: [/^grecaptcha-/]
+    }
+  }
 }
