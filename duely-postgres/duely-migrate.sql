@@ -10,25 +10,34 @@ DO
 LANGUAGE plpgsql
 $_MIGRATION_$
 DECLARE
-
+  _form_uuid uuid;
 BEGIN
 -- MIGRATION CODE START
 
-CREATE OR REPLACE FUNCTION internal_.insert_resource_token_for_order_() RETURNS trigger
+CREATE OR REPLACE FUNCTION internal_.set_form_field_sort_key_() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
+DECLARE
+  _sort_key real;
 BEGIN
-  INSERT INTO security_.resource_token_ (resource_uuid_, token_, keys_)
-  SELECT _order.uuid_, _order.stripe_checkout_session_id_ext_, '{uuid_, customer_uuid_, stripe_account_uuid_, stripe_checkout_session_id_ext_, state_, error_, ordered_at_, processed_at_}'::text[]
-  FROM _order;
+  SELECT MAX(s.sort_key_) + 1 INTO _sort_key
+  FROM internal_.form_field_ s
+  WHERE s.form_uuid_ = NEW.form_uuid_;
 
-  INSERT INTO security_.resource_token_ (resource_uuid_, token_, keys_)
-  SELECT _order.customer_uuid_, _order.stripe_checkout_session_id_ext_, '{uuid_, name_, email_address_}'::text[]
-  FROM _order;
+  NEW.sort_key_ = COALESCE(_sort_key, 0);
 
-  RETURN NULL;
+  RETURN NEW;
 END
 $$;
+
+DROP TRIGGER tr_before_insert_set_sort_key_ ON internal_.form_field_;
+
+CREATE TRIGGER tr_before_insert_set_sort_key_ BEFORE INSERT ON internal_.form_field_ FOR EACH ROW WHEN (NEW.sort_key_ IS NULL) EXECUTE FUNCTION internal_.set_form_field_sort_key_();
+
+
+INSERT INTO internal_.form_ (uuid_) VALUES (DEFAULT) RETURNING uuid_ INTO _form_uuid;
+
+INSERT INTO internal_.integration_type_ (form_uuid_, name_) VALUES (_form_uuid, 'teachable/enroll');
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN

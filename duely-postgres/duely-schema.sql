@@ -1536,13 +1536,11 @@ CREATE FUNCTION internal_.set_form_field_sort_key_() RETURNS trigger
 DECLARE
   _sort_key real;
 BEGIN
-  IF NEW.sort_key_ IS NULL THEN
-    SELECT MAX(s.sort_key_) + 1 INTO _sort_key
-    FROM internal_.form_field_ s
-    WHERE s.form_uuid_ = NEW.form_uuid_;
+  SELECT MAX(s.sort_key_) + 1 INTO _sort_key
+  FROM internal_.form_field_ s
+  WHERE s.form_uuid_ = NEW.form_uuid_;
 
-    NEW.sort_key_ = _sort_key;
-  END IF;
+  NEW.sort_key_ = COALESCE(_sort_key, 0);
 
   RETURN NEW;
 END
@@ -7140,6 +7138,7 @@ ALTER TABLE ONLY application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT gen_random
 
 COPY internal_.form_ (uuid_, audit_at_, audit_session_uuid_) FROM stdin;
 63bb3010-4ed1-40bb-a029-e4501e3b0bd7	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000
+5126a7ce-f579-4da8-b2a8-ac9d13eff884	2021-04-18 08:04:52.893077+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7160,6 +7159,7 @@ b78b6a5b-9034-4fef-acb1-b9cd6982a0da	imageSrc	text	63bb3010-4ed1-40bb-a029-e4501
 --
 
 COPY internal_.integration_type_ (uuid_, form_uuid_, name_) FROM stdin;
+63693293-fc7a-49d9-8410-a72bb5337af0	5126a7ce-f579-4da8-b2a8-ac9d13eff884	teachable/enroll
 \.
 
 
@@ -7207,6 +7207,7 @@ COPY internal_.transaction_fee_ (uuid_, subscription_plan_uuid_, numerator_, den
 
 COPY internal__audit_.form_ (uuid_, audit_at_, audit_session_uuid_, audit_op_) FROM stdin;
 63bb3010-4ed1-40bb-a029-e4501e3b0bd7	2020-12-30 19:23:52.750455+00	00000000-0000-0000-0000-000000000000	I
+5126a7ce-f579-4da8-b2a8-ac9d13eff884	2021-04-18 08:04:52.893077+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -9622,7 +9623,7 @@ CREATE TRIGGER tr_before_insert_insert_form_ BEFORE INSERT ON internal_.page_blo
 -- Name: form_field_ tr_before_insert_set_sort_key_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
-CREATE TRIGGER tr_before_insert_set_sort_key_ BEFORE INSERT ON internal_.form_field_ FOR EACH ROW EXECUTE FUNCTION internal_.set_form_field_sort_key_();
+CREATE TRIGGER tr_before_insert_set_sort_key_ BEFORE INSERT ON internal_.form_field_ FOR EACH ROW WHEN ((new.sort_key_ IS NULL)) EXECUTE FUNCTION internal_.set_form_field_sort_key_();
 
 
 --
