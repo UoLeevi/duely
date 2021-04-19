@@ -348,6 +348,34 @@ $$;
 
 ALTER FUNCTION internal_.check_current_user_is_serviceaccount_() OWNER TO postgres;
 
+--
+-- Name: check_integration_data_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.check_integration_data_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _before_uuid uuid;
+BEGIN
+  IF EXISTS (
+      SELECT jsonb_object_keys(NEW.data_)
+    EXCEPT
+      SELECT ff.name_
+      FROM internal_.integration_type_ t
+      JOIN internal_.form_field_ ff ON ff.form_uuid_ = t.form_uuid_
+      WHERE t.uuid_ = NEW.integration_type_uuid_
+  ) THEN
+    RAISE 'Data does not match required schema.' USING ERRCODE = 'DDATA';
+  END IF;
+
+  RETURN NEW;
+END
+$$;
+
+
+ALTER FUNCTION internal_.check_integration_data_() OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -9194,6 +9222,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.web
 --
 
 CREATE TRIGGER tr_after_update_update_product_page_url_ AFTER UPDATE ON application_.product_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.update_product_page_url_();
+
+
+--
+-- Name: integration_ tr_before_insert_or_update_check_integration_data_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_insert_or_update_check_integration_data_ BEFORE INSERT OR UPDATE ON application_.integration_ FOR EACH ROW EXECUTE FUNCTION internal_.check_integration_data_();
 
 
 --

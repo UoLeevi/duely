@@ -14,15 +14,30 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-INSERT INTO internal_.form_field_ (name_, type_, form_uuid_, default_, label_)
-SELECT 'school_domain', 'text', i.form_uuid_, NULL, 'School domain name'
-FROM internal_.integration_type_ i
-WHERE i.name_ = 'teachable/enroll';
+CREATE FUNCTION internal_.check_integration_data_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  _before_uuid uuid;
+BEGIN
+  IF EXISTS (
+      SELECT jsonb_object_keys(NEW.data_)
+    EXCEPT
+      SELECT ff.name_
+      FROM internal_.integration_type_ t
+      JOIN internal_.form_field_ ff ON ff.form_uuid_ = t.form_uuid_
+      WHERE t.uuid_ = NEW.integration_type_uuid_
+  ) THEN
+    RAISE 'Data does not match required schema.' USING ERRCODE = 'DDATA';
+  END IF;
 
-INSERT INTO internal_.form_field_ (name_, type_, form_uuid_, default_, label_)
-SELECT 'product_id', 'text', i.form_uuid_, NULL, 'Product ID'
-FROM internal_.integration_type_ i
-WHERE i.name_ = 'teachable/enroll';
+  RETURN NEW;
+END
+$$;
+
+CREATE TRIGGER tr_before_insert_or_update_check_integration_data_ 
+BEFORE INSERT OR UPDATE ON application_.integration_
+FOR EACH ROW EXECUTE FUNCTION internal_.check_integration_data_();
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
