@@ -40,6 +40,8 @@ export function getDbErrorCode(err: Error) {
       return 'duely__unauthorized';
     case 'DUPSE': // Upsert is not allowed for this resource.
       return 'duely__upsert_not_allowed'
+    case 'DDATA': // Data does not match required schema.
+      return 'duely__invalid_data'
 
     // Unhandled cases
     default:
