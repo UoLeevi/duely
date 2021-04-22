@@ -39,7 +39,9 @@ import {
   CountrySpecDocument,
   CustomerDocument,
   AgencyStripeAccountDocument,
-  SubdomainAgencyExtendedDocument
+  SubdomainAgencyExtendedDocument,
+  FormFieldDocument,
+  FormFieldsDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -214,6 +216,16 @@ export const product_Q = {
 export const products_Q = {
   query: ProductsDocument,
   result: (d: ResultOf<typeof ProductsDocument>) => d?.products
+};
+
+export const form_field_Q = {
+  query: FormFieldDocument,
+  result: (d: ResultOf<typeof FormFieldDocument>) => d?.form_field
+};
+
+export const form_fields_Q = {
+  query: FormFieldsDocument,
+  result: (d: ResultOf<typeof FormFieldsDocument>) => d?.form_fields
 };
 
 export const order_Q = {

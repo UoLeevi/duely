@@ -424,3 +424,15 @@ query CalculateTransactionFee($subscription_plan_id: ID!, $amount: Int!, $curren
     calculate_fee(amount: $amount, currency: $currency)
   }
 }
+
+query FormField($form_field_id: ID!) {
+  form_field(id: $form_field_id) {
+    ...form_field
+  }
+}
+
+query FormFields($filter: FormFieldFilter!) {
+  form_fields(filter: $filter) {
+    ...form_field
+  }
+}
