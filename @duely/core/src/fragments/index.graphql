@@ -368,6 +368,28 @@ fragment form_field on FormField {
   default
 }
 
+fragment integration on Integration {
+  id
+  data
+  agency {
+    id
+  }
+  credential {
+    id
+  }
+  integration_type {
+    id
+  }
+}
+
+fragment integration_type on IntegrationType {
+  id
+  name
+  fields {
+    ...form_field
+  }
+}
+
 fragment page_definition on PageDefinition {
   id
   name

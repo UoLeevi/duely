@@ -41,7 +41,11 @@ import {
   AgencyStripeAccountDocument,
   SubdomainAgencyExtendedDocument,
   FormFieldDocument,
-  FormFieldsDocument
+  FormFieldsDocument,
+  IntegrationDocument,
+  IntegrationTypeDocument,
+  IntegrationsDocument,
+  IntegrationTypesDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -226,6 +230,26 @@ export const form_field_Q = {
 export const form_fields_Q = {
   query: FormFieldsDocument,
   result: (d: ResultOf<typeof FormFieldsDocument>) => d?.form_fields
+};
+
+export const integration_Q = {
+  query: IntegrationDocument,
+  result: (d: ResultOf<typeof IntegrationDocument>) => d?.integration
+};
+
+export const integrations_Q = {
+  query: IntegrationsDocument,
+  result: (d: ResultOf<typeof IntegrationsDocument>) => d?.integrations
+};
+
+export const integration_type_Q = {
+  query: IntegrationTypeDocument,
+  result: (d: ResultOf<typeof IntegrationTypeDocument>) => d?.integration_type
+};
+
+export const integration_types_Q = {
+  query: IntegrationTypesDocument,
+  result: (d: ResultOf<typeof IntegrationTypesDocument>) => d?.integration_types
 };
 
 export const order_Q = {

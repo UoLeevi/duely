@@ -436,3 +436,27 @@ query FormFields($filter: FormFieldFilter!) {
     ...form_field
   }
 }
+
+query Integration($integration_id: ID!) {
+  integration(id: $integration_id) {
+    ...integration
+  }
+}
+
+query Integrations($filter: IntegrationFilter!) {
+  integrations(filter: $filter) {
+    ...integration
+  }
+}
+
+query IntegrationType($integration_type_id: ID!) {
+  integration_type(id: $integration_type_id) {
+    ...integration_type
+  }
+}
+
+query IntegrationTypes($filter: IntegrationTypeFilter!) {
+  integration_types(filter: $filter) {
+    ...integration_type
+  }
+}
