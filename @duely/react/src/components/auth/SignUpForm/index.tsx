@@ -112,7 +112,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
       />
       <div className="flex flex-col">
         <label className="block font-bold text-gray-500">
-          <input name="newsletter" ref={form.register} className="mr-2" type="checkbox" />
+          <input {...form.register('newsletter')} className="mr-2" type="checkbox" />
           <span className="text-sm font-medium leading-6 text-gray-700">
             Send me your newsletter!
           </span>

@@ -1,21 +1,12 @@
 import type { ImageInput } from '@duely/core';
 import React from 'react';
-import type { FieldError, RegisterOptions, UseFormMethods } from 'react-hook-form';
+import type { FieldError, Path, RegisterOptions, UseFormReturn } from 'react-hook-form';
 import { Util } from '../../../util';
 import { LoadingBar } from '../../LoadingBar';
 
-type FormFieldBaseProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
-  name: string & keyof TFieldValues;
-  form: UseFormMethods<TFieldValues>;
-  label?: React.ReactNode;
-  registerOptions?: RegisterOptions;
-  hint?: React.ReactNode;
-  loading?: boolean;
-};
-
 type FormFieldPropsPartial<TFieldValues extends Record<string, any> = Record<string, any>> = {
-  name: string & keyof TFieldValues;
-  form: UseFormMethods<TFieldValues>;
+  name: Path<TFieldValues>;
+  form: UseFormReturn<TFieldValues>;
   label?: React.ReactNode;
   registerOptions?: RegisterOptions;
   hint?: React.ReactNode;
@@ -62,7 +53,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
   className,
   ...props
 }: FormFieldProps<TFieldValues>) {
-  const error = form.errors[name] as FieldError | undefined;
+  const error = form.formState.errors[name] as FieldError | undefined;
   let errorMessage =
     error &&
     (error.message ||
@@ -93,10 +84,9 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
         <div className="flex">
           <div className="grid items-center grid-cols-3 form-field-radio-toggle">
             <input
-              ref={form.register(registerOptions)}
+              {...form.register(name, registerOptions)}
               type="radio"
               id={`radio-toggle-option-${left.value}`}
-              name={name}
               value={left.value}
               defaultChecked
               hidden
@@ -117,10 +107,9 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
             </div>
 
             <input
-              ref={form.register(registerOptions)}
+              {...form.register(name, registerOptions)}
               type="radio"
               id={`radio-toggle-option-${right.value}`}
-              name={name}
               value={right.value}
               hidden
               {...props}
@@ -154,11 +143,10 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           return (
             <label key={value} htmlFor={`radio-blocks-option-${value}`} className={className}>
               <input
-                ref={form.register(registerOptions)}
+                {...form.register(name, registerOptions)}
                 key={value}
                 value={value}
                 id={`radio-blocks-option-${value}`}
-                name={name}
                 type="radio"
                 hidden
                 {...props}
@@ -191,8 +179,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
         <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
           <select
             id={name}
-            name={name}
-            ref={form.register(registerOptions)}
+            {...form.register(name, registerOptions)}
             className="w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none"
             spellCheck="false"
             autoComplete="off"
@@ -278,8 +265,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           <input
             disabled={loading}
             id={name}
-            name={name}
-            ref={form.register(registerOptions)}
+            {...form.register(name, registerOptions)}
             accept={accept}
             type="file"
             hidden
@@ -322,8 +308,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           )}
           <input
             id={name}
-            name={name}
-            ref={form.register(registerOptions)}
+            {...form.register(name, registerOptions)}
             type="file"
             accept={accept}
             hidden
@@ -342,8 +327,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
           <textarea
             id={name}
-            name={name}
-            ref={form.register(registerOptions)}
+            {...form.register(name, registerOptions)}
             className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
             spellCheck="false"
             autoComplete="off"
@@ -361,8 +345,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
           <input
             id={name}
-            name={name}
-            ref={form.register(registerOptions)}
+            {...form.register(name, registerOptions)}
             type={type}
             className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
             spellCheck="false"

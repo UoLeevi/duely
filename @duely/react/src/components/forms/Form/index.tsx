@@ -3,11 +3,11 @@ import type {
   DeepPartial,
   SubmitHandler,
   UnpackNestedValue,
-  UseFormMethods
+  UseFormReturn
 } from 'react-hook-form';
 
 type FormProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
-  form: UseFormMethods<TFieldValues>;
+  form: UseFormReturn<TFieldValues>;
   onSubmit: SubmitHandler<TFieldValues>;
   values?: UnpackNestedValue<DeepPartial<TFieldValues>>;
 } & Omit<

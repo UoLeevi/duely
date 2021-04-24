@@ -1,10 +1,10 @@
 import React from 'react';
 import { Util } from '../../../util';
 import { LoadingSpinner } from '../../LoadingSpinner';
-import { UseFormMethods } from 'react-hook-form';
+import { UseFormReturn } from 'react-hook-form';
 
 type FormButtonProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
-  form: UseFormMethods<TFieldValues>;
+  form: UseFormReturn<TFieldValues>;
   spinner?: boolean;
   loading?: boolean;
   dense?: boolean;

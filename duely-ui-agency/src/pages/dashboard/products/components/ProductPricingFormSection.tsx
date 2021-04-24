@@ -1,6 +1,6 @@
 import { agency_stripe_account_Q, current_agency_Q, useQuery } from '@duely/client';
 import { FormField } from '@duely/react';
-import { UseFormMethods } from 'react-hook-form';
+import { UseFormReturn } from 'react-hook-form';
 
 type ProductPricingFormSectionFields = {
   unit_amount_major: string;
@@ -9,7 +9,7 @@ type ProductPricingFormSectionFields = {
 };
 
 type ProductPricingFormSectionProps<TFieldValues extends ProductPricingFormSectionFields> = {
-  form: UseFormMethods<TFieldValues>;
+  form: UseFormReturn<TFieldValues>;
 };
 
 export function ProductPricingFormSection<TFieldValues extends ProductPricingFormSectionFields>({
@@ -18,7 +18,7 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
   // TODO: fix types
   // Lets's brute force fix the type errors
   // see: https://github.com/react-hook-form/react-hook-form/discussions/3924
-  const form = (_form as unknown) as UseFormMethods<ProductPricingFormSectionFields>;
+  const form = (_form as unknown) as UseFormReturn<ProductPricingFormSectionFields>;
 
   const { data: agency } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(

@@ -1,5 +1,5 @@
 import { FormField, useImageInputFromFileList } from '@duely/react';
-import { UseFormMethods } from 'react-hook-form';
+import { UseFormReturn } from 'react-hook-form';
 
 type ProductBasicInfoFormSectionFields = {
   name: string;
@@ -9,7 +9,7 @@ type ProductBasicInfoFormSectionFields = {
 };
 
 type ProductBasicInfoFormSectionProps<TFieldValues extends ProductBasicInfoFormSectionFields> = {
-  form: UseFormMethods<TFieldValues>;
+  form: UseFormReturn<TFieldValues>;
 };
 
 export function ProductBasicInfoFormSection<
@@ -18,7 +18,7 @@ export function ProductBasicInfoFormSection<
   // TODO: fix types
   // Lets's brute force fix the type errors
   // see: https://github.com/react-hook-form/react-hook-form/discussions/3924
-  const form = _form as unknown as UseFormMethods<ProductBasicInfoFormSectionFields>;
+  const form = _form as unknown as UseFormReturn<ProductBasicInfoFormSectionFields>;
 
   // image logo
   const image_logo_file_list = form.watch('image_logo_file_list');
