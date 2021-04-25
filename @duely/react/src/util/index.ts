@@ -342,7 +342,7 @@ declare global {
 
 function fetchRecapthcaToken(action?: string) {
   return new Promise((resolve) => {
-    if (!window.__duely.reCAPTCHA_site_key) {
+    if (!window.__duely.reCAPTCHA_site_key || location.hostname === 'localhost') {
       resolve(undefined);
     }
 

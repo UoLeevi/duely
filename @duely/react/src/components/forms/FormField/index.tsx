@@ -135,8 +135,8 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
               ? option
               : { value: option, element: undefined, description: undefined };
           const className = Util.createClassName(
-            selected === value && (props.disabled ? 'border-gray-400' : 'border-blue-400'),
-            selected !== value && props.disabled && 'opacity-50',
+            selected === value && ((props.readOnly || props.disabled) ? 'border-gray-400' : 'border-blue-400'),
+            selected !== value && (props.readOnly || props.disabled) && 'opacity-50',
             'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1'
           );
 
@@ -263,7 +263,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
           )}
 
           <input
-            disabled={loading}
+            readOnly={loading}
             id={name}
             {...form.register(name, registerOptions)}
             accept={accept}

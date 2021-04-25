@@ -122,9 +122,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
     }
 
     const { price } = res_price;
-    await updateProduct({ product_id: product!.id, default_price_id: price!.id });
-
-    const res = await updateProduct({ product_id, ...update });
+    const res = await updateProduct({ product_id: product!.id, default_price_id: price!.id });
 
     if (res?.success) {
       setSuccessMessage('Saved');
@@ -144,7 +142,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
           className="max-w-2xl"
           name="payment_type"
           type="radio-blocks"
-          disabled
+          readOnly
           options={[
             {
               value: 'one_time',
