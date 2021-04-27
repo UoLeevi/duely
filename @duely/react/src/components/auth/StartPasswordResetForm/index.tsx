@@ -17,6 +17,7 @@ type StartPasswordResetFormProps = {
 
 export function StartPasswordResetForm({ className, redirectUrl }: StartPasswordResetFormProps) {
   const form = useForm<StartPasswordResetFormValues>();
+  const [sentToEmail, setSentToEmail] = useState<string>();
   const [completed, setCompleted] = useState(false);
   const [startPasswordReset, { loading: startPasswordResetLoading }] = useMutation(
     start_password_reset_M
@@ -33,6 +34,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
 
     if (success) {
       setCompleted(true);
+      setSentToEmail(email_address);
     } else {
       setErrorMessage(message ?? 'Incorrect password');
     }
@@ -54,7 +56,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
         </div>
         <p className="font-semibold">
           <span>Password reset verification link sent to </span>
-          <span className="font-bold whitespace-nowrap">{form.watch('email_address')}</span>
+          <span className="font-bold whitespace-nowrap">{sentToEmail}</span>
           <span>.</span>
           <br />
           <span>Please check your inbox.</span>

@@ -21,6 +21,7 @@ type SignUpFormProps = {
 
 export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   const form = useForm<SignUpFormFields>();
+  const [sentToEmail, setSentToEmail] = useState<string>();
   const [completed, setCompleted] = useState(false);
   const [startSignUp, { loading: startSignUpLoading }] = useMutation(start_sign_up_M);
   const { infoMessage, setInfoMessage, errorMessage, setErrorMessage } = useFormMessages();
@@ -39,6 +40,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
 
     if (success) {
       setCompleted(true);
+      setSentToEmail(data.email_address);
     } else if (message?.includes('duplicate key')) {
       setInfoMessage('Email address is already registered. Try to log in.');
     } else {
@@ -62,7 +64,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
         </div>
         <p className="font-semibold">
           <span>Sign up verification link sent to </span>
-          <span className="font-bold whitespace-nowrap">{form.watch('email_address')}</span>
+          <span className="font-bold whitespace-nowrap">{sentToEmail}</span>
           <span>.</span>
           <br />
           <span>Please check your inbox.</span>
