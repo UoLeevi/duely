@@ -12,7 +12,7 @@
   --color-success: #10b981;
 }
 
-/*! tailwindcss v2.1.1 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v2.1.2 | MIT License | https://tailwindcss.com */
 
 /*! modern-normalize v1.0.0 | MIT License | https://github.com/sindresorhus/modern-normalize */
 
@@ -532,6 +532,10 @@ html, body, #root {
 }
 
 /* see: https://developers.google.com/recaptcha/docs/faq#id-like-to-hide-the-recaptcha-badge.-what-is-allowed */
+
+.grecaptcha-badge {
+  visibility: hidden;
+}
 
 .container {
   width: 100%;
@@ -2338,6 +2342,10 @@ html, body, #root {
 }
 
 /* see: https://developers.google.com/recaptcha/docs/faq#id-like-to-hide-the-recaptcha-badge.-what-is-allowed */
+
+.grecaptcha-show .grecaptcha-badge {
+  visibility: visible;
+}
 
 .bg-blur {
   -webkit-backdrop-filter: blur(2px);
