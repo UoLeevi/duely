@@ -74,7 +74,7 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
         <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
           <BsCheck className="text-3xl text-green-600" />
         </div>
-        <h3 className="text-2xl font-semibold">
+        <h3 className="text-2xl font-semibold ">
           <span className="whitespace-nowrap">{agency!.name}</span>{' '}
           <span className="whitespace-nowrap">created succesfully</span>
         </h3>

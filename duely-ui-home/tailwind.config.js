@@ -1,4 +1,5 @@
 module.exports = {
+  mode: 'jit',
   presets: [require('@duely/react/preset-duely')],
   purge: {
     content: [
