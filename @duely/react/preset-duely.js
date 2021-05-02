@@ -52,19 +52,6 @@ module.exports = {
       }
     },
   },
-  variants: {
-    extend: {
-      textColor: ['focus-visible'],
-      borderColor: ['focus-visible'],
-      boxShadow: ['focus-visible'],
-      opacity: ['disabled'],
-      outline: ['focus-visible'],
-      padding: ['first', 'last'],
-      ringColor: ['focus-visible'],
-      ringOpacity: ['focus-visible'],
-      ringWidth: ['focus-visible']
-    }
-  },
   plugins: [
     require('@tailwindcss/typography')
   ]

@@ -1,17 +1,15 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+let mode = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+
 module.exports = [
   {
+    // @duely/react npm package
     devtool: 'source-map',
-    entry: {
-      index: {
-        import: './src/index.ts',
-        filename: 'index.js'
-      }
-    },
+    entry: './src/index.ts',
     externals: ['react', 'react-dom', 'react-hook-form', 'react-router-dom', '@duely/client'],
-    mode: 'none',
+    mode,
     module: {
       rules: [
         {
@@ -36,18 +34,15 @@ module.exports = [
     }
   },
   {
+    // demo app to ease experimentation
     devtool: 'source-map',
     devServer: {
-      publicPath: './public',
-      contentBase: './dist/demo'
+      hot: true,
+      inline: true,
+      contentBase: [path.resolve(__dirname, 'src', 'demo'), path.resolve(__dirname, 'dist', 'demo')]
     },
-    entry: {
-      demo: {
-        import: './src/demo/index.tsx',
-        filename: 'demo/index.js'
-      }
-    },
-    mode: 'development',
+    entry: './src/demo/index.tsx',
+    mode,
     module: {
       rules: [
         {
@@ -64,16 +59,17 @@ module.exports = [
     },
     plugins: [
       new HtmlWebpackPlugin({
-        template: './public/index.html',
-        filename: 'demo/index.html',
-        inject: false
+        template: path.resolve(__dirname, 'src', 'demo', 'index.html'),
+        filename: 'index.html',
+        inject: 'body'
       })
     ],
     resolve: {
       extensions: ['.ts', '.js', '.tsx', '.jsx']
     },
     output: {
-      path: path.resolve(__dirname, 'dist')
+      filename: 'index.js',
+      path: path.resolve(__dirname, 'dist', 'demo')
     }
   }
 ];
