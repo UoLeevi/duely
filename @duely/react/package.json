@@ -16,10 +16,10 @@
   "scripts": {
     "start": "webpack serve",
     "build": "cross-env NODE_ENV='production' webpack",
-    "build:css": "cross-env NODE_ENV='production' postcss tailwind.css -o dist/demo/styles/index.css",
+    "build:css": "cross-env NODE_ENV='production' postcss tailwind.css -o public/demo/styles/index.css",
     "test": "jest",
     "watch": "webpack --watch",
-    "watch:css": "cross-env postcss -w tailwind.css -o dist/demo/styles/index.css"
+    "watch:css": "cross-env postcss -w tailwind.css -o public/demo/styles/index.css"
   },
   "devDependencies": {
     "@duely/client": "0.0.112",

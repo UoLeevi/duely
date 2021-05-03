@@ -39,7 +39,11 @@ module.exports = [
     devServer: {
       hot: true,
       inline: true,
-      contentBase: [path.resolve(__dirname, 'src', 'demo'), path.resolve(__dirname, 'dist', 'demo')]
+      contentBase: [
+        path.resolve(__dirname, 'dist', 'demo'),
+        path.resolve(__dirname, 'public', 'demo')
+      ],
+      writeToDisk: true
     },
     entry: './src/demo/index.tsx',
     mode,
@@ -59,7 +63,7 @@ module.exports = [
     },
     plugins: [
       new HtmlWebpackPlugin({
-        template: path.resolve(__dirname, 'src', 'demo', 'index.html'),
+        template: 'public/demo/index.html',
         filename: 'index.html',
         inject: 'body'
       })
