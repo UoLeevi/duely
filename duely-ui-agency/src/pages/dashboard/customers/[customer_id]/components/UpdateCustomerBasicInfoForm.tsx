@@ -44,7 +44,7 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
       name: customer.name!,
       email_address: customer.email_address
     });
-  }, [reset, customer]);
+  }, [reset, customer, customer?.name, customer?.email_address]);
 
   async function onSubmit({ ...data }: UpdateCustomerBasicInfoFormFields) {
     const update = {

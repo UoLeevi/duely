@@ -34,7 +34,7 @@ export function SettingsMiscellaneousSettingsForm() {
     reset({
       default_pricing_currency: current_agency.default_pricing_currency ?? undefined
     });
-  }, [reset, current_agency]);
+  }, [reset, current_agency, current_agency?.default_pricing_currency]);
 
   const onSubmit: SubmitHandler<SettingsMiscellaneousSettingsFormValues> = async ({
     default_pricing_currency

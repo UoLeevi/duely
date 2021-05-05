@@ -40,7 +40,7 @@ export function UpdateProductStatusForm({ product_id }: ProductProps) {
     reset({
       status: product.status
     });
-  }, [reset, product]);
+  }, [reset, product, product?.status]);
 
   async function onSubmit({ status }: UpdateProductStatusFormFields) {
     if (status === product?.status) {

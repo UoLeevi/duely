@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '../components/forms';
 
@@ -7,7 +7,13 @@ export default function App() {
     name: string;
     description: string;
     url_name: string;
+    toggle: string;
   }>();
+
+  useEffect(() => {
+    form.reset({ toggle: 'draft' });
+  }, []);
+
   const {
     infoMessage,
     setInfoMessage,
@@ -75,6 +81,17 @@ export default function App() {
           type="textarea"
           rows={5}
           registerOptions={{ required: true }}
+        />
+
+        <FormField
+          form={form}
+          label="Toggle"
+          name="toggle"
+          type="radio-toggle"
+          options={[
+            'draft',
+            { value: 'live', className: 'bg-gradient-to-r from-green-400 to-green-300' }
+          ]}
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">

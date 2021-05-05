@@ -56,7 +56,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
       description: product.description ?? undefined,
       url_name: product.url_name
     });
-  }, [reset, product]);
+  }, [reset, product, product?.name, product?.description, product?.url_name]);
 
   async function onSubmit({ image_logo_file_list, ...data }: UpdateProductBasicInfoFormFields) {
     const update = {

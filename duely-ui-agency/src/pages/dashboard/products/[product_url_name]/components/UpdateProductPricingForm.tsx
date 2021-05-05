@@ -62,7 +62,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
           ? undefined
           : `${default_price.recurring_interval_count}:${default_price.recurring_interval}`
     });
-  }, [reset, product]);
+  }, [reset, product, product?.default_price]);
 
   async function onSubmit({
     unit_amount_major,

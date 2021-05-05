@@ -47,7 +47,7 @@ export function SettingsCheckoutSettingsForm() {
     reset({
       url: agency_thank_you_page_settings?.url?.replace('https://', '')
     });
-  }, [reset, agency_thank_you_page_settings]);
+  }, [reset, agency_thank_you_page_settings, agency_thank_you_page_settings?.url]);
 
   const onSubmit: SubmitHandler<SettingsCheckoutSettingsFormValues> = async ({ url }) => {
     url = url.trim();

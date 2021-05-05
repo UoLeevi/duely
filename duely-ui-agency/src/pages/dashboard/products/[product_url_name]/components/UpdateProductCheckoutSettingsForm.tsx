@@ -66,7 +66,7 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
     reset({
       url: product_thank_you_page_settings?.url?.replace('https://', '')
     });
-  }, [reset, product_thank_you_page_settings]);
+  }, [reset, product_thank_you_page_settings, product_thank_you_page_settings?.url]);
 
   async function onSubmit({ url }: UpdateProductCheckoutSettingsFormFields) {
     url = url.trim();
