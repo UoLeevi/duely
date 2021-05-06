@@ -825,6 +825,14 @@ html, body, #root {
   max-width: 20rem;
 }
 
+.max-w-screen-md {
+  max-width: 768px;
+}
+
+.max-w-screen-sm {
+  max-width: 640px;
+}
+
 .flex-1 {
   flex: 1 1 0%;
 }
@@ -1224,22 +1232,22 @@ html, body, #root {
   background-image: linear-gradient(to right, var(--tw-gradient-stops));
 }
 
-.from-gray-400 {
-  --tw-gradient-from: #94a3b8;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(148, 163, 184, 0));
-}
-
 .from-green-400 {
   --tw-gradient-from: #34d399;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(52, 211, 153, 0));
 }
 
-.to-gray-300 {
-  --tw-gradient-to: #cbd5e1;
+.from-gray-400 {
+  --tw-gradient-from: #94a3b8;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(148, 163, 184, 0));
 }
 
 .to-green-300 {
   --tw-gradient-to: #6ee7b7;
+}
+
+.to-gray-300 {
+  --tw-gradient-to: #cbd5e1;
 }
 
 .bg-clip-content {
