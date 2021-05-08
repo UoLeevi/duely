@@ -28,6 +28,7 @@ module.exports = [
       extensions: ['.ts', '.js', '.tsx', '.jsx']
     },
     output: {
+      filename: 'index.js',
       path: path.resolve(__dirname, 'dist'),
       library: '@duely/react',
       libraryTarget: 'umd'

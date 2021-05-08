@@ -1,7 +1,6 @@
 import { integration_types_Q, useQuery } from '@duely/client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Util } from '..';
 import { LoadingScreen } from '../components';
 import {
   Form,
@@ -26,6 +25,20 @@ export default function Workspace() {
 
   const form = useForm();
 
+  const [{ values, loading }, setState] = useState<any>({ values: undefined, loading: true });
+
+  useEffect(() => {
+    // Lets simulate loading of initial data
+    setTimeout(() => {
+      setState({
+        values: {
+          school_domain: 'example.com',
+        },
+        loading: false
+      });
+    }, 3000);
+  }, [])
+
   const {
     infoMessage,
     setInfoMessage,
@@ -44,6 +57,10 @@ export default function Workspace() {
   async function onSubmit(data: any) {
     console.log('submitted:', data);
     setSuccessMessage('Saved');
+    setState({
+      values: data,
+      loading: false
+    });
   }
 
   return (
@@ -53,7 +70,7 @@ export default function Workspace() {
         onSubmit={onSubmit}
         className="flex flex-col w-screen max-w-screen-sm space-y-3"
       >
-        <DynamicFormFields form={form} fields={fields} />
+        <DynamicFormFields loading={loading} form={form} fields={fields} values={values} skeletonFieldCount={2} />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
           <FormButton form={form} spinner dense loading={state.loading}>

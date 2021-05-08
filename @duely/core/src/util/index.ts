@@ -6,7 +6,7 @@ export type ResolvableValue<R = any, TArgs extends any[] = any[]> =
 
 export type ResolvedType<T> = T extends ResolvableValue<infer U, unknown[]> ? U : never;
 export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
-export type ElementType<T extends unknown[]> = T extends readonly (infer U)[] ? U : never;
+export type ElementType<T extends readonly unknown[]> = T extends readonly (infer U)[] ? U : never;
 export type Head<T extends unknown[]> = T extends [infer U, ...unknown[]] ? U : never;
 export type Tail<T extends unknown[]> = T extends [unknown, ...infer U] ? U : never;
 export type Concat<T extends unknown[], U extends unknown[]> = U extends []
@@ -78,6 +78,25 @@ export namespace Util {
       const args: TParams = [...partials, ...rest] as any;
       return func(...args);
     };
+  }
+
+  export function pick<T extends object, TKeys extends readonly string[]>(
+    fromObject: T,
+    keys: TKeys | Record<ElementType<TKeys>, unknown>
+  ): {
+    [TKey in ElementType<TKeys>]: TKey extends keyof T ? T[TKey] : undefined;
+  } {
+    const keysArray = Array.isArray(keys)
+      ? (keys as TKeys)
+      : ((Object.keys(keys) as unknown) as TKeys);
+
+    const obj = {};
+
+    for (const key of keysArray) {
+      (obj as any)[key] = (fromObject as any)[key];
+    }
+
+    return obj as any;
   }
 
   export function memo<R, TParams extends unknown[]>(

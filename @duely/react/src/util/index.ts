@@ -23,7 +23,6 @@ export const Util = {
   truncate,
   sentenceCase,
   mimeTypeFromDataUrl,
-  pick,
   diff,
   get,
   template,
@@ -291,14 +290,6 @@ function sentenceCase(text: string) {
 
 function mimeTypeFromDataUrl(dataUrl: string) {
   return dataUrl.substr(5, dataUrl.indexOf(';') - 5);
-}
-
-function pick(fromObject: object, keys: string[] | object) {
-  keys = Array.isArray(keys) ? keys : Object.keys(keys);
-
-  return Object.fromEntries(
-    Object.entries(fromObject).filter(([key]) => (keys as string[]).includes(key))
-  );
 }
 
 function diff(fromObject: object, omitObject: object) {
