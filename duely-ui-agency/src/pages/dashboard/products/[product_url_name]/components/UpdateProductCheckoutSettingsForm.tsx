@@ -15,19 +15,24 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 type ProductProps = {
-  product_id: string;
+  product_id?: string;
 };
 
 type UpdateProductCheckoutSettingsFormFields = { url: string };
 
 export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) {
   const form = useForm<UpdateProductCheckoutSettingsFormFields>();
-  const { loading: productLoading } = useQuery(product_Q, { product_id });
+  const { loading: productLoading } = useQuery(
+    product_Q,
+    { product_id: product_id! },
+    { skip: !product_id }
+  );
 
-  const {
-    data: product_thank_you_page_settings,
-    loading: settingsLoading
-  } = useQuery(product_thank_you_page_settings_Q, { product_id });
+  const { data: product_thank_you_page_settings, loading: settingsLoading } = useQuery(
+    product_thank_you_page_settings_Q,
+    { product_id: product_id! },
+    { skip: !product_id }
+  );
 
   const { data: current_agency } = useQuery(current_agency_Q);
 
@@ -50,14 +55,10 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
   } = useFormMessages();
 
   const state = {
-    loading:
-      productLoading ||
-      agencySettingsLoading ||
-      settingsLoading ||
-      stateUpdate.loading ||
-      stateCreate.loading ||
-      stateDelete.loading
+    loading: !product_id || productLoading || agencySettingsLoading || settingsLoading
   };
+
+  const updateLoading = stateUpdate.loading || stateCreate.loading || stateDelete.loading;
 
   const reset = form.reset;
 
@@ -89,7 +90,7 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
       let res: MutationResult | null | undefined;
 
       if (product_thank_you_page_settings == null) {
-        res = await createSetting({ url, product_id });
+        res = await createSetting({ url, product_id: product_id! });
       } else {
         res = await updateSetting({ url, setting_id: product_thank_you_page_settings.id });
       }
@@ -113,7 +114,7 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
           label="Thank you page URL"
           prefix="https://"
           placeholder={agency_thank_you_page_settings?.url?.replace('https://', '')}
-          loading={settingsLoading}
+          loading={state.loading}
           hint={
             <span>
               Set a thank you page URL for this product. Your customers will be redirected here
@@ -123,10 +124,10 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} spinner dense loading={state.loading}>
+          <FormButton form={form} spinner dense loading={updateLoading}>
             Save
           </FormButton>
-          <FormButton form={form} type="reset" dense disabled={state.loading}>
+          <FormButton form={form} type="reset" dense disabled={updateLoading}>
             Cancel
           </FormButton>
           <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

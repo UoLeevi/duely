@@ -8,11 +8,13 @@ import {
   useFormMessages,
   Util
 } from '@duely/react';
+
+import { Util as CoreUtil } from '@duely/core';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 type ProductProps = {
-  product_id: string;
+  product_id?: string;
 };
 
 type UpdateProductBasicInfoFormFields = {
@@ -24,7 +26,11 @@ type UpdateProductBasicInfoFormFields = {
 
 export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
   const form = useForm<UpdateProductBasicInfoFormFields>();
-  const { data: product, loading: productLoading } = useQuery(product_Q, { product_id });
+  const { data: product, loading: productLoading } = useQuery(
+    product_Q,
+    { product_id: product_id! },
+    { skip: !product_id }
+  );
   const [updateProduct, stateUpdate] = useMutation(update_product_M);
   const {
     infoMessage,
@@ -36,7 +42,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
   } = useFormMessages();
 
   const state = {
-    loading: productLoading || stateUpdate.loading
+    loading: !product_id || productLoading
   };
 
   // image logo
@@ -60,7 +66,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
 
   async function onSubmit({ image_logo_file_list, ...data }: UpdateProductBasicInfoFormFields) {
     const update = {
-      ...Util.diff(Util.pick(data, product!), product!)
+      ...Util.diff(CoreUtil.pick(data, product!), product!)
     };
 
     if (image_logo && image_logo?.data !== product?.image_logo?.data) {
@@ -73,7 +79,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
       return;
     }
 
-    const res = await updateProduct({ product_id, ...update });
+    const res = await updateProduct({ product_id: product_id!, ...update });
 
     if (res?.success) {
       setSuccessMessage('Saved');
@@ -93,6 +99,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
           name="name"
           type="text"
           registerOptions={{ required: true }}
+          loading={state.loading}
         />
         <FormField
           form={form}
@@ -123,6 +130,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
             </span>
           }
           registerOptions={{ required: true }}
+          loading={state.loading}
         />
         <FormField
           form={form}
@@ -132,6 +140,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
           type="textarea"
           rows={5}
           registerOptions={{ required: true }}
+          loading={state.loading}
         />
         <FormField
           form={form}
@@ -146,10 +155,10 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} spinner dense loading={state.loading}>
+          <FormButton form={form} spinner dense loading={stateUpdate.loading}>
             Save
           </FormButton>
-          <FormButton form={form} type="reset" dense disabled={state.loading}>
+          <FormButton form={form} type="reset" dense disabled={stateUpdate.loading}>
             Cancel
           </FormButton>
           <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

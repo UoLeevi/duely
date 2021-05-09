@@ -7,6 +7,7 @@ import {
   useFormMessages,
   Util
 } from '@duely/react';
+import { Util as CoreUtil } from '@duely/core';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -48,7 +49,7 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
 
   async function onSubmit({ ...data }: UpdateCustomerBasicInfoFormFields) {
     const update = {
-      ...Util.diff(Util.pick(data, customer!), customer!)
+      ...Util.diff(CoreUtil.pick(data, customer!), customer!)
     };
 
     if (Object.keys(update).length === 0) {

@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-agency",
-  "version": "0.6.50",
+  "version": "0.6.51",
   "private": true,
   "scripts": {
     "build": "cross-env NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o public/styles/index.css && react-scripts build",
@@ -31,8 +31,8 @@
   "dependencies": {
     "@apollo/client": "^3.3.16",
     "@duely/client": "0.0.112",
-    "@duely/core": "0.0.71",
-    "@duely/react": "^0.2.82",
+    "@duely/core": "0.0.72",
+    "@duely/react": "^0.2.83",
     "@headlessui/react": "^1.1.1",
     "@tailwindcss/typography": "^0.4.0",
     "@testing-library/jest-dom": "^5.12.0",
@@ -46,12 +46,12 @@
     "markdown-to-jsx": "^7.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-hook-form": "^7.4.0",
+    "react-hook-form": "^7.4.2",
     "react-icons": "^4.2.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^4.0.3",
     "typescript": "^4.2.4",
-    "web-vitals": "^1.1.1"
+    "web-vitals": "^1.1.2"
   },
   "devDependencies": {
     "@graphql-typed-document-node/core": "^3.1.0",
@@ -59,7 +59,7 @@
     "@types/react-router-dom": "^5.1.7",
     "autoprefixer": "^10.2.5",
     "cross-env": "^7.0.3",
-    "postcss": "^8.2.13",
+    "postcss": "^8.2.14",
     "postcss-cli": "^8.3.1",
     "tailwindcss": "^2.1.2"
   }

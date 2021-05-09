@@ -24,7 +24,7 @@ export default function DashboardProductsEditProduct() {
             title="Basic information"
             description="Name, description, image and URL name for the product."
           >
-            {product && <UpdateProductBasicInfoForm product_id={product.id} />}
+            <UpdateProductBasicInfoForm product_id={product?.id} />
           </FormSection>
         </Card>
 
@@ -33,7 +33,7 @@ export default function DashboardProductsEditProduct() {
             title="Pricing"
             description="Product pricing can be set to either a one-time payment or a subscription."
           >
-            {product && <UpdateProductPricingForm product_id={product.id} />}
+            <UpdateProductPricingForm product_id={product?.id} />
           </FormSection>
         </Card>
 
@@ -59,7 +59,7 @@ export default function DashboardProductsEditProduct() {
               </span>
             }
           >
-            {product && <UpdateProductCheckoutSettingsForm product_id={product.id} />}
+            <UpdateProductCheckoutSettingsForm product_id={product?.id} />
           </FormSection>
         </Card>
 
@@ -74,7 +74,7 @@ export default function DashboardProductsEditProduct() {
               </span>
             }
           >
-            {product && <UpdateProductStatusForm product_id={product.id} />}
+            <UpdateProductStatusForm product_id={product?.id} />
           </FormSection>
         </Card>
       </DashboardSection>

@@ -1,15 +1,10 @@
 import { product_Q, update_product_M, useMutation, useQuery } from '@duely/client';
-import {
-  Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
-  useFormMessages} from '@duely/react';
+import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 type ProductProps = {
-  product_id: string;
+  product_id?: string;
 };
 
 type UpdateProductStatusFormFields = {
@@ -18,7 +13,11 @@ type UpdateProductStatusFormFields = {
 
 export function UpdateProductStatusForm({ product_id }: ProductProps) {
   const form = useForm<UpdateProductStatusFormFields>();
-  const { data: product, loading: productLoading } = useQuery(product_Q, { product_id });
+  const { data: product, loading: productLoading } = useQuery(
+    product_Q,
+    { product_id: product_id! },
+    { skip: !product_id }
+  );
   const [updateProduct, stateUpdate] = useMutation(update_product_M);
   const {
     infoMessage,
@@ -30,7 +29,7 @@ export function UpdateProductStatusForm({ product_id }: ProductProps) {
   } = useFormMessages();
 
   const state = {
-    loading: productLoading || stateUpdate.loading
+    loading: !product_id || productLoading
   };
 
   const reset = form.reset;
@@ -49,7 +48,7 @@ export function UpdateProductStatusForm({ product_id }: ProductProps) {
       return;
     }
 
-    const res = await updateProduct({ product_id, status });
+    const res = await updateProduct({ product_id: product_id!, status });
 
     if (res?.success) {
       setSuccessMessage('Saved');
@@ -70,13 +69,14 @@ export function UpdateProductStatusForm({ product_id }: ProductProps) {
             'draft',
             { value: 'live', className: 'bg-gradient-to-r from-green-400 to-green-300' }
           ]}
+          loading={state.loading}
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} spinner dense loading={state.loading}>
+          <FormButton form={form} spinner dense loading={stateUpdate.loading}>
             Save
           </FormButton>
-          <FormButton form={form} type="reset" dense disabled={state.loading}>
+          <FormButton form={form} type="reset" dense disabled={stateUpdate.loading}>
             Cancel
           </FormButton>
           <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

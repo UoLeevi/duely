@@ -18,7 +18,7 @@ export default function DashboardCustomersEditCustomer() {
             title="Basic information"
             description="Name and email address for the customer."
           >
-            {customer && <UpdateCustomerBasicInfoForm customer_id={customer.id} />}
+            <UpdateCustomerBasicInfoForm customer_id={customer_id} />
           </FormSection>
         </Card>
       </DashboardSection>

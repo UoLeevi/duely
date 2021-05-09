@@ -1,18 +1,12 @@
 import { product_Q, create_price_M, update_product_M, useMutation, useQuery } from '@duely/client';
 import { Currency } from '@duely/core';
-import {
-  Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
-  useFormMessages,
-  Util
-} from '@duely/react';
+import { Form, FormButton, FormField, FormInfoMessage, useFormMessages, Util } from '@duely/react';
+import { Util as CoreUtil } from '@duely/core';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 type ProductProps = {
-  product_id: string;
+  product_id?: string;
 };
 
 type UpdateProductPricingFormFields = {
@@ -23,7 +17,11 @@ type UpdateProductPricingFormFields = {
 
 export function UpdateProductPricingForm({ product_id }: ProductProps) {
   const form = useForm<UpdateProductPricingFormFields>();
-  const { data: product, loading: productLoading } = useQuery(product_Q, { product_id });
+  const { data: product, loading: productLoading } = useQuery(
+    product_Q,
+    { product_id: product_id! },
+    { skip: !product_id }
+  );
 
   const currencyPrefix: React.ReactNode = (
     <span className="pr-1">{product?.default_price?.currency?.toUpperCase()}</span>
@@ -42,8 +40,10 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
   const [updateProduct, stateUpdate] = useMutation(update_product_M);
 
   const state = {
-    loading: productLoading || stateUpdate.loading || statePrice.loading
+    loading: !product_id || productLoading
   };
+
+  const updateLoading = stateUpdate.loading || statePrice.loading;
 
   const reset = form.reset;
 
@@ -90,7 +90,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
     }
 
     const update = Util.diff(
-      Util.pick(
+      CoreUtil.pick(
         {
           unit_amount,
           currency,
@@ -155,6 +155,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
               description: 'Charge on a recurring basis'
             }
           ]}
+          loading={state.loading}
         />
 
         {payment_type === 'one_time' && (
@@ -169,6 +170,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
                   inputMode="numeric"
                   prefix={currencyPrefix}
                   registerOptions={{ required: true }}
+                  loading={state.loading}
                 />
               </div>
             </div>
@@ -187,6 +189,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
                   inputMode="numeric"
                   prefix={currencyPrefix}
                   registerOptions={{ required: true }}
+                  loading={state.loading}
                 />
               </div>
               <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
@@ -204,6 +207,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
                     { value: '1:year', element: 'Every year' }
                   ]}
                   registerOptions={{ required: true }}
+                  loading={state.loading}
                 />
               </div>
             </div>
@@ -211,10 +215,10 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
         )}
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} spinner dense loading={state.loading}>
+          <FormButton form={form} spinner dense loading={updateLoading}>
             Save
           </FormButton>
-          <FormButton form={form} type="reset" dense disabled={state.loading}>
+          <FormButton form={form} type="reset" dense disabled={updateLoading}>
             Cancel
           </FormButton>
           <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
