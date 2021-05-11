@@ -1,10 +1,12 @@
 const path = require('path');
 
+let mode = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+
 module.exports = {
   devtool: 'source-map',
   entry: './src/index.ts',
   externals: ['react', '@apollo/client', '@duely/core'],
-  mode: 'none',
+  mode,
   module: {
     rules: [
       {

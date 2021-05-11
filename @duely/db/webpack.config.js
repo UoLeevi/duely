@@ -1,11 +1,13 @@
 const path = require('path');
 const webpack = require('webpack');
 
+let mode = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+
 module.exports = {
   devtool: 'source-map',
   entry: './src/index.ts',
   target: 'node',
-  mode: 'none',
+  mode,
   module: {
     rules: [
       {

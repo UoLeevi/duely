@@ -1,6 +1,6 @@
 {
   "name": "@duely/db",
-  "version": "0.0.35",
+  "version": "0.0.36",
   "description": "Client for querying duely-postgres database.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -9,17 +9,18 @@
   "source": "src/index.ts",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "webpack",
+    "build": "cross-env NODE_ENV='production' webpack",
     "test": "jest"
   },
   "dependencies": {
-    "@duely/core": "0.0.56",
+    "@duely/core": "^0.0.73",
     "pg": "^8.6.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
     "@types/node": "^14.14.41",
     "@types/pg": "^7.14.11",
+    "cross-env": "^7.0.3",
     "jest": "^26.6.3",
     "ts-jest": "^26.5.5",
     "ts-loader": "^8.1.0",
