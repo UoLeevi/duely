@@ -8,7 +8,6 @@ import {
   DropMenu,
   SkeletonText
 } from '@duely/react';
-import { BsPencilSquare } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 import { DashboardSection } from '../../components';
 import { ColoredChip } from '../../components/ColoredChip';
@@ -65,11 +64,11 @@ const headers = ['Page', 'Status', 'Action'];
 
 export default function DashboardSitePagesHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
-  const { data: pages, loading: pagesLoading, error: pagesError } = useQuery(
-    agency_pages_Q,
-    { agency_id: agency?.id! },
-    { skip: !agency }
-  );
+  const {
+    data: pages,
+    loading: pagesLoading,
+    error: pagesError
+  } = useQuery(agency_pages_Q, { agency_id: agency?.id! }, { skip: !agency });
 
   const loading = agencyLoading || pagesLoading;
   const error = agencyError ?? pagesError;
@@ -99,7 +98,20 @@ export default function DashboardSitePagesHome() {
             'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
           children: (
             <div className="flex items-center space-x-2">
-              <BsPencilSquare />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
               <span>Edit</span>
             </div>
           ),

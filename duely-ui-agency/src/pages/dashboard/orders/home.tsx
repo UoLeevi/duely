@@ -10,7 +10,6 @@ import {
   Util
 } from '@duely/react';
 import { DashboardSection } from '../components';
-import { BsPencilSquare } from 'react-icons/bs';
 import { Currency } from '@duely/core';
 import { ColoredChip } from '../components/ColoredChip';
 
@@ -23,7 +22,7 @@ const statusColors = {
   pending: 'orange',
   failed: 'red',
   processed: 'blue'
-}
+};
 
 const headers = ['Order', 'Customer', 'Amount', 'Order date', 'Status', 'Action'];
 
@@ -40,7 +39,11 @@ export default function DashboardOrdersHome() {
     },
     { skip: !agency }
   );
-  const { data: orders, loading: ordersLoading, error: ordersError } = useQuery(
+  const {
+    data: orders,
+    loading: ordersLoading,
+    error: ordersError
+  } = useQuery(
     orders_Q,
     {
       filter: {
@@ -96,17 +99,12 @@ export default function DashboardOrdersHome() {
     // date & time
     (order: TOrder) => (
       <div className="flex flex-col space-y-2">
-        <span className="text-xs text-gray-800">
-          {Util.formatDate(new Date(order.ordered_at))}
-        </span>
+        <span className="text-xs text-gray-800">{Util.formatDate(new Date(order.ordered_at))}</span>
       </div>
     ),
 
-    
     // product product status
-    (order: TOrder) => (
-      <ColoredChip color={statusColors} text={order.state} />
-    ),
+    (order: TOrder) => <ColoredChip color={statusColors} text={order.state} />,
 
     // actions
     (order: TOrder) => {
@@ -117,7 +115,20 @@ export default function DashboardOrdersHome() {
             'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
           children: (
             <div className="flex items-center space-x-2">
-              <BsPencilSquare />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
               <span>Edit</span>
             </div>
           ),

@@ -23,7 +23,7 @@ import {
   useFormMessages,
   Util
 } from '@duely/react';
-import { pageBlockComponents } from 'components/page-blocks';
+import { pageBlockComponents } from '~/components/page-blocks';
 import React, { useContext, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';

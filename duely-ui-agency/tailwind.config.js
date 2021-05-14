@@ -12,20 +12,13 @@ module.exports = {
     })
   ],
   presets: [require('@duely/react/preset-duely')],
-  purge: {
-    content: [
-      './public/*.html',
-      './src/**/*.js',
-      './src/**/*.ts',
-      './src/**/*.tsx',
-      './node_modules/\\@duely/react/dist/**/*.js'
-    ],
-    options: {
-      safelist: [/^grecaptcha-/]
-    }
-  },
-  variants: {
-    borderWidth: ['responsive', 'first', 'last'],
-    display: ['responsive', 'router-link-active']
-  }
+  purge: [
+    './safelist.txt',
+    './public/*.html',
+    './src/**/*.js',
+    './src/**/*.jsx',
+    './src/**/*.ts',
+    './src/**/*.tsx',
+    './node_modules/\\@duely/react/dist/**/*.js'
+  ]
 };

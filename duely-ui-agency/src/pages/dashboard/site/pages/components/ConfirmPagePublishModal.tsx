@@ -3,7 +3,7 @@ import { useQuery, useMutation, page_Q, update_page_M } from '@duely/client';
 import { ConfirmationModal } from '@duely/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import produce from 'immer';
-import { usePrevious } from 'hooks';
+import { usePrevious } from '~/hooks';
 import { AccessLevel } from '@duely/core';
 
 export function ConfirmPagePublishModal() {

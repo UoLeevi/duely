@@ -8,7 +8,7 @@ type AuthManagerProps = {
   children?: React.ReactNode;
 };
 
-export default function AuthManager({ children }: AuthManagerProps) {
+export function AuthManager({ children }: AuthManagerProps) {
   const { loading: accessTokenLoading } = useAccessToken();
   const { loading: verificationLoading } = useVerificationCode();
   const { loading: logInOutLoading } = useLogInOut();

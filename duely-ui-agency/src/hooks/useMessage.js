@@ -1,5 +1,5 @@
 import { useContext, useLayoutEffect, useCallback } from 'react';
-import { MessageContext } from 'contexts/MessageContext';
+import { MessageContext } from '~/contexts/MessageContext';
 
 const defaultOptions = {
   show: false,

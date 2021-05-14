@@ -1,5 +1,5 @@
 import { LogInForm } from '@duely/react';
-import TopBar from 'components/TopBar';
+import TopBar from '~/components/TopBar';
 import { useLocation } from 'react-router-dom';
 
 export default function LogIn() {

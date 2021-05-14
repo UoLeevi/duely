@@ -186,13 +186,13 @@ export const current_subdomain_Q = {
 };
 
 function resolveSubdomain(): string | null {
-  const domain = window.location.hostname.toLowerCase();
+  const hostname = window.location.hostname.toLowerCase();
   let subdomain = null;
 
-  if (process.env.NODE_ENV === 'production') {
-    if (domain !== 'duely.app') {
-      if (domain.endsWith('.duely.app')) {
-        subdomain = domain.slice(0, -'.duely.app'.length);
+  if (hostname !== 'localhost') {
+    if (hostname !== 'duely.app') {
+      if (hostname.endsWith('.duely.app')) {
+        subdomain = hostname.slice(0, -'.duely.app'.length);
       } else {
         // TODO: check from database
         throw new Error('Not implemented.');

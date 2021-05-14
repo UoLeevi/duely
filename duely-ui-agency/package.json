@@ -1,44 +1,30 @@
 {
   "name": "duely-ui-agency",
-  "version": "0.6.51",
+  "version": "0.7.0",
   "private": true,
   "scripts": {
-    "build": "cross-env NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o public/styles/index.css && react-scripts build",
-    "build:css": "cross-env NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o public/styles/index.css",
-    "eject": "react-scripts eject",
-    "start": "react-scripts start",
-    "watch:css": "cross-env NODE_ENV='development' postcss -w node_modules/@duely/react/tailwind.css -o public/styles/index.css",
-    "test": "react-scripts test"
+    "start": "webpack serve",
+    "build": "cross-env-shell NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o src/styles/index.css && webpack",
+    "build+profile": "cross-env NODE_ENV='production' webpack --profile --json > stats.json",
+    "build:css": "cross-env NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o src/styles/index.css",
+    "watch": "webpack --watch",
+    "watch:css": "cross-env postcss -w node_modules/@duely/react/tailwind.css -o src/styles/index.css",
+    "analyze": "npx webpack-bundle-analyzer stats.json"
   },
-  "browserslist": {
-    "production": [
-      ">2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
+  "workspaces": [
+    "../@duely/core",
+    "../@duely/client",
+    "../@duely/db",
+    "../@duely/lambda",
+    "../@duely/react"
+  ],
   "dependencies": {
     "@apollo/client": "^3.3.16",
-    "@duely/client": "^0.3.0",
-    "@duely/core": "^0.3.0",
-    "@duely/react": "^0.3.0",
-    "@headlessui/react": "^1.1.1",
+    "@duely/client": "^0.3.1",
+    "@duely/core": "^0.3.1",
+    "@duely/react": "^0.3.2",
+    "@headlessui/react": "^1.2.0",
     "@tailwindcss/typography": "^0.4.0",
-    "@testing-library/jest-dom": "^5.12.0",
-    "@testing-library/react": "^11.2.6",
-    "@testing-library/user-event": "^13.1.8",
-    "@types/jest": "^26.0.23",
     "@types/node": "^14.14.44",
     "@types/react-dom": "^17.0.3",
     "graphql": "^15.5.0",
@@ -46,21 +32,24 @@
     "markdown-to-jsx": "^7.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-hook-form": "^7.4.2",
-    "react-icons": "^4.2.0",
-    "react-router-dom": "^5.2.0",
-    "react-scripts": "^4.0.3",
-    "typescript": "^4.2.4",
-    "web-vitals": "^1.1.2"
+    "react-hook-form": "^7.5.2",
+    "react-router-dom": "^5.2.0"
   },
   "devDependencies": {
-    "@graphql-typed-document-node/core": "^3.1.0",
     "@types/react": "^17.0.5",
     "@types/react-router-dom": "^5.1.7",
     "autoprefixer": "^10.2.5",
     "cross-env": "^7.0.3",
+    "css-loader": "^5.2.4",
+    "html-webpack-plugin": "^5.3.1",
     "postcss": "^8.2.14",
     "postcss-cli": "^8.3.1",
-    "tailwindcss": "^2.1.2"
+    "style-loader": "^2.0.0",
+    "tailwindcss": "^2.1.2",
+    "ts-loader": "^9.1.2",
+    "typescript": "^4.2.4",
+    "webpack": "^5.36.0",
+    "webpack-cli": "^4.7.0",
+    "webpack-dev-server": "^3.11.2"
   }
 }

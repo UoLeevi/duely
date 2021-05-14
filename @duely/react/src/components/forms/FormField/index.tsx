@@ -1,6 +1,6 @@
 import type { ImageInput } from '@duely/core';
 import React from 'react';
-import type { FieldError, Path, RegisterOptions, UseFormReturn } from 'react-hook-form';
+import { FieldError, Path, RegisterOptions, UseFormReturn, useWatch } from 'react-hook-form';
 import { Util } from '../../../util';
 import { LoadingBar } from '../../LoadingBar';
 
@@ -26,15 +26,17 @@ type FormFieldPropsPartial<TFieldValues extends Record<string, any> = Record<str
   )[];
 };
 
-type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, any>> = FormFieldPropsPartial<TFieldValues> & Omit<
-  React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> &
-    React.DetailedHTMLProps<
-      React.TextareaHTMLAttributes<HTMLTextAreaElement>,
-      HTMLTextAreaElement
-    > &
-    React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>,
-  keyof FormFieldPropsPartial<TFieldValues>
->;
+type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, any>> =
+  FormFieldPropsPartial<TFieldValues> &
+    Omit<
+      React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> &
+        React.DetailedHTMLProps<
+          React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+          HTMLTextAreaElement
+        > &
+        React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>,
+      keyof FormFieldPropsPartial<TFieldValues>
+    >;
 
 export function FormField<TFieldValues extends Record<string, any> = Record<string, any>>({
   name,
@@ -78,7 +80,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
         typeof option === 'object' ? option : { value: option }
       );
 
-      const selected = form.watch(name);
+      const selected = useWatch({ control: form.control, name });
 
       element = (
         <div className="flex">
@@ -101,7 +103,8 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
             <div className="relative w-12 h-8 col-start-2 row-start-1 border border-gray-300 rounded-md shadow-sm outline-none pointer-events-none sm:text-sm sm:leading-5">
               <div
                 className={`box-border grid place-items-center absolute inset-y-0 w-6 m-px transition border-2 border-transparent rounded-md bg-clip-content ${
-                  (left.value === selected ? left : right).className ?? 'bg-gradient-to-r from-gray-400 to-gray-300'
+                  (left.value === selected ? left : right).className ??
+                  'bg-gradient-to-r from-gray-400 to-gray-300'
                 }`}
               ></div>
             </div>
@@ -135,7 +138,8 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
               ? option
               : { value: option, element: undefined, description: undefined };
           const className = Util.createClassName(
-            selected === value && ((props.readOnly || props.disabled) ? 'border-gray-400' : 'border-blue-400'),
+            selected === value &&
+              (props.readOnly || props.disabled ? 'border-gray-400' : 'border-blue-400'),
             selected !== value && (props.readOnly || props.disabled) && 'opacity-50',
             'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1'
           );

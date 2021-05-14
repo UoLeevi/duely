@@ -1,10 +1,9 @@
 import React, { useCallback } from 'react';
 import { useQuery, useMutation, customer_Q, delete_customer_M } from '@duely/client';
 import { ConfirmationModal } from '@duely/react';
-import { BsExclamationTriangle } from 'react-icons/bs';
 import { useHistory, useLocation } from 'react-router-dom';
 import produce from 'immer';
-import { usePrevious } from 'hooks';
+import { usePrevious } from '~/hooks';
 
 export function ConfirmCustomerDeletionModal() {
   // Get customer id from url query string and replace history entry if cancelled
@@ -49,7 +48,22 @@ export function ConfirmCustomerDeletionModal() {
       heading="Delete customer"
       confirmText="Delete"
       color="red"
-      icon={<BsExclamationTriangle />}
+      icon={
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-6 h-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+      }
       loading={loadingCustomer}
     >
       <p className="text-sm text-gray-600">

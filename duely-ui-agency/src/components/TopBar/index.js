@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import NavMenu from 'components/NavMenu';
+import NavMenu from '~/components/NavMenu';
 import { useQuery, current_subdomain_Q } from '@duely/client';
 
 export default function TopBar() {

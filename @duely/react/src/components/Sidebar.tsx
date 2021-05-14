@@ -58,7 +58,7 @@ function SidebarLink({ text, icon, to, exact, className }: SidebarLinkProps) {
   );
   return (
     <Link to={to} className={className}>
-      <Icon className="text-lg sm:text-xl md:text-2xl" />
+      <Icon className="text-lg sm:text-xl md:text-2xl h-[1.05em] w-[1.05em]" />
       <span>{text}</span>
     </Link>
   );

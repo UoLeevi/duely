@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import useResizeObserver from 'hooks/useResizeObserver';
+import useResizeObserver from '~/hooks/useResizeObserver';
 
 /** Binds element's x, y, width and height as other elements css custom properties
  * fromRef = ref to element which size and position should be tracked

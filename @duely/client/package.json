@@ -1,18 +1,21 @@
 {
   "name": "@duely/client",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "description": "GraphQL client by Duely (wrapper for @apollo/client)",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
   "author": "Leevi Uotinen",
-  "main": "dist/index.js",
+  "module": "dist/index.js",
   "source": "src/index.ts",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "cross-env NODE_ENV='production' webpack",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint src/**"
+    "test": "jest",
+    "watch": "webpack --watch"
   },
+  "workspaces": [
+    "../core"
+  ],
   "dependencies": {
     "graphql": "^15.5.0",
     "subscriptions-transport-ws": "^0.9.18"
@@ -29,7 +32,7 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.3.14",
-    "@duely/core": "^0.3.0",
+    "@duely/core": "^0.3.3",
     "react": "^17.0.1"
   }
 }

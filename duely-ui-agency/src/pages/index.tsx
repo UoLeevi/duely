@@ -4,7 +4,7 @@ import ThankYouPage from './orders/thank-you';
 import NotFound from './not-found';
 import { page_by_url_Q, current_subdomain_Q, useQuery, agency_Q, product_Q } from '@duely/client';
 import { useMemo } from 'react';
-import { pageBlockComponents } from 'components/page-blocks';
+import { pageBlockComponents } from '~/components/page-blocks';
 import { ErrorScreen, LoadingScreen } from '@duely/react';
 import LogIn from './log-in';
 import SignUp from './sign-up';

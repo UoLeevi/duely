@@ -1,6 +1,6 @@
 {
   "name": "@duely/lambda",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "description": "Utilities for working with Duely infrastructure lambda functions.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -8,12 +8,16 @@
   "main": "dist/index.js",
   "source": "src/index.ts",
   "types": "dist/index.d.ts",
+  "workspaces": [
+    "../core"
+  ],
   "scripts": {
     "build": "cross-env NODE_ENV='production' webpack",
-    "test": "jest"
+    "test": "jest",
+    "watch": "webpack --watch"
   },
   "dependencies": {
-    "@duely/core": "^0.0.73",
+    "@duely/core": "^0.3.3",
     "axios": "^0.21.1"
   },
   "devDependencies": {

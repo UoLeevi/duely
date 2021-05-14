@@ -1,4 +1,4 @@
-import { PageEditor } from 'components/PageEditor';
+import { PageEditor } from '~/components/PageEditor';
 import DashboardSitePagesHome from './home';
 
 export const routes = [
