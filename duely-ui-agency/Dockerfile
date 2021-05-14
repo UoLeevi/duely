@@ -1,5 +1,5 @@
 FROM node:16-alpine AS build
-RUN apk add --update --no-cache python make g++
+RUN apk add --update --no-cache python3 make g++
 WORKDIR /src
 COPY . .
 RUN npm i --no-package-lock
