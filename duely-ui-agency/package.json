@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-agency",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "scripts": {
     "start": "webpack serve",
@@ -12,17 +12,13 @@
     "analyze": "npx webpack-bundle-analyzer stats.json"
   },
   "workspaces": [
-    "../@duely/core",
-    "../@duely/client",
-    "../@duely/db",
-    "../@duely/lambda",
-    "../@duely/react"
+    "../@duely/*"
   ],
   "dependencies": {
     "@apollo/client": "^3.3.16",
-    "@duely/client": "^0.3.1",
-    "@duely/core": "^0.3.1",
-    "@duely/react": "^0.3.2",
+    "@duely/client": "^0.3.3",
+    "@duely/core": "^0.3.3",
+    "@duely/react": "^0.3.3",
     "@headlessui/react": "^1.2.0",
     "@tailwindcss/typography": "^0.4.0",
     "@types/node": "^14.14.44",
