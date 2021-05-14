@@ -1,7 +1,7 @@
 import { Menu, Transition } from '@headlessui/react';
 import { Link } from 'react-router-dom';
 import { useQuery, current_user_Q } from '@duely/client';
-import LoadingSpinner from 'components/LoadingSpinner';
+import { LoadingSpinner } from '@duely/react';
 
 export default function NavMenu() {
   const currentUserQ = useQuery(current_user_Q);

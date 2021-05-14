@@ -13,9 +13,9 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@duely/core": "0.0.65",
-    "@duely/db": "0.0.32",
-    "@duely/lambda": "0.0.1",
+    "@duely/core": "^0.3.6",
+    "@duely/db": "^0.3.6",
+    "@duely/lambda": "^0.3.6",
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "stripe": "^8.142.0",

@@ -14,8 +14,8 @@
     "lint": "eslint src/**"
   },
   "dependencies": {
-    "@duely/core": "0.0.69",
-    "@duely/db": "0.0.35",
+    "@duely/core": "^0.3.6",
+    "@duely/db": "^0.3.6",
     "@graphql-tools/schema": "^7.1.3",
     "axios": "^0.21.1",
     "base64url": "^3.0.1",

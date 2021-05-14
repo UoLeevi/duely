@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import NavMenu from 'components/NavMenu';
-import DuelyLogo from 'components/DuelyLogo';
+import NavMenu from '~/components/NavMenu';
+import DuelyLogo from '~/components/DuelyLogo';
 
 export default function TopBar() {
   return (

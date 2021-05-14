@@ -34,7 +34,7 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js', '.tsx', '.jsx']
   },
   output: {
     path: path.resolve(__dirname, 'dist')

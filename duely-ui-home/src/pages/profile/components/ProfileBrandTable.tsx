@@ -5,10 +5,13 @@ import {
   agency_stripe_account_update_url_Q
 } from '@duely/client';
 import { useDynamicNavigation, Table, LoadingScreen, ErrorScreen } from '@duely/react';
-import { BsCheck, BsCreditCard, BsPeopleFill } from 'react-icons/bs';
 
 type AgencyColumnProps = {
-  agency: NonNullable<ReturnType<typeof current_user_agencies_Q.result>> extends readonly (infer T)[] ? T : never;
+  agency: NonNullable<
+    ReturnType<typeof current_user_agencies_Q.result>
+  > extends readonly (infer T)[]
+    ? T
+    : never;
 };
 
 const wrap = {
@@ -39,7 +42,14 @@ function BrandColumn({ agency }: AgencyColumnProps) {
       >
         <div className="font-medium whitespace-nowrap">{agency.name}</div>
         <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <BsPeopleFill className="text-gray-300" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-5 h-5 text-gray-300"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+          </svg>
           <span className="text-xs font-medium">{members.join(', ')}</span>
         </div>
       </a>
@@ -50,7 +60,11 @@ function BrandColumn({ agency }: AgencyColumnProps) {
 function PlanColumn({ agency }: AgencyColumnProps) {
   const plan = agency.subscription_plan;
 
-  return <div className="flex items-center p-3 space-x-3 text-sm font-bold text-gray-600">{plan.name}</div>;
+  return (
+    <div className="flex items-center p-3 space-x-3 text-sm font-bold text-gray-600">
+      {plan.name}
+    </div>
+  );
 }
 
 function StatusColumn({ agency }: AgencyColumnProps) {
@@ -65,7 +79,20 @@ function StatusColumn({ agency }: AgencyColumnProps) {
   if (!agency.stripe_account.charges_enabled) {
     return (
       <div className="flex items-center space-x-5">
-        <BsCreditCard className="block text-4xl text-indigo-500 w-7" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="block w-6 h-6 text-indigo-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+          />
+        </svg>
         <div className="flex flex-col space-y-1">
           <span className="text-sm font-medium text-gray-500">
             Update your information to enable charges
@@ -85,7 +112,20 @@ function StatusColumn({ agency }: AgencyColumnProps) {
   if (!agency.stripe_account.payouts_enabled) {
     return (
       <div className="flex items-center space-x-5">
-        <BsCreditCard className="block text-4xl text-indigo-500 w-7" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="block w-6 h-6 text-indigo-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+          />
+        </svg>
         <div className="flex flex-col space-y-1">
           <span className="text-sm font-medium text-gray-500">
             Update your information to enable payouts
@@ -104,7 +144,15 @@ function StatusColumn({ agency }: AgencyColumnProps) {
 
   return (
     <div className="flex items-center space-x-5">
-      <BsCheck className="block text-4xl text-green-500 w-7" />
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="w-6 h-6 blocktext-green-500"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      </svg>
       <div className="flex flex-col items-center space-y-1">
         <span className="text-sm font-medium text-gray-500">
           All set up.

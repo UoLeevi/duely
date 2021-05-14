@@ -1,5 +1,5 @@
 import { SignUpForm } from '@duely/react';
-import TopBar from 'components/TopBar';
+import TopBar from '~/components/TopBar';
 
 export default function SignUp() {
   return (

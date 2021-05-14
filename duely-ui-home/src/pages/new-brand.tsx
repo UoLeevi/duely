@@ -1,5 +1,5 @@
-import TopBar from 'components/TopBar';
-import CreateBrandForm from 'components/CreateBrandForm';
+import TopBar from '~/components/TopBar';
+import CreateBrandForm from '~/components/CreateBrandForm';
 
 export default function NewBrand() {
   return (

@@ -1,5 +1,5 @@
 import { StartPasswordResetForm } from '@duely/react';
-import TopBar from 'components/TopBar';
+import TopBar from '~/components/TopBar';
 
 export default function PasswordReset() {
   return (

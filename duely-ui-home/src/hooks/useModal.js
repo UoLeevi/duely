@@ -1,5 +1,5 @@
 import { useContext, useLayoutEffect, useCallback } from 'react';
-import { ModalContext } from 'contexts/ModalContext';
+import { ModalContext } from '~/contexts/ModalContext';
 
 const defaultOptions = {
   show: false,
