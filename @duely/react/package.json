@@ -1,6 +1,6 @@
 {
   "name": "@duely/react",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "UI components used in duely.app",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -42,9 +42,9 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.3.14",
-    "@duely/build": "^0.0.2",
-    "@duely/client": "^0.3.3",
-    "@duely/core": "^0.3.3",
+    "@duely/build": "^0.3.6",
+    "@duely/client": "^0.3.6",
+    "@duely/core": "^0.3.6",
     "@headlessui/react": "^1.0.0",
     "graphql": "^15.5.0",
     "react": "^17.0.1",

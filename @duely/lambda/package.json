@@ -1,6 +1,6 @@
 {
   "name": "@duely/lambda",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Utilities for working with Duely infrastructure lambda functions.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -18,8 +18,8 @@
     "watch": "webpack --watch"
   },
   "dependencies": {
-    "@duely/build": "^0.0.2",
-    "@duely/core": "^0.3.3",
+    "@duely/build": "^0.3.6",
+    "@duely/core": "^0.3.6",
     "axios": "^0.21.1"
   },
   "devDependencies": {
