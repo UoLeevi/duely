@@ -1,6 +1,6 @@
 {
   "name": "duely-lambda",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Web server for running lambda function like jobs.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -9,9 +9,20 @@
   "source": "src/index.ts",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "webpack",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "build": "cross-env NODE_ENV='production' webpack",
+    "build+profile": "cross-env NODE_ENV='production' webpack --profile --json > stats.json",
+    "watch": "webpack --watch",
+    "analyze": "npx webpack-bundle-analyzer stats.json"
   },
+  "workspaces": [
+    "../@duely/build",
+    "../@duely/core",
+    "../@duely/client",
+    "../@duely/db",
+    "../@duely/lambda",
+    "../@duely/react"
+  ],
   "dependencies": {
     "@duely/core": "^0.3.6",
     "@duely/db": "^0.3.6",
@@ -22,12 +33,14 @@
     "stripe": "^8.142.0"
   },
   "devDependencies": {
+    "@duely/build": "^0.3.7",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.9",
     "@types/node": "^14.14.37",
-    "ts-loader": "^8.1.0",
+    "cross-env": "^7.0.3",
     "typescript": "^4.2.4",
     "webpack": "^5.31.2",
-    "webpack-cli": "^4.6.0"
+    "webpack-cli": "^4.6.0",
+    "webpack-merge": "^5.7.3"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "duely-graphql",
-  "version": "0.104.66",
+  "version": "0.105.0",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
   "author": "Leevi Uotinen",
@@ -8,11 +8,20 @@
   "source": "src/index.ts",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "webpack",
     "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint src/**"
+    "build": "cross-env NODE_ENV='production' webpack",
+    "build+profile": "cross-env NODE_ENV='production' webpack --profile --json > stats.json",
+    "watch": "webpack --watch",
+    "analyze": "npx webpack-bundle-analyzer stats.json"
   },
+  "workspaces": [
+    "../@duely/build",
+    "../@duely/core",
+    "../@duely/client",
+    "../@duely/db",
+    "../@duely/lambda",
+    "../@duely/react"
+  ],
   "dependencies": {
     "@duely/core": "^0.3.6",
     "@duely/db": "^0.3.6",
@@ -33,6 +42,7 @@
     "validator": "^13.6.0"
   },
   "devDependencies": {
+    "@duely/build": "^0.3.7",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.11",
     "@types/jsonwebtoken": "^8.5.1",
@@ -40,11 +50,12 @@
     "@types/node": "^14.14.41",
     "@types/validator": "^13.1.3",
     "copy-webpack-plugin": "^7.0.0",
+    "cross-env": "^7.0.3",
     "jest": "^26.6.3",
     "ts-jest": "^26.5.5",
-    "ts-loader": "^8.1.0",
     "typescript": "^4.2.4",
     "webpack": "^5.35.0",
-    "webpack-cli": "^4.6.0"
+    "webpack-cli": "^4.6.0",
+    "webpack-merge": "^5.7.3"
   }
 }

@@ -1,7 +1,7 @@
-const path = require('path');
+const { merge } = require('webpack-merge');
+const commonConfig = require('./node_modules/@duely/build/webpack/webpack.common.js');
 
-module.exports = {
-  devtool: 'source-map',
+module.exports = merge(commonConfig, {
   target: 'node',
   entry: {
     index: { import: './src/index.ts', filename: 'index.js' },
@@ -22,21 +22,5 @@ module.exports = {
       import: './src/jobs/webhook-event/stripe-agency/customer.created/index.ts',
       filename: 'jobs/webhook-event/stripe-agency/customer.created/index.js'
     }
-  },
-  mode: 'none',
-  module: {
-    rules: [
-      {
-        test: /\.[jt]s$/,
-        use: 'ts-loader',
-        include: [path.resolve(__dirname, 'src')]
-      }
-    ]
-  },
-  resolve: {
-    extensions: ['.ts', '.js', '.tsx', '.jsx']
-  },
-  output: {
-    path: path.resolve(__dirname, 'dist')
   }
-};
+});
