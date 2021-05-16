@@ -91,7 +91,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
         registerOptions={{ required: true }}
       />
       <div className="flex flex-col items-center pt-4">
-        <FormButton form={form} spinner loading={startPasswordResetLoading}>
+        <FormButton form={form} loading={startPasswordResetLoading}>
           Send a verification link
         </FormButton>
       </div>

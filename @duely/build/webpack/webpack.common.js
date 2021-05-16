@@ -51,6 +51,6 @@ module.exports = {
   },
   output: {
     path: path.resolve(projectPath, 'dist'),
-    clean: true
+    clean: mode === 'production'
   }
 };

@@ -68,7 +68,7 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
           }
         />
         <div className="flex flex-col items-center pt-4">
-          <FormButton form={form} spinner loading={loading}>
+          <FormButton form={form} loading={loading}>
             Log in
           </FormButton>
         </div>

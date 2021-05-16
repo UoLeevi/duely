@@ -96,7 +96,7 @@ export function CreateCustomerForm() {
           registerOptions={{ required: true }}
         />
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <FormButton form={form} spinner loading={state.loading}>
+          <FormButton form={form} loading={state.loading}>
             Create customer
           </FormButton>
           <FormInfoMessage error={state.error} />

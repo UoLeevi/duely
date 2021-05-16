@@ -5,11 +5,13 @@ import type {
   UnpackNestedValue,
   UseFormReturn
 } from 'react-hook-form';
+import { Util } from '@duely/core';
 
 type FormProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
   form: UseFormReturn<TFieldValues>;
   onSubmit: SubmitHandler<TFieldValues>;
-  values?: UnpackNestedValue<DeepPartial<TFieldValues>>;
+  values?: UnpackNestedValue<DeepPartial<TFieldValues>> | null;
+  defaultValues?: UnpackNestedValue<DeepPartial<TFieldValues>> | null;
 } & Omit<
   React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>,
   'onSubmit'
@@ -19,22 +21,26 @@ export function Form<TFieldValues extends Record<string, any> = Record<string, a
   form,
   onSubmit,
   values,
+  defaultValues,
   children,
   ...props
 }: FormProps<TFieldValues>) {
-  const reset = form.reset;
+  const { reset, getValues } = form;
+  defaultValues = defaultValues ?? values;
 
   useEffect(() => {
     if (!values) return;
-    reset(values);
-  }, [reset, values]);
+    const resetValues = Util.pick(values, getValues());
+    reset(resetValues as any);
+  }, [reset, getValues, JSON.stringify(values)]);
 
   const onReset = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      reset();
+      const resetValues = defaultValues && Util.pick(defaultValues, getValues());
+      reset(resetValues as any ?? undefined);
     },
-    [reset]
+    [reset, getValues, JSON.stringify(defaultValues)]
   );
 
   return (

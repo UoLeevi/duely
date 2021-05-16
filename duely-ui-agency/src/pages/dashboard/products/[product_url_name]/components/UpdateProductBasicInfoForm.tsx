@@ -10,7 +10,6 @@ import {
 } from '@duely/react';
 
 import { Util as CoreUtil } from '@duely/core';
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 type ProductProps = {
@@ -19,7 +18,7 @@ type ProductProps = {
 
 type UpdateProductBasicInfoFormFields = {
   name: string;
-  description: string;
+  description: string | null;
   url_name: string;
   image_logo_file_list: FileList;
 };
@@ -49,20 +48,8 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
   const current_image_logo = product?.image_logo;
 
   const image_logo_file_list = form.watch('image_logo_file_list');
-  const { image: image_logo, loading: imageLogoLoading } = useImageInputFromFileList(
-    image_logo_file_list
-  );
-
-  const reset = form.reset;
-
-  useEffect(() => {
-    if (!product) return;
-    reset({
-      name: product.name,
-      description: product.description ?? undefined,
-      url_name: product.url_name
-    });
-  }, [reset, product, product?.name, product?.description, product?.url_name]);
+  const { image: image_logo, loading: imageLogoLoading } =
+    useImageInputFromFileList(image_logo_file_list);
 
   async function onSubmit({ image_logo_file_list, ...data }: UpdateProductBasicInfoFormFields) {
     const update = {
@@ -91,7 +78,12 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
 
   return (
     <>
-      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
+      <Form
+        form={form}
+        onSubmit={onSubmit}
+        values={product ?? undefined}
+        className="flex flex-col space-y-3"
+      >
         <FormField
           form={form}
           label="Product name"
@@ -155,7 +147,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} spinner dense loading={stateUpdate.loading}>
+          <FormButton form={form} dense loading={stateUpdate.loading}>
             Save
           </FormButton>
           <FormButton form={form} type="reset" dense disabled={stateUpdate.loading}>

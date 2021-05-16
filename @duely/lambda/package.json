@@ -18,8 +18,8 @@
     "watch": "webpack --watch"
   },
   "dependencies": {
-    "@duely/build": "^0.3.6",
-    "@duely/core": "^0.3.6",
+    "@duely/build": "^0.3.9",
+    "@duely/core": "^0.3.7",
     "axios": "^0.21.1"
   },
   "devDependencies": {

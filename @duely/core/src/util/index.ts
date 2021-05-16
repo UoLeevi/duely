@@ -19,16 +19,14 @@ export type LeadingTypes<T extends unknown[]> = T extends []
   : T | LeadingTypes<ExcludingLast<T>>;
 
 export type TrailingTypes<T extends unknown[]> = T extends [] ? T : T | TrailingTypes<Tail<T>>;
-export type PartialApplication<
-  T extends unknown[],
-  TPartials extends LeadingTypes<T>
-> = TPartials extends []
-  ? T
-  : Head<TPartials> extends Head<T>
-  ? Tail<TPartials> extends LeadingTypes<Tail<T>>
-    ? PartialApplication<Tail<T>, Tail<TPartials>>
-    : never
-  : never;
+export type PartialApplication<T extends unknown[], TPartials extends LeadingTypes<T>> =
+  TPartials extends []
+    ? T
+    : Head<TPartials> extends Head<T>
+    ? Tail<TPartials> extends LeadingTypes<Tail<T>>
+      ? PartialApplication<Tail<T>, Tail<TPartials>>
+      : never
+    : never;
 
 export namespace Util {
   export function hasOwnProperty<T, TKey extends PropertyKey>(
@@ -80,16 +78,17 @@ export namespace Util {
     };
   }
 
-  export function pick<T extends object, TKeys extends readonly string[]>(
-    fromObject: T,
-    keys: TKeys | Record<ElementType<TKeys>, unknown>
+  export function pick<
+    TFrom extends object,
+    TKeys extends string,
+    T extends Record<TKeys, unknown>
+  >(
+    fromObject: TFrom,
+    keys: TKeys[] | T
   ): {
-    [TKey in ElementType<TKeys>]: TKey extends keyof T ? T[TKey] : undefined;
+    [TKey in keyof T]: TKey extends keyof TFrom ? TFrom[TKey] : undefined;
   } {
-    const keysArray = Array.isArray(keys)
-      ? (keys as TKeys)
-      : ((Object.keys(keys) as unknown) as TKeys);
-
+    const keysArray = Array.isArray(keys) ? keys : (Object.keys(keys) as TKeys[]);
     const obj = {};
 
     for (const key of keysArray) {

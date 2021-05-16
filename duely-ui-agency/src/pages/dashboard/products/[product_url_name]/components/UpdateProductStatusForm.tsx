@@ -1,6 +1,5 @@
 import { product_Q, update_product_M, useMutation, useQuery } from '@duely/client';
 import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 type ProductProps = {
@@ -32,15 +31,6 @@ export function UpdateProductStatusForm({ product_id }: ProductProps) {
     loading: !product_id || productLoading
   };
 
-  const reset = form.reset;
-
-  useEffect(() => {
-    if (!product) return;
-    reset({
-      status: product.status
-    });
-  }, [reset, product, product?.status]);
-
   async function onSubmit({ status }: UpdateProductStatusFormFields) {
     if (status === product?.status) {
       setInfoMessage('No changes to be saved');
@@ -60,7 +50,12 @@ export function UpdateProductStatusForm({ product_id }: ProductProps) {
 
   return (
     <>
-      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
+      <Form
+        form={form}
+        onSubmit={onSubmit}
+        values={product ?? undefined}
+        className="flex flex-col space-y-3"
+      >
         <FormField
           form={form}
           name="status"
@@ -73,7 +68,7 @@ export function UpdateProductStatusForm({ product_id }: ProductProps) {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} spinner dense loading={stateUpdate.loading}>
+          <FormButton form={form} dense loading={stateUpdate.loading}>
             Save
           </FormButton>
           <FormButton form={form} type="reset" dense disabled={stateUpdate.loading}>

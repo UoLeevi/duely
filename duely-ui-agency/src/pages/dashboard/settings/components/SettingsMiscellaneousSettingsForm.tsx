@@ -1,6 +1,5 @@
 import { update_agency_M, useMutation, useQuery, current_agency_extended_Q } from '@duely/client';
-import { FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
-import { useEffect } from 'react';
+import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 type SettingsMiscellaneousSettingsFormValues = { default_pricing_currency: string };
@@ -10,9 +9,8 @@ export function SettingsMiscellaneousSettingsForm() {
 
   const form = useForm<SettingsMiscellaneousSettingsFormValues>();
 
-  const { data: current_agency, loading: current_agency_loading } = useQuery(
-    current_agency_extended_Q
-  );
+  const { data: current_agency, loading: current_agency_loading } =
+    useQuery(current_agency_extended_Q);
 
   const {
     infoMessage,
@@ -27,14 +25,9 @@ export function SettingsMiscellaneousSettingsForm() {
     loading: current_agency_loading || stateUpdate.loading
   };
 
-  const reset = form.reset;
-
-  useEffect(() => {
-    if (!current_agency) return;
-    reset({
-      default_pricing_currency: current_agency.default_pricing_currency ?? undefined
-    });
-  }, [reset, current_agency, current_agency?.default_pricing_currency]);
+  const formValues = current_agency && {
+    default_pricing_currency: current_agency.default_pricing_currency ?? undefined
+  };
 
   const onSubmit: SubmitHandler<SettingsMiscellaneousSettingsFormValues> = async ({
     default_pricing_currency
@@ -54,7 +47,7 @@ export function SettingsMiscellaneousSettingsForm() {
     ?.sort((a, b) => a.element.localeCompare(b.element));
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-3">
+    <Form form={form} onSubmit={onSubmit} values={formValues} className="flex flex-col space-y-3">
       <FormField
         form={form}
         name="default_pricing_currency"
@@ -67,7 +60,7 @@ export function SettingsMiscellaneousSettingsForm() {
       />
 
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton form={form} spinner dense loading={state.loading}>
+        <FormButton form={form} dense loading={state.loading}>
           Save
         </FormButton>
         <FormButton form={form} type="reset" dense disabled={state.loading}>
@@ -75,6 +68,6 @@ export function SettingsMiscellaneousSettingsForm() {
         </FormButton>
         <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
       </div>
-    </form>
+    </Form>
   );
 }

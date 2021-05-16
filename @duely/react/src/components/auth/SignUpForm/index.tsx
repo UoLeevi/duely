@@ -121,7 +121,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
         </label>
       </div>
       <div className="flex flex-col items-center pt-4">
-        <FormButton form={form} spinner loading={startSignUpLoading}>
+        <FormButton form={form} loading={startSignUpLoading}>
           Sign up
         </FormButton>
       </div>

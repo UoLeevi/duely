@@ -167,7 +167,7 @@ function PageEditorEditBlockForm() {
         />
       ))}
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton form={form} spinner dense loading={formLoading}>
+        <FormButton form={form} dense loading={formLoading}>
           Save
         </FormButton>
         <FormButton form={form} type="reset" dense disabled={formLoading}>

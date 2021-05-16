@@ -2,7 +2,6 @@ import { product_Q, create_price_M, update_product_M, useMutation, useQuery } fr
 import { Currency } from '@duely/core';
 import { Form, FormButton, FormField, FormInfoMessage, useFormMessages, Util } from '@duely/react';
 import { Util as CoreUtil } from '@duely/core';
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 type ProductProps = {
@@ -45,24 +44,18 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
 
   const updateLoading = stateUpdate.loading || statePrice.loading;
 
-  const reset = form.reset;
-
-  useEffect(() => {
-    const default_price = product?.default_price;
-    if (!default_price) return;
-
-    reset({
-      unit_amount_major: Currency.minorCurrencyAmountToNumber(
-        default_price.unit_amount,
-        default_price.currency as Currency
-      ).toString(),
-      payment_type: default_price.type,
-      frequency:
-        default_price.type === 'one_time'
-          ? undefined
-          : `${default_price.recurring_interval_count}:${default_price.recurring_interval}`
-    });
-  }, [reset, product, product?.default_price]);
+  const default_price = product?.default_price;
+  const formValues = default_price && {
+    unit_amount_major: Currency.minorCurrencyAmountToNumber(
+      default_price.unit_amount,
+      default_price.currency as Currency
+    ).toString(),
+    payment_type: default_price.type,
+    frequency:
+      default_price.type === 'one_time'
+        ? undefined
+        : `${default_price.recurring_interval_count}:${default_price.recurring_interval}`
+  };
 
   async function onSubmit({
     unit_amount_major,
@@ -136,7 +129,12 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
 
   return (
     <>
-      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
+      <Form
+        form={form}
+        onSubmit={onSubmit}
+        values={formValues ?? undefined}
+        className="flex flex-col space-y-3"
+      >
         <FormField
           form={form}
           className="max-w-2xl"
@@ -215,7 +213,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
         )}
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} spinner dense loading={updateLoading}>
+          <FormButton form={form} dense loading={updateLoading}>
             Save
           </FormButton>
           <FormButton form={form} type="reset" dense disabled={updateLoading}>

@@ -54,7 +54,6 @@ export function ConfirmationModal({ show, heading, color, icon, children, loadin
           onClick={confirmCallback}
           dense
           loading={confirmLoading}
-          spinner
           color={color}
         >
           { confirmText ?? 'Confirm' }

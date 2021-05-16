@@ -172,7 +172,7 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           </p>
         </div>
         <div className="flex flex-col items-center pt-4">
-          <FormButton form={form} spinner loading={state.loading}>
+          <FormButton form={form} loading={state.loading}>
             Create a brand
           </FormButton>
         </div>

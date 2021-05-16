@@ -30,7 +30,7 @@
     "graphql-request": "^3.4.0"
   },
   "devDependencies": {
-    "@duely/build": "^0.3.7",
+    "@duely/build": "^0.3.9",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.11",
     "@types/node": "^14.14.37",

@@ -11,14 +11,13 @@ import {
 } from '@duely/client';
 import { MutationResult } from '@duely/core';
 import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 type ProductProps = {
   product_id?: string;
 };
 
-type UpdateProductCheckoutSettingsFormFields = { url: string };
+type UpdateProductCheckoutSettingsFormFields = { url: string | null | undefined };
 
 export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) {
   const form = useForm<UpdateProductCheckoutSettingsFormFields>();
@@ -36,10 +35,10 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
 
   const { data: current_agency } = useQuery(current_agency_Q);
 
-  const {
-    data: agency_thank_you_page_settings,
-    loading: agencySettingsLoading
-  } = useQuery(agency_thank_you_page_settings_Q, { agency_id: current_agency!.id });
+  const { data: agency_thank_you_page_settings, loading: agencySettingsLoading } = useQuery(
+    agency_thank_you_page_settings_Q,
+    { agency_id: current_agency!.id }
+  );
 
   const [createSetting, stateCreate] = useMutation(create_product_thank_you_page_setting_M);
   const [updateSetting, stateUpdate] = useMutation(update_product_thank_you_page_setting_M);
@@ -60,17 +59,12 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
 
   const updateLoading = stateUpdate.loading || stateCreate.loading || stateDelete.loading;
 
-  const reset = form.reset;
-
-  useEffect(() => {
-    if (!product_thank_you_page_settings) return;
-    reset({
-      url: product_thank_you_page_settings?.url?.replace('https://', '')
-    });
-  }, [reset, product_thank_you_page_settings, product_thank_you_page_settings?.url]);
+  const formValues = product_thank_you_page_settings && {
+    url: product_thank_you_page_settings.url?.replace('https://', '')
+  };
 
   async function onSubmit({ url }: UpdateProductCheckoutSettingsFormFields) {
-    url = url.trim();
+    url = url?.trim();
 
     if (url === '') {
       if (product_thank_you_page_settings == null) {
@@ -106,7 +100,12 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
 
   return (
     <>
-      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
+      <Form
+        form={form}
+        onSubmit={onSubmit}
+        values={formValues ?? undefined}
+        className="flex flex-col space-y-3"
+      >
         <FormField
           form={form}
           name="url"
@@ -124,7 +123,7 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} spinner dense loading={updateLoading}>
+          <FormButton form={form} dense loading={updateLoading}>
             Save
           </FormButton>
           <FormButton form={form} type="reset" dense disabled={updateLoading}>

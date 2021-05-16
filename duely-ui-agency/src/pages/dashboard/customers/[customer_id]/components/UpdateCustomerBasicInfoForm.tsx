@@ -1,14 +1,6 @@
 import { customer_Q, update_customer_M, useMutation, useQuery } from '@duely/client';
-import {
-  Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
-  useFormMessages,
-  Util
-} from '@duely/react';
+import { Form, FormButton, FormField, FormInfoMessage, useFormMessages, Util } from '@duely/react';
 import { Util as CoreUtil } from '@duely/core';
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 type CustomerProps = {
@@ -16,7 +8,7 @@ type CustomerProps = {
 };
 
 type UpdateCustomerBasicInfoFormFields = {
-  name: string;
+  name: string | null;
   email_address: string;
 };
 
@@ -36,16 +28,6 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
   const state = {
     loading: customerLoading || stateUpdate.loading
   };
-
-  const reset = form.reset;
-
-  useEffect(() => {
-    if (!customer) return;
-    reset({
-      name: customer.name!,
-      email_address: customer.email_address
-    });
-  }, [reset, customer, customer?.name, customer?.email_address]);
 
   async function onSubmit({ ...data }: UpdateCustomerBasicInfoFormFields) {
     const update = {
@@ -70,7 +52,12 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
 
   return (
     <>
-      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
+      <Form
+        form={form}
+        onSubmit={onSubmit}
+        values={customer ?? undefined}
+        className="flex flex-col space-y-3"
+      >
         <FormField
           form={form}
           label="Customer name"
@@ -89,7 +76,7 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} spinner dense loading={state.loading}>
+          <FormButton form={form} dense loading={state.loading}>
             Save
           </FormButton>
           <FormButton form={form} type="reset" dense disabled={state.loading}>

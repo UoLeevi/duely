@@ -24,7 +24,7 @@
     "../@duely/react"
   ],
   "dependencies": {
-    "@duely/core": "^0.3.6",
+    "@duely/core": "^0.3.7",
     "@duely/db": "^0.3.6",
     "@duely/lambda": "^0.3.6",
     "cors": "^2.8.5",
@@ -33,7 +33,7 @@
     "validator": "^13.5.2"
   },
   "devDependencies": {
-    "@duely/build": "^0.3.7",
+    "@duely/build": "^0.3.9",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.9",
     "@types/node": "^14.14.37",

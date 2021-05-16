@@ -8,8 +8,7 @@ import {
   useQuery
 } from '@duely/client';
 import { MutationResult } from '@duely/core';
-import { FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
-import { useEffect } from 'react';
+import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 type SettingsCheckoutSettingsFormValues = { url: string };
@@ -22,10 +21,10 @@ export function SettingsCheckoutSettingsForm() {
   const form = useForm<SettingsCheckoutSettingsFormValues>();
 
   const { data: current_agency } = useQuery(current_agency_Q);
-  const {
-    data: agency_thank_you_page_settings,
-    loading: settingsLoading
-  } = useQuery(agency_thank_you_page_settings_Q, { agency_id: current_agency!.id });
+  const { data: agency_thank_you_page_settings, loading: settingsLoading } = useQuery(
+    agency_thank_you_page_settings_Q,
+    { agency_id: current_agency!.id }
+  );
 
   const {
     infoMessage,
@@ -40,14 +39,9 @@ export function SettingsCheckoutSettingsForm() {
     loading: stateCreate.loading || stateUpdate.loading || stateDelete.loading
   };
 
-  const reset = form.reset;
-
-  useEffect(() => {
-    if (!agency_thank_you_page_settings) return;
-    reset({
-      url: agency_thank_you_page_settings?.url?.replace('https://', '')
-    });
-  }, [reset, agency_thank_you_page_settings, agency_thank_you_page_settings?.url]);
+  const formValues = agency_thank_you_page_settings && {
+    url: agency_thank_you_page_settings.url?.replace('https://', '')
+  };
 
   const onSubmit: SubmitHandler<SettingsCheckoutSettingsFormValues> = async ({ url }) => {
     url = url.trim();
@@ -85,7 +79,12 @@ export function SettingsCheckoutSettingsForm() {
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-3">
+    <Form
+      form={form}
+      onSubmit={onSubmit}
+      values={formValues ?? undefined}
+      className="flex flex-col space-y-3"
+    >
       <FormField
         form={form}
         name="url"
@@ -103,7 +102,7 @@ export function SettingsCheckoutSettingsForm() {
       />
 
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton form={form} spinner dense loading={state.loading}>
+        <FormButton form={form} dense loading={state.loading}>
           Save
         </FormButton>
         <FormButton form={form} type="reset" dense disabled={state.loading}>
@@ -111,6 +110,6 @@ export function SettingsCheckoutSettingsForm() {
         </FormButton>
         <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
       </div>
-    </form>
+    </Form>
   );
 }
