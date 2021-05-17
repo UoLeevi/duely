@@ -25,10 +25,6 @@ export function SettingsMiscellaneousSettingsForm() {
     loading: current_agency_loading || stateUpdate.loading
   };
 
-  const formValues = current_agency && {
-    default_pricing_currency: current_agency.default_pricing_currency ?? undefined
-  };
-
   const onSubmit: SubmitHandler<SettingsMiscellaneousSettingsFormValues> = async ({
     default_pricing_currency
   }) => {
@@ -47,9 +43,10 @@ export function SettingsMiscellaneousSettingsForm() {
     ?.sort((a, b) => a.element.localeCompare(b.element));
 
   return (
-    <Form form={form} onSubmit={onSubmit} values={formValues} className="flex flex-col space-y-3">
+    <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
       <FormField
         form={form}
+        defaultValue={current_agency?.default_pricing_currency ?? undefined}
         name="default_pricing_currency"
         label="Pricing currency"
         type="select"

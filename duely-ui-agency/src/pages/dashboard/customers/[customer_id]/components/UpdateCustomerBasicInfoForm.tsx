@@ -55,11 +55,11 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
       <Form
         form={form}
         onSubmit={onSubmit}
-        values={customer ?? undefined}
         className="flex flex-col space-y-3"
       >
         <FormField
           form={form}
+          defaultValue={customer?.name}
           label="Customer name"
           className="max-w-xl"
           name="name"
@@ -68,6 +68,7 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
         />
         <FormField
           form={form}
+          defaultValue={customer?.email_address}
           label="Email address"
           className="max-w-xl"
           name="email_address"

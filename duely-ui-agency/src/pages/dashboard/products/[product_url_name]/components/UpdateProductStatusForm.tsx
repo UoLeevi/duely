@@ -53,11 +53,11 @@ export function UpdateProductStatusForm({ product_id }: ProductProps) {
       <Form
         form={form}
         onSubmit={onSubmit}
-        values={product ?? undefined}
         className="flex flex-col space-y-3"
       >
         <FormField
           form={form}
+          defaultValue={product?.status}
           name="status"
           type="radio-toggle"
           options={[

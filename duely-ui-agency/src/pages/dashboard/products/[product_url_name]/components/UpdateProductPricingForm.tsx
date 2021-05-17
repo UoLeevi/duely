@@ -45,17 +45,19 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
   const updateLoading = stateUpdate.loading || statePrice.loading;
 
   const default_price = product?.default_price;
-  const formValues = default_price && {
-    unit_amount_major: Currency.minorCurrencyAmountToNumber(
-      default_price.unit_amount,
-      default_price.currency as Currency
-    ).toString(),
-    payment_type: default_price.type,
-    frequency:
-      default_price.type === 'one_time'
-        ? undefined
-        : `${default_price.recurring_interval_count}:${default_price.recurring_interval}`
-  };
+  const unit_amount_major =
+    (default_price &&
+      Currency.minorCurrencyAmountToNumber(
+        default_price.unit_amount,
+        default_price.currency as Currency
+      ).toString()) ??
+    undefined;
+
+  const frequency = !default_price
+    ? undefined
+    : default_price.type === 'one_time'
+    ? undefined
+    : `${default_price.recurring_interval_count}:${default_price.recurring_interval}`;
 
   async function onSubmit({
     unit_amount_major,
@@ -125,20 +127,16 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
     }
   }
 
-  const payment_type = form.watch('payment_type');
+  const payment_type = form.watch('payment_type', default_price?.type);
 
   return (
     <>
-      <Form
-        form={form}
-        onSubmit={onSubmit}
-        values={formValues ?? undefined}
-        className="flex flex-col space-y-3"
-      >
+      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
         <FormField
           form={form}
           className="max-w-2xl"
           name="payment_type"
+          defaultValue={default_price?.type}
           type="radio-blocks"
           readOnly
           options={[
@@ -162,6 +160,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
               <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
                 <FormField
                   form={form}
+                  defaultValue={unit_amount_major}
                   label="Price of product"
                   name="unit_amount_major"
                   type="text"
@@ -181,6 +180,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
               <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
                 <FormField
                   form={form}
+                  defaultValue={unit_amount_major}
                   label="Amount"
                   name="unit_amount_major"
                   type="text"
@@ -193,6 +193,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
               <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
                 <FormField
                   form={form}
+                  defaultValue={frequency}
                   label="Frequency"
                   name="frequency"
                   type="select"

@@ -59,10 +59,6 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
 
   const updateLoading = stateUpdate.loading || stateCreate.loading || stateDelete.loading;
 
-  const formValues = product_thank_you_page_settings && {
-    url: product_thank_you_page_settings.url?.replace('https://', '')
-  };
-
   async function onSubmit({ url }: UpdateProductCheckoutSettingsFormFields) {
     url = url?.trim();
 
@@ -100,14 +96,10 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
 
   return (
     <>
-      <Form
-        form={form}
-        onSubmit={onSubmit}
-        values={formValues ?? undefined}
-        className="flex flex-col space-y-3"
-      >
+      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
         <FormField
           form={form}
+          defaultValue={product_thank_you_page_settings?.url?.replace('https://', '')}
           name="url"
           className="max-w-xl"
           label="Thank you page URL"

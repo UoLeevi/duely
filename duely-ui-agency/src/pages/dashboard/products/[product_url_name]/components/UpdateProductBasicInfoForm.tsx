@@ -81,11 +81,11 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
       <Form
         form={form}
         onSubmit={onSubmit}
-        values={product ?? undefined}
         className="flex flex-col space-y-3"
       >
         <FormField
           form={form}
+          defaultValue={product?.name}
           label="Product name"
           className="max-w-xl"
           name="name"
@@ -95,6 +95,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
         />
         <FormField
           form={form}
+          defaultValue={product?.url_name}
           label="URL friendly name"
           className="max-w-xl"
           name="url_name"
@@ -126,6 +127,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
         />
         <FormField
           form={form}
+          defaultValue={product?.description}
           label="Description"
           className="max-w-xl"
           name="description"

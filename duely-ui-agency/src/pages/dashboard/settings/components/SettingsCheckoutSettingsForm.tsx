@@ -39,10 +39,6 @@ export function SettingsCheckoutSettingsForm() {
     loading: stateCreate.loading || stateUpdate.loading || stateDelete.loading
   };
 
-  const formValues = agency_thank_you_page_settings && {
-    url: agency_thank_you_page_settings.url?.replace('https://', '')
-  };
-
   const onSubmit: SubmitHandler<SettingsCheckoutSettingsFormValues> = async ({ url }) => {
     url = url.trim();
 
@@ -79,14 +75,10 @@ export function SettingsCheckoutSettingsForm() {
   };
 
   return (
-    <Form
-      form={form}
-      onSubmit={onSubmit}
-      values={formValues ?? undefined}
-      className="flex flex-col space-y-3"
-    >
+    <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
       <FormField
         form={form}
+        defaultValue={agency_thank_you_page_settings?.url?.replace('https://', '') ?? undefined}
         name="url"
         className="max-w-xl"
         label="Thank you page URL"
