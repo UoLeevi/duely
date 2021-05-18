@@ -1,11 +1,14 @@
 import type { ImageInput } from '@duely/core';
-import React from 'react';
+import React, { useEffect, } from 'react';
 import { FieldError, Path, RegisterOptions, UseFormReturn, useWatch } from 'react-hook-form';
+import { useRerender } from '../../../hooks';
 import { Util } from '../../../util';
 import { LoadingBar } from '../../LoadingBar';
+import { useForm2 } from '../Form';
 
-type FormFieldPropsPartial<TFieldValues extends Record<string, any> = Record<string, any>> = {
-  name: Path<TFieldValues>;
+type FormFieldPropsPartial<TName extends Path<TFieldValues>, TFieldValues extends Record<string, any> = Record<string, any>> = {
+  name: TName;
+  defaultValue?: TFieldValues[TName]
   form: UseFormReturn<TFieldValues>;
   label?: React.ReactNode;
   registerOptions?: RegisterOptions;
@@ -26,8 +29,8 @@ type FormFieldPropsPartial<TFieldValues extends Record<string, any> = Record<str
   )[];
 };
 
-type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, any>> =
-  FormFieldPropsPartial<TFieldValues> &
+type FormFieldProps<TName extends Path<TFieldValues>, TFieldValues extends Record<string, any> = Record<string, any>> =
+  FormFieldPropsPartial<TName, TFieldValues> &
     Omit<
       React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> &
         React.DetailedHTMLProps<
@@ -35,11 +38,12 @@ type FormFieldProps<TFieldValues extends Record<string, any> = Record<string, an
           HTMLTextAreaElement
         > &
         React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>,
-      keyof FormFieldPropsPartial<TFieldValues>
+      keyof FormFieldPropsPartial<TName, TFieldValues>
     >;
 
-export function FormField<TFieldValues extends Record<string, any> = Record<string, any>>({
+export function FormField<TName extends Path<TFieldValues>, TFieldValues extends Record<string, any> = Record<string, any>>({
   name,
+  defaultValue,
   label,
   form,
   type,
@@ -54,7 +58,7 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
   image,
   className,
   ...props
-}: FormFieldProps<TFieldValues>) {
+}: FormFieldProps<TName, TFieldValues>) {
   const error = form.formState.errors[name] as FieldError | undefined;
   let errorMessage =
     error &&
@@ -71,6 +75,17 @@ export function FormField<TFieldValues extends Record<string, any> = Record<stri
 
   let element;
   let hintOrInfo = hint;
+
+  const rerender = useRerender();
+  const { setValue, getValues } = form;
+  const form2 = useForm2();
+
+  useEffect(() => {
+    if (defaultValue === undefined || getValues(name) === defaultValue) return;
+    setValue(name, defaultValue);
+    form2?.setDefaultValue(name, defaultValue);
+    rerender();
+  }, [setValue, name, defaultValue, getValues]);
 
   switch (type) {
     case 'radio-toggle': {

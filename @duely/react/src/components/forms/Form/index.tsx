@@ -1,17 +1,27 @@
-import React, { useCallback, useEffect } from 'react';
-import type {
-  DeepPartial,
-  SubmitHandler,
-  UnpackNestedValue,
-  UseFormReturn
-} from 'react-hook-form';
-import { Util } from '@duely/core';
+import React, { useCallback, createContext, useContext, useRef } from 'react';
+import type { SubmitHandler, UseFormReturn } from 'react-hook-form';
+import { useRerender } from '../../../hooks';
+
+type FormFieldInfo<T = any> = {
+  defaultValue?: T;
+  ref?: any;
+};
+
+const FormContext =
+  createContext<
+    | {
+        setDefaultValue(name: string, value: any): void;
+      }
+    | undefined
+  >(undefined);
+
+export function useForm2() {
+  return useContext(FormContext);
+}
 
 type FormProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
   form: UseFormReturn<TFieldValues>;
   onSubmit: SubmitHandler<TFieldValues>;
-  values?: UnpackNestedValue<DeepPartial<TFieldValues>> | null;
-  defaultValues?: UnpackNestedValue<DeepPartial<TFieldValues>> | null;
 } & Omit<
   React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>,
   'onSubmit'
@@ -20,32 +30,41 @@ type FormProps<TFieldValues extends Record<string, any> = Record<string, any>> =
 export function Form<TFieldValues extends Record<string, any> = Record<string, any>>({
   form,
   onSubmit,
-  values,
-  defaultValues,
   children,
   ...props
 }: FormProps<TFieldValues>) {
-  const { reset, getValues } = form;
-  defaultValues = defaultValues ?? values;
-
-  useEffect(() => {
-    if (!values) return;
-    const resetValues = Util.pick(values, getValues());
-    reset(resetValues as any);
-  }, [reset, getValues, JSON.stringify(values)]);
+  const fieldsRef = useRef(new Map<string, FormFieldInfo>());
+  const { reset } = form;
 
   const onReset = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const resetValues = defaultValues && Util.pick(defaultValues, getValues());
-      reset(resetValues as any ?? undefined);
+      const defaultValues = Object.fromEntries(
+        Array.from(fieldsRef.current, ([name, field]) => [name, field.defaultValue])
+      );
+
+      reset(defaultValues as any);
     },
-    [reset, getValues, JSON.stringify(defaultValues)]
+    [reset]
   );
 
+  function setDefaultValue(name: string, value: any): void {
+    const fields = fieldsRef.current;
+    let field = fields.get(name);
+
+    if (field === undefined) {
+      field = {};
+      fields.set(name, field);
+    }
+
+    field.defaultValue = value;
+  }
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} onReset={onReset} {...props}>
-      {children}
-    </form>
+    <FormContext.Provider value={{ setDefaultValue }}>
+      <form onSubmit={form.handleSubmit(onSubmit)} onReset={onReset} {...props}>
+        {children}
+      </form>
+    </FormContext.Provider>
   );
 }
