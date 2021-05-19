@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useMutation, start_password_reset_M } from '@duely/client';
-import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '../../forms';
+import { Form, FormButton, FormField, FormInfoMessage, useForm2, useFormMessages } from '../../forms';
 import { Button } from '../../buttons';
 import { Util } from '../../../util';
 
@@ -17,6 +17,7 @@ type StartPasswordResetFormProps = {
 
 export function StartPasswordResetForm({ className, redirectUrl }: StartPasswordResetFormProps) {
   const form = useForm<StartPasswordResetFormValues>();
+  const form2 = useForm2<StartPasswordResetFormValues>();
   const [sentToEmail, setSentToEmail] = useState<string>();
   const [completed, setCompleted] = useState(false);
   const [startPasswordReset, { loading: startPasswordResetLoading }] = useMutation(
@@ -81,7 +82,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
   className = Util.createClassName('flex flex-col space-y-3', className);
 
   return (
-    <Form form={form} onSubmit={onSubmit} className={className}>
+    <Form form={form} form2={form2} onSubmit={onSubmit} className={className}>
       <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Password reset</h2>
       <FormField
         form={form}

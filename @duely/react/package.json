@@ -42,8 +42,8 @@
     "webpack-cli": "^4.7.0"
   },
   "peerDependencies": {
-    "@apollo/client": "^3.3.14",
-    "@duely/client": "^0.3.6",
+    "@apollo/client": "^3.3.16",
+    "@duely/client": "^0.3.7",
     "@duely/core": "^0.3.7",
     "@headlessui/react": "^1.0.0",
     "graphql": "^15.5.0",

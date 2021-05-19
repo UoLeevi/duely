@@ -4,7 +4,7 @@ import { FieldError, Path, RegisterOptions, UseFormReturn, useWatch } from 'reac
 import { useRerender } from '../../../hooks';
 import { Util } from '../../../util';
 import { LoadingBar } from '../../LoadingBar';
-import { useForm2 } from '../Form';
+import { useFormContext2 } from '../Form';
 
 type FormFieldPropsPartial<TName extends Path<TFieldValues>, TFieldValues extends Record<string, any> = Record<string, any>> = {
   name: TName;
@@ -78,7 +78,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
 
   const rerender = useRerender();
   const { setValue, getValues } = form;
-  const form2 = useForm2();
+  const form2 = useFormContext2();
 
   useEffect(() => {
     if (defaultValue === undefined || getValues(name) === defaultValue) return;
@@ -86,6 +86,16 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
     form2?.setDefaultValue(name, defaultValue);
     rerender();
   }, [setValue, name, defaultValue, getValues]);
+
+  const {
+    onChange,
+    onBlur,
+    ref
+  } = form.register(name, registerOptions);
+
+  const {
+    ref: ref2
+  } = form2!.register(name);
 
   switch (type) {
     case 'radio-toggle': {
@@ -101,7 +111,15 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
         <div className="flex">
           <div className="grid items-center grid-cols-3 form-field-radio-toggle">
             <input
-              {...form.register(name, registerOptions)}
+              {...{
+                onBlur,
+                onChange,
+                ref(el) {
+                  ref(el);
+                  ref2(el);
+                },
+                name
+              }}
               type="radio"
               id={`radio-toggle-option-${left.value}`}
               value={left.value}
@@ -125,7 +143,15 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
             </div>
 
             <input
-              {...form.register(name, registerOptions)}
+              {...{
+                onBlur,
+                onChange,
+                ref(el) {
+                  ref(el);
+                  ref2(el);
+                },
+                name
+              }}
               type="radio"
               id={`radio-toggle-option-${right.value}`}
               value={right.value}
@@ -162,7 +188,15 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
           return (
             <label key={value} htmlFor={`radio-blocks-option-${value}`} className={className}>
               <input
-                {...form.register(name, registerOptions)}
+                {...{
+                  onBlur,
+                  onChange,
+                  ref(el) {
+                    ref(el);
+                    ref2(el);
+                  },
+                  name
+                }}
                 key={value}
                 value={value}
                 id={`radio-blocks-option-${value}`}
@@ -198,7 +232,15 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
         <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
           <select
             id={name}
-            {...form.register(name, registerOptions)}
+            {...{
+              onBlur,
+              onChange,
+              ref(el) {
+                ref(el);
+                ref2(el);
+              },
+              name
+            }}
             className="w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none"
             spellCheck="false"
             autoComplete="off"
@@ -284,7 +326,15 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
           <input
             readOnly={loading}
             id={name}
-            {...form.register(name, registerOptions)}
+            {...{
+              onBlur,
+              onChange,
+              ref(el) {
+                ref(el);
+                ref2(el);
+              },
+              name
+            }}
             accept={accept}
             type="file"
             hidden
@@ -327,7 +377,15 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
           )}
           <input
             id={name}
-            {...form.register(name, registerOptions)}
+            {...{
+              onBlur,
+              onChange,
+              ref(el) {
+                ref(el);
+                ref2(el);
+              },
+              name
+            }}
             type="file"
             accept={accept}
             hidden
@@ -346,7 +404,15 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
           {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
           <textarea
             id={name}
-            {...form.register(name, registerOptions)}
+            {...{
+              onBlur,
+              onChange,
+              ref(el) {
+                ref(el);
+                ref2(el);
+              },
+              name
+            }}
             className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
             spellCheck="false"
             autoComplete="off"
@@ -364,7 +430,15 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
           {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
           <input
             id={name}
-            {...form.register(name, registerOptions)}
+            {...{
+              onBlur,
+              onChange,
+              ref(el) {
+                ref(el);
+                ref2(el);
+              },
+              name
+            }}
             type={type}
             className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
             spellCheck="false"
