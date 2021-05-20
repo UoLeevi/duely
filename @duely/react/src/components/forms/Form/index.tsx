@@ -1,78 +1,15 @@
-import React, { useCallback, createContext, useContext, useRef } from 'react';
+import React, { useCallback, createContext, useContext } from 'react';
 import type { SubmitHandler, UseFormReturn } from 'react-hook-form';
 import { useRerender } from '../../../hooks';
+import { FormFieldHTMLElement, useForm2 } from './useForm2';
 
-type FormFieldHTMLElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-
-type FormFieldInfo<T = any> = {
-  defaultValue?: T;
-  domElement?: FormFieldHTMLElement;
-};
+export { useForm2 };
 
 const FormContext =
-  createContext<
-    | {
-        setDefaultValue(name: string, value: any): void;
-        register(name: string): { ref: (el: FormFieldHTMLElement) => void };
-      }
-    | undefined
-  >(undefined);
-
-export function useForm2<TFormFields extends Record<string, any> = Record<string, any>>() {
-  const fieldsRef = useRef(new Map<string, FormFieldInfo>());
-  const rerender = useRerender();
-  const setDefaultValue = useCallback((name: string, value: any) => {
-    const fields = fieldsRef.current;
-    let field = fields.get(name);
-
-    if (field === undefined) {
-      field = {};
-      fields.set(name, field);
-    }
-
-    field.defaultValue = value;
-
-    if (field.domElement) {
-      field.domElement.value = value ?? '';
-      rerender();
-    }
-  }, [rerender]);
-
-  const register = useCallback((name: string) => {
-    const fields = fieldsRef.current;
-    let field = fields.get(name);
-
-    if (field === undefined) {
-      field = {};
-      fields.set(name, field);
-    }
-
-    return {
-      ref: (el: FormFieldHTMLElement) => {
-        console.log('registered', el);
-        field!.domElement = el;
-
-        if (field?.domElement && !field.domElement.value) {
-          field.domElement.value = field.defaultValue ?? '';
-          rerender();
-        }
-      }
-    };
-  }, [rerender]);
-
-  const watch = useCallback((name: string) => {
-    const fields = fieldsRef.current;
-    let field = fields.get(name);
-    return field?.domElement?.value;
-  }, [rerender]);
-
-  return {
-    control: fieldsRef,
-    register,
-    setDefaultValue,
-    watch
-  };
-}
+  createContext<{
+    setDefaultValue(name: string, value: any): void;
+    register(name: string): { ref: (el: FormFieldHTMLElement) => void };
+  }>(undefined as any);
 
 export function useFormContext2() {
   return useContext(FormContext);
