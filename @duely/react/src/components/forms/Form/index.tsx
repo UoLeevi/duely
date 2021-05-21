@@ -1,15 +1,11 @@
 import React, { useCallback, createContext, useContext } from 'react';
 import type { SubmitHandler, UseFormReturn } from 'react-hook-form';
 import { useRerender } from '../../../hooks';
-import { FormFieldHTMLElement, useForm2 } from './useForm2';
+import { useForm2 } from './useForm2';
 
 export { useForm2 };
 
-const FormContext =
-  createContext<{
-    setDefaultValue(name: string, value: any): void;
-    register(name: string): { ref: (el: FormFieldHTMLElement) => void };
-  }>(undefined as any);
+const FormContext = createContext<ReturnType<typeof useForm2>>(undefined as any);
 
 export function useFormContext2() {
   return useContext(FormContext);

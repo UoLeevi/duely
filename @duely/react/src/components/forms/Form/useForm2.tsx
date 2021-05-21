@@ -1,6 +1,8 @@
 import { ChangeEvent, FocusEvent } from 'react';
 import { useCallback, useRef } from 'react';
 import { useRerender } from '../../../hooks';
+import { Util } from '@duely/core';
+import { useEffect } from 'react';
 
 export type FormFieldHTMLElement =
   | HTMLInputElement
@@ -11,19 +13,18 @@ export type FormFieldHTMLElement =
 export type FormFieldInfo<T = any> = {
   name: string;
   defaultValue?: T;
-  value?: T;
+  watchValue: T;
   domElement?: FormFieldHTMLElement;
-  rerender(): void;
+  notify(): void;
+  watchCounter: number;
 };
 
-function registerElement(field: FormFieldInfo, el: NonNullable<FormFieldHTMLElement>) {
+function attachElement(field: FormFieldInfo, el: NonNullable<FormFieldHTMLElement>) {
   field.domElement = el;
-  setElementValue(el, field.defaultValue);
-  console.log('registered', field.name)
+  setFieldValue(field, field.defaultValue);
 }
 
-function unregisterElement(field: FormFieldInfo) {
-  console.log('unregistered', field.name)
+function detachElement(field: FormFieldInfo) {
   field.domElement = null;
 }
 
@@ -31,11 +32,16 @@ function isCheckBoxElement(el: NonNullable<FormFieldHTMLElement>): el is HTMLInp
   return el.type === 'checkbox';
 }
 
-function getElementValue(el: NonNullable<FormFieldHTMLElement>) {
+function getFieldValue(field: FormFieldInfo) {
+  const el = field.domElement;
+  if (!el) return undefined;
   return isCheckBoxElement(el) ? el.checked : el.value;
 }
 
-function setElementValue(el: NonNullable<FormFieldHTMLElement>, value: any) {
+function setFieldValue(field: FormFieldInfo, value: any) {
+  const el = field.domElement;
+  if (!el) return;
+
   if (isCheckBoxElement(el)) {
     el.checked = value ?? false;
   } else {
@@ -44,23 +50,35 @@ function setElementValue(el: NonNullable<FormFieldHTMLElement>, value: any) {
 }
 
 function onFieldChange(field: FormFieldInfo, event: ChangeEvent<FormFieldHTMLElement>) {
-  field.value = getElementValue(event.target);
+  field.notify();
 }
 
 function onFieldBlur(field: FormFieldInfo, event: FocusEvent<FormFieldHTMLElement>) {}
 
+function createField(name: string, rerenderForm: () => void): FormFieldInfo {
+  const field = {
+    name,
+    watchValue: undefined,
+    notify: () => {
+      if (field.watchCounter === 0) return;
+      if (field.watchValue === getFieldValue(field)) return;
+      rerenderForm();
+    },
+    watchCounter: 0
+  };
+
+  return field;
+}
+
 export function useForm2<TFormFields extends Record<string, any> = Record<string, any>>() {
   const fieldsRef = useRef(new Map<string, FormFieldInfo>());
-  const rerender = useRerender();
+  const rerenderForm = useRerender();
   const setDefaultValue = useCallback((name: string, value: any) => {
     const fields = fieldsRef.current;
     let field = fields.get(name);
 
     if (field === undefined) {
-      field = {
-        name,
-        rerender
-      };
+      field = createField(name, rerenderForm);
       fields.set(name, field);
     }
 
@@ -68,45 +86,59 @@ export function useForm2<TFormFields extends Record<string, any> = Record<string
 
     if (field.domElement) {
       field.domElement.value = value ?? '';
-      rerender();
+      if (field!.watchCounter != 0) rerenderForm();
     }
   }, []);
 
-  const register = useCallback((name: string) => {
-    const fields = fieldsRef.current;
-    let field = fields.get(name);
+  const register = useCallback(
+    Util.memo((name: string) => {
+      const fields = fieldsRef.current;
+      let field = fields.get(name);
 
-    if (field === undefined) {
-      field = {
-        name,
-        rerender
-      };
-      fields.set(name, field);
-    }
-
-    return {
-      name,
-      // see: https://reactjs.org/docs/refs-and-the-dom.html#callback-refs
-      ref(el: FormFieldHTMLElement) {
-        if (el) {
-          registerElement(field!, el);
-        } else {
-          unregisterElement(field!);
-        }
-      },
-      onChange(event: ChangeEvent<FormFieldHTMLElement>) {
-        onFieldChange(field!, event);
-      },
-      onBlur(event: FocusEvent<FormFieldHTMLElement>) {
-        onFieldBlur(field!, event);
+      if (field === undefined) {
+        field = createField(name, rerenderForm);
+        fields.set(name, field);
       }
-    };
-  }, []);
+
+      return {
+        name,
+        // see: https://reactjs.org/docs/refs-and-the-dom.html#callback-refs
+        ref(el: FormFieldHTMLElement) {
+          if (el) {
+            attachElement(field!, el);
+          } else {
+            detachElement(field!);
+          }
+        },
+        onChange(event: ChangeEvent<FormFieldHTMLElement>) {
+          onFieldChange(field!, event);
+        },
+        onBlur(event: FocusEvent<FormFieldHTMLElement>) {
+          onFieldBlur(field!, event);
+        }
+      };
+    }),
+    []
+  );
 
   const watch = useCallback((name: string) => {
     const fields = fieldsRef.current;
     let field = fields.get(name);
-    return field && field.domElement && getElementValue(field.domElement);
+
+    if (field === undefined) {
+      field = createField(name, rerenderForm);
+      fields.set(name, field);
+    }
+
+    useEffect(() => {
+      ++field!.watchCounter;
+      return () => {
+        --field!.watchCounter;
+      };
+    }, []);
+
+    field.watchValue = getFieldValue(field);
+    return field.watchValue;
   }, []);
 
   return {
