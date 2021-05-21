@@ -82,7 +82,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
   className = Util.createClassName('flex flex-col space-y-3', className);
 
   return (
-    <Form form={form} form2={form2} onSubmit={onSubmit} className={className}>
+    <Form form={form2} onSubmit={onSubmit} className={className}>
       <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Password reset</h2>
       <FormField
         form={form}
@@ -92,7 +92,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
         registerOptions={{ required: true }}
       />
       <div className="flex flex-col items-center pt-4">
-        <FormButton form={form} loading={startPasswordResetLoading}>
+        <FormButton loading={startPasswordResetLoading}>
           Send a verification link
         </FormButton>
       </div>

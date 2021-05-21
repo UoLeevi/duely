@@ -90,7 +90,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   className = Util.createClassName('flex flex-col space-y-3', className);
 
   return (
-    <Form form={form} form2={form2} onSubmit={onSubmit} className={className}>
+    <Form form={form2} onSubmit={onSubmit} className={className}>
       <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Sign up</h2>
       <FormField
         form={form}
@@ -122,7 +122,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
         </label>
       </div>
       <div className="flex flex-col items-center pt-4">
-        <FormButton form={form} loading={startSignUpLoading}>
+        <FormButton loading={startSignUpLoading}>
           Sign up
         </FormButton>
       </div>

@@ -12,9 +12,8 @@ export function useFormContext2() {
 }
 
 type FormProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
-  form: UseFormReturn<TFieldValues>;
-  form2: ReturnType<typeof useForm2>;
-  onSubmit: SubmitHandler<TFieldValues>;
+  form: ReturnType<typeof useForm2>;
+  onSubmit: (data: TFieldValues, event?: React.BaseSyntheticEvent) => any | Promise<any>;
 } & Omit<
   React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>,
   'onSubmit'
@@ -22,27 +21,19 @@ type FormProps<TFieldValues extends Record<string, any> = Record<string, any>> =
 
 export function Form<TFieldValues extends Record<string, any> = Record<string, any>>({
   form,
-  form2,
   onSubmit,
   children,
   ...props
 }: FormProps<TFieldValues>) {
-  const rerender = useRerender();
-
+  
   const onReset = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const fields = form2.control.current;
-    fields.forEach((field) => {
-      if (field?.domElement) {
-        field.domElement.value = field.defaultValue ?? '';
-      }
-    });
-    rerender();
+    form.reset();
   }, []);
 
   return (
-    <FormContext.Provider value={form2}>
-      <form onSubmit={form.handleSubmit(onSubmit)} onReset={onReset} {...props}>
+    <FormContext.Provider value={form}>
+      <form onSubmit={form.handleSubmit(onSubmit as any)} onReset={onReset} {...props}>
         {children}
       </form>
     </FormContext.Provider>
