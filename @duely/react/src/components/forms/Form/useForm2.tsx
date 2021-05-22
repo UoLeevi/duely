@@ -1,191 +1,357 @@
 import { ChangeEvent, FocusEvent, useMemo, useState } from 'react';
-import { useCallback, useRef } from 'react';
 import { useRerender } from '../../../hooks';
-import { Util } from '@duely/core';
 import { useEffect } from 'react';
 
+// see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
+// see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select
+// see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea
 export type FormFieldHTMLElement =
   | HTMLInputElement
   | HTMLSelectElement
   | HTMLTextAreaElement
   | null;
 
-export type FormFieldInfo<T = any> = {
-  name: string;
-  defaultValue?: T;
-  watchValue: T;
-  domElement?: FormFieldHTMLElement;
-  notify(): void;
-  watchCounter: number;
-  control: FormControl;
-};
+export enum FormState {
+  isDirty,
+  isSubmitting,
+  dirtyFields,
+  touchedFields
+}
 
-class FormControl<TFormFields extends Record<string, any> = Record<string, any>> {
-  rerenderForm: () => void;
-  fields: Map<string & keyof TFormFields, FormFieldInfo>;
-  formState: {
-    isDirty: boolean;
+function isCheckBoxElement(el: NonNullable<FormFieldHTMLElement>): el is HTMLInputElement {
+  return el.type === 'checkbox';
+}
+
+function isFormStateEnum<TFormFields extends Record<string, any> = Record<string, any>>(
+  value: (string & keyof TFormFields) | FormState
+): value is FormState {
+  return typeof value === 'number';
+}
+
+function isFormFieldName<TFormFields extends Record<string, any> = Record<string, any>>(
+  value: (string & keyof TFormFields) | FormState
+): value is string & keyof TFormFields {
+  return typeof value === 'string';
+}
+
+class FormWatcher<TFormFields extends Record<string, any> = Record<string, any>> {
+  #control: FormControl<TFormFields>;
+
+  #fieldSubscriptions: {
+    field: FormFieldControl<string & keyof TFormFields, TFormFields>;
+    value: any;
+  }[];
+
+  #formStateSubscriptions: {
+    formState: FormState;
+    value: any;
+  }[];
+
+  #rerender: () => void;
+
+  constructor(
+    control: FormControl<TFormFields>,
+    fields: FormFieldControl<string, TFormFields>[],
+    formStates: FormState[],
+    rerender: () => void
+  ) {
+    this.#control = control;
+    this.#fieldSubscriptions = fields.map((field) => ({ field, value: field.value }));
+    this.#formStateSubscriptions = formStates.map((formState) => ({
+      formState,
+      value: JSON.stringify(this.#control.getFormState(formState))
+    }));
+
+    this.#rerender = rerender;
+  }
+
+  update() {
+    let shouldRerender = false;
+
+    for (const subscription of this.#fieldSubscriptions) {
+      const value = subscription.field.value;
+      if (subscription.value !== value) shouldRerender = true;
+      subscription.value = value;
+    }
+
+    for (const subscription of this.#formStateSubscriptions) {
+      const value = JSON.stringify(this.#control.getFormState(subscription.formState));
+      if (subscription.value !== value) shouldRerender = true;
+      subscription.value = value;
+    }
+
+    if (!shouldRerender) return;
+    this.#rerender();
+  }
+}
+
+class FormFieldControl<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>
+> {
+  #domElement?: FormFieldHTMLElement;
+  #control: FormControl<TFormFields>;
+  name: TName;
+  props: {
+    name: TName;
+    ref(el: FormFieldHTMLElement): void;
+    onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
+    onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
   };
+  defaultValue?: TFormFields[TName];
+  isDirty: boolean;
+  isTouched: boolean;
+  watchers: Set<FormWatcher<TFormFields>>;
 
-  constructor(rerenderForm: () => void) {
-    this.rerenderForm = rerenderForm;
-    this.fields = new Map();
-    this.formState = { isDirty: false };
+  constructor(name: TName, control: FormControl<TFormFields>) {
+    this.#control = control;
+    this.name = name;
+    this.isDirty = false;
+    this.isTouched = false;
+    this.watchers = new Set();
+    this.props = {
+      name: this.name,
+      // see: https://reactjs.org/docs/refs-and-the-dom.html#callback-refs
+      ref: (el: FormFieldHTMLElement) => {
+        if (el) {
+          this.#attachElement(el);
+        } else {
+          this.#detachElement();
+        }
+      },
+      onChange: (event: ChangeEvent<FormFieldHTMLElement>) => {
+        this.#onChange(event);
+      },
+      onBlur: (event: FocusEvent<FormFieldHTMLElement>) => {
+        this.#onBlur(event);
+      }
+    };
   }
 
-  attachElement(field: FormFieldInfo, el: NonNullable<FormFieldHTMLElement>) {
-    field.domElement = el;
-    this.setFieldValue(field, field.defaultValue);
+  #attachElement(el: NonNullable<FormFieldHTMLElement>) {
+    this.#domElement = el;
+    this.value = this.defaultValue;
   }
 
-  detachElement(field: FormFieldInfo) {
-    field.domElement = null;
+  #detachElement() {
+    this.#domElement = null;
   }
 
-  isCheckBoxElement(el: NonNullable<FormFieldHTMLElement>): el is HTMLInputElement {
-    return el.type === 'checkbox';
+  #onChange(event: ChangeEvent<FormFieldHTMLElement>) {
+    this.isDirty = true;
+    this.#update();
   }
 
-  getFieldValue(field: FormFieldInfo) {
-    const el = field.domElement;
+  #onBlur(event: FocusEvent<FormFieldHTMLElement>) {
+    this.isTouched = true;
+  }
+
+  #update() {
+    this.watchers.forEach((watcher) => watcher.update());
+  }
+
+  get value() {
+    const el = this.#domElement;
     if (!el) return undefined;
-    return this.isCheckBoxElement(el) ? el.checked : el.value;
+    return (isCheckBoxElement(el) ? el.checked : el.value) as TFormFields[TName]; // TODO: Fix typings
   }
 
-  setFieldValue(field: FormFieldInfo, value: any) {
-    const el = field.domElement;
+  set value(value: TFormFields[TName] | undefined) {
+    const el = this.#domElement;
     if (!el) return;
 
-    if (this.isCheckBoxElement(el)) {
+    if (isCheckBoxElement(el)) {
       el.checked = value ?? false;
     } else {
       el.value = value ?? '';
     }
+
+    this.#update();
+  }
+}
+
+class FormControl<TFormFields extends Record<string, any> = Record<string, any>> {
+  #isSubmitting: boolean;
+  #fields: Map<
+    string & keyof TFormFields,
+    FormFieldControl<string & keyof TFormFields, TFormFields>
+  >;
+  watchers: Map<FormState, Set<FormWatcher>>;
+  constructor() {
+    this.#isSubmitting = false;
+    this.#fields = new Map();
+    this.watchers = new Map();
+
+    for (const formState of Object.values(FormState)) {
+      this.watchers.set(formState as number, new Set());
+    }
   }
 
-  onFieldChange(field: FormFieldInfo, event: ChangeEvent<FormFieldHTMLElement>) {
-    field.notify();
-    this.formState.isDirty = true;
-  }
-
-  onFieldBlur(field: FormFieldInfo, event: FocusEvent<FormFieldHTMLElement>) {}
-
-  getOrAddField(name: string & keyof TFormFields): FormFieldInfo {
-    let field = this.fields.get(name);
+  #getOrAddField<TName extends string & keyof TFormFields>(
+    name: TName
+  ): FormFieldControl<TName, TFormFields> {
+    let field = this.#fields.get(name) as FormFieldControl<TName, TFormFields> | undefined;
 
     if (field === undefined) {
-      field = {
-        name,
-        watchValue: undefined,
-        notify: () => {
-          if (field!.watchCounter === 0) return;
-          if (field!.watchValue === this.getFieldValue(field!)) return;
-          this.rerenderForm();
-        },
-        watchCounter: 0,
-        control: this as FormControl
-      };
-
-      this.fields.set(name, field);
+      field = new FormFieldControl(name, this);
+      this.#fields.set(name, field);
     }
 
     return field;
   }
-}
 
-export function useForm2<TFormFields extends Record<string, any> = Record<string, any>>() {
-  const rerenderForm = useRerender();
-  const control = useState(() => new FormControl(rerenderForm))[0];
-  const setDefaultValue = useCallback((name: string, value: any) => {
-    const field = control.getOrAddField(name);
-    field.defaultValue = value;
-
-    if (field.domElement) {
-      field.domElement.value = value ?? '';
-      if (field!.watchCounter != 0) rerenderForm();
-    }
-  }, []);
-
-  const register = useCallback(
-    Util.memo((name: string) => {
-      const field = control.getOrAddField(name);
-
-      return {
-        name,
-        // see: https://reactjs.org/docs/refs-and-the-dom.html#callback-refs
-        ref(el: FormFieldHTMLElement) {
-          if (el) {
-            control.attachElement(field!, el);
-          } else {
-            control.detachElement(field!);
-          }
-        },
-        onChange(event: ChangeEvent<FormFieldHTMLElement>) {
-          control.onFieldChange(field!, event);
-        },
-        onBlur(event: FocusEvent<FormFieldHTMLElement>) {
-          control.onFieldBlur(field!, event);
+  getFormState<TFormState extends FormState>(formState: TFormState) {
+    switch (formState) {
+      case FormState.isDirty:
+        for (const [, field] of this.#fields.entries()) {
+          if (field.isDirty) return true;
         }
-      };
-    }),
-    []
-  );
 
-  const watch = useCallback((name: string) => {
-    const field = control.getOrAddField(name);
+        return false;
+
+      case FormState.dirtyFields:
+        const dirtyFields: (string & keyof TFormFields)[] = [];
+
+        for (const [name, field] of this.#fields.entries()) {
+          if (field.isDirty) return dirtyFields.push(name);
+        }
+
+        return dirtyFields;
+
+      case FormState.touchedFields:
+        const touchedFields: (string & keyof TFormFields)[] = [];
+
+        for (const [name, field] of this.#fields.entries()) {
+          if (field.isTouched) return touchedFields.push(name);
+        }
+
+        return touchedFields;
+
+      case FormState.isSubmitting:
+        return this.#isSubmitting;
+
+      default:
+        return undefined;
+    }
+  }
+
+  register<TName extends string & keyof TFormFields>(name: TName) {
+    const field = this.#getOrAddField(name);
+    return field.props;
+  }
+
+  useWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(...names: TNames) {
+    const rerender = useRerender();
+    const fields = names.filter(isFormFieldName).map((name) => this.#getOrAddField(name));
+    const formStates = names.filter(isFormStateEnum);
 
     useEffect(() => {
-      ++field!.watchCounter;
+      const watcher = new FormWatcher(this, fields, formStates, rerender) as any; // TODO: Fix typings
+      formStates.forEach((formState) => this.watchers.get(formState)!.add(watcher));
+      fields.forEach((field) => field.watchers.add(watcher));
       return () => {
-        --field!.watchCounter;
+        formStates.forEach((formState) => this.watchers.get(formState)!.delete(watcher));
+        fields.forEach((field) => field.watchers.delete(watcher));
       };
     }, []);
 
-    field.watchValue = control.getFieldValue(field);
-    return field.watchValue;
-  }, []);
+    return names.map((name) =>
+      isFormFieldName(name)
+        ? this.#getOrAddField(name).value
+        : isFormStateEnum(name)
+        ? this.getFormState(name)
+        : undefined
+    );
+  }
 
-  const reset = useCallback(() => {
-    const { fields, formState } = control;
-    fields.forEach((field) => {
-      control.setFieldValue(field, field.defaultValue);
+  reset() {
+    this.#fields.forEach((field) => {
+      field.value = field.defaultValue;
+      field.isDirty = false;
+      field.isTouched = false;
     });
-    formState.isDirty = false;
-    rerenderForm();
-  }, []);
 
-  const handleSubmit = useCallback(
-    (onSubmit: (data: TFormFields, event?: React.BaseSyntheticEvent) => any | Promise<any>) => {
-      return async (event?: React.BaseSyntheticEvent) => {
-        event?.preventDefault();
-        console.log(event);
-        const { fields } = control;
-        const data: any = {};
-        fields.forEach((field, name) => {
-          data[name] = control.getFieldValue(field);
-        });
-        await onSubmit(data, event);
-      };
-    },
+    this.watchers.get(FormState.isDirty)!.forEach((watcher) => watcher.update());
+    this.watchers.get(FormState.dirtyFields)!.forEach((watcher) => watcher.update());
+    this.watchers.get(FormState.touchedFields)!.forEach((watcher) => watcher.update());
+  }
+
+  handleSubmit(
+    onSubmit: (data: TFormFields, event?: React.BaseSyntheticEvent) => any | Promise<any>
+  ) {
+    const control = this;
+    return async (event?: React.BaseSyntheticEvent) => {
+      event?.preventDefault();
+      console.log(event);
+      const data: any = {};
+      control.#fields.forEach((field, name) => {
+        data[name] = field.value;
+      });
+
+      this.#isSubmitting = true;
+      this.watchers.get(FormState.isSubmitting)!.forEach((watcher) => watcher.update());
+      await onSubmit(data, event);
+      this.#isSubmitting = false;
+      this.watchers.get(FormState.isSubmitting)!.forEach((watcher) => watcher.update());
+    };
+  }
+
+  setValue<TName extends string & keyof TFormFields>(name: TName, value: TFormFields[TName]) {
+    const field = this.#getOrAddField(name);
+    field.value = value;
+  }
+
+  setDefaultValue<TName extends string & keyof TFormFields>(
+    name: TName,
+    value: TFormFields[TName]
+  ) {
+    const field = this.#getOrAddField(name);
+    field.defaultValue = value;
+    field.value = value;
+  }
+}
+
+export type UseForm2Return<TFormFields extends Record<string, any> = Record<string, any>> = {
+  control: FormControl<TFormFields>;
+  register<TName extends string & keyof TFormFields>(
+    name: TName
+  ): {
+    name: TName;
+    ref(el: FormFieldHTMLElement): void;
+    onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
+    onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
+  };
+  useWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(
+    ...names: TNames
+  ): any; // TODO: Fix typings
+  reset(): void;
+  handleSubmit(
+    onSubmit: (
+      data: TFormFields,
+      event?: React.BaseSyntheticEvent<object, any, any> | undefined
+    ) => any | Promise<any>
+  ): (event?: React.BaseSyntheticEvent<object, any, any> | undefined) => Promise<void>;
+  setValue<TName extends string & keyof TFormFields>(name: TName, value: TFormFields[TName]): void;
+  setDefaultValue<TName extends string & keyof TFormFields>(
+    name: TName,
+    value: TFormFields[TName]
+  ): void;
+};
+
+export function useForm2<
+  TFormFields extends Record<string, any> = Record<string, any>
+>(): UseForm2Return<TFormFields> {
+  const control = useState(() => new FormControl<TFormFields>())[0];
+  return useMemo(
+    () => ({
+      control,
+      register: control.register.bind(control),
+      useWatch: control.useWatch.bind(control),
+      reset: control.reset.bind(control),
+      handleSubmit: control.handleSubmit.bind(control),
+      setValue: control.setValue.bind(control),
+      setDefaultValue: control.setDefaultValue.bind(control)
+    }),
     []
   );
-
-  const formState = useMemo(() => {
-    const { formState } = control;
-    return new Proxy<typeof formState>(formState, {
-      get(target, p, receiver) {
-        return target[p as keyof typeof target];
-      }
-    });
-  }, []);
-
-  return {
-    control,
-    register,
-    setDefaultValue,
-    watch,
-    reset,
-    handleSubmit,
-    formState
-  };
 }
