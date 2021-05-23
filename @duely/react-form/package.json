@@ -1,0 +1,31 @@
+{
+  "name": "@duely/react-form",
+  "version": "0.3.11",
+  "description": "React useFrom hook for duely.app",
+  "repository": "github:uoleevi/duely",
+  "license": "MIT",
+  "author": "Leevi Uotinen",
+  "module": "dist/index.js",
+  "source": "src/index.ts",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "cross-env NODE_ENV='production' webpack",
+    "test": "jest",
+    "watch": "webpack --watch"
+  },
+  "workspaces": [
+    "../build"
+  ],
+  "devDependencies": {
+    "@duely/build": "^0.3.9",
+    "@types/jest": "^26.0.23",
+    "@types/react": "^17.0.5",
+    "cross-env": "^7.0.3",
+    "jest": "^26.6.3",
+    "webpack": "^5.36.0",
+    "webpack-cli": "^4.7.0"
+  },
+  "peerDependencies": {
+    "react": "^17.0.1"
+  }
+}

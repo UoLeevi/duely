@@ -1,18 +1,14 @@
 import React, { useCallback, createContext, useContext } from 'react';
-import type { SubmitHandler, UseFormReturn } from 'react-hook-form';
-import { useRerender } from '../../../hooks';
-import { useForm2, UseForm2Return, FormState } from './useForm2';
+import { useForm, UseFormReturn } from '../hooks';
 
-export { useForm2, FormState };
+const FormContext = createContext<ReturnType<typeof useForm>>(undefined as any);
 
-const FormContext = createContext<ReturnType<typeof useForm2>>(undefined as any);
-
-export function useFormContext2() {
+export function useFormContext() {
   return useContext(FormContext);
 }
 
 type FormProps<TFormFields extends Record<string, any> = Record<string, any>> = {
-  form: UseForm2Return<TFormFields>;
+  form: UseFormReturn<TFormFields>;
   onSubmit: (data: TFormFields, event?: React.BaseSyntheticEvent) => any | Promise<any>;
 } & Omit<
   React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>,

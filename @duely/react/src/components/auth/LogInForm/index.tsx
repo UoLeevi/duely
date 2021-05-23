@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery, current_user_Q, useMutation, log_in_M } from '@duely/client';
-import { Form, FormButton, FormField, FormInfoMessage, useForm2, useFormMessages } from '../../forms';
+import { Form, FormButton, FormField, FormInfoMessage, useForm as useForm2, useFormMessages } from '../../forms';
 import { Util } from '../../../util';
 import { useClassName } from '../../../hooks';
 

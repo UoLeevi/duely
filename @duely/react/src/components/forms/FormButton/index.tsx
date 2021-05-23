@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, ButtonProps } from '../../buttons/Button';
-import { useFormContext2 } from '../Form';
-import { FormState } from '../Form/useForm2';
+import { useFormContext } from '../Form';
+import { FormState } from '../hooks';
 
 type FormButtonProps<TFieldValues extends Record<string, any> = Record<string, any>> = {
   loading?: boolean;
@@ -15,8 +15,8 @@ export function FormButton<TFieldValues extends Record<string, any> = Record<str
   color,
   ...props
 }: FormButtonProps<TFieldValues>) {
-  const { useWatch } = useFormContext2();
-  const [isDirty] = useWatch(FormState.isDirty);
+  const { useFormWatch } = useFormContext();
+  const [isDirty] = useFormWatch(FormState.isDirty);
   disabled = !!(disabled || loading || !isDirty);
   color = color ?? (type === 'reset' ? 'gray' : 'indigo');
 

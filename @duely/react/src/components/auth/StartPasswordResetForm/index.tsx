@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useMutation, start_password_reset_M } from '@duely/client';
-import { Form, FormButton, FormField, FormInfoMessage, useForm2, useFormMessages } from '../../forms';
+import { Form, FormButton, FormField, FormInfoMessage, useForm as useForm2, useFormMessages } from '../../forms';
 import { Button } from '../../buttons';
 import { Util } from '../../../util';
 

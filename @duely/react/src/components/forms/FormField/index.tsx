@@ -4,7 +4,7 @@ import { FieldError, Path, RegisterOptions, UseFormReturn, useWatch } from 'reac
 import { useRerender } from '../../../hooks';
 import { Util } from '../../../util';
 import { LoadingBar } from '../../LoadingBar';
-import { useFormContext2 } from '../Form';
+import { useFormContext } from '../Form';
 
 type FormFieldPropsPartial<TName extends Path<TFieldValues>, TFieldValues extends Record<string, any> = Record<string, any>> = {
   name: TName;
@@ -78,7 +78,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
 
   const rerender = useRerender();
   const { setValue, getValues } = form;
-  const form2 = useFormContext2();
+  const form2 = useFormContext();
 
   useEffect(() => {
     if (defaultValue === undefined || getValues(name) === defaultValue) return;

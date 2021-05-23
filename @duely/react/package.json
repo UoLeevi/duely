@@ -16,7 +16,8 @@
   "workspaces": [
     "../build",
     "../core",
-    "../client"
+    "../client",
+    "../react-form"
   ],
   "scripts": {
     "build": "cross-env NODE_ENV='production' webpack",
@@ -51,6 +52,7 @@
     "react-router-dom": "^5.2.0"
   },
   "dependencies": {
+    "@duely/react-form": "^0.3.10",
     "immer": "^9.0.2"
   }
 }

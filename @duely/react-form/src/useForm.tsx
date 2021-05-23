@@ -1,6 +1,9 @@
-import { ChangeEvent, FocusEvent, useMemo, useState } from 'react';
-import { useRerender } from '../../../hooks';
-import { useEffect } from 'react';
+import { ChangeEvent, FocusEvent, useMemo, useState, useCallback, useEffect } from 'react';
+
+function useRerender() {
+  const [, setCounter] = useState(0);
+  return useCallback(() => setCounter((i) => i + 1), []);
+}
 
 // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
 // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select
@@ -240,7 +243,7 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
     return field.props;
   }
 
-  useWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(...names: TNames) {
+  useFormWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(...names: TNames) {
     const rerender = useRerender();
     const fields = names.filter(isFormFieldName).map((name) => this.#getOrAddField(name));
     const formStates = names.filter(isFormStateEnum);
@@ -311,7 +314,7 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
   }
 }
 
-export type UseForm2Return<TFormFields extends Record<string, any> = Record<string, any>> = {
+export type UseFormReturn<TFormFields extends Record<string, any> = Record<string, any>> = {
   control: FormControl<TFormFields>;
   register<TName extends string & keyof TFormFields>(
     name: TName
@@ -321,7 +324,7 @@ export type UseForm2Return<TFormFields extends Record<string, any> = Record<stri
     onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
     onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
   };
-  useWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(
+  useFormWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(
     ...names: TNames
   ): any; // TODO: Fix typings
   reset(): void;
@@ -338,15 +341,15 @@ export type UseForm2Return<TFormFields extends Record<string, any> = Record<stri
   ): void;
 };
 
-export function useForm2<
+export function useForm<
   TFormFields extends Record<string, any> = Record<string, any>
->(): UseForm2Return<TFormFields> {
+>(): UseFormReturn<TFormFields> {
   const control = useState(() => new FormControl<TFormFields>())[0];
   return useMemo(
     () => ({
       control,
       register: control.register.bind(control),
-      useWatch: control.useWatch.bind(control),
+      useFormWatch: control.useFormWatch.bind(control),
       reset: control.reset.bind(control),
       handleSubmit: control.handleSubmit.bind(control),
       setValue: control.setValue.bind(control),
@@ -354,4 +357,11 @@ export function useForm2<
     }),
     []
   );
+}
+
+export function useFormWatch<
+  TNames extends readonly ((string & keyof TFormFields) | FormState)[],
+  TFormFields extends Record<string, any> = Record<string, any>
+>(control: FormControl<TFormFields>, ...names: TNames) {
+  return control.useFormWatch(...names);
 }
