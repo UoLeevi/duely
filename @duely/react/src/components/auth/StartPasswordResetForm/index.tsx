@@ -85,7 +85,6 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
     <Form form={form2} onSubmit={onSubmit} className={className}>
       <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Password reset</h2>
       <FormField
-        form={form}
         label="Email address"
         name="email_address"
         type="email"

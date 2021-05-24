@@ -93,21 +93,18 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
     <Form form={form2} onSubmit={onSubmit} className={className}>
       <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Sign up</h2>
       <FormField
-        form={form}
         label="Name"
         name="name"
         type="text"
         registerOptions={{ required: true }}
       />
       <FormField
-        form={form}
         label="Email address"
         name="email_address"
         type="email"
         registerOptions={{ required: true }}
       />
       <FormField
-        form={form}
         label="Password"
         name="password"
         type="password"

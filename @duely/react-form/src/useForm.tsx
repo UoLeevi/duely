@@ -21,6 +21,10 @@ export enum FormState {
   touchedFields
 }
 
+export type FormFieldRegisterOptions = {
+  required?: boolean;
+};
+
 function isCheckBoxElement(el: NonNullable<FormFieldHTMLElement>): el is HTMLInputElement {
   return el.type === 'checkbox';
 }
@@ -88,7 +92,7 @@ class FormWatcher<TFormFields extends Record<string, any> = Record<string, any>>
   }
 }
 
-class FormFieldControl<
+export class FormFieldControl<
   TName extends string & keyof TFormFields,
   TFormFields extends Record<string, any> = Record<string, any>
 > {
@@ -101,14 +105,18 @@ class FormFieldControl<
     onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
     onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
   };
+  options: FormFieldRegisterOptions;
+  error: string | null;
   defaultValue?: TFormFields[TName];
   isDirty: boolean;
   isTouched: boolean;
   watchers: Set<FormWatcher<TFormFields>>;
 
-  constructor(name: TName, control: FormControl<TFormFields>) {
+  constructor(name: TName, control: FormControl<TFormFields>, options?: FormFieldRegisterOptions) {
     this.#control = control;
     this.name = name;
+    this.options = options ?? {};
+    this.error = null;
     this.isDirty = false;
     this.isTouched = false;
     this.watchers = new Set();
@@ -142,15 +150,38 @@ class FormFieldControl<
 
   #onChange(event: ChangeEvent<FormFieldHTMLElement>) {
     this.isDirty = true;
+
+    if (this.isTouched) {
+      this.validate();
+    }
+
     this.#update();
   }
 
   #onBlur(event: FocusEvent<FormFieldHTMLElement>) {
     this.isTouched = true;
+    this.validate();
+    this.#update();
   }
 
   #update() {
     this.watchers.forEach((watcher) => watcher.update());
+  }
+
+  validate(): boolean {
+    if (this.options.required && !this.hasValue) {
+      this.error = useForm.options.errorMessages.required;
+      this.#update();
+      return false;
+    }
+
+    this.error = null;
+    this.#update();
+    return true;
+  }
+
+  focus() {
+    this.#domElement?.focus();
   }
 
   get value() {
@@ -170,6 +201,10 @@ class FormFieldControl<
     }
 
     this.#update();
+  }
+
+  get hasValue() {
+    return ![undefined, ''].includes(this.value);
   }
 }
 
@@ -191,13 +226,18 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
   }
 
   #getOrAddField<TName extends string & keyof TFormFields>(
-    name: TName
+    name: TName,
+    options?: FormFieldRegisterOptions
   ): FormFieldControl<TName, TFormFields> {
     let field = this.#fields.get(name) as FormFieldControl<TName, TFormFields> | undefined;
 
     if (field === undefined) {
-      field = new FormFieldControl(name, this);
+      field = new FormFieldControl(name, this, options);
       this.#fields.set(name, field);
+    }
+
+    if (options) {
+      field.options = options;
     }
 
     return field;
@@ -206,7 +246,7 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
   getFormState<TFormState extends FormState>(formState: TFormState) {
     switch (formState) {
       case FormState.isDirty:
-        for (const [, field] of this.#fields.entries()) {
+        for (const field of this.#fields.values()) {
           if (field.isDirty) return true;
         }
 
@@ -238,12 +278,17 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
     }
   }
 
-  register<TName extends string & keyof TFormFields>(name: TName) {
-    const field = this.#getOrAddField(name);
+  register<TName extends string & keyof TFormFields>(
+    name: TName,
+    options?: FormFieldRegisterOptions
+  ) {
+    const field = this.#getOrAddField(name, options);
     return field.props;
   }
 
-  useFormWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(...names: TNames) {
+  useFormWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(
+    ...names: TNames
+  ) {
     const rerender = useRerender();
     const fields = names.filter(isFormFieldName).map((name) => this.#getOrAddField(name));
     const formStates = names.filter(isFormStateEnum);
@@ -260,7 +305,7 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
 
     return names.map((name) =>
       isFormFieldName(name)
-        ? this.#getOrAddField(name).value
+        ? this.#getOrAddField(name)
         : isFormStateEnum(name)
         ? this.getFormState(name)
         : undefined
@@ -270,6 +315,7 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
   reset() {
     this.#fields.forEach((field) => {
       field.value = field.defaultValue;
+      field.error = null;
       field.isDirty = false;
       field.isTouched = false;
     });
@@ -285,11 +331,16 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
     const control = this;
     return async (event?: React.BaseSyntheticEvent) => {
       event?.preventDefault();
-      console.log(event);
       const data: any = {};
-      control.#fields.forEach((field, name) => {
+
+      for (const [name, field] of control.#fields.entries()) {
+        if (!field.validate()) {
+          field.focus();
+          return;
+        }
+
         data[name] = field.value;
-      });
+      }
 
       this.#isSubmitting = true;
       this.watchers.get(FormState.isSubmitting)!.forEach((watcher) => watcher.update());
@@ -317,7 +368,8 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
 export type UseFormReturn<TFormFields extends Record<string, any> = Record<string, any>> = {
   control: FormControl<TFormFields>;
   register<TName extends string & keyof TFormFields>(
-    name: TName
+    name: TName,
+    options?: FormFieldRegisterOptions
   ): {
     name: TName;
     ref(el: FormFieldHTMLElement): void;
@@ -326,7 +378,7 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
   };
   useFormWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(
     ...names: TNames
-  ): any; // TODO: Fix typings
+  ): (number | boolean | FormFieldControl<string & keyof TFormFields, TFormFields> | (string & keyof TFormFields)[] | undefined)[]
   reset(): void;
   handleSubmit(
     onSubmit: (
@@ -365,3 +417,10 @@ export function useFormWatch<
 >(control: FormControl<TFormFields>, ...names: TNames) {
   return control.useFormWatch(...names);
 }
+
+useForm.options = {
+  errorMessages: {
+    required: 'Required',
+    fallback: 'Invalid value'
+  }
+};

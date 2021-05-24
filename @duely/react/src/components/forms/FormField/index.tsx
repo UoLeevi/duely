@@ -1,17 +1,18 @@
 import type { ImageInput } from '@duely/core';
-import React, { useEffect, } from 'react';
-import { FieldError, Path, RegisterOptions, UseFormReturn, useWatch } from 'react-hook-form';
-import { useRerender } from '../../../hooks';
+import React, { useEffect } from 'react';
+import { FormFieldControl, FormFieldRegisterOptions } from '@duely/react-form';
 import { Util } from '../../../util';
 import { LoadingBar } from '../../LoadingBar';
 import { useFormContext } from '../Form';
 
-type FormFieldPropsPartial<TName extends Path<TFieldValues>, TFieldValues extends Record<string, any> = Record<string, any>> = {
+type FormFieldPropsPartial<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>
+> = {
   name: TName;
-  defaultValue?: TFieldValues[TName]
-  form: UseFormReturn<TFieldValues>;
+  defaultValue?: TFormFields[TName];
   label?: React.ReactNode;
-  registerOptions?: RegisterOptions;
+  registerOptions?: FormFieldRegisterOptions;
   hint?: React.ReactNode;
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
@@ -29,23 +30,27 @@ type FormFieldPropsPartial<TName extends Path<TFieldValues>, TFieldValues extend
   )[];
 };
 
-type FormFieldProps<TName extends Path<TFieldValues>, TFieldValues extends Record<string, any> = Record<string, any>> =
-  FormFieldPropsPartial<TName, TFieldValues> &
-    Omit<
-      React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> &
-        React.DetailedHTMLProps<
-          React.TextareaHTMLAttributes<HTMLTextAreaElement>,
-          HTMLTextAreaElement
-        > &
-        React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>,
-      keyof FormFieldPropsPartial<TName, TFieldValues>
-    >;
+type FormFieldProps<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>
+> = FormFieldPropsPartial<TName, TFormFields> &
+  Omit<
+    React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> &
+      React.DetailedHTMLProps<
+        React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+        HTMLTextAreaElement
+      > &
+      React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>,
+    keyof FormFieldPropsPartial<TName, TFormFields>
+  >;
 
-export function FormField<TName extends Path<TFieldValues>, TFieldValues extends Record<string, any> = Record<string, any>>({
+export function FormField<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>
+>({
   name,
   defaultValue,
   label,
-  form,
   type,
   registerOptions,
   hint,
@@ -58,17 +63,10 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
   image,
   className,
   ...props
-}: FormFieldProps<TName, TFieldValues>) {
-  const error = form.formState.errors[name] as FieldError | undefined;
-  let errorMessage =
-    error &&
-    (error.message ||
-      (error.type === 'required' && 'Required') ||
-      (error.type === 'minLength' && 'Too short') ||
-      (error.type === 'maxLength' && 'Too long') ||
-      (error.type === 'min' && 'Too small') ||
-      (error.type === 'max' && 'Too large') ||
-      'Invalid');
+}: FormFieldProps<TName, TFormFields>) {
+  const form = useFormContext();
+  const [field] = form.useFormWatch(name) as [FormFieldControl<TName, TFormFields>];
+  let errorMessage = field.error;
 
   const [longErrorMessage, shortErrorMessage] =
     errorMessage?.length! > 20 ? [errorMessage, null] : [null, errorMessage];
@@ -76,16 +74,13 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
   let element;
   let hintOrInfo = hint;
 
-  const rerender = useRerender();
-  const { setValue, getValues } = form;
-  const form2 = useFormContext();
-
   useEffect(() => {
-    if (defaultValue === undefined || getValues(name) === defaultValue) return;
-    setValue(name, defaultValue);
-    form2.setDefaultValue(name, defaultValue);
-    rerender();
-  }, [setValue, name, defaultValue, getValues]);
+    if (defaultValue === undefined || field.defaultValue === defaultValue) return;
+    field.defaultValue = defaultValue;
+    if (!field.hasValue) {
+      field.value = defaultValue;
+    }
+  }, [name, defaultValue]);
 
   switch (type) {
     case 'radio-toggle': {
@@ -95,13 +90,13 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
         typeof option === 'object' ? option : { value: option }
       );
 
-      const selected = useWatch({ control: form.control, name });
+      const selected = field.value;
 
       element = (
         <div className="flex">
           <div className="grid items-center grid-cols-3 form-field-radio-toggle">
             <input
-              {...form2.register(name)}
+              {...form.register(name, registerOptions)}
               type="radio"
               id={`radio-toggle-option-${left.value}`}
               value={left.value}
@@ -125,7 +120,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
             </div>
 
             <input
-              {...form2.register(name)}
+              {...form.register(name, registerOptions)}
               type="radio"
               id={`radio-toggle-option-${right.value}`}
               value={right.value}
@@ -144,7 +139,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
     }
 
     case 'radio-blocks': {
-      const selected = form.watch(name);
+      const selected = field.value;
 
       const children =
         (options ?? []).map((option) => {
@@ -162,7 +157,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
           return (
             <label key={value} htmlFor={`radio-blocks-option-${value}`} className={className}>
               <input
-                {...form2.register(name)}
+                {...form.register(name, registerOptions)}
                 key={value}
                 value={value}
                 id={`radio-blocks-option-${value}`}
@@ -198,7 +193,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
         <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
           <select
             id={name}
-            {...form2.register(name)}
+            {...form.register(name, registerOptions)}
             className="w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none"
             spellCheck="false"
             autoComplete="off"
@@ -225,7 +220,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
     }
 
     case 'image': {
-      const fileList = form.watch(name) as FileList | null;
+      const fileList = field.value as FileList | null;
       const hasFile = (fileList?.length ?? 0) > 0;
       hintOrInfo = hasFile
         ? Array.from(fileList!)
@@ -284,7 +279,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
           <input
             readOnly={loading}
             id={name}
-            {...form2.register(name)}
+            {...form.register(name, registerOptions)}
             accept={accept}
             type="file"
             hidden
@@ -298,7 +293,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
     }
 
     case 'file': {
-      const fileList = form.watch(name) as FileList | null;
+      const fileList = field.value as FileList | null;
       const hasFile = (fileList?.length ?? 0) > 0;
       const filenames = hasFile
         ? Array.from(fileList!)
@@ -327,7 +322,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
           )}
           <input
             id={name}
-            {...form2.register(name)}
+            {...form.register(name, registerOptions)}
             type="file"
             accept={accept}
             hidden
@@ -346,7 +341,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
           {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
           <textarea
             id={name}
-            {...form2.register(name)}
+            {...form.register(name, registerOptions)}
             className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
             spellCheck="false"
             autoComplete="off"
@@ -364,7 +359,7 @@ export function FormField<TName extends Path<TFieldValues>, TFieldValues extends
           {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
           <input
             id={name}
-            {...form2.register(name)}
+            {...form.register(name, registerOptions)}
             type={type}
             className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
             spellCheck="false"
