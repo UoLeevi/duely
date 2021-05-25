@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
 import { useMutation, start_sign_up_M } from '@duely/client';
-import { Form, FormButton, FormField, FormInfoMessage, useForm as useForm2, useFormMessages } from '../../forms';
+import { Form, FormButton, FormField, FormInfoMessage, useForm, useFormMessages } from '../../forms';
 import { Button } from '../../buttons';
 import { Util } from '../../../util';
 import { useClassName } from '../../../hooks';
@@ -21,7 +20,6 @@ type SignUpFormProps = {
 
 export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   const form = useForm<SignUpFormFields>();
-  const form2 = useForm2<SignUpFormFields>();
   const [sentToEmail, setSentToEmail] = useState<string>();
   const [completed, setCompleted] = useState(false);
   const [startSignUp, { loading: startSignUpLoading }] = useMutation(start_sign_up_M);
@@ -90,7 +88,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   className = Util.createClassName('flex flex-col space-y-3', className);
 
   return (
-    <Form form={form2} onSubmit={onSubmit} className={className}>
+    <Form form={form} onSubmit={onSubmit} className={className}>
       <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Sign up</h2>
       <FormField
         label="Name"

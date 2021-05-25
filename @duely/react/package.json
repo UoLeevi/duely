@@ -1,6 +1,6 @@
 {
   "name": "@duely/react",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "UI components used in duely.app",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -48,7 +48,6 @@
     "graphql": "^15.5.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "react-hook-form": "^7.3.0",
     "react-router-dom": "^5.2.0"
   },
   "dependencies": {

@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
 import { useQuery, current_user_Q, useMutation, log_in_M } from '@duely/client';
-import { Form, FormButton, FormField, FormInfoMessage, useForm as useForm2, useFormMessages } from '../../forms';
+import { Form, FormButton, FormField, FormInfoMessage, useForm, useFormMessages } from '../../forms';
 import { Util } from '../../../util';
 import { useClassName } from '../../../hooks';
 
@@ -18,7 +17,6 @@ type LogInFormProps = {
 
 export function LogInForm({ className, redirectTo }: LogInFormProps) {
   const form = useForm<LogInFormFields>();
-  const form2 = useForm2<LogInFormFields>();
   const [logIn, { loading: logInLoading }] = useMutation(log_in_M);
   const { data: user, loading: userLoading } = useQuery(current_user_Q);
   const history = useHistory();
@@ -43,7 +41,7 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
   className = Util.createClassName('flex flex-col space-y-3', className);
 
   return (
-      <Form form={form2} onSubmit={onSubmit} className={className}>
+      <Form form={form} onSubmit={onSubmit} className={className}>
         <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Log in</h2>
         <FormField
           label="Email address"
