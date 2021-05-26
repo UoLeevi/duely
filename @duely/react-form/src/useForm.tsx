@@ -41,56 +41,7 @@ function isFormFieldName<TFormFields extends Record<string, any> = Record<string
   return typeof value === 'string';
 }
 
-class FormWatcher<TFormFields extends Record<string, any> = Record<string, any>> {
-  #control: FormControl<TFormFields>;
-
-  #fieldSubscriptions: {
-    field: FormFieldControl<string & keyof TFormFields, TFormFields>;
-    value: any;
-  }[];
-
-  #formStateSubscriptions: {
-    formState: FormState;
-    value: any;
-  }[];
-
-  #rerender: () => void;
-
-  constructor(
-    control: FormControl<TFormFields>,
-    fields: FormFieldControl<string, TFormFields>[],
-    formStates: FormState[],
-    rerender: () => void
-  ) {
-    this.#control = control;
-    this.#fieldSubscriptions = fields.map((field) => ({ field, value: field.value }));
-    this.#formStateSubscriptions = formStates.map((formState) => ({
-      formState,
-      value: JSON.stringify(this.#control.getFormState(formState))
-    }));
-
-    this.#rerender = rerender;
-  }
-
-  update() {
-    let shouldRerender = false;
-
-    for (const subscription of this.#fieldSubscriptions) {
-      const value = subscription.field.value;
-      if (subscription.value !== value) shouldRerender = true;
-      subscription.value = value;
-    }
-
-    for (const subscription of this.#formStateSubscriptions) {
-      const value = JSON.stringify(this.#control.getFormState(subscription.formState));
-      if (subscription.value !== value) shouldRerender = true;
-      subscription.value = value;
-    }
-
-    if (!shouldRerender) return;
-    this.#rerender();
-  }
-}
+type FormWatcher = () => void;
 
 export class FormFieldControl<
   TName extends string & keyof TFormFields,
@@ -98,6 +49,11 @@ export class FormFieldControl<
 > {
   #domElement?: FormFieldHTMLElement;
   #control: FormControl<TFormFields>;
+  #updatePaused: boolean;
+  #updatePending: boolean;
+  #error: string | null;
+  #isDirty: boolean;
+  #isTouched: boolean;
   name: TName;
   props: {
     name: TName;
@@ -106,19 +62,18 @@ export class FormFieldControl<
     onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
   };
   options: FormFieldRegisterOptions;
-  error: string | null;
   defaultValue?: TFormFields[TName];
-  isDirty: boolean;
-  isTouched: boolean;
-  watchers: Set<FormWatcher<TFormFields>>;
+  watchers: Set<FormWatcher>;
 
   constructor(name: TName, control: FormControl<TFormFields>, options?: FormFieldRegisterOptions) {
     this.#control = control;
     this.name = name;
     this.options = options ?? {};
-    this.error = null;
-    this.isDirty = false;
-    this.isTouched = false;
+    this.#updatePaused = false;
+    this.#updatePending = false;
+    this.#error = null;
+    this.#isDirty = false;
+    this.#isTouched = false;
     this.watchers = new Set();
     this.props = {
       name: this.name,
@@ -149,39 +104,93 @@ export class FormFieldControl<
   }
 
   #onChange(event: ChangeEvent<FormFieldHTMLElement>) {
+    this.#pauseUpdate();
     this.isDirty = true;
-
-    if (this.isTouched) {
-      this.validate();
-    }
-
+    if (this.isTouched) this.validate();
     this.#update();
+    this.#resumeUpdate();
   }
 
   #onBlur(event: FocusEvent<FormFieldHTMLElement>) {
+    this.#pauseUpdate();
     this.isTouched = true;
-    this.validate();
-    this.#update();
+    if (this.isDirty) this.validate();
+    this.#resumeUpdate();
+  }
+
+  #pauseUpdate() {
+    this.#updatePaused = true;
+  }
+
+  #resumeUpdate() {
+    this.#updatePaused = false;
+
+    if (this.#updatePending) {
+      this.#update();
+    }
   }
 
   #update() {
-    this.watchers.forEach((watcher) => watcher.update());
+    if (this.#updatePaused) {
+      this.#updatePending = true;
+      return;
+    }
+    
+    this.#updatePending = false;
+    this.watchers.forEach((watcher) => watcher());
   }
 
   validate(): boolean {
     if (this.options.required && !this.hasValue) {
       this.error = useForm.options.errorMessages.required;
-      this.#update();
       return false;
     }
 
     this.error = null;
-    this.#update();
     return true;
+  }
+
+  reset() {
+    this.#pauseUpdate();
+    this.value = this.defaultValue;
+    this.error = null;
+    this.isDirty = false;
+    this.isTouched = false;
+    this.#resumeUpdate();
   }
 
   focus() {
     this.#domElement?.focus();
+  }
+
+  get isDirty() {
+    return this.#isDirty;
+  }
+
+  set isDirty(value: boolean) {
+    if (this.#isDirty === value) return;
+    this.#isDirty = value;
+    this.#update();
+  }
+
+  get isTouched() {
+    return this.#isTouched;
+  }
+
+  set isTouched(value: boolean) {
+    if (this.#isTouched === value) return;
+    this.#isTouched = value;
+    this.#update();
+  }
+
+  get error() {
+    return this.#error;
+  }
+
+  set error(value: string | null) {
+    if (this.#error === value) return;
+    this.#error = value;
+    this.#update();
   }
 
   get value() {
@@ -195,12 +204,16 @@ export class FormFieldControl<
     if (!el) return;
 
     if (isCheckBoxElement(el)) {
-      el.checked = value ?? false;
+      const newValue = value ?? false;
+      if (el.checked === value) return;
+      el.checked = newValue;
+      this.#update();
     } else {
-      el.value = value ?? '';
+      const newValue = value ?? '';
+      if (el.value === value) return;
+      el.value = newValue;
+      this.#update();
     }
-
-    this.#update();
   }
 
   get hasValue() {
@@ -294,12 +307,11 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
     const formStates = names.filter(isFormStateEnum);
 
     useEffect(() => {
-      const watcher = new FormWatcher(this, fields, formStates, rerender) as any; // TODO: Fix typings
-      formStates.forEach((formState) => this.watchers.get(formState)!.add(watcher));
-      fields.forEach((field) => field.watchers.add(watcher));
+      formStates.forEach((formState) => this.watchers.get(formState)!.add(rerender));
+      fields.forEach((field) => field.watchers.add(rerender));
       return () => {
-        formStates.forEach((formState) => this.watchers.get(formState)!.delete(watcher));
-        fields.forEach((field) => field.watchers.delete(watcher));
+        formStates.forEach((formState) => this.watchers.get(formState)!.delete(rerender));
+        fields.forEach((field) => field.watchers.delete(rerender));
       };
     }, []);
 
@@ -313,16 +325,11 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
   }
 
   reset() {
-    this.#fields.forEach((field) => {
-      field.value = field.defaultValue;
-      field.error = null;
-      field.isDirty = false;
-      field.isTouched = false;
-    });
+    this.#fields.forEach((field) => field.reset());
 
-    this.watchers.get(FormState.isDirty)!.forEach((watcher) => watcher.update());
-    this.watchers.get(FormState.dirtyFields)!.forEach((watcher) => watcher.update());
-    this.watchers.get(FormState.touchedFields)!.forEach((watcher) => watcher.update());
+    this.watchers.get(FormState.isDirty)!.forEach((watcher) => watcher());
+    this.watchers.get(FormState.dirtyFields)!.forEach((watcher) => watcher());
+    this.watchers.get(FormState.touchedFields)!.forEach((watcher) => watcher());
   }
 
   handleSubmit(
@@ -343,10 +350,10 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
       }
 
       this.#isSubmitting = true;
-      this.watchers.get(FormState.isSubmitting)!.forEach((watcher) => watcher.update());
+      this.watchers.get(FormState.isSubmitting)!.forEach((watcher) => watcher());
       await onSubmit(data, event);
       this.#isSubmitting = false;
-      this.watchers.get(FormState.isSubmitting)!.forEach((watcher) => watcher.update());
+      this.watchers.get(FormState.isSubmitting)!.forEach((watcher) => watcher());
     };
   }
 
@@ -378,7 +385,13 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
   };
   useFormWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(
     ...names: TNames
-  ): (number | boolean | FormFieldControl<string & keyof TFormFields, TFormFields> | (string & keyof TFormFields)[] | undefined)[]
+  ): (
+    | number
+    | boolean
+    | FormFieldControl<string & keyof TFormFields, TFormFields>
+    | (string & keyof TFormFields)[]
+    | undefined
+  )[];
   reset(): void;
   handleSubmit(
     onSubmit: (
