@@ -14,6 +14,30 @@ export type FormFieldHTMLElement =
   | HTMLTextAreaElement
   | null;
 
+type FormFieldType =
+  // standard input types
+  // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
+  | 'checkbox'
+  | 'color'
+  | 'date'
+  | 'datetime-local'
+  | 'email'
+  | 'file'
+  | 'month'
+  | 'number'
+  | 'password'
+  | 'radio'
+  | 'range'
+  | 'search'
+  | 'tel'
+  | 'text' // default
+  | 'time'
+  | 'url'
+  | 'week'
+  // different elements
+  | 'select'
+  | 'textarea';
+
 export enum FormState {
   isDirty,
   isSubmitting,
@@ -135,7 +159,7 @@ export class FormFieldControl<
       this.#updatePending = true;
       return;
     }
-    
+
     this.#updatePending = false;
     this.watchers.forEach((watcher) => watcher());
   }
