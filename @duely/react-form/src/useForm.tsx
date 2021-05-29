@@ -5,149 +5,6 @@ function useRerender() {
   return useCallback(() => setCounter((i) => i + 1), []);
 }
 
-type FormFieldTypes = {
-  // standard input types
-  // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
-
-  // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox
-  checkbox: {
-    elementType: HTMLInputElement;
-    valueType: boolean;
-    attributes: {
-      type: 'checkbox';
-    };
-  };
-  color: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'color';
-    };
-  };
-  date: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'date';
-    };
-  };
-  'datetime-local': {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'datetime-local';
-    };
-  };
-  email: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'email';
-    };
-  };
-
-  // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
-  file: {
-    elementType: HTMLInputElement;
-    valueType: FileList;
-    attributes: {
-      type: 'file';
-    };
-  };
-  month: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'month';
-    };
-  };
-  number: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'number';
-    };
-  };
-  password: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'password';
-    };
-  };
-  radio: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'radio';
-    };
-  };
-  range: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'range';
-    };
-  };
-  search: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'search';
-    };
-  };
-  tel: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'tel';
-    };
-  };
-  text: {
-    // default
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'text';
-    };
-  };
-  time: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'time';
-    };
-  };
-  url: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'url';
-    };
-  };
-  week: {
-    elementType: HTMLInputElement;
-    valueType: string;
-    attributes: {
-      type: 'week';
-    };
-  };
-
-  // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select
-  select: {
-    elementType: HTMLSelectElement;
-    valueType: string;
-    attributes: {};
-  };
-
-  // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea
-  textarea: {
-    elementType: HTMLTextAreaElement;
-    valueType: string;
-    attributes: {};
-  };
-};
-
 export enum FormState {
   isDirty,
   isSubmitting,
@@ -181,79 +38,226 @@ function isFormFieldName<TFormFields extends Record<string, any> = Record<string
 
 type FormWatcher = () => void;
 
-export class FormFieldControl<TType extends keyof FormFieldTypes = 'text'> {
-  #type: TType;
-  #domElement: FormFieldTypes[TType]['elementType'] | undefined | null;
-  #updatePaused: boolean;
-  #updatePending: boolean;
-  #error: string | null;
-  #isDirty: boolean;
-  #isTouched: boolean;
-  props: FormFieldTypes[TType]['attributes'] & {
-    name: string;
-    ref(el: FormFieldTypes[TType]['elementType']): void;
-    onChange(event: ChangeEvent<FormFieldTypes[TType]['elementType']>): void;
-    onBlur(event: FocusEvent<FormFieldTypes[TType]['elementType']>): void;
-  };
+const formFieldInfo = {
+  checkbox: {
+    props: {
+      type: 'checkbox'
+    }
+  },
+  color: {
+    props: {
+      type: 'color'
+    }
+  },
+  date: {
+    props: {
+      type: 'date'
+    }
+  },
+  'datetime-local': {
+    props: {
+      type: 'datetime-local'
+    }
+  },
+  email: {
+    props: {
+      type: 'email'
+    }
+  },
+  file: {
+    props: {
+      type: 'file'
+    }
+  },
+  month: {
+    props: {
+      type: 'month'
+    }
+  },
+  number: {
+    props: {
+      type: 'number'
+    }
+  },
+  password: {
+    props: {
+      type: 'password'
+    }
+  },
+  radio: {
+    props: {
+      type: 'radio'
+    }
+  },
+  range: {
+    props: {
+      type: 'range'
+    }
+  },
+  search: {
+    props: {
+      type: 'search'
+    }
+  },
+  tel: {
+    props: {
+      type: 'tel'
+    }
+  },
+  text: {
+    props: {
+      type: 'text'
+    }
+  },
+  time: {
+    props: {
+      type: 'time'
+    }
+  },
+  url: {
+    props: {
+      type: 'url'
+    }
+  },
+  week: {
+    props: {
+      type: 'week'
+    }
+  },
+  select: {
+    props: {}
+  },
+  textarea: {
+    props: {}
+  }
+};
+
+export type FormFieldControl = TextFormField | PasswordFormField | CheckBoxFormField;
+
+class FormFieldBase<THTMLElement extends HTMLElement> {
+  #name: string;
+  #props:
+    | undefined
+    | (Partial<React.HTMLAttributes<THTMLElement>> & {
+        name: string;
+        ref(el: THTMLElement): void;
+        onChange(event: ChangeEvent<THTMLElement>): void;
+        onBlur(event: FocusEvent<THTMLElement>): void;
+      });
+  #updatePaused = false;
+  #updatePending = false;
+  #error: string | null = null;
+  #isDirty = false;
+  #isTouched = false;
+
+  element: THTMLElement | undefined | null;
   options: FormFieldRegisterOptions;
-  defaultValue?: FormFieldTypes[TType]['valueType'];
   watchers: Set<FormWatcher>;
 
-  constructor(name: string, type: TType, options?: FormFieldRegisterOptions) {
-    this.#type = type;
-    this.#updatePaused = false;
-    this.#updatePending = false;
-    this.#error = null;
-    this.#isDirty = false;
-    this.#isTouched = false;
+  constructor(name: string, options: FormFieldRegisterOptions | undefined) {
+    if (new.target === FormFieldBase) {
+      throw new TypeError('Cannot construct FormFieldBase instances directly');
+    }
+
+    this.#name = name;
+
     this.options = options ?? {};
     this.watchers = new Set();
-    this.props = {
-      name,
-      type,
-      // see: https://reactjs.org/docs/refs-and-the-dom.html#callback-refs
-      ref: (el: FormFieldTypes[TType]['elementType']) => {
-        if (el) {
-          this.#attachElement(el);
-        } else {
-          this.#detachElement();
-        }
-      },
-      onChange: (event: ChangeEvent<FormFieldTypes[TType]['elementType']>) => {
-        this.#onChange(event);
-      },
-      onBlur: (event: FocusEvent<FormFieldTypes[TType]['elementType']>) => {
-        this.#onBlur(event);
-      }
-    };
   }
 
-  #isCheckBox(): this is FormFieldControl<'checkbox'> {
-    return this.#type === 'checkbox';
+  get props(): Partial<React.HTMLAttributes<THTMLElement>> & {
+    name: string;
+    ref(el: THTMLElement): void;
+    onChange(event: ChangeEvent<THTMLElement>): void;
+    onBlur(event: FocusEvent<THTMLElement>): void;
+  } {
+    if (!this.#props) {
+      this.#props = {
+        name: this.#name,
+        // see: https://reactjs.org/docs/refs-and-the-dom.html#callback-refs
+        ref: (element: THTMLElement) => {
+          if (element) {
+            this.#attachElement(element);
+          } else {
+            this.#detachElement();
+          }
+        },
+        onChange: (event: ChangeEvent<THTMLElement>) => {
+          this.#onChange(event);
+        },
+        onBlur: (event: FocusEvent<THTMLElement>) => {
+          this.#onBlur(event);
+        },
+        ...this.createProps()
+      };
+    }
+
+    return this.#props;
   }
 
-  #isFileInput(): this is FormFieldControl<'file'> {
-    return this.#type === 'file';
+  get type(): string {
+    throw new Error('Abstract method should be implemented by subclass');
   }
 
-  #attachElement(el: FormFieldTypes[TType]['elementType']) {
-    this.#domElement = el;
-    this.value = this.defaultValue;
+  get value() {
+    throw new Error('Abstract method should be implemented by subclass');
   }
 
-  #detachElement() {
-    this.#domElement = null;
+  set value(value: any) {
+    throw new Error('Abstract method should be implemented by subclass');
   }
 
-  #onChange(event: ChangeEvent<FormFieldTypes[TType]['elementType']>) {
+  get hasValue(): boolean {
+    throw new Error('Abstract method should be implemented by subclass');
+  }
+
+  get defaultValue() {
+    throw new Error('Abstract method should be implemented by subclass');
+  }
+
+  set defaultValue(value: any) {
+    throw new Error('Abstract method should be implemented by subclass');
+  }
+
+  get isDirty() {
+    return this.#isDirty;
+  }
+
+  set isDirty(value: boolean) {
+    if (this.#isDirty === value) return;
+    this.#isDirty = value;
+    this.update();
+  }
+
+  get isTouched() {
+    return this.#isTouched;
+  }
+
+  set isTouched(value: boolean) {
+    if (this.#isTouched === value) return;
+    this.#isTouched = value;
+    this.update();
+  }
+
+  get error() {
+    return this.#error;
+  }
+
+  set error(value: string | null) {
+    if (this.#error === value) return;
+    this.#error = value;
+    this.update();
+  }
+
+  #onChange(event: ChangeEvent<THTMLElement>) {
     this.#pauseUpdate();
     this.isDirty = true;
     if (this.isTouched) this.validate();
-    this.#update();
+    this.update();
     this.#resumeUpdate();
   }
 
-  #onBlur(event: FocusEvent<FormFieldTypes[TType]['elementType']>) {
+  #onBlur(event: FocusEvent<THTMLElement>) {
     this.#pauseUpdate();
     this.isTouched = true;
     if (this.isDirty) this.validate();
@@ -268,11 +272,20 @@ export class FormFieldControl<TType extends keyof FormFieldTypes = 'text'> {
     this.#updatePaused = false;
 
     if (this.#updatePending) {
-      this.#update();
+      this.update();
     }
   }
 
-  #update() {
+  #attachElement(element: THTMLElement | null) {
+    this.element = element;
+    this.value = this.defaultValue;
+  }
+
+  #detachElement() {
+    this.element = null;
+  }
+
+  update() {
     if (this.#updatePaused) {
       this.#updatePending = true;
       return;
@@ -302,78 +315,248 @@ export class FormFieldControl<TType extends keyof FormFieldTypes = 'text'> {
   }
 
   focus() {
-    this.#domElement?.focus();
+    this.element?.focus();
   }
 
-  get isDirty() {
-    return this.#isDirty;
-  }
-
-  set isDirty(value: boolean) {
-    if (this.#isDirty === value) return;
-    this.#isDirty = value;
-    this.#update();
-  }
-
-  get isTouched() {
-    return this.#isTouched;
-  }
-
-  set isTouched(value: boolean) {
-    if (this.#isTouched === value) return;
-    this.#isTouched = value;
-    this.#update();
-  }
-
-  get error() {
-    return this.#error;
-  }
-
-  set error(value: string | null) {
-    if (this.#error === value) return;
-    this.#error = value;
-    this.#update();
-  }
-
-  get value(): FormFieldTypes[TType]['valueType'] | undefined {
-    const el = this.#domElement;
-    if (!el) return undefined;
-    return isCheckBoxElement(el) ? el.checked : el.value
-  }
-
-  set value(value: FormFieldTypes[TType]['valueType'] | undefined) {
-    if (!this.#domElement) return;
-
-    if (this.#isCheckBox()) {
-      const newValue = value ?? false;
-      if (this.#domElement.checked === value) return;
-      this.#domElement.checked = newValue as boolean;
-      this.#update();
-      return;
-    }
-
-    if (this.#isFileInput()) {
-      // TODO
-    }
-
-    const newValue = value ?? '';
-    if (this.#domElement.value === value) return;
-    this.#domElement.value = newValue as string;
-    this.#update();
-  }
-
-  get hasValue() {
-    return this.#domElement && this.#domElement.value !== '';
+  createProps(): object {
+    throw new Error('Abstract method should be implemented by subclass');
   }
 }
 
-class FormControl<TFormFields extends Record<string, any> = Record<string, any>> {
-  #isSubmitting: boolean;
-  #fields: Map<
-    string & keyof TFormFields,
-    FormFieldControl<string & keyof TFormFields, TFormFields>
+export class TextFormField extends FormFieldBase<HTMLInputElement> {
+  #defaultValue = '';
+
+  constructor(name: string, options?: FormFieldRegisterOptions) {
+    super(name, options);
+  }
+
+  get type() {
+    return 'text';
+  }
+
+  get value() {
+    return this.element?.value;
+  }
+
+  set value(value: string | undefined) {
+    if (!this.element) return;
+    if (this.element.value === value) return;
+    this.element.value = value ?? '';
+    this.update();
+  }
+
+  get hasValue() {
+    return ![undefined, ''].includes(this.element?.value);
+  }
+
+  get defaultValue() {
+    return this.#defaultValue;
+  }
+
+  set defaultValue(value: string) {
+    this.#defaultValue = value;
+  }
+
+  createProps() {
+    return {
+      type: this.type,
+      defaultValue: this.defaultValue
+    };
+  }
+}
+
+export class PasswordFormField extends TextFormField {
+  constructor(name: string, options?: FormFieldRegisterOptions) {
+    super(name, options);
+  }
+
+  get type() {
+    return 'password';
+  }
+}
+
+export class CheckBoxFormField extends FormFieldBase<HTMLInputElement> {
+  #defaultValue = false;
+
+  constructor(name: string, options?: FormFieldRegisterOptions) {
+    super(name, options);
+  }
+
+  get type() {
+    return 'checkbox';
+  }
+
+  get value() {
+    return this.element?.checked;
+  }
+
+  set value(value: boolean | undefined) {
+    if (!this.element) return;
+    if (this.element.checked === value) return;
+    this.element.checked = value ?? false;
+    this.update();
+  }
+
+  get hasValue() {
+    return ![undefined, ''].includes(this.element?.value);
+  }
+
+  get defaultValue() {
+    return this.#defaultValue;
+  }
+
+  set defaultValue(value: boolean) {
+    this.#defaultValue = value;
+  }
+
+  createProps() {
+    return {
+      type: 'checkbox',
+      defaultChecked: this.defaultValue
+    };
+  }
+}
+
+const formFieldConstructors = {
+  // standard input types
+  // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
+
+  // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox
+  checkbox: CheckBoxFormField,
+  // color: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'color';
+  //   };
+  // };
+  // date: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'date';
+  //   };
+  // };
+  // 'datetime-local': {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'datetime-local';
+  //   };
+  // };
+  // email: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'email';
+  //   };
+  // };
+
+  // // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
+  // file: {
+  //   elementType: HTMLInputElement;
+  //   valueType: FileList;
+  //   attributes: {
+  //     type: 'file';
+  //   };
+  // };
+  // month: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'month';
+  //   };
+  // };
+  // number: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'number';
+  //   };
+  // };
+  password: PasswordFormField,
+  // radio: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'radio';
+  //   };
+  // };
+  // range: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'range';
+  //   };
+  // };
+  // search: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'search';
+  //   };
+  // };
+  // tel: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'tel';
+  //   };
+  // };
+  text: TextFormField
+  // time: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'time';
+  //   };
+  // };
+  // url: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'url';
+  //   };
+  // };
+  // week: {
+  //   elementType: HTMLInputElement;
+  //   valueType: string;
+  //   attributes: {
+  //     type: 'week';
+  //   };
+  // };
+
+  // // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select
+  // select: {
+  //   elementType: HTMLSelectElement;
+  //   valueType: string;
+  //   attributes: {};
+  // };
+
+  // // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea
+  // textarea: {
+  //   elementType: HTMLTextAreaElement;
+  //   valueType: string;
+  //   attributes: {};
+  // };
+};
+
+export type FormFieldTypes = {
+  [TypeKey in keyof typeof formFieldConstructors]: InstanceType<
+    typeof formFieldConstructors[TypeKey]
   >;
+};
+
+class FormControl<
+  TFormFields extends Record<string, keyof typeof formFieldConstructors> = Record<
+    string,
+    keyof typeof formFieldConstructors
+  >
+> {
+  #isSubmitting: boolean;
+  #fields: Map<keyof TFormFields, FormFieldControl>;
   watchers: Map<FormState, Set<FormWatcher>>;
+
   constructor() {
     this.#isSubmitting = false;
     this.#fields = new Map();
@@ -386,12 +569,13 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
 
   #getOrAddField<TName extends string & keyof TFormFields>(
     name: TName,
+    type: TFormFields[TName],
     options?: FormFieldRegisterOptions
-  ): FormFieldControl<TName, TFormFields> {
-    let field = this.#fields.get(name) as FormFieldControl<TName, TFormFields> | undefined;
+  ): FormFieldTypes[TFormFields[TName]] {
+    let field = this.#fields.get(name) as FormFieldTypes[TFormFields[TName]] | undefined;
 
     if (field === undefined) {
-      field = new FormFieldControl(name, this, options);
+      field = new formFieldConstructors[type](name, options) as FormFieldTypes[TFormFields[TName]];
       this.#fields.set(name, field);
     }
 
