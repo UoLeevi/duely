@@ -132,40 +132,114 @@ const formFieldInfo = {
   }
 };
 
-export type FormFieldControl = TextFormField | PasswordFormField | CheckBoxFormField;
+type HTMLFormFieldElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
-class FormFieldBase<THTMLElement extends HTMLElement> {
+class FormFieldElementControl<THTMLElement extends HTMLFormFieldElement = HTMLFormFieldElement, TValue = string, TRawValue = TValue> {
+  #element: THTMLElement | undefined | null;
+  #defaultValue: TValue = '' as unknown as TValue;
+
+  constructor(element: THTMLElement) {
+    this.#element = element;
+  }
+
+  get element() {
+    return this.#element;
+  }
+
+  get type() {
+    return this.#element?.type;
+  }
+
+  get value() {
+    if (!this.element) return undefined;
+    return this.element.value as unknown as TValue;
+  }
+
+  set value(value: TValue | undefined) {
+    if (!this.element) return;
+    this.element.value = value as unknown as string ?? this.defaultValue;
+  }
+
+  get hasValue() {
+    return ![undefined, ''].includes(this.element?.value);
+  }
+
+  get defaultValue() {
+    return this.#defaultValue;
+  }
+
+  set defaultValue(value: TValue) {
+    this.#defaultValue = value;
+  }
+
+  attachElement(element: THTMLElement) {
+    this.#element = element;
+    this.value = this.defaultValue;
+  }
+
+  detachElement() {
+    this.#element = null;
+  }
+
+  focus() {
+    this.#element?.focus();
+  }
+
+  convertValue(value: TRawValue): TValue {
+    return value as unknown as TValue;
+  }
+}
+
+export class CheckBoxFormFieldElementControl extends FormFieldElementControl<HTMLInputElement, boolean> {
+  #defaultValue = false;
+
+  get value() {
+    return this.element?.checked;
+  }
+
+  set value(value) {
+    if (!this.element) return;
+    this.element.checked = value ?? this.defaultValue;;
+  }
+
+  get defaultValue() {
+    return this.#defaultValue;
+  }
+
+  set defaultValue(value: boolean) {
+    this.#defaultValue = value;
+  }
+}
+
+class FormFieldControl<THTMLElement extends HTMLFormFieldElement = HTMLFormFieldElement, TGetValue = string> {
   #name: string;
+  #elementControl: undefined | FormFieldElementControl;
   #props:
     | undefined
-    | (Partial<React.HTMLAttributes<THTMLElement>> & {
+    | {
         name: string;
         ref(el: THTMLElement): void;
         onChange(event: ChangeEvent<THTMLElement>): void;
         onBlur(event: FocusEvent<THTMLElement>): void;
-      });
+      };
+
   #updatePaused = false;
   #updatePending = false;
   #error: string | null = null;
   #isDirty = false;
   #isTouched = false;
 
-  element: THTMLElement | undefined | null;
   options: FormFieldRegisterOptions;
   watchers: Set<FormWatcher>;
 
   constructor(name: string, options: FormFieldRegisterOptions | undefined) {
-    if (new.target === FormFieldBase) {
-      throw new TypeError('Cannot construct FormFieldBase instances directly');
-    }
-
     this.#name = name;
 
     this.options = options ?? {};
     this.watchers = new Set();
   }
 
-  get props(): Partial<React.HTMLAttributes<THTMLElement>> & {
+  get props(): {
     name: string;
     ref(el: THTMLElement): void;
     onChange(event: ChangeEvent<THTMLElement>): void;
@@ -187,36 +261,40 @@ class FormFieldBase<THTMLElement extends HTMLElement> {
         },
         onBlur: (event: FocusEvent<THTMLElement>) => {
           this.#onBlur(event);
-        },
-        ...this.createProps()
+        }
       };
     }
 
     return this.#props;
   }
 
-  get type(): string {
-    throw new Error('Abstract method should be implemented by subclass');
+  get type() {
+    return this.#elementControl?.type;
   }
 
   get value() {
-    throw new Error('Abstract method should be implemented by subclass');
+    return this.#elementControl?.value;
   }
 
   set value(value: any) {
-    throw new Error('Abstract method should be implemented by subclass');
+    if (!this.#elementControl) return;
+    const convertedValue = this.#elementControl.convertValue(value);
+    if (this.value === convertedValue) return;
+    this.#elementControl.value = convertedValue;
+    this.update();
   }
 
   get hasValue(): boolean {
-    throw new Error('Abstract method should be implemented by subclass');
+    return this.#elementControl?.hasValue ?? false;
   }
 
   get defaultValue() {
-    throw new Error('Abstract method should be implemented by subclass');
+    return this.#elementControl?.defaultValue;
   }
 
   set defaultValue(value: any) {
-    throw new Error('Abstract method should be implemented by subclass');
+    if (!this.#elementControl) return;
+    this.#elementControl.defaultValue = value;
   }
 
   get isDirty() {
@@ -276,13 +354,17 @@ class FormFieldBase<THTMLElement extends HTMLElement> {
     }
   }
 
-  #attachElement(element: THTMLElement | null) {
-    this.element = element;
-    this.value = this.defaultValue;
+  #attachElement(element: HTMLFormFieldElement) {
+    if (!this.#elementControl) {
+      const ctor = specialFormFieldElementControlConstructors.get(element.type) as any ?? FormFieldElementControl;
+      this.#elementControl = new ctor(element);
+    } else {
+      this.#elementControl.attachElement(element);
+    }
   }
 
   #detachElement() {
-    this.element = null;
+    this.#elementControl?.detachElement();
   }
 
   update() {
@@ -315,242 +397,20 @@ class FormFieldBase<THTMLElement extends HTMLElement> {
   }
 
   focus() {
-    this.element?.focus();
-  }
-
-  createProps(): object {
-    throw new Error('Abstract method should be implemented by subclass');
+    this.#elementControl?.focus();
   }
 }
 
-export class TextFormField extends FormFieldBase<HTMLInputElement> {
-  #defaultValue = '';
 
-  constructor(name: string, options?: FormFieldRegisterOptions) {
-    super(name, options);
-  }
 
-  get type() {
-    return 'text';
-  }
-
-  get value() {
-    return this.element?.value;
-  }
-
-  set value(value: string | undefined) {
-    if (!this.element) return;
-    if (this.element.value === value) return;
-    this.element.value = value ?? '';
-    this.update();
-  }
-
-  get hasValue() {
-    return ![undefined, ''].includes(this.element?.value);
-  }
-
-  get defaultValue() {
-    return this.#defaultValue;
-  }
-
-  set defaultValue(value: string) {
-    this.#defaultValue = value;
-  }
-
-  createProps() {
-    return {
-      type: this.type,
-      defaultValue: this.defaultValue
-    };
-  }
-}
-
-export class PasswordFormField extends TextFormField {
-  constructor(name: string, options?: FormFieldRegisterOptions) {
-    super(name, options);
-  }
-
-  get type() {
-    return 'password';
-  }
-}
-
-export class CheckBoxFormField extends FormFieldBase<HTMLInputElement> {
-  #defaultValue = false;
-
-  constructor(name: string, options?: FormFieldRegisterOptions) {
-    super(name, options);
-  }
-
-  get type() {
-    return 'checkbox';
-  }
-
-  get value() {
-    return this.element?.checked;
-  }
-
-  set value(value: boolean | undefined) {
-    if (!this.element) return;
-    if (this.element.checked === value) return;
-    this.element.checked = value ?? false;
-    this.update();
-  }
-
-  get hasValue() {
-    return ![undefined, ''].includes(this.element?.value);
-  }
-
-  get defaultValue() {
-    return this.#defaultValue;
-  }
-
-  set defaultValue(value: boolean) {
-    this.#defaultValue = value;
-  }
-
-  createProps() {
-    return {
-      type: 'checkbox',
-      defaultChecked: this.defaultValue
-    };
-  }
-}
-
-const formFieldConstructors = {
-  // standard input types
-  // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
-
-  // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox
-  checkbox: CheckBoxFormField,
-  // color: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'color';
-  //   };
-  // };
-  // date: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'date';
-  //   };
-  // };
-  // 'datetime-local': {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'datetime-local';
-  //   };
-  // };
-  // email: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'email';
-  //   };
-  // };
-
-  // // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
-  // file: {
-  //   elementType: HTMLInputElement;
-  //   valueType: FileList;
-  //   attributes: {
-  //     type: 'file';
-  //   };
-  // };
-  // month: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'month';
-  //   };
-  // };
-  // number: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'number';
-  //   };
-  // };
-  password: PasswordFormField,
-  // radio: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'radio';
-  //   };
-  // };
-  // range: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'range';
-  //   };
-  // };
-  // search: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'search';
-  //   };
-  // };
-  // tel: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'tel';
-  //   };
-  // };
-  text: TextFormField
-  // time: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'time';
-  //   };
-  // };
-  // url: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'url';
-  //   };
-  // };
-  // week: {
-  //   elementType: HTMLInputElement;
-  //   valueType: string;
-  //   attributes: {
-  //     type: 'week';
-  //   };
-  // };
-
-  // // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select
-  // select: {
-  //   elementType: HTMLSelectElement;
-  //   valueType: string;
-  //   attributes: {};
-  // };
-
-  // // see: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea
-  // textarea: {
-  //   elementType: HTMLTextAreaElement;
-  //   valueType: string;
-  //   attributes: {};
-  // };
-};
-
-export type FormFieldTypes = {
-  [TypeKey in keyof typeof formFieldConstructors]: InstanceType<
-    typeof formFieldConstructors[TypeKey]
-  >;
-};
+const specialFormFieldElementControlConstructors = new Map([
+  ['checkbox', CheckBoxFormFieldElementControl]
+]);
 
 class FormControl<
-  TFormFields extends Record<string, keyof typeof formFieldConstructors> = Record<
+  TFormFields extends Record<string, keyof typeof specialFormFieldElementControlConstructors> = Record<
     string,
-    keyof typeof formFieldConstructors
+    keyof typeof specialFormFieldElementControlConstructors
   >
 > {
   #isSubmitting: boolean;
@@ -575,7 +435,7 @@ class FormControl<
     let field = this.#fields.get(name) as FormFieldTypes[TFormFields[TName]] | undefined;
 
     if (field === undefined) {
-      field = new formFieldConstructors[type](name, options) as FormFieldTypes[TFormFields[TName]];
+      field = new specialFormFieldElementControlConstructors[type](name, options) as FormFieldTypes[TFormFields[TName]];
       this.#fields.set(name, field);
     }
 
