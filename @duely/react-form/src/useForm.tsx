@@ -134,7 +134,11 @@ const formFieldInfo = {
 
 type HTMLFormFieldElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
-class FormFieldElementControl<THTMLElement extends HTMLFormFieldElement = HTMLFormFieldElement, TValue = string, TRawValue = TValue> {
+class FormFieldElementControl<
+  THTMLElement extends HTMLFormFieldElement = HTMLFormFieldElement,
+  TValue = string,
+  TRawValue = TValue
+> {
   #element: THTMLElement | undefined | null;
   #defaultValue: TValue = '' as unknown as TValue;
 
@@ -157,7 +161,7 @@ class FormFieldElementControl<THTMLElement extends HTMLFormFieldElement = HTMLFo
 
   set value(value: TValue | undefined) {
     if (!this.element) return;
-    this.element.value = value as unknown as string ?? this.defaultValue;
+    this.element.value = (value as unknown as string) ?? this.defaultValue;
   }
 
   get hasValue() {
@@ -190,7 +194,10 @@ class FormFieldElementControl<THTMLElement extends HTMLFormFieldElement = HTMLFo
   }
 }
 
-export class CheckBoxFormFieldElementControl extends FormFieldElementControl<HTMLInputElement, boolean> {
+export class CheckBoxFormFieldElementControl extends FormFieldElementControl<
+  HTMLInputElement,
+  boolean
+> {
   #defaultValue = false;
 
   get value() {
@@ -199,7 +206,7 @@ export class CheckBoxFormFieldElementControl extends FormFieldElementControl<HTM
 
   set value(value) {
     if (!this.element) return;
-    this.element.checked = value ?? this.defaultValue;;
+    this.element.checked = value ?? this.defaultValue;
   }
 
   get defaultValue() {
@@ -211,7 +218,7 @@ export class CheckBoxFormFieldElementControl extends FormFieldElementControl<HTM
   }
 }
 
-class FormFieldControl<THTMLElement extends HTMLFormFieldElement = HTMLFormFieldElement, TGetValue = string> {
+class FormFieldControl<THTMLElement extends HTMLFormFieldElement = HTMLFormFieldElement> {
   #name: string;
   #elementControl: undefined | FormFieldElementControl;
   #props:
@@ -356,7 +363,9 @@ class FormFieldControl<THTMLElement extends HTMLFormFieldElement = HTMLFormField
 
   #attachElement(element: HTMLFormFieldElement) {
     if (!this.#elementControl) {
-      const ctor = specialFormFieldElementControlConstructors.get(element.type) as any ?? FormFieldElementControl;
+      const ctor =
+        (specialFormFieldElementControlConstructors.get(element.type) as any) ??
+        FormFieldElementControl;
       this.#elementControl = new ctor(element);
     } else {
       this.#elementControl.attachElement(element);
@@ -401,20 +410,13 @@ class FormFieldControl<THTMLElement extends HTMLFormFieldElement = HTMLFormField
   }
 }
 
-
-
 const specialFormFieldElementControlConstructors = new Map([
   ['checkbox', CheckBoxFormFieldElementControl]
 ]);
 
-class FormControl<
-  TFormFields extends Record<string, keyof typeof specialFormFieldElementControlConstructors> = Record<
-    string,
-    keyof typeof specialFormFieldElementControlConstructors
-  >
-> {
+class FormControl<TFormFields extends Record<string, any> = Record<string, any>> {
   #isSubmitting: boolean;
-  #fields: Map<keyof TFormFields, FormFieldControl>;
+  #fields: Map<string & keyof TFormFields, FormFieldControl>;
   watchers: Map<FormState, Set<FormWatcher>>;
 
   constructor() {
@@ -429,13 +431,12 @@ class FormControl<
 
   #getOrAddField<TName extends string & keyof TFormFields>(
     name: TName,
-    type: TFormFields[TName],
     options?: FormFieldRegisterOptions
-  ): FormFieldTypes[TFormFields[TName]] {
-    let field = this.#fields.get(name) as FormFieldTypes[TFormFields[TName]] | undefined;
+  ): FormFieldControl {
+    let field = this.#fields.get(name);
 
     if (field === undefined) {
-      field = new specialFormFieldElementControlConstructors[type](name, options) as FormFieldTypes[TFormFields[TName]];
+      field = new FormFieldControl(name, options);
       this.#fields.set(name, field);
     }
 
@@ -568,20 +569,14 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
     name: TName,
     options?: FormFieldRegisterOptions
   ): {
-    name: TName;
-    ref(el: FormFieldHTMLElement): void;
-    onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
-    onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
+    name: string;
+    ref(el: HTMLFormFieldElement): void;
+    onChange(event: ChangeEvent<HTMLFormFieldElement>): void;
+    onBlur(event: FocusEvent<HTMLFormFieldElement>): void;
   };
   useFormWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(
     ...names: TNames
-  ): (
-    | number
-    | boolean
-    | FormFieldControl<string & keyof TFormFields, TFormFields>
-    | (string & keyof TFormFields)[]
-    | undefined
-  )[];
+  ): (number | boolean | FormFieldControl | (string & keyof TFormFields)[] | undefined)[];
   reset(): void;
   handleSubmit(
     onSubmit: (
