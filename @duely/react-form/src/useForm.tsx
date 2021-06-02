@@ -5,9 +5,11 @@ function useRerender() {
   return useCallback(() => setCounter((i) => i + 1), []);
 }
 
-class Var<T> {
+class ReactiveVar<T> {
   #value: T;
-  #listeners: ((newValue: T, oldValue: T, variable: Var<T>) => void)[] = [];
+  #paused = false;
+  #pending = false;
+  #listeners: ((value: T, variable: ReactiveVar<T>) => void)[] = [];
 
   constructor(value: T) {
     this.#value = value;
@@ -18,21 +20,43 @@ class Var<T> {
   }
 
   set value(value: T) {
-    const oldValue = this.#value;
-    if (value === oldValue) return;
+    if (this.#value === value) return;
     this.#value = value;
-    this.#listeners.forEach((callback) => callback(value, oldValue, this));
+
+    if (this.#paused) {
+      this.#pending = true;
+      return;
+    }
+
+    this.#listeners.forEach((callback) => callback(value, this));
   }
 
-  addListener(callback: (newValue: T, oldValue: T, variable: Var<T>) => void): void {
+  subscribe(callback: (value: T, variable: ReactiveVar<T>) => void): () => void {
     this.#listeners.push(callback);
+    return () => this.unsubscribe(callback);
   }
 
-  removeListener(callback: (newValue: T, oldValue: T, variable: Var<T>) => void): void {
+  unsubscribe(callback: (value: T, variable: ReactiveVar<T>) => void): void {
     const index = this.#listeners.indexOf(callback);
     if (index === -1) return;
     this.#listeners.splice(index, 1);
   }
+
+  pause() {
+    this.#paused = true;
+  }
+
+  resume() {
+    this.#paused = false;
+
+    if (this.#pending) {
+      const value = this.#value;
+      this.#listeners.forEach((callback) => callback(value, this));
+    }
+  }
+
+  // TODO:
+  // static combine() {}
 }
 
 export enum FormState {
@@ -167,11 +191,13 @@ class FormFieldElementControl<
   TValue = string,
   TRawValue = TValue
 > {
+  #valueVar: ReactiveVar<TValue | undefined>;
   #element: THTMLElement | undefined | null;
   #defaultValue: TValue = '' as unknown as TValue;
 
   constructor(element: THTMLElement) {
     this.#element = element;
+    this.#valueVar = new ReactiveVar<TValue | undefined>(this.defaultValue);
   }
 
   get element() {
@@ -183,8 +209,7 @@ class FormFieldElementControl<
   }
 
   get value() {
-    if (!this.element) return undefined;
-    return this.element.value as unknown as TValue;
+    return this.#valueVar.value;
   }
 
   set value(value: TValue | undefined) {
