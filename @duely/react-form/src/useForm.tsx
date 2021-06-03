@@ -10,6 +10,7 @@ class ReactiveVar<T> {
   #paused = false;
   #pending = false;
   #listeners: ((value: T, variable: ReactiveVar<T>) => void)[] = [];
+  #linkedVars = new Set<ReactiveVar<unknown>>();
 
   constructor(value: T) {
     this.#value = value;
@@ -43,11 +44,15 @@ class ReactiveVar<T> {
   }
 
   pause() {
+    if (this.#paused) return;
     this.#paused = true;
+    this.#linkedVars.forEach(variable => variable.pause());
   }
 
   resume() {
+    if (!this.#paused) return;
     this.#paused = false;
+    this.#linkedVars.forEach(variable => variable.resume());
 
     if (this.#pending) {
       const value = this.#value;
@@ -57,6 +62,15 @@ class ReactiveVar<T> {
 
   // TODO:
   // static combine() {}
+
+  static link(...vars: ReactiveVar<unknown>[]) {
+    vars.forEach(variable => vars.forEach(variable.#linkedVars.add, variable));
+    return ReactiveVar.unlink(...vars);
+  }
+
+  static unlink(...vars: ReactiveVar<unknown>[]) {
+    vars.forEach(variable => vars.forEach(variable.#linkedVars.delete, variable));
+  }
 }
 
 export enum FormState {
