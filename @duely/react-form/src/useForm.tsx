@@ -46,16 +46,16 @@ class ReactiveVar<T> {
   pause() {
     if (this.#paused) return;
     this.#paused = true;
-    this.#linkedVars.forEach(variable => variable.pause());
+    this.#linkedVars.forEach((variable) => variable.pause());
   }
 
   resume() {
     if (!this.#paused) return;
     this.#paused = false;
-    this.#linkedVars.forEach(variable => variable.resume());
+    this.#linkedVars.forEach((variable) => variable.resume());
 
     if (this.#pending) {
-      const value = this.#value;
+      const value = this.value;
       this.#listeners.forEach((callback) => callback(value, this));
     }
   }
@@ -63,13 +63,49 @@ class ReactiveVar<T> {
   // TODO:
   // static combine() {}
 
-  static link(...vars: ReactiveVar<unknown>[]) {
-    vars.forEach(variable => vars.forEach(variable.#linkedVars.add, variable));
-    return ReactiveVar.unlink(...vars);
+  static link(...vars: ReactiveVar<any>[]) {
+    vars.forEach((variable) => vars.forEach(variable.#linkedVars.add, variable));
+    return () => ReactiveVar.unlink(...vars);
   }
 
-  static unlink(...vars: ReactiveVar<unknown>[]) {
-    vars.forEach(variable => vars.forEach(variable.#linkedVars.delete, variable));
+  static unlink(...vars: ReactiveVar<any>[]) {
+    vars.forEach((variable) => vars.forEach(variable.#linkedVars.delete, variable));
+  }
+}
+
+class ComputedVar<T, TArgs extends readonly any[]> extends ReactiveVar<T> {
+  #selector: (...args: TArgs) => T;
+  #args: any[];
+  #detach: null | (() => void);
+
+  constructor(
+    selector: (...args: TArgs) => T,
+    ...variables: {
+      [i in keyof TArgs]: ReactiveVar<TArgs[i]>;
+    }
+  ) {
+    super(selector(...(variables.map((variable) => variable.value) as unknown as TArgs)));
+    this.#args = variables.map((variable) => variable.value);
+    this.#selector = selector;
+
+    const unlink = ReactiveVar.link(this, ...variables);
+
+    const unsubscribes = variables.map((variable, i) =>
+      variable.subscribe((value) => {
+        this.#args[i] = value;
+        this.value = this.#selector(...(this.#args as unknown as TArgs));
+      })
+    );
+
+    this.#detach = () => {
+      this.#detach = null;
+      unsubscribes.forEach((unsubscribe) => unsubscribe());
+      unlink();
+    };
+  }
+
+  detach() {
+    this.#detach?.();
   }
 }
 
