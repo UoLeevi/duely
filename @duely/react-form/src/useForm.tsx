@@ -5,6 +5,49 @@ function useRerender() {
   return useCallback(() => setCounter((i) => i + 1), []);
 }
 
+class Binding<T> {
+  #value: T;
+  #paused = false;
+  #pending = false;
+  #callback: (value: T) => void;
+
+  constructor(value: T, callback: (value: T) => void) {
+    this.#callback = callback;
+    this.#value = value;
+  }
+
+  get value() {
+    return this.#value;
+  }
+
+  set value(value: T) {
+    if (this.#value === value) return;
+    this.#value = value;
+
+    if (this.#paused) {
+      this.#pending = true;
+      return;
+    }
+
+    this.#callback(this.#value);
+  }
+
+  pause() {
+    if (this.#paused) return;
+    this.#paused = true;
+  }
+
+  resume() {
+    if (!this.#paused) return;
+    this.#paused = false;
+
+    if (this.#pending) {
+      this.#pending = false;
+      this.#callback(this.#value);
+    }
+  }
+}
+
 class ReactiveVar<T> {
   #value: T;
   #paused = false;
@@ -59,9 +102,6 @@ class ReactiveVar<T> {
       this.#listeners.forEach((callback) => callback(value, this));
     }
   }
-
-  // TODO:
-  // static combine() {}
 
   static link(...vars: ReactiveVar<any>[]) {
     vars.forEach((variable) => vars.forEach(variable.#linkedVars.add, variable));
@@ -119,14 +159,6 @@ export enum FormState {
 export type FormFieldRegisterOptions = {
   required?: boolean;
 };
-
-function isCheckBoxElement(el: any): el is HTMLInputElement {
-  return el.type === 'checkbox';
-}
-
-function isFileInputElement(el: any): el is HTMLInputElement {
-  return el.type === 'file';
-}
 
 function isFormStateEnum<TFormFields extends Record<string, any> = Record<string, any>>(
   value: (string & keyof TFormFields) | FormState
@@ -241,13 +273,22 @@ class FormFieldElementControl<
   TValue = string,
   TRawValue = TValue
 > {
-  #valueVar: ReactiveVar<TValue | undefined>;
+  #valueVar: ReactiveVar<TValue>;
   #element: THTMLElement | undefined | null;
   #defaultValue: TValue = '' as unknown as TValue;
+  #onInput: (e: Event) => void;
 
   constructor(element: THTMLElement) {
     this.#element = element;
-    this.#valueVar = new ReactiveVar<TValue | undefined>(this.defaultValue);
+    this.#valueVar = new ReactiveVar<TValue>(this.defaultValue);
+
+    this.#valueVar.subscribe((value) => {
+      this.elementValue = value;
+    });
+
+    this.#onInput = (e) => {
+      this.#valueVar.value = this.elementValue;
+    };
   }
 
   get element() {
@@ -267,6 +308,14 @@ class FormFieldElementControl<
     this.element.value = (value as unknown as string) ?? this.defaultValue;
   }
 
+  get elementValue(): TValue {
+    return this.#element!.value as unknown as TValue;
+  }
+
+  set elementValue(value: TValue) {
+    this.#element!.value = value as any;
+  }
+
   get hasValue() {
     return ![undefined, ''].includes(this.element?.value);
   }
@@ -281,7 +330,7 @@ class FormFieldElementControl<
 
   attachElement(element: THTMLElement) {
     this.#element = element;
-    this.value = this.defaultValue;
+    element.addEventListener('input', this.#onInput);
   }
 
   detachElement() {
