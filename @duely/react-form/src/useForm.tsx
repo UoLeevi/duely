@@ -266,19 +266,19 @@ const formFieldInfo = {
   }
 };
 
-type HTMLFormFieldElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+type FormFieldHTMLElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
 class FormFieldElementControl<
-  THTMLElement extends HTMLFormFieldElement = HTMLFormFieldElement,
+  HTMLFormFieldElement extends HTMLFormFieldElement = HTMLFormFieldElement,
   TValue = string,
   TRawValue = TValue
 > {
   #valueVar: ReactiveVar<TValue>;
-  #element: THTMLElement | undefined | null;
+  #element: HTMLFormFieldElement | undefined | null;
   #defaultValue: TValue = '' as unknown as TValue;
   #onInput: (e: Event) => void;
 
-  constructor(element: THTMLElement) {
+  constructor(element: HTMLFormFieldElement) {
     this.#element = element;
     this.#valueVar = new ReactiveVar<TValue>(this.defaultValue);
 
@@ -328,7 +328,7 @@ class FormFieldElementControl<
     this.#defaultValue = value;
   }
 
-  attachElement(element: THTMLElement) {
+  attachElement(element: HTMLFormFieldElement) {
     this.#element = element;
     element.addEventListener('input', this.#onInput);
   }
@@ -370,16 +370,16 @@ export class CheckBoxFormFieldElementControl extends FormFieldElementControl<
   }
 }
 
-export class FormFieldControl<THTMLElement extends HTMLFormFieldElement = HTMLFormFieldElement> {
+export class FormFieldControl<T> {
   #name: string;
   #elementControl: undefined | FormFieldElementControl;
   #props:
     | undefined
     | {
         name: string;
-        ref(el: THTMLElement): void;
-        onChange(event: ChangeEvent<THTMLElement>): void;
-        onBlur(event: FocusEvent<THTMLElement>): void;
+        ref(el: FormFieldHTMLElement): void;
+        onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
+        onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
       };
 
   #updatePaused = false;
@@ -387,38 +387,37 @@ export class FormFieldControl<THTMLElement extends HTMLFormFieldElement = HTMLFo
   #error: string | null = null;
   #isDirty = false;
   #isTouched = false;
+  #valueChangedListeners: ((value: T) => void)[] = [];
+  #stateChangedListeners: ((field: FormFieldControl<T>) => void)[] = [];
 
   options: FormFieldRegisterOptions;
-  changeCallbacks: Set<() => void>;
 
   constructor(name: string, options: FormFieldRegisterOptions | undefined) {
     this.#name = name;
-
     this.options = options ?? {};
-    this.changeCallbacks = new Set();
   }
 
   get props(): {
     name: string;
-    ref(el: THTMLElement): void;
-    onChange(event: ChangeEvent<THTMLElement>): void;
-    onBlur(event: FocusEvent<THTMLElement>): void;
+    ref(el: FormFieldHTMLElement): void;
+    onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
+    onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
   } {
     if (!this.#props) {
       this.#props = {
         name: this.#name,
         // see: https://reactjs.org/docs/refs-and-the-dom.html#callback-refs
-        ref: (element: THTMLElement) => {
+        ref: (element: FormFieldHTMLElement) => {
           if (element) {
             this.#attachElement(element);
           } else {
             this.#detachElement();
           }
         },
-        onChange: (event: ChangeEvent<THTMLElement>) => {
+        onChange: (event: ChangeEvent<FormFieldHTMLElement>) => {
           this.#onChange(event);
         },
-        onBlur: (event: FocusEvent<THTMLElement>) => {
+        onBlur: (event: FocusEvent<FormFieldHTMLElement>) => {
           this.#onBlur(event);
         }
       };
@@ -486,7 +485,25 @@ export class FormFieldControl<THTMLElement extends HTMLFormFieldElement = HTMLFo
     this.update();
   }
 
-  #onChange(event: ChangeEvent<THTMLElement>) {
+  subscribeToValueChanged(callback: (value: T) => void) {
+    this.#valueChangedListeners.push(callback);
+    return () => {
+      const index = this.#valueChangedListeners.indexOf(callback);
+      if (index === -1) return;
+      this.#valueChangedListeners.splice(index, 1);
+    };
+  }
+
+  subscribeToStateChanged(callback: (field: FormFieldControl<T>) => void) {
+    this.#stateChangedListeners.push(callback);
+    return () => {
+      const index = this.#stateChangedListeners.indexOf(callback);
+      if (index === -1) return;
+      this.#stateChangedListeners.splice(index, 1);
+    };
+  }
+
+  #onChange(event: ChangeEvent<FormFieldHTMLElement>) {
     this.#pauseUpdate();
     this.isDirty = true;
     if (this.isTouched) this.validate();
@@ -494,7 +511,7 @@ export class FormFieldControl<THTMLElement extends HTMLFormFieldElement = HTMLFo
     this.#resumeUpdate();
   }
 
-  #onBlur(event: FocusEvent<THTMLElement>) {
+  #onBlur(event: FocusEvent<FormFieldHTMLElement>) {
     this.#pauseUpdate();
     this.isTouched = true;
     if (this.isDirty) this.validate();
@@ -513,7 +530,7 @@ export class FormFieldControl<THTMLElement extends HTMLFormFieldElement = HTMLFo
     }
   }
 
-  #attachElement(element: HTMLFormFieldElement) {
+  #attachElement(element: FormFieldHTMLElement) {
     if (!this.#elementControl) {
       const ctor =
         (specialFormFieldElementControlConstructors.get(element.type) as any) ??
@@ -567,29 +584,23 @@ const specialFormFieldElementControlConstructors = new Map([
 ]);
 
 class FormControl<TFormFields extends Record<string, any> = Record<string, any>> {
-  #isSubmitting: boolean;
-  #fields: Map<string & keyof TFormFields, FormFieldControl>;
-  changeCallbacks: Map<FormState, Set<() => void>>;
-
-  constructor() {
-    this.#isSubmitting = false;
-    this.#fields = new Map();
-    this.changeCallbacks = new Map();
-
-    for (const formState of Object.values(FormState)) {
-      this.changeCallbacks.set(formState as number, new Set());
+  #isSubmitting = false;
+  #stateChangedListeners: ((field: FormControl<TFormFields>) => void)[] = [];
+  #fields: Partial<
+    {
+      [TName in keyof TFormFields]: FormFieldControl<TFormFields[TName]>;
     }
-  }
+  > = {};
 
   #getOrAddField<TName extends string & keyof TFormFields>(
     name: TName,
     options?: FormFieldRegisterOptions
-  ): FormFieldControl {
-    let field = this.#fields.get(name);
+  ): FormFieldControl<TFormFields[TName]> {
+    let field = this.#fields[name];
 
     if (field === undefined) {
       field = new FormFieldControl(name, options);
-      this.#fields.set(name, field);
+      this.#fields[name] = field;
     }
 
     if (options) {
@@ -599,39 +610,13 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
     return field;
   }
 
-  getFormState<TFormState extends FormState>(formState: TFormState) {
-    switch (formState) {
-      case FormState.isDirty:
-        for (const field of this.#fields.values()) {
-          if (field.isDirty) return true;
-        }
-
-        return false;
-
-      case FormState.dirtyFields:
-        const dirtyFields: (string & keyof TFormFields)[] = [];
-
-        for (const [name, field] of this.#fields.entries()) {
-          if (field.isDirty) return dirtyFields.push(name);
-        }
-
-        return dirtyFields;
-
-      case FormState.touchedFields:
-        const touchedFields: (string & keyof TFormFields)[] = [];
-
-        for (const [name, field] of this.#fields.entries()) {
-          if (field.isTouched) return touchedFields.push(name);
-        }
-
-        return touchedFields;
-
-      case FormState.isSubmitting:
-        return this.#isSubmitting;
-
-      default:
-        return undefined;
-    }
+  #subscribeToStateChanged(callback: (control: FormControl<TFormFields>) => void) {
+    this.#stateChangedListeners.push(callback);
+    return () => {
+      const index = this.#stateChangedListeners.indexOf(callback);
+      if (index === -1) return;
+      this.#stateChangedListeners.splice(index, 1);
+    };
   }
 
   register<TName extends string & keyof TFormFields>(
@@ -642,37 +627,28 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
     return field.props;
   }
 
-  useFormWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(
-    ...names: TNames
-  ) {
+  useFormState(control: FormControl<TFormFields>) {
     const rerender = useRerender();
-    const fields = names.filter(isFormFieldName).map((name) => this.#getOrAddField(name));
-    const formStates = names.filter(isFormStateEnum);
+    useEffect(() => control.#subscribeToStateChanged(rerender), []);
+    return control;
+  }
 
-    useEffect(() => {
-      formStates.forEach((formState) => this.changeCallbacks.get(formState)!.add(rerender));
-      fields.forEach((field) => field.changeCallbacks.add(rerender));
-      return () => {
-        formStates.forEach((formState) => this.changeCallbacks.get(formState)!.delete(rerender));
-        fields.forEach((field) => field.changeCallbacks.delete(rerender));
-      };
-    }, []);
+  useFormFieldState<TName extends string & keyof TFormFields>(name: TName) {
+    const rerender = useRerender();
+    const field = this.#getOrAddField(name);
+    useEffect(() => field.subscribeToStateChanged(rerender), []);
+    return field;
+  }
 
-    return names.map((name) =>
-      isFormFieldName(name)
-        ? this.#getOrAddField(name)
-        : isFormStateEnum(name)
-        ? this.getFormState(name)
-        : undefined
-    );
+  useFormFieldValue<TName extends string & keyof TFormFields>(name: TName) {
+    const rerender = useRerender();
+    const field = this.#getOrAddField(name);
+    useEffect(() => field.subscribeToValueChanged(rerender), []);
+    return field.value;
   }
 
   reset() {
-    this.#fields.forEach((field) => field.reset());
-
-    this.changeCallbacks.get(FormState.isDirty)!.forEach((watcher) => watcher());
-    this.changeCallbacks.get(FormState.dirtyFields)!.forEach((watcher) => watcher());
-    this.changeCallbacks.get(FormState.touchedFields)!.forEach((watcher) => watcher());
+    Object.values(this.#fields).forEach((field) => field.reset());
   }
 
   handleSubmit(
@@ -683,7 +659,7 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
       event?.preventDefault();
       const data: any = {};
 
-      for (const [name, field] of control.#fields.entries()) {
+      for (const [name, field] of Object.entries(control.#fields)) {
         if (!field.validate()) {
           field.focus();
           return;
@@ -693,10 +669,8 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
       }
 
       this.#isSubmitting = true;
-      this.changeCallbacks.get(FormState.isSubmitting)!.forEach((watcher) => watcher());
       await onSubmit(data, event);
       this.#isSubmitting = false;
-      this.changeCallbacks.get(FormState.isSubmitting)!.forEach((watcher) => watcher());
     };
   }
 
@@ -722,13 +696,15 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
     options?: FormFieldRegisterOptions
   ): {
     name: string;
-    ref(el: HTMLFormFieldElement | null): void;
-    onChange(event: ChangeEvent<HTMLFormFieldElement>): void;
-    onBlur(event: FocusEvent<HTMLFormFieldElement>): void;
+    ref(el: FormFieldHTMLElement | null): void;
+    onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
+    onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
   };
-  useFormWatch<TNames extends readonly ((string & keyof TFormFields) | FormState)[]>(
-    ...names: TNames
-  ): (number | boolean | FormFieldControl | (string & keyof TFormFields)[] | undefined)[];
+  useFormField<TName extends string & keyof TFormFields>(
+    name: TName
+  ): FormFieldControl<TFormFields[TName]>;
+  useFormFieldValue<TName extends string & keyof TFormFields>(name: TName): TFormFields[TName];
+  useFormState(): FormState;
   reset(): void;
   handleSubmit(
     onSubmit: (
@@ -751,7 +727,9 @@ export function useForm<
     () => ({
       control,
       register: control.register.bind(control),
-      useFormWatch: control.useFormWatch.bind(control),
+      useFormField: control.useFormFieldState.bind(control),
+      useFormFieldValue: control.useFormFieldValue.bind(control),
+      useFormState: control.useFormState.bind(control),
       reset: control.reset.bind(control),
       handleSubmit: control.handleSubmit.bind(control),
       setValue: control.setValue.bind(control),
