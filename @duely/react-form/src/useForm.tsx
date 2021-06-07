@@ -160,18 +160,6 @@ export type FormFieldRegisterOptions = {
   required?: boolean;
 };
 
-function isFormStateEnum<TFormFields extends Record<string, any> = Record<string, any>>(
-  value: (string & keyof TFormFields) | FormState
-): value is FormState {
-  return typeof value === 'number';
-}
-
-function isFormFieldName<TFormFields extends Record<string, any> = Record<string, any>>(
-  value: (string & keyof TFormFields) | FormState
-): value is string & keyof TFormFields {
-  return typeof value === 'string';
-}
-
 const formFieldInfo = {
   checkbox: {
     props: {
@@ -268,111 +256,9 @@ const formFieldInfo = {
 
 type FormFieldHTMLElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
-class FormFieldElementControl<
-  HTMLFormFieldElement extends HTMLFormFieldElement = HTMLFormFieldElement,
-  TValue = string,
-  TRawValue = TValue
-> {
-  #valueVar: ReactiveVar<TValue>;
-  #element: HTMLFormFieldElement | undefined | null;
-  #defaultValue: TValue = '' as unknown as TValue;
-  #onInput: (e: Event) => void;
-
-  constructor(element: HTMLFormFieldElement) {
-    this.#element = element;
-    this.#valueVar = new ReactiveVar<TValue>(this.defaultValue);
-
-    this.#valueVar.subscribe((value) => {
-      this.elementValue = value;
-    });
-
-    this.#onInput = (e) => {
-      this.#valueVar.value = this.elementValue;
-    };
-  }
-
-  get element() {
-    return this.#element;
-  }
-
-  get type() {
-    return this.#element?.type;
-  }
-
-  get value() {
-    return this.#valueVar.value;
-  }
-
-  set value(value: TValue | undefined) {
-    if (!this.element) return;
-    this.element.value = (value as unknown as string) ?? this.defaultValue;
-  }
-
-  get elementValue(): TValue {
-    return this.#element!.value as unknown as TValue;
-  }
-
-  set elementValue(value: TValue) {
-    this.#element!.value = value as any;
-  }
-
-  get hasValue() {
-    return ![undefined, ''].includes(this.element?.value);
-  }
-
-  get defaultValue() {
-    return this.#defaultValue;
-  }
-
-  set defaultValue(value: TValue) {
-    this.#defaultValue = value;
-  }
-
-  attachElement(element: HTMLFormFieldElement) {
-    this.#element = element;
-    element.addEventListener('input', this.#onInput);
-  }
-
-  detachElement() {
-    this.#element = null;
-  }
-
-  focus() {
-    this.#element?.focus();
-  }
-
-  convertValue(value: TRawValue): TValue {
-    return value as unknown as TValue;
-  }
-}
-
-export class CheckBoxFormFieldElementControl extends FormFieldElementControl<
-  HTMLInputElement,
-  boolean
-> {
-  #defaultValue = false;
-
-  get value() {
-    return this.element?.checked;
-  }
-
-  set value(value) {
-    if (!this.element) return;
-    this.element.checked = value ?? this.defaultValue;
-  }
-
-  get defaultValue() {
-    return this.#defaultValue;
-  }
-
-  set defaultValue(value: boolean) {
-    this.#defaultValue = value;
-  }
-}
-
 export class FormFieldControl<T> {
   #name: string;
-  #elementControl: undefined | FormFieldElementControl;
+  #element: FormFieldHTMLElement | undefined | null;
   #props:
     | undefined
     | {
@@ -485,24 +371,6 @@ export class FormFieldControl<T> {
     this.update();
   }
 
-  subscribeToValueChanged(callback: (value: T) => void) {
-    this.#valueChangedListeners.push(callback);
-    return () => {
-      const index = this.#valueChangedListeners.indexOf(callback);
-      if (index === -1) return;
-      this.#valueChangedListeners.splice(index, 1);
-    };
-  }
-
-  subscribeToStateChanged(callback: (field: FormFieldControl<T>) => void) {
-    this.#stateChangedListeners.push(callback);
-    return () => {
-      const index = this.#stateChangedListeners.indexOf(callback);
-      if (index === -1) return;
-      this.#stateChangedListeners.splice(index, 1);
-    };
-  }
-
   #onChange(event: ChangeEvent<FormFieldHTMLElement>) {
     this.#pauseUpdate();
     this.isDirty = true;
@@ -531,18 +399,31 @@ export class FormFieldControl<T> {
   }
 
   #attachElement(element: FormFieldHTMLElement) {
-    if (!this.#elementControl) {
-      const ctor =
-        (specialFormFieldElementControlConstructors.get(element.type) as any) ??
-        FormFieldElementControl;
-      this.#elementControl = new ctor(element);
-    } else {
-      this.#elementControl.attachElement(element);
+    if (!this.#element) {
+      this.#element = element;
     }
   }
 
   #detachElement() {
-    this.#elementControl?.detachElement();
+    this.#element = null;
+  }
+
+  subscribeToValueChanged(callback: (value: T) => void) {
+    this.#valueChangedListeners.push(callback);
+    return () => {
+      const index = this.#valueChangedListeners.indexOf(callback);
+      if (index === -1) return;
+      this.#valueChangedListeners.splice(index, 1);
+    };
+  }
+
+  subscribeToStateChanged(callback: (field: FormFieldControl<T>) => void) {
+    this.#stateChangedListeners.push(callback);
+    return () => {
+      const index = this.#stateChangedListeners.indexOf(callback);
+      if (index === -1) return;
+      this.#stateChangedListeners.splice(index, 1);
+    };
   }
 
   update() {
@@ -585,6 +466,7 @@ const specialFormFieldElementControlConstructors = new Map([
 
 class FormControl<TFormFields extends Record<string, any> = Record<string, any>> {
   #isSubmitting = false;
+  #element: FormFieldHTMLElement | undefined | null;
   #stateChangedListeners: ((field: FormControl<TFormFields>) => void)[] = [];
   #fields: Partial<
     {
