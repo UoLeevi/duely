@@ -160,11 +160,24 @@ export type FormFieldRegisterOptions = {
   required?: boolean;
 };
 
-const formFieldInfo = {
+function isCheckBoxElement(element: FormFieldHTMLElement): element is HTMLInputElement {
+  return element.type === 'checkbox';
+}
+
+const formFieldInfo: Record<
+  FormFieldHTMLElement['type'],
+  {
+    props: Record<string, any>;
+    getElementValue?: (element: any) => any;
+    setElementValue?: (element: any, value: any) => void;
+  }
+> = {
   checkbox: {
     props: {
       type: 'checkbox'
-    }
+    },
+    getElementValue: (element: HTMLInputElement) => element.checked,
+    setElementValue: (element: HTMLInputElement, value: boolean) => (element.checked = value)
   },
   color: {
     props: {
@@ -268,6 +281,9 @@ export class FormFieldControl<T> {
         onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
       };
 
+  #value: T | undefined;
+  #getElementValue: ((element: FormFieldHTMLElement) => T) | undefined;
+  #setElementValue: ((element: FormFieldHTMLElement, value: T) => T) | undefined;
   #updatePaused = false;
   #updatePending = false;
   #error: string | null = null;
@@ -313,18 +329,18 @@ export class FormFieldControl<T> {
   }
 
   get type() {
-    return this.#elementControl?.type;
+    return this.#element?.type;
   }
 
   get value() {
-    return this.#elementControl?.value;
+    return this.#value;
   }
 
   set value(value: any) {
-    if (!this.#elementControl) return;
-    const convertedValue = this.#elementControl.convertValue(value);
+    if (!this.#element) return;
+    const convertedValue = this.#element.convertValue(value);
     if (this.value === convertedValue) return;
-    this.#elementControl.value = convertedValue;
+    this.#element.value = convertedValue;
     this.update();
   }
 
@@ -373,6 +389,7 @@ export class FormFieldControl<T> {
 
   #onChange(event: ChangeEvent<FormFieldHTMLElement>) {
     this.#pauseUpdate();
+    this.value = this.#element?.value;
     this.isDirty = true;
     if (this.isTouched) this.validate();
     this.update();
@@ -401,6 +418,12 @@ export class FormFieldControl<T> {
   #attachElement(element: FormFieldHTMLElement) {
     if (!this.#element) {
       this.#element = element;
+      this.#getElementValue =
+        formFieldInfo[element.type].getElementValue ?? ((element) => element.value as any);
+
+      this.#setElementValue =
+        formFieldInfo[element.type].setElementValue ??
+        ((element, value) => (element.value = value as any));
     }
   }
 
@@ -426,16 +449,6 @@ export class FormFieldControl<T> {
     };
   }
 
-  update() {
-    if (this.#updatePaused) {
-      this.#updatePending = true;
-      return;
-    }
-
-    this.#updatePending = false;
-    this.changeCallbacks.forEach((watcher) => watcher());
-  }
-
   validate(): boolean {
     if (this.options.required && !this.hasValue) {
       this.error = useForm.options.errorMessages.required;
@@ -456,13 +469,9 @@ export class FormFieldControl<T> {
   }
 
   focus() {
-    this.#elementControl?.focus();
+    this.#element?.focus();
   }
 }
-
-const specialFormFieldElementControlConstructors = new Map([
-  ['checkbox', CheckBoxFormFieldElementControl]
-]);
 
 class FormControl<TFormFields extends Record<string, any> = Record<string, any>> {
   #isSubmitting = false;
