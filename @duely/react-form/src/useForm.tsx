@@ -164,12 +164,22 @@ function isCheckBoxElement(element: FormFieldHTMLElement): element is HTMLInputE
   return element.type === 'checkbox';
 }
 
+function defaultGetElementValue(element: FormFieldHTMLElement): any {
+  return element.value;
+}
+
+function defaultSetElementValue(element: FormFieldHTMLElement, value: any) {
+  if (element.value === value) return false;
+  element.value = value;
+  return true;
+}
+
 const formFieldInfo: Record<
   FormFieldHTMLElement['type'],
   {
     props: Record<string, any>;
     getElementValue?: (element: any) => any;
-    setElementValue?: (element: any, value: any) => void;
+    setElementValue?: (element: any, value: any) => boolean;
   }
 > = {
   checkbox: {
@@ -177,7 +187,11 @@ const formFieldInfo: Record<
       type: 'checkbox'
     },
     getElementValue: (element: HTMLInputElement) => element.checked,
-    setElementValue: (element: HTMLInputElement, value: boolean) => (element.checked = value)
+    setElementValue: (element: HTMLInputElement, value: boolean) => {
+      if (element.checked === value) return false;
+      element.checked = value;
+      return true;
+    }
   },
   color: {
     props: {
@@ -283,14 +297,14 @@ export class FormFieldControl<T> {
 
   #value: T | undefined;
   #getElementValue: ((element: FormFieldHTMLElement) => T) | undefined;
-  #setElementValue: ((element: FormFieldHTMLElement, value: T) => T) | undefined;
+  #setElementValue: ((element: FormFieldHTMLElement, value: T) => boolean) | undefined;
   #updatePaused = false;
   #updatePending = false;
   #error: string | null = null;
   #isDirty = false;
   #isTouched = false;
-  #valueChangedListeners: ((value: T) => void)[] = [];
-  #stateChangedListeners: ((field: FormFieldControl<T>) => void)[] = [];
+  #valueChangedListeners: (() => void)[] = [];
+  #stateChangedListeners: (() => void)[] = [];
 
   options: FormFieldRegisterOptions;
 
@@ -330,18 +344,6 @@ export class FormFieldControl<T> {
 
   get type() {
     return this.#element?.type;
-  }
-
-  get value() {
-    return this.#value;
-  }
-
-  set value(value: any) {
-    if (!this.#element) return;
-    const convertedValue = this.#element.convertValue(value);
-    if (this.value === convertedValue) return;
-    this.#element.value = convertedValue;
-    this.update();
   }
 
   get hasValue(): boolean {
@@ -418,12 +420,8 @@ export class FormFieldControl<T> {
   #attachElement(element: FormFieldHTMLElement) {
     if (!this.#element) {
       this.#element = element;
-      this.#getElementValue =
-        formFieldInfo[element.type].getElementValue ?? ((element) => element.value as any);
-
-      this.#setElementValue =
-        formFieldInfo[element.type].setElementValue ??
-        ((element, value) => (element.value = value as any));
+      this.#getElementValue = formFieldInfo[element.type].getElementValue ?? defaultGetElementValue;
+      this.#setElementValue = formFieldInfo[element.type].setElementValue ?? defaultSetElementValue;
     }
   }
 
@@ -431,7 +429,25 @@ export class FormFieldControl<T> {
     this.#element = null;
   }
 
-  subscribeToValueChanged(callback: (value: T) => void) {
+  getValue(): T | undefined {
+    if (this.#element === undefined) return undefined;
+
+    if (this.#element !== null) {
+      this.#value = this.#getElementValue!(this.#element);
+    }
+
+    return this.#value;
+  }
+
+  setValue(value: T) {
+    if (!this.#element) return;
+    const changed = this.#setElementValue?.(this.#element, value);
+    if (!changed) return;
+    
+    // TODO
+  }
+
+  subscribeToValueChanged(callback: () => void) {
     this.#valueChangedListeners.push(callback);
     return () => {
       const index = this.#valueChangedListeners.indexOf(callback);
@@ -440,7 +456,7 @@ export class FormFieldControl<T> {
     };
   }
 
-  subscribeToStateChanged(callback: (field: FormFieldControl<T>) => void) {
+  subscribeToStateChanged(callback: () => void) {
     this.#stateChangedListeners.push(callback);
     return () => {
       const index = this.#stateChangedListeners.indexOf(callback);
