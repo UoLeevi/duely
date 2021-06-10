@@ -298,8 +298,6 @@ export class FormFieldControl<T> {
   #value: T | undefined;
   #getElementValue: ((element: FormFieldHTMLElement) => T) | undefined;
   #setElementValue: ((element: FormFieldHTMLElement, value: T) => boolean) | undefined;
-  #updatePaused = false;
-  #updatePending = false;
   #error: string | null = null;
   #isDirty = false;
   #isTouched = false;
@@ -346,6 +344,16 @@ export class FormFieldControl<T> {
     return this.#element?.type;
   }
 
+  get value(): T | undefined {
+    if (this.#element === undefined) return undefined;
+
+    if (this.#element !== null) {
+      this.#value = this.#getElementValue!(this.#element);
+    }
+
+    return this.#value;
+  }
+
   get hasValue(): boolean {
     return this.#elementControl?.hasValue ?? false;
   }
@@ -366,7 +374,7 @@ export class FormFieldControl<T> {
   set isDirty(value: boolean) {
     if (this.#isDirty === value) return;
     this.#isDirty = value;
-    this.update();
+    this.#stateChangedListeners.forEach(callback => callback());
   }
 
   get isTouched() {
@@ -376,17 +384,11 @@ export class FormFieldControl<T> {
   set isTouched(value: boolean) {
     if (this.#isTouched === value) return;
     this.#isTouched = value;
-    this.update();
+    this.#stateChangedListeners.forEach(callback => callback());
   }
 
   get error() {
     return this.#error;
-  }
-
-  set error(value: string | null) {
-    if (this.#error === value) return;
-    this.#error = value;
-    this.update();
   }
 
   #onChange(event: ChangeEvent<FormFieldHTMLElement>) {
@@ -405,18 +407,6 @@ export class FormFieldControl<T> {
     this.#resumeUpdate();
   }
 
-  #pauseUpdate() {
-    this.#updatePaused = true;
-  }
-
-  #resumeUpdate() {
-    this.#updatePaused = false;
-
-    if (this.#updatePending) {
-      this.update();
-    }
-  }
-
   #attachElement(element: FormFieldHTMLElement) {
     if (!this.#element) {
       this.#element = element;
@@ -429,22 +419,11 @@ export class FormFieldControl<T> {
     this.#element = null;
   }
 
-  getValue(): T | undefined {
-    if (this.#element === undefined) return undefined;
-
-    if (this.#element !== null) {
-      this.#value = this.#getElementValue!(this.#element);
-    }
-
-    return this.#value;
-  }
-
   setValue(value: T) {
     if (!this.#element) return;
     const changed = this.#setElementValue?.(this.#element, value);
     if (!changed) return;
-    
-    // TODO
+    this.#valueChangedListeners.forEach(callback => callback());
   }
 
   subscribeToValueChanged(callback: () => void) {
@@ -476,12 +455,12 @@ export class FormFieldControl<T> {
   }
 
   reset() {
-    this.#pauseUpdate();
-    this.value = this.defaultValue;
-    this.error = null;
-    this.isDirty = false;
-    this.isTouched = false;
-    this.#resumeUpdate();
+    this.#error = null;
+    this.#isDirty = false;
+    this.#isTouched = false;
+    if (this.#element) this.#setElementValue!(this.#element, this.defaultValue);
+    this.#valueChangedListeners.forEach(callback => callback());
+    this.#stateChangedListeners.forEach(callback => callback());
   }
 
   focus() {
