@@ -160,10 +160,6 @@ export type FormFieldRegisterOptions = {
   required?: boolean;
 };
 
-function isCheckBoxElement(element: FormFieldHTMLElement): element is HTMLInputElement {
-  return element.type === 'checkbox';
-}
-
 function defaultGetElementValue(element: FormFieldHTMLElement): any {
   return element.value;
 }
@@ -296,19 +292,27 @@ export class FormFieldControl<T> {
       };
 
   #value: T | undefined;
+  #defaultValue: T | undefined;
   #getElementValue: ((element: FormFieldHTMLElement) => T) | undefined;
   #setElementValue: ((element: FormFieldHTMLElement, value: T) => boolean) | undefined;
   #error: string | null = null;
   #isDirty = false;
   #isTouched = false;
+  #valueChanged = false;
   #valueChangedListeners: (() => void)[] = [];
+  #stateChanged = false;
   #stateChangedListeners: (() => void)[] = [];
+  #opCounter = 0;
 
   options: FormFieldRegisterOptions;
 
   constructor(name: string, options: FormFieldRegisterOptions | undefined) {
     this.#name = name;
     this.options = options ?? {};
+  }
+
+  get #hasValue() {
+    return ![undefined, ''].includes(this.#element?.value);
   }
 
   get props(): {
@@ -354,17 +358,8 @@ export class FormFieldControl<T> {
     return this.#value;
   }
 
-  get hasValue(): boolean {
-    return this.#elementControl?.hasValue ?? false;
-  }
-
   get defaultValue() {
-    return this.#elementControl?.defaultValue;
-  }
-
-  set defaultValue(value: any) {
-    if (!this.#elementControl) return;
-    this.#elementControl.defaultValue = value;
+    return this.#defaultValue;
   }
 
   get isDirty() {
@@ -373,8 +368,10 @@ export class FormFieldControl<T> {
 
   set isDirty(value: boolean) {
     if (this.#isDirty === value) return;
+    this.#opStart();
     this.#isDirty = value;
-    this.#stateChangedListeners.forEach(callback => callback());
+    this.#stateChanged = true;
+    this.#opEnd();
   }
 
   get isTouched() {
@@ -383,28 +380,54 @@ export class FormFieldControl<T> {
 
   set isTouched(value: boolean) {
     if (this.#isTouched === value) return;
+    this.#opStart();
     this.#isTouched = value;
-    this.#stateChangedListeners.forEach(callback => callback());
+    this.#stateChanged = true;
+    this.#opEnd();
   }
 
   get error() {
     return this.#error;
   }
 
+  set error(value: string | null) {
+    if (this.#error === value) return;
+    this.#opStart();
+    this.#error = value;
+    this.#stateChanged = true;
+    this.#opEnd();
+  }
+
+  #opStart() {
+    ++this.#opCounter;
+  }
+
+  #opEnd() {
+    if (--this.#opCounter !== 0) return;
+
+    if (this.#valueChanged) {
+      this.#valueChanged = false;
+      this.#valueChangedListeners.forEach((callback) => callback());
+    }
+
+    if (this.#stateChanged) {
+      this.#stateChanged = false;
+      this.#stateChangedListeners.forEach((callback) => callback());
+    }
+  }
+
   #onChange(event: ChangeEvent<FormFieldHTMLElement>) {
-    this.#pauseUpdate();
-    this.value = this.#element?.value;
+    this.#opStart();
     this.isDirty = true;
     if (this.isTouched) this.validate();
-    this.update();
-    this.#resumeUpdate();
+    this.#opEnd();
   }
 
   #onBlur(event: FocusEvent<FormFieldHTMLElement>) {
-    this.#pauseUpdate();
+    this.#opStart();
     this.isTouched = true;
     if (this.isDirty) this.validate();
-    this.#resumeUpdate();
+    this.#opEnd();
   }
 
   #attachElement(element: FormFieldHTMLElement) {
@@ -412,6 +435,9 @@ export class FormFieldControl<T> {
       this.#element = element;
       this.#getElementValue = formFieldInfo[element.type].getElementValue ?? defaultGetElementValue;
       this.#setElementValue = formFieldInfo[element.type].setElementValue ?? defaultSetElementValue;
+      if (this.defaultValue !== undefined) {
+        this.setValue(this.defaultValue);
+      }
     }
   }
 
@@ -421,9 +447,18 @@ export class FormFieldControl<T> {
 
   setValue(value: T) {
     if (!this.#element) return;
-    const changed = this.#setElementValue?.(this.#element, value);
-    if (!changed) return;
-    this.#valueChangedListeners.forEach(callback => callback());
+
+    this.#opStart();
+    this.#valueChanged ||= this.#setElementValue!(this.#element, value);
+    this.#opEnd();
+  }
+
+  setDefaultValue(value: T) {
+    this.#defaultValue = value;
+
+    if (this.#element && this.#hasValue) {
+      this.setValue(this.defaultValue!);
+    }
   }
 
   subscribeToValueChanged(callback: () => void) {
@@ -445,22 +480,32 @@ export class FormFieldControl<T> {
   }
 
   validate(): boolean {
-    if (this.options.required && !this.hasValue) {
+    this.#opStart();
+
+    if (this.options.required && this.#hasValue) {
       this.error = useForm.options.errorMessages.required;
+      this.#opEnd();
       return false;
     }
 
     this.error = null;
+    this.#opEnd();
     return true;
   }
 
   reset() {
+    this.#opStart();
     this.#error = null;
     this.#isDirty = false;
     this.#isTouched = false;
-    if (this.#element) this.#setElementValue!(this.#element, this.defaultValue);
-    this.#valueChangedListeners.forEach(callback => callback());
-    this.#stateChangedListeners.forEach(callback => callback());
+
+    if (this.#element && this.defaultValue !== undefined) {
+      this.#setElementValue!(this.#element, this.defaultValue);
+    }
+
+    this.#valueChanged = true;
+    this.#stateChanged = true;
+    this.#opEnd();
   }
 
   focus() {
@@ -562,7 +607,7 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
 
   setValue<TName extends string & keyof TFormFields>(name: TName, value: TFormFields[TName]) {
     const field = this.#getOrAddField(name);
-    field.value = value;
+    field.setValue(value);
   }
 
   setDefaultValue<TName extends string & keyof TFormFields>(
@@ -570,8 +615,7 @@ class FormControl<TFormFields extends Record<string, any> = Record<string, any>>
     value: TFormFields[TName]
   ) {
     const field = this.#getOrAddField(name);
-    field.defaultValue = value;
-    field.value = value;
+    field.setDefaultValue(value);
   }
 }
 
@@ -586,11 +630,15 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
     onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
     onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
   };
-  useFormField<TName extends string & keyof TFormFields>(
+  useFormFieldState<TName extends string & keyof TFormFields>(
     name: TName
-  ): FormFieldControl<TFormFields[TName]>;
-  useFormFieldValue<TName extends string & keyof TFormFields>(name: TName): TFormFields[TName];
-  useFormState(): FormState;
+  ): {
+    isDirty: boolean;
+    isTouched: boolean;
+    error: string | null;
+   };
+  useFormFieldValue<TName extends string & keyof TFormFields>(name: TName): TFormFields[TName] | undefined;
+  // useFormState(): FormState;
   reset(): void;
   handleSubmit(
     onSubmit: (
@@ -613,9 +661,9 @@ export function useForm<
     () => ({
       control,
       register: control.register.bind(control),
-      useFormField: control.useFormFieldState.bind(control),
+      useFormFieldState: control.useFormFieldState.bind(control),
       useFormFieldValue: control.useFormFieldValue.bind(control),
-      useFormState: control.useFormState.bind(control),
+      // useFormState: control.useFormState.bind(control),
       reset: control.reset.bind(control),
       handleSubmit: control.handleSubmit.bind(control),
       setValue: control.setValue.bind(control),
@@ -623,13 +671,6 @@ export function useForm<
     }),
     []
   );
-}
-
-export function useFormWatch<
-  TNames extends readonly ((string & keyof TFormFields) | FormState)[],
-  TFormFields extends Record<string, any> = Record<string, any>
->(control: FormControl<TFormFields>, ...names: TNames) {
-  return control.useFormWatch(...names);
 }
 
 useForm.options = {
