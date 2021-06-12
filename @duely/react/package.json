@@ -1,6 +1,6 @@
 {
   "name": "@duely/react",
-  "version": "0.3.12",
+  "version": "0.4.0",
   "description": "UI components used in duely.app",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -25,7 +25,7 @@
     "watch": "webpack --watch"
   },
   "devDependencies": {
-    "@duely/build": "^0.3.9",
+    "@duely/build": "0.4.0",
     "@tailwindcss/typography": "^0.4.0",
     "@types/jest": "^26.0.23",
     "@types/react": "^17.0.5",
@@ -37,13 +37,13 @@
     "postcss": "^8.2.14",
     "postcss-cli": "^8.3.1",
     "tailwindcss": "^2.1.2",
-    "webpack": "^5.36.0",
-    "webpack-cli": "^4.7.0"
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.2"
   },
   "peerDependencies": {
     "@apollo/client": "^3.3.16",
-    "@duely/client": "^0.3.7",
-    "@duely/core": "^0.3.7",
+    "@duely/client": "0.4.0",
+    "@duely/core": "0.4.0",
     "@headlessui/react": "^1.0.0",
     "graphql": "^15.5.0",
     "react": "^17.0.1",
@@ -51,7 +51,7 @@
     "react-router-dom": "^5.2.0"
   },
   "dependencies": {
-    "@duely/react-form": "^0.3.11",
+    "@duely/react-form": "0.4.0",
     "immer": "^9.0.2"
   }
 }
