@@ -61,7 +61,8 @@ const formFieldInfo: Record<
   file: {
     props: {
       type: 'file'
-    }
+    },
+    getElementValue: (element: HTMLInputElement) => element.files
   },
   month: {
     props: {

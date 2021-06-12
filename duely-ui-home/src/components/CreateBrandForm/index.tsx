@@ -1,8 +1,15 @@
-import { useForm } from 'react-hook-form';
-import { FormButton, FormInfoMessage, useImageInputFromFileList, Util } from '@duely/react';
-import { useMemo, useRef } from 'react';
+import {
+  FormButton,
+  FormInfoMessage,
+  useImageInputFromFileList,
+  Util,
+  useForm,
+  FormField,
+  useDynamicNavigation,
+  Form
+} from '@duely/react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useModal } from '~/hooks';
-import { FormField, useDynamicNavigation } from '@duely/react';
 import ServicesAgreement from '~/components/ServicesAgreement';
 import { useQuery, countries_Q, useMutation, create_agency_M } from '@duely/client';
 
@@ -20,7 +27,6 @@ type CreateBrandFormProps = {
 
 export default function CreateBrandForm({ className }: CreateBrandFormProps) {
   const form = useForm<CreateBrandFormFields>();
-  const { watch, setValue, formState } = form;
   const [createAgency, state] = useMutation(create_agency_M);
 
   // countries
@@ -33,19 +39,25 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
     [countriesQuery.data]
   );
 
+  const image_logo_file_list = form.useFormFieldValue('image_logo_file_list');
+  const name = form.useFormFieldValue('name');
+  const subdomain_name_field = form.useFormFieldState('subdomain_name');
+
   // image logo
-  const image_logo_file_list = watch('image_logo_file_list');
-  const { image: image_logo, loading: imageLogoLoading } =
-    useImageInputFromFileList(image_logo_file_list);
+  const { image: image_logo, loading: imageLogoLoading } = useImageInputFromFileList(
+    image_logo_file_list
+  );
 
   // subdomain name
-  if (!formState.dirtyFields.subdomain_name) {
-    const defaultSubdomainName = watch('name')
-      ?.trim()
-      .toLowerCase()
-      .replace(/[^\w\d]+/g, '');
-    setValue('subdomain_name', defaultSubdomainName);
-  }
+  useEffect(() => {
+    if (!subdomain_name_field.isDirty) {
+      const defaultSubdomainName = name
+        ?.trim()
+        .toLowerCase()
+        .replace(/[^\w\d]+/g, '');
+      form.setValue('subdomain_name', defaultSubdomainName ?? '');
+    }
+  }, [subdomain_name_field.isDirty, name]);
 
   async function onSubmit({ image_logo_file_list, ...data }: CreateBrandFormFields) {
     await createAgency({
@@ -114,16 +126,14 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
       <h2 className="self-center text-xl font-semibold text-gray-700 sm:text-2xl">
         Create your brand
       </h2>
-      <form onSubmit={form.handleSubmit(onSubmit)} className={className}>
+      <Form form={form} onSubmit={onSubmit} className={className}>
         <FormField
-          form={form}
           label="Brand name"
           name="name"
           type="text"
           registerOptions={{ required: true }}
         />
         <FormField
-          form={form}
           label="Subdomain URL"
           name="subdomain_name"
           prefix="https://"
@@ -133,7 +143,6 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           registerOptions={{ required: true }}
         />
         <FormField
-          form={form}
           label="Country"
           name="country_code"
           type="select"
@@ -142,7 +151,6 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           registerOptions={{ required: true }}
         />
         <FormField
-          form={form}
           label="Logo image"
           name="image_logo_file_list"
           type="image"
@@ -172,14 +180,12 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           </p>
         </div>
         <div className="flex flex-col items-center pt-4">
-          <FormButton form={form} loading={state.loading}>
-            Create a brand
-          </FormButton>
+          <FormButton loading={state.loading}>Create a brand</FormButton>
         </div>
         <div className="flex flex-col items-center h-24 pt-4">
           <FormInfoMessage error={state.error} />
         </div>
-      </form>
+      </Form>
     </>
   );
 }
