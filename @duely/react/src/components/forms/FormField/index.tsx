@@ -65,8 +65,9 @@ export function FormField<
   ...props
 }: FormFieldProps<TName, TFormFields>) {
   const form = useFormContext();
-  const [field] = form.useFormWatch(name) as [FormFieldControl<TName, TFormFields>];
-  let errorMessage = field.error;
+  const fieldValue = form.useFormFieldValue(name);
+  const fieldState = form.useFormFieldState(name);
+  let errorMessage = fieldState.error;
 
   const [longErrorMessage, shortErrorMessage] =
     errorMessage?.length! > 20 ? [errorMessage, null] : [null, errorMessage];
@@ -75,11 +76,7 @@ export function FormField<
   let hintOrInfo = hint;
 
   useEffect(() => {
-    if (defaultValue === undefined || field.defaultValue === defaultValue) return;
-    field.defaultValue = defaultValue;
-    if (!field.hasValue) {
-      field.value = defaultValue;
-    }
+    form.setDefaultValue(name, defaultValue);
   }, [name, defaultValue]);
 
   switch (type) {
@@ -90,7 +87,7 @@ export function FormField<
         typeof option === 'object' ? option : { value: option }
       );
 
-      const selected = field.value;
+      const selected = fieldValue;
 
       element = (
         <div className="flex">
@@ -139,7 +136,7 @@ export function FormField<
     }
 
     case 'radio-blocks': {
-      const selected = field.value;
+      const selected = fieldValue;
 
       const children =
         (options ?? []).map((option) => {
@@ -220,7 +217,7 @@ export function FormField<
     }
 
     case 'image': {
-      const fileList = field.value as FileList | null;
+      const fileList = fieldValue as FileList | null;
       const hasFile = (fileList?.length ?? 0) > 0;
       hintOrInfo = hasFile
         ? Array.from(fileList!)
@@ -293,7 +290,7 @@ export function FormField<
     }
 
     case 'file': {
-      const fileList = field.value as FileList | null;
+      const fileList = fieldValue as FileList | null;
       const hasFile = (fileList?.length ?? 0) > 0;
       const filenames = hasFile
         ? Array.from(fileList!)
@@ -324,7 +321,7 @@ export function FormField<
             id={name}
             {...form.register(name, registerOptions)}
             type="file"
-            accept={accept}
+            accept={accept!}
             hidden
             spellCheck="false"
             autoComplete="off"
@@ -360,7 +357,7 @@ export function FormField<
           <input
             id={name}
             {...form.register(name, registerOptions)}
-            type={type}
+            type={type!}
             className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
             spellCheck="false"
             autoComplete="off"
