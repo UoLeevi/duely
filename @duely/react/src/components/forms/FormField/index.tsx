@@ -12,7 +12,7 @@ type FormFieldPropsPartial<
   name: TName;
   defaultValue?: TFormFields[TName];
   label?: React.ReactNode;
-  registerOptions?: FormFieldRegisterOptions;
+  registerOptions?: FormFieldRegisterOptions<TFormFields[TName]>;
   hint?: React.ReactNode;
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
