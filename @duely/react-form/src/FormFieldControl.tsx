@@ -88,6 +88,31 @@ export const formFieldInfo: Record<
   radio: {
     props: {
       type: 'radio'
+    },
+    getElementValue: (element: HTMLInputElement) => {
+      const control = element.form?.elements[element.name as keyof HTMLFormControlsCollection];
+      if (!control) return undefined;
+      const radioNodeList = control as unknown as RadioNodeList;
+      return radioNodeList.value;
+    },
+    setElementValue: (element: HTMLInputElement, value: string | undefined) => {
+      const control = element.form?.elements[element.name as keyof HTMLFormControlsCollection];
+      if (!control) return false;
+      const radioNodeList = control as unknown as RadioNodeList;
+      value = value ?? '';
+      if (radioNodeList.value === value) return false;
+
+      if (value === '') {
+        Array.from(radioNodeList)
+          .map((n) => n as HTMLInputElement)
+          .filter((n) => n.checked)
+          .forEach((n) => (n.checked = false));
+
+      } else {
+        radioNodeList.value = value;
+      }
+
+      return true;
     }
   },
   range: {
