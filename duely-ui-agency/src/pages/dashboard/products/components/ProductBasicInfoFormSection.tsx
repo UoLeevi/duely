@@ -1,5 +1,5 @@
-import { FormField, useImageInputFromFileList } from '@duely/react';
-import { UseFormReturn } from 'react-hook-form';
+import { FormField, useImageInputFromFileList, UseFormReturn } from '@duely/react';
+import { useEffect } from 'react';
 
 type ProductBasicInfoFormSectionFields = {
   name: string;
@@ -21,25 +21,29 @@ export function ProductBasicInfoFormSection<
   const form = _form as unknown as UseFormReturn<ProductBasicInfoFormSectionFields>;
 
   // image logo
-  const image_logo_file_list = form.watch('image_logo_file_list');
-  const { image: imageLogo, loading: imageLogoLoading } = useImageInputFromFileList(
-    image_logo_file_list
-  );
+  const image_logo_file_list = form.useFormFieldValue('image_logo_file_list');
+  const { image: imageLogo, loading: imageLogoLoading } =
+    useImageInputFromFileList(image_logo_file_list);
 
   // url name
-  if (!form.formState.dirtyFields.url_name) {
-    const defaultCheckoutUrl = form
-      .watch('name')
-      ?.trim()
-      .toLowerCase()
-      .replace(/[^\w\d-]+/g, '-');
-    form.setValue('url_name', defaultCheckoutUrl);
-  }
+  const url_name_field = form.useFormFieldState('url_name');
+  const name = form.useFormFieldValue('name');
+
+  useEffect(() => {
+    if (!url_name_field.isDirty) {
+      const defaultCheckoutUrl =
+        name
+          ?.trim()
+          .toLowerCase()
+          .replace(/[^\w\d-]+/g, '-') ?? '';
+
+      form.setValue('url_name', defaultCheckoutUrl);
+    }
+  }, [url_name_field.isDirty, name]);
 
   return (
     <>
       <FormField
-        form={form}
         label="Product name"
         className="max-w-xl"
         name="name"
@@ -47,7 +51,6 @@ export function ProductBasicInfoFormSection<
         registerOptions={{ required: true }}
       />
       <FormField
-        form={form}
         label="URL friendly name"
         className="max-w-xl"
         name="url_name"
@@ -57,7 +60,6 @@ export function ProductBasicInfoFormSection<
         registerOptions={{ required: true }}
       />
       <FormField
-        form={form}
         label="Description"
         className="max-w-xl"
         name="description"
@@ -66,7 +68,6 @@ export function ProductBasicInfoFormSection<
         registerOptions={{ required: true }}
       />
       <FormField
-        form={form}
         label="Logo image"
         className="max-w-xl"
         name="image_logo_file_list"

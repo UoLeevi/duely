@@ -76,6 +76,7 @@ export function FormField<
   let hintOrInfo = hint;
 
   useEffect(() => {
+    if (defaultValue === undefined) return;
     form.setDefaultValue(name, defaultValue);
   }, [name, defaultValue]);
 
@@ -88,6 +89,7 @@ export function FormField<
       );
 
       const selected = fieldValue;
+      console.log('name:', name, ', selected:', selected)
 
       element = (
         <div className="flex">
@@ -97,7 +99,6 @@ export function FormField<
               type="radio"
               id={`radio-toggle-option-${left.value}`}
               value={left.value}
-              defaultChecked
               hidden
               {...props}
             />
@@ -137,6 +138,7 @@ export function FormField<
 
     case 'radio-blocks': {
       const selected = fieldValue;
+      console.log('name:', name, ', selected:', selected)
 
       const children =
         (options ?? []).map((option) => {

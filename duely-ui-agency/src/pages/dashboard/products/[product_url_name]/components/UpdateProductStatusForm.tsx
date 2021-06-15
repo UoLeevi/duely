@@ -1,6 +1,12 @@
 import { product_Q, update_product_M, useMutation, useQuery } from '@duely/client';
-import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
-import { useForm } from 'react-hook-form';
+import {
+  Form,
+  FormButton,
+  FormField,
+  FormInfoMessage,
+  useFormMessages,
+  useForm
+} from '@duely/react';
 
 type ProductProps = {
   product_id?: string;
@@ -50,13 +56,8 @@ export function UpdateProductStatusForm({ product_id }: ProductProps) {
 
   return (
     <>
-      <Form
-        form={form}
-        onSubmit={onSubmit}
-        className="flex flex-col space-y-3"
-      >
+      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
         <FormField
-          form={form}
           defaultValue={product?.status}
           name="status"
           type="radio-toggle"
@@ -68,10 +69,10 @@ export function UpdateProductStatusForm({ product_id }: ProductProps) {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} dense loading={stateUpdate.loading}>
+          <FormButton dense loading={stateUpdate.loading}>
             Save
           </FormButton>
-          <FormButton form={form} type="reset" dense disabled={stateUpdate.loading}>
+          <FormButton type="reset" dense disabled={stateUpdate.loading}>
             Cancel
           </FormButton>
           <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

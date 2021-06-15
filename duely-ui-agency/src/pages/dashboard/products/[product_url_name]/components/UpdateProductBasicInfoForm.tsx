@@ -6,11 +6,11 @@ import {
   FormInfoMessage,
   useImageInputFromFileList,
   useFormMessages,
-  Util
+  Util,
+  useForm
 } from '@duely/react';
 
 import { Util as CoreUtil } from '@duely/core';
-import { useForm } from 'react-hook-form';
 
 type ProductProps = {
   product_id?: string;
@@ -47,7 +47,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
   // image logo
   const current_image_logo = product?.image_logo;
 
-  const image_logo_file_list = form.watch('image_logo_file_list');
+  const image_logo_file_list = form.useFormFieldValue('image_logo_file_list');
   const { image: image_logo, loading: imageLogoLoading } =
     useImageInputFromFileList(image_logo_file_list);
 
@@ -78,13 +78,8 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
 
   return (
     <>
-      <Form
-        form={form}
-        onSubmit={onSubmit}
-        className="flex flex-col space-y-3"
-      >
+      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
         <FormField
-          form={form}
           defaultValue={product?.name}
           label="Product name"
           className="max-w-xl"
@@ -94,7 +89,6 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
           loading={state.loading}
         />
         <FormField
-          form={form}
           defaultValue={product?.url_name}
           label="URL friendly name"
           className="max-w-xl"
@@ -126,7 +120,6 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
           loading={state.loading}
         />
         <FormField
-          form={form}
           defaultValue={product?.description}
           label="Description"
           className="max-w-xl"
@@ -137,7 +130,6 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
           loading={state.loading}
         />
         <FormField
-          form={form}
           label="Logo image"
           className="max-w-xl"
           name="image_logo_file_list"
@@ -149,10 +141,10 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} dense loading={stateUpdate.loading}>
+          <FormButton dense loading={stateUpdate.loading}>
             Save
           </FormButton>
-          <FormButton form={form} type="reset" dense disabled={stateUpdate.loading}>
+          <FormButton type="reset" dense disabled={stateUpdate.loading}>
             Cancel
           </FormButton>
           <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

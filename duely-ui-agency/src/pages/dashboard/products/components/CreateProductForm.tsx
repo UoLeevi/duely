@@ -1,5 +1,11 @@
-import { useForm } from 'react-hook-form';
-import { FormButton, FormInfoMessage, FormField, useImageInputFromFileList } from '@duely/react';
+import {
+  FormButton,
+  FormInfoMessage,
+  FormField,
+  useImageInputFromFileList,
+  useForm,
+  Form
+} from '@duely/react';
 import {
   useMutation,
   useQuery,
@@ -50,7 +56,7 @@ export function CreateProductForm() {
   };
 
   // image logo
-  const image_logo_file_list = form.watch('image_logo_file_list');
+  const image_logo_file_list = form.useFormFieldValue('image_logo_file_list');
   const { image: image_logo } = useImageInputFromFileList(image_logo_file_list);
 
   async function onSubmit({ image_logo_file_list, ...data }: CreateProductFormFields) {
@@ -105,7 +111,7 @@ export function CreateProductForm() {
     return (
       <div className="flex flex-col items-center space-y-4 text-center">
         <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
-        <svg
+          <svg
             xmlns="http://www.w3.org/2000/svg"
             className="text-3xl text-green-600 h-[1em] w-[1em]"
             fill="none"
@@ -137,13 +143,12 @@ export function CreateProductForm() {
   return (
     <>
       <h2 className="mb-3 text-xl font-medium">Create a product</h2>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-3">
+      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
         <ProductBasicInfoFormSection form={form} />
         <h3 className="pt-6 pb-2 text-lg font-medium">Pricing</h3>
         <ProductPricingFormSection form={form} />
         <h3 className="pt-6 pb-2 text-lg font-medium">Status</h3>
         <FormField
-          form={form}
           name="status"
           type="radio-toggle"
           options={[
@@ -152,12 +157,10 @@ export function CreateProductForm() {
           ]}
         />
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <FormButton form={form} loading={state.loading}>
-            Create product
-          </FormButton>
+          <FormButton loading={state.loading}>Create product</FormButton>
           <FormInfoMessage error={state.error} />
         </div>
-      </form>
+      </Form>
     </>
   );
 }

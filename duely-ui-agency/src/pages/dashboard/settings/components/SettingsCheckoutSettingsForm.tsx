@@ -8,8 +8,7 @@ import {
   useQuery
 } from '@duely/client';
 import { MutationResult } from '@duely/core';
-import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { Form, FormButton, FormField, FormInfoMessage, useFormMessages, useForm } from '@duely/react';
 
 type SettingsCheckoutSettingsFormValues = { url: string };
 
@@ -39,7 +38,7 @@ export function SettingsCheckoutSettingsForm() {
     loading: stateCreate.loading || stateUpdate.loading || stateDelete.loading
   };
 
-  const onSubmit: SubmitHandler<SettingsCheckoutSettingsFormValues> = async ({ url }) => {
+  const onSubmit = async ({ url }: SettingsCheckoutSettingsFormValues) => {
     url = url.trim();
 
     if (url === '') {
@@ -77,7 +76,6 @@ export function SettingsCheckoutSettingsForm() {
   return (
     <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
       <FormField
-        form={form}
         defaultValue={agency_thank_you_page_settings?.url?.replace('https://', '') ?? undefined}
         name="url"
         className="max-w-xl"
@@ -94,10 +92,10 @@ export function SettingsCheckoutSettingsForm() {
       />
 
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton form={form} dense loading={state.loading}>
+        <FormButton dense loading={state.loading}>
           Save
         </FormButton>
-        <FormButton form={form} type="reset" dense disabled={state.loading}>
+        <FormButton type="reset" dense disabled={state.loading}>
           Cancel
         </FormButton>
         <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

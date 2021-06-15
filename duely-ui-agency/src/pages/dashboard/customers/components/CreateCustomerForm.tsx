@@ -1,5 +1,4 @@
-import { useForm } from 'react-hook-form';
-import { FormButton, FormInfoMessage, FormField } from '@duely/react';
+import { FormButton, FormInfoMessage, FormField, useForm, Form } from '@duely/react';
 import {
   useMutation,
   useQuery,
@@ -78,17 +77,15 @@ export function CreateCustomerForm() {
   return (
     <>
       <h2 className="mb-3 text-xl font-medium">Create a customer</h2>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-3">
-        <FormField
-          form={form}
+      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
+        < FormField
           label="Customer name"
           className="max-w-xl"
           name="name"
           type="text"
           registerOptions={{ required: true }}
         />
-        <FormField
-          form={form}
+        < FormField
           label="Email address"
           className="max-w-xl"
           name="email_address"
@@ -96,12 +93,12 @@ export function CreateCustomerForm() {
           registerOptions={{ required: true }}
         />
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <FormButton form={form} loading={state.loading}>
+          <FormButton loading={state.loading}>
             Create customer
           </FormButton>
           <FormInfoMessage error={state.error} />
         </div>
-      </form>
+      </Form>
     </>
   );
 }

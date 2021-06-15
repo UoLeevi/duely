@@ -10,8 +10,7 @@ import {
   useQuery
 } from '@duely/client';
 import { MutationResult } from '@duely/core';
-import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
-import { useForm } from 'react-hook-form';
+import { Form, FormButton, FormField, FormInfoMessage, useFormMessages, useForm } from '@duely/react';
 
 type ProductProps = {
   product_id?: string;
@@ -97,8 +96,7 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
   return (
     <>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        <FormField
-          form={form}
+        < FormField
           defaultValue={product_thank_you_page_settings?.url?.replace('https://', '')}
           name="url"
           className="max-w-xl"
@@ -115,10 +113,10 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} dense loading={updateLoading}>
+          <FormButton dense loading={updateLoading}>
             Save
           </FormButton>
-          <FormButton form={form} type="reset" dense disabled={updateLoading}>
+          <FormButton type="reset" dense disabled={updateLoading}>
             Cancel
           </FormButton>
           <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

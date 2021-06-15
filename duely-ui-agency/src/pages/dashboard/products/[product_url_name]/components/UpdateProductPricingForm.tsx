@@ -1,8 +1,16 @@
 import { product_Q, create_price_M, update_product_M, useMutation, useQuery } from '@duely/client';
 import { Currency } from '@duely/core';
-import { Form, FormButton, FormField, FormInfoMessage, useFormMessages, Util } from '@duely/react';
+import {
+  Form,
+  FormButton,
+  FormField,
+  FormInfoMessage,
+  useFormMessages,
+  Util,
+  useForm
+} from '@duely/react';
+
 import { Util as CoreUtil } from '@duely/core';
-import { useForm } from 'react-hook-form';
 
 type ProductProps = {
   product_id?: string;
@@ -127,13 +135,12 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
     }
   }
 
-  const payment_type = form.watch('payment_type', default_price?.type);
+  const payment_type = form.useFormFieldValue('payment_type') ?? default_price?.type;
 
   return (
     <>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
         <FormField
-          form={form}
           className="max-w-2xl"
           name="payment_type"
           defaultValue={default_price?.type}
@@ -159,7 +166,6 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
             <div className="flex flex-col -m-2 sm:flex-row">
               <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
                 <FormField
-                  form={form}
                   defaultValue={unit_amount_major}
                   label="Price of product"
                   name="unit_amount_major"
@@ -179,7 +185,6 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
             <div className="flex flex-col -m-2 sm:flex-row">
               <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
                 <FormField
-                  form={form}
                   defaultValue={unit_amount_major}
                   label="Amount"
                   name="unit_amount_major"
@@ -192,7 +197,6 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
               </div>
               <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
                 <FormField
-                  form={form}
                   defaultValue={frequency}
                   label="Frequency"
                   name="frequency"
@@ -214,10 +218,10 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
         )}
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} dense loading={updateLoading}>
+          <FormButton dense loading={updateLoading}>
             Save
           </FormButton>
-          <FormButton form={form} type="reset" dense disabled={updateLoading}>
+          <FormButton type="reset" dense disabled={updateLoading}>
             Cancel
           </FormButton>
           <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

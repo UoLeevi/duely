@@ -1,6 +1,5 @@
 import { agency_stripe_account_Q, current_agency_Q, useQuery } from '@duely/client';
-import { FormField } from '@duely/react';
-import { UseFormReturn } from 'react-hook-form';
+import { FormField, UseFormReturn } from '@duely/react';
 
 type ProductPricingFormSectionFields = {
   unit_amount_major: string;
@@ -33,11 +32,10 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
     <span className="pr-1">{currency?.toUpperCase()}</span>
   );
 
-  const payment_type = form.watch('payment_type');
+  const payment_type = form.useFormFieldValue('payment_type');
   return (
     <>
-      <FormField
-        form={form}
+      < FormField
         className="max-w-2xl"
         name="payment_type"
         type="radio-blocks"
@@ -59,8 +57,7 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
         <>
           <div className="flex flex-col -m-2 sm:flex-row">
             <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-              <FormField
-                form={form}
+              <FormField 
                 label="Price of product"
                 name="unit_amount_major"
                 type="text"
@@ -78,8 +75,7 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
         <>
           <div className="flex flex-col -m-2 sm:flex-row">
             <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-              <FormField
-                form={form}
+              <FormField 
                 label="Amount"
                 name="unit_amount_major"
                 type="text"
@@ -90,8 +86,7 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
               />
             </div>
             <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-              <FormField
-                form={form}
+              <FormField 
                 label="Frequency"
                 name="frequency"
                 type="select"

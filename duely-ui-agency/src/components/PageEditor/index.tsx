@@ -21,11 +21,12 @@ import {
   FormInfoMessage,
   LoadingScreen,
   useFormMessages,
-  Util
+  Util,
+  useForm,
+  UseFormReturn
 } from '@duely/react';
 import { pageBlockComponents } from '~/components/page-blocks';
 import React, { useContext, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 
 type PageEditorContextValue = {
@@ -35,7 +36,7 @@ type PageEditorContextValue = {
   selectedBlock: Page_BlockFragment | null;
   selectBlock(block: Page_BlockFragment): void;
   goBackToBlockList(): void;
-  editBlockForm: ReturnType<typeof useForm>;
+  editBlockForm: UseFormReturn;
 };
 
 const PageEditorContext = React.createContext<PageEditorContextValue | null>(null);
@@ -112,7 +113,8 @@ function PageBlockPreview({ block }: PageBlockPreviewProps) {
   const { selectedBlock, selectBlock, page, agency, product, editBlockForm } = usePageEditor();
   const className = Util.createClassName(block === selectedBlock && 'overlay-ring');
   const data = useMemo(() => JSON.parse(block.data), [block.data]);
-  const values = block === selectedBlock ? editBlockForm.watch() : data;
+  const formValue = editBlockForm.useFormValue();
+  const values = block === selectedBlock ? formValue : data;
 
   const definition = block.definition;
   const Component = pageBlockComponents[definition.name];
@@ -160,17 +162,16 @@ function PageEditorEditBlockForm() {
       {definition.fields.map((field) => (
         <FormField
           key={field.name}
-          form={form}
           name={field.name}
           label={field.label}
           type={field.type}
         />
       ))}
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton form={form} dense loading={formLoading}>
+        <FormButton dense loading={formLoading}>
           Save
         </FormButton>
-        <FormButton form={form} type="reset" dense disabled={formLoading}>
+        <FormButton type="reset" dense disabled={formLoading}>
           Cancel
         </FormButton>
         <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

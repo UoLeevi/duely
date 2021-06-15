@@ -107,7 +107,6 @@ export const formFieldInfo: Record<
           .map((n) => n as HTMLInputElement)
           .filter((n) => n.checked)
           .forEach((n) => (n.checked = false));
-
       } else {
         radioNodeList.value = value;
       }
@@ -197,7 +196,7 @@ export class FormFieldControl<T> {
   }
 
   get #hasValue() {
-    return ![undefined, ''].includes(this.#element?.value);
+    return ![undefined, ''].includes(this.value as any);
   }
 
   get props(): {
@@ -334,14 +333,20 @@ export class FormFieldControl<T> {
   }
 
   #attachElement(element: FormFieldHTMLElement) {
-    if (!this.#element) {
-      this.#element = element;
-      this.#getElementValue = formFieldInfo[element.type].getElementValue ?? defaultGetElementValue;
-      this.#setElementValue = formFieldInfo[element.type].setElementValue ?? defaultSetElementValue;
-      if (this.defaultValue !== undefined) {
-        this.setValue(this.defaultValue);
-      }
+    this.startUpdate();
+    this.#element = element;
+    this.#getElementValue = formFieldInfo[element.type].getElementValue ?? defaultGetElementValue;
+    this.#setElementValue = formFieldInfo[element.type].setElementValue ?? defaultSetElementValue;
+
+    if (this.defaultValue !== undefined) {
+      this.setValue(this.defaultValue);
     }
+
+    if (this.value !== undefined) {
+      this.#valueChanged = true;
+    }
+
+    this.endUpdate();
   }
 
   #detachElement() {

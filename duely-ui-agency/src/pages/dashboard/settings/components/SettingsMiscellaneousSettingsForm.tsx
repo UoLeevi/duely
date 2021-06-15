@@ -1,6 +1,5 @@
 import { update_agency_M, useMutation, useQuery, current_agency_extended_Q } from '@duely/client';
-import { Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useForm, Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
 
 type SettingsMiscellaneousSettingsFormValues = { default_pricing_currency: string };
 
@@ -25,9 +24,9 @@ export function SettingsMiscellaneousSettingsForm() {
     loading: current_agency_loading || stateUpdate.loading
   };
 
-  const onSubmit: SubmitHandler<SettingsMiscellaneousSettingsFormValues> = async ({
+  const onSubmit = async ({
     default_pricing_currency
-  }) => {
+  }: SettingsMiscellaneousSettingsFormValues) => {
     const res = await updateAgency({ agency_id: current_agency!.id, default_pricing_currency });
 
     if (res?.success) {
@@ -45,7 +44,6 @@ export function SettingsMiscellaneousSettingsForm() {
   return (
     <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
       <FormField
-        form={form}
         defaultValue={current_agency?.default_pricing_currency ?? undefined}
         name="default_pricing_currency"
         label="Pricing currency"
@@ -57,10 +55,10 @@ export function SettingsMiscellaneousSettingsForm() {
       />
 
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton form={form} dense loading={state.loading}>
+        <FormButton dense loading={state.loading}>
           Save
         </FormButton>
-        <FormButton form={form} type="reset" dense disabled={state.loading}>
+        <FormButton type="reset" dense disabled={state.loading}>
           Cancel
         </FormButton>
         <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
