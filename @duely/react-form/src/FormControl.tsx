@@ -179,6 +179,8 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
 
       this.startUpdate();
       this.#isSubmitting = false;
+      this.#isDirty = false;
+      Object.values(this.#fields).forEach((field) => field.isDirty = false);
       this.#stateChanged = true;
       this.endUpdate();
     };
