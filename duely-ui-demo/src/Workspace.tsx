@@ -1,6 +1,5 @@
 import { integration_types_Q, useQuery } from '@duely/client';
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import {
   Form,
   FormButton,
@@ -8,18 +7,18 @@ import {
   DynamicFormFields,
   useFormMessages,
   FormField,
-  Button
+  useForm
 } from '@duely/react';
 
+let renderCount = 0;
+
 export default function Workspace() {
-  const defaultValues = {
-    integration_type_name: ''
-  };
-
   const form = useForm();
+  const integration_type_name = form.useFormFieldValue('integration_type_name');
+  const product_id = form.useFormFieldValue('product_id');
+  const { isSubmitting } = form.useFormState();
 
-  const integration_type_name = form.watch('integration_type_name');
-  console.log(integration_type_name);
+  console.log(++renderCount, integration_type_name, product_id, isSubmitting)
 
   const { data: integration_types, loading: integration_typesLoading } = useQuery(
     integration_types_Q,
@@ -51,14 +50,15 @@ export default function Workspace() {
     loading: false
   };
 
-  async function onSubmit(data: any) {
-    console.log('submitted:', data);
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setValues(data);
-      setSuccessMessage('Saved');
-    }, 3000);
+  function onSubmit(data: any) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        setValues(data);
+        console.log('submitted:', data);
+        setSuccessMessage('Saved');
+        resolve(data);
+      }, 3000);
+    });
   }
 
   return (
@@ -66,13 +66,12 @@ export default function Workspace() {
       <Form
         form={form}
         onSubmit={onSubmit}
-        values={values}
-        defaultValues={defaultValues}
         className="flex flex-col w-screen max-w-screen-sm space-y-3 min-h-[60vh] p-6 box-border"
       >
         <FormField
-          form={form}
           name="integration_type_name"
+          registerOptions={{ required: true }}
+          defaultValue={''}
           label="Integration type"
           type="select"
           options={[{ element: 'Teachable', value: 'teachable/enroll' }]}
@@ -81,16 +80,15 @@ export default function Workspace() {
 
         <DynamicFormFields
           loading={loading ?? integration_typesLoading}
-          form={form}
           fields={fields ?? []}
           skeletonFieldCount={2}
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton form={form} dense loading={state.loading}>
+          <FormButton dense loading={isSubmitting}>
             Save
           </FormButton>
-          <FormButton form={form} type="reset" dense disabled={state.loading}>
+          <FormButton type="reset" dense disabled={isSubmitting}>
             Cancel
           </FormButton>
           <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

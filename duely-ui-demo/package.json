@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "start": "webpack serve",
-    "build": "cross-env-shell NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o src/styles/index.css && webpack",
+    "build": "cross-env-shell NODE_ENV='production' tailwindcss -i node_modules/@duely/react/tailwind.css -c node_modules/@duely/react/tailwind.config.js -o src/styles/index.css && webpack",
     "build+profile": "cross-env NODE_ENV='production' webpack --profile --json > stats.json",
-    "build:css": "cross-env NODE_ENV='production' postcss node_modules/@duely/react/tailwind.css -o src/styles/index.css",
+    "build:css": "cross-env NODE_ENV='production' tailwindcss -i node_modules/@duely/react/tailwind.css -c node_modules/@duely/react/tailwind.config.js -o src/styles/index.css",
     "watch": "webpack --watch",
-    "watch:css": "cross-env postcss -w node_modules/@duely/react/tailwind.css -o src/styles/index.css",
+    "watch:css": "cross-env tailwindcss -w -i node_modules/@duely/react/tailwind.css -c node_modules/@duely/react/tailwind.config.js -o src/styles/index.css",
     "analyze": "npx webpack-bundle-analyzer stats.json"
   },
   "workspaces": [
@@ -21,9 +21,9 @@
   ],
   "dependencies": {
     "@apollo/client": "^3.3.16",
-    "@duely/client": "^0.3.6",
-    "@duely/core": "^0.3.7",
-    "@duely/react": "^0.3.9",
+    "@duely/client": "0.4.0",
+    "@duely/core": "0.4.0",
+    "@duely/react": "0.4.3",
     "@headlessui/react": "^1.2.0",
     "@tailwindcss/typography": "^0.4.0",
     "@types/node": "^14.14.44",
@@ -33,11 +33,10 @@
     "markdown-to-jsx": "^7.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-hook-form": "^7.5.2",
     "react-router-dom": "^5.2.0"
   },
   "devDependencies": {
-    "@duely/build": "^0.3.9",
+    "@duely/build": "0.4.0",
     "@types/react": "^17.0.5",
     "@types/react-router-dom": "^5.1.7",
     "autoprefixer": "^10.2.5",
@@ -45,7 +44,6 @@
     "postcss": "^8.2.14",
     "postcss-cli": "^8.3.1",
     "tailwindcss": "^2.1.2",
-    "typescript": "^4.2.4",
     "webpack": "^5.36.0",
     "webpack-cli": "^4.7.0",
     "webpack-dev-server": "^3.11.2"
