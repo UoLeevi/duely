@@ -1,12 +1,13 @@
 {
   "name": "@duely/build",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Common config files used for building duely.app projects",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
   "author": "Leevi Uotinen",
   "files": [
-    "webpack"
+    "webpack",
+    "tailwindcss"
   ],
   "dependencies": {
     "css-loader": "^5.2.6",

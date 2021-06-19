@@ -18,7 +18,7 @@
 ## 4. To check if the ingress controller pods have started, run the following command:
 # kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx --watch
 
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: duely-ingress-rules
@@ -26,6 +26,7 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "999999"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "999999"
+    nginx.ingress.kubernetes.io/proxy-body-size: 8m
 spec:
   tls:
   - hosts:
@@ -37,37 +38,57 @@ spec:
     http:
       paths:
       - path: /asset
-        # pathType: Prefix
+        pathType: Prefix
         backend:
-          serviceName: duely-asset-service
-          servicePort: 8080
+          service:
+            name: duely-asset-service
+            port:
+              number: 8080
       - path: /webhook
-        # pathType: Prefix
+        pathType: Prefix
         backend:
-          serviceName: duely-webhook-service
-          servicePort: 8080
-      - backend:
-          serviceName: duely-ui-home-service
-          servicePort: 8080
+          service:
+            name: duely-webhook-service
+            port:
+              number: 8080
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: duely-ui-home-service
+            port:
+              number: 8080
   - host: 'api.duely.app'
     http:
       paths:
-      - backend:
-          serviceName: duely-graphql-service
-          servicePort: 8080
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: duely-graphql-service
+            port:
+              number: 8080
   - host: '*.duely.app'
     http:
       paths:
       - path: /asset
-        # pathType: Prefix
+        pathType: Prefix
         backend:
-          serviceName: duely-asset-service
-          servicePort: 8080
+          service:
+            name: duely-asset-service
+            port:
+              number: 8080
       - path: /checkout
-        # pathType: Prefix
+        pathType: Prefix
         backend:
-          serviceName: duely-checkout-service
-          servicePort: 8080
-      - backend:
-          serviceName: duely-ui-agency-service
-          servicePort: 8080
+          service:
+            name: duely-checkout-service
+            port:
+              number: 8080
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: duely-ui-agency-service
+            port:
+              number: 8080

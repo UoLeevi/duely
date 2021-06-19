@@ -1,4 +1,12 @@
-const colors = require('tailwindcss/colors');
+const path = require('path');
+
+// {projectPath}\node_modules\tailwindcss\lib
+const tailwindcssCliPath = require.main.path;
+
+const modulesPath = path.resolve(tailwindcssCliPath, '../../');
+const requireLocal = module => require(path.resolve(modulesPath, module));
+
+const colors = requireLocal('tailwindcss/colors');
 
 module.exports = {
   theme: {
