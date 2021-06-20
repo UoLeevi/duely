@@ -61,6 +61,6 @@ module.exports = {
     },
   },
   plugins: [
-    require('@tailwindcss/typography')
+    requireLocal('@tailwindcss/typography')
   ]
 };

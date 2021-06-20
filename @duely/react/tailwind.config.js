@@ -27,6 +27,6 @@ module.exports = {
     './src/**/*.jsx',
     './src/**/*.ts',
     './src/**/*.tsx',
-    './node_modules/\\@duely/react/dist/**/*.js'
+    './node_modules/\@duely/react/dist/**/*.js'
   ]
 };
