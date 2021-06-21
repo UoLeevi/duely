@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-demo",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "scripts": {
     "start": "webpack serve",
@@ -20,10 +20,10 @@
     "../@duely/react"
   ],
   "dependencies": {
-    "@apollo/client": "^3.3.16",
-    "@duely/client": "0.4.0",
-    "@duely/core": "0.4.0",
-    "@duely/react": "0.4.3",
+    "@apollo/client": "^3.3.20",
+    "@duely/client": "0.4.1",
+    "@duely/core": "0.4.1",
+    "@duely/react": "0.4.6",
     "@headlessui/react": "^1.2.0",
     "@tailwindcss/typography": "^0.4.0",
     "@types/node": "^14.14.44",

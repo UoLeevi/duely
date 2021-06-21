@@ -1,4 +1,6 @@
 schema: "https://api.duely.app/graphql"
+config:
+  dedupeFragments: true
 documents: "./src/**/*.graphql"
 generates:
   ./src/typed-document-nodes.ts:
