@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-home",
-  "version": "0.10.6",
+  "version": "0.10.7",
   "private": true,
   "scripts": {
     "start": "webpack serve",
@@ -23,7 +23,7 @@
     "@apollo/client": "^3.3.20",
     "@duely/client": "0.4.2",
     "@duely/core": "0.4.1",
-    "@duely/react": "0.4.7",
+    "@duely/react": "0.4.8",
     "@headlessui/react": "^1.2.0",
     "@tailwindcss/typography": "^0.4.0",
     "@types/node": "^14.14.44",

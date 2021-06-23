@@ -89,7 +89,6 @@ export function FormField<
       );
 
       const selected = fieldValue;
-      console.log('name:', name, ', selected:', selected)
 
       element = (
         <div className="flex">
@@ -138,7 +137,6 @@ export function FormField<
 
     case 'radio-blocks': {
       const selected = fieldValue;
-      console.log('name:', name, ', selected:', selected)
 
       const children =
         (options ?? []).map((option) => {
@@ -394,9 +392,9 @@ export function FormField<
       <LoadingBar className="h-px px-1" loading={!!loading} />
 
       {longErrorMessage ? (
-        <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-4">{longErrorMessage}</p>
+        <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">{longErrorMessage}</p>
       ) : (
-        <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-4">{hintOrInfo}</p>
+        <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">{hintOrInfo}</p>
       )}
     </div>
   );

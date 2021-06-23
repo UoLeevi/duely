@@ -11,9 +11,7 @@ type ImageFromFileState = {
 /**
  * Use image from file or if file is not provided use image from image object.
  */
-export function useImageInputFromFileList(
-  fileList: FileList | null | undefined
-): {
+export function useImageInputFromFileList(fileList: FileList | null | undefined): {
   image: ImageInput | null;
   loading: boolean;
   error: Error | null;
@@ -25,8 +23,12 @@ export function useImageInputFromFileList(
   });
 
   useEffect(() => {
-    if (!fileList) {
-      setState({ loading: false, error: null, image: null });
+    if (!fileList || fileList.length === 0) {
+      setState({
+        loading: false,
+        error: null,
+        image: null
+      });
       return;
     }
 
@@ -40,12 +42,16 @@ export function useImageInputFromFileList(
     }
 
     const file = fileList[0];
-    setState({ loading: true, error: null, image: null });
+    setState({
+      loading: true,
+      error: null,
+      image: null
+    });
 
     Util.readFileAsImageInput(file)
       .then((image) => setState({ loading: false, error: null, image }))
       .catch((error) => setState({ loading: false, error, image: null }));
-  }, [fileList]);
+  }, [fileList, fileList?.length]);
 
   return state;
 }
