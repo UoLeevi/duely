@@ -1,71 +1,133 @@
-import type { ImageInput } from '@duely/core';
-import React, { useEffect } from 'react';
-import { FormFieldControl, FormFieldRegisterOptions } from '@duely/react-form';
+import React, { useEffect, useRef } from 'react';
+import { FormFieldRegisterOptions } from '@duely/react-form';
 import { Util } from '../../../util';
 import { LoadingBar } from '../../LoadingBar';
 import { useFormContext } from '../Form';
+import {
+  FormFieldDefaultElement,
+  FormFieldDefaultElementProps,
+  FormFieldFileElement,
+  FormFieldFileElementProps,
+  FormFieldImageElement,
+  FormFieldImageElementProps,
+  FormFieldRadioBlocksElement,
+  FormFieldRadioBlocksElementProps,
+  FormFieldRadioToggleElement,
+  FormFieldRadioToggleElementProps,
+  FormFieldSelectElement,
+  FormFieldSelectElementProps,
+  FormFieldTextAreaElement,
+  FormFieldTextAreaElementProps
+} from './elements';
 
 type FormFieldPropsPartial<
   TName extends string & keyof TFormFields,
-  TFormFields extends Record<string, any> = Record<string, any>
+  TFormFields extends Record<string, any> = Record<string, any>,
+  TType extends string = string
 > = {
   name: TName;
+  type?: TType;
   defaultValue?: TFormFields[TName];
   label?: React.ReactNode;
   registerOptions?: FormFieldRegisterOptions<TFormFields[TName]>;
   hint?: React.ReactNode;
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
-  image?: ImageInput | null;
   actions?: React.ReactNode;
   loading?: boolean;
-  options?: (
-    | string
-    | {
-        value: string;
-        element?: React.ReactNode;
-        description?: React.ReactNode;
-        className?: string;
-      }
-  )[];
 };
 
-type FormFieldProps<
+type FormFieldRadioToggleProps<
   TName extends string & keyof TFormFields,
   TFormFields extends Record<string, any> = Record<string, any>
 > = FormFieldPropsPartial<TName, TFormFields> &
-  Omit<
-    React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> &
-      React.DetailedHTMLProps<
-        React.TextareaHTMLAttributes<HTMLTextAreaElement>,
-        HTMLTextAreaElement
-      > &
-      React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>,
-    keyof FormFieldPropsPartial<TName, TFormFields>
-  >;
+  FormFieldRadioToggleElementProps<TName, TFormFields> & {
+    type: 'radio-toggle';
+  };
+
+type FormFieldRadioBlocksProps<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>
+> = FormFieldPropsPartial<TName, TFormFields> &
+  FormFieldRadioBlocksElementProps<TName, TFormFields> & {
+    type: 'radio-blocks';
+  };
+
+type FormFieldSelectProps<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>
+> = FormFieldPropsPartial<TName, TFormFields> &
+  FormFieldSelectElementProps<TName, TFormFields> & {
+    type: 'select';
+  };
+
+type FormFieldImageProps<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>
+> = FormFieldPropsPartial<TName, TFormFields> &
+  FormFieldImageElementProps<TName, TFormFields> & {
+    type: 'image';
+  };
+
+type FormFieldFileProps<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>
+> = FormFieldPropsPartial<TName, TFormFields> &
+  FormFieldFileElementProps<TName, TFormFields> & {
+    type: 'file';
+  };
+
+type FormFieldTextAreaProps<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>
+> = FormFieldPropsPartial<TName, TFormFields> &
+  FormFieldTextAreaElementProps<TName, TFormFields> & {
+    type: 'textarea';
+  };
+
+type FormFieldDefaultProps<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>,
+  TType extends string = string
+> = FormFieldPropsPartial<TName, TFormFields> &
+  FormFieldDefaultElementProps<TName, TFormFields> & {
+    type?: Exclude<
+      TType,
+      'radio-toggle' | 'radio-blocks' | 'select' | 'image' | 'file' | 'textarea'
+    >;
+  };
+
+type FormFieldProps<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>,
+  TType extends string = string
+> =
+  | Omit<FormFieldTextAreaProps<TName, TFormFields>, 'hintOrInfoRef'>
+  | Omit<FormFieldFileProps<TName, TFormFields>, 'hintOrInfoRef'>
+  | Omit<FormFieldImageProps<TName, TFormFields>, 'hintOrInfoRef'>
+  | Omit<FormFieldRadioToggleProps<TName, TFormFields>, 'hintOrInfoRef'>
+  | Omit<FormFieldRadioBlocksProps<TName, TFormFields>, 'hintOrInfoRef'>
+  | Omit<FormFieldSelectProps<TName, TFormFields>, 'hintOrInfoRef'>
+  | Omit<FormFieldDefaultProps<TName, TFormFields, TType>, 'hintOrInfoRef'>;
 
 export function FormField<
   TName extends string & keyof TFormFields,
-  TFormFields extends Record<string, any> = Record<string, any>
+  TFormFields extends Record<string, any> = Record<string, any>,
+  TType extends string = string
 >({
   name,
   defaultValue,
   label,
   type,
-  registerOptions,
   hint,
   prefix,
   suffix,
   actions,
   loading,
-  options,
-  accept,
-  image,
   className,
   ...props
-}: FormFieldProps<TName, TFormFields>) {
+}: FormFieldProps<TName, TFormFields, TType>) {
   const form = useFormContext();
-  const fieldValue = form.useFormFieldValue(name);
   const fieldState = form.useFormFieldState(name);
   let errorMessage = fieldState.error;
 
@@ -73,7 +135,7 @@ export function FormField<
     errorMessage?.length! > 20 ? [errorMessage, null] : [null, errorMessage];
 
   let element;
-  let hintOrInfo = hint;
+  let hintOrInfoRef = useRef(hint);
 
   useEffect(() => {
     if (defaultValue === undefined) return;
@@ -82,289 +144,121 @@ export function FormField<
 
   switch (type) {
     case 'radio-toggle': {
-      if (!Array.isArray(options) || options.length !== 2)
-        throw new Error('radio-toggle expects options prop as an array containing two items.');
-      const [left, right] = options.map((option) =>
-        typeof option === 'object' ? option : { value: option }
-      );
-
-      const selected = fieldValue;
-
       element = (
-        <div className="flex">
-          <div className="grid items-center grid-cols-3 form-field-radio-toggle">
-            <input
-              {...form.register(name, registerOptions)}
-              type="radio"
-              id={`radio-toggle-option-${left.value}`}
-              value={left.value}
-              hidden
-              {...props}
-            />
-            <label htmlFor={`radio-toggle-option-${left.value}`} className="grid row-start-1">
-              <span className="pr-3 font-medium tracking-wide text-right">
-                {left.element ?? Util.sentenceCase(left.value)}
-              </span>
-            </label>
-
-            <div className="relative w-12 h-8 col-start-2 row-start-1 border border-gray-300 rounded-md shadow-sm outline-none pointer-events-none sm:text-sm sm:leading-5">
-              <div
-                className={`box-border grid place-items-center absolute inset-y-0 w-6 m-px transition border-2 border-transparent rounded-md bg-clip-content ${
-                  (left.value === selected ? left : right).className ??
-                  'bg-gradient-to-r from-gray-400 to-gray-300'
-                }`}
-              ></div>
-            </div>
-
-            <input
-              {...form.register(name, registerOptions)}
-              type="radio"
-              id={`radio-toggle-option-${right.value}`}
-              value={right.value}
-              hidden
-              {...props}
-            />
-            <label htmlFor={`radio-toggle-option-${right.value}`} className="grid row-start-1">
-              <span className="pl-3 font-medium tracking-wide text-left">
-                {right.element ?? Util.sentenceCase(right.value)}
-              </span>
-            </label>
-          </div>
-        </div>
+        <FormFieldRadioToggleElement
+          {...({
+            name,
+            hint,
+            loading,
+            hintOrInfoRef,
+            prefix,
+            suffix,
+            ...props
+          } as FormFieldRadioToggleElementProps<TName, TFormFields>)}
+        />
       );
       break;
     }
 
     case 'radio-blocks': {
-      const selected = fieldValue;
-
-      const children =
-        (options ?? []).map((option) => {
-          const { value, element, description } =
-            typeof option === 'object'
-              ? option
-              : { value: option, element: undefined, description: undefined };
-          const className = Util.createClassName(
-            selected === value &&
-              (props.readOnly || props.disabled ? 'border-gray-400' : 'border-blue-400'),
-            selected !== value && (props.readOnly || props.disabled) && 'opacity-50',
-            'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1'
-          );
-
-          return (
-            <label key={value} htmlFor={`radio-blocks-option-${value}`} className={className}>
-              <input
-                {...form.register(name, registerOptions)}
-                key={value}
-                value={value}
-                id={`radio-blocks-option-${value}`}
-                type="radio"
-                hidden
-                {...props}
-              />
-              <div className="space-y-2">
-                <span className="font-semibold">{element ?? value}</span>
-                {description && <p className="text-xs whitespace-nowrap">{description}</p>}
-              </div>
-            </label>
-          );
-        }) ?? [];
-
-      element = <div className="grid gap-4 grid-cols-fill-200">{children}</div>;
+      element = (
+        <FormFieldRadioBlocksElement
+          {...({
+            name,
+            hint,
+            loading,
+            hintOrInfoRef,
+            prefix,
+            suffix,
+            ...props
+          } as FormFieldRadioBlocksElementProps<TName, TFormFields>)}
+        />
+      );
       break;
     }
 
     case 'select': {
-      const children =
-        ['', ...(options ?? [])].map((option) => {
-          const { value, element } =
-            typeof option === 'object' ? option : { value: option, element: undefined };
-          return (
-            <option key={value} value={value}>
-              {element ?? value}
-            </option>
-          );
-        }) ?? [];
-
       element = (
-        <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
-          <select
-            id={name}
-            {...form.register(name, registerOptions)}
-            className="w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none"
-            spellCheck="false"
-            autoComplete="off"
-            {...props}
-          >
-            {children}
-          </select>
-
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="absolute right-0 w-5 h-5 mr-3 text-gray-600 pointer-events-none"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </div>
+        <FormFieldSelectElement
+          {...({
+            name,
+            hint,
+            loading,
+            hintOrInfoRef,
+            prefix,
+            suffix,
+            ...props
+          } as FormFieldSelectElementProps<TName, TFormFields>)}
+        />
       );
       break;
     }
 
     case 'image': {
-      const fileList = fieldValue as FileList | null;
-      const hasFile = (fileList?.length ?? 0) > 0;
-      hintOrInfo = hasFile
-        ? Array.from(fileList!)
-            .map((f) => `${f.name} ${Util.formatFileSize(f.size)}`)
-            .join(', ')
-        : null;
-
-      loading = !!loading;
-      accept = accept ?? 'image/png, image/jpeg';
-
-      const className = Util.createClassName(
-        loading && 'animate-pulse border-indigo-400',
-        !loading && 'border-gray-300',
-        image && 'border border-gray-300 shadow-sm',
-        !image && 'px-6 pt-5 pb-6 border-2 border-dashed',
-        'relative transition-colors flex justify-center rounded-md'
-      );
-
       element = (
-        <label htmlFor={name} className={className}>
-          {image && (
-            <img
-              className="flex-1 object-contain rounded-md"
-              src={image.data}
-              alt={typeof label === 'string' ? label : ''}
-            />
-          )}
-
-          {!image && (
-            <div className="text-center">
-              <svg
-                className="w-12 h-12 mx-auto text-gray-400"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 48 48"
-              >
-                <path
-                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                ></path>
-              </svg>
-              <p className="mt-1 text-sm text-gray-600">
-                <span className="font-medium text-indigo-600 transition duration-150 ease-in-out cursor-pointer hover:text-indigo-500 focus:outline-none focus:underline">
-                  Upload a file
-                </span>
-                <span> or drag and drop</span>
-              </p>
-              <p className="mt-1 text-xs text-gray-500">
-                {hint ?? accept!.split('image/').join('').toUpperCase()}
-              </p>
-            </div>
-          )}
-
-          <input
-            readOnly={loading}
-            id={name}
-            {...form.register(name, registerOptions)}
-            accept={accept}
-            type="file"
-            hidden
-            spellCheck="false"
-            autoComplete="off"
-            {...props}
-          />
-        </label>
+        <FormFieldImageElement
+          {...({
+            name,
+            hint,
+            loading,
+            hintOrInfoRef,
+            prefix,
+            suffix,
+            ...props
+          } as FormFieldImageElementProps<TName, TFormFields>)}
+        />
       );
       break;
     }
 
     case 'file': {
-      const fileList = fieldValue as FileList | null;
-      const hasFile = (fileList?.length ?? 0) > 0;
-      const filenames = hasFile
-        ? Array.from(fileList!)
-            .map((f) => f.name)
-            .join(', ')
-        : null;
-      hintOrInfo = hasFile
-        ? Array.from(fileList!)
-            .map((f) => Util.formatFileSize(f.size))
-            .join(', ')
-        : null;
-
       element = (
-        <label
-          className="grid px-3 border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5"
-          htmlFor={name}
-        >
-          {filenames ? (
-            <span className="w-full py-2 bg-transparent rounded-md row-span-full col-span-full">
-              {filenames}
-            </span>
-          ) : (
-            <span className="w-full py-2 text-gray-500 bg-transparent rounded-md row-span-full col-span-full">
-              <span>Upload a file</span> or drag and drop
-            </span>
-          )}
-          <input
-            id={name}
-            {...form.register(name, registerOptions)}
-            type="file"
-            accept={accept!}
-            hidden
-            spellCheck="false"
-            autoComplete="off"
-            {...props}
-          />
-        </label>
+        <FormFieldFileElement
+          {...({
+            name,
+            hint,
+            loading,
+            hintOrInfoRef,
+            prefix,
+            suffix,
+            ...props
+          } as FormFieldFileElementProps<TName, TFormFields>)}
+        />
       );
       break;
     }
 
     case 'textarea': {
       element = (
-        <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
-          {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
-          <textarea
-            id={name}
-            {...form.register(name, registerOptions)}
-            className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
-            spellCheck="false"
-            autoComplete="off"
-            {...props}
-          />
-          {suffix && <span className="pr-3 text-gray-500">{suffix}</span>}
-        </div>
+        <FormFieldTextAreaElement
+          {...({
+            name,
+            hint,
+            loading,
+            hintOrInfoRef,
+            prefix,
+            suffix,
+            ...props
+          } as FormFieldTextAreaElementProps<TName, TFormFields>)}
+        />
       );
       break;
     }
 
     default: {
       element = (
-        <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
-          {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
-          <input
-            id={name}
-            {...form.register(name, registerOptions)}
-            type={type!}
-            className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
-            spellCheck="false"
-            autoComplete="off"
-            {...props}
-          />
-          {suffix && <span className="pr-3 text-gray-500">{suffix}</span>}
-        </div>
+        <FormFieldDefaultElement
+          {...({
+            name,
+            type,
+            hint,
+            loading,
+            hintOrInfoRef,
+            prefix,
+            suffix,
+            ...props
+          } as FormFieldDefaultElementProps<TName, TFormFields>)}
+        />
       );
     }
   }
@@ -392,9 +286,13 @@ export function FormField<
       <LoadingBar className="h-px px-1" loading={!!loading} />
 
       {longErrorMessage ? (
-        <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">{longErrorMessage}</p>
+        <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">
+          {longErrorMessage}
+        </p>
       ) : (
-        <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">{hintOrInfo}</p>
+        <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
+          {hintOrInfoRef.current}
+        </p>
       )}
     </div>
   );

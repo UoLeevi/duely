@@ -12,13 +12,8 @@ type ProductPricingFormSectionProps<TFieldValues extends ProductPricingFormSecti
 };
 
 export function ProductPricingFormSection<TFieldValues extends ProductPricingFormSectionFields>({
-  form: _form
+  form
 }: ProductPricingFormSectionProps<TFieldValues>) {
-  // TODO: fix types
-  // Lets's brute force fix the type errors
-  // see: https://github.com/react-hook-form/react-hook-form/discussions/3924
-  const form = (_form as unknown) as UseFormReturn<ProductPricingFormSectionFields>;
-
   const { data: agency } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
     agency_stripe_account_Q,
@@ -28,14 +23,12 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
 
   const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency;
 
-  const currencyPrefix: React.ReactNode = (
-    <span className="pr-1">{currency?.toUpperCase()}</span>
-  );
+  const currencyPrefix: React.ReactChild = <span className="pr-1">{currency?.toUpperCase()}</span>;
 
   const payment_type = form.useFormFieldValue('payment_type');
   return (
     <>
-      < FormField
+      <FormField
         className="max-w-2xl"
         name="payment_type"
         type="radio-blocks"
@@ -57,7 +50,7 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
         <>
           <div className="flex flex-col -m-2 sm:flex-row">
             <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-              <FormField 
+              <FormField
                 label="Price of product"
                 name="unit_amount_major"
                 type="text"
@@ -75,7 +68,7 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
         <>
           <div className="flex flex-col -m-2 sm:flex-row">
             <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-              <FormField 
+              <FormField
                 label="Amount"
                 name="unit_amount_major"
                 type="text"
@@ -86,7 +79,7 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
               />
             </div>
             <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-              <FormField 
+              <FormField
                 label="Frequency"
                 name="frequency"
                 type="select"
