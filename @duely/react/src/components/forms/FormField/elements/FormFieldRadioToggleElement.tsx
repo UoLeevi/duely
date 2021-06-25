@@ -1,3 +1,4 @@
+import type { Override } from '@duely/core';
 import React from 'react';
 import { Util } from '../../../../util';
 import { useFormContext } from '../../Form';
@@ -6,10 +7,8 @@ import { FormFieldElementProps } from './FormFieldElementProps';
 export type FormFieldRadioToggleElementProps<
   TName extends string,
   TFormFields extends Record<TName, string> = Record<TName, string>
-> = Omit<
+> = Override<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
-  keyof FormFieldElementProps<TName, TFormFields>
-> &
   FormFieldElementProps<TName, TFormFields> & {
     options: [
       left:
@@ -29,7 +28,7 @@ export type FormFieldRadioToggleElementProps<
             className?: string;
           }
     ];
-  };
+  }>;
 
 export function FormFieldRadioToggleElement<
   TName extends string & keyof TFormFields,
@@ -39,11 +38,6 @@ export function FormFieldRadioToggleElement<
   registerOptions,
   options,
   loading,
-  label,
-  hint,
-  hintOrInfoRef,
-  prefix,
-  suffix,
   ...props
 }: FormFieldRadioToggleElementProps<TName, TFormFields>) {
   const form = useFormContext();
@@ -87,6 +81,7 @@ export function FormFieldRadioToggleElement<
           id={`radio-toggle-option-${right.value}`}
           value={right.value}
           hidden
+          readOnly={loading}
           {...props}
         />
         <label htmlFor={`radio-toggle-option-${right.value}`} className="grid row-start-1">

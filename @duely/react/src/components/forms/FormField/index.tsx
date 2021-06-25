@@ -31,8 +31,6 @@ type FormFieldPropsPartial<
   label?: React.ReactNode;
   registerOptions?: FormFieldRegisterOptions<TFormFields[TName]>;
   hint?: React.ReactNode;
-  prefix?: React.ReactNode;
-  suffix?: React.ReactNode;
   actions?: React.ReactNode;
   loading?: boolean;
 };
@@ -102,13 +100,13 @@ type FormFieldProps<
   TFormFields extends Record<string, any> = Record<string, any>,
   TType extends string = string
 > =
-  | Omit<FormFieldTextAreaProps<TName, TFormFields>, 'hintOrInfoRef'>
-  | Omit<FormFieldFileProps<TName, TFormFields>, 'hintOrInfoRef'>
-  | Omit<FormFieldImageProps<TName, TFormFields>, 'hintOrInfoRef'>
-  | Omit<FormFieldRadioToggleProps<TName, TFormFields>, 'hintOrInfoRef'>
-  | Omit<FormFieldRadioBlocksProps<TName, TFormFields>, 'hintOrInfoRef'>
-  | Omit<FormFieldSelectProps<TName, TFormFields>, 'hintOrInfoRef'>
-  | Omit<FormFieldDefaultProps<TName, TFormFields, TType>, 'hintOrInfoRef'>;
+  | Omit<FormFieldTextAreaProps<TName, TFormFields>, 'hintRef'>
+  | Omit<FormFieldFileProps<TName, TFormFields>, 'hintRef'>
+  | Omit<FormFieldImageProps<TName, TFormFields>, 'hintRef'>
+  | Omit<FormFieldRadioToggleProps<TName, TFormFields>, 'hintRef'>
+  | Omit<FormFieldRadioBlocksProps<TName, TFormFields>, 'hintRef'>
+  | Omit<FormFieldSelectProps<TName, TFormFields>, 'hintRef'>
+  | Omit<FormFieldDefaultProps<TName, TFormFields, TType>, 'hintRef'>;
 
 export function FormField<
   TName extends string & keyof TFormFields,
@@ -120,8 +118,6 @@ export function FormField<
   label,
   type,
   hint,
-  prefix,
-  suffix,
   actions,
   loading,
   className,
@@ -135,7 +131,7 @@ export function FormField<
     errorMessage?.length! > 20 ? [errorMessage, null] : [null, errorMessage];
 
   let element;
-  let hintOrInfoRef = useRef(hint);
+  let hintRef = useRef(hint);
 
   useEffect(() => {
     if (defaultValue === undefined) return;
@@ -148,11 +144,7 @@ export function FormField<
         <FormFieldRadioToggleElement
           {...({
             name,
-            hint,
             loading,
-            hintOrInfoRef,
-            prefix,
-            suffix,
             ...props
           } as FormFieldRadioToggleElementProps<TName, TFormFields>)}
         />
@@ -165,11 +157,7 @@ export function FormField<
         <FormFieldRadioBlocksElement
           {...({
             name,
-            hint,
             loading,
-            hintOrInfoRef,
-            prefix,
-            suffix,
             ...props
           } as FormFieldRadioBlocksElementProps<TName, TFormFields>)}
         />
@@ -182,11 +170,7 @@ export function FormField<
         <FormFieldSelectElement
           {...({
             name,
-            hint,
             loading,
-            hintOrInfoRef,
-            prefix,
-            suffix,
             ...props
           } as FormFieldSelectElementProps<TName, TFormFields>)}
         />
@@ -201,9 +185,7 @@ export function FormField<
             name,
             hint,
             loading,
-            hintOrInfoRef,
-            prefix,
-            suffix,
+            hintRef,
             ...props
           } as FormFieldImageElementProps<TName, TFormFields>)}
         />
@@ -216,11 +198,8 @@ export function FormField<
         <FormFieldFileElement
           {...({
             name,
-            hint,
             loading,
-            hintOrInfoRef,
-            prefix,
-            suffix,
+            hintRef,
             ...props
           } as FormFieldFileElementProps<TName, TFormFields>)}
         />
@@ -233,11 +212,7 @@ export function FormField<
         <FormFieldTextAreaElement
           {...({
             name,
-            hint,
             loading,
-            hintOrInfoRef,
-            prefix,
-            suffix,
             ...props
           } as FormFieldTextAreaElementProps<TName, TFormFields>)}
         />
@@ -251,11 +226,7 @@ export function FormField<
           {...({
             name,
             type,
-            hint,
             loading,
-            hintOrInfoRef,
-            prefix,
-            suffix,
             ...props
           } as FormFieldDefaultElementProps<TName, TFormFields>)}
         />
@@ -291,7 +262,7 @@ export function FormField<
         </p>
       ) : (
         <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
-          {hintOrInfoRef.current}
+          {hintRef.current}
         </p>
       )}
     </div>

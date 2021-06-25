@@ -1,3 +1,4 @@
+import type { Override } from '@duely/core';
 import React from 'react';
 import { Util } from '../../../../util';
 import { useFormContext } from '../../Form';
@@ -6,10 +7,8 @@ import { FormFieldElementProps } from './FormFieldElementProps';
 export type FormFieldRadioBlocksElementProps<
   TName extends string,
   TFormFields extends Record<TName, string> = Record<TName, string>
-> = Omit<
+> = Override<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
-  keyof FormFieldElementProps<TName, TFormFields>
-> &
   FormFieldElementProps<TName, TFormFields> & {
     options: (
       | string
@@ -20,7 +19,7 @@ export type FormFieldRadioBlocksElementProps<
           className?: string;
         }
     )[];
-  };
+  }>;
 
 export function FormFieldRadioBlocksElement<
   TName extends string & keyof TFormFields,
@@ -30,11 +29,6 @@ export function FormFieldRadioBlocksElement<
   registerOptions,
   options,
   loading,
-  label,
-  hint,
-  hintOrInfoRef,
-  prefix,
-  suffix,
   ...props
 }: FormFieldRadioBlocksElementProps<TName, TFormFields>) {
   const form = useFormContext();
@@ -62,6 +56,7 @@ export function FormFieldRadioBlocksElement<
             id={`radio-blocks-option-${value}`}
             type="radio"
             hidden
+            readOnly={loading}
             {...props}
           />
           <div className="space-y-2">

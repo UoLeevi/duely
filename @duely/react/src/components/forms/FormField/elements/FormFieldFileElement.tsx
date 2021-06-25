@@ -1,3 +1,4 @@
+import type { Override } from '@duely/core';
 import React from 'react';
 import { Util } from '../../../../util';
 import { useFormContext } from '../../Form';
@@ -6,13 +7,13 @@ import { FormFieldElementProps } from './FormFieldElementProps';
 export type FormFieldFileElementProps<
   TName extends string,
   TFormFields extends Record<TName, string> = Record<TName, string>
-> = Omit<
+> = Override<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
-  keyof FormFieldElementProps<TName, TFormFields>
-> &
   FormFieldElementProps<TName, TFormFields> & {
     accept: string;
-  };
+    hintRef: React.MutableRefObject<React.ReactNode>;
+  }
+>;
 
 export function FormFieldFileElement<
   TName extends string & keyof TFormFields,
@@ -22,11 +23,7 @@ export function FormFieldFileElement<
   registerOptions,
   accept,
   loading,
-  label,
-  hint,
-  hintOrInfoRef,
-  prefix,
-  suffix,
+  hintRef,
   ...props
 }: FormFieldFileElementProps<TName, TFormFields>) {
   const form = useFormContext();
@@ -38,7 +35,7 @@ export function FormFieldFileElement<
         .join(', ')
     : null;
 
-  hintOrInfoRef.current = hasFile
+  hintRef.current = hasFile
     ? Array.from(fileList!)
         .map((f) => Util.formatFileSize(f.size))
         .join(', ')
@@ -66,6 +63,7 @@ export function FormFieldFileElement<
         hidden
         spellCheck="false"
         autoComplete="off"
+        readOnly={loading}
         {...props}
       />
     </label>

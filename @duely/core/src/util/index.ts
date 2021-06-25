@@ -1,3 +1,5 @@
+export type Override<T1, T2> = T2 & Omit<T1, keyof T2>;
+
 export type NotFunction<T> = T extends Function ? never : T;
 export type GenericFunction<R = any, TArgs extends any[] = any[]> = (...args: TArgs) => R;
 export type ResolvableValue<R = any, TArgs extends any[] = any[]> =

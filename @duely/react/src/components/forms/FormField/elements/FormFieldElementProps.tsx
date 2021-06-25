@@ -7,9 +7,4 @@ export type FormFieldElementProps<
   name: TName;
   registerOptions?: FormFieldRegisterOptions<TFormFields[TName]>;
   loading?: boolean;
-  label?: React.ReactNode;
-  hint?: React.ReactNode;
-  prefix?: React.ReactNode;
-  suffix?: React.ReactNode;
-  hintOrInfoRef: React.MutableRefObject<React.ReactNode>;
 };

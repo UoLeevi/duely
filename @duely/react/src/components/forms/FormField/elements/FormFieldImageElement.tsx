@@ -1,4 +1,4 @@
-import { ImageInput } from '@duely/core';
+import { Override, ImageInput } from '@duely/core';
 import React from 'react';
 import { Util } from '../../../../util';
 import { useFormContext } from '../../Form';
@@ -7,14 +7,15 @@ import { FormFieldElementProps } from './FormFieldElementProps';
 export type FormFieldImageElementProps<
   TName extends string,
   TFormFields extends Record<TName, string> = Record<TName, string>
-> = Omit<
+> = Override<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
-  keyof FormFieldElementProps<TName, TFormFields>
-> &
   FormFieldElementProps<TName, TFormFields> & {
     accept: string;
     image?: ImageInput | null;
-  };
+    hintRef: React.MutableRefObject<React.ReactNode>;
+    label?: React.ReactNode;
+    hint?: React.ReactNode;    
+  }>;
 
 export function FormFieldImageElement<
   TName extends string & keyof TFormFields,
@@ -25,17 +26,15 @@ export function FormFieldImageElement<
   accept,
   image,
   loading,
-  label,
+  hintRef,
   hint,
-  hintOrInfoRef,
-  prefix,
-  suffix,
+  label,
   ...props
 }: FormFieldImageElementProps<TName, TFormFields>) {
   const form = useFormContext();
   const fileList = form.useFormFieldValue(name) as FileList | null;
   const hasFile = (fileList?.length ?? 0) > 0;
-  hintOrInfoRef.current = hasFile
+  hintRef.current = hasFile
     ? Array.from(fileList!)
         .map((f) => `${f.name} ${Util.formatFileSize(f.size)}`)
         .join(', ')
@@ -90,9 +89,9 @@ export function FormFieldImageElement<
       )}
 
       <input
-        readOnly={loading}
         id={name}
         {...form.register(name, registerOptions)}
+        readOnly={loading}
         accept={accept}
         type="file"
         hidden

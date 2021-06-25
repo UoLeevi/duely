@@ -1,3 +1,4 @@
+import type { Override } from '@duely/core';
 import React from 'react';
 import { useFormContext } from '../../Form';
 import { FormFieldElementProps } from './FormFieldElementProps';
@@ -5,10 +6,8 @@ import { FormFieldElementProps } from './FormFieldElementProps';
 export type FormFieldSelectElementProps<
   TName extends string,
   TFormFields extends Record<TName, string> = Record<TName, string>
-> = Omit<
+> = Override<
   React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>,
-  keyof FormFieldElementProps<TName, TFormFields>
-> &
   FormFieldElementProps<TName, TFormFields> & {
     options:
       | (
@@ -21,7 +20,7 @@ export type FormFieldSelectElementProps<
             }
         )[]
       | undefined;
-  };
+  }>;
 
 export function FormFieldSelectElement<
   TName extends string & keyof TFormFields,
@@ -31,11 +30,6 @@ export function FormFieldSelectElement<
   registerOptions,
   options,
   loading,
-  label,
-  hint,
-  hintOrInfoRef,
-  prefix,
-  suffix,
   ...props
 }: FormFieldSelectElementProps<TName, TFormFields>) {
   const form = useFormContext();

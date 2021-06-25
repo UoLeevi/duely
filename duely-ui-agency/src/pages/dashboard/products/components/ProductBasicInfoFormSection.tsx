@@ -14,11 +14,7 @@ type ProductBasicInfoFormSectionProps<TFieldValues extends ProductBasicInfoFormS
 
 export function ProductBasicInfoFormSection<
   TFieldValues extends ProductBasicInfoFormSectionFields
->({ form: _form }: ProductBasicInfoFormSectionProps<TFieldValues>) {
-  // TODO: fix types
-  // Lets's brute force fix the type errors
-  // see: https://github.com/react-hook-form/react-hook-form/discussions/3924
-  const form = _form as unknown as UseFormReturn<ProductBasicInfoFormSectionFields>;
+>({ form }: ProductBasicInfoFormSectionProps<TFieldValues>) {
 
   // image logo
   const image_logo_file_list = form.useFormFieldValue('image_logo_file_list');

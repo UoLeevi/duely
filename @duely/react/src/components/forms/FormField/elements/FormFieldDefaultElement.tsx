@@ -1,3 +1,4 @@
+import type { Override } from '@duely/core';
 import React from 'react';
 import { useFormContext } from '../../Form';
 import { FormFieldElementProps } from './FormFieldElementProps';
@@ -5,11 +6,13 @@ import { FormFieldElementProps } from './FormFieldElementProps';
 export type FormFieldDefaultElementProps<
   TName extends string,
   TFormFields extends Record<TName, string> = Record<TName, string>
-> = Omit<
+> = Override<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
-  keyof FormFieldElementProps<TName, TFormFields>
-> &
-  FormFieldElementProps<TName, TFormFields>;
+  FormFieldElementProps<TName, TFormFields> & {
+    prefix?: React.ReactNode;
+    suffix?: React.ReactNode;
+  }
+>;
 
 export function FormFieldDefaultElement<
   TName extends string & keyof TFormFields,
@@ -18,9 +21,6 @@ export function FormFieldDefaultElement<
   name,
   registerOptions,
   loading,
-  label,
-  hint,
-  hintOrInfoRef,
   prefix,
   suffix,
   type,
@@ -37,6 +37,7 @@ export function FormFieldDefaultElement<
         className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
         spellCheck="false"
         autoComplete="off"
+        readOnly={loading}
         {...props}
       />
       {suffix && <span className="pr-3 text-gray-500">{suffix}</span>}
