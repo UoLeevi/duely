@@ -7,7 +7,8 @@ import {
   useImageInputFromFileList,
   useFormMessages,
   Util,
-  useForm
+  useForm,
+  ValidationRules
 } from '@duely/react';
 
 import { Util as CoreUtil } from '@duely/core';
@@ -136,6 +137,11 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
           type="image"
           loading={imageLogoLoading}
           image={image_logo ?? current_image_logo}
+          registerOptions={{
+            rules: [
+              ValidationRules.maxFileSize(512000)
+            ]
+          }}
           accept="image/jpeg, image/png"
           hint="PNG, JPG up to 512KB, and minimum 128px by 128px."
         />

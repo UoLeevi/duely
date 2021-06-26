@@ -238,7 +238,7 @@ function formatDate(d: Date) {
 }
 
 function formatFileSize(size: number) {
-  if (size < 1000) return `${size}B`;
+  if (size < 1000) return `${size.toFixed(0)}B`;
 
   size /= 1000;
   if (size < 1000) return `${size.toPrecision(3)}KB`;

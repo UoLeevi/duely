@@ -11,6 +11,7 @@ const globalOptions = {
 export type FormFieldRegisterOptions<T> = {
   required?: boolean;
   defaultValue?: T;
+  rules?: ((value: T, element: FormFieldHTMLElement) => string | undefined)[];
 };
 
 export function defaultGetElementValue(element: FormFieldHTMLElement): any {
@@ -28,6 +29,7 @@ export const formFieldInfo: Record<
   FormFieldHTMLElement['type'],
   {
     props: Record<string, any>;
+    shouldValidateOnChange?: boolean;
     getElementValue?: (element: any) => any;
     setElementValue?: (element: any, value: any) => boolean;
   }
@@ -68,6 +70,7 @@ export const formFieldInfo: Record<
     props: {
       type: 'file'
     },
+    shouldValidateOnChange: true,
     getElementValue: (element: HTMLInputElement) => element.files
   },
   month: {
@@ -89,6 +92,7 @@ export const formFieldInfo: Record<
     props: {
       type: 'radio'
     },
+    shouldValidateOnChange: true,
     getElementValue: (element: HTMLInputElement) => {
       const control = element.form?.elements[element.name as keyof HTMLFormControlsCollection];
       if (!control) return undefined;
@@ -150,15 +154,21 @@ export const formFieldInfo: Record<
     }
   },
   'select-one': {
-    props: {}
+    props: {},
+    shouldValidateOnChange: true
   },
   'select-multiple': {
-    props: {}
+    props: {},
+    shouldValidateOnChange: true
   },
   textarea: {
     props: {}
   }
 };
+
+const elementTypesWhichShouldValidateOnChange = Object.entries(formFieldInfo)
+  .filter(([, info]) => info.shouldValidateOnChange)
+  .map(([type]) => type);
 
 export type FormFieldHTMLElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
@@ -197,6 +207,16 @@ export class FormFieldControl<T> {
 
   get #hasValue() {
     return ![undefined, ''].includes(this.value as any);
+  }
+
+  get #shouldValidate() {
+    if (this.#isTouched) return true;
+
+    if (this.#element && elementTypesWhichShouldValidateOnChange.includes(this.#element.type)) {
+      return true;
+    }
+
+    return false;
   }
 
   get props(): {
@@ -321,7 +341,7 @@ export class FormFieldControl<T> {
     this.startUpdate();
     this.isDirty = true;
     this.#valueChanged = true;
-    if (this.isTouched) this.validate();
+    if (this.#shouldValidate) this.validate();
     this.endUpdate();
   }
 
@@ -358,6 +378,7 @@ export class FormFieldControl<T> {
 
     this.startUpdate();
     this.#valueChanged ||= this.#setElementValue!(this.#element, value);
+    if (this.#valueChanged && this.#shouldValidate) this.validate();
     this.endUpdate();
   }
 
@@ -394,6 +415,19 @@ export class FormFieldControl<T> {
       this.error = globalOptions.errorMessages.required;
       this.endUpdate();
       return false;
+    }
+
+    if (this.#element && this.#hasValue) {
+      for (const rule of this.#options.rules ?? []) {
+        const value = this.value;
+        const error = rule(value!, this.#element);
+
+        if (error) {
+          this.error = error;
+          this.endUpdate();
+          return false;
+        }
+      }
     }
 
     this.error = null;
