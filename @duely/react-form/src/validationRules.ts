@@ -16,4 +16,12 @@ export namespace ValidationRules {
     return (fileList: FileList) =>
       fileList?.[0]?.size > bytes ? `Maximum image size is ${formatFileSize(bytes)}.` : undefined;
   }
+
+  export function isNumber(value: string) {
+    return isNaN(+value) ? 'Value is not a valid number' : undefined;
+  }
+
+  export function isPositiveNumber(value: string) {
+    return isNaN(+value) || +value < 0 ? 'Value is not a positive number' : undefined;
+  }
 }

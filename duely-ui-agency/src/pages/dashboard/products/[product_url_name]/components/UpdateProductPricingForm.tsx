@@ -7,7 +7,9 @@ import {
   FormInfoMessage,
   useFormMessages,
   Util,
-  useForm
+  useForm,
+  InputFilters,
+  ValidationRules
 } from '@duely/react';
 
 import { Util as CoreUtil } from '@duely/core';
@@ -172,7 +174,11 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
                   type="text"
                   inputMode="numeric"
                   prefix={currencyPrefix}
-                  registerOptions={{ required: true }}
+                  registerOptions={{
+                    required: true,
+                    inputFilter: InputFilters.numeric,
+                    rules: [ValidationRules.isNumber, ValidationRules.isPositiveNumber]
+                  }}
                   loading={state.loading}
                 />
               </div>
@@ -191,7 +197,11 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
                   type="text"
                   inputMode="numeric"
                   prefix={currencyPrefix}
-                  registerOptions={{ required: true }}
+                  registerOptions={{
+                    required: true,
+                    inputFilter: InputFilters.numeric,
+                    rules: [ValidationRules.isNumber, ValidationRules.isPositiveNumber]
+                  }}
                   loading={state.loading}
                 />
               </div>

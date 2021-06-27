@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import { ChangeEvent, FocusEvent } from 'react';
 import { FormControl } from '../FormControl';
 import { FormFieldHTMLElement, FormFieldRegisterOptions } from '../FormFieldControl';
@@ -11,6 +11,7 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
   ): {
     name: string;
     ref(el: FormFieldHTMLElement | null): void;
+    onBeforeInput(event: FormEvent<FormFieldHTMLElement>): void;
     onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
     onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
   };

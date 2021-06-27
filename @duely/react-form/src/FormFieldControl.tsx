@@ -1,4 +1,4 @@
-import { ChangeEvent, FocusEvent } from 'react';
+import { ChangeEvent, FocusEvent, FormEvent } from 'react';
 import { FormControl } from './FormControl';
 
 const globalOptions = {
@@ -12,6 +12,7 @@ export type FormFieldRegisterOptions<T> = {
   required?: boolean;
   defaultValue?: T;
   rules?: ((value: T, element: FormFieldHTMLElement) => string | undefined)[];
+  inputFilter?: RegExp;
 };
 
 export function defaultGetElementValue(element: FormFieldHTMLElement): any {
@@ -181,6 +182,7 @@ export class FormFieldControl<T> {
     | {
         name: string;
         ref(el: FormFieldHTMLElement): void;
+        onBeforeInput(event: ChangeEvent<FormFieldHTMLElement>): void;
         onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
         onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
       };
@@ -222,6 +224,7 @@ export class FormFieldControl<T> {
   get props(): {
     name: string;
     ref(el: FormFieldHTMLElement): void;
+    onBeforeInput(event: FormEvent<FormFieldHTMLElement>): void;
     onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
     onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
   } {
@@ -235,6 +238,9 @@ export class FormFieldControl<T> {
           } else {
             this.#detachElement();
           }
+        },
+        onBeforeInput: (event: FormEvent<FormFieldHTMLElement>) => {
+          this.#onBeforeInput(event);
         },
         onChange: (event: ChangeEvent<FormFieldHTMLElement>) => {
           this.#onChange(event);
@@ -334,6 +340,16 @@ export class FormFieldControl<T> {
     if (this.#stateChanged) {
       this.#stateChanged = false;
       this.#stateChangedListeners.forEach((callback) => callback());
+    }
+  }
+
+  #onBeforeInput(event: FormEvent<FormFieldHTMLElement>) {
+    const inputEvent = event.nativeEvent as InputEvent;
+
+    if (this.#options.inputFilter && inputEvent.data) {
+      if (inputEvent.data.match(this.#options.inputFilter)?.[0].length !== inputEvent.data.length) {
+        event.preventDefault();
+      }
     }
   }
 
