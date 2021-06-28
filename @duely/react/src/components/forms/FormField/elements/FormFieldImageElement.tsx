@@ -91,7 +91,7 @@ export function FormFieldImageElement<
       <input
         id={name}
         {...form.register(name, registerOptions)}
-        readOnly={loading}
+        disabled={loading}
         accept={accept}
         type="file"
         hidden

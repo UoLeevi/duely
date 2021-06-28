@@ -63,7 +63,7 @@ export function FormFieldFileElement<
         hidden
         spellCheck="false"
         autoComplete="off"
-        readOnly={loading}
+        disabled={loading}
         {...props}
       />
     </label>

@@ -56,7 +56,7 @@ export function FormFieldRadioBlocksElement<
             id={`radio-blocks-option-${value}`}
             type="radio"
             hidden
-            readOnly={loading}
+            disabled={loading}
             {...props}
           />
           <div className="space-y-2">

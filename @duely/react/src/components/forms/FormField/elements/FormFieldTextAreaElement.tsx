@@ -24,7 +24,7 @@ export function FormFieldTextAreaElement<
         className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
         spellCheck="false"
         autoComplete="off"
-        readOnly={loading}
+        disabled={loading}
         {...props}
       />
     </div>

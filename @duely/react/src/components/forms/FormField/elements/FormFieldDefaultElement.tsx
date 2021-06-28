@@ -37,7 +37,7 @@ export function FormFieldDefaultElement<
         className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
         spellCheck="false"
         autoComplete="off"
-        readOnly={loading}
+        disabled={loading}
         {...props}
       />
       {suffix && <span className="pr-3 text-gray-500">{suffix}</span>}

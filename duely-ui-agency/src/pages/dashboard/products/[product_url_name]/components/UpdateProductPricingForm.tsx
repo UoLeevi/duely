@@ -147,7 +147,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
           name="payment_type"
           defaultValue={default_price?.type}
           type="radio-blocks"
-          readOnly
+          disabled
           options={[
             {
               value: 'one_time',
