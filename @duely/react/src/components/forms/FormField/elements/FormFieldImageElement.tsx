@@ -14,8 +14,9 @@ export type FormFieldImageElementProps<
     image?: ImageInput | null;
     hintRef: React.MutableRefObject<React.ReactNode>;
     label?: React.ReactNode;
-    hint?: React.ReactNode;    
-  }>;
+    hint?: React.ReactNode;
+  }
+>;
 
 export function FormFieldImageElement<
   TName extends string & keyof TFormFields,
@@ -46,45 +47,47 @@ export function FormFieldImageElement<
   const className = Util.createClassName(
     loading && 'animate-pulse border-indigo-400',
     !loading && 'border-gray-300',
-    image && 'border border-gray-300 shadow-sm',
-    !image && 'px-6 pt-5 pb-6 border-2 border-dashed',
-    'relative transition-colors flex justify-center rounded-md'
+    image && 'border m-px border-gray-300 shadow-sm',
+    !image && 'border-2 border-dashed',
+    'relative aspect-w-3 aspect-h-2 transition-colors flex justify-center rounded-md'
   );
 
   return (
     <label htmlFor={name} className={className}>
       {image && (
         <img
-          className="flex-1 object-contain rounded-md"
+          className="flex-1 object-cover rounded-md"
           src={image.data}
           alt={typeof label === 'string' ? label : ''}
         />
       )}
 
       {!image && (
-        <div className="text-center">
-          <svg
-            className="w-12 h-12 mx-auto text-gray-400"
-            stroke="currentColor"
-            fill="none"
-            viewBox="0 0 48 48"
-          >
-            <path
-              d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            ></path>
-          </svg>
-          <p className="mt-1 text-sm text-gray-600">
-            <span className="font-medium text-indigo-600 transition duration-150 ease-in-out cursor-pointer hover:text-indigo-500 focus:outline-none focus:underline">
-              Upload a file
-            </span>
-            <span> or drag and drop</span>
-          </p>
-          <p className="mt-1 text-xs text-gray-500">
-            {hint ?? accept!.split('image/').join('').toUpperCase()}
-          </p>
+        <div className="grid text-center place-items-center">
+          <div>
+            <svg
+              className="w-12 h-12 mx-auto text-gray-400"
+              stroke="currentColor"
+              fill="none"
+              viewBox="0 0 48 48"
+            >
+              <path
+                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              ></path>
+            </svg>
+            <p className="mt-1 text-sm text-gray-600">
+              <span className="font-medium text-indigo-600 transition duration-150 ease-in-out cursor-pointer hover:text-indigo-500 focus:outline-none focus:underline">
+                Upload a file
+              </span>
+              <span> or drag and drop</span>
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              {hint ?? accept!.split('image/').join('').toUpperCase()}
+            </p>
+          </div>
         </div>
       )}
 

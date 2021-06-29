@@ -14,7 +14,7 @@
 
 /* purgecss start ignore */
 
-/* ! tailwindcss v2.2.2 | MIT License | https://tailwindcss.com */
+/* ! tailwindcss v2.2.4 | MIT License | https://tailwindcss.com */
 
 /*! modern-normalize v1.1.0 | MIT License | https://github.com/sindresorhus/modern-normalize */
 
@@ -365,16 +365,6 @@ button {
   background-image: none;
 }
 
-/**
- * Work around a Firefox/IE bug where the transparent `button` background
- * results in a loss of the default `button` focus styles.
- */
-
-button:focus {
-  outline: 1px dotted;
-  outline: 5px auto -webkit-focus-ring-color;
-}
-
 fieldset {
   margin: 0;
   padding: 0;
@@ -685,6 +675,67 @@ html, body, #root {
   }
 }
 
+.aspect-w-1,
+.aspect-w-2,
+.aspect-w-3,
+.aspect-w-4,
+.aspect-w-5,
+.aspect-w-6,
+.aspect-w-7,
+.aspect-w-8,
+.aspect-w-9,
+.aspect-w-10,
+.aspect-w-11,
+.aspect-w-12,
+.aspect-w-13,
+.aspect-w-14,
+.aspect-w-15,
+.aspect-w-16 {
+  position: relative;
+  padding-bottom: calc(var(--tw-aspect-h) / var(--tw-aspect-w) * 100%);
+}
+
+.aspect-w-1 > *,
+.aspect-w-2 > *,
+.aspect-w-3 > *,
+.aspect-w-4 > *,
+.aspect-w-5 > *,
+.aspect-w-6 > *,
+.aspect-w-7 > *,
+.aspect-w-8 > *,
+.aspect-w-9 > *,
+.aspect-w-10 > *,
+.aspect-w-11 > *,
+.aspect-w-12 > *,
+.aspect-w-13 > *,
+.aspect-w-14 > *,
+.aspect-w-15 > *,
+.aspect-w-16 > * {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.aspect-w-1 {
+  --tw-aspect-w: 1;
+}
+
+.aspect-w-3 {
+  --tw-aspect-w: 3;
+}
+
+.aspect-h-1 {
+  --tw-aspect-h: 1;
+}
+
+.aspect-h-2 {
+  --tw-aspect-h: 2;
+}
+
 .page-container {
   position: relative;
   box-sizing: border-box;
@@ -981,6 +1032,10 @@ html, body, #root {
   margin: 0px;
 }
 
+.m-1 {
+  margin: 0.25rem;
+}
+
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
@@ -989,6 +1044,11 @@ html, body, #root {
 .my-auto {
   margin-top: auto;
   margin-bottom: auto;
+}
+
+.mx-6 {
+  margin-left: 1.5rem;
+  margin-right: 1.5rem;
 }
 
 .mt-10 {
@@ -1047,12 +1107,16 @@ html, body, #root {
   margin-left: 0.75rem;
 }
 
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
 .mr-3 {
   margin-right: 0.75rem;
 }
 
-.mt-1 {
-  margin-top: 0.25rem;
+.mb-6 {
+  margin-bottom: 1.5rem;
 }
 
 .box-border {
@@ -1671,6 +1735,11 @@ html, body, #root {
   border-color: rgba(16, 185, 129, var(--tw-border-opacity));
 }
 
+.border-indigo-400 {
+  --tw-border-opacity: 1;
+  border-color: rgba(127, 156, 245, var(--tw-border-opacity));
+}
+
 .border-gray-400 {
   --tw-border-opacity: 1;
   border-color: rgba(148, 163, 184, var(--tw-border-opacity));
@@ -1679,11 +1748,6 @@ html, body, #root {
 .border-blue-400 {
   --tw-border-opacity: 1;
   border-color: rgba(96, 165, 250, var(--tw-border-opacity));
-}
-
-.border-indigo-400 {
-  --tw-border-opacity: 1;
-  border-color: rgba(127, 156, 245, var(--tw-border-opacity));
 }
 
 .bg-white {
@@ -1808,11 +1872,6 @@ html, body, #root {
 
 .bg-clip-content {
   background-clip: content-box;
-}
-
-.object-contain {
-  -o-object-fit: contain;
-     object-fit: contain;
 }
 
 .object-cover {
@@ -1977,12 +2036,12 @@ html, body, #root {
   padding-bottom: 1.5rem;
 }
 
-.pr-3 {
-  padding-right: 0.75rem;
-}
-
 .pl-3 {
   padding-left: 0.75rem;
+}
+
+.pr-3 {
+  padding-right: 0.75rem;
 }
 
 .pt-5 {
@@ -2677,18 +2736,6 @@ html, body, #root {
 
 .last\:pr-3:last-child {
   padding-right: 0.75rem;
-}
-
-.empty\:content-\[\'\'\]:empty {
-  content: '';
-}
-
-.empty\:content-\[\'\\\\200b\'\]:empty {
-  content: '\\200b';
-}
-
-.empty\:content-\[\'asdf\'\]:empty {
-  content: 'asdf';
 }
 
 .focus-within\:ring:focus-within {

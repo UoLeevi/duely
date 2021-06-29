@@ -61,6 +61,7 @@ module.exports = {
     },
   },
   plugins: [
-    requireLocal('@tailwindcss/typography')
+    requireLocal('@tailwindcss/typography'),
+    requireLocal('@tailwindcss/aspect-ratio')
   ]
 };
