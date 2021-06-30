@@ -379,6 +379,10 @@ export class FormFieldControl<T> {
     }
 
     if (this.value !== undefined) {
+      if (this.defaultValue === undefined) {
+        this.#defaultValue = this.value;
+      }
+
       this.#valueChanged = true;
     }
 
@@ -399,9 +403,10 @@ export class FormFieldControl<T> {
   }
 
   setDefaultValue(value: T | undefined) {
+    const previousDefaultValue = this.defaultValue;
     this.#defaultValue = value;
 
-    if (this.#element && !this.#hasValue) {
+    if (this.#element && (!this.#hasValue || previousDefaultValue === this.value)) {
       this.setValue(this.defaultValue!);
     }
   }

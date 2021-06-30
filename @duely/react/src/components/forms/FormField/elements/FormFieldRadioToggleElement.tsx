@@ -58,6 +58,7 @@ export function FormFieldRadioToggleElement<
           id={`radio-toggle-option-${left.value}`}
           value={left.value}
           hidden
+          disabled={loading}
           {...props}
         />
         <label htmlFor={`radio-toggle-option-${left.value}`} className="grid row-start-1">
