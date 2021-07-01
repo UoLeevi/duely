@@ -1,4 +1,3 @@
-import { ChangeEvent, FocusEvent, FormEvent } from 'react';
 import { FormControl } from './FormControl';
 
 const globalOptions = {
@@ -20,6 +19,7 @@ export function defaultGetElementValue(element: FormFieldHTMLElement): any {
 }
 
 export function defaultSetElementValue(element: FormFieldHTMLElement, value: any) {
+  if (value?.length === 0) value = undefined;
   value = value ?? '';
   if (element.value === value) return false;
   element.value = value;
@@ -108,10 +108,11 @@ export const formFieldInfo: Record<
       if (radioNodeList.value === value) return false;
 
       if (value === '') {
-        Array.from(radioNodeList)
+        const input = Array.from(radioNodeList)
           .map((n) => n as HTMLInputElement)
-          .filter((n) => n.checked)
-          .forEach((n) => (n.checked = false));
+          .find((n) => n.checked);
+        if (!input) return false;
+        input.checked = false;
       } else {
         radioNodeList.value = value;
       }
@@ -182,9 +183,6 @@ export class FormFieldControl<T> {
     | {
         name: string;
         ref(el: FormFieldHTMLElement): void;
-        onBeforeInput(event: ChangeEvent<FormFieldHTMLElement>): void;
-        onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
-        onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
       };
 
   #value: T | undefined;
@@ -224,9 +222,6 @@ export class FormFieldControl<T> {
   get props(): {
     name: string;
     ref(el: FormFieldHTMLElement): void;
-    onBeforeInput(event: FormEvent<FormFieldHTMLElement>): void;
-    onChange(event: ChangeEvent<FormFieldHTMLElement>): void;
-    onBlur(event: FocusEvent<FormFieldHTMLElement>): void;
   } {
     if (!this.#props) {
       this.#props = {
@@ -238,15 +233,6 @@ export class FormFieldControl<T> {
           } else {
             this.#detachElement();
           }
-        },
-        onBeforeInput: (event: FormEvent<FormFieldHTMLElement>) => {
-          this.#onBeforeInput(event);
-        },
-        onChange: (event: ChangeEvent<FormFieldHTMLElement>) => {
-          this.#onChange(event);
-        },
-        onBlur: (event: FocusEvent<FormFieldHTMLElement>) => {
-          this.#onBlur(event);
         }
       };
     }
@@ -343,17 +329,15 @@ export class FormFieldControl<T> {
     }
   }
 
-  #onBeforeInput(event: FormEvent<FormFieldHTMLElement>) {
-    const inputEvent = event.nativeEvent as InputEvent;
-
-    if (this.#options.inputFilter && inputEvent.data) {
-      if (inputEvent.data.match(this.#options.inputFilter)?.[0].length !== inputEvent.data.length) {
+  #onBeforeInput(event: InputEvent) {
+    if (this.#options.inputFilter && event.data) {
+      if (event.data.match(this.#options.inputFilter)?.[0].length !== event.data.length) {
         event.preventDefault();
       }
     }
   }
 
-  #onChange(event: ChangeEvent<FormFieldHTMLElement>) {
+  #onInput(event: InputEvent) {
     this.startUpdate();
     this.isDirty = true;
     this.#valueChanged = true;
@@ -361,7 +345,7 @@ export class FormFieldControl<T> {
     this.endUpdate();
   }
 
-  #onBlur(event: FocusEvent<FormFieldHTMLElement>) {
+  #onBlur(event: FocusEvent) {
     this.startUpdate();
     this.isTouched = true;
     if (this.isDirty) this.validate();
@@ -371,6 +355,14 @@ export class FormFieldControl<T> {
   #attachElement(element: FormFieldHTMLElement) {
     this.startUpdate();
     this.#element = element;
+
+    // I encountered issues with react's SynteticEvents not firing in some cases.
+    // For example if radio button was programatically changed and afterwards manually clicked (checked),
+    // the onChange event would not be fired. There is no such issue with native DOM events.
+    element.addEventListener('beforeinput', (event) => this.#onBeforeInput(event as InputEvent));
+    element.addEventListener('input', (event) => this.#onInput(event as InputEvent));
+    element.addEventListener('blur', (event) => this.#onBlur(event as FocusEvent));
+
     this.#getElementValue = formFieldInfo[element.type].getElementValue ?? defaultGetElementValue;
     this.#setElementValue = formFieldInfo[element.type].setElementValue ?? defaultSetElementValue;
 
