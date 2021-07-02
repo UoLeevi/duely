@@ -15,7 +15,9 @@ module.exports = merge(commonConfig, {
     inline: true,
     contentBase: path.resolve(projectPath, 'assets'),
     writeToDisk: true,
-    historyApiFallback: true
+    historyApiFallback: true,
+    host: '0.0.0.0',
+    useLocalIp: true
   },
   entry: path.resolve(projectPath, 'src/index.tsx'),
   module: {

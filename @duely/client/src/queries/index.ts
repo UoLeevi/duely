@@ -102,8 +102,7 @@ export const countries_Q = {
 
 export const country_spec_Q = {
   query: CountrySpecDocument,
-  result: (d: ResultOf<typeof CountrySpecDocument>) =>
-    d?.country_spec
+  result: (d: ResultOf<typeof CountrySpecDocument>) => d?.country_spec
 };
 
 export const services_agreement_Q = {
@@ -123,8 +122,7 @@ export const agencies_Q = {
 
 export const agency_stripe_account_Q = {
   query: AgencyStripeAccountDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountDocument>) =>
-    d?.agency?.stripe_account
+  result: (d: ResultOf<typeof AgencyStripeAccountDocument>) => d?.agency?.stripe_account
 };
 
 export const agency_stripe_account_update_url_Q = {
@@ -154,8 +152,7 @@ export const agency_stripe_account_payment_intents_Q = {
 
 export const agency_customers_Q = {
   query: AgencyCustomersDocument,
-  result: (d: ResultOf<typeof AgencyCustomersDocument>) =>
-    d?.agency?.stripe_account?.customers
+  result: (d: ResultOf<typeof AgencyCustomersDocument>) => d?.agency?.stripe_account?.customers
 };
 
 export const customer_Q = {
@@ -186,8 +183,12 @@ export const current_subdomain_Q = {
 };
 
 function resolveSubdomain(): string | null {
+  const url = new URL(window.location.href);
+  let name = url.searchParams.get('subdomain');
+  let subdomain = name?.toLowerCase() ?? null;
+  if (subdomain !== null) return subdomain;
+
   const hostname = window.location.hostname.toLowerCase();
-  let subdomain = null;
 
   if (hostname !== 'localhost') {
     if (hostname !== 'duely.app') {
@@ -198,10 +199,6 @@ function resolveSubdomain(): string | null {
         throw new Error('Not implemented.');
       }
     }
-  } else {
-    const url = new URL(window.location.href);
-    let name = url.searchParams.get('subdomain');
-    subdomain = name?.toLowerCase() ?? 'test';
   }
 
   return subdomain;
@@ -274,7 +271,8 @@ export const order_items_Q = {
 
 export const product_and_agency_from_url_parts_Q = {
   query: ProductAndAgencyFromUrlPartsDocument,
-  result: (d: ResultOf<typeof ProductAndAgencyFromUrlPartsDocument>) => d?.subdomains?.[0]?.agency.products?.[0]
+  result: (d: ResultOf<typeof ProductAndAgencyFromUrlPartsDocument>) =>
+    d?.subdomains?.[0]?.agency.products?.[0]
 };
 
 export const current_agency_Q = {
@@ -299,12 +297,14 @@ export const current_agency_stripe_account_update_url_Q = {
 
 export const agency_thank_you_page_settings_Q = {
   query: AgencyThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof AgencyThankYouPageSettingDocument>) => d?.agency?.settings?.thank_you_page_setting
+  result: (d: ResultOf<typeof AgencyThankYouPageSettingDocument>) =>
+    d?.agency?.settings?.thank_you_page_setting
 };
 
 export const product_thank_you_page_settings_Q = {
   query: ProductThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof ProductThankYouPageSettingDocument>) => d?.product?.settings?.thank_you_page_setting
+  result: (d: ResultOf<typeof ProductThankYouPageSettingDocument>) =>
+    d?.product?.settings?.thank_you_page_setting
 };
 
 export const agency_pages_Q = {
@@ -359,5 +359,6 @@ export const page_block_definition_by_name_Q = {
 
 export const calculate_transaction_fee_Q = {
   query: CalculateTransactionFeeDocument,
-  result: (d: ResultOf<typeof CalculateTransactionFeeDocument>) => d?.subscription_plan?.calculate_fee
-}
+  result: (d: ResultOf<typeof CalculateTransactionFeeDocument>) =>
+    d?.subscription_plan?.calculate_fee
+};

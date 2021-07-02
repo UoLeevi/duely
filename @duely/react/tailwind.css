@@ -23,7 +23,7 @@
   html,
   body,
   #root {
-    @apply h-full;
+    @apply min-h-full;
   }
 
   /* see: https://developers.google.com/recaptcha/docs/faq#id-like-to-hide-the-recaptcha-badge.-what-is-allowed */
@@ -34,11 +34,11 @@
 
 @layer components {
   .page-container {
-    @apply box-border relative flex flex-col h-full bg-white;
+    @apply box-border relative flex flex-col min-h-full bg-white;
   }
 
   .page-body-container {
-    @apply container box-border inset-x-0 top-0 flex flex-col flex-1 h-full px-3 py-12 mx-auto space-y-6 md:px-4 md:py-16;
+    @apply container box-border inset-x-0 top-0 flex flex-col flex-1 min-h-full px-3 py-12 mx-auto space-y-6 md:px-4 md:py-16;
   }
 
   .form-container {

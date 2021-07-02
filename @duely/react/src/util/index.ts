@@ -305,14 +305,14 @@ type NestedDictionary = {
 };
 
 function get(obj: NestedDictionary, path: string): string | null | undefined {
-  return (path
+  return path
     .replace(/\[(\w+)\]/g, '.$1')
     .replace(/^\./, '')
     .split('.')
     .reduce(
       (prev, key) => (prev as NestedDictionary)?.[key] as NestedDictionary,
       obj
-    ) as unknown) as string | null | undefined;
+    ) as unknown as string | null | undefined;
 }
 
 function template(template: string, variables: Record<string, any>) {
@@ -331,9 +331,24 @@ declare global {
   }
 }
 
+function isPrivateIp(hostname: string) {
+  var parts = hostname.split('.').map((part) => parseInt(part, 10));
+  if (parts.length !== 4 || parts.some(isNaN)) return false;
+
+  return (
+    parts[0] === 10 ||
+    (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
+    (parts[0] === 192 && parts[1] === 168)
+  );
+}
+
 function fetchRecapthcaToken(action?: string): Promise<string | undefined> {
   return new Promise((resolve) => {
-    if (!window.__duely.reCAPTCHA_site_key || location.hostname === 'localhost') {
+    if (
+      !window.__duely.reCAPTCHA_site_key ||
+      location.hostname === 'localhost' ||
+      isPrivateIp(location.hostname)
+    ) {
       resolve(undefined);
     }
 

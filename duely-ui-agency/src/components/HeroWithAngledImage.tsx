@@ -280,13 +280,35 @@ function HeroNavBar() {
                 </Link>
               </div>
               <div role="none">
-                <Link
-                  to="/log-in"
-                  className="block w-full px-5 py-3 font-medium text-center text-indigo-600 bg-gray-50 hover:bg-gray-100"
-                  role="menuitem"
-                >
-                  Log in
-                </Link>
+                {isAgent && (
+                  <Link
+                    to="/dashboard"
+                    className="block w-full px-5 py-3 font-medium text-center text-indigo-600 bg-gray-50 hover:bg-gray-100"
+                    role="menuitem"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+
+                {!user && (
+                  <Link
+                    to="/log-in"
+                    className="block w-full px-5 py-3 font-medium text-center text-indigo-600 bg-gray-50 hover:bg-gray-100"
+                    role="menuitem"
+                  >
+                    Log in
+                  </Link>
+                )}
+
+                {user && !isAgent && (
+                  <Link
+                    to="/?log-out"
+                    className="block w-full px-5 py-3 font-medium text-center text-indigo-600 bg-gray-50 hover:bg-gray-100"
+                    role="menuitem"
+                  >
+                    Log out
+                  </Link>
+                )}
               </div>
             </div>
           </div>
