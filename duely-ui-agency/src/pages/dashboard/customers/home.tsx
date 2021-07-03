@@ -41,10 +41,10 @@ export default function DashboardCustomersHome() {
     // customer name & email address
     (customer: TCustomer) => (
       <div className="flex flex-col space-y-2">
-        <span className="text-sm font-medium text-gray-800">
+        <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
           {customer.name ?? customer.email_address.split('@')[0]}
         </span>
-        <span className="text-xs font-medium text-gray-800">{customer.email_address}</span>
+        <span className="text-xs font-medium text-gray-800 dark:text-gray-300">{customer.email_address}</span>
       </div>
     ),
 
@@ -54,7 +54,7 @@ export default function DashboardCustomersHome() {
         {
           key: 'edit',
           className:
-            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
+            'text-sm text-center text-gray-500 focus:text-gray-700 dark:focus:text-gray-300 focus:outline-none hover:text-gray-800 dark:hover:text-gray-200',
           children: (
             <div className="flex items-center space-x-2">
               <svg
@@ -79,7 +79,7 @@ export default function DashboardCustomersHome() {
         {
           key: 'delete',
           className:
-            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
+            'text-sm text-center text-gray-500 focus:text-gray-700 dark:focus:text-gray-300 focus:outline-none hover:text-gray-800 dark:hover:text-gray-200',
           children: (
             <div className="flex items-center space-x-2">
               <svg

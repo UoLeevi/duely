@@ -6,24 +6,19 @@ import {
   agency_Q,
   product_Q
 } from '@duely/client';
-import {
-  AgencyFragment,
-  PageFragment,
-  Page_BlockFragment,
-  ProductFragment
-} from '@duely/core';
+import { AgencyFragment, PageFragment, Page_BlockFragment, ProductFragment } from '@duely/core';
 import {
   Card,
   ErrorScreen,
   Form,
   FormButton,
-  FormField,
   FormInfoMessage,
   LoadingScreen,
   useFormMessages,
   Util,
   useForm,
-  UseFormReturn
+  UseFormReturn,
+  DynamicFormFields
 } from '@duely/react';
 import { pageBlockComponents } from '~/components/page-blocks';
 import React, { useContext, useMemo, useState } from 'react';
@@ -131,18 +126,14 @@ function PageBlockPreview({ block }: PageBlockPreviewProps) {
 function PageEditorEditBlockForm() {
   const { editBlockForm: form, selectedBlock } = usePageEditor();
   const block = selectedBlock!;
+  const data = useMemo(() => JSON.parse(block.data), [block.data]);
   const [updatePageBlock, stateUpdate] = useMutation(update_page_block_M);
   // const [deletePageBlock, stateDelete] = useMutation(delete_page_block_M);
 
   const formLoading = stateUpdate.loading;
 
-  const {
-    infoMessage,
-    successMessage,
-    setSuccessMessage,
-    errorMessage,
-    setErrorMessage
-  } = useFormMessages();
+  const { infoMessage, successMessage, setSuccessMessage, errorMessage, setErrorMessage } =
+    useFormMessages();
 
   const definition = block!.definition;
 
@@ -159,14 +150,7 @@ function PageEditorEditBlockForm() {
 
   return (
     <Form form={form} onSubmit={onSubmit} className="space-y-3">
-      {definition.fields.map((field) => (
-        <FormField
-          key={field.name}
-          name={field.name}
-          label={field.label}
-          type={field.type}
-        />
-      ))}
+      <DynamicFormFields fields={definition.fields ?? []} defaultValues={data} />
       <div className="flex flex-row items-center pt-3 space-x-4">
         <FormButton dense loading={formLoading}>
           Save
@@ -198,7 +182,7 @@ function PageEditorSidebar() {
   const { selectedBlock, goBackToBlockList } = usePageEditor();
   return selectedBlock ? (
     <>
-      <div className="flex items-center pb-1.5 space-x-3 border-b">
+      <div className="flex items-center pb-1.5 space-x-3 border-b dark:border-gray-700">
         <button className="focus:outline-none" onClick={goBackToBlockList} type="button">
           <svg
             className="w-5 h-5"
@@ -213,15 +197,15 @@ function PageEditorSidebar() {
             />
           </svg>
         </button>
-        <h3 className="font-medium text-gray-800">{selectedBlock.definition.name}</h3>
+        <h3 className="font-medium text-gray-800 dark:text-gray-300">{selectedBlock.definition.name}</h3>
       </div>
       <PageEditorEditBlockForm />
     </>
   ) : (
     <>
-      <div className="flex items-center pb-1.5 space-x-3 border-b">
+      <div className="flex items-center pb-1.5 space-x-3 border-b dark:border-gray-700">
         <div className="w-5 h-5"></div>
-        <h3 className="font-medium text-gray-800">Page blocks</h3>
+        <h3 className="font-medium text-gray-800 dark:text-gray-300">Page blocks</h3>
       </div>
       <PageEditorSidebarBlockList />
     </>
@@ -266,7 +250,7 @@ export function PageEditor() {
     <PageEditorContext.Provider
       value={{
         selectedBlock,
-        selectBlock: block => {
+        selectBlock: (block) => {
           if (selectedBlock === block) return;
           const defaultValues = JSON.parse(block.data);
           editBlockForm.reset(defaultValues);

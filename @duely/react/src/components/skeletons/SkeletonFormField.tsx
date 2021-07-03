@@ -18,7 +18,7 @@ export function SkeletonFormField({ type, className, label, ...props }: Skeleton
   switch (type) {
     default: {
       element = (
-        <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
+        <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
           <input
             disabled
             type={type}

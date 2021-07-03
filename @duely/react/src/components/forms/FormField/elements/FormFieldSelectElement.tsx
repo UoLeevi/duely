@@ -38,14 +38,14 @@ export function FormFieldSelectElement<
       const { value, element } =
         typeof option === 'object' ? option : { value: option, element: undefined };
       return (
-        <option key={value} value={value}>
+        <option key={value} value={value} className="dark:bg-gray-900 dark:bg-gray-800">
           {element ?? value}
         </option>
       );
     }) ?? [];
 
   return (
-    <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
+    <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
       <select
         id={name}
         {...form.register(name, registerOptions)}

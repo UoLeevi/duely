@@ -23,7 +23,7 @@ export function FormSection({
   return (
     <section className={className} {...props}>
       <div className="flex items-center space-x-2 group">
-        <h3 ref={linkRef} className="font-bold tracking-wide text-gray-700">
+        <h3 ref={linkRef} className="font-bold tracking-wide text-gray-700 dark:text-gray-300">
           {title}
           {hashLink}
         </h3>

@@ -46,8 +46,8 @@ export function FormFieldImageElement<
 
   const className = Util.createClassName(
     loading && 'animate-pulse border-indigo-400',
-    !loading && 'border-gray-300',
-    image && 'border m-px border-gray-300 shadow-sm',
+    !loading && 'border-gray-300 dark:border-gray-500',
+    image && 'border m-px border-gray-300 dark:border-gray-500 shadow-sm',
     !image && 'border-2 border-dashed',
     'relative aspect-w-3 aspect-h-2 transition-colors flex justify-center rounded-md'
   );

@@ -26,13 +26,13 @@ export function DashboardSection({
       {hasTitle && (
         <div className="flex flex-row items-center justify-between h-8 space-x-2">
           {loading && (
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-400">
               <SkeletonText />
             </h2>
           )}
 
           {!loading && title && (
-            <h2 ref={linkRef} className="text-xl font-semibold text-gray-900">
+            <h2 ref={linkRef} className="text-xl font-semibold text-gray-900 dark:text-gray-400">
               {title}
               {hashLink}
             </h2>

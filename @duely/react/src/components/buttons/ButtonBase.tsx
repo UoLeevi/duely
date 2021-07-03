@@ -21,10 +21,10 @@ type BaseComponent<T extends React.ElementType> = {
 };
 
 const colorClassName = {
-  gray: 'text-gray-600 bg-gray-50 hover:bg-gray-100 border-gray-300',
-  indigo: 'bg-indigo-600 hover:bg-indigo-700 text-white',
-  red: 'bg-red-600 hover:bg-red-700 text-white',
-  green: 'bg-green-600 hover:bg-green-700 text-white'
+  gray: 'text-gray-600 dark:text-white bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-500',
+  indigo: 'bg-indigo-600 hover:bg-indigo-700 text-white dark:border-gray-600',
+  red: 'bg-red-600 hover:bg-red-700 text-white dark:border-gray-700',
+  green: 'bg-green-600 hover:bg-green-700 text-white dark:border-gray-700'
 };
 
 export function ButtonBase<T extends React.ElementType = 'button'>({

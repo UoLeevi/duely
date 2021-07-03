@@ -19,19 +19,19 @@ export function ColoredChip({ text, color }: ColoredChipProps) {
   // NOTE: simple concatenation would mess up the PurgeCSS
   switch (color) {
     case 'green':
-      colorClassName = 'bg-green-100 text-green-800';
+      colorClassName = 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100';
       break;
     case 'orange':
-      colorClassName = 'bg-orange-100 text-orange-800';
+      colorClassName = 'bg-orange-100 text-orange-800 dark:bg-orange-700 dark:text-orange-100';
       break;
     case 'indigo':
-      colorClassName = 'bg-indigo-100 text-indigo-800';
+      colorClassName = 'bg-indigo-100 text-indigo-800 dark:bg-indigo-700 dark:text-indigo-100';
       break;
     case 'blue':
-      colorClassName = 'bg-blue-100 text-blue-800';
+      colorClassName = 'bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100';
       break;
     default:
-      colorClassName = 'bg-gray-100 text-gray-800';
+      colorClassName = 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
       break;
   }
 

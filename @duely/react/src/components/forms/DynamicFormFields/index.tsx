@@ -7,12 +7,14 @@ export type DynamicFormFieldsProps = {
   fields: Form_FieldFragment[] | undefined;
   loading?: boolean;
   skeletonFieldCount?: number
+  defaultValues?: Record<string, any>
 };
 
 export function DynamicFormFields({
   fields,
   loading,
   skeletonFieldCount,
+  defaultValues,
   ...props
 }: DynamicFormFieldsProps) {
 
@@ -33,6 +35,7 @@ export function DynamicFormFields({
           type={field.type}
           name={field.name}
           label={field.label}
+          defaultValue={defaultValues?.[field.name]}
         />
       ))}
     </React.Fragment>

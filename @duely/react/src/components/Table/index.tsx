@@ -32,7 +32,7 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
   error
 }: TableProps<TItem>) {
   const breakpoints = useBreakpoints();
-  const isNotWrapped = breakpoints[breakpoint ?? 'sm'];
+  const isNotWrapped = breakpoints[breakpoint ?? 'lg'];
   const wrapColCount = wrapOptions?.columns ?? 1;
   const wrapColSpans = wrapOptions?.spans ?? new Array(headers.length).fill(1);
   const wrapColSpanSum = wrapColSpans.reduce((a, b) => a + b, 0);
@@ -229,7 +229,7 @@ function TableRow<TItem>({
   last,
   isNotWrapped
 }: TableRowProps<TItem>) {
-  let className = 'border-gray-200' + (last ? '' : ' border-b');
+  let className = 'border-gray-200 dark:border-gray-700' + (last ? '' : ' border-b');
   const cells = columns.map((column, j) => column(item, j));
 
   if (isNotWrapped) {

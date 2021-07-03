@@ -7,7 +7,7 @@ type CardProps = React.DetailedHTMLProps<
 >;
 
 export function Card({ className, children, ...props }: CardProps) {
-  className = Util.createClassName(className, 'flex flex-col w-full bg-white border shadow-sm rounded-md');
+  className = Util.createClassName(className, 'flex flex-col w-full bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-sm rounded-md');
   return (
     <div className={className} {...props}>
       {children}

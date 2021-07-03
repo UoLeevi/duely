@@ -174,7 +174,7 @@ type DashboardLayoutProps = {
 };
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  useClassName(document.documentElement, 'bg-gray-25');
+  useClassName(document.documentElement, 'bg-gray-25 dark:bg-gray-900 dark:text-gray-300');
   const { data: current_subdomain } = useQuery(current_subdomain_Q);
   const logoSrc = current_subdomain?.agency.theme.image_logo!.data;
 

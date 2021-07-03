@@ -18,7 +18,7 @@ export function Sidebar({ className, links, topContent, bottomContent, ...props 
   const { md } = useBreakpoints();
   className = Util.createClassName(
     className,
-    'z-10 w-full h-16 bg-white border-t md:bg-gray-25 md:border-none border-box md:w-48 xl:w-64 md:h-full md:p-2'
+    'z-10 w-full h-16 bg-white dark:bg-gray-800 border-t dark:border-gray-700 md:bg-gray-25 dark:md:bg-gray-900 md:border-none border-box md:w-48 xl:w-64 md:h-full md:p-2'
   );
 
   return (
@@ -52,9 +52,9 @@ function SidebarLink({ text, icon, to, exact, className }: SidebarLinkProps) {
   className = Util.createClassName(
     className,
     match
-      ? 'md:bg-white md:shadow-sm'
+      ? 'md:bg-white dark:md:bg-gray-800 md:shadow-sm dark:border-gray-700'
       : 'focus-visible:text-gray-700 hover:text-gray-700 border-transparent',
-    'flex flex-col md:flex-row items-center focus:outline-none md:border space-y-1 md:space-y-0 md:space-x-3 rounded-md text-gray-500 text-xs shadow-gray-500 md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white'
+    'flex flex-col md:flex-row items-center focus:outline-none md:border space-y-1 md:space-y-0 md:space-x-3 rounded-md text-gray-500 text-xs shadow-gray-500 md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white dark:focus-visible:bg-gray-800'
   );
   return (
     <Link to={to} className={className}>

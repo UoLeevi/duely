@@ -42,9 +42,9 @@ export function FormFieldRadioBlocksElement<
           : { value: option, element: undefined, description: undefined };
       const className = Util.createClassName(
         fieldValue === value &&
-          (props.readOnly || props.disabled ? 'border-gray-400' : 'border-blue-400'),
+          (props.readOnly || props.disabled ? 'border-gray-400 dark:border-gray-700' : 'border-blue-400'),
         fieldValue !== value && (props.readOnly || props.disabled) && 'opacity-50',
-        'text-gray-700 px-4 border border-gray-300 rounded-md shadow-sm flex items-center h-20 flex-1'
+        'text-gray-700 dark:text-gray-300 px-4 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm flex items-center h-20 flex-1'
       );
 
       return (

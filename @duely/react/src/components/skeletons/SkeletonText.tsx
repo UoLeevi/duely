@@ -15,7 +15,7 @@ export function SkeletonText({ ch, className, ...props }: SkeletonTextProps) {
 
   return (
     <span className={className} {...props}>
-      <span style={style} className="inline-block bg-gray-200 rounded-[0.25rem] animate-pulse"></span>
+      <span style={style} className="inline-block bg-gray-200 dark:bg-gray-600 rounded-[0.25rem] animate-pulse"></span>
       <span> </span>
     </span>
   );

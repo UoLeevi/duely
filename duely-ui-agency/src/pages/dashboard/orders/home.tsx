@@ -67,7 +67,7 @@ export default function DashboardOrdersHome() {
     // product name & order id
     (order: TOrder) => (
       <div className="flex flex-col space-y-2">
-        <span className="text-sm font-medium text-gray-800">
+        <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
           {Util.truncate(order.items.map((item) => item.price.product.name).join(', '), 50)}
         </span>
         <span className="text-xs text-gray-600">{order.id}</span>
@@ -77,17 +77,17 @@ export default function DashboardOrdersHome() {
     // customer info
     (order: TOrder) => (
       <div className="flex flex-col space-y-2">
-        <span className="text-sm font-medium text-gray-800">
+        <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
           {order.customer.name ?? order.customer.email_address.split('@')[0]}
         </span>
-        <span className="text-xs text-gray-800">{order.customer.email_address}</span>
+        <span className="text-xs text-gray-800 dark:text-gray-300">{order.customer.email_address}</span>
       </div>
     ),
 
     // amount info
     (order: TOrder) => (
       <div className="flex flex-col space-y-2">
-        <span className="text-sm font-medium text-gray-800">
+        <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
           {Currency.format(
             order.items.reduce((sum, item) => sum + item.price.unit_amount, 0),
             order.items[0].price.currency as Currency
@@ -99,7 +99,7 @@ export default function DashboardOrdersHome() {
     // date & time
     (order: TOrder) => (
       <div className="flex flex-col space-y-2">
-        <span className="text-xs text-gray-800">{Util.formatDate(new Date(order.ordered_at))}</span>
+        <span className="text-xs text-gray-800 dark:text-gray-300">{Util.formatDate(new Date(order.ordered_at))}</span>
       </div>
     ),
 
@@ -112,7 +112,7 @@ export default function DashboardOrdersHome() {
         {
           key: 'edit',
           className:
-            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
+            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800 dark:text-gray-300',
           children: (
             <div className="flex items-center space-x-2">
               <svg

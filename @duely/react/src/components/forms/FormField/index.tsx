@@ -240,7 +240,7 @@ export function FormField<
     <div className={className}>
       <div className="flex justify-between whitespace-nowrap">
         {label && (
-          <label className="pb-1 pl-px text-sm font-medium text-gray-700" htmlFor={name}>
+          <label className="pb-1 pl-px text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor={name}>
             {label}
           </label>
         )}

@@ -28,7 +28,7 @@ export function FormFieldDefaultElement<
 }: FormFieldDefaultElementProps<TName, TFormFields>) {
   const form = useFormContext();
   return (
-    <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5">
+    <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
       {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
       <input
         id={name}

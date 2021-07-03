@@ -84,7 +84,7 @@ function DropMenuItems({ children, close, buttonRef, ...props }: DropMenuItemsPr
     <div
       ref={ref}
       tabIndex={-1}
-      className="absolute right-0 z-10 flex flex-col px-4 py-2 space-y-2 bg-white border rounded-md shadow-md focus:outline-none"
+      className="absolute right-0 z-10 flex flex-col px-4 py-2 space-y-2 bg-white border rounded-md shadow-md dark:bg-gray-900 dark:border-gray-700 focus:outline-none"
       onBlur={onBlur}
       {...props}
     >

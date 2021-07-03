@@ -59,6 +59,7 @@ export function FormFieldRadioToggleElement<
           value={left.value}
           hidden
           disabled={loading}
+          defaultChecked
           {...props}
         />
         <label htmlFor={`radio-toggle-option-${left.value}`} className="grid row-start-1">
@@ -67,7 +68,7 @@ export function FormFieldRadioToggleElement<
           </span>
         </label>
 
-        <div className="relative w-12 h-8 col-start-2 row-start-1 border border-gray-300 rounded-md shadow-sm outline-none pointer-events-none sm:text-sm sm:leading-5">
+        <div className="relative w-12 h-8 col-start-2 row-start-1 border border-gray-300 rounded-md shadow-sm outline-none pointer-events-none dark:border-gray-500 sm:text-sm sm:leading-5">
           <div
             className={`box-border grid place-items-center absolute inset-y-0 w-6 m-px transition border-2 border-transparent rounded-md bg-clip-content ${
               (left.value === fieldValue ? left : right).className ??

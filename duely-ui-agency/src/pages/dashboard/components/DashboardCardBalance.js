@@ -55,7 +55,7 @@ export function DashboardCardBalance() {
           {Object.entries(balancesByCurrency).map(([currency, { available, pending }]) => (
             <div key={currency}>
               <div className="flex flex-row items-center space-x-4">
-                <span className="flex-1 font-medium text-gray-800">{Currency.format(available, currency)} available</span>
+                <span className="flex-1 font-medium text-gray-800 dark:text-gray-300">{Currency.format(available, currency)} available</span>
               </div>
               <div className="flex flex-row items-center space-x-4">
                 <span className="flex-1 text-sm font-medium text-gray-400">{Currency.format(pending, currency)} pending</span>
@@ -65,8 +65,8 @@ export function DashboardCardBalance() {
 
         </div>
       </div>
-      <div className="px-4 py-2 bg-gray-100 rounded-md-b">
-        <Link to="/dashboard/payments"><span className="text-sm font-semibold text-indigo-600">View all</span></Link>
+      <div className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-b-md">
+        <Link to="/dashboard/payments"><span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">View all</span></Link>
       </div>
     </Card>
   );
