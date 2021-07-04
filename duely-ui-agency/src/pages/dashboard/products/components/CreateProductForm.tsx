@@ -157,7 +157,7 @@ export function CreateProductForm() {
           ]}
         />
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <FormButton loading={state.loading}>Create product</FormButton>
+          <FormButton disabled={state.loading}>Create product</FormButton>
           <FormInfoMessage error={state.error} />
         </div>
       </Form>

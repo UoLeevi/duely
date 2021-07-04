@@ -12,12 +12,14 @@ export function FormButton({
   disabled,
   loading,
   color,
+  name,
+  value,
   ...props
 }: FormButtonProps) {
   const form = useFormContext();
   const { isDirty } = form.useFormState();
   disabled = !!(disabled || loading || !isDirty);
   color = color ?? (type === 'reset' ? 'gray' : 'indigo');
-
-  return <Button type={type} color={color} disabled={disabled} loading={loading} {...props} />;
+  const registerProps = (name !== undefined && value !== undefined) ? form.register(name) : undefined;
+  return <Button type={type} color={color} disabled={disabled} loading={loading} {...props} {...registerProps} />;
 }

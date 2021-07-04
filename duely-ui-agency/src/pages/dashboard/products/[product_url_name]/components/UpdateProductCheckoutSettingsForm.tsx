@@ -113,7 +113,7 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton dense loading={updateLoading}>
+          <FormButton dense disabled={updateLoading}>
             Save
           </FormButton>
           <FormButton type="reset" dense disabled={updateLoading}>

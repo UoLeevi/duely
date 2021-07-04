@@ -168,11 +168,17 @@ export const formFieldInfo: Record<
   }
 };
 
+const buttonElementTypes = ['button', 'submit', 'reset', 'menu', 'image'];
+
 const elementTypesWhichShouldValidateOnChange = Object.entries(formFieldInfo)
   .filter(([, info]) => info.shouldValidateOnChange)
   .map(([type]) => type);
 
-export type FormFieldHTMLElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+export type FormFieldHTMLElement =
+  | HTMLInputElement
+  | HTMLSelectElement
+  | HTMLTextAreaElement
+  | HTMLButtonElement;
 
 export class FormFieldControl<T> {
   #name: string;
@@ -245,10 +251,8 @@ export class FormFieldControl<T> {
   }
 
   get value(): T | undefined {
-    if (this.#element === undefined) return undefined;
-
-    if (this.#element !== null) {
-      this.#value = this.#getElementValue!(this.#element);
+    if (this.#getElementValue && this.#element) {
+      this.#value = this.#getElementValue(this.#element);
     }
 
     return this.#value;
@@ -329,6 +333,11 @@ export class FormFieldControl<T> {
     }
   }
 
+  #onClick(event: MouseEvent) {
+    const element = event.currentTarget as FormFieldHTMLElement;
+    this.setValue(element.value as any)
+  }
+
   #onBeforeInput(event: InputEvent) {
     if (this.#options.inputFilter && event.data) {
       if (event.data.match(this.#options.inputFilter)?.[0].length !== event.data.length) {
@@ -359,12 +368,17 @@ export class FormFieldControl<T> {
     // I encountered issues with react's SynteticEvents not firing in some cases.
     // For example if radio button was programatically changed and afterwards manually clicked (checked),
     // the onChange event would not be fired. There is no such issue with native DOM events.
-    element.addEventListener('beforeinput', (event) => this.#onBeforeInput(event as InputEvent));
-    element.addEventListener('input', (event) => this.#onInput(event as InputEvent));
-    element.addEventListener('blur', (event) => this.#onBlur(event as FocusEvent));
 
-    this.#getElementValue = formFieldInfo[element.type].getElementValue ?? defaultGetElementValue;
-    this.#setElementValue = formFieldInfo[element.type].setElementValue ?? defaultSetElementValue;
+    if (buttonElementTypes.includes(element.type)) {
+      element.addEventListener('click', (event) => this.#onClick(event as MouseEvent));
+    } else {
+      element.addEventListener('beforeinput', (event) => this.#onBeforeInput(event as InputEvent));
+      element.addEventListener('input', (event) => this.#onInput(event as InputEvent));
+      element.addEventListener('blur', (event) => this.#onBlur(event as FocusEvent));
+
+      this.#getElementValue = formFieldInfo[element.type].getElementValue ?? defaultGetElementValue;
+      this.#setElementValue = formFieldInfo[element.type].setElementValue ?? defaultSetElementValue;
+    }
 
     if (this.defaultValue !== undefined) {
       this.setValue(this.defaultValue);
@@ -382,24 +396,39 @@ export class FormFieldControl<T> {
   }
 
   #detachElement() {
+    if (this.#getElementValue && this.#element) {
+      this.#value = this.#getElementValue(this.#element);
+    }
+
     this.#element = null;
   }
 
   setValue(value: T | undefined) {
-    if (!this.#element) return;
-
     this.startUpdate();
-    this.#valueChanged ||= this.#setElementValue!(this.#element, value);
-    if (this.#valueChanged && this.#shouldValidate) this.validate();
+
+    if (this.#setElementValue && this.#element) {
+      this.#valueChanged ||= this.#setElementValue(this.#element, value);
+      if (this.#valueChanged && this.#shouldValidate) this.validate();
+    } else {
+      const previousValue = this.value;
+      this.#defaultValue = value;
+      this.#value = value;
+      this.#valueChanged ||= previousValue !== this.value;
+    }
+
     this.endUpdate();
   }
 
   setDefaultValue(value: T | undefined) {
-    const previousDefaultValue = this.defaultValue;
-    this.#defaultValue = value;
+    if (this.#element) {
+      const previousDefaultValue = this.defaultValue;
+      this.#defaultValue = value;
 
-    if (this.#element && (!this.#hasValue || previousDefaultValue === this.value)) {
-      this.setValue(this.defaultValue!);
+      if (!this.#hasValue || previousDefaultValue === this.value) {
+        this.setValue(this.defaultValue!);
+      }
+    } else {
+      this.setValue(value);
     }
   }
 
@@ -458,11 +487,7 @@ export class FormFieldControl<T> {
       this.setDefaultValue(defaultValue);
     }
 
-    if (this.#element) {
-      this.#setElementValue!(this.#element, this.defaultValue);
-    }
-
-    this.#valueChanged = true;
+    this.setValue(this.defaultValue);
     this.#stateChanged = true;
     this.endUpdate();
   }

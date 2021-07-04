@@ -89,7 +89,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
         registerOptions={{ required: true }}
       />
       <div className="flex flex-col items-center pt-4">
-        <FormButton loading={startPasswordResetLoading}>
+        <FormButton disabled={startPasswordResetLoading}>
           Send a verification link
         </FormButton>
       </div>

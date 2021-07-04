@@ -180,7 +180,7 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           </p>
         </div>
         <div className="flex flex-col items-center pt-4">
-          <FormButton loading={state.loading}>Create a brand</FormButton>
+          <FormButton disabled={state.loading}>Create a brand</FormButton>
         </div>
         <div className="flex flex-col items-center h-24 pt-4">
           <FormInfoMessage error={state.error} />

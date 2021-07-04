@@ -1,6 +1,6 @@
 {
   "name": "@duely/react",
-  "version": "0.4.18",
+  "version": "0.4.19",
   "description": "UI components used in duely.app",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -47,7 +47,7 @@
     "react-router-dom": "^5.2.0"
   },
   "dependencies": {
-    "@duely/react-form": "0.4.7",
+    "@duely/react-form": "0.4.8",
     "immer": "^9.0.2"
   }
 }

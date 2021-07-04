@@ -1,6 +1,6 @@
 import { Util } from '@duely/react';
 
-type Color = 'gray' | 'green' | 'orange' | 'indigo' | 'blue';
+type Color = 'gray' | 'green' | 'orange' | 'red' | 'indigo' | 'blue';
 
 type ColoredChipProps = {
   text: string;
@@ -23,6 +23,9 @@ export function ColoredChip({ text, color }: ColoredChipProps) {
       break;
     case 'orange':
       colorClassName = 'bg-orange-100 text-orange-800 dark:bg-orange-700 dark:text-orange-100';
+      break;
+    case 'red':
+      colorClassName = 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100';
       break;
     case 'indigo':
       colorClassName = 'bg-indigo-100 text-indigo-800 dark:bg-indigo-700 dark:text-indigo-100';

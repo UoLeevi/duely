@@ -152,7 +152,7 @@ function PageEditorEditBlockForm() {
     <Form form={form} onSubmit={onSubmit} className="space-y-3">
       <DynamicFormFields fields={definition.fields ?? []} defaultValues={data} />
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton dense loading={formLoading}>
+        <FormButton dense disabled={formLoading}>
           Save
         </FormButton>
         <FormButton type="reset" dense disabled={formLoading}>

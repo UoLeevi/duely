@@ -7,7 +7,10 @@ import {
   Card,
   LoadingScreen,
   ErrorScreen,
-  Util
+  Util,
+  useForm,
+  Form,
+  useFormContext
 } from '@duely/react';
 import { DashboardSection } from '../components';
 import { Currency } from '@duely/core';
@@ -21,7 +24,8 @@ const wrap = {
 const statusColors = {
   pending: 'orange',
   failed: 'red',
-  processed: 'blue'
+  processed: 'blue',
+  cancelled: 'gray'
 };
 
 const headers = ['Order', 'Customer', 'Amount', 'Order date', 'Status', 'Action'];
@@ -80,7 +84,9 @@ export default function DashboardOrdersHome() {
         <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
           {order.customer.name ?? order.customer.email_address.split('@')[0]}
         </span>
-        <span className="text-xs text-gray-800 dark:text-gray-300">{order.customer.email_address}</span>
+        <span className="text-xs text-gray-800 dark:text-gray-300">
+          {order.customer.email_address}
+        </span>
       </div>
     ),
 
@@ -99,12 +105,29 @@ export default function DashboardOrdersHome() {
     // date & time
     (order: TOrder) => (
       <div className="flex flex-col space-y-2">
-        <span className="text-xs text-gray-800 dark:text-gray-300">{Util.formatDate(new Date(order.ordered_at))}</span>
+        <span className="text-xs text-gray-800 dark:text-gray-300">
+          {Util.formatDate(new Date(order.ordered_at))}
+        </span>
       </div>
     ),
 
     // product product status
-    (order: TOrder) => <ColoredChip color={statusColors} text={order.state} />,
+    (order: TOrder) => {
+      return (
+        <div className="flex">
+          <DropMenu
+            origin="center"
+            button={
+              <div className="p-2">
+                <ColoredChip color={statusColors} text={order.state} />
+              </div>
+            }
+          >
+            <ChangeOrderStatusForm status={order.state} order_id={order.id} />
+          </DropMenu>
+        </div>
+      );
+    },
 
     // actions
     (order: TOrder) => {
@@ -166,5 +189,41 @@ export default function DashboardOrdersHome() {
         </Card>
       </DashboardSection>
     </>
+  );
+}
+
+type ChangeOrderStatusFormProps = {
+  order_id: string;
+  status: string;
+};
+
+function ChangeOrderStatusForm({ order_id, status }: ChangeOrderStatusFormProps) {
+  // TODO
+  const form = useForm();
+  return (
+    <Form form={form} onSubmit={(data) => console.log(data)}>
+      <div className="flex flex-col pb-2 space-y-2">
+        <div>
+          <span className="text-xs font-medium text-gray-800 dark:text-gray-300 whitespace-nowrap">
+            Change status
+          </span>
+        </div>
+        <ChangeOrderStatusButton status="processed" />
+        <ChangeOrderStatusButton status="cancelled" />
+      </div>
+    </Form>
+  );
+}
+
+type ChangeOrderStatusButtonProps = {
+  status: string;
+};
+
+function ChangeOrderStatusButton({ status }: ChangeOrderStatusButtonProps) {
+  const form = useFormContext();
+  return (
+    <button value={status} {...form.register('status')}>
+      <ColoredChip color={statusColors} text={status} />
+    </button>
   );
 }

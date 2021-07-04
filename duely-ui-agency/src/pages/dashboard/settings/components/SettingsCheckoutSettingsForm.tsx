@@ -92,7 +92,7 @@ export function SettingsCheckoutSettingsForm() {
       />
 
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton dense loading={state.loading}>
+        <FormButton dense disabled={state.loading}>
           Save
         </FormButton>
         <FormButton type="reset" dense disabled={state.loading}>

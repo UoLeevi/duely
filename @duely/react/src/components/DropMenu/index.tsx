@@ -1,14 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Transition } from '@headlessui/react';
+import { Util } from '../../util';
 
 type DropMenuProps = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
   HTMLDivElement
 > & {
   button?: React.ReactNode;
+  origin?: 'right' | 'left' | 'center';
 };
 
-export function DropMenu({ children, button }: DropMenuProps) {
+const originClassNames = {
+  right: 'right-0',
+  left: 'left-0',
+  center: 'left-[50%] -translate-x-1/2'
+};
+
+export function DropMenu({ children, button, origin }: DropMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef(null);
 
@@ -50,7 +58,7 @@ export function DropMenu({ children, button }: DropMenuProps) {
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <DropMenuItems buttonRef={ref} close={close}>
+        <DropMenuItems buttonRef={ref} close={close} origin={origin}>
           {children}
         </DropMenuItems>
       </Transition>
@@ -64,9 +72,10 @@ type DropMenuItemsProps = React.DetailedHTMLProps<
 > & {
   close: () => void;
   buttonRef: React.RefObject<HTMLButtonElement>;
+  origin?: 'right' | 'left' | 'center';
 };
 
-function DropMenuItems({ children, close, buttonRef, ...props }: DropMenuItemsProps) {
+function DropMenuItems({ children, close, buttonRef, origin, ...props }: DropMenuItemsProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => ref.current?.focus(), []);
@@ -80,11 +89,16 @@ function DropMenuItems({ children, close, buttonRef, ...props }: DropMenuItemsPr
     }
   }
 
+  const className = Util.createClassName(
+    originClassNames[origin ?? 'right'],
+    'absolute z-10 flex flex-col px-4 py-2 space-y-2 bg-white border rounded-md shadow-md dark:bg-gray-900 dark:border-gray-700 focus:outline-none'
+  );
+
   return (
     <div
       ref={ref}
       tabIndex={-1}
-      className="absolute right-0 z-10 flex flex-col px-4 py-2 space-y-2 bg-white border rounded-md shadow-md dark:bg-gray-900 dark:border-gray-700 focus:outline-none"
+      className={className}
       onBlur={onBlur}
       {...props}
     >
