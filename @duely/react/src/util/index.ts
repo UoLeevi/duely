@@ -27,7 +27,8 @@ export const Util = {
   get,
   template,
   createGraphQLPlaygroundUrl,
-  fetchRecapthcaToken
+  fetchRecapthcaToken,
+  isPrivateIp
 };
 
 // see: https://github.com/graphql/graphql-playground/issues/1018#issuecomment-762935106

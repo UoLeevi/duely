@@ -182,6 +182,17 @@ export const current_subdomain_Q = {
   }
 };
 
+function isPrivateIp(hostname: string) {
+  var parts = hostname.split('.').map((part) => parseInt(part, 10));
+  if (parts.length !== 4 || parts.some(isNaN)) return false;
+
+  return (
+    parts[0] === 10 ||
+    (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
+    (parts[0] === 192 && parts[1] === 168)
+  );
+}
+
 function resolveSubdomain(): string | null {
   const url = new URL(window.location.href);
   let name = url.searchParams.get('subdomain');
@@ -190,7 +201,7 @@ function resolveSubdomain(): string | null {
 
   const hostname = window.location.hostname.toLowerCase();
 
-  if (hostname !== 'localhost') {
+  if (hostname !== 'localhost' && !isPrivateIp(hostname)) {
     if (hostname !== 'duely.app') {
       if (hostname.endsWith('.duely.app')) {
         subdomain = hostname.slice(0, -'.duely.app'.length);
