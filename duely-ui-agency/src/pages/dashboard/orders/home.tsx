@@ -13,19 +13,12 @@ import {
   useFormContext
 } from '@duely/react';
 import { DashboardSection } from '../components';
-import { Currency } from '@duely/core';
+import { Currency, OrderFragment } from '@duely/core';
 import { ColoredChip } from '../components/ColoredChip';
 
 const wrap = {
   columns: 2,
   spans: [2, 2, 1, 1, 1, 1]
-};
-
-const statusColors = {
-  pending: 'orange',
-  failed: 'red',
-  processed: 'blue',
-  cancelled: 'gray'
 };
 
 const headers = ['Order', 'Customer', 'Amount', 'Order date', 'Status', 'Action'];
@@ -112,22 +105,7 @@ export default function DashboardOrdersHome() {
     ),
 
     // product product status
-    (order: TOrder) => {
-      return (
-        <div className="flex">
-          <DropMenu
-            origin="center"
-            button={
-              <div className="p-2">
-                <ColoredChip color={statusColors} text={order.state} />
-              </div>
-            }
-          >
-            <ChangeOrderStatusForm status={order.state} order_id={order.id} />
-          </DropMenu>
-        </div>
-      );
-    },
+    (order: TOrder) => <OrderStatusColumn order={order} />,
 
     // actions
     (order: TOrder) => {
@@ -192,12 +170,54 @@ export default function DashboardOrdersHome() {
   );
 }
 
+const orderStatuses = {
+  pending: 'not started',
+  processing: 'started',
+  processed: 'completed',
+  failed: 'cancelled'
+};
+
+const statusColors = {
+  'not started': 'orange',
+  started: 'blue',
+  completed: 'green',
+  cancelled: 'gray'
+};
+
+type OrderStatusColumnProps = {
+  order: OrderFragment;
+};
+
+function OrderStatusColumn({ order }: OrderStatusColumnProps) {
+  return (
+    <div className="flex">
+      <DropMenu
+        origin="center"
+        button={
+          <div className="p-2">
+            <ColoredChip
+              color={statusColors}
+              text={orderStatuses[order.state as keyof typeof orderStatuses]}
+            />
+          </div>
+        }
+      >
+        <ChangeOrderStatusForm status={order.state} order_id={order.id} />
+      </DropMenu>
+    </div>
+  );
+}
+
 type ChangeOrderStatusFormProps = {
   order_id: string;
   status: string;
 };
 
 function ChangeOrderStatusForm({ order_id, status }: ChangeOrderStatusFormProps) {
+  const otherStatuses = Object.keys(orderStatuses).filter(
+    (processingState) => processingState !== status
+  );
+
   // TODO
   const form = useForm();
   return (
@@ -208,8 +228,9 @@ function ChangeOrderStatusForm({ order_id, status }: ChangeOrderStatusFormProps)
             Change status
           </span>
         </div>
-        <ChangeOrderStatusButton status="processed" />
-        <ChangeOrderStatusButton status="cancelled" />
+        {otherStatuses.map((processingState) => (
+          <ChangeOrderStatusButton status={processingState} key={processingState} />
+        ))}
       </div>
     </Form>
   );
@@ -223,7 +244,10 @@ function ChangeOrderStatusButton({ status }: ChangeOrderStatusButtonProps) {
   const form = useFormContext();
   return (
     <button value={status} {...form.register('status')}>
-      <ColoredChip color={statusColors} text={status} />
+      <ColoredChip
+        color={statusColors}
+        text={orderStatuses[status as keyof typeof orderStatuses]}
+      />
     </button>
   );
 }

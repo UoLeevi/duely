@@ -1,2 +1,0 @@
-grecaptcha-show
-grecaptcha-badge
