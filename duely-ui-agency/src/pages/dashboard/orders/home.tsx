@@ -10,11 +10,14 @@ import {
   Util,
   useForm,
   Form,
-  useFormContext
+  useFormContext,
+  useDropMenu,
+  useFormMessages
 } from '@duely/react';
 import { DashboardSection } from '../components';
 import { Currency, OrderFragment } from '@duely/core';
 import { ColoredChip } from '../components/ColoredChip';
+import { useRef } from 'react';
 
 const wrap = {
   columns: 2,
@@ -189,10 +192,13 @@ type OrderStatusColumnProps = {
 };
 
 function OrderStatusColumn({ order }: OrderStatusColumnProps) {
+  const dropMenu = useDropMenu();
+
   return (
     <div className="flex">
       <DropMenu
         origin="center"
+        control={dropMenu.control}
         button={
           <div className="p-2">
             <ColoredChip
@@ -202,7 +208,7 @@ function OrderStatusColumn({ order }: OrderStatusColumnProps) {
           </div>
         }
       >
-        <ChangeOrderStatusForm status={order.state} order_id={order.id} />
+        <ChangeOrderStatusForm status={order.state} order_id={order.id} onDone={dropMenu.close} />
       </DropMenu>
     </div>
   );
@@ -211,17 +217,45 @@ function OrderStatusColumn({ order }: OrderStatusColumnProps) {
 type ChangeOrderStatusFormProps = {
   order_id: string;
   status: string;
+  onDone: () => void;
 };
 
-function ChangeOrderStatusForm({ order_id, status }: ChangeOrderStatusFormProps) {
+type UpdateOrderStatusFormFields = {
+  status: keyof typeof orderStatuses
+};
+
+function ChangeOrderStatusForm({ order_id, status, onDone }: ChangeOrderStatusFormProps) {
   const otherStatuses = Object.keys(orderStatuses).filter(
     (processingState) => processingState !== status
   );
 
   // TODO
-  const form = useForm();
+  const form = useForm<UpdateOrderStatusFormFields>();
+
+  const {
+    infoMessage,
+    setInfoMessage,
+    successMessage,
+    setSuccessMessage,
+    errorMessage,
+    setErrorMessage
+  } = useFormMessages();
+
+  async function onSubmit({ ...data }: UpdateOrderStatusFormFields) {
+    // const res = await updateOrder({ order_id, ...data });
+
+    // if (res?.success) {
+    //   setSuccessMessage('Saved');
+    //   return;
+    // } else {
+    //   setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
+    // }
+    console.log(data);
+    onDone();
+  }
+
   return (
-    <Form form={form} onSubmit={(data) => console.log(data)}>
+    <Form form={form} onSubmit={onSubmit}>
       <div className="flex flex-col pb-2 space-y-2">
         <div>
           <span className="text-xs font-medium text-gray-800 dark:text-gray-300 whitespace-nowrap">

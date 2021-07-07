@@ -1,6 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Transition } from '@headlessui/react';
 import { Util } from '../../util';
+
+export function useDropMenu() {
+  const control = useRef<undefined | { open: () => void; close: () => void }>();
+  return useMemo(
+    () => ({
+      open: () => control.current?.open(),
+      close: () => control.current?.close(),
+      control
+    }),
+    []
+  );
+}
 
 type DropMenuProps = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
@@ -8,6 +20,7 @@ type DropMenuProps = React.DetailedHTMLProps<
 > & {
   button?: React.ReactNode;
   origin?: 'right' | 'left' | 'center';
+  control?: ReturnType<typeof useDropMenu>['control'];
 };
 
 const originClassNames = {
@@ -16,7 +29,7 @@ const originClassNames = {
   center: 'left-[50%] -translate-x-1/2'
 };
 
-export function DropMenu({ children, button, origin }: DropMenuProps) {
+export function DropMenu({ children, button, origin, control }: DropMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef(null);
 
@@ -26,6 +39,10 @@ export function DropMenu({ children, button, origin }: DropMenuProps) {
 
   function close() {
     setIsOpen(false);
+  }
+
+  if (control) {
+    control.current = { open, close };
   }
 
   return (
@@ -95,13 +112,7 @@ function DropMenuItems({ children, close, buttonRef, origin, ...props }: DropMen
   );
 
   return (
-    <div
-      ref={ref}
-      tabIndex={-1}
-      className={className}
-      onBlur={onBlur}
-      {...props}
-    >
+    <div ref={ref} tabIndex={-1} className={className} onBlur={onBlur} {...props}>
       {children}
     </div>
   );
