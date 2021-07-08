@@ -149,7 +149,7 @@ export const Image: GqlTypeDefinition = {
               type: 'ImageMutationResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -185,7 +185,7 @@ export const Image: GqlTypeDefinition = {
               type: 'ImageMutationResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

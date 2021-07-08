@@ -81,7 +81,7 @@ export const PasswordReset: GqlTypeDefinition = {
               type: 'SimpleResult'
             };
           }
-        } catch (error) {
+        } catch (error: any) {
           return {
             success: false,
             message: error.message,
@@ -151,7 +151,7 @@ export const PasswordReset: GqlTypeDefinition = {
               type: 'SimpleResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             success: false,
             message: error.message, // `Unable to complete password reset an account for '${emailAddress}'. It might be that the verification code was incorrect.`,

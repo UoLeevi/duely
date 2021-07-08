@@ -91,7 +91,7 @@ async function readFileAsDataUrl(file: File | null | undefined): Promise<string 
         const dataUrl = reader.result as string;
         resolve(dataUrl);
       };
-    } catch (err) {
+    } catch (err: any) {
       reject(err);
     }
   });

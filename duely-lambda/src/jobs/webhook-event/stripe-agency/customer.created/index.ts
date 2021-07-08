@@ -1,12 +1,12 @@
 import Stripe from 'stripe';
-import { queryResource, withSession, updateProcessingState } from '@duely/db';
+import { queryResource, withSession, updateProcessingState, getServiceAccountContext } from '@duely/db';
 
-const context = { jwt: process.argv[2] };
-const webhook_event_id = process.argv[3];
+const webhook_event_id = process.argv[2];
 
 main();
 
 async function main() {
+  const context = await getServiceAccountContext();
   const webhook_event = await queryResource(context, 'webhook event', webhook_event_id);
   const event = webhook_event.data as Stripe.Event;
   const stripe_customer = event.data.object as Stripe.Customer;
@@ -46,7 +46,7 @@ async function main() {
       });
     });
     await updateProcessingState(context, 'webhook event', webhook_event_id, 'processed');
-  } catch (err) {
+  } catch (err: any) {
     console.error(`Webhook event processing failed:\n${err}`);
     await updateProcessingState(context, 'webhook event', webhook_event_id, err);
   }

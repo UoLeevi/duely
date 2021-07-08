@@ -3,7 +3,7 @@ import cors from 'cors';
 import fs from 'fs';
 import validator from 'validator';
 import { GraphQLClient, gql } from 'graphql-request';
-import { serviceAccountContextPromise } from '@duely/db';
+import { getServiceAccountContext } from '@duely/db';
 
 const gql_subdomain = gql`
   query($subdomain_name: String!, $livemode: Boolean) {
@@ -51,7 +51,7 @@ let context: {
 };
 
 async function main() {
-  context = await serviceAccountContextPromise;
+  context = await getServiceAccountContext();
   client = await createGraphQLClient();
   const app = express();
   app.set('trust proxy', true);
@@ -123,7 +123,7 @@ async function get_checkout(req: Request, res: Response) {
     agency_id = agency.id;
     stripe_id_ext = agency.stripe_account.id_ext;
     livemode = agency.stripe_account.livemode;
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.sendStatus(404);
     return;
@@ -141,7 +141,7 @@ async function get_checkout(req: Request, res: Response) {
     }
 
     price_id = products[0].default_price?.id;
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.sendStatus(404);
     return;
@@ -173,7 +173,7 @@ async function get_checkout(req: Request, res: Response) {
     }
 
     checkout_session_id = validator.escape(result.checkout_session_id);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.sendStatus(404);
     return;

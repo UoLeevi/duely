@@ -63,7 +63,7 @@ export const LogIn: GqlTypeDefinition = {
             jwt: await logIn(context, email_address, password),
             type: 'LogInResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             success: false,
             message: error.message, // `Your email or password was invalid. Please try again.`
@@ -80,7 +80,7 @@ export const LogIn: GqlTypeDefinition = {
             success: true,
             type: 'SimpleResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             success: false,
             message: error.message,

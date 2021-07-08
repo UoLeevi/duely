@@ -1,11 +1,11 @@
-import { updateProcessingState, withSession } from '@duely/db';
+import { getServiceAccountContext, updateProcessingState, withSession } from '@duely/db';
 
-const context = { jwt: process.argv[2] };
-const order_id = process.argv[3];
+const order_id = process.argv[2];
 
 main();
 
 async function main() {
+  const context = await getServiceAccountContext();
   console.log(`Order processing started for order: ${order_id}`);
   try {
     await updateProcessingState(context, 'order', order_id, 'processing');
@@ -29,7 +29,7 @@ async function main() {
       }
     });
     await updateProcessingState(context, 'order', order_id, 'processed');
-  } catch (err) {
+  } catch (err: any) {
     console.error(`Order processing failed:\n${err}`);
     await updateProcessingState(context, 'order', order_id, err);
   }

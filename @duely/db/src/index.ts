@@ -1,7 +1,7 @@
 import { ClientBase, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
-import { Awaited, ResolvableValue, Util } from '@duely/core';
+import { ResolvableValue, Util } from '@duely/core';
 import { AccessLevel, Resources, ResourcesWithState } from './types';
 
 export * from './errors';
@@ -35,7 +35,7 @@ type WithConnectionCallback<R = any> = (
 
 type Context = {
   ip?: string | null;
-  jwt?: string | null;
+  jwt: string | null;
 };
 
 export async function beginVisit(): Promise<string> {
@@ -162,7 +162,26 @@ async function logInServiceAccount() {
   return await withSessionEx(context, callback, Util.identity);
 }
 
-export const serviceAccountContextPromise = Util.lazy(logInServiceAccount);
+const serviceAccountContextState: {
+  ttl: number;
+  logInTime: number;
+  contextPromise: Promise<Context> | null;
+} = {
+  ttl: 4001000,
+  logInTime: Number.NEGATIVE_INFINITY,
+  contextPromise: null
+};
+
+export async function getServiceAccountContext(): Promise<Context> {
+  const time = Date.now();
+
+  if (time - serviceAccountContextState.logInTime > serviceAccountContextState.ttl) {
+    serviceAccountContextState.logInTime = time;
+    serviceAccountContextState.contextPromise = logInServiceAccount();
+  }
+
+  return await serviceAccountContextState.contextPromise!;
+}
 
 export async function withConnection<R = any>(
   context: Context,
@@ -471,19 +490,19 @@ function useFunctions(client: ClientBase) {
 export type ProcessingState = 'pending' | 'processing' | 'processed' | 'failed';
 
 export async function updateProcessingState(
-  context: Awaited<typeof serviceAccountContextPromise>,
+  context: Context,
   resource_name: keyof ResourcesWithState,
   id: string,
   state: ProcessingState
 ): Promise<void>;
 export async function updateProcessingState(
-  context: Awaited<typeof serviceAccountContextPromise>,
+  context: Context,
   resource_name: keyof ResourcesWithState,
   id: string,
   err: Error
 ): Promise<void>;
 export async function updateProcessingState(
-  context: Awaited<typeof serviceAccountContextPromise>,
+  context: Context,
   resource_name: keyof ResourcesWithState,
   id: string,
   arg: ProcessingState | Error

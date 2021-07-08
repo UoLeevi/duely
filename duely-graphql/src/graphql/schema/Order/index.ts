@@ -86,7 +86,7 @@ export const Order: GqlTypeDefinition = {
             stripeAccount: stripe_account.stripe_id_ext,
             ...stripe_checkout_session
           };
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
       }
@@ -107,7 +107,7 @@ export const Order: GqlTypeDefinition = {
             order,
             type: 'OrderMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

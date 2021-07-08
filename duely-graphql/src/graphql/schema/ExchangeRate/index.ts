@@ -62,7 +62,7 @@ export const ExchangeRate: GqlTypeDefinition = {
       async exchange_rate(
         source: unknown,
         { currency }: { currency: string },
-        context: { jwt?: string; ip?: string }
+        context: { jwt: string | null; ip?: string }
       ) {
         if (!context.jwt) throw new Error('Unauthorized');
         const rates = await fetchExhangeRates();

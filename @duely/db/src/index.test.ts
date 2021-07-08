@@ -1,6 +1,6 @@
-import { serviceAccountContextPromise } from '.';
+import { getServiceAccountContext } from '.';
 
-test('serviceAccountContextPromise', async () => {
-  const context = await serviceAccountContextPromise; 
+test('getServiceAccountContext', async () => {
+  const context = await getServiceAccountContext(); 
   expect(context.jwt).toBeTruthy();
 });

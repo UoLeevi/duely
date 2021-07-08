@@ -24,7 +24,7 @@ export const Visit: GqlTypeDefinition = {
             jwt: await beginVisit(),
             type: 'BeginVisitResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             success: false,
             message: error.message,
@@ -41,7 +41,7 @@ export const Visit: GqlTypeDefinition = {
             success: true,
             type: 'SimpleResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             success: false,
             message: error.message,

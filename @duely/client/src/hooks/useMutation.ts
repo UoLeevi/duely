@@ -93,7 +93,7 @@ export function useMutation<
         }
 
         return res;
-      } catch (error) {
+      } catch (error: any) {
         setState(createErrorState(error));
 
         if (resetErrorMs > 0) {

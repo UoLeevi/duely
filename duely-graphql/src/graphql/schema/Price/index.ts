@@ -162,7 +162,7 @@ export const Price: GqlTypeDefinition = {
               };
             }
           );
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -186,7 +186,7 @@ export const Price: GqlTypeDefinition = {
               type: 'PriceMutationResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -243,7 +243,7 @@ export const Price: GqlTypeDefinition = {
               type: 'PriceMutationResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -299,7 +299,7 @@ export const Price: GqlTypeDefinition = {
               const url = new URL(success_url);
               url.searchParams.append('session_id', '{CHECKOUT_SESSION_ID}');
               success_url = url.href.replace('%7B', '{').replace('%7D', '}');
-            } catch (error) {
+            } catch (error: any) {
               return {
                 // error
                 success: false,
@@ -361,7 +361,7 @@ export const Price: GqlTypeDefinition = {
               type: 'CreateStripeCheckoutSessionResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

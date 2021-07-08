@@ -1,10 +1,9 @@
 import stripe from '../../../../stripe';
 import Stripe from 'stripe';
-import { queryResource, withSession, updateProcessingState } from '@duely/db';
+import { queryResource, withSession, updateProcessingState, getServiceAccountContext } from '@duely/db';
 import { runLambda } from '@duely/lambda';
 
-const context = { jwt: process.argv[2] };
-const webhook_event_id = process.argv[3];
+const webhook_event_id = process.argv[2];
 
 main();
 
@@ -15,6 +14,7 @@ main();
 // 3. wait that payment has succeeded
 // 4. start whatever happens then
 async function main() {
+  const context = await getServiceAccountContext();
   const webhook_event = await queryResource(context, 'webhook event', webhook_event_id);
   const event = webhook_event.data as Stripe.Event;
   const session = event.data.object as Stripe.Checkout.Session;
@@ -75,7 +75,7 @@ async function main() {
       await runLambda('process-order', order.id);
     });
     await updateProcessingState(context, 'webhook event', webhook_event_id, 'processed');
-  } catch (err) {
+  } catch (err: any) {
     console.error(`Webhook event processing failed:\n${err}`);
     await updateProcessingState(context, 'webhook event', webhook_event_id, err);
   }

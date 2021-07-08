@@ -73,7 +73,7 @@ export const PageBlock: GqlTypeDefinition = {
             page_block,
             type: 'PageBlockMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -95,7 +95,7 @@ export const PageBlock: GqlTypeDefinition = {
             page_block,
             type: 'PageBlockMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -116,7 +116,7 @@ export const PageBlock: GqlTypeDefinition = {
             page_block,
             type: 'PageBlockMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

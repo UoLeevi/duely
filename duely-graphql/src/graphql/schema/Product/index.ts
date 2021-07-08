@@ -221,7 +221,7 @@ export const Product: GqlTypeDefinition = {
               };
             }
           );
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -328,7 +328,7 @@ export const Product: GqlTypeDefinition = {
               };
             }
           );
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -389,7 +389,7 @@ export const Product: GqlTypeDefinition = {
               type: 'ProductMutationResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

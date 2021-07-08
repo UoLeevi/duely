@@ -13,7 +13,7 @@ export type DuelyQqlContext = {
   ip?: string;
   referer?: string;
   user_agent?: string;
-  jwt?: string | null;
+  jwt: string | null;
   cache?: Map<any, any>;
 };
 

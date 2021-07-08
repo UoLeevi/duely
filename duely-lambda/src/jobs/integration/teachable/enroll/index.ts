@@ -1,15 +1,15 @@
-import { withSession } from '@duely/db';
+import { getServiceAccountContext, withSession } from '@duely/db';
 import { setResult } from '@duely/lambda';
 import axios from 'axios';
 
-const context = { jwt: process.argv[2] };
-const order_item_id = process.argv[3];
+const order_item_id = process.argv[2];
 
 main();
 
 // see: https://docs.teachable.com/reference#apiv1sale
 
 async function main() {
+  const context = await getServiceAccountContext();
   try {
     await withSession(context, async ({ queryResource }) => {
       const order_item = await queryResource('order item', order_item_id);
@@ -69,7 +69,7 @@ async function main() {
 
       setResult({ success: true, enrollment_id: result.data.id });
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error(`integration/teachable/enroll failed:\n${err}`);
   }
 }

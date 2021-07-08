@@ -55,7 +55,7 @@ export const ProductSettings: GqlTypeDefinition = {
         try {
           // validate and normalize url
           url = new URL(args.url);
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -85,7 +85,7 @@ export const ProductSettings: GqlTypeDefinition = {
             setting,
             type: 'ProductThankYouPageSettingMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -102,7 +102,7 @@ export const ProductSettings: GqlTypeDefinition = {
         try {
           // validate and normalize url
           url = new URL(args.url);
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -137,7 +137,7 @@ export const ProductSettings: GqlTypeDefinition = {
             setting,
             type: 'ProductThankYouPageSettingMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -163,7 +163,7 @@ export const ProductSettings: GqlTypeDefinition = {
             setting,
             type: 'ProductThankYouPageSettingMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

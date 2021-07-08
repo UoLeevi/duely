@@ -67,7 +67,7 @@ export const Credential: GqlTypeDefinition = {
             credential,
             type: 'CredentialMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -89,7 +89,7 @@ export const Credential: GqlTypeDefinition = {
             credential,
             type: 'CredentialMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

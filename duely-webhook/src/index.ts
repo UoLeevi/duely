@@ -4,7 +4,7 @@ import stripe from './stripe';
 import Stripe from 'stripe';
 import {
   createResource,
-  serviceAccountContextPromise,
+  getServiceAccountContext,
   queryResource,
   getDbErrorCode,
   updateProcessingState
@@ -19,7 +19,7 @@ let context: {
 main();
 
 async function main() {
-  context = await serviceAccountContextPromise;
+  context = await getServiceAccountContext();
   const app = express();
   app.set('trust proxy', true);
   app.use(cors());
@@ -66,7 +66,7 @@ async function handle_webhook(req: Request, res: Response) {
         throw new Error(`Event source '${source}' is unknown.`);
       }
     }
-  } catch (err) {
+  } catch (err: any) {
     res.status(400).send(`Webhook Error: ${err.message}`);
     return;
   }
@@ -77,7 +77,7 @@ async function handle_webhook(req: Request, res: Response) {
         stripe_id_ext: event.account
       });
       agency_id = stripe_account.agency_id;
-    } catch (err) {
+    } catch (err: any) {
       res.status(400).send(`Error while querying agency: ${err.message}`);
     }
   }
@@ -93,7 +93,7 @@ async function handle_webhook(req: Request, res: Response) {
       state: 'pending',
       agency_id
     });
-  } catch (err) {
+  } catch (err: any) {
     if (getDbErrorCode(err) === 'unique_violation') {
       console.log(`Duplicate webhook event received: source: ${source}, id_ext: ${event.id}`);
       res.json({ received: true, message: 'already processed' });

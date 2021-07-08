@@ -74,7 +74,7 @@ export const Integration: GqlTypeDefinition = {
             integration,
             type: 'IntegrationMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -96,7 +96,7 @@ export const Integration: GqlTypeDefinition = {
             integration,
             type: 'IntegrationMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

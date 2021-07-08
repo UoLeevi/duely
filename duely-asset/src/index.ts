@@ -99,7 +99,7 @@ async function get_image(req: Request, res: Response) {
     res.setHeader('content-type', mimeType);
     res.send(buffer);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.sendStatus(404);
     return;

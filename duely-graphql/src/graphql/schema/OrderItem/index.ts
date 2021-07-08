@@ -68,7 +68,7 @@ export const OrderItem: GqlTypeDefinition = {
             order_item,
             type: 'OrderItemMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

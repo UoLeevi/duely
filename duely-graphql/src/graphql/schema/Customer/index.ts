@@ -92,7 +92,7 @@ export const Customer: GqlTypeDefinition = {
             stripeAccount: stripe_account.stripe_id_ext,
             ...stripe_customer
           };
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
       },
@@ -131,7 +131,7 @@ export const Customer: GqlTypeDefinition = {
             stripeAccount: stripe_account.stripe_id_ext,
             ...cus
           }));
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
       }
@@ -189,7 +189,7 @@ export const Customer: GqlTypeDefinition = {
               type: 'CustomerMutationResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -250,7 +250,7 @@ export const Customer: GqlTypeDefinition = {
               type: 'CustomerMutationResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -294,7 +294,7 @@ export const Customer: GqlTypeDefinition = {
               type: 'CustomerMutationResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

@@ -66,7 +66,7 @@ export const Markdown: GqlTypeDefinition = {
         try {
           // validate markdown
           md.render(args.data);
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -85,7 +85,7 @@ export const Markdown: GqlTypeDefinition = {
             markdown,
             type: 'MarkdownMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -101,7 +101,7 @@ export const Markdown: GqlTypeDefinition = {
           try {
             // validate markdown
             md.render(args.data);
-          } catch (error) {
+          } catch (error: any) {
             return {
               // error
               success: false,
@@ -121,7 +121,7 @@ export const Markdown: GqlTypeDefinition = {
             markdown,
             type: 'MarkdownMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

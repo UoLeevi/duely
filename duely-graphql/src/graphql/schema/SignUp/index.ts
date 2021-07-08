@@ -114,7 +114,7 @@ export const SignUp: GqlTypeDefinition = {
             email_address,
             data: { redirect_url: redirect_url.href }
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             success: false,
             message: error.message,
@@ -180,7 +180,7 @@ export const SignUp: GqlTypeDefinition = {
               type: 'SimpleResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             success: false,
             message: error.message, // `Unable to complete sign up an account for '${emailAddress}'. It might be that the verification code was incorrect.`,

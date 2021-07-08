@@ -143,7 +143,7 @@ export const StripeAccount: GqlTypeDefinition = {
             type: source.details_submitted ? 'account_onboarding' : 'account_update',
             collect: 'eventually_due'
           });
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
       },
@@ -162,7 +162,7 @@ export const StripeAccount: GqlTypeDefinition = {
           // retrive connected account balance
           // see: https://stripe.com/docs/api/balance/balance_retrieve
           return await stripe[stripe_env].balance.retrieve({ stripeAccount: source.stripe_id_ext });
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
       },
@@ -204,7 +204,7 @@ export const StripeAccount: GqlTypeDefinition = {
             stripeAccount: source.stripe_id_ext,
             ...txn
           }));
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
       },
@@ -245,7 +245,7 @@ export const StripeAccount: GqlTypeDefinition = {
             stripeAccount: source.stripe_id_ext,
             ...pi
           }));
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
       }
@@ -266,7 +266,7 @@ export const StripeAccount: GqlTypeDefinition = {
             stripe_account.stripe_id_ext
           );
           return { ...stripe_account, ...stripe_account_ext };
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
       }

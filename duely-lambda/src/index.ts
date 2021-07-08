@@ -3,19 +3,13 @@ import childProcess from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
-import { serviceAccountContextPromise } from '@duely/db';
 import type { LambdaResult } from '@duely/lambda';
 
 const scriptDirpath = path.resolve(__dirname, 'jobs');
 
-let context: {
-  jwt: string;
-};
-
 main();
 
 async function main() {
-  context = await serviceAccountContextPromise;
   const app = express();
   app.set('trust proxy', true);
   app.use(cors());
@@ -50,7 +44,7 @@ async function handle_run(req: Request, res: Response) {
 
   // keep track of whether callback has been invoked to prevent multiple invocations
   let invoked = false;
-  const process = childProcess.fork(scriptPath, [context.jwt, ...args]);
+  const process = childProcess.fork(scriptPath, args);
 
   // listen for message which is used to set the result of the lambda
   let result: LambdaResult | null = null;

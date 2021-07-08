@@ -122,7 +122,7 @@ export const StripeCheckoutSession: GqlTypeDefinition = {
               stripeAccount: source.stripe_id_ext,
               ...item
             }));
-          } catch (error) {
+          } catch (error: any) {
             throw new Error(error.message);
           }
       }

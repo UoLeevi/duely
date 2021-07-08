@@ -139,7 +139,7 @@ type CreateResolverForReferencedResourceAllArgs<K extends keyof Resources> = (
 export function createResolverForReferencedResourceAll<
   K extends keyof Resources,
   TSource extends { id?: string },
-  TContext extends { jwt?: string; ip?: string }
+  TContext extends { jwt: string | null; ip?: string }
 >({
   name,
   column_name,

@@ -92,7 +92,7 @@ export const Agency: GqlTypeDefinition = {
             stripe_account.stripe_id_ext
           );
           return { ...stripe_account, ...stripe_account_ext };
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
       },
@@ -133,7 +133,7 @@ export const Agency: GqlTypeDefinition = {
 
           const countries = await fetchCountries();
           return countries.get(country)?.supported_payment_currencies;
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
       }
@@ -306,7 +306,7 @@ export const Agency: GqlTypeDefinition = {
                 type: 'account_onboarding',
                 collect: 'eventually_due'
               });
-            } catch (error) {
+            } catch (error: any) {
               return {
                 // something went wrong during account verification link creation
                 success: true,
@@ -324,7 +324,7 @@ export const Agency: GqlTypeDefinition = {
               type: 'CreateAgencyResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -380,7 +380,7 @@ export const Agency: GqlTypeDefinition = {
               type: 'AgencyMutationResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
@@ -431,7 +431,7 @@ export const Agency: GqlTypeDefinition = {
               type: 'AgencyMutationResult'
             };
           });
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

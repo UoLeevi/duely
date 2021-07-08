@@ -72,7 +72,7 @@ export const Page: GqlTypeDefinition = {
         try {
           url = new URL(args.url);
           if (url == null) throw new Error('URL is invalid');
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
 
@@ -95,7 +95,7 @@ export const Page: GqlTypeDefinition = {
             if (!agency) return null;
             return await queryResource('page', { agency_id: agency.id, url_path: path });
           });
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(error.message);
         }
       }
@@ -114,7 +114,7 @@ export const Page: GqlTypeDefinition = {
             page,
             type: 'PageMutationResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,

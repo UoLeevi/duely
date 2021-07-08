@@ -81,7 +81,7 @@ export const Theme: GqlTypeDefinition = {
             theme,
             type: 'UpdateThemeResult'
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             // error
             success: false,
