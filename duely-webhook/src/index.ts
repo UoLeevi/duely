@@ -13,7 +13,7 @@ import { runLambda } from '@duely/lambda';
 import { WebhookEventResource } from '@duely/db/dist/types';
 
 let context: {
-  jwt: string;
+  jwt: string | null;
 };
 
 main();
