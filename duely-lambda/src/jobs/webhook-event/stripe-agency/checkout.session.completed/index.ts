@@ -19,6 +19,7 @@ async function main() {
   const event = webhook_event.data as Stripe.Event;
   const session = event.data.object as Stripe.Checkout.Session;
   const stripe_env = event.livemode ? 'live' : 'test';
+  let order_id: string;
 
   try {
     await updateProcessingState(context, 'webhook event', webhook_event_id, 'processing');
@@ -71,9 +72,10 @@ async function main() {
       }
 
       console.log(`Info: Order created:\n${JSON.stringify(order)}`);
-
-      await runLambda('process-order', order.id);
+      order_id = order.id;
     });
+
+    await runLambda('process-order', order_id!);
     await updateProcessingState(context, 'webhook event', webhook_event_id, 'processed');
   } catch (err: any) {
     console.error(`Webhook event processing failed:\n${err}`);

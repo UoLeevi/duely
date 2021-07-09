@@ -4527,7 +4527,7 @@ CREATE FUNCTION policy_.serviceaccount_can_change_order_(_resource_definition se
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
     RETURN '{state_, error_, processed_at_}'::text[];
   ELSE
     RETURN '{}'::text[];

@@ -1,3 +1,6 @@
+// usage with kubectl:
+// kubectl run -it --rm --restart=Never curl --image=curlimages/curl -- -X POST http://duely-lambda-service:8080/run/:job/:args
+
 import express, { Request, Response } from 'express';
 import childProcess from 'child_process';
 import fs from 'fs';
