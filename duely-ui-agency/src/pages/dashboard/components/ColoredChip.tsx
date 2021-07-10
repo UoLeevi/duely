@@ -39,7 +39,7 @@ export function ColoredChip({ text, color }: ColoredChipProps) {
   }
 
   const className =
-    'w-16 px-2 py-1 text-xs font-medium tracking-wider text-center rounded-md min-w-max ' +
+    'w-16 px-2 py-1 text-xs font-medium tracking-wider text-center rounded-md min-w-max whitespace-nowrap ' +
     colorClassName;
 
   return <span className={className}>{Util.sentenceCase(text)}</span>;

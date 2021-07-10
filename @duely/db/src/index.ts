@@ -432,6 +432,9 @@ export async function deleteResource<K extends keyof Resources>(
 function useFunctions(client: ClientBase) {
   return {
     client,
+    async commit() {
+      await client.query('COMMIT AND CHAIN');
+    },
     async queryAll<R = any, I extends any[] = any[]>(
       sql: string | QueryConfig<I>,
       ...parameters: I

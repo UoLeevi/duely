@@ -9,7 +9,7 @@ async function main() {
   console.log(`Order processing started for order: ${order_id}`);
   try {
     await updateProcessingState(context, 'order', order_id, 'processing');
-    await withSession(context, async ({ queryResource, queryResourceAll }) => {
+    await withSession(context, async ({ queryResource, queryResourceAll, commit }) => {
       const order = await queryResource('order', order_id);
 
       if (!order) {
@@ -19,12 +19,22 @@ async function main() {
       const items = await queryResourceAll('order item', { order_id: order.id });
 
       for (const item of items) {
-        const price = await queryResource('price', item.price_id);
-        const product = await queryResource('product', price.product_id);
+        await updateProcessingState(context, 'order item', item.id, 'processing');
+        try {
+          const price = await queryResource('price', item.price_id);
+          const product = await queryResource('product', price.product_id);
 
-        if (product.integration_id) {
-          const integration = await queryResource('integration', product.integration_id);
-          // TODO: start job related to integration
+          if (product.integration_id) {
+            const integration = await queryResource('integration', product.integration_id);
+            // TODO: start job related to integration
+            await commit();
+          }
+
+          await updateProcessingState(context, 'order item', item.id, 'processed');
+        } catch (err: any) {
+          console.error(`Order item processing failed:\n${err}`);
+          await updateProcessingState(context, 'order item', item.id, err);
+          throw err;
         }
       }
     });
