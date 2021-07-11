@@ -349,6 +349,32 @@ $$;
 ALTER FUNCTION internal_.check_current_user_is_serviceaccount_() OWNER TO postgres;
 
 --
+-- Name: check_integration_config_data_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.check_integration_config_data_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF EXISTS (
+      SELECT jsonb_object_keys(NEW.data_)
+    EXCEPT
+      SELECT ff.name_
+      FROM internal_.integration_type_ t
+      JOIN internal_.form_field_ ff ON ff.form_uuid_ = t.config_form_uuid_
+      WHERE t.uuid_ = NEW.integration_type_uuid_
+  ) THEN
+    RAISE 'Data does not match required schema.' USING ERRCODE = 'DDATA';
+  END IF;
+
+  RETURN NEW;
+END
+$$;
+
+
+ALTER FUNCTION internal_.check_integration_config_data_() OWNER TO postgres;
+
+--
 -- Name: check_integration_data_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -3145,7 +3171,7 @@ ALTER FUNCTION policy_.anyone_can_query_form_field_(_resource_definition securit
 CREATE FUNCTION policy_.anyone_can_query_integration_type_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
-  SELECT '{uuid_, form_uuid_, name_}'::text[];
+  SELECT '{uuid_, form_uuid_, config_form_uuid_, name_, automatic_order_management_}'::text[];
 $$;
 
 
@@ -3765,6 +3791,25 @@ $$;
 ALTER FUNCTION policy_.owner_can_change_integration_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
 
 --
+-- Name: owner_can_change_integration_config_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_change_integration_config_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{credential_uuid_, name_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_change_integration_config_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: owner_can_change_markdown_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4098,7 +4143,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{agency_uuid_, integration_type_uuid_, credential_uuid_, data_}'::text[];
+    RETURN '{agency_uuid_, integration_config_uuid_, integration_type_uuid_, credential_uuid_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4107,6 +4152,28 @@ $$;
 
 
 ALTER FUNCTION policy_.owner_can_create_integration_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: owner_can_create_integration_config_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_create_integration_config_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF (
+    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
+    FROM internal_.query_owner_resource_(_resource_definition, _data)
+  ) THEN
+    RETURN '{integration_type_uuid_, agency_uuid_, credential_uuid_, name_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_create_integration_config_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: owner_can_create_markdown_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4334,7 +4401,7 @@ CREATE FUNCTION policy_.owner_can_query_integration_(_resource_definition securi
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{uuid_, agency_uuid_, integration_type_uuid_, credential_uuid_, data_}'::text[];
+    RETURN '{uuid_, agency_uuid_, integration_config_uuid_, integration_type_uuid_, credential_uuid_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4343,6 +4410,25 @@ $$;
 
 
 ALTER FUNCTION policy_.owner_can_query_integration_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: owner_can_query_integration_config_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_query_integration_config_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{uuid_, integration_type_uuid_, agency_uuid_, credential_uuid_, name_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_query_integration_config_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: owner_can_query_markdown_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -4758,7 +4844,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_integration_(_resource_definiti
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, agency_uuid_, integration_type_uuid_, credential_uuid_, data_}'::text[];
+    RETURN '{uuid_, agency_uuid_, integration_config_uuid_, integration_type_uuid_, credential_uuid_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4767,6 +4853,25 @@ $$;
 
 
 ALTER FUNCTION policy_.serviceaccount_can_query_integration_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_query_integration_config_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_query_integration_config_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, integration_type_uuid_, agency_uuid_, credential_uuid_, name_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_query_integration_config_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: serviceaccount_can_query_markdown_without_agency_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5810,11 +5915,28 @@ CREATE TABLE application_.integration_ (
     agency_uuid_ uuid NOT NULL,
     credential_uuid_ uuid,
     data_ jsonb NOT NULL,
-    integration_type_uuid_ uuid NOT NULL
+    integration_type_uuid_ uuid NOT NULL,
+    integration_config_uuid_ uuid
 );
 
 
 ALTER TABLE application_.integration_ OWNER TO postgres;
+
+--
+-- Name: integration_config_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.integration_config_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    integration_type_uuid_ uuid NOT NULL,
+    agency_uuid_ uuid NOT NULL,
+    credential_uuid_ uuid,
+    data_ jsonb NOT NULL,
+    name_ text NOT NULL
+);
+
+
+ALTER TABLE application_.integration_config_ OWNER TO postgres;
 
 --
 -- Name: markdown_; Type: TABLE; Schema: application_; Owner: postgres
@@ -6532,7 +6654,9 @@ ALTER TABLE internal_.form_field_ OWNER TO postgres;
 CREATE TABLE internal_.integration_type_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     form_uuid_ uuid,
-    name_ text
+    name_ text,
+    config_form_uuid_ uuid,
+    automatic_order_management_ boolean DEFAULT false NOT NULL
 );
 
 
@@ -7188,8 +7312,8 @@ c73098ad-183f-40b1-a96e-a314d56a6ed7	product_id	text	5126a7ce-f579-4da8-b2a8-ac9
 -- Data for Name: integration_type_; Type: TABLE DATA; Schema: internal_; Owner: postgres
 --
 
-COPY internal_.integration_type_ (uuid_, form_uuid_, name_) FROM stdin;
-63693293-fc7a-49d9-8410-a72bb5337af0	5126a7ce-f579-4da8-b2a8-ac9d13eff884	teachable/enroll
+COPY internal_.integration_type_ (uuid_, form_uuid_, name_, config_form_uuid_, automatic_order_management_) FROM stdin;
+63693293-fc7a-49d9-8410-a72bb5337af0	5126a7ce-f579-4da8-b2a8-ac9d13eff884	teachable/enroll	\N	f
 \.
 
 
@@ -7443,6 +7567,11 @@ b509686c-6e80-4454-bb68-3ddaf855590d	677e43b0-6a66-4f84-b857-938f462fdf90	policy
 92343770-3065-48f4-8de9-b48ce1a9257e	30e49b72-e52a-467d-8300-8b5051f32d9a	policy_.anyone_can_query_integration_type_(security_.resource_definition_,application_.resource_)	query	\N
 c9f182bb-10ac-40a0-b8dc-107ed4f88d1d	30e49b72-e52a-467d-8300-8b5051f32d9a	policy_.delete_forbidden_(security_.resource_definition_,application_.resource_)	delete	\N
 6f79da26-c71b-4560-91d0-cbd05150e062	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_agency_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
+0fe40001-8bdc-42a8-a01d-22a5629e19d6	6f6a79ba-b275-451f-9156-75740d01156f	policy_.serviceaccount_can_query_integration_config_(security_.resource_definition_,application_.resource_)	query	\N
+adb47a35-ae23-44c4-931a-cf9368c0524c	6f6a79ba-b275-451f-9156-75740d01156f	policy_.owner_can_query_integration_config_(security_.resource_definition_,application_.resource_)	query	0fe40001-8bdc-42a8-a01d-22a5629e19d6
+7b9f353d-1247-4d51-bf21-2964a5494dd9	6f6a79ba-b275-451f-9156-75740d01156f	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
+5b7119cc-3e79-40ae-9d1e-c6cf3f9d5773	6f6a79ba-b275-451f-9156-75740d01156f	policy_.owner_can_change_integration_config_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
+5a416245-3eb6-47b9-be14-ddcf7f224678	6f6a79ba-b275-451f-9156-75740d01156f	policy_.owner_can_create_integration_config_(security_.resource_definition_,jsonb)	create	\N
 \.
 
 
@@ -7502,6 +7631,7 @@ f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bd
 d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	\N	2021-03-05 15:24:22.112531+00	00000000-0000-0000-0000-000000000000
 677e43b0-6a66-4f84-b857-938f462fdf90	orditm	order item	application_.order_item_	20c1d214-27e8-4805-b645-2e5a00f32486	{uuid_,order_uuid_,stripe_line_item_id_ext_}	\N	2021-03-07 08:06:08.312786+00	00000000-0000-0000-0000-000000000000
 30e49b72-e52a-467d-8300-8b5051f32d9a	intetype	integration type	internal_.integration_type_	\N	{uuid_,form_uuid_,name_}	\N	2021-03-31 14:03:52.464206+00	00000000-0000-0000-0000-000000000000
+6f6a79ba-b275-451f-9156-75740d01156f	inteconf	integration config	application_.integration_config_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,integration_type_uuid_,agency_uuid_,name_}	\N	2021-07-11 06:36:57.993321+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7618,6 +7748,7 @@ f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bd
 d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	\N	2021-03-05 15:24:22.112531+00	00000000-0000-0000-0000-000000000000	I
 677e43b0-6a66-4f84-b857-938f462fdf90	orditm	order item	application_.order_item_	20c1d214-27e8-4805-b645-2e5a00f32486	{uuid_,order_uuid_,stripe_line_item_id_ext_}	\N	2021-03-07 08:06:08.312786+00	00000000-0000-0000-0000-000000000000	I
 30e49b72-e52a-467d-8300-8b5051f32d9a	intetype	integration type	internal_.integration_type_	\N	{uuid_,form_uuid_,name_}	\N	2021-03-31 14:03:52.464206+00	00000000-0000-0000-0000-000000000000	I
+6f6a79ba-b275-451f-9156-75740d01156f	inteconf	integration config	application_.integration_config_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,integration_type_uuid_,agency_uuid_,name_}	\N	2021-07-11 06:36:57.993321+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -7737,6 +7868,22 @@ ALTER TABLE ONLY application_.image_
 
 ALTER TABLE ONLY application_.integration_
     ADD CONSTRAINT integration__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: integration_config_ integration_config__name__agency_uuid__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.integration_config_
+    ADD CONSTRAINT integration_config__name__agency_uuid__key UNIQUE (name_, agency_uuid_);
+
+
+--
+-- Name: integration_config_ integration_config__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.integration_config_
+    ADD CONSTRAINT integration_config__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -8574,6 +8721,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.int
 
 
 --
+-- Name: integration_config_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.integration_config_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: markdown_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -8868,6 +9022,13 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.int
 
 
 --
+-- Name: integration_config_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.integration_config_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: markdown_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -9127,6 +9288,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.int
 
 
 --
+-- Name: integration_config_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.integration_config_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
 -- Name: markdown_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -9222,6 +9390,13 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.web
 --
 
 CREATE TRIGGER tr_after_update_update_product_page_url_ AFTER UPDATE ON application_.product_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.update_product_page_url_();
+
+
+--
+-- Name: integration_config_ tr_before_insert_or_update_check_integration_config_data_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_insert_or_update_check_integration_config_data_ BEFORE INSERT OR UPDATE ON application_.integration_config_ FOR EACH ROW EXECUTE FUNCTION internal_.check_integration_config_data_();
 
 
 --
@@ -10298,11 +10473,43 @@ ALTER TABLE ONLY application_.integration_
 
 
 --
+-- Name: integration_ integration__integration_config_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.integration_
+    ADD CONSTRAINT integration__integration_config_uuid__fkey FOREIGN KEY (integration_config_uuid_) REFERENCES application_.integration_config_(uuid_);
+
+
+--
 -- Name: integration_ integration__integration_type_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
 ALTER TABLE ONLY application_.integration_
     ADD CONSTRAINT integration__integration_type_uuid__fkey FOREIGN KEY (integration_type_uuid_) REFERENCES internal_.integration_type_(uuid_);
+
+
+--
+-- Name: integration_config_ integration_config__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.integration_config_
+    ADD CONSTRAINT integration_config__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+
+
+--
+-- Name: integration_config_ integration_config__credential_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.integration_config_
+    ADD CONSTRAINT integration_config__credential_uuid__fkey FOREIGN KEY (credential_uuid_) REFERENCES application_.credential_(uuid_);
+
+
+--
+-- Name: integration_config_ integration_config__integration_type_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.integration_config_
+    ADD CONSTRAINT integration_config__integration_type_uuid__fkey FOREIGN KEY (integration_type_uuid_) REFERENCES internal_.integration_type_(uuid_);
 
 
 --
@@ -10559,6 +10766,14 @@ ALTER TABLE ONLY application_.webhook_event_
 
 ALTER TABLE ONLY internal_.form_field_
     ADD CONSTRAINT form_field__form_uuid__fkey FOREIGN KEY (form_uuid_) REFERENCES internal_.form_(uuid_);
+
+
+--
+-- Name: integration_type_ integration_type__config_form_uuid__fkey; Type: FK CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.integration_type_
+    ADD CONSTRAINT integration_type__config_form_uuid__fkey FOREIGN KEY (config_form_uuid_) REFERENCES internal_.form_(uuid_);
 
 
 --
