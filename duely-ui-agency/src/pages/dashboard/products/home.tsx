@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery, current_agency_Q } from '@duely/client';
+import { useQuery, current_agency_Q, image_Q } from '@duely/client';
 import { Util, useBreakpoints, Table, DropMenu, Card, useDynamicNavigation } from '@duely/react';
 import { ConfirmProductDeletionModal } from './components';
 import {
@@ -43,42 +43,46 @@ export default function DashboardProductsHome() {
 
   const columns = [
     // product name & description
-    (item: TItem) => (
-      <div className="flex space-x-6">
-        {item.product.image_logo ? (
-          <img
-            className="object-cover w-32 h-20 rounded-lg flex-shrink-1"
-            src={item.product.image_logo.data}
-            alt={`${item.product.name} logo`}
-          />
-        ) : (
-          <div className="w-32 h-20 bg-gray-200 rounded-lg flex-shrink-1"></div>
-        )}
+    (item: TItem) => {
+      const { data: image_logo, loading: image_logoLoading } = useQuery(image_Q, { image_id: item.product?.image_logo?.id! }, { skip: !item.product?.image_logo });
 
-        <div className="flex flex-col space-y-1">
-          <span className="font-medium">{item.product.name}</span>
-          <p className="flex-1 text-xs text-gray-500">
-            {Util.truncate(item.product.description ?? '', 120)}
-          </p>
-          <div className="flex items-center pb-1 space-x-3 text-xs text-gray-500">
-            {item.price && (
-              <span>
-                {Currency.format(item.price.unit_amount, item.price.currency as Currency)}
-              </span>
-            )}
+      return (
+        <div className="flex space-x-6">
+          {image_logo ? (
+            <img
+              className="object-cover w-32 h-20 rounded-lg flex-shrink-1"
+              src={image_logo.data}
+              alt={`${item.product.name} logo`}
+            />
+          ) : (
+            <div className="w-32 h-20 bg-gray-200 rounded-lg flex-shrink-1"></div>
+          )}
 
-            <a
-              className="px-1 rounded-sm hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600"
-              onClick={passAccessToken}
-              target={`preview ${item.product.url_name}`}
-              href={`https://${agency?.subdomain.name}.duely.app/checkout/${item.product.url_name}?preview`}
-            >
-              preview checkout
-            </a>
+          <div className="flex flex-col space-y-1">
+            <span className="font-medium">{item.product.name}</span>
+            <p className="flex-1 text-xs text-gray-500">
+              {Util.truncate(item.product.description ?? '', 120)}
+            </p>
+            <div className="flex items-center pb-1 space-x-3 text-xs text-gray-500">
+              {item.price && (
+                <span>
+                  {Currency.format(item.price.unit_amount, item.price.currency as Currency)}
+                </span>
+              )}
+
+              <a
+                className="px-1 rounded-sm hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600"
+                onClick={passAccessToken}
+                target={`preview ${item.product.url_name}`}
+                href={`https://${agency?.subdomain.name}.duely.app/checkout/${item.product.url_name}?preview`}
+              >
+                preview checkout
+              </a>
+            </div>
           </div>
         </div>
-      </div>
-    ),
+      );
+    },
 
     // product product status
     (item: TItem) => <ColoredChip color={statusColors} text={item.product.status} />,

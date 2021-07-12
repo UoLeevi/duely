@@ -47,7 +47,9 @@ import {
   IntegrationsDocument,
   IntegrationTypesDocument,
   IntegrationConfigDocument,
-  IntegrationConfigsDocument
+  IntegrationConfigsDocument,
+  ImageDocument,
+  ImagesDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -105,6 +107,16 @@ export const countries_Q = {
 export const country_spec_Q = {
   query: CountrySpecDocument,
   result: (d: ResultOf<typeof CountrySpecDocument>) => d?.country_spec
+};
+
+export const image_Q = {
+  query: ImageDocument,
+  result: (d: ResultOf<typeof ImageDocument>) => d?.image
+};
+
+export const images_Q = {
+  query: ImagesDocument,
+  result: (d: ResultOf<typeof ImagesDocument>) => d?.images
 };
 
 export const services_agreement_Q = {

@@ -23,6 +23,18 @@ query CountrySpec($country_code: ID!) {
   }
 }
 
+query Image($image_id: ID!) {
+  image(id: $image_id) {
+    ...image
+  }
+}
+
+query Images($filter: ImageFilter!) {
+  images(filter: $filter) {
+    ...image
+  }
+}
+
 query ServicesAgreement {
   markdowns(filter: { name: "Services Agreement", agency_id: null }) {
     ...markdown

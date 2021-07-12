@@ -1,4 +1,4 @@
-import { product_Q, update_product_M, useMutation, useQuery } from '@duely/client';
+import { image_Q, product_Q, update_product_M, useMutation, useQuery } from '@duely/client';
 import {
   Form,
   FormButton,
@@ -46,8 +46,11 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
   };
 
   // image logo
-  const current_image_logo = product?.image_logo;
-
+  const { data: current_image_logo, loading: image_logoLoading } = useQuery(
+    image_Q,
+    { image_id: product?.image_logo?.id! },
+    { skip: !product?.image_logo }
+  );
   const image_logo_file_list = form.useFormFieldValue('image_logo_file_list');
   const { image: image_logo, loading: imageLogoLoading } =
     useImageInputFromFileList(image_logo_file_list);
@@ -57,7 +60,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
       ...Util.diff(CoreUtil.pick(data, product!), product!)
     };
 
-    if (image_logo && image_logo?.data !== product?.image_logo?.data) {
+    if (image_logo && image_logo?.data !== current_image_logo?.data) {
       update.image_logo = image_logo;
     }
 
@@ -135,12 +138,10 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
           className="max-w-xl"
           name="image_logo_file_list"
           type="image"
-          loading={imageLogoLoading}
+          loading={image_logoLoading || imageLogoLoading}
           image={image_logo ?? current_image_logo}
           registerOptions={{
-            rules: [
-              ValidationRules.maxFileSize(512000)
-            ]
+            rules: [ValidationRules.maxFileSize(512000)]
           }}
           accept="image/jpeg, image/png"
           hint="PNG, JPG up to 512KB, and minimum 128px by 128px."
