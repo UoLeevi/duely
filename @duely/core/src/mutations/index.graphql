@@ -353,3 +353,77 @@ mutation DeletePageBlock($page_block_id: ID!) {
     }
   }
 }
+
+mutation CreateIntegration(
+  $agency_id: ID!
+  $integration_type_id: ID!
+  $credential_id: ID
+  $integration_config_id: ID
+  $data: Json!
+) {
+  create_integration(
+    agency_id: $agency_id
+    integration_type_id: $integration_type_id
+    credential_id: $credential_id
+    integration_config_id: $integration_config_id
+    data: $data
+  ) {
+    success
+    message
+    integration {
+      ...integration
+    }
+  }
+}
+
+mutation UpdateIntegration($integration_id: ID!, $credential_id: ID, $data: Json!) {
+  update_integration(integration_id: $integration_id, credential_id: $credential_id, data: $data) {
+    success
+    message
+    integration {
+      ...integration
+    }
+  }
+}
+
+mutation CreateIntegrationConfig(
+  $agency_id: ID!
+  $integration_type_id: ID!
+  $credential_id: ID
+  $name: String!
+  $data: Json!
+) {
+  create_integration_config(
+    agency_id: $agency_id
+    integration_type_id: $integration_type_id
+    credential_id: $credential_id
+    name: $name
+    data: $data
+  ) {
+    success
+    message
+    integration_config {
+      ...integration_config
+    }
+  }
+}
+
+mutation UpdateIntegrationConfig(
+  $integration_config_id: ID!
+  $name: String
+  $credential_id: ID
+  $data: Json!
+) {
+  update_integration_config(
+    integration_config_id: $integration_config_id
+    credential_id: $credential_id
+    name: $name
+    data: $data
+  ) {
+    success
+    message
+    integration_config {
+      ...integration_config
+    }
+  }
+}

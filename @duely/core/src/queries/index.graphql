@@ -449,6 +449,18 @@ query Integrations($filter: IntegrationFilter!) {
   }
 }
 
+query IntegrationConfig($integration_config_id: ID!) {
+  integration_config(id: $integration_config_id) {
+    ...integration_config
+  }
+}
+
+query IntegrationConfigs($filter: IntegrationConfigFilter!) {
+  integration_configs(filter: $filter) {
+    ...integration_config
+  }
+}
+
 query IntegrationType($integration_type_id: ID!) {
   integration_type(id: $integration_type_id) {
     ...integration_type

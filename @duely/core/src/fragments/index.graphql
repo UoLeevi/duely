@@ -264,10 +264,10 @@ fragment product on Product {
     ...price
   }
   image_logo {
-    ...image
+    id
   }
   image_hero {
-    ...image
+    id
   }
   markdown_description {
     ...markdown
@@ -276,6 +276,9 @@ fragment product on Product {
     id
   }
   settings {
+    id
+  }
+  integration {
     id
   }
 }
@@ -380,12 +383,34 @@ fragment integration on Integration {
   integration_type {
     id
   }
+  integration_config {
+    id
+  }
+}
+
+fragment integration_config on IntegrationConfig {
+  id
+  name
+  data
+  agency {
+    id
+  }
+  credential {
+    id
+  }
+  integration_type {
+    id
+  }
 }
 
 fragment integration_type on IntegrationType {
   id
   name
+  automatic_order_management
   fields {
+    ...form_field
+  }
+  config_fields {
     ...form_field
   }
 }

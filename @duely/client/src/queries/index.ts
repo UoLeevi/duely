@@ -45,7 +45,9 @@ import {
   IntegrationDocument,
   IntegrationTypeDocument,
   IntegrationsDocument,
-  IntegrationTypesDocument
+  IntegrationTypesDocument,
+  IntegrationConfigDocument,
+  IntegrationConfigsDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -248,6 +250,16 @@ export const integration_Q = {
 export const integrations_Q = {
   query: IntegrationsDocument,
   result: (d: ResultOf<typeof IntegrationsDocument>) => d?.integrations
+};
+
+export const integration_config_Q = {
+  query: IntegrationConfigDocument,
+  result: (d: ResultOf<typeof IntegrationConfigDocument>) => d?.integration_config
+};
+
+export const integration_configs_Q = {
+  query: IntegrationConfigsDocument,
+  result: (d: ResultOf<typeof IntegrationConfigsDocument>) => d?.integration_configs
 };
 
 export const integration_type_Q = {

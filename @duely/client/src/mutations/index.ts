@@ -10,6 +10,8 @@ import {
   CreateAgencyDocument,
   CreateAgencyThankYouPageSettingDocument,
   CreateCustomerDocument,
+  CreateIntegrationConfigDocument,
+  CreateIntegrationDocument,
   CreatePageBlockDocument,
   CreatePriceDocument,
   CreateProductDocument,
@@ -30,6 +32,8 @@ import {
   UpdateAgencyDocument,
   UpdateAgencyThankYouPageSettingDocument,
   UpdateCustomerDocument,
+  UpdateIntegrationConfigDocument,
+  UpdateIntegrationDocument,
   UpdatePageBlockDocument,
   UpdatePageDocument,
   UpdateProductDocument,
@@ -475,4 +479,24 @@ export const delete_page_block_M = {
     cache.evict({ id });
     cache.gc();
   }
+};
+
+export const create_integration_M = {
+  mutation: CreateIntegrationDocument,
+  result: (d: ResultOf<typeof CreateIntegrationDocument>) => d?.create_integration
+};
+
+export const update_integration_M = {
+  mutation: UpdateIntegrationDocument,
+  result: (d: ResultOf<typeof UpdateIntegrationDocument>) => d?.update_integration
+};
+
+export const create_integration_config_M = {
+  mutation: CreateIntegrationConfigDocument,
+  result: (d: ResultOf<typeof CreateIntegrationConfigDocument>) => d?.create_integration_config
+};
+
+export const update_integration_config_M = {
+  mutation: UpdateIntegrationConfigDocument,
+  result: (d: ResultOf<typeof UpdateIntegrationConfigDocument>) => d?.update_integration_config
 };
