@@ -20,6 +20,7 @@ export const IntegrationConfig: GqlTypeDefinition = {
       agency: Agency!
       credential: Credential
       integration_type: IntegrationType!
+      data: Json!
     }
 
     input IntegrationConfigFilter {
