@@ -7,10 +7,10 @@ import {
   getServiceAccountContext,
   queryResource,
   getDbErrorCode,
-  updateProcessingState
+  updateProcessingState,
+  WebhookEventResource
 } from '@duely/db';
 import { runLambda } from '@duely/lambda';
-import { WebhookEventResource } from '@duely/db/dist/types';
 
 let context: {
   jwt: string | null;
@@ -43,9 +43,8 @@ async function handle_webhook(req: Request, res: Response) {
   try {
     switch (source) {
       case 'stripe-agency': {
-        const secret = process.env[
-          livemode ? 'STRIPE_WHSEC_AGENCY_LIVE' : 'STRIPE_WHSEC_AGENCY_TEST'
-        ]!;
+        const secret =
+          process.env[livemode ? 'STRIPE_WHSEC_AGENCY_LIVE' : 'STRIPE_WHSEC_AGENCY_TEST']!;
         const stripe_env = livemode ? 'live' : 'test';
         const sig = req.headers['stripe-signature']!;
         event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, secret);
@@ -53,9 +52,8 @@ async function handle_webhook(req: Request, res: Response) {
       }
 
       case 'stripe-platform': {
-        const secret = process.env[
-          livemode ? 'STRIPE_WHSEC_PLATFORM_LIVE' : 'STRIPE_WHSEC_PLATFORM_TEST'
-        ]!;
+        const secret =
+          process.env[livemode ? 'STRIPE_WHSEC_PLATFORM_LIVE' : 'STRIPE_WHSEC_PLATFORM_TEST']!;
         const stripe_env = livemode ? 'live' : 'test';
         const sig = req.headers['stripe-signature']!;
         event = stripe[stripe_env].webhooks.constructEvent(req.body, sig, secret);

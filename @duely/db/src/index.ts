@@ -2,9 +2,10 @@ import { ClientBase, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
 import { ResolvableValue, Util } from '@duely/core';
-import { AccessLevel, Resources, ResourcesWithState } from './types';
+import { AccessLevel, Resources, ResourcesWithState } from './resources';
 
 export * from './errors';
+export * from './resources';
 
 if (!process.env.DUELY_SERVICE_ACCOUNT_PASSWORD) {
   if (!process.env.SERVICEACCOUNTCONFIGFILE) {

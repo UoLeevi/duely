@@ -1,11 +1,10 @@
 import gql from 'graphql-tag';
-import { queryResourceAll, getServiceAccountContext } from '@duely/db';
+import { queryResourceAll, getServiceAccountContext, Resources } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResourceAll
 } from '../../util';
 import { convertCurrency } from '../ExchangeRate';
-import { Resources } from '@duely/db/dist/types';
 
 const resource = {
   name: 'subscription plan',

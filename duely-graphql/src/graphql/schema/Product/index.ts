@@ -1,4 +1,4 @@
-import { withSession } from '@duely/db';
+import { withSession, ProductResource } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
@@ -10,7 +10,6 @@ import { validateAndReadDataUrlAsBuffer } from '../Image';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
-import { ProductResource } from '@duely/db/dist/types';
 
 const resource = {
   name: 'product'

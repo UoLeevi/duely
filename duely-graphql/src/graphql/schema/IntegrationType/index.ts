@@ -16,7 +16,9 @@ export const IntegrationType: GqlTypeDefinition = {
     type IntegrationType implements Node {
       id: ID!
       name: String!
+      automatic_order_management: Boolean!
       fields: [FormField!]
+      config_fields: [FormField!]
     }
 
     input IntegrationTypeFilter {
@@ -36,7 +38,13 @@ export const IntegrationType: GqlTypeDefinition = {
         resource_name: 'form field',
         column_name: 'form_id',
         reverse_column_name: 'form_id'
-      })
+      }),
+      ...createResolverForReferencedResourceAll({
+        name: 'config_fields',
+        resource_name: 'form field',
+        column_name: 'form_id',
+        reverse_column_name: 'config_form_id'
+      }),
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

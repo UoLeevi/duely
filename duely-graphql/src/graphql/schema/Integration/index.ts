@@ -18,6 +18,7 @@ export const Integration: GqlTypeDefinition = {
       agency: Agency!
       credential: Credential
       integration_type: IntegrationType!
+      integration_config: IntegrationConfig
     }
 
     input IntegrationFilter {
@@ -34,13 +35,13 @@ export const Integration: GqlTypeDefinition = {
       create_integration(
         agency_id: ID!
         credential_id: ID
-        integration_type: ID!
+        integration_type_id: ID!
+        integration_config_id: ID
         data: Json!
       ): IntegrationMutationResult!
       update_integration(
         integration_id: ID!
         credential_id: ID
-        integration_type: ID
         data: Json
       ): IntegrationMutationResult!
     }
@@ -55,7 +56,8 @@ export const Integration: GqlTypeDefinition = {
     Integration: {
       ...createResolverForReferencedResource({ name: 'agency' }),
       ...createResolverForReferencedResource({ name: 'credential' }),
-      ...createResolverForReferencedResource({ name: 'integration_type', resource_name: 'integration type' })
+      ...createResolverForReferencedResource({ name: 'integration_type', resource_name: 'integration type' }),
+      ...createResolverForReferencedResource({ name: 'integration_config', resource_name: 'integration config' })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
@@ -88,7 +90,7 @@ export const Integration: GqlTypeDefinition = {
 
         try {
           // update integration resource
-          const integration = await updateResource(context, 'integration', integration_id, args);
+          const integration = await updateResource(context, resource.name, integration_id, args);
 
           // success
           return {

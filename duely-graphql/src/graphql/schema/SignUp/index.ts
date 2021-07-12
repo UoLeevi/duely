@@ -1,11 +1,10 @@
-import { createResource, withSession } from '@duely/db';
+import { createResource, withSession, SignUpResource } from '@duely/db';
 import gmail from '../../../gmail';
 import { p, br, strong, em, a } from '../../../gmail/utilities';
 import validator from 'validator';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import { URL } from 'url';
-import { SignUpResource } from '@duely/db/dist/types';
 import axios from 'axios';
 
 const resource_name = 'sign up';

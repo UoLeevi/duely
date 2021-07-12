@@ -1,4 +1,4 @@
-import { withSession } from '@duely/db';
+import { withSession, PriceResource, ProductResource } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -10,7 +10,6 @@ import { GqlTypeDefinition } from '../../types';
 import { Currency, Price as TPrice } from '@duely/core';
 import Stripe from 'stripe';
 import { URL } from 'url';
-import { PriceResource, ProductResource } from '@duely/db/dist/types';
 
 const resource = {
   name: 'price',

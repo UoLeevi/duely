@@ -19,6 +19,7 @@ async function main() {
       const items = await queryResourceAll('order item', { order_id: order.id });
 
       for (const item of items) {
+        if (item.state === 'processed') continue;
         await updateProcessingState(context, 'order item', item.id, 'processing');
         try {
           const price = await queryResource('price', item.price_id);

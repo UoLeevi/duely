@@ -14,9 +14,8 @@ export type ResourcesWithState = {
 export type Resource = Resources[keyof Resources];
 export type ResourceWithState = ResourcesWithState[keyof ResourcesWithState];
 
-export type ResourceId<
-  K extends keyof ResourceDefinitions
-> = `${ResourceDefinitions[K]['prefix']}_${string}`;
+export type ResourceId<K extends keyof ResourceDefinitions> =
+  `${ResourceDefinitions[K]['prefix']}_${string}`;
 
 export type ResourceName<R extends Resource> = FilteredKeys<Resources, R>;
 
@@ -280,11 +279,23 @@ export type IntegrationTypeResource = {
   id: ResourceId<'integration type'>;
   name: string;
   form_id: ResourceId<'form'>;
+  config_form_id: ResourceId<'form'>;
+  automatic_order_management: boolean;
+};
+
+export type IntegrationConfigResource = {
+  id: ResourceId<'integration config'>;
+  name: string;
+  integration_type_id: ResourceId<'integration type'>;
+  agency_id: ResourceId<'agency'>;
+  credential_id?: ResourceId<'credential'> | null;
+  data: object;
 };
 
 export type IntegrationResource = {
   id: ResourceId<'integration'>;
   integration_type_id: ResourceId<'integration type'>;
+  integration_config_id: ResourceId<'integration config'>;
   agency_id: ResourceId<'agency'>;
   credential_id?: ResourceId<'credential'> | null;
   data: object;
@@ -471,6 +482,12 @@ export type ResourceDefinitions = {
     prefix: 'intetype';
     table_name: 'integration_type';
     resource: IntegrationTypeResource;
+  };
+  'integration config': {
+    name: 'integration config';
+    prefix: 'inteconf';
+    table_name: 'integration_config';
+    resource: IntegrationConfigResource;
   };
   integration: {
     name: 'integration';
