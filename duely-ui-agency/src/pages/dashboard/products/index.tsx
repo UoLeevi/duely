@@ -1,8 +1,9 @@
 import DashboardProductsEditProduct from './[product_url_name]/edit';
 import DashboardProductsHome from './home';
 import DashboardProductsCreateProduct from './new-product';
+import { RouteProps } from 'react-router-dom';
 
-export const routes = [
+export const routes: RouteProps[] = [
   {
     path: '/dashboard/products/new-product',
     component: DashboardProductsCreateProduct

@@ -1,9 +1,9 @@
 import { useQuery, current_subdomain_Q } from '@duely/client';
-import { useClassName, Sidebar } from '@duely/react';
+import { useClassName, Sidebar, SidebarProps } from '@duely/react';
 import { Link } from 'react-router-dom';
 import { ApiLink } from './ApiLink';
 
-const sidebarLinks = [
+const sidebarLinks: SidebarProps['links'] = [
   {
     text: 'Home',
     icon: ({ ...props }: React.SVGProps<SVGSVGElement>) => (
@@ -131,6 +131,7 @@ const sidebarLinks = [
   },
   {
     text: 'Settings',
+    name: 'settings',
     icon: ({ ...props }: React.SVGProps<SVGSVGElement>) => (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -154,7 +155,20 @@ const sidebarLinks = [
         />
       </svg>
     ),
-    to: '/dashboard/settings'
+    items: [
+      {
+        text: 'Checkout',
+        to: '/dashboard/settings/checkout'
+      },
+      {
+        text: 'Integrations',
+        to: '/dashboard/settings/integrations'
+      },
+      {
+        text: 'Miscellaneous',
+        to: '/dashboard/settings/miscellaneous'
+      }
+    ]
   }
 ];
 

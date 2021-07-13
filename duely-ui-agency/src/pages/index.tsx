@@ -1,4 +1,4 @@
-import { Route, Switch, useLocation } from 'react-router-dom';
+import { Route, RouteProps, Switch, useLocation } from 'react-router-dom';
 import Dashboard from './dashboard';
 import ThankYouPage from './orders/thank-you';
 import NotFound from './not-found';
@@ -10,7 +10,7 @@ import LogIn from './log-in';
 import SignUp from './sign-up';
 import PasswordReset from './password-reset';
 
-const routes = [
+const routes: RouteProps[] = [
   {
     path: '/log-in',
     component: LogIn

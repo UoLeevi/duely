@@ -14,6 +14,14 @@ export type FormFieldRegisterOptions<T> = {
   inputFilter?: RegExp;
 };
 
+type SetValueOptions = {
+  preventValidate?: boolean;
+};
+
+const setValueDefaultOptions: SetValueOptions = {
+  preventValidate: false
+};
+
 export function defaultGetElementValue(element: FormFieldHTMLElement): any {
   return element.value;
 }
@@ -335,7 +343,7 @@ export class FormFieldControl<T> {
 
   #onClick(event: MouseEvent) {
     const element = event.currentTarget as FormFieldHTMLElement;
-    this.setValue(element.value as any)
+    this.setValue(element.value as any);
   }
 
   #onBeforeInput(event: InputEvent) {
@@ -403,12 +411,13 @@ export class FormFieldControl<T> {
     this.#element = null;
   }
 
-  setValue(value: T | undefined) {
+  setValue(value: T | undefined, options?: SetValueOptions) {
+    options ??= setValueDefaultOptions;
     this.startUpdate();
 
     if (this.#setElementValue && this.#element) {
       this.#valueChanged ||= this.#setElementValue(this.#element, value);
-      if (this.#valueChanged && this.#shouldValidate) this.validate();
+      if (!options.preventValidate && this.#valueChanged && this.#shouldValidate) this.validate();
     } else {
       const previousValue = this.value;
       this.#defaultValue = value;
@@ -419,16 +428,18 @@ export class FormFieldControl<T> {
     this.endUpdate();
   }
 
-  setDefaultValue(value: T | undefined) {
+  setDefaultValue(value: T | undefined, options?: SetValueOptions) {
+    options ??= setValueDefaultOptions;
+
     if (this.#element) {
       const previousDefaultValue = this.defaultValue;
       this.#defaultValue = value;
 
       if (!this.#hasValue || previousDefaultValue === this.value) {
-        this.setValue(this.defaultValue!);
+        this.setValue(this.defaultValue, options);
       }
     } else {
-      this.setValue(value);
+      this.setValue(value, options);
     }
   }
 
@@ -484,10 +495,10 @@ export class FormFieldControl<T> {
     this.#isTouched = false;
 
     if (defaultValue !== undefined) {
-      this.setDefaultValue(defaultValue);
+      this.setDefaultValue(defaultValue, { preventValidate: true });
     }
 
-    this.setValue(this.defaultValue);
+    this.setValue(this.defaultValue, { preventValidate: true });
     this.#stateChanged = true;
     this.endUpdate();
   }

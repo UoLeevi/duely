@@ -1,4 +1,4 @@
-import { Link, Route, Switch } from 'react-router-dom';
+import { Link, Route, RouteProps, Switch } from 'react-router-dom';
 import { useQuery, current_agency_Q, current_user_Q } from '@duely/client';
 import { LoadingScreen, ErrorScreen } from '@duely/react';
 import { DashboardLayout } from './components';
@@ -8,9 +8,9 @@ import { routes as orderRoutes } from './orders';
 import DashboardHome from './home';
 import DashboardPayments from './payments';
 import { routes as productRoutes } from './products';
-import DashboardSettings from './settings';
+import { routes as settingsRoutes } from './settings';
 
-const routes = [
+const routes: RouteProps[] = [
   ...orderRoutes,
   ...productRoutes,
   ...siteRoutes,
@@ -19,10 +19,7 @@ const routes = [
     path: '/dashboard/payments',
     component: DashboardPayments
   },
-  {
-    path: '/dashboard/settings',
-    component: DashboardSettings
-  },
+  ...settingsRoutes,
   {
     path: '/dashboard',
     component: DashboardHome

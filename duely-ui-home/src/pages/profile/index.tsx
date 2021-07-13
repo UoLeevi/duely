@@ -1,10 +1,10 @@
-import { Link, Route, Switch } from 'react-router-dom';
+import { Link, Route, RouteProps, Switch } from 'react-router-dom';
 import { useQuery, current_user_agencies_Q, current_user_Q } from '@duely/client';
 import { LoadingScreen, ErrorScreen } from '@duely/react';
 import ProfileHome from './home';
 import { ProfileLayout } from './components';
 
-const routes = [
+const routes: RouteProps[] = [
   {
     path: '/',
     component: ProfileHome

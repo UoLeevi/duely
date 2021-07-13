@@ -209,24 +209,30 @@ function isPrivateIp(hostname: string) {
 
 function resolveSubdomain(): string | null {
   const url = new URL(window.location.href);
-  let name = url.searchParams.get('subdomain');
-  let subdomain = name?.toLowerCase() ?? null;
-  if (subdomain !== null) return subdomain;
+  const hostname = url.hostname.toLowerCase();
 
-  const hostname = window.location.hostname.toLowerCase();
+  if (hostname === 'localhost' || isPrivateIp(hostname)) {
+    // development environment
+    let subdomain = url.searchParams.get('subdomain')?.toLowerCase() ?? null;
+    
+    if (subdomain !== null) {
+      sessionStorage.setItem('development-subdomain', subdomain);
+      return subdomain;
+    }
 
-  if (hostname !== 'localhost' && !isPrivateIp(hostname)) {
-    if (hostname !== 'duely.app') {
-      if (hostname.endsWith('.duely.app')) {
-        subdomain = hostname.slice(0, -'.duely.app'.length);
-      } else {
-        // TODO: check from database
-        throw new Error('Not implemented.');
-      }
+    return sessionStorage.getItem('development-subdomain');
+  }
+
+  if (hostname !== 'duely.app') {
+    if (hostname.endsWith('.duely.app')) {
+      return hostname.slice(0, -'.duely.app'.length);
+    } else {
+      // TODO: check from database
+      throw new Error('Not implemented.');
     }
   }
 
-  return subdomain;
+  return null;
 }
 
 export const agency_products_Q = {
