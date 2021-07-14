@@ -51,8 +51,8 @@ export const Credential: GqlTypeDefinition = {
     Credential: {
       ...createResolverForReferencedResource({ name: 'agency' }),
       ...createResolverForReferencedResource({
-        name: 'credential type',
-        column_name: 'credential_type_id'
+        name: 'credential_type',
+        resource_name: 'credential type'
       })
     },
     Query: {

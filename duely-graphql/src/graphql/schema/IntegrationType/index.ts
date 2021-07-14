@@ -47,8 +47,8 @@ export const IntegrationType: GqlTypeDefinition = {
         reverse_column_name: 'config_form_id'
       }),
       ...createResolverForReferencedResource({
-        name: 'credential type',
-        column_name: 'credential_type_id'
+        name: 'credential_type',
+        resource_name: 'credential type'
       })
     },
     Query: {

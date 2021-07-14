@@ -56,8 +56,14 @@ export const Integration: GqlTypeDefinition = {
     Integration: {
       ...createResolverForReferencedResource({ name: 'agency' }),
       ...createResolverForReferencedResource({ name: 'credential' }),
-      ...createResolverForReferencedResource({ name: 'integration_type', resource_name: 'integration type' }),
-      ...createResolverForReferencedResource({ name: 'integration_config', resource_name: 'integration config' })
+      ...createResolverForReferencedResource({
+        name: 'integration_type',
+        resource_name: 'integration type'
+      }),
+      ...createResolverForReferencedResource({
+        name: 'integration_config',
+        resource_name: 'integration config'
+      })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
