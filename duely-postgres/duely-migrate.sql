@@ -16,17 +16,17 @@ BEGIN
 
 INSERT INTO internal_.form_ (uuid_) VALUES (DEFAULT) RETURNING uuid_ INTO _form_uuid;
 
-INSERT INTO internal_.credential_type_ (name_, form_uuid_) VALUES ('basic', _form_uuid);
+INSERT INTO internal_.credential_type_ (name_, form_uuid_) VALUES ('basic-email', _form_uuid);
 
 INSERT INTO internal_.form_field_ (name_, type_, form_uuid_, default_, label_)
-SELECT 'username', 'text', t.form_uuid_, NULL, 'Username'
+SELECT 'email_address', 'email', t.form_uuid_, NULL, 'Email address'
 FROM internal_.credential_type_ t
-WHERE t.name_ = 'basic';
+WHERE t.form_uuid_ = _form_uuid;
 
 INSERT INTO internal_.form_field_ (name_, type_, form_uuid_, default_, label_)
 SELECT 'password', 'password', t.form_uuid_, NULL, 'Password'
 FROM internal_.credential_type_ t
-WHERE t.name_ = 'basic';
+WHERE t.form_uuid_ = _form_uuid;
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
