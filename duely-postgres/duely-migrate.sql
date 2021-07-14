@@ -10,94 +10,23 @@ DO
 LANGUAGE plpgsql
 $_MIGRATION_$
 DECLARE
+  _form_uuid uuid;
 BEGIN
 -- MIGRATION CODE START
 
-CREATE TABLE internal_.credential_type_ (
-    uuid_ uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-    form_uuid_ uuid NOT NULL REFERENCES internal_.form_ (uuid_),
-    name_ text NOT NULL UNIQUE
-);
-CALL internal_.setup_resource_('internal_.credential_type_', 'credential type', 'credtype', '{uuid_, form_uuid_, name_}');
+INSERT INTO internal_.form_ (uuid_) VALUES (DEFAULT) RETURNING uuid_ INTO _form_uuid;
 
-CREATE FUNCTION policy_.anyone_can_query_credential_type_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE sql STABLE SECURITY DEFINER
-    AS $$
-  SELECT '{uuid_, subdomain_uuid_, name_, livemode_, default_pricing_currency_}'::text[];
-$$;
-PERFORM security_.register_policy_('internal_.credential_type_', 'query', 'policy_.anyone_can_query_credential_type_');
+INSERT INTO internal_.credential_type_ (name_, form_uuid_) VALUES ('basic', _form_uuid);
 
-ALTER TABLE internal_.integration_type_ ADD COLUMN credential_type_uuid_ uuid REFERENCES internal_.credential_type_ (uuid_);
+INSERT INTO internal_.form_field_ (name_, type_, form_uuid_, default_, label_)
+SELECT 'username', 'text', t.form_uuid_, NULL, 'Username'
+FROM internal_.credential_type_ t
+WHERE t.name_ = 'basic';
 
-CREATE OR REPLACE FUNCTION policy_.anyone_can_query_integration_type_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE sql STABLE SECURITY DEFINER
-    AS $$
-  SELECT '{uuid_, form_uuid_, config_form_uuid_, credential_type_uuid_, name_, automatic_order_management_}'::text[];
-$$;
-
-ALTER TABLE application_.credential_ ADD COLUMN credential_type_uuid_ uuid NOT NULL REFERENCES internal_.credential_type_ (uuid_);
-ALTER TABLE application_.credential_ DROP COLUMN type_;
-CALL internal_.setup_resource_('application_.credential_', 'credential', 'cred', '{uuid_, agency_uuid_, credential_type_uuid_, name_}', 'application_.agency_');
-
-CREATE OR REPLACE FUNCTION policy_.owner_can_create_credential_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF (
-    SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
-    FROM internal_.query_owner_resource_(_resource_definition, _data)
-  ) THEN
-    RETURN '{agency_uuid_, credential_type_uuid_, name_, data_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_query_credential_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, agency_uuid_, credential_type_uuid_, name_, data_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-CREATE OR REPLACE FUNCTION policy_.owner_can_query_credential_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{uuid_, agency_uuid_, credential_type_uuid_, name_, data_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-CREATE OR REPLACE FUNCTION internal_.check_credential_data_() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-  IF EXISTS (
-      SELECT jsonb_object_keys(NEW.data_)
-    EXCEPT
-      SELECT ff.name_
-      FROM internal_.credential_type_ t
-      JOIN internal_.form_field_ ff ON ff.form_uuid_ = t.form_uuid_
-      WHERE t.uuid_ = NEW.credential_type_uuid_
-  ) THEN
-    RAISE 'Data does not match required schema.' USING ERRCODE = 'DDATA';
-  END IF;
-
-  RETURN NEW;
-END
-$$;
-
-CREATE TRIGGER tr_before_insert_or_update_check_credential_data_ BEFORE INSERT OR UPDATE ON application_.credential_ FOR EACH ROW EXECUTE FUNCTION internal_.check_credential_data_();
+INSERT INTO internal_.form_field_ (name_, type_, form_uuid_, default_, label_)
+SELECT 'password', 'password', t.form_uuid_, NULL, 'Password'
+FROM internal_.credential_type_ t
+WHERE t.name_ = 'basic';
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
