@@ -6,7 +6,8 @@ import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 
 const resource = {
-  name: 'credential type'
+  name: 'credential type',
+  table_name: 'credential_type'
 } as const;
 
 export const CredentialType: GqlTypeDefinition = {
