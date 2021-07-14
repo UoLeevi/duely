@@ -17,12 +17,13 @@ export const Credential: GqlTypeDefinition = {
       name: String!
       data: Json!
       agency: Agency!
-      type: String!
+      credential_type: CredentialType!
     }
 
     input CredentialFilter {
       name: String
       agency_id: ID
+      credential_type_id: ID
     }
 
     extend type Query {
@@ -35,7 +36,7 @@ export const Credential: GqlTypeDefinition = {
         agency_id: ID
         name: String!
         data: Json!
-        type: String!
+        credential_type_id: ID!
       ): CredentialMutationResult!
       update_credential(credential_id: ID!, data: Json!): CredentialMutationResult!
     }
@@ -48,7 +49,11 @@ export const Credential: GqlTypeDefinition = {
   `,
   resolvers: {
     Credential: {
-      ...createResolverForReferencedResource({ name: 'agency' })
+      ...createResolverForReferencedResource({ name: 'agency' }),
+      ...createResolverForReferencedResource({
+        name: 'credential type',
+        column_name: 'credential_type_id'
+      })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

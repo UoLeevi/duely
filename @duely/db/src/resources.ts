@@ -267,10 +267,16 @@ export type OrderResource = {
   ordered_at: Date;
 } & ResourceState;
 
+export type CredentialTypeResource = {
+  id: ResourceId<'credential type'>;
+  name: string;
+  form_id: ResourceId<'form'>;
+};
+
 export type CredentialResource = {
   id: ResourceId<'credential'>;
   name: string;
-  type: string;
+  credential_type_id: ResourceId<'credential type'>;
   agency_id: ResourceId<'agency'>;
   data: object;
 };
@@ -280,6 +286,7 @@ export type IntegrationTypeResource = {
   name: string;
   form_id: ResourceId<'form'>;
   config_form_id: ResourceId<'form'>;
+  credential_type_id: ResourceId<'credential type'>;
   automatic_order_management: boolean;
 };
 
@@ -470,6 +477,12 @@ export type ResourceDefinitions = {
     prefix: 'ord';
     table_name: 'order';
     resource: OrderResource;
+  };
+  'credential type': {
+    name: 'credential type';
+    prefix: 'credtype';
+    table_name: 'credential_type';
+    resource: CredentialTypeResource;
   };
   credential: {
     name: 'credential';

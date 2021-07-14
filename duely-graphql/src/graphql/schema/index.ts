@@ -45,6 +45,7 @@ import { Integration } from './Integration';
 import { OrderItem } from './OrderItem';
 import { IntegrationType } from './IntegrationType';
 import { IntegrationConfig } from './IntegrationConfig';
+import { CredentialType } from './CredentialType';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -61,6 +62,7 @@ const types: GqlTypeDefinition[] = [
   interfaces,
   AccessLevel,
   Credential,
+  CredentialType,
   FormField,
   Page,
   PageBlock,

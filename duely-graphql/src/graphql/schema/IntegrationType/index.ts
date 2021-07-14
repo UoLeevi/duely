@@ -19,6 +19,7 @@ export const IntegrationType: GqlTypeDefinition = {
       automatic_order_management: Boolean!
       fields: [FormField!]
       config_fields: [FormField!]
+      credential_type_id: ID
     }
 
     input IntegrationTypeFilter {
@@ -45,6 +46,10 @@ export const IntegrationType: GqlTypeDefinition = {
         column_name: 'form_id',
         reverse_column_name: 'config_form_id'
       }),
+      ...createResolverForReferencedResource({
+        name: 'credential type',
+        column_name: 'credential_type_id'
+      })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
