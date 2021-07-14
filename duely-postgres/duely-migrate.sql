@@ -14,10 +14,15 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE OR REPLACE FUNCTION policy_.anyone_can_query_credential_type_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+CALL internal_.drop_auditing_('internal_.form_field_');
+ALTER TABLE internal_.form_field_ ADD COLUMN hint_ text;
+ALTER TABLE internal_.form_field_ ADD COLUMN required_ boolean NOT NULL DEFAULT 'f';
+CALL internal_.setup_auditing_('internal_.form_field_');
+
+CREATE OR REPLACE FUNCTION policy_.anyone_can_query_form_field_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
-  SELECT '{uuid_, name_, form_uuid_}'::text[];
+  SELECT '{uuid_, name_, label_, type_, hint_, required_, form_uuid_, sort_key_, default_}'::text[];
 $$;
 
 -- MIGRATION CODE END
