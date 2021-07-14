@@ -9,6 +9,7 @@ import {
   AgencyThankYouPageSettingDocument,
   CreateAgencyDocument,
   CreateAgencyThankYouPageSettingDocument,
+  CreateCredentialDocument,
   CreateCustomerDocument,
   CreateIntegrationConfigDocument,
   CreateIntegrationDocument,
@@ -31,6 +32,7 @@ import {
   StartSignUpDocument,
   UpdateAgencyDocument,
   UpdateAgencyThankYouPageSettingDocument,
+  UpdateCredentialDocument,
   UpdateCustomerDocument,
   UpdateIntegrationConfigDocument,
   UpdateIntegrationDocument,
@@ -480,6 +482,17 @@ export const delete_page_block_M = {
     cache.gc();
   }
 };
+
+export const create_credential_M = {
+  mutation: CreateCredentialDocument,
+  result: (d: ResultOf<typeof CreateCredentialDocument>) => d?.create_credential
+};
+
+export const update_credential_M = {
+  mutation: UpdateCredentialDocument,
+  result: (d: ResultOf<typeof UpdateCredentialDocument>) => d?.update_credential
+};
+
 
 export const create_integration_M = {
   mutation: CreateIntegrationDocument,

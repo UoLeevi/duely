@@ -354,6 +354,36 @@ mutation DeletePageBlock($page_block_id: ID!) {
   }
 }
 
+mutation CreateCredential(
+  $agency_id: ID!
+  $credential_type_id: ID!
+  $data: Json!
+  $name: String!
+) {
+  create_credential(
+    agency_id: $agency_id
+    credential_type_id: $credential_type_id
+    data: $data
+    name: $name
+  ) {
+    success
+    message
+    credential {
+      ...credential
+    }
+  }
+}
+
+mutation UpdateCredential($credential_id: ID!, $data: Json!) {
+  update_credential(credential_id: $credential_id, data: $data) {
+    success
+    message
+    credential {
+      ...credential
+    }
+  }
+}
+
 mutation CreateIntegration(
   $agency_id: ID!
   $integration_type_id: ID!

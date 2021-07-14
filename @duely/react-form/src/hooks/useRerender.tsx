@@ -1,6 +1,33 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useLayoutEffect } from 'react';
+
+function initializeState() {
+  return {
+    isRendering: false,
+    rerenderingPending: false
+  };
+}
 
 export function useRerender() {
   const [, setCounter] = useState(0);
-  return useCallback(() => setCounter((i) => i + 1), []);
+  const [state] = useState(initializeState);
+
+  state.isRendering = true;
+
+  useLayoutEffect(() => {
+    state.isRendering = false;
+
+    if (state.rerenderingPending) {
+      state.rerenderingPending = false;
+      setCounter((i) => i + 1);
+    }
+  });
+
+  return useCallback(() => {
+    if (state.isRendering) {
+      state.rerenderingPending = true;
+    } else {
+      state.rerenderingPending = false;
+      setCounter((i) => i + 1);
+    }
+  }, [state]);
 }

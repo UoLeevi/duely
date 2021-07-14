@@ -34,7 +34,7 @@ export function SkeletonFormField({ type, className, label, ...props }: Skeleton
   return (
     <div className={className}>
       <div className="flex justify-between whitespace-nowrap">
-        <span className="pb-1 pl-px text-sm font-medium text-gray-700">
+        <span className="pb-1 pl-px text-sm font-medium text-gray-700 dark:text-gray-300">
           {label ?? <SkeletonText />}
         </span>
       </div>
@@ -43,7 +43,7 @@ export function SkeletonFormField({ type, className, label, ...props }: Skeleton
 
       <LoadingBar className="h-px px-1" loading={true} />
 
-      <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-4"> </p>
+      <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content"> </p>
     </div>
   );
 }

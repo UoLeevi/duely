@@ -449,6 +449,30 @@ query FormFields($filter: FormFieldFilter!) {
   }
 }
 
+query Credential($credential_id: ID!) {
+  credential(id: $credential_id) {
+    ...credential
+  }
+}
+
+query Credentials($filter: CredentialFilter!) {
+  credentials(filter: $filter) {
+    ...credential
+  }
+}
+
+query CredentialType($credential_type_id: ID!) {
+  credential_type(id: $credential_type_id) {
+    ...credential_type
+  }
+}
+
+query CredentialTypes($filter: CredentialTypeFilter!) {
+  credential_types(filter: $filter) {
+    ...credential_type
+  }
+}
+
 query Integration($integration_id: ID!) {
   integration(id: $integration_id) {
     ...integration

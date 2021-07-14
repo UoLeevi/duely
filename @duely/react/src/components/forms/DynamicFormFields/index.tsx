@@ -6,8 +6,8 @@ import { FormField } from '../FormField';
 export type DynamicFormFieldsProps = {
   fields: Form_FieldFragment[] | undefined;
   loading?: boolean;
-  skeletonFieldCount?: number
-  defaultValues?: Record<string, any>
+  skeletonFieldCount?: number;
+  defaultValues?: Record<string, any>;
 };
 
 export function DynamicFormFields({
@@ -17,7 +17,6 @@ export function DynamicFormFields({
   defaultValues,
   ...props
 }: DynamicFormFieldsProps) {
-
   if (loading)
     return (
       <React.Fragment>
@@ -31,10 +30,14 @@ export function DynamicFormFields({
     <React.Fragment>
       {fields?.map((field) => (
         <FormField
+          registerOptions={{
+            required: field.required
+          }}
           key={field.id}
           type={field.type}
           name={field.name}
           label={field.label}
+          hint={field.hint}
           defaultValue={defaultValues?.[field.name]}
         />
       ))}

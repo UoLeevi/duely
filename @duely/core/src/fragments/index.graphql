@@ -368,7 +368,28 @@ fragment form_field on FormField {
   name
   label
   type
+  hint
+  required
   default
+}
+
+fragment credential_type on CredentialType {
+  id
+  name
+  fields {
+    ...form_field
+  }
+}
+
+fragment credential on Credential {
+  id
+  data
+  agency {
+    id
+  }
+  credential_type {
+    ...credential_type
+  }
 }
 
 fragment integration on Integration {
@@ -412,6 +433,9 @@ fragment integration_type on IntegrationType {
   }
   config_fields {
     ...form_field
+  }
+  credential_type {
+    ...credential_type
   }
 }
 

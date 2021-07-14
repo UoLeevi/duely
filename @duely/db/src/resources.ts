@@ -170,6 +170,8 @@ export type FormFieldResource = {
   name: string;
   type: string;
   label: string;
+  hint?: string | null;
+  required: boolean;
   default?: object | null;
   sort_key: number;
 };

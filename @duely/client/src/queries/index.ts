@@ -49,7 +49,11 @@ import {
   IntegrationConfigDocument,
   IntegrationConfigsDocument,
   ImageDocument,
-  ImagesDocument
+  ImagesDocument,
+  CredentialDocument,
+  CredentialsDocument,
+  CredentialTypeDocument,
+  CredentialTypesDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -258,6 +262,26 @@ export const form_field_Q = {
 export const form_fields_Q = {
   query: FormFieldsDocument,
   result: (d: ResultOf<typeof FormFieldsDocument>) => d?.form_fields
+};
+
+export const credential_Q = {
+  query: CredentialDocument,
+  result: (d: ResultOf<typeof CredentialDocument>) => d?.credential
+};
+
+export const credentials_Q = {
+  query: CredentialsDocument,
+  result: (d: ResultOf<typeof CredentialsDocument>) => d?.credentials
+};
+
+export const credential_type_Q = {
+  query: CredentialTypeDocument,
+  result: (d: ResultOf<typeof CredentialTypeDocument>) => d?.credential_type
+};
+
+export const credential_types_Q = {
+  query: CredentialTypesDocument,
+  result: (d: ResultOf<typeof CredentialTypesDocument>) => d?.credential_types
 };
 
 export const integration_Q = {
