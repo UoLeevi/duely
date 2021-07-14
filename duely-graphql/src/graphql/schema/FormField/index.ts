@@ -13,6 +13,8 @@ export const FormField: GqlTypeDefinition = {
       id: ID!
       name: String!
       label: String!
+      hint: String
+      required: Boolean!
       type: String!
       default: Json
     }
