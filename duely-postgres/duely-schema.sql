@@ -3171,7 +3171,7 @@ ALTER FUNCTION policy_.anyone_can_query_basic_agency_fields_(_resource_definitio
 CREATE FUNCTION policy_.anyone_can_query_credential_type_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
-  SELECT '{uuid_, subdomain_uuid_, name_, livemode_, default_pricing_currency_}'::text[];
+  SELECT '{uuid_, name_, form_uuid_}'::text[];
 $$;
 
 
