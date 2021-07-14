@@ -16,17 +16,21 @@ BEGIN
 
 INSERT INTO internal_.form_ (uuid_) VALUES (DEFAULT) RETURNING uuid_ INTO _form_uuid;
 
-INSERT INTO internal_.credential_type_ (name_, form_uuid_) VALUES ('basic-email', _form_uuid);
+UPDATE internal_.integration_type_ it
+SET
+  credential_type_uuid_ = ct.uuid_,
+  config_form_uuid_ = _form_uuid,
+  automatic_order_management_ = 't'
+FROM internal_.credential_type_ ct
+WHERE ct.name_ = 'basic-email'
+  AND it.name_ = 'teachable/enroll';
 
-INSERT INTO internal_.form_field_ (name_, type_, form_uuid_, default_, label_)
-SELECT 'email_address', 'email', t.form_uuid_, NULL, 'Email address'
-FROM internal_.credential_type_ t
-WHERE t.form_uuid_ = _form_uuid;
-
-INSERT INTO internal_.form_field_ (name_, type_, form_uuid_, default_, label_)
-SELECT 'password', 'password', t.form_uuid_, NULL, 'Password'
-FROM internal_.credential_type_ t
-WHERE t.form_uuid_ = _form_uuid;
+UPDATE internal_.form_field_ ff
+SET
+  form_uuid_ = _form_uuid
+FROM internal_.integration_type_ it
+WHERE it.name_ = 'teachable/enroll'
+  AND ff.name_ = 'school_domain';
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
