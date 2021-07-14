@@ -13,3 +13,4 @@ SELECT internal_.resource_insert_from_('internal_.page_block_definition_');
 SELECT internal_.resource_insert_from_('internal_.subscription_plan_');
 SELECT internal_.resource_insert_from_('internal_.transaction_fee_');
 SELECT internal_.resource_insert_from_('internal_.integration_type_');
+SELECT internal_.resource_insert_from_('internal_.credential_type_');

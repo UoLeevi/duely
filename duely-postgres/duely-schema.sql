@@ -324,6 +324,32 @@ $$;
 ALTER FUNCTION internal_.base64url_encode_(_data bytea) OWNER TO postgres;
 
 --
+-- Name: check_credential_data_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.check_credential_data_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF EXISTS (
+      SELECT jsonb_object_keys(NEW.data_)
+    EXCEPT
+      SELECT ff.name_
+      FROM internal_.credential_type_ t
+      JOIN internal_.form_field_ ff ON ff.form_uuid_ = t.form_uuid_
+      WHERE t.uuid_ = NEW.credential_type_uuid_
+  ) THEN
+    RAISE 'Data does not match required schema.' USING ERRCODE = 'DDATA';
+  END IF;
+
+  RETURN NEW;
+END
+$$;
+
+
+ALTER FUNCTION internal_.check_credential_data_() OWNER TO postgres;
+
+--
 -- Name: check_current_user_is_serviceaccount_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -3139,6 +3165,19 @@ $$;
 ALTER FUNCTION policy_.anyone_can_query_basic_agency_fields_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: anyone_can_query_credential_type_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.anyone_can_query_credential_type_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE sql STABLE SECURITY DEFINER
+    AS $$
+  SELECT '{uuid_, subdomain_uuid_, name_, livemode_, default_pricing_currency_}'::text[];
+$$;
+
+
+ALTER FUNCTION policy_.anyone_can_query_credential_type_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: anyone_can_query_form_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -3171,7 +3210,7 @@ ALTER FUNCTION policy_.anyone_can_query_form_field_(_resource_definition securit
 CREATE FUNCTION policy_.anyone_can_query_integration_type_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
-  SELECT '{uuid_, form_uuid_, config_form_uuid_, name_, automatic_order_management_}'::text[];
+  SELECT '{uuid_, form_uuid_, config_form_uuid_, credential_type_uuid_, name_, automatic_order_management_}'::text[];
 $$;
 
 
@@ -4077,7 +4116,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{agency_uuid_, type_, name_, data_}'::text[];
+    RETURN '{agency_uuid_, credential_type_uuid_, name_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4382,7 +4421,7 @@ CREATE FUNCTION policy_.owner_can_query_credential_(_resource_definition securit
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{uuid_, agency_uuid_, type_, name_, data_}'::text[];
+    RETURN '{uuid_, agency_uuid_, credential_type_uuid_, name_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4806,7 +4845,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_credential_(_resource_definitio
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, agency_uuid_, type_, name_, data_}'::text[];
+    RETURN '{uuid_, agency_uuid_, credential_type_uuid_, name_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5865,8 +5904,8 @@ CREATE TABLE application_.credential_ (
     uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
     agency_uuid_ uuid,
     name_ text NOT NULL,
-    type_ text NOT NULL,
-    data_ jsonb NOT NULL
+    data_ jsonb NOT NULL,
+    credential_type_uuid_ uuid NOT NULL
 );
 
 
@@ -6616,6 +6655,19 @@ CREATE TABLE application__audit_.user_notification_setting_ (
 ALTER TABLE application__audit_.user_notification_setting_ OWNER TO postgres;
 
 --
+-- Name: credential_type_; Type: TABLE; Schema: internal_; Owner: postgres
+--
+
+CREATE TABLE internal_.credential_type_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    form_uuid_ uuid NOT NULL,
+    name_ text NOT NULL
+);
+
+
+ALTER TABLE internal_.credential_type_ OWNER TO postgres;
+
+--
 -- Name: form_; Type: TABLE; Schema: internal_; Owner: postgres
 --
 
@@ -6656,7 +6708,8 @@ CREATE TABLE internal_.integration_type_ (
     form_uuid_ uuid,
     name_ text,
     config_form_uuid_ uuid,
-    automatic_order_management_ boolean DEFAULT false NOT NULL
+    automatic_order_management_ boolean DEFAULT false NOT NULL,
+    credential_type_uuid_ uuid
 );
 
 
@@ -7285,6 +7338,14 @@ ALTER TABLE ONLY application_.sign_up_ ALTER COLUMN uuid_ SET DEFAULT gen_random
 
 
 --
+-- Data for Name: credential_type_; Type: TABLE DATA; Schema: internal_; Owner: postgres
+--
+
+COPY internal_.credential_type_ (uuid_, form_uuid_, name_) FROM stdin;
+\.
+
+
+--
 -- Data for Name: form_; Type: TABLE DATA; Schema: internal_; Owner: postgres
 --
 
@@ -7312,8 +7373,8 @@ c73098ad-183f-40b1-a96e-a314d56a6ed7	product_id	text	5126a7ce-f579-4da8-b2a8-ac9
 -- Data for Name: integration_type_; Type: TABLE DATA; Schema: internal_; Owner: postgres
 --
 
-COPY internal_.integration_type_ (uuid_, form_uuid_, name_, config_form_uuid_, automatic_order_management_) FROM stdin;
-63693293-fc7a-49d9-8410-a72bb5337af0	5126a7ce-f579-4da8-b2a8-ac9d13eff884	teachable/enroll	\N	f
+COPY internal_.integration_type_ (uuid_, form_uuid_, name_, config_form_uuid_, automatic_order_management_, credential_type_uuid_) FROM stdin;
+63693293-fc7a-49d9-8410-a72bb5337af0	5126a7ce-f579-4da8-b2a8-ac9d13eff884	teachable/enroll	\N	f	\N
 \.
 
 
@@ -7572,6 +7633,7 @@ adb47a35-ae23-44c4-931a-cf9368c0524c	6f6a79ba-b275-451f-9156-75740d01156f	policy
 7b9f353d-1247-4d51-bf21-2964a5494dd9	6f6a79ba-b275-451f-9156-75740d01156f	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
 5b7119cc-3e79-40ae-9d1e-c6cf3f9d5773	6f6a79ba-b275-451f-9156-75740d01156f	policy_.owner_can_change_integration_config_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
 5a416245-3eb6-47b9-be14-ddcf7f224678	6f6a79ba-b275-451f-9156-75740d01156f	policy_.owner_can_create_integration_config_(security_.resource_definition_,jsonb)	create	\N
+b9fb70ad-f319-4e47-aac7-193d9d9e7ace	e82d9b56-e05d-4aa2-81b4-2af2643f224c	policy_.anyone_can_query_credential_type_(security_.resource_definition_,application_.resource_)	query	\N
 \.
 
 
@@ -7627,11 +7689,12 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{product_uuid_,stripe_price_id_ext_live_,stripe_price_id_ext_test_}	\N	2021-02-17 14:48:13.97898+00	00000000-0000-0000-0000-000000000000
 20c1d214-27e8-4805-b645-2e5a00f32486	ord	order	application_.order_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,customer_uuid_,stripe_account_uuid_,stripe_checkout_session_id_ext_}	\N	2021-02-20 18:02:47.892503+00	00000000-0000-0000-0000-000000000000
-38d32095-8cfa-4e0e-92f8-079fb73002eb	cred	credential	application_.credential_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,type_,name_}	\N	2021-03-04 14:04:59.110539+00	00000000-0000-0000-0000-000000000000
 d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	\N	2021-03-05 15:24:22.112531+00	00000000-0000-0000-0000-000000000000
 677e43b0-6a66-4f84-b857-938f462fdf90	orditm	order item	application_.order_item_	20c1d214-27e8-4805-b645-2e5a00f32486	{uuid_,order_uuid_,stripe_line_item_id_ext_}	\N	2021-03-07 08:06:08.312786+00	00000000-0000-0000-0000-000000000000
 30e49b72-e52a-467d-8300-8b5051f32d9a	intetype	integration type	internal_.integration_type_	\N	{uuid_,form_uuid_,name_}	\N	2021-03-31 14:03:52.464206+00	00000000-0000-0000-0000-000000000000
 6f6a79ba-b275-451f-9156-75740d01156f	inteconf	integration config	application_.integration_config_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,integration_type_uuid_,agency_uuid_,name_}	\N	2021-07-11 06:36:57.993321+00	00000000-0000-0000-0000-000000000000
+e82d9b56-e05d-4aa2-81b4-2af2643f224c	credtype	credential type	internal_.credential_type_	\N	{uuid_,form_uuid_,name_}	\N	2021-07-14 05:41:08.571837+00	00000000-0000-0000-0000-000000000000
+38d32095-8cfa-4e0e-92f8-079fb73002eb	cred	credential	application_.credential_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,credential_type_uuid_,name_}	\N	2021-07-14 05:41:08.571837+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7749,6 +7812,8 @@ d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	
 677e43b0-6a66-4f84-b857-938f462fdf90	orditm	order item	application_.order_item_	20c1d214-27e8-4805-b645-2e5a00f32486	{uuid_,order_uuid_,stripe_line_item_id_ext_}	\N	2021-03-07 08:06:08.312786+00	00000000-0000-0000-0000-000000000000	I
 30e49b72-e52a-467d-8300-8b5051f32d9a	intetype	integration type	internal_.integration_type_	\N	{uuid_,form_uuid_,name_}	\N	2021-03-31 14:03:52.464206+00	00000000-0000-0000-0000-000000000000	I
 6f6a79ba-b275-451f-9156-75740d01156f	inteconf	integration config	application_.integration_config_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,integration_type_uuid_,agency_uuid_,name_}	\N	2021-07-11 06:36:57.993321+00	00000000-0000-0000-0000-000000000000	I
+e82d9b56-e05d-4aa2-81b4-2af2643f224c	credtype	credential type	internal_.credential_type_	\N	{uuid_,form_uuid_,name_}	\N	2021-07-14 05:41:08.571837+00	00000000-0000-0000-0000-000000000000	I
+38d32095-8cfa-4e0e-92f8-079fb73002eb	cred	credential	application_.credential_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,credential_type_uuid_,name_}	\N	2021-07-14 05:41:08.571837+00	00000000-0000-0000-0000-000000000000	U
 \.
 
 
@@ -8132,6 +8197,22 @@ ALTER TABLE ONLY application_.webhook_event_
 
 ALTER TABLE ONLY application_.webhook_event_
     ADD CONSTRAINT webhook_event__source__id_ext__key UNIQUE (source_, id_ext_);
+
+
+--
+-- Name: credential_type_ credential_type__name__key; Type: CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.credential_type_
+    ADD CONSTRAINT credential_type__name__key UNIQUE (name_);
+
+
+--
+-- Name: credential_type_ credential_type__pkey; Type: CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.credential_type_
+    ADD CONSTRAINT credential_type__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -9393,6 +9474,13 @@ CREATE TRIGGER tr_after_update_update_product_page_url_ AFTER UPDATE ON applicat
 
 
 --
+-- Name: credential_ tr_before_insert_or_update_check_credential_data_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_insert_or_update_check_credential_data_ BEFORE INSERT OR UPDATE ON application_.credential_ FOR EACH ROW EXECUTE FUNCTION internal_.check_credential_data_();
+
+
+--
 -- Name: integration_config_ tr_before_insert_or_update_check_integration_config_data_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -9596,6 +9684,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON internal_.transacti
 
 
 --
+-- Name: credential_type_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON internal_.credential_type_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: form_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
@@ -9687,6 +9782,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON internal_
 
 
 --
+-- Name: credential_type_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON internal_.credential_type_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: form_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: internal_; Owner: postgres
 --
 
@@ -9775,6 +9877,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON internal_
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON internal_.transaction_fee_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: credential_type_ tr_after_update_resource_update_; Type: TRIGGER; Schema: internal_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON internal_.credential_type_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
@@ -10433,6 +10542,14 @@ ALTER TABLE ONLY application_.credential_
 
 
 --
+-- Name: credential_ credential__credential_type_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.credential_
+    ADD CONSTRAINT credential__credential_type_uuid__fkey FOREIGN KEY (credential_type_uuid_) REFERENCES internal_.credential_type_(uuid_);
+
+
+--
 -- Name: customer_ customer__stripe_account_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -10761,6 +10878,14 @@ ALTER TABLE ONLY application_.webhook_event_
 
 
 --
+-- Name: credential_type_ credential_type__form_uuid__fkey; Type: FK CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.credential_type_
+    ADD CONSTRAINT credential_type__form_uuid__fkey FOREIGN KEY (form_uuid_) REFERENCES internal_.form_(uuid_);
+
+
+--
 -- Name: form_field_ form_field__form_uuid__fkey; Type: FK CONSTRAINT; Schema: internal_; Owner: postgres
 --
 
@@ -10774,6 +10899,14 @@ ALTER TABLE ONLY internal_.form_field_
 
 ALTER TABLE ONLY internal_.integration_type_
     ADD CONSTRAINT integration_type__config_form_uuid__fkey FOREIGN KEY (config_form_uuid_) REFERENCES internal_.form_(uuid_);
+
+
+--
+-- Name: integration_type_ integration_type__credential_type_uuid__fkey; Type: FK CONSTRAINT; Schema: internal_; Owner: postgres
+--
+
+ALTER TABLE ONLY internal_.integration_type_
+    ADD CONSTRAINT integration_type__credential_type_uuid__fkey FOREIGN KEY (credential_type_uuid_) REFERENCES internal_.credential_type_(uuid_);
 
 
 --
