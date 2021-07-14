@@ -19,7 +19,7 @@ export const IntegrationType: GqlTypeDefinition = {
       automatic_order_management: Boolean!
       fields: [FormField!]
       config_fields: [FormField!]
-      credential_type_id: ID
+      credential_type: CredentialType
     }
 
     input IntegrationTypeFilter {
