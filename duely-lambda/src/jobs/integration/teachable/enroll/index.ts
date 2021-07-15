@@ -70,7 +70,7 @@ async function main() {
         {
           email: customer.email_address,
           price: price.unit_amount,
-          product_id: integrationData.product_id,
+          product_id: +integrationData.product_id,
           name: customer.name ?? customer.email_address,
           src: order_item_id
         },
