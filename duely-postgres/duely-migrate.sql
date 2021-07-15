@@ -14,28 +14,22 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-UPDATE internal_.form_field_
-SET required_ = 't'
-WHERE name_ IN (
-  'username',
-  'password',
-  'email_address'
-);
+CALL internal_.drop_auditing_('internal_.form_field_');
+ALTER TABLE internal_.form_field_ ADD COLUMN prefix_ text;
+ALTER TABLE internal_.form_field_ ADD COLUMN suffix_ text;
+CALL internal_.setup_auditing_('internal_.form_field_');
+
+CREATE OR REPLACE FUNCTION policy_.anyone_can_query_form_field_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE sql STABLE SECURITY DEFINER
+    AS $$
+  SELECT '{uuid_, name_, label_, type_, hint_, required_, form_uuid_, sort_key_, default_, prefix_, suffix_}'::text[];
+$$;
 
 UPDATE internal_.form_field_
 SET
-  hint_ = 'Domain name of the Teachable school',
-  required_ = 't'
+  prefix_ = 'https://'
 WHERE name_ IN (
   'school_domain'
-);
-
-UPDATE internal_.form_field_
-SET 
-  hint_ = 'ID of the Teachable product',
-  required_ = 't'
-WHERE name_ IN (
-  'product_id'
 );
 
 -- MIGRATION CODE END
