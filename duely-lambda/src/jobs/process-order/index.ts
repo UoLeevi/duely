@@ -34,7 +34,7 @@ async function main() {
               'integration type',
               integration.integration_type_id
             );
-            await runLambda(`integration/${integration_type.name}`, order_id!);
+            await runLambda(`integration/${integration_type.name}`, item.id!);
           }
 
           await updateProcessingState(context, 'order item', item.id, 'processed');
