@@ -30,7 +30,7 @@ export const Product: GqlTypeDefinition = {
       image_logo: Image
       image_hero: Image
       markdown_description: Markdown
-      integration: Integration
+      integrations: [Integration!]
       pages(filter: PageFilter): [Page!]
       settings: ProductSettings!
     }
@@ -57,7 +57,6 @@ export const Product: GqlTypeDefinition = {
         image_logo: ImageInput
         image_logo_id: ID
         image_hero: ImageInput
-        integration_id: ID
         status: String
       ): ProductMutationResult!
       update_product(
@@ -71,7 +70,6 @@ export const Product: GqlTypeDefinition = {
         image_logo: ImageInput
         image_logo_id: ID
         image_hero: ImageInput
-        integration_id: ID
         status: String
       ): ProductMutationResult!
       delete_product(product_id: ID!): ProductMutationResult!
@@ -86,7 +84,6 @@ export const Product: GqlTypeDefinition = {
   resolvers: {
     Product: {
       ...createResolverForReferencedResource({ name: 'agency' }),
-      ...createResolverForReferencedResource({ name: 'integration' }),
       ...createResolverForReferencedResource({ name: 'default_price', resource_name: 'price' }),
       ...createResolverForReferencedResourceAll({
         name: 'prices',
@@ -102,6 +99,11 @@ export const Product: GqlTypeDefinition = {
       ...createResolverForReferencedResourceAll({
         name: 'pages',
         resource_name: 'page',
+        column_name: 'product_id'
+      }),
+      ...createResolverForReferencedResourceAll({
+        name: 'integrations',
+        resource_name: 'integration',
         column_name: 'product_id'
       }),
       settings: (product) => ({ product_id: product.id })

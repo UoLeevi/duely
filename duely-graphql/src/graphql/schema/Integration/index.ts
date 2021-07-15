@@ -17,13 +17,16 @@ export const Integration: GqlTypeDefinition = {
       data: Json!
       agency: Agency!
       credential: Credential
+      product: Product
       integration_type: IntegrationType!
       integration_config: IntegrationConfig
     }
 
     input IntegrationFilter {
-      integration_type_id: ID
       agency_id: ID
+      integration_type_id: ID
+      integration_config_id: ID
+      product_id: ID
     }
 
     extend type Query {
@@ -35,6 +38,7 @@ export const Integration: GqlTypeDefinition = {
       create_integration(
         agency_id: ID!
         credential_id: ID
+        product_id: ID
         integration_type_id: ID!
         integration_config_id: ID
         data: Json!
@@ -56,6 +60,7 @@ export const Integration: GqlTypeDefinition = {
     Integration: {
       ...createResolverForReferencedResource({ name: 'agency' }),
       ...createResolverForReferencedResource({ name: 'credential' }),
+      ...createResolverForReferencedResource({ name: 'product' }),
       ...createResolverForReferencedResource({
         name: 'integration_type',
         resource_name: 'integration type'
