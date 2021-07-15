@@ -84,8 +84,10 @@ async function main() {
       );
 
       setResult({ success: true, enrollment_id: result.data.id });
+      console.log(`Integration teachable/enroll completed for order item: ${order_item_id}. Enrollment id: ${result.data.id}`);
     });
   } catch (err: any) {
     console.error(`integration/teachable/enroll failed:\n${err}`);
+    throw err;
   }
 }

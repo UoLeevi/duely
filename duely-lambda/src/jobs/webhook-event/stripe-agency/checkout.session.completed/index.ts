@@ -80,5 +80,6 @@ async function main() {
   } catch (err: any) {
     console.error(`Webhook event processing failed:\n${err}`);
     await updateProcessingState(context, 'webhook event', webhook_event_id, err);
+    throw err;
   }
 }

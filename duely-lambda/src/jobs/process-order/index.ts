@@ -49,5 +49,6 @@ async function main() {
   } catch (err: any) {
     console.error(`Order processing failed:\n${err}`);
     await updateProcessingState(context, 'order', order_id, err);
+    throw err;
   }
 }
