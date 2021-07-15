@@ -105,7 +105,6 @@ export type ProductResource = {
   markdown_description_id?: ResourceId<'markdown'> | null;
   stripe_prod_id_ext_live?: string | null;
   stripe_prod_id_ext_test?: string | null;
-  integration_id?: ResourceId<'integration'> | null;
 };
 
 export type MarkdownResource = {
@@ -309,6 +308,7 @@ export type IntegrationResource = {
   integration_config_id: ResourceId<'integration config'>;
   agency_id: ResourceId<'agency'>;
   credential_id?: ResourceId<'credential'> | null;
+  product_id?: ResourceId<'product'> | null;
   data: object;
 };
 

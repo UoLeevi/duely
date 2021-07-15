@@ -278,7 +278,7 @@ fragment product on Product {
   settings {
     id
   }
-  integration {
+  integrations {
     id
   }
 }
@@ -401,6 +401,9 @@ fragment integration on Integration {
     id
   }
   credential {
+    id
+  }
+  product {
     id
   }
   integration_type {

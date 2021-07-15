@@ -388,6 +388,7 @@ mutation CreateIntegration(
   $agency_id: ID!
   $integration_type_id: ID!
   $credential_id: ID
+  $product_id: ID
   $integration_config_id: ID
   $data: Json!
 ) {
@@ -395,6 +396,7 @@ mutation CreateIntegration(
     agency_id: $agency_id
     integration_type_id: $integration_type_id
     credential_id: $credential_id
+    product_id: $product_id
     integration_config_id: $integration_config_id
     data: $data
   ) {

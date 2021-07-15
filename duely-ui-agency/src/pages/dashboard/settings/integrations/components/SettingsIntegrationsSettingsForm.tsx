@@ -203,7 +203,7 @@ export function SettingsIntegrationsSettingsForm() {
           loading={integration_typesLoading || integration_configsLoading || credentialLoading}
           fields={integration_type.credential_type.fields ?? []}
           defaultValues={credential_values}
-          skeletonFieldCount={0}
+          skeletonFieldCount={2}
         />
       )}
 

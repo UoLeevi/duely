@@ -440,7 +440,7 @@ BEGIN
       SELECT 1
       FROM application_.product_
       WHERE agency_uuid_ = NEW.agency_uuid_
-        AND product_uuid_ = NEW.product_uuid_
+        AND uuid_ = NEW.product_uuid_
   ) THEN
     RAISE 'Product does not belong to specified agency' USING ERRCODE = 'DDATA';
   END IF;

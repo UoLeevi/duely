@@ -14,12 +14,16 @@ import {
   create_price_M,
   update_product_M,
   agency_stripe_account_Q,
-  current_agency_Q
+  current_agency_Q,
+  integration_configs_Q,
+  integration_type_Q,
+  create_integration_M
 } from '@duely/client';
 import { ProductBasicInfoFormSection } from './ProductBasicInfoFormSection';
 import { ProductPricingFormSection } from './ProductPricingFormSection';
 import { Link } from 'react-router-dom';
-import { Currency } from '@duely/core';
+import { Currency, Util as CoreUtil } from '@duely/core';
+import { ProductIntegrationFormSection } from './ProductIntegrationFormSection';
 
 type CreateProductFormFields = {
   name: string;
@@ -30,7 +34,8 @@ type CreateProductFormFields = {
   payment_type: 'one_time' | 'recurring';
   image_logo_file_list: FileList;
   frequency?: string;
-};
+  integration_config_name: string;
+} & Record<string, string>;
 
 export function CreateProductForm() {
   const form = useForm<CreateProductFormFields>({
@@ -40,6 +45,7 @@ export function CreateProductForm() {
   });
   const [createProduct, stateProduct] = useMutation(create_product_M);
   const [createPrice, statePrice] = useMutation(create_price_M);
+  const [createIntegration, stateIntegration] = useMutation(create_integration_M);
   const [updateProduct, stateUpdate] = useMutation(update_product_M);
   const { data: current_subdomain } = useQuery(current_subdomain_Q);
   const { data: agency } = useQuery(current_agency_Q);
@@ -47,6 +53,25 @@ export function CreateProductForm() {
     agency_stripe_account_Q,
     { agency_id: agency!.id },
     { skip: !agency }
+  );
+
+  const { data: integration_configs, loading: integration_configsLoading } = useQuery(
+    integration_configs_Q,
+    { filter: { agency_id: agency!.id } },
+    { skip: !agency }
+  );
+
+  const integration_config_name = form.useFormFieldValue('integration_config_name');
+  const integration_config = integration_configs?.find((c) => c.name === integration_config_name);
+
+  const { data: integration_type, loading: integration_typeLoading } = useQuery(
+    integration_type_Q,
+    {
+      integration_type_id: integration_config?.integration_type?.id!
+    },
+    {
+      skip: !integration_config
+    }
   );
 
   const state = {
@@ -102,6 +127,25 @@ export function CreateProductForm() {
 
     if (!res_price?.success) return;
 
+    if (integration_type) {
+      const integration_json = JSON.stringify(
+        CoreUtil.pick(
+          data,
+          integration_type.fields!.map((f) => f.name)
+        )
+      );
+
+      const res_integration = await createIntegration({
+        agency_id: current_subdomain!.agency.id,
+        integration_config_id: integration_config!.id,
+        integration_type_id: integration_type?.id,
+        product_id: product!.id,
+        data: integration_json
+      });
+
+      if (!res_integration?.success) return;
+    }
+
     const { price } = res_price;
     await updateProduct({ product_id: product!.id, default_price_id: price!.id, status });
   }
@@ -147,6 +191,8 @@ export function CreateProductForm() {
         <ProductBasicInfoFormSection form={form} />
         <h3 className="pt-6 pb-2 text-lg font-medium">Pricing</h3>
         <ProductPricingFormSection form={form} />
+        <h3 className="pt-6 pb-2 text-lg font-medium">Integration</h3>
+        <ProductIntegrationFormSection form={form} />
         <h3 className="pt-6 pb-2 text-lg font-medium">Status</h3>
         <FormField
           name="status"
