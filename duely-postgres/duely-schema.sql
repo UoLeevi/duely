@@ -428,6 +428,30 @@ $$;
 
 ALTER FUNCTION internal_.check_integration_data_() OWNER TO postgres;
 
+--
+-- Name: check_product_belongs_to_agency_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.check_product_belongs_to_agency_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF NEW.product_uuid_ IS NOT NULL AND NEW.agency_uuid_ IS NOT NULL AND NOT EXISTS (
+      SELECT 1
+      FROM application_.product_
+      WHERE agency_uuid_ = NEW.agency_uuid_
+        AND product_uuid_ = NEW.product_uuid_
+  ) THEN
+    RAISE 'Product does not belong to specified agency' USING ERRCODE = 'DDATA';
+  END IF;
+
+  RETURN NEW;
+END
+$$;
+
+
+ALTER FUNCTION internal_.check_product_belongs_to_agency_() OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -3040,7 +3064,7 @@ CREATE FUNCTION policy_.agent_can_query_product_(_resource_definition security_.
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
+    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3988,9 +4012,9 @@ BEGIN
         AND stripe_prod_id_ext_live_ IS NULL
         AND stripe_prod_id_ext_test_ IS NULL
     ) THEN
-      RETURN '{name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
+      RETURN '{name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
     ELSE
-      RETURN '{name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
+      RETURN '{name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
     END IF;
   ELSE
     RETURN '{}'::text[];
@@ -4182,7 +4206,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{agency_uuid_, integration_config_uuid_, integration_type_uuid_, credential_uuid_, data_}'::text[];
+    RETURN '{agency_uuid_, integration_config_uuid_, integration_type_uuid_, credential_uuid_, product_uuid_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4314,7 +4338,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
+    RETURN '{agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4440,7 +4464,7 @@ CREATE FUNCTION policy_.owner_can_query_integration_(_resource_definition securi
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
-    RETURN '{uuid_, agency_uuid_, integration_config_uuid_, integration_type_uuid_, credential_uuid_, data_}'::text[];
+    RETURN '{uuid_, agency_uuid_, integration_config_uuid_, integration_type_uuid_, credential_uuid_, product_uuid_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4883,7 +4907,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_integration_(_resource_definiti
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, agency_uuid_, integration_config_uuid_, integration_type_uuid_, credential_uuid_, data_}'::text[];
+    RETURN '{uuid_, agency_uuid_, integration_config_uuid_, integration_type_uuid_, credential_uuid_, product_uuid_, data_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4978,7 +5002,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_product_(_resource_definition s
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_, integration_uuid_}'::text[];
+    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5955,7 +5979,10 @@ CREATE TABLE application_.integration_ (
     credential_uuid_ uuid,
     data_ jsonb NOT NULL,
     integration_type_uuid_ uuid NOT NULL,
-    integration_config_uuid_ uuid
+    integration_config_uuid_ uuid,
+    product_uuid_ uuid,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -6227,7 +6254,6 @@ CREATE TABLE application_.product_ (
     markdown_description_uuid_ uuid,
     stripe_prod_id_ext_live_ text,
     stripe_prod_id_ext_test_ text,
-    integration_uuid_ uuid,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6448,6 +6474,26 @@ CREATE TABLE application__audit_.customer_ (
 ALTER TABLE application__audit_.customer_ OWNER TO postgres;
 
 --
+-- Name: integration_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.integration_ (
+    uuid_ uuid,
+    agency_uuid_ uuid,
+    credential_uuid_ uuid,
+    data_ jsonb,
+    integration_type_uuid_ uuid,
+    integration_config_uuid_ uuid,
+    product_uuid_ uuid,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.integration_ OWNER TO postgres;
+
+--
 -- Name: notification_definition_; Type: TABLE; Schema: application__audit_; Owner: postgres
 --
 
@@ -6548,7 +6594,6 @@ CREATE TABLE application__audit_.product_ (
     markdown_description_uuid_ uuid,
     stripe_prod_id_ext_live_ text,
     stripe_prod_id_ext_test_ text,
-    integration_uuid_ uuid,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -7714,7 +7759,7 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{product_uuid_,stripe_price_id_ext_live_,stripe_price_id_ext_test_}	\N	2021-02-17 14:48:13.97898+00	00000000-0000-0000-0000-000000000000
 20c1d214-27e8-4805-b645-2e5a00f32486	ord	order	application_.order_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,customer_uuid_,stripe_account_uuid_,stripe_checkout_session_id_ext_}	\N	2021-02-20 18:02:47.892503+00	00000000-0000-0000-0000-000000000000
-d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	\N	2021-03-05 15:24:22.112531+00	00000000-0000-0000-0000-000000000000
+d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{agency_uuid_,integration_config_uuid_,integration_type_uuid_,product_uuid_}	\N	2021-07-15 07:22:39.535955+00	00000000-0000-0000-0000-000000000000
 677e43b0-6a66-4f84-b857-938f462fdf90	orditm	order item	application_.order_item_	20c1d214-27e8-4805-b645-2e5a00f32486	{uuid_,order_uuid_,stripe_line_item_id_ext_}	\N	2021-03-07 08:06:08.312786+00	00000000-0000-0000-0000-000000000000
 30e49b72-e52a-467d-8300-8b5051f32d9a	intetype	integration type	internal_.integration_type_	\N	{uuid_,form_uuid_,name_}	\N	2021-03-31 14:03:52.464206+00	00000000-0000-0000-0000-000000000000
 6f6a79ba-b275-451f-9156-75740d01156f	inteconf	integration config	application_.integration_config_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,integration_type_uuid_,agency_uuid_,name_}	\N	2021-07-11 06:36:57.993321+00	00000000-0000-0000-0000-000000000000
@@ -7839,6 +7884,7 @@ d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	
 6f6a79ba-b275-451f-9156-75740d01156f	inteconf	integration config	application_.integration_config_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,integration_type_uuid_,agency_uuid_,name_}	\N	2021-07-11 06:36:57.993321+00	00000000-0000-0000-0000-000000000000	I
 e82d9b56-e05d-4aa2-81b4-2af2643f224c	credtype	credential type	internal_.credential_type_	\N	{uuid_,form_uuid_,name_}	\N	2021-07-14 05:41:08.571837+00	00000000-0000-0000-0000-000000000000	I
 38d32095-8cfa-4e0e-92f8-079fb73002eb	cred	credential	application_.credential_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,credential_type_uuid_,name_}	\N	2021-07-14 05:41:08.571837+00	00000000-0000-0000-0000-000000000000	U
+d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{agency_uuid_,integration_config_uuid_,integration_type_uuid_,product_uuid_}	\N	2021-07-15 07:22:39.535955+00	00000000-0000-0000-0000-000000000000	U
 \.
 
 
@@ -8680,6 +8726,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.custom
 
 
 --
+-- Name: integration_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.integration_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
 -- Name: notification_definition_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -8943,6 +8996,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.customer_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: integration_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.integration_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -9247,6 +9307,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 
 
 --
+-- Name: integration_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.integration_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
 -- Name: notification_definition_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -9520,6 +9587,20 @@ CREATE TRIGGER tr_before_insert_or_update_check_integration_data_ BEFORE INSERT 
 
 
 --
+-- Name: integration_ tr_before_insert_or_update_check_product_belongs_to_agency_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_insert_or_update_check_product_belongs_to_agency_ BEFORE INSERT OR UPDATE ON application_.integration_ FOR EACH ROW EXECUTE FUNCTION internal_.check_product_belongs_to_agency_();
+
+
+--
+-- Name: page_ tr_before_insert_or_update_check_product_belongs_to_agency_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_insert_or_update_check_product_belongs_to_agency_ BEFORE INSERT OR UPDATE ON application_.page_ FOR EACH ROW EXECUTE FUNCTION internal_.check_product_belongs_to_agency_();
+
+
+--
 -- Name: page_block_ tr_before_insert_or_update_update_page_block_linked_list_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -9552,6 +9633,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agenc
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.customer_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: integration_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.integration_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
@@ -10631,6 +10719,14 @@ ALTER TABLE ONLY application_.integration_
 
 
 --
+-- Name: integration_ integration__product_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.integration_
+    ADD CONSTRAINT integration__product_uuid__fkey FOREIGN KEY (product_uuid_) REFERENCES application_.product_(uuid_);
+
+
+--
 -- Name: integration_config_ integration_config__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -10772,14 +10868,6 @@ ALTER TABLE ONLY application_.product_
 
 ALTER TABLE ONLY application_.product_
     ADD CONSTRAINT product__image_logo_uuid__fkey FOREIGN KEY (image_logo_uuid_) REFERENCES application_.image_(uuid_);
-
-
---
--- Name: product_ product__integration_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
---
-
-ALTER TABLE ONLY application_.product_
-    ADD CONSTRAINT product__integration_uuid__fkey FOREIGN KEY (integration_uuid_) REFERENCES application_.integration_(uuid_);
 
 
 --
