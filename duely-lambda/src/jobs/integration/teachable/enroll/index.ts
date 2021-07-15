@@ -10,45 +10,61 @@ main();
 
 async function main() {
   const context = await getServiceAccountContext();
+
   try {
     await withSession(context, async ({ queryResource }) => {
+      const integration_type = await queryResource('integration type', {
+        name: 'teachable/enroll'
+      });
       const order_item = await queryResource('order item', order_item_id);
       const order = await queryResource('order', order_item.order_id);
       const price = await queryResource('price', order_item.price_id);
       const product = await queryResource('product', price.product_id);
       const customer = await queryResource('customer', order.customer_id);
-      const integration = await queryResource('integration', product.integration_id!);
+      const integration = await queryResource('integration', {
+        product_id: product.id,
+        integration_type_id: integration_type.id
+      });
 
       if (!integration) {
         throw new Error(`No teachable/enroll integration found for product ${product.id}`);
       }
 
-      const integration_type = await queryResource(
-        'integration type',
-        integration.integration_type_id!
+      if (!integration.integration_config_id) {
+        throw new Error(`No integration config specified for integration ${integration.id}`);
+      }
+
+      const integration_config = await queryResource(
+        'integration config',
+        integration.integration_config_id
       );
 
-      if (integration_type.name != 'teachable/enroll') {
-        throw new Error(`No teachable/enroll integration found for product ${product.id}`);
+      if (!integration.credential_id || !integration_config.credential_id) {
+        throw new Error(`No credentials found for integration ${integration.id}`);
       }
 
-      const credential = await queryResource('credential', integration.credential_id!);
+      const credential = await queryResource(
+        'credential',
+        integration.credential_id ?? integration_config.credential_id
+      );
 
-      if (!credential || credential.type != 'basic') {
-        throw new Error(`No credentials with basic type found for integration ${integration.id}`);
-      }
+      const integrationConfigData = integration_config.data as {
+        school_domain: string;
+      };
 
       const integrationData = integration.data as {
-        school_domain: string;
         product_id: string;
       };
 
       const credentialData = credential.data as {
-        username: string;
+        email_address: string;
         password: string;
       };
 
-      const url = new URL('/api/v1/sales', `https://${integrationData.school_domain}`).toString();
+      const url = new URL(
+        '/api/v1/sales',
+        `https://${integrationConfigData.school_domain}`
+      ).toString();
 
       const result = await axios.post(
         url,
@@ -56,12 +72,12 @@ async function main() {
           email: customer.email_address,
           price: price.unit_amount,
           product_id: integrationData.product_id,
-          name: customer.name,
+          name: customer.name ?? customer.email_address,
           src: order_item_id
         },
         {
           auth: {
-            username: credentialData.username,
+            username: credentialData.email_address,
             password: credentialData.password
           }
         }

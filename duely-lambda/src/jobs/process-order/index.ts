@@ -1,4 +1,5 @@
 import { getServiceAccountContext, updateProcessingState, withSession } from '@duely/db';
+import { runLambda } from '@duely/lambda';
 
 const order_id = process.argv[2];
 
@@ -19,16 +20,21 @@ async function main() {
       const items = await queryResourceAll('order item', { order_id: order.id });
 
       for (const item of items) {
-        if (item.state === 'processed') continue;
+        if (item.state === 'processed' || item.state === 'processing') continue;
         await updateProcessingState(context, 'order item', item.id, 'processing');
+        await commit();
+
         try {
           const price = await queryResource('price', item.price_id);
           const product = await queryResource('product', price.product_id);
+          const integrations = await queryResourceAll('integration', { product_id: product.id });
 
-          if (product.integration_id) {
-            const integration = await queryResource('integration', product.integration_id);
-            // TODO: start job related to integration
-            await commit();
+          for (const integration of integrations) {
+            const integration_type = await queryResource(
+              'integration type',
+              integration.integration_type_id
+            );
+            await runLambda(`integration/${integration_type.name}`, order_id!);
           }
 
           await updateProcessingState(context, 'order item', item.id, 'processed');
