@@ -369,6 +369,8 @@ fragment form_field on FormField {
   label
   type
   hint
+  prefix
+  suffix
   required
   default
 }

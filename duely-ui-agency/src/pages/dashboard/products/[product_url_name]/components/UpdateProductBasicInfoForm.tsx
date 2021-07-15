@@ -56,21 +56,21 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
     useImageInputFromFileList(image_logo_file_list);
 
   async function onSubmit({ image_logo_file_list, ...data }: UpdateProductBasicInfoFormFields) {
-    const update = {
+    const diff = {
       ...Util.diff(CoreUtil.pick(data, product!), product!)
     };
 
     if (image_logo && image_logo?.data !== current_image_logo?.data) {
-      update.image_logo = image_logo;
+      diff.image_logo = image_logo;
     }
 
-    if (Object.keys(update).length === 0) {
+    if (Object.keys(diff).length === 0) {
       setInfoMessage('No changes to be saved');
       form.reset();
       return;
     }
 
-    const res = await updateProduct({ product_id: product_id!, ...update });
+    const res = await updateProduct({ product_id: product_id!, ...diff });
 
     if (res?.success) {
       setSuccessMessage('Saved');

@@ -171,6 +171,8 @@ export type FormFieldResource = {
   type: string;
   label: string;
   hint?: string | null;
+  prefix?: string | null;
+  suffix?: string | null;
   required: boolean;
   default?: object | null;
   sort_key: number;

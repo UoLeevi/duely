@@ -30,6 +30,7 @@ export function DynamicFormFields({
     <React.Fragment>
       {fields?.map((field) => (
         <FormField
+          className="max-w-xl"
           registerOptions={{
             required: field.required
           }}
@@ -38,6 +39,8 @@ export function DynamicFormFields({
           name={field.name}
           label={field.label}
           hint={field.hint}
+          prefix={field.prefix}
+          suffix={field.suffix}
           defaultValue={defaultValues?.[field.name]}
         />
       ))}

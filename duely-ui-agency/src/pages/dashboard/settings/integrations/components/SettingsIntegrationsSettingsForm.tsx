@@ -1,11 +1,14 @@
 import {
-  update_agency_M,
   useMutation,
   useQuery,
   current_agency_extended_Q,
   integration_types_Q,
   integration_configs_Q,
-  credential_Q
+  credential_Q,
+  create_integration_config_M,
+  update_integration_config_M,
+  create_credential_M,
+  update_credential_M
 } from '@duely/client';
 import {
   useForm,
@@ -16,6 +19,7 @@ import {
   useFormMessages,
   DynamicFormFields
 } from '@duely/react';
+import { Awaited, Util as CoreUtil } from '@duely/core';
 import { useMemo } from 'react';
 
 type SettingsIntegrationsSettingsFormFields = { integration_type_name: string } & Record<
@@ -24,7 +28,16 @@ type SettingsIntegrationsSettingsFormFields = { integration_type_name: string } 
 >;
 
 export function SettingsIntegrationsSettingsForm() {
-  const [updateAgency, stateUpdate] = useMutation(update_agency_M);
+  const [createIntegrationConfig, stateIntegrationConfigCreate] = useMutation(
+    create_integration_config_M
+  );
+  const [updateIntegrationConfig, stateIntegrationConfigUpdate] = useMutation(
+    update_integration_config_M
+  );
+  // const [deleteIntegrationConfig, stateIntegrationConfigDelete] = useMutation(delete_integration_config_M);
+  const [createCredential, stateCredentialCreate] = useMutation(create_credential_M);
+  const [updateCredential, stateCredentialUpdate] = useMutation(update_credential_M);
+  // const [deleteCredential, stateCredentialDelete] = useMutation(delete_credential_M);
 
   const form = useForm<SettingsIntegrationsSettingsFormFields>();
 
@@ -57,7 +70,7 @@ export function SettingsIntegrationsSettingsForm() {
       }
     },
     {
-      skip: !integration_type
+      skip: !integration_type || !current_agency?.id
     }
   );
 
@@ -89,22 +102,84 @@ export function SettingsIntegrationsSettingsForm() {
   } = useFormMessages();
 
   const state = {
-    loading: current_agency_loading || stateUpdate.loading
+    loading:
+      current_agency_loading ||
+      stateIntegrationConfigCreate.loading ||
+      stateIntegrationConfigUpdate.loading ||
+      stateCredentialCreate.loading ||
+      stateCredentialUpdate.loading
   };
 
-  const onSubmit = async ({ integration_type_name, ...data }: SettingsIntegrationsSettingsFormFields) => {
-    console.log(integration_type_name, data)
-    // const res = await updateAgency({ agency_id: current_agency!.id, default_pricing_currency });
-    // if (res?.success) {
-    //   setSuccessMessage('Saved');
-    //   return;
-    // } else {
-    //   setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
-    // }
+  const onSubmit = async ({
+    integration_type_name,
+    ...data
+  }: SettingsIntegrationsSettingsFormFields) => {
+    let res_credential:
+      | Awaited<ReturnType<typeof createCredential>>
+      | Awaited<ReturnType<typeof updateCredential>> = null;
+
+    if (integration_type?.credential_type) {
+      const credential_json = JSON.stringify(
+        CoreUtil.pick(
+          data,
+          integration_type.credential_type.fields!.map((f) => f.name)
+        )
+      );
+
+      if (credential == null) {
+        res_credential = await createCredential({
+          agency_id: current_agency!.id,
+          credential_type_id: integration_type.credential_type.id,
+          name: `${integration_type.name} credential`,
+          data: credential_json
+        });
+      } else {
+        res_credential = await updateCredential({
+          credential_id: credential.id,
+          data: credential_json
+        });
+      }
+    }
+
+    let res_integration_config:
+      | Awaited<ReturnType<typeof createIntegrationConfig>>
+      | Awaited<ReturnType<typeof updateIntegrationConfig>> = null;
+
+    const integration_config_json = JSON.stringify(
+      CoreUtil.pick(
+        data,
+        integration_type!.config_fields!.map((f) => f.name)
+      )
+    );
+
+    if (integration_config == null) {
+      res_integration_config = await createIntegrationConfig({
+        agency_id: current_agency!.id,
+        credential_id: res_credential?.credential?.id,
+        integration_type_id: integration_type!.id,
+        name: integration_type!.name,
+        data: integration_config_json
+      });
+    } else {
+      res_integration_config = await updateIntegrationConfig({
+        integration_config_id: integration_config.id,
+        credential_id: res_credential?.credential?.id,
+        data: integration_config_json
+      });
+    }
+
+    if (res_integration_config?.success) {
+      setSuccessMessage('Saved');
+      return;
+    } else {
+      setErrorMessage(
+        res_integration_config?.message ?? 'Unable to save changes. Something went wrong.'
+      );
+    }
   };
 
   return (
-    <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
+    <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3 ">
       <FormField
         name="integration_type_name"
         registerOptions={{ required: true }}
@@ -128,7 +203,7 @@ export function SettingsIntegrationsSettingsForm() {
           loading={integration_typesLoading || integration_configsLoading || credentialLoading}
           fields={integration_type.credential_type.fields ?? []}
           defaultValues={credential_values}
-          skeletonFieldCount={2}
+          skeletonFieldCount={0}
         />
       )}
 
