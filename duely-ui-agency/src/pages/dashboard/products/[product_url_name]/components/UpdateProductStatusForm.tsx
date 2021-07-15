@@ -69,10 +69,10 @@ export function UpdateProductStatusForm({ product_id }: ProductProps) {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton dense disabled={stateUpdate.loading}>
+          <FormButton dense>
             Save
           </FormButton>
-          <FormButton type="reset" dense disabled={stateUpdate.loading}>
+          <FormButton type="reset" dense>
             Cancel
           </FormButton>
           <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

@@ -15,7 +15,7 @@ export function DashboardSection({
   className,
   ...props
 }: DashboardSectionProps) {
-  className = Util.createClassName(className, 'flex flex-col space-y-4 sm:p-2 md:p-3 xl:p-5');
+  className = Util.createClassName(className, 'flex flex-col flex-1 space-y-4 sm:p-2 md:p-3 xl:p-5');
 
   const [linkRef, hashLink] = useHashScrolling<HTMLHeadingElement>();
 
@@ -42,7 +42,7 @@ export function DashboardSection({
         </div>
       )}
 
-      <div className="flex flex-col space-y-8">{children}</div>
+      <div className="flex flex-col flex-1 space-y-8">{children}</div>
     </section>
   );
 }

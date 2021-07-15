@@ -17,8 +17,10 @@ export function FormButton({
   ...props
 }: FormButtonProps) {
   const form = useFormContext();
-  const { isDirty } = form.useFormState();
-  disabled = !!(disabled || loading || !isDirty);
+  const { isDirty, isSubmitting } = form.useFormState();
+  const isSubmitButton = !type || type === 'submit';
+  loading ||= isSubmitButton && isSubmitting;
+  disabled ||= isSubmitting || !isDirty;
   color = color ?? (type === 'reset' ? 'gray' : 'indigo');
   const registerProps = (name !== undefined && value !== undefined) ? form.register(name) : undefined;
   return <Button type={type} color={color} disabled={disabled} loading={loading} {...props} {...registerProps} />;

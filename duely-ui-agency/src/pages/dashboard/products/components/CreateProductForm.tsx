@@ -153,8 +153,8 @@ export function CreateProductForm() {
   if (state.success) {
     const { product } = stateProduct.data!;
     return (
-      <div className="flex flex-col items-center space-y-4 text-center">
-        <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
+      <div className="flex flex-col items-center flex-1 space-y-4 text-center">
+        <div className="grid w-12 h-12 border-2 border-green-600 rounded-full bg-gradient-to-r from-green-50 to-green-100 place-items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="text-3xl text-green-600 h-[1em] w-[1em]"
@@ -163,6 +163,7 @@ export function CreateProductForm() {
             stroke="currentColor"
           >
             <path
+              className="animate-stroke-draw-200"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={1.5}
@@ -203,7 +204,7 @@ export function CreateProductForm() {
           ]}
         />
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <FormButton disabled={state.loading}>Create product</FormButton>
+          <FormButton>Create product</FormButton>
           <FormInfoMessage error={state.error} />
         </div>
       </Form>

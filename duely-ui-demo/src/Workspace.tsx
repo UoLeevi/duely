@@ -85,10 +85,10 @@ export default function Workspace() {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton dense disabled={isSubmitting}>
+          <FormButton dense>
             Save
           </FormButton>
-          <FormButton type="reset" dense disabled={isSubmitting}>
+          <FormButton type="reset" dense>
             Cancel
           </FormButton>
           <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

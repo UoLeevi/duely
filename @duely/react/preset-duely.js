@@ -4,7 +4,7 @@ const path = require('path');
 const tailwindcssCliPath = require.main.path;
 
 const modulesPath = path.resolve(tailwindcssCliPath, '../../');
-const requireLocal = module => require(path.resolve(modulesPath, module));
+const requireLocal = (module) => require(path.resolve(modulesPath, module));
 
 const colors = requireLocal('tailwindcss/colors');
 
@@ -46,7 +46,9 @@ module.exports = {
     },
     extend: {
       animation: {
-        progress: 'progress 1800ms cubic-bezier(.02,.25,1,.61) infinite'
+        progress: 'progress 1800ms cubic-bezier(.02,.25,1,.61) infinite',
+        'stroke-draw-100': 'stroke-draw-100 800ms ease-in-out 300ms',
+        'stroke-draw-200': 'stroke-draw-200 800ms ease-in-out 300ms'
       },
       colors: {
         gray: {
@@ -57,12 +59,17 @@ module.exports = {
         progress: {
           from: { transform: 'translateX(-100%)' },
           to: { transform: 'translateX(110%)' }
+        },
+        'stroke-draw-100': {
+          from: { strokeDashoffset: '100', strokeDasharray: '100' },
+          to: { strokeDashoffset: '0', strokeDasharray: '100' }
+        },
+        'stroke-draw-200': {
+          from: { strokeDashoffset: '200', strokeDasharray: '200' },
+          to: { strokeDashoffset: '0', strokeDasharray: '200' }
         }
       }
-    },
+    }
   },
-  plugins: [
-    requireLocal('@tailwindcss/typography'),
-    requireLocal('@tailwindcss/aspect-ratio')
-  ]
+  plugins: [requireLocal('@tailwindcss/typography'), requireLocal('@tailwindcss/aspect-ratio')]
 };

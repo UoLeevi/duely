@@ -65,7 +65,7 @@ export default function ThankYouPage() {
 
   return (
     <>
-      <div className="grid h-full place-items-center bg-gray-25">
+      <div className="flex flex-col items-center justify-center flex-1 bg-gray-25">
         <div className="flex flex-col space-y-6">
           <div className="flex flex-col space-y-3">
             <div className="grid self-center w-16 h-16 border-2 border-green-500 rounded-full bg-green-50 place-items-center">
@@ -77,6 +77,7 @@ export default function ThankYouPage() {
                 stroke="currentColor"
               >
                 <path
+                  className="stroke-draw-200"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="1.5"

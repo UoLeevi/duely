@@ -65,7 +65,7 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
           }
         />
         <div className="flex flex-col items-center pt-4">
-          <FormButton disabled={loading}>
+          <FormButton>
             Log in
           </FormButton>
         </div>
