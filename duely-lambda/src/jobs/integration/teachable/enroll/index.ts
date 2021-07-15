@@ -39,14 +39,13 @@ async function main() {
         integration.integration_config_id
       );
 
-      if (!integration.credential_id || !integration_config.credential_id) {
+      const credential_id = integration.credential_id ?? integration_config.credential_id;
+
+      if (!credential_id) {
         throw new Error(`No credentials found for integration ${integration.id}`);
       }
 
-      const credential = await queryResource(
-        'credential',
-        integration.credential_id ?? integration_config.credential_id
-      );
+      const credential = await queryResource('credential', credential_id);
 
       const integrationConfigData = integration_config.data as {
         school_domain: string;
@@ -84,7 +83,9 @@ async function main() {
       );
 
       setResult({ success: true, enrollment_id: result.data.id });
-      console.log(`Integration teachable/enroll completed for order item: ${order_item_id}. Enrollment id: ${result.data.id}`);
+      console.log(
+        `Integration teachable/enroll completed for order item: ${order_item_id}. Enrollment id: ${result.data.id}`
+      );
     });
   } catch (err: any) {
     console.error(`integration/teachable/enroll failed:\n${err}`);
