@@ -27,7 +27,7 @@ export const TransactionFee = {
 
     extend type Query {
       transaction_fee(id: ID!): TransactionFee
-      transaction_fees(filter: TransactionFeeFilter!, token: String, desc: Boolean, order_by: String, limit: Int, after_id: ID): [TransactionFee!]
+      transaction_fees(filter: TransactionFeeFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [TransactionFee!]
     }
   `,
   resolvers: {
