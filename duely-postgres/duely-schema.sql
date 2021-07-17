@@ -2693,7 +2693,7 @@ BEGIN
           JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
           WHERE d.table_ = $1
             AND r.id_ = $4
-        )
+        ),
         all_ AS (
           SELECT internal_.dynamic_select_(d.table_, r.uuid_, keys_) data_
           FROM ' || _table || ' t
@@ -2799,7 +2799,7 @@ BEGIN
           JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
           WHERE d.table_ = $1
             AND r.id_ = $5
-        )
+        ),
         all_ AS (
           SELECT internal_.dynamic_select_(d.table_, r.uuid_, x.keys_) data_
           FROM ' || _table || ' t
