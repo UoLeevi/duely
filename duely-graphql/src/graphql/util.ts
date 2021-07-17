@@ -1,5 +1,5 @@
 import type { GraphQLResolveInfo } from 'graphql';
-import { queryResource, queryResourceAll } from '@duely/db';
+import { countResource, queryResource, queryResourceAll } from '@duely/db';
 import { DuelyQqlContext } from './context';
 import { Resources } from '@duely/db';
 import { Util } from '@duely/core';
@@ -79,7 +79,19 @@ export function createDefaultQueryResolversForResource<
         args.before_id,
         args.after_id
       );
-    }
+    },
+    // async [`count_${plural ?? (table_name ?? name) + 's'}`](
+    //   source: TSource,
+    //   args: {
+    //     filter?: Partial<Resources[K]>;
+    //     token?: string;
+    //   },
+    //   context: TContext,
+    //   info: GraphQLResolveInfo
+    // ) {
+    //   if (!context.jwt) throw new Error('Unauthorized');
+    //   return await countResource(context, name, args.filter, args.token);
+    // }
   };
 }
 

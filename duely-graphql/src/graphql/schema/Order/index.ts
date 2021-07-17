@@ -1,4 +1,4 @@
-import { queryResource, queryResourceAccess, updateResource } from '@duely/db';
+import { countResource, queryResource, queryResourceAccess, updateResource } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
@@ -17,7 +17,15 @@ export const Order: GqlTypeDefinition = {
     type Order {
       id: ID!
       customer(token: String): Customer!
-      items(filter: OrderItemFilter, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [OrderItem!]!
+      items(
+        filter: OrderItemFilter
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [OrderItem!]!
       stripe_account: StripeAccount!
       stripe_checkout_session: StripeCheckoutSession!
       state: String!
@@ -34,7 +42,16 @@ export const Order: GqlTypeDefinition = {
 
     extend type Query {
       order(id: ID!, token: String): Order
-      orders(filter: OrderFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Order!]
+      orders(
+        filter: OrderFilter!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Order!]
+      count_orders(filter: OrderFilter!, token: String): Int!
     }
 
     extend type Mutation {
@@ -92,7 +109,16 @@ export const Order: GqlTypeDefinition = {
       }
     },
     Query: {
-      ...createDefaultQueryResolversForResource(resource)
+      ...createDefaultQueryResolversForResource(resource),
+      async count_orders(
+        source,
+        args,
+        context,
+        info
+      ) {
+        if (!context.jwt) throw new Error('Unauthorized');
+        return await countResource(context, 'order', args.filter, args.token);
+      }
     },
     Mutation: {
       async update_order(obj, { order_id, ...args }, context, info) {
