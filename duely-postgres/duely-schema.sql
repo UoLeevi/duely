@@ -2457,27 +2457,6 @@ $$;
 ALTER FUNCTION operation_.log_out_user_() OWNER TO postgres;
 
 --
--- Name: query_active_subject_(); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.query_active_subject_() RETURNS TABLE(uuid_ uuid, name_ text, type_ text, email_address_ text)
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  PERFORM security_.control_operation_('query_active_subject_');
-
-  RETURN QUERY
-  SELECT s.uuid_, COALESCE(u.name_, 'visitor') name_, s.type_, u.email_address_
-  FROM security_.active_subject_ s
-  LEFT JOIN security_.user_ u ON s.uuid_ = u.uuid_;
-
-END
-$$;
-
-
-ALTER FUNCTION operation_.query_active_subject_() OWNER TO postgres;
-
---
 -- Name: query_current_user_(); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -2830,45 +2809,6 @@ $$;
 ALTER FUNCTION operation_.query_resource_access_(_id text) OWNER TO postgres;
 
 --
--- Name: query_resource_all_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.query_resource_all_(_resource_name text, _containing jsonb) RETURNS SETOF jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF _containing = '{}'::jsonb THEN
-    RETURN;
-  END IF;
-
-  IF _containing - 'id' = '{}'::jsonb THEN
-    RETURN QUERY
-      SELECT operation_.query_resource_(_containing->>'id');
-  END IF;
-
-  _containing := internal_.convert_to_internal_format_(_containing);
-
-  RETURN QUERY
-    WITH
-      all_ AS (
-        SELECT internal_.dynamic_select_(d.table_, r.uuid_, keys_) data_
-        FROM application_.resource_ r
-        JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
-        CROSS JOIN security_.control_query_(d, r) keys_
-        WHERE d.name_ = _resource_name
-          AND r.search_ @> _containing
-      )
-    SELECT internal_.convert_from_internal_format_(all_.data_) query_resource_all_
-    FROM all_
-    WHERE all_.data_ @> _containing
-    ORDER BY (all_.data_->>'sort_key_')::real;
-END
-$$;
-
-
-ALTER FUNCTION operation_.query_resource_all_(_resource_name text, _containing jsonb) OWNER TO postgres;
-
---
 -- Name: query_resource_definition_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -2890,53 +2830,6 @@ $$;
 
 
 ALTER FUNCTION operation_.query_resource_definition_(_resource_definition_uuid uuid) OWNER TO postgres;
-
---
--- Name: query_role_(uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.query_role_(_role_uuid uuid) RETURNS TABLE(uuid_ uuid, name_ text)
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-  DECLARE
-    _arg RECORD;
-  BEGIN
-    SELECT _role_uuid role_uuid_ INTO _arg;
-    PERFORM security_.control_operation_('query_role_', _arg);
-
-    RETURN QUERY
-    SELECT uuid_, name_
-    FROM security_.role_
-    WHERE uuid_ = _role_uuid;
-
-  END
-  $$;
-
-
-ALTER FUNCTION operation_.query_role_(_role_uuid uuid) OWNER TO postgres;
-
---
--- Name: query_user_(); Type: FUNCTION; Schema: operation_; Owner: postgres
---
-
-CREATE FUNCTION operation_.query_user_() RETURNS TABLE(uuid_ uuid, name_ text, email_address_ text)
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-DECLARE
-  _arg RECORD;
-BEGIN
-  PERFORM security_.control_operation_('query_user_');
-
-  RETURN QUERY
-  SELECT s.uuid_, s.name_, u.email_address_
-  FROM security_.subject_ s
-  JOIN security_.user_ u ON s.uuid_ = u.uuid_;
-
-END
-$$;
-
-
-ALTER FUNCTION operation_.query_user_() OWNER TO postgres;
 
 --
 -- Name: update_resource_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -7708,9 +7601,6 @@ COPY internal__audit_.transaction_fee_ (uuid_, subscription_plan_uuid_, numerato
 COPY security_.operation_ (uuid_, name_, log_events_, audit_at_, audit_session_uuid_) FROM stdin;
 12ba3162-4b08-46cf-bf69-f8db5f6c291d	log_out_user_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 a1c956c8-b64e-41ba-af40-d3c16721b04e	log_in_user_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
-7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
-44836e4b-ecd5-4184-a177-498b412ff251	query_user_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
-6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 9506e0e9-ee4a-4442-968a-76d9de05d2b3	query_current_user_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
@@ -7867,8 +7757,6 @@ b9fb70ad-f319-4e47-aac7-193d9d9e7ace	e82d9b56-e05d-4aa2-81b4-2af2643f224c	policy
 COPY security_.policy_assignment_ (uuid_, policy_name_, operation_uuid_, type_, audit_at_, audit_session_uuid_) FROM stdin;
 685c3913-3fff-4345-865c-d3e4026321ed	visitor_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 f9e2b169-903d-4e9c-ae20-b397489875dd	logged_in_	12ba3162-4b08-46cf-bf69-f8db5f6c291d	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
-b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
-04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 fc380d88-74e8-4863-b95f-e2bfdcf45235	logged_in_	a1c956c8-b64e-41ba-af40-d3c16721b04e	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 9c17e5e7-3043-4cc3-b2ca-5e635883b121	logged_in_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 df7169dc-3ef6-4e89-b749-9d96216f37f4	visitor_	fdcd4f76-f55e-4f73-a063-57fac33976e9	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
@@ -7965,6 +7853,9 @@ fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	2021-01-09 11:43:57.60957
 a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000	I
 9506e0e9-ee4a-4442-968a-76d9de05d2b3	query_current_user_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000	I
 ba39b019-2291-419e-baee-ed810d004ffc	query_resource_access_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000	I
+7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	f	2021-07-17 13:37:29.083163+00	00000000-0000-0000-0000-000000000000	D
+44836e4b-ecd5-4184-a177-498b412ff251	query_user_	f	2021-07-17 13:37:29.083163+00	00000000-0000-0000-0000-000000000000	D
+6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	f	2021-07-17 13:37:29.083163+00	00000000-0000-0000-0000-000000000000	D
 \.
 
 
@@ -7993,6 +7884,8 @@ ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b
 61729bd8-0be4-4bdc-a602-72fd08383f5f	logged_in_	9506e0e9-ee4a-4442-968a-76d9de05d2b3	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000	I
 da286841-dd4c-4a92-a772-253bce497514	visitor_	9506e0e9-ee4a-4442-968a-76d9de05d2b3	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000	I
 4682e137-bca9-4772-8b3e-dd5727add654	logged_in_	ba39b019-2291-419e-baee-ed810d004ffc	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000	I
+b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	2021-07-17 13:37:29.083163+00	00000000-0000-0000-0000-000000000000	D
+04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	2021-07-17 13:37:29.083163+00	00000000-0000-0000-0000-000000000000	D
 \.
 
 
