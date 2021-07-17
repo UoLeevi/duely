@@ -2779,7 +2779,7 @@ BEGIN
           JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
           JOIN security_.resource_token_ x ON r.uuid_ = x.resource_uuid_ AND r.uuid_ = x.resource_uuid_
           WHERE d.table_ = $1
-            AND x.token_ = _token
+            AND x.token_ = $4
             AND r.search_ @> $2
           ' || _order_by_sql || '
           LIMIT $3
@@ -2788,7 +2788,7 @@ BEGIN
       FROM all_
       WHERE all_.data_ @> $2
     '
-    USING _table, _filter, _limit;
+    USING _table, _filter, _limit, _token;
   ELSE
     RETURN QUERY EXECUTE format('
       WITH
@@ -2798,7 +2798,7 @@ BEGIN
           JOIN application_.resource_ r ON r.uuid_ = t.uuid_
           JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
           WHERE d.table_ = $1
-            AND r.id_ = $4
+            AND r.id_ = $5
         )
         all_ AS (
           SELECT internal_.dynamic_select_(d.table_, r.uuid_, x.keys_) data_
@@ -2808,7 +2808,7 @@ BEGIN
           JOIN security_.resource_token_ x ON r.uuid_ = x.resource_uuid_ AND r.uuid_ = x.resource_uuid_
           JOIN before_ ON 1=1
           WHERE d.table_ = $1
-            AND x.token_ = _token
+            AND x.token_ = $4
             AND r.search_ @> $2
             AND (t.%1$I %2$s before_.%1$I OR (t.%1$I %2$s= before_.%1$I AND r.id_ > before_.id_))
           ' || _order_by_sql || '
@@ -2818,7 +2818,7 @@ BEGIN
       FROM all_
       WHERE all_.data_ @> $2
     ', _order_by, _lt_gt)
-    USING _table, _filter, _limit, _after_id;
+    USING _table, _filter, _limit, _token, _after_id;
   END IF;
 END
 $_$;
