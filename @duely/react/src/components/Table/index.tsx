@@ -1,7 +1,44 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useCallback, useMemo, useState } from 'react';
 import { Util } from '../../util';
 import { useBreakpoints } from '../../hooks';
 import { LoadingSpinner } from '../LoadingSpinner';
+
+function usePagination() {
+  const [state, setState] = useState({
+    limit: 50,
+    page: 1
+  });
+
+  return useMemo(
+    () => ({
+      nextPage() {
+        setState((state) => ({
+          limit: state.limit,
+          page: state.page + 1
+        }));
+      },
+      previousPage() {
+        setState((state) => ({
+          limit: state.limit,
+          page: state.page - 1
+        }));
+      },
+      setPage(page: number) {
+        setState((state) => ({
+          limit: state.limit,
+          page
+        }));
+      },
+      setLimit(limit: number) {
+        setState((state) => ({
+          limit,
+          page: state.page
+        }));
+      }
+    }),
+    []
+  );
+}
 
 type TableProps<TItem> = {
   rows: TItem[] | undefined | null;

@@ -27,7 +27,7 @@ export const PageBlockDefinition: GqlTypeDefinition = {
 
     extend type Query {
       page_block_definition(id: ID!): PageBlockDefinition
-      page_block_definitions(filter: PageBlockDefinitionFilter!): [PageBlockDefinition!]
+      page_block_definitions(filter: PageBlockDefinitionFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [PageBlockDefinition!]
     }
   `,
   resolvers: {

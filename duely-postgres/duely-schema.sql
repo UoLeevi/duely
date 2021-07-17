@@ -2773,12 +2773,11 @@ BEGIN
     RETURN QUERY EXECUTE '
       WITH
         all_ AS (
-          SELECT internal_.dynamic_select_(d.table_, r.uuid_, keys_) data_
+          SELECT internal_.dynamic_select_(d.table_, r.uuid_, x.keys_) data_
           FROM ' || _table || ' t
           JOIN application_.resource_ r ON r.uuid_ = t.uuid_
           JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
           JOIN security_.resource_token_ x ON r.uuid_ = x.resource_uuid_ AND r.uuid_ = x.resource_uuid_
-          CROSS JOIN security_.control_query_(d, r) keys_
           WHERE d.table_ = $1
             AND x.token_ = _token
             AND r.search_ @> $2
@@ -2802,12 +2801,11 @@ BEGIN
             AND r.id_ = $4
         )
         all_ AS (
-          SELECT internal_.dynamic_select_(d.table_, r.uuid_, keys_) data_
+          SELECT internal_.dynamic_select_(d.table_, r.uuid_, x.keys_) data_
           FROM ' || _table || ' t
           JOIN application_.resource_ r ON r.uuid_ = t.uuid_
           JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
           JOIN security_.resource_token_ x ON r.uuid_ = x.resource_uuid_ AND r.uuid_ = x.resource_uuid_
-          CROSS JOIN security_.control_query_(d, r) keys_
           JOIN before_ ON 1=1
           WHERE d.table_ = $1
             AND x.token_ = _token

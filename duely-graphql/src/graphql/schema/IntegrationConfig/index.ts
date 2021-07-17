@@ -31,7 +31,7 @@ export const IntegrationConfig: GqlTypeDefinition = {
 
     extend type Query {
       integration_config(id: ID!): IntegrationConfig
-      integration_configs(filter: IntegrationConfigFilter!): [IntegrationConfig!]
+      integration_configs(filter: IntegrationConfigFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [IntegrationConfig!]
     }
 
     extend type Mutation {

@@ -43,7 +43,7 @@ export const Product: GqlTypeDefinition = {
 
     extend type Query {
       product(id: ID!): Product
-      products(filter: ProductFilter!): [Product!]
+      products(filter: ProductFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [Product!]
     }
 
     extend type Mutation {

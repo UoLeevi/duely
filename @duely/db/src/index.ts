@@ -304,28 +304,45 @@ export async function queryResourceAll<K extends keyof Resources>(
   client: ClientBase,
   resource_name: K,
   filter?: Partial<Resources[K]>,
-  token?: string
+  token?: string,
+  desc?: boolean,
+  order_by?: string & keyof Resources[K],
+  limit?: number,
+  after_id?: Resources[K]['id']
 ): Promise<Resources[K][]>;
 export async function queryResourceAll<K extends keyof Resources>(
   context: Context,
   resource_name: K,
   filter?: Partial<Resources[K]>,
-  token?: string
+  token?: string,
+  desc?: boolean,
+  order_by?: string & keyof Resources[K],
+  limit?: number,
+  after_id?: Resources[K]['id']
 ): Promise<Resources[K][]>;
 export async function queryResourceAll<K extends keyof Resources>(
   arg: Context | ClientBase,
   resource_name: K,
   filter?: Partial<Resources[K]>,
-  token?: string
+  token?: string,
+  desc?: boolean,
+  order_by?: string & keyof Resources[K],
+  limit?: number,
+  after_id?: Resources[K]['id']
 ): Promise<Resources[K][]> {
   if (!arg || !resource_name || !filter) throw Error('Arguments are required');
 
-  const parameterPgTypes = ['text', 'jsonb'];
+  desc ??= false;
 
-  if (token != undefined) parameterPgTypes.push('text');
+  const parameterPgTypes = ['text', 'jsonb', 'boolean', 'text', 'integer', 'text'];
+  const parameters: any[] = [resource_name, filter, desc, order_by, limit, after_id];
+
+  if (token != undefined) {
+    parameterPgTypes.splice(2, 0, 'text');
+    parameters.splice(2, 0, token);
+  }
 
   const parametersSql = parameterPgTypes.map((t, i) => `$${i + 1}::${t}`).join(', ');
-  const parameters = [resource_name, filter, token].slice(0, parameterPgTypes.length);
 
   return await queryAll(
     arg as any /* Context | ClientBase */,

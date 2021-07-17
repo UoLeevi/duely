@@ -26,7 +26,7 @@ export const Subdomain: GqlTypeDefinition = {
 
     extend type Query {
       subdomain(id: ID!): Subdomain
-      subdomains(filter: SubdomainFilter!): [Subdomain!]
+      subdomains(filter: SubdomainFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [Subdomain!]
     }
   `,
   resolvers: {

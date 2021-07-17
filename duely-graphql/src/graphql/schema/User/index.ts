@@ -28,7 +28,7 @@ export const User: GqlTypeDefinition = {
     extend type Query {
       current_user: User
       user(id: ID!): User
-      users(filter: UserFilter!): [User!]
+      users(filter: UserFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [User!]
     }
   `,
   resolvers: {

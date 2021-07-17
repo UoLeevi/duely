@@ -58,12 +58,25 @@ export function createDefaultQueryResolversForResource<
       args: {
         filter?: Partial<Resources[K]>;
         token?: string;
+        desc?: boolean;
+        order_by?: string & keyof Resources[K];
+        limit?: number;
+        after_id?: Resources[K]['id'];
       },
       context: TContext,
       info: GraphQLResolveInfo
     ) {
       if (!context.jwt) throw new Error('Unauthorized');
-      return await queryResourceAll(context, name, args.filter, args.token);
+      return await queryResourceAll(
+        context,
+        name,
+        args.filter,
+        args.token,
+        args.desc,
+        args.order_by,
+        args.limit,
+        args.after_id
+      );
     }
   };
 }
@@ -105,7 +118,7 @@ export function createResolverForReferencedResource<
             ? source[reverse_column_name as keyof TSource]
             : source.id ?? source[column_name! as keyof TSource]
         } as Partial<Resources[K]>)
-    : (source, args) => (source[column_name! as keyof TSource]! as unknown) as string;
+    : (source, args) => source[column_name! as keyof TSource]! as unknown as string;
 
   return {
     async [name](

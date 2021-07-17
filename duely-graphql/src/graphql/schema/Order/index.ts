@@ -34,7 +34,7 @@ export const Order: GqlTypeDefinition = {
 
     extend type Query {
       order(id: ID!, token: String): Order
-      orders(filter: OrderFilter!, token: String): [Order!]
+      orders(filter: OrderFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [Order!]
     }
 
     extend type Mutation {

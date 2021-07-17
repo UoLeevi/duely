@@ -77,7 +77,7 @@ export default function ThankYouPage() {
                 stroke="currentColor"
               >
                 <path
-                  className="stroke-draw-200"
+                  className="animate-stroke-draw-200"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="1.5"

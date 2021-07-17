@@ -29,7 +29,7 @@ export const IntegrationType: GqlTypeDefinition = {
 
     extend type Query {
       integration_type(id: ID!): IntegrationType
-      integration_types(filter: IntegrationTypeFilter!): [IntegrationType!]
+      integration_types(filter: IntegrationTypeFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [IntegrationType!]
     }
   `,
   resolvers: {
