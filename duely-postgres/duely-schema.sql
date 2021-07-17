@@ -6184,7 +6184,10 @@ CREATE TABLE application_.order_ (
     state_ public.processing_state_ NOT NULL,
     error_ text,
     ordered_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    processed_at_ timestamp with time zone
+    processed_at_ timestamp with time zone,
+    sort_key_ interval GENERATED ALWAYS AS ((- (ordered_at_ - '1970-01-01 00:00:00+00'::timestamp with time zone))) STORED,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
 
 
@@ -6586,6 +6589,28 @@ CREATE TABLE application__audit_.notification_definition_ (
 
 
 ALTER TABLE application__audit_.notification_definition_ OWNER TO postgres;
+
+--
+-- Name: order_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.order_ (
+    uuid_ uuid,
+    customer_uuid_ uuid,
+    stripe_account_uuid_ uuid,
+    stripe_checkout_session_id_ext_ text,
+    state_ public.processing_state_,
+    error_ text,
+    ordered_at_ timestamp with time zone,
+    processed_at_ timestamp with time zone,
+    sort_key_ interval,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.order_ OWNER TO postgres;
 
 --
 -- Name: page_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -8748,6 +8773,13 @@ CREATE UNIQUE INDEX markdown__name__key ON application_.markdown_ USING btree (n
 
 
 --
+-- Name: order__sort_key__idx; Type: INDEX; Schema: application_; Owner: postgres
+--
+
+CREATE INDEX order__sort_key__idx ON application_.order_ USING btree (sort_key_);
+
+
+--
 -- Name: resource__search__idx; Type: INDEX; Schema: application_; Owner: postgres
 --
 
@@ -8808,6 +8840,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.integr
 --
 
 CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.notification_definition_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
+-- Name: order_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.order_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
 
 
 --
@@ -9081,6 +9120,13 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON applicati
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.notification_definition_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: order_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.order_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -9389,6 +9435,13 @@ CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON applicati
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.notification_definition_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: order_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.order_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -9718,6 +9771,13 @@ CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.integ
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.notification_definition_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: order_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.order_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
