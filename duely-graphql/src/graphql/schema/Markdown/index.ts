@@ -28,7 +28,16 @@ export const Markdown: GqlTypeDefinition = {
 
     extend type Query {
       markdown(id: ID!): Markdown
-      markdowns(filter: MarkdownFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Markdown!]
+      markdowns(
+        filter: Markdown!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Markdown!]
+      count_markdowns(filter: MarkdownFilter!, token: String): Int!
     }
 
     extend type Mutation {

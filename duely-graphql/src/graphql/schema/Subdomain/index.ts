@@ -17,7 +17,15 @@ export const Subdomain: GqlTypeDefinition = {
       id: ID!
       name: String!
       agency: Agency!
-      memberships(filter: MembershipFilter, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Membership!]!
+      memberships(
+        filter: MembershipFilter
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Membership!]!
     }
 
     input SubdomainFilter {
@@ -26,7 +34,16 @@ export const Subdomain: GqlTypeDefinition = {
 
     extend type Query {
       subdomain(id: ID!): Subdomain
-      subdomains(filter: SubdomainFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Subdomain!]
+      subdomains(
+        filter: Subdomain!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Subdomain!]
+      count_subdomains(filter: SubdomainFilter!, token: String): Int!
     }
   `,
   resolvers: {

@@ -38,7 +38,16 @@ export const Customer: GqlTypeDefinition = {
 
     extend type Query {
       customer(id: ID!, token: String): Customer
-      customers(filter: CustomerFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Customer!]
+      customers(
+        filter: Customer!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Customer!]
+      count_customers(filter: CustomerFilter!, token: String): Int!
     }
 
     extend type Mutation {

@@ -26,8 +26,24 @@ export const Agency: GqlTypeDefinition = {
       stripe_account(livemode: Boolean): StripeAccount!
       subdomain: Subdomain!
       theme: Theme!
-      products(filter: ProductFilter, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Product!]
-      pages(filter: PageFilter, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Page!]
+      products(
+        filter: ProductFilter
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Product!]
+      pages(
+        filter: PageFilter
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Page!]
       settings: AgencySettings!
       subscription_plan: SubscriptionPlan!
       default_pricing_currency: String
@@ -40,7 +56,16 @@ export const Agency: GqlTypeDefinition = {
 
     extend type Query {
       agency(id: ID!): Agency
-      agencies(filter: AgencyFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Agency!]
+      agencies(
+        filter: Agency!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Agency!]
+      count_agencies(filter: AgencyFilter!, token: String): Int!
     }
 
     extend type Mutation {

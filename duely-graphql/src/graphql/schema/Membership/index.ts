@@ -27,7 +27,16 @@ export const Membership: GqlTypeDefinition = {
 
     extend type Query {
       membership(id: ID!): Membership
-      memberships(filter: MembershipFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Membership!]
+      memberships(
+        filter: Membership!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Membership!]
+      count_memberships(filter: MembershipFilter!, token: String): Int!
     }
   `,
   resolvers: {

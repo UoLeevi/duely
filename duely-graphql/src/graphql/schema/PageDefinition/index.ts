@@ -28,7 +28,16 @@ export const PageDefinition: GqlTypeDefinition = {
     extend type Query {
       page_definition(id: ID!): PageDefinition
       page_definition_by_url_path(url_path: String!): PageDefinition
-      page_definitions(filter: PageDefinitionFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [PageDefinition!]
+      page_definitions(
+        filter: PageDefinition!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [PageDefinition!]
+      count_page_definitions(filter: PageDefinitionFilter!, token: String): Int!
     }
   `,
   resolvers: {

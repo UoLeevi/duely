@@ -34,7 +34,16 @@ export const Theme: GqlTypeDefinition = {
 
     extend type Query {
       theme(id: ID!): Theme
-      themes(filter: ThemeFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Theme!]
+      themes(
+        filter: Theme!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Theme!]
+      count_themes(filter: ThemeFilter!, token: String): Int!
     }
 
     extend type Mutation {

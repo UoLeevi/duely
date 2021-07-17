@@ -38,7 +38,16 @@ export const Price: GqlTypeDefinition = {
 
     extend type Query {
       price(id: ID!): Price
-      prices(filter: PriceFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Price!]
+      prices(
+        filter: Price!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Price!]
+      count_prices(filter: PriceFilter!, token: String): Int!
     }
 
     extend type Mutation {

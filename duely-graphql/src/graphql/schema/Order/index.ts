@@ -109,16 +109,7 @@ export const Order: GqlTypeDefinition = {
       }
     },
     Query: {
-      ...createDefaultQueryResolversForResource(resource),
-      async count_orders(
-        source,
-        args,
-        context,
-        info
-      ) {
-        if (!context.jwt) throw new Error('Unauthorized');
-        return await countResource(context, 'order', args.filter, args.token);
-      }
+      ...createDefaultQueryResolversForResource(resource)
     },
     Mutation: {
       async update_order(obj, { order_id, ...args }, context, info) {

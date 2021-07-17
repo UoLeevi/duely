@@ -27,7 +27,16 @@ export const FormField: GqlTypeDefinition = {
 
     extend type Query {
       form_field(id: ID!): FormField
-      form_fields(filter: FormFieldFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [FormField!]
+      form_fields(
+        filter: FormField!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [FormField!]
+      count_form_fields(filter: FormFieldFilter!, token: String): Int!
     }
   `,
   resolvers: {

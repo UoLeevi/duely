@@ -31,7 +31,16 @@ export const Integration: GqlTypeDefinition = {
 
     extend type Query {
       integration(id: ID!): Integration
-      integrations(filter: IntegrationFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Integration!]
+      integrations(
+        filter: Integration!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Integration!]
+      count_integrations(filter: IntegrationFilter!, token: String): Int!
     }
 
     extend type Mutation {

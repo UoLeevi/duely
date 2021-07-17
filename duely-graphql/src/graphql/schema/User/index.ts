@@ -17,7 +17,15 @@ export const User: GqlTypeDefinition = {
       id: ID!
       name: String!
       email_address: String!
-      memberships(filter: MembershipFilter, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Membership!]!
+      memberships(
+        filter: MembershipFilter
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Membership!]!
     }
 
     input UserFilter {
@@ -28,7 +36,16 @@ export const User: GqlTypeDefinition = {
     extend type Query {
       current_user: User
       user(id: ID!): User
-      users(filter: UserFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [User!]
+      users(
+        filter: User!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [User!]
+      count_users(filter: UserFilter!, token: String): Int!
     }
   `,
   resolvers: {

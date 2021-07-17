@@ -31,7 +31,16 @@ export const IntegrationConfig: GqlTypeDefinition = {
 
     extend type Query {
       integration_config(id: ID!): IntegrationConfig
-      integration_configs(filter: IntegrationConfigFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [IntegrationConfig!]
+      integration_configs(
+        filter: IntegrationConfig!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [IntegrationConfig!]
+      count_integration_configs(filter: IntegrationConfigFilter!, token: String): Int!
     }
 
     extend type Mutation {
@@ -60,7 +69,10 @@ export const IntegrationConfig: GqlTypeDefinition = {
     IntegrationConfig: {
       ...createResolverForReferencedResource({ name: 'agency' }),
       ...createResolverForReferencedResource({ name: 'credential' }),
-      ...createResolverForReferencedResource({ name: 'integration_type', resource_name: 'integration type' }),
+      ...createResolverForReferencedResource({
+        name: 'integration_type',
+        resource_name: 'integration type'
+      })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
@@ -93,7 +105,12 @@ export const IntegrationConfig: GqlTypeDefinition = {
 
         try {
           // update integration config resource
-          const integration_config = await updateResource(context, resource.name, integration_config_id, args);
+          const integration_config = await updateResource(
+            context,
+            resource.name,
+            integration_config_id,
+            args
+          );
 
           // success
           return {

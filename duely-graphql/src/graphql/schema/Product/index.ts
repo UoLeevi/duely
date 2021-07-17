@@ -26,12 +26,28 @@ export const Product: GqlTypeDefinition = {
       duration: String
       default_price: Price
       agency: Agency!
-      prices(filter: PriceFilter, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Price!]
+      prices(
+        filter: PriceFilter
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Price!]
       image_logo: Image
       image_hero: Image
       markdown_description: Markdown
       integrations: [Integration!]
-      pages(filter: PageFilter, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Page!]
+      pages(
+        filter: PageFilter
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Page!]
       settings: ProductSettings!
     }
 
@@ -43,7 +59,16 @@ export const Product: GqlTypeDefinition = {
 
     extend type Query {
       product(id: ID!): Product
-      products(filter: ProductFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Product!]
+      products(
+        filter: Product!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Product!]
+      count_products(filter: ProductFilter!, token: String): Int!
     }
 
     extend type Mutation {

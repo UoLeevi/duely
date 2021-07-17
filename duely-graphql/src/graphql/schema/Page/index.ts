@@ -34,7 +34,16 @@ export const Page: GqlTypeDefinition = {
     extend type Query {
       page(id: ID!): Page
       page_by_url(url: String!): Page
-      pages(filter: PageFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Page!]
+      pages(
+        filter: Page!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [Page!]
+      count_pages(filter: PageFilter!, token: String): Int!
     }
 
     extend type Mutation {

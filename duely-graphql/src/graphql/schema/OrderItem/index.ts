@@ -30,7 +30,16 @@ export const OrderItem: GqlTypeDefinition = {
 
     extend type Query {
       order_item(id: ID!, token: String): OrderItem
-      order_items(filter: OrderItemFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [OrderItem!]
+      order_items(
+        filter: OrderItem!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [OrderItem!]
+      count_order_items(filter: OrderItemFilter!, token: String): Int!
     }
 
     extend type Mutation {

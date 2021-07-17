@@ -27,7 +27,16 @@ export const PageBlock: GqlTypeDefinition = {
 
     extend type Query {
       page_block(id: ID!): PageBlock
-      page_blocks(filter: PageBlockFilter!, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [PageBlock!]
+      page_blocks(
+        filter: PageBlock!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        before_id: ID
+        after_id: ID
+      ): [PageBlock!]
+      count_page_blocks(filter: PageBlockFilter!, token: String): Int!
     }
 
     extend type Mutation {
@@ -35,9 +44,15 @@ export const PageBlock: GqlTypeDefinition = {
         page_id: ID!
         page_block_definition_id: ID!
         data: Json!
-        before_id: ID, after_id: ID
+        before_id: ID
+        after_id: ID
       ): PageBlockMutationResult!
-      update_page_block(page_block_id: ID!, data: Json, before_id: ID, after_id: ID): PageBlockMutationResult!
+      update_page_block(
+        page_block_id: ID!
+        data: Json
+        before_id: ID
+        after_id: ID
+      ): PageBlockMutationResult!
       delete_page_block(page_block_id: ID!): PageBlockMutationResult!
     }
 
