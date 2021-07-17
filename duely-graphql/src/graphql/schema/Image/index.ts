@@ -88,7 +88,7 @@ export const Image: GqlTypeDefinition = {
 
     extend type Query {
       image(id: ID!): Image
-      images(filter: ImageFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [Image!]
+      images(filter: ImageFilter!, token: String, desc: Boolean, order_by: String, limit: Int, after_id: ID): [Image!]
     }
 
     extend type Mutation {

@@ -40,7 +40,7 @@ export const Agency: GqlTypeDefinition = {
 
     extend type Query {
       agency(id: ID!): Agency
-      agencies(filter: AgencyFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [Agency!]
+      agencies(filter: AgencyFilter!, token: String, desc: Boolean, order_by: String, limit: Int, after_id: ID): [Agency!]
     }
 
     extend type Mutation {

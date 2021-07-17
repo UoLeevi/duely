@@ -28,7 +28,7 @@ export const Credential: GqlTypeDefinition = {
 
     extend type Query {
       credential(id: ID!): Credential
-      credentials(filter: CredentialFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [Credential!]
+      credentials(filter: CredentialFilter!, token: String, desc: Boolean, order_by: String, limit: Int, after_id: ID): [Credential!]
     }
 
     extend type Mutation {

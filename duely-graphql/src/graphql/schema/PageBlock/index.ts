@@ -27,7 +27,7 @@ export const PageBlock: GqlTypeDefinition = {
 
     extend type Query {
       page_block(id: ID!): PageBlock
-      page_blocks(filter: PageBlockFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [PageBlock!]
+      page_blocks(filter: PageBlockFilter!, token: String, desc: Boolean, order_by: String, limit: Int, after_id: ID): [PageBlock!]
     }
 
     extend type Mutation {

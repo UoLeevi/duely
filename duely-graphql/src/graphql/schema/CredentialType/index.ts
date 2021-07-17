@@ -25,7 +25,7 @@ export const CredentialType: GqlTypeDefinition = {
 
     extend type Query {
       credential_type(id: ID!): CredentialType
-      credential_types(filter: CredentialTypeFilter!, token: String, desc: Boolean, order_by: String, limit: Number, after_id: ID): [CredentialType!]
+      credential_types(filter: CredentialTypeFilter!, token: String, desc: Boolean, order_by: String, limit: Int, after_id: ID): [CredentialType!]
     }
   `,
   resolvers: {
