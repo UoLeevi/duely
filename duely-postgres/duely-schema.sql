@@ -2171,6 +2171,77 @@ $$;
 ALTER FUNCTION operation_.begin_visit_() OWNER TO postgres;
 
 --
+-- Name: count_resource_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.count_resource_(_resource_name text, _filter jsonb) RETURNS bigint
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _count bigint;
+  _filter_keys text[];
+BEGIN
+  IF _resource_name IS NULL OR _filter IS NULL THEN
+    RETURN -1;
+  END IF;
+
+  _filter := internal_.convert_to_internal_format_(_filter);
+
+  SELECT array_agg(keys_) INTO _filter_keys
+  FROM jsonb_object_keys(_filter) keys_;
+
+  SELECT count(*) INTO _count
+  FROM application_.resource_ r
+  JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+  CROSS JOIN security_.control_query_(d, r) keys_
+  WHERE d.name_ = _resource_name
+    AND r.search_ @> _filter
+    AND keys_ @> _filter_keys;
+
+  RETURN _count;
+END
+$$;
+
+
+ALTER FUNCTION operation_.count_resource_(_resource_name text, _filter jsonb) OWNER TO postgres;
+
+--
+-- Name: count_resource_(text, jsonb, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.count_resource_(_resource_name text, _filter jsonb, _token text) RETURNS bigint
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _count bigint;
+  _filter_keys text[];
+BEGIN
+  IF _resource_name IS NULL OR _filter IS NULL OR _token IS NULL THEN
+    RETURN -1;
+  END IF;
+
+  _filter := internal_.convert_to_internal_format_(_filter);
+
+  SELECT array_agg(keys_) INTO _filter_keys
+  FROM jsonb_object_keys(_filter) keys_;
+
+  SELECT count(*) INTO _count
+  FROM application_.resource_ r
+  JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
+  JOIN security_.resource_token_ x ON r.uuid_ = x.resource_uuid_ AND r.uuid_ = x.resource_uuid_
+  WHERE d.name_ = _resource_name
+    AND x.token_ = _token
+    AND r.search_ @> _filter
+    AND x.keys_ @> _filter_keys;
+
+  RETURN _count;
+END
+$$;
+
+
+ALTER FUNCTION operation_.count_resource_(_resource_name text, _filter jsonb, _token text) OWNER TO postgres;
+
+--
 -- Name: create_resource_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -2605,6 +2676,7 @@ DECLARE
   _lt_gt_after text;
   _lt_gt_before text;
   _order_by_sql text;
+  _filter_keys text[];
   _table regclass;
 BEGIN
   IF _resource_name IS NULL OR _filter IS NULL THEN
@@ -2644,6 +2716,9 @@ BEGIN
   _order_by_sql := format('ORDER BY t.%1$I %2$s, r.id_', _order_by, _desc_asc);
 
   _filter := internal_.convert_to_internal_format_(_filter);
+
+  SELECT array_agg(keys_) INTO _filter_keys
+  FROM jsonb_object_keys(_filter) keys_;
 
   RETURN QUERY EXECUTE format('
     WITH
@@ -2675,16 +2750,16 @@ BEGIN
         LEFT JOIN before_ ON 1=1
         WHERE d.table_ = $1
           AND r.search_ @> $2
+          AND keys_ @> $6
           AND ($4 IS NULL OR t.%1$I %3$s after_.%1$I OR (t.%1$I %3$s= after_.%1$I AND r.id_ < after_.id_))
           AND ($5 IS NULL OR t.%1$I %2$s before_.%1$I OR (t.%1$I %2$s= before_.%1$I AND r.id_ > before_.id_))
         ' || _order_by_sql || '
         LIMIT $3
       )
     SELECT internal_.convert_from_internal_format_(all_.data_) query_resource_
-    FROM all_
-    WHERE all_.data_ @> $2
+    FROM all_;
   ', _order_by, _lt_gt_before, _lt_gt_after)
-  USING _table, _filter, _limit, _before_id, _after_id;
+  USING _table, _filter, _limit, _before_id, _after_id, _filter_keys;
 END
 $_$;
 
@@ -2703,9 +2778,10 @@ DECLARE
   _lt_gt_before text;
   _lt_gt_after text;
   _order_by_sql text;
+  _filter_keys text[];
   _table regclass;
 BEGIN
-  IF _resource_name IS NULL OR _filter IS NULL THEN
+  IF _resource_name IS NULL OR _filter IS NULL OR _token IS NULL THEN
     RETURN;
   END IF;
 
@@ -2742,6 +2818,9 @@ BEGIN
   _order_by_sql := format('ORDER BY t.%1$I %2$s, r.id_', _order_by, _desc_asc);
 
   _filter := internal_.convert_to_internal_format_(_filter);
+
+  SELECT array_agg(keys_) INTO _filter_keys
+  FROM jsonb_object_keys(_filter) keys_;
 
   RETURN QUERY EXECUTE format('
     WITH
@@ -2774,16 +2853,16 @@ BEGIN
         WHERE d.table_ = $1
           AND x.token_ = $6
           AND r.search_ @> $2
+          AND x.keys_ @> $7
           AND ($4 IS NULL OR t.%1$I %3$s after_.%1$I OR (t.%1$I %3$s= after_.%1$I AND r.id_ < after_.id_))
           AND ($5 IS NULL OR t.%1$I %2$s before_.%1$I OR (t.%1$I %2$s= before_.%1$I AND r.id_ > before_.id_))
         ' || _order_by_sql || '
         LIMIT $3
       )
     SELECT internal_.convert_from_internal_format_(all_.data_) query_resource_
-    FROM all_
-    WHERE all_.data_ @> $2
+    FROM all_;
   ', _order_by, _lt_gt_before, _lt_gt_after)
-  USING _table, _filter, _limit, _before_id, _after_id, _token;
+  USING _table, _filter, _limit, _before_id, _after_id, _token, _filter_keys;
 END
 $_$;
 
@@ -7605,6 +7684,7 @@ fdcd4f76-f55e-4f73-a063-57fac33976e9	query_resource_	f	2021-01-09 11:43:57.60957
 a4337d7b-9595-40c3-89c0-77787a394b72	query_resource_definition_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 9506e0e9-ee4a-4442-968a-76d9de05d2b3	query_current_user_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 ba39b019-2291-419e-baee-ed810d004ffc	query_resource_access_	f	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
+39be14d6-bf09-4c2f-abff-2747db9ad1ed	count_resource_	f	2021-07-17 15:28:18.804489+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7765,6 +7845,8 @@ ce8318f6-3d8d-4e08-ac17-e1ff187b87a9	visitor_	a4337d7b-9595-40c3-89c0-77787a394b
 61729bd8-0be4-4bdc-a602-72fd08383f5f	logged_in_	9506e0e9-ee4a-4442-968a-76d9de05d2b3	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 da286841-dd4c-4a92-a772-253bce497514	visitor_	9506e0e9-ee4a-4442-968a-76d9de05d2b3	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
 4682e137-bca9-4772-8b3e-dd5727add654	logged_in_	ba39b019-2291-419e-baee-ed810d004ffc	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000
+aa4541f2-46f7-4c5a-b8bb-b135e5457f73	logged_in_	39be14d6-bf09-4c2f-abff-2747db9ad1ed	allow	2021-07-17 15:28:18.804489+00	00000000-0000-0000-0000-000000000000
+c9c1f3e0-20d3-4a03-bc85-570f1c97e209	visitor_	39be14d6-bf09-4c2f-abff-2747db9ad1ed	allow	2021-07-17 15:28:18.804489+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -7856,6 +7938,7 @@ ba39b019-2291-419e-baee-ed810d004ffc	query_resource_access_	f	2021-01-09 11:43:5
 7f2f5147-db6c-43cf-b0f0-2d68d56cba74	query_active_subject_	f	2021-07-17 13:37:29.083163+00	00000000-0000-0000-0000-000000000000	D
 44836e4b-ecd5-4184-a177-498b412ff251	query_user_	f	2021-07-17 13:37:29.083163+00	00000000-0000-0000-0000-000000000000	D
 6780b297-e2e5-48f5-b58d-a855b51a0fae	query_role_	f	2021-07-17 13:37:29.083163+00	00000000-0000-0000-0000-000000000000	D
+39be14d6-bf09-4c2f-abff-2747db9ad1ed	count_resource_	f	2021-07-17 15:28:18.804489+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -7886,6 +7969,8 @@ da286841-dd4c-4a92-a772-253bce497514	visitor_	9506e0e9-ee4a-4442-968a-76d9de05d2
 4682e137-bca9-4772-8b3e-dd5727add654	logged_in_	ba39b019-2291-419e-baee-ed810d004ffc	allow	2021-01-09 11:43:57.609576+00	00000000-0000-0000-0000-000000000000	I
 b987a658-ec1d-4761-ba88-1b271d0ce51f	visitor_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	2021-07-17 13:37:29.083163+00	00000000-0000-0000-0000-000000000000	D
 04793c21-c83f-4b7b-805d-c100578cb652	logged_in_	7f2f5147-db6c-43cf-b0f0-2d68d56cba74	allow	2021-07-17 13:37:29.083163+00	00000000-0000-0000-0000-000000000000	D
+aa4541f2-46f7-4c5a-b8bb-b135e5457f73	logged_in_	39be14d6-bf09-4c2f-abff-2747db9ad1ed	allow	2021-07-17 15:28:18.804489+00	00000000-0000-0000-0000-000000000000	I
+c9c1f3e0-20d3-4a03-bc85-570f1c97e209	visitor_	39be14d6-bf09-4c2f-abff-2747db9ad1ed	allow	2021-07-17 15:28:18.804489+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
