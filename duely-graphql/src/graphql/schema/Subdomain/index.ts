@@ -17,7 +17,7 @@ export const Subdomain: GqlTypeDefinition = {
       id: ID!
       name: String!
       agency: Agency!
-      memberships(filter: MembershipFilter): [Membership!]!
+      memberships(filter: MembershipFilter, token: String, desc: Boolean, order_by: String, limit: Int, after_id: ID): [Membership!]!
     }
 
     input SubdomainFilter {

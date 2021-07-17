@@ -26,12 +26,12 @@ export const Product: GqlTypeDefinition = {
       duration: String
       default_price: Price
       agency: Agency!
-      prices(filter: PriceFilter): [Price!]
+      prices(filter: PriceFilter, token: String, desc: Boolean, order_by: String, limit: Int, after_id: ID): [Price!]
       image_logo: Image
       image_hero: Image
       markdown_description: Markdown
       integrations: [Integration!]
-      pages(filter: PageFilter): [Page!]
+      pages(filter: PageFilter, token: String, desc: Boolean, order_by: String, limit: Int, after_id: ID): [Page!]
       settings: ProductSettings!
     }
 

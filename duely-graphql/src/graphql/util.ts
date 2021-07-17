@@ -168,6 +168,10 @@ export function createResolverForReferencedResourceAll<
       args: {
         filter?: Partial<Resources[K]>;
         token?: string;
+        desc?: boolean;
+        order_by?: string & keyof Resources[K];
+        limit?: number;
+        after_id?: Resources[K]['id'];
       },
       context: TContext,
       info: GraphQLResolveInfo
@@ -182,7 +186,11 @@ export function createResolverForReferencedResourceAll<
             ? source[reverse_column_name as keyof TSource]
             : source.id ?? source[column_name! as keyof TSource]
         } as Partial<Resources[K]>,
-        args.token
+        args.token,
+        args.desc,
+        args.order_by,
+        args.limit,
+        args.after_id
       );
     }
   };

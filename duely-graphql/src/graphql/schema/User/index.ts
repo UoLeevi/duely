@@ -17,7 +17,7 @@ export const User: GqlTypeDefinition = {
       id: ID!
       name: String!
       email_address: String!
-      memberships(filter: MembershipFilter): [Membership!]!
+      memberships(filter: MembershipFilter, token: String, desc: Boolean, order_by: String, limit: Int, after_id: ID): [Membership!]!
     }
 
     input UserFilter {
