@@ -3346,7 +3346,7 @@ ALTER FUNCTION policy_.anyone_can_query_form_field_(_resource_definition securit
 CREATE FUNCTION policy_.anyone_can_query_integration_type_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
     LANGUAGE sql STABLE SECURITY DEFINER
     AS $$
-  SELECT '{uuid_, form_uuid_, config_form_uuid_, credential_type_uuid_, name_, automatic_order_management_}'::text[];
+  SELECT '{uuid_, title_, status_, form_uuid_, config_form_uuid_, credential_type_uuid_, name_, automatic_order_management_}'::text[];
 $$;
 
 
