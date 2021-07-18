@@ -1,6 +1,7 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 
-export default function NotFound() {
+export function NotFoundScreen() {
   return (
     <div className="flex flex-col items-center justify-center flex-1">
       <div className="flex flex-col items-center space-y-1">

@@ -1,14 +1,14 @@
 import { Route, RouteProps, Switch, useLocation } from 'react-router-dom';
 import Dashboard from './dashboard';
 import ThankYouPage from './orders/thank-you';
-import NotFound from './not-found';
 import { page_by_url_Q, current_subdomain_Q, useQuery, agency_Q, product_Q } from '@duely/client';
 import { useMemo } from 'react';
 import { pageBlockComponents } from '~/components/page-blocks';
-import { ErrorScreen, LoadingScreen } from '@duely/react';
+import { ErrorScreen, LoadingScreen, NotFoundScreen } from '@duely/react';
 import LogIn from './log-in';
 import SignUp from './sign-up';
 import PasswordReset from './password-reset';
+import SetNewPassword from './set-new-password';
 
 const routes: RouteProps[] = [
   {
@@ -22,6 +22,10 @@ const routes: RouteProps[] = [
   {
     path: '/password-reset',
     component: PasswordReset
+  },
+  {
+    path: '/set-new-password',
+    component: SetNewPassword
   },
   {
     path: '/orders/thank-you',
@@ -78,7 +82,7 @@ function DynamicPage() {
   if (loading) return <LoadingScreen />;
   if (pageError) return <ErrorScreen />;
 
-  return element ?? <NotFound />;
+  return element ?? <NotFoundScreen />;
 }
 
 export default function Pages() {

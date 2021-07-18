@@ -1,8 +1,7 @@
 import { useQuery, current_agency_Q, orders_Q } from '@duely/client';
 import { Currency, ElementType } from '@duely/core';
-import { Card, LoadingScreen, Table } from '@duely/react';
+import { Card, LoadingScreen, Table, NotFoundScreen } from '@duely/react';
 import { Link, useLocation } from 'react-router-dom';
-import NotFound from '../../not-found';
 
 const wrap = {
   columns: 1,
@@ -30,7 +29,7 @@ export default function ThankYouPage() {
   const loading = current_agencyLoading || orderLoading;
 
   if (!session_id) {
-    return <NotFound />;
+    return <NotFoundScreen />;
   }
 
   if (loading) {
@@ -38,7 +37,7 @@ export default function ThankYouPage() {
   }
 
   if (orders?.length !== 1) {
-    return <NotFound />;
+    return <NotFoundScreen />;
   }
 
   const order = orders[0];

@@ -27,8 +27,10 @@ export function useVerificationCode() {
     if (verify && verification_code) {
       switch (verify) {
         case 'password_reset':
-          // TODO
-          history.replace(location);
+          history.replace('/set-new-password', {
+            redirectTo: location,
+            verification_code
+          });
           break;
 
         case 'sign_up':

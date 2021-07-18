@@ -4,6 +4,7 @@ import LogIn from './log-in';
 import NewBrand from './new-brand';
 import PasswordReset from './password-reset';
 import Profile from './profile';
+import SetNewPassword from './set-new-password';
 import SignUp from './sign-up';
 
 const routes: RouteProps[] = [
@@ -18,6 +19,10 @@ const routes: RouteProps[] = [
   {
     path: '/password-reset',
     component: PasswordReset
+  },
+  {
+    path: '/set-new-password',
+    component: SetNewPassword
   },
   {
     path: '/profile',
