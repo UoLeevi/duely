@@ -16,6 +16,8 @@ export const IntegrationType: GqlTypeDefinition = {
     type IntegrationType implements Node {
       id: ID!
       name: String!
+      title: String!
+      status: String!
       automatic_order_management: Boolean!
       fields: [FormField!]
       config_fields: [FormField!]
@@ -24,7 +26,10 @@ export const IntegrationType: GqlTypeDefinition = {
 
     input IntegrationTypeFilter {
       name: String
+      title: String
+      status: String
       form_id: ID
+      config_form_id: ID
     }
 
     extend type Query {
