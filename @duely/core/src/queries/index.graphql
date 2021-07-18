@@ -29,8 +29,24 @@ query Image($image_id: ID!) {
   }
 }
 
-query Images($filter: ImageFilter!) {
-  images(filter: $filter) {
+query Images(
+  $filter: ImageFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  images(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    before_id: $before_id
+    after_id: $after_id
+  ) {
     ...image
   }
 }
@@ -149,12 +165,29 @@ query Customer($customer_id: ID!) {
   }
 }
 
-query AgencyCustomers($agency_id: ID!, $filter: CustomerFilter) {
+query AgencyCustomers(
+  $agency_id: ID!
+  $filter: CustomerFilter
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
   agency(id: $agency_id) {
     id
     stripe_account {
       id
-      customers(filter: $filter) {
+      customers(
+        filter: $filter
+        token: $token
+        desc: $desc
+        order_by: $order_by
+        limit: $limit
+        before_id: $before_id
+        after_id: $after_id
+      ) {
         ...customer
       }
     }
@@ -176,8 +209,24 @@ query Agency($agency_id: ID!) {
   }
 }
 
-query Agencies($filter: AgencyFilter!) {
-  agencies(filter: $filter) {
+query Agencies(
+  $filter: AgencyFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  agencies(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    before_id: $before_id
+    after_id: $after_id
+  ) {
     ...agency
   }
 }
@@ -240,8 +289,24 @@ query Product($product_id: ID!) {
   }
 }
 
-query Products($filter: ProductFilter!) {
-  products(filter: $filter) {
+query Products(
+  $filter: ProductFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  products(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    before_id: $before_id
+    after_id: $after_id
+  ) {
     ...product
   }
 }
@@ -260,8 +325,24 @@ query Order($order_id: ID!, $token: String) {
   }
 }
 
-query Orders($filter: OrderFilter!, $token: String) {
-  orders(filter: $filter, token: $token) {
+query Orders(
+  $filter: OrderFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  orders(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    before_id: $before_id
+    after_id: $after_id
+  ) {
     ...order
     items(token: $token) {
       ...order_item
@@ -280,8 +361,24 @@ query OrderItem($order_item_id: ID!, $token: String) {
   }
 }
 
-query OrderItems($filter: OrderItemFilter!, $token: String) {
-  order_items(filter: $filter, token: $token) {
+query OrderItems(
+  $filter: OrderItemFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  order_items(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    before_id: $before_id
+    after_id: $after_id
+  ) {
     ...order_item
   }
 }
@@ -443,8 +540,24 @@ query FormField($form_field_id: ID!) {
   }
 }
 
-query FormFields($filter: FormFieldFilter!) {
-  form_fields(filter: $filter) {
+query FormFields(
+  $filter: FormFieldFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  form_fields(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    before_id: $before_id
+    after_id: $after_id
+  ) {
     ...form_field
   }
 }
@@ -455,8 +568,24 @@ query Credential($credential_id: ID!) {
   }
 }
 
-query Credentials($filter: CredentialFilter!) {
-  credentials(filter: $filter) {
+query Credentials(
+  $filter: CredentialFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  credentials(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    before_id: $before_id
+    after_id: $after_id
+  ) {
     ...credential
   }
 }
@@ -467,8 +596,24 @@ query CredentialType($credential_type_id: ID!) {
   }
 }
 
-query CredentialTypes($filter: CredentialTypeFilter!) {
-  credential_types(filter: $filter) {
+query CredentialTypes(
+  $filter: CredentialTypeFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  credential_types(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    before_id: $before_id
+    after_id: $after_id
+  ) {
     ...credential_type
   }
 }
@@ -479,8 +624,24 @@ query Integration($integration_id: ID!) {
   }
 }
 
-query Integrations($filter: IntegrationFilter!) {
-  integrations(filter: $filter) {
+query Integrations(
+  $filter: IntegrationFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  integrations(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    before_id: $before_id
+    after_id: $after_id
+  ) {
     ...integration
   }
 }
@@ -491,8 +652,24 @@ query IntegrationConfig($integration_config_id: ID!) {
   }
 }
 
-query IntegrationConfigs($filter: IntegrationConfigFilter!) {
-  integration_configs(filter: $filter) {
+query IntegrationConfigs(
+  $filter: IntegrationConfigFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  integration_configs(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    before_id: $before_id
+    after_id: $after_id
+  ) {
     ...integration_config
   }
 }
@@ -503,8 +680,24 @@ query IntegrationType($integration_type_id: ID!) {
   }
 }
 
-query IntegrationTypes($filter: IntegrationTypeFilter!) {
-  integration_types(filter: $filter) {
+query IntegrationTypes(
+  $filter: IntegrationTypeFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  integration_types(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    before_id: $before_id
+    after_id: $after_id
+  ) {
     ...integration_type
   }
 }

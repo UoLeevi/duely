@@ -12,12 +12,12 @@ import {
   Form,
   useFormContext,
   useDropMenu,
-  useFormMessages
+  useFormMessages,
+  usePagination
 } from '@duely/react';
 import { DashboardSection } from '../components';
 import { Currency, OrderFragment } from '@duely/core';
 import { ColoredChip } from '../components/ColoredChip';
-import { useRef } from 'react';
 
 const wrap = {
   columns: 2,
@@ -39,6 +39,9 @@ export default function DashboardOrdersHome() {
     },
     { skip: !agency }
   );
+
+  // const { page, limit } = usePagination({ limit: 2 });
+
   const {
     data: orders,
     loading: ordersLoading,
@@ -48,7 +51,8 @@ export default function DashboardOrdersHome() {
     {
       filter: {
         stripe_account_id: stripe_account?.id
-      }
+      },
+      // limit
     },
     { skip: !agency || !stripe_account }
   );
@@ -221,7 +225,7 @@ type ChangeOrderStatusFormProps = {
 };
 
 type UpdateOrderStatusFormFields = {
-  status: keyof typeof orderStatuses
+  status: keyof typeof orderStatuses;
 };
 
 function ChangeOrderStatusForm({ order_id, status, onDone }: ChangeOrderStatusFormProps) {

@@ -1,15 +1,15 @@
-import React, { Fragment, useCallback, useMemo, useState } from 'react';
+import React, { Fragment, useMemo, useState } from 'react';
 import { Util } from '../../util';
 import { useBreakpoints } from '../../hooks';
 import { LoadingSpinner } from '../LoadingSpinner';
 
-function usePagination() {
+export function usePagination(initialState?: { limit?: number; page?: number }) {
   const [state, setState] = useState({
-    limit: 50,
-    page: 1
+    limit: initialState?.limit ?? 50,
+    page: initialState?.page ?? 1
   });
 
-  return useMemo(
+  const functions = useMemo(
     () => ({
       nextPage() {
         setState((state) => ({
@@ -38,6 +38,11 @@ function usePagination() {
     }),
     []
   );
+
+  return {
+    ...state,
+    ...functions
+  };
 }
 
 type TableProps<TItem> = {
