@@ -131,7 +131,7 @@ export const PasswordReset: GqlTypeDefinition = {
 
         try {
           return await withSession(context, async ({ queryResource, updateResource }) => {
-            let password_reset = await queryResource(resource_name, { verification_code });
+            let password_reset = await queryResource(resource_name, { verification_code }, verification_code);
 
             if (!password_reset?.id) {
               return {

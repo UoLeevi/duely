@@ -1020,6 +1020,44 @@ $$;
 ALTER FUNCTION internal_.insert_resource_token_for_order_item_() OWNER TO postgres;
 
 --
+-- Name: insert_resource_token_for_password_reset_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.insert_resource_token_for_password_reset_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  INSERT INTO security_.resource_token_ (resource_uuid_, token_, keys_)
+  SELECT _password_reset.uuid_, _password_reset.verification_code_, '{uuid_, user_uuid_, data_, verification_code_}'::text[]
+  FROM _password_reset;
+
+  RETURN NULL;
+END
+$$;
+
+
+ALTER FUNCTION internal_.insert_resource_token_for_password_reset_() OWNER TO postgres;
+
+--
+-- Name: insert_resource_token_for_sign_up_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.insert_resource_token_for_sign_up_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  INSERT INTO security_.resource_token_ (resource_uuid_, token_, keys_)
+  SELECT _sign_up.uuid_, _sign_up.verification_code_, '{uuid_, user_uuid_, data_, verification_code_}'::text[]
+  FROM _sign_up;
+
+  RETURN NULL;
+END
+$$;
+
+
+ALTER FUNCTION internal_.insert_resource_token_for_sign_up_() OWNER TO postgres;
+
+--
 -- Name: insert_subject_for_user_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -10584,6 +10622,20 @@ CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON security_.user_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: password_reset_ tr_after_insert_insert_resource_token_for_password_reset_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_insert_resource_token_for_password_reset_ AFTER INSERT ON security_.password_reset_ REFERENCING NEW TABLE AS _password_reset FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_resource_token_for_password_reset_();
+
+
+--
+-- Name: sign_up_ tr_after_insert_insert_resource_token_for_sign_up_; Type: TRIGGER; Schema: security_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_insert_resource_token_for_sign_up_ AFTER INSERT ON security_.sign_up_ REFERENCING NEW TABLE AS _sign_up FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_resource_token_for_sign_up_();
 
 
 --

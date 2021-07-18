@@ -163,7 +163,7 @@ export const SignUp: GqlTypeDefinition = {
 
         try {
           return await withSession(context, async ({ queryResource, updateResource }) => {
-            let sign_up = await queryResource(resource_name, { verification_code });
+            let sign_up = await queryResource(resource_name, { verification_code }, verification_code);
 
             if (!sign_up?.id) {
               return {

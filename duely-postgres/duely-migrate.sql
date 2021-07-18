@@ -15,11 +15,35 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-CREATE OR REPLACE FUNCTION policy_.anyone_can_query_integration_type_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE sql STABLE SECURITY DEFINER
+CREATE FUNCTION internal_.insert_resource_token_for_sign_up_() RETURNS trigger
+    LANGUAGE plpgsql
     AS $$
-  SELECT '{uuid_, title_, status_, form_uuid_, config_form_uuid_, credential_type_uuid_, name_, automatic_order_management_}'::text[];
+BEGIN
+  INSERT INTO security_.resource_token_ (resource_uuid_, token_, keys_)
+  SELECT _sign_up.uuid_, _sign_up.verification_code_, '{uuid_, user_uuid_, data_, verification_code_}'::text[]
+  FROM _sign_up;
+
+  RETURN NULL;
+END
 $$;
+
+CREATE TRIGGER tr_after_insert_insert_resource_token_for_sign_up_ AFTER INSERT ON security_.sign_up_ REFERENCING NEW TABLE AS _sign_up FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_resource_token_for_sign_up_();
+
+
+CREATE FUNCTION internal_.insert_resource_token_for_password_reset_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  INSERT INTO security_.resource_token_ (resource_uuid_, token_, keys_)
+  SELECT _password_reset.uuid_, _password_reset.verification_code_, '{uuid_, user_uuid_, data_, verification_code_}'::text[]
+  FROM _password_reset;
+
+  RETURN NULL;
+END
+$$;
+
+CREATE TRIGGER tr_after_insert_insert_resource_token_for_password_reset_ AFTER INSERT ON security_.password_reset_ REFERENCING NEW TABLE AS _password_reset FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_resource_token_for_password_reset_();
+
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
