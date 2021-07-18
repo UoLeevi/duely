@@ -11,6 +11,7 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
     name: string;
     ref(el: FormFieldHTMLElement | null): void;
   };
+  unregister<TName extends string & keyof TFormFields>(name: TName): void;
   useFormFieldState<TName extends string & keyof TFormFields>(
     name: TName
   ): {
@@ -48,6 +49,7 @@ export function useForm<TFormFields extends Record<string, any> = Record<string,
     () => ({
       control,
       register: control.register.bind(control),
+      unregister: control.unregister.bind(control),
       useFormFieldState: control.useFormFieldState.bind(control),
       useFormFieldValue: control.useFormFieldValue.bind(control),
       useFormValue: control.useFormValue.bind(control),

@@ -260,6 +260,7 @@ export type PriceResource = {
   recurring_inteval_count?: number | null;
   stripe_price_id_ext_live?: string | null;
   stripe_price_id_ext_test?: string | null;
+  status: string;
 };
 
 export type OrderResource = {
@@ -287,6 +288,8 @@ export type CredentialResource = {
 export type IntegrationTypeResource = {
   id: ResourceId<'integration type'>;
   name: string;
+  title: string;
+  status: string;
   form_id: ResourceId<'form'>;
   config_form_id: ResourceId<'form'>;
   credential_type_id: ResourceId<'credential type'>;

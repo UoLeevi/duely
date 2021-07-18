@@ -201,15 +201,6 @@ export type Charge = {
   transfer_group?: Maybe<Scalars['String']>;
 };
 
-export type Connection = {
-  edges: Array<Edge>;
-};
-
-
-export type ConnectionEdgesArgs = {
-  ids?: Maybe<Array<Scalars['ID']>>;
-};
-
 export type CountrySpec = {
   __typename?: 'CountrySpec';
   id: Scalars['ID'];
@@ -319,11 +310,6 @@ export type CustomerMutationResult = MutationResult & {
   customer?: Maybe<Customer>;
 };
 
-
-export type Edge = {
-  cursor?: Maybe<Scalars['String']>;
-  node: Node;
-};
 
 export type ExchangeRate = {
   __typename?: 'ExchangeRate';
@@ -435,6 +421,8 @@ export type IntegrationType = Node & {
   __typename?: 'IntegrationType';
   id: Scalars['ID'];
   name: Scalars['String'];
+  title: Scalars['String'];
+  status: Scalars['String'];
   automatic_order_management: Scalars['Boolean'];
   fields?: Maybe<Array<FormField>>;
   config_fields?: Maybe<Array<FormField>>;
@@ -443,7 +431,10 @@ export type IntegrationType = Node & {
 
 export type IntegrationTypeFilter = {
   name?: Maybe<Scalars['String']>;
+  title?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['String']>;
   form_id?: Maybe<Scalars['ID']>;
+  config_form_id?: Maybe<Scalars['ID']>;
 };
 
 
@@ -867,7 +858,6 @@ export type MutationResult = {
 
 export type Node = {
   id: Scalars['ID'];
-  name: Scalars['String'];
 };
 
 export type Order = {
@@ -1162,59 +1152,83 @@ export type Query = {
   __typename?: 'Query';
   credential?: Maybe<Credential>;
   credentials?: Maybe<Array<Credential>>;
+  count_credentials: Scalars['Int'];
   credential_type?: Maybe<CredentialType>;
   credential_types?: Maybe<Array<CredentialType>>;
+  count_credential_types: Scalars['Int'];
   form_field?: Maybe<FormField>;
   form_fields?: Maybe<Array<FormField>>;
+  count_form_fields: Scalars['Int'];
   page?: Maybe<Page>;
   page_by_url?: Maybe<Page>;
   pages?: Maybe<Array<Page>>;
+  count_pages: Scalars['Int'];
   page_block?: Maybe<PageBlock>;
   page_blocks?: Maybe<Array<PageBlock>>;
+  count_page_blocks: Scalars['Int'];
   page_definition?: Maybe<PageDefinition>;
   page_definition_by_url_path?: Maybe<PageDefinition>;
   page_definitions?: Maybe<Array<PageDefinition>>;
+  count_page_definitions: Scalars['Int'];
   page_block_definition?: Maybe<PageBlockDefinition>;
   page_block_definitions?: Maybe<Array<PageBlockDefinition>>;
+  count_page_block_definitions: Scalars['Int'];
   country_codes: Array<Scalars['String']>;
   country_spec?: Maybe<CountrySpec>;
   exchange_rate?: Maybe<ExchangeRate>;
   current_user?: Maybe<User>;
   user?: Maybe<User>;
   users?: Maybe<Array<User>>;
+  count_users: Scalars['Int'];
   customer?: Maybe<Customer>;
   customers?: Maybe<Array<Customer>>;
+  count_customers: Scalars['Int'];
   agency?: Maybe<Agency>;
   agencies?: Maybe<Array<Agency>>;
+  count_agencies: Scalars['Int'];
   price?: Maybe<Price>;
   prices?: Maybe<Array<Price>>;
+  count_prices: Scalars['Int'];
   stripe_account?: Maybe<StripeAccount>;
   product?: Maybe<Product>;
   products?: Maybe<Array<Product>>;
+  count_products: Scalars['Int'];
   subdomain?: Maybe<Subdomain>;
   subdomains?: Maybe<Array<Subdomain>>;
+  count_subdomains: Scalars['Int'];
   subscription_plan?: Maybe<SubscriptionPlan>;
   subscription_plans?: Maybe<Array<SubscriptionPlan>>;
+  count_subscription_plans: Scalars['Int'];
   transaction_fee?: Maybe<TransactionFee>;
   transaction_fees?: Maybe<Array<TransactionFee>>;
+  count_transaction_fees: Scalars['Int'];
   image?: Maybe<Image>;
   images?: Maybe<Array<Image>>;
+  count_images: Scalars['Int'];
   markdown?: Maybe<Markdown>;
   markdowns?: Maybe<Array<Markdown>>;
+  count_markdowns: Scalars['Int'];
   membership?: Maybe<Membership>;
   memberships?: Maybe<Array<Membership>>;
+  count_memberships: Scalars['Int'];
   theme?: Maybe<Theme>;
   themes?: Maybe<Array<Theme>>;
+  count_themes: Scalars['Int'];
   order?: Maybe<Order>;
   orders?: Maybe<Array<Order>>;
+  count_orders: Scalars['Int'];
   order_item?: Maybe<OrderItem>;
   order_items?: Maybe<Array<OrderItem>>;
+  count_order_items: Scalars['Int'];
   integration?: Maybe<Integration>;
   integrations?: Maybe<Array<Integration>>;
+  count_integrations: Scalars['Int'];
   integration_config?: Maybe<IntegrationConfig>;
   integration_configs?: Maybe<Array<IntegrationConfig>>;
+  count_integration_configs: Scalars['Int'];
   integration_type?: Maybe<IntegrationType>;
   integration_types?: Maybe<Array<IntegrationType>>;
+  count_integration_types: Scalars['Int'];
 };
 
 
@@ -1234,6 +1248,12 @@ export type QueryCredentialsArgs = {
 };
 
 
+export type QueryCount_CredentialsArgs = {
+  filter: CredentialFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryCredential_TypeArgs = {
   id: Scalars['ID'];
 };
@@ -1250,6 +1270,12 @@ export type QueryCredential_TypesArgs = {
 };
 
 
+export type QueryCount_Credential_TypesArgs = {
+  filter: CredentialTypeFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryForm_FieldArgs = {
   id: Scalars['ID'];
 };
@@ -1263,6 +1289,12 @@ export type QueryForm_FieldsArgs = {
   limit?: Maybe<Scalars['Int']>;
   before_id?: Maybe<Scalars['ID']>;
   after_id?: Maybe<Scalars['ID']>;
+};
+
+
+export type QueryCount_Form_FieldsArgs = {
+  filter: FormFieldFilter;
+  token?: Maybe<Scalars['String']>;
 };
 
 
@@ -1287,6 +1319,12 @@ export type QueryPagesArgs = {
 };
 
 
+export type QueryCount_PagesArgs = {
+  filter: PageFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryPage_BlockArgs = {
   id: Scalars['ID'];
 };
@@ -1300,6 +1338,12 @@ export type QueryPage_BlocksArgs = {
   limit?: Maybe<Scalars['Int']>;
   before_id?: Maybe<Scalars['ID']>;
   after_id?: Maybe<Scalars['ID']>;
+};
+
+
+export type QueryCount_Page_BlocksArgs = {
+  filter: PageBlockFilter;
+  token?: Maybe<Scalars['String']>;
 };
 
 
@@ -1324,6 +1368,12 @@ export type QueryPage_DefinitionsArgs = {
 };
 
 
+export type QueryCount_Page_DefinitionsArgs = {
+  filter: PageDefinitionFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryPage_Block_DefinitionArgs = {
   id: Scalars['ID'];
 };
@@ -1337,6 +1387,12 @@ export type QueryPage_Block_DefinitionsArgs = {
   limit?: Maybe<Scalars['Int']>;
   before_id?: Maybe<Scalars['ID']>;
   after_id?: Maybe<Scalars['ID']>;
+};
+
+
+export type QueryCount_Page_Block_DefinitionsArgs = {
+  filter: PageBlockDefinitionFilter;
+  token?: Maybe<Scalars['String']>;
 };
 
 
@@ -1366,6 +1422,12 @@ export type QueryUsersArgs = {
 };
 
 
+export type QueryCount_UsersArgs = {
+  filter: UserFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryCustomerArgs = {
   id: Scalars['ID'];
   token?: Maybe<Scalars['String']>;
@@ -1380,6 +1442,12 @@ export type QueryCustomersArgs = {
   limit?: Maybe<Scalars['Int']>;
   before_id?: Maybe<Scalars['ID']>;
   after_id?: Maybe<Scalars['ID']>;
+};
+
+
+export type QueryCount_CustomersArgs = {
+  filter: CustomerFilter;
+  token?: Maybe<Scalars['String']>;
 };
 
 
@@ -1399,6 +1467,12 @@ export type QueryAgenciesArgs = {
 };
 
 
+export type QueryCount_AgenciesArgs = {
+  filter: AgencyFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryPriceArgs = {
   id: Scalars['ID'];
 };
@@ -1412,6 +1486,12 @@ export type QueryPricesArgs = {
   limit?: Maybe<Scalars['Int']>;
   before_id?: Maybe<Scalars['ID']>;
   after_id?: Maybe<Scalars['ID']>;
+};
+
+
+export type QueryCount_PricesArgs = {
+  filter: PriceFilter;
+  token?: Maybe<Scalars['String']>;
 };
 
 
@@ -1436,6 +1516,12 @@ export type QueryProductsArgs = {
 };
 
 
+export type QueryCount_ProductsArgs = {
+  filter: ProductFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QuerySubdomainArgs = {
   id: Scalars['ID'];
 };
@@ -1449,6 +1535,12 @@ export type QuerySubdomainsArgs = {
   limit?: Maybe<Scalars['Int']>;
   before_id?: Maybe<Scalars['ID']>;
   after_id?: Maybe<Scalars['ID']>;
+};
+
+
+export type QueryCount_SubdomainsArgs = {
+  filter: SubdomainFilter;
+  token?: Maybe<Scalars['String']>;
 };
 
 
@@ -1468,6 +1560,12 @@ export type QuerySubscription_PlansArgs = {
 };
 
 
+export type QueryCount_Subscription_PlansArgs = {
+  filter: SubscriptionPlanFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryTransaction_FeeArgs = {
   id: Scalars['ID'];
 };
@@ -1481,6 +1579,12 @@ export type QueryTransaction_FeesArgs = {
   limit?: Maybe<Scalars['Int']>;
   before_id?: Maybe<Scalars['ID']>;
   after_id?: Maybe<Scalars['ID']>;
+};
+
+
+export type QueryCount_Transaction_FeesArgs = {
+  filter: TransactionFeeFilter;
+  token?: Maybe<Scalars['String']>;
 };
 
 
@@ -1500,6 +1604,12 @@ export type QueryImagesArgs = {
 };
 
 
+export type QueryCount_ImagesArgs = {
+  filter: ImageFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryMarkdownArgs = {
   id: Scalars['ID'];
 };
@@ -1513,6 +1623,12 @@ export type QueryMarkdownsArgs = {
   limit?: Maybe<Scalars['Int']>;
   before_id?: Maybe<Scalars['ID']>;
   after_id?: Maybe<Scalars['ID']>;
+};
+
+
+export type QueryCount_MarkdownsArgs = {
+  filter: MarkdownFilter;
+  token?: Maybe<Scalars['String']>;
 };
 
 
@@ -1532,6 +1648,12 @@ export type QueryMembershipsArgs = {
 };
 
 
+export type QueryCount_MembershipsArgs = {
+  filter: MembershipFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryThemeArgs = {
   id: Scalars['ID'];
 };
@@ -1545,6 +1667,12 @@ export type QueryThemesArgs = {
   limit?: Maybe<Scalars['Int']>;
   before_id?: Maybe<Scalars['ID']>;
   after_id?: Maybe<Scalars['ID']>;
+};
+
+
+export type QueryCount_ThemesArgs = {
+  filter: ThemeFilter;
+  token?: Maybe<Scalars['String']>;
 };
 
 
@@ -1565,6 +1693,12 @@ export type QueryOrdersArgs = {
 };
 
 
+export type QueryCount_OrdersArgs = {
+  filter: OrderFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryOrder_ItemArgs = {
   id: Scalars['ID'];
   token?: Maybe<Scalars['String']>;
@@ -1579,6 +1713,12 @@ export type QueryOrder_ItemsArgs = {
   limit?: Maybe<Scalars['Int']>;
   before_id?: Maybe<Scalars['ID']>;
   after_id?: Maybe<Scalars['ID']>;
+};
+
+
+export type QueryCount_Order_ItemsArgs = {
+  filter: OrderItemFilter;
+  token?: Maybe<Scalars['String']>;
 };
 
 
@@ -1598,6 +1738,12 @@ export type QueryIntegrationsArgs = {
 };
 
 
+export type QueryCount_IntegrationsArgs = {
+  filter: IntegrationFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryIntegration_ConfigArgs = {
   id: Scalars['ID'];
 };
@@ -1614,6 +1760,12 @@ export type QueryIntegration_ConfigsArgs = {
 };
 
 
+export type QueryCount_Integration_ConfigsArgs = {
+  filter: IntegrationConfigFilter;
+  token?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryIntegration_TypeArgs = {
   id: Scalars['ID'];
 };
@@ -1627,6 +1779,12 @@ export type QueryIntegration_TypesArgs = {
   limit?: Maybe<Scalars['Int']>;
   before_id?: Maybe<Scalars['ID']>;
   after_id?: Maybe<Scalars['ID']>;
+};
+
+
+export type QueryCount_Integration_TypesArgs = {
+  filter: IntegrationTypeFilter;
+  token?: Maybe<Scalars['String']>;
 };
 
 export type Shipping = {
@@ -2218,7 +2376,7 @@ export type Integration_ConfigFragment = (
 
 export type Integration_TypeFragment = (
   { __typename?: 'IntegrationType' }
-  & Pick<IntegrationType, 'id' | 'name' | 'automatic_order_management'>
+  & Pick<IntegrationType, 'id' | 'name' | 'title' | 'status' | 'automatic_order_management'>
   & { fields?: Maybe<Array<(
     { __typename?: 'FormField' }
     & Form_FieldFragment
@@ -3888,7 +4046,7 @@ export const Credential_TypeFragmentDoc = {"kind":"Document","definitions":[{"ki
 export const CredentialFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"credential"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Credential"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"data"}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"credential_type"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"credential_type"}}]}}]}}]} as unknown as DocumentNode<CredentialFragment, unknown>;
 export const IntegrationFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"integration"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Integration"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"data"}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"credential"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"product"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"integration_type"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"integration_config"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<IntegrationFragment, unknown>;
 export const Integration_ConfigFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"integration_config"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"IntegrationConfig"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"data"}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"credential"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"integration_type"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<Integration_ConfigFragment, unknown>;
-export const Integration_TypeFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"integration_type"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"IntegrationType"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"automatic_order_management"}},{"kind":"Field","name":{"kind":"Name","value":"fields"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"form_field"}}]}},{"kind":"Field","name":{"kind":"Name","value":"config_fields"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"form_field"}}]}},{"kind":"Field","name":{"kind":"Name","value":"credential_type"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"credential_type"}}]}}]}}]} as unknown as DocumentNode<Integration_TypeFragment, unknown>;
+export const Integration_TypeFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"integration_type"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"IntegrationType"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"automatic_order_management"}},{"kind":"Field","name":{"kind":"Name","value":"fields"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"form_field"}}]}},{"kind":"Field","name":{"kind":"Name","value":"config_fields"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"form_field"}}]}},{"kind":"Field","name":{"kind":"Name","value":"credential_type"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"credential_type"}}]}}]}}]} as unknown as DocumentNode<Integration_TypeFragment, unknown>;
 export const Page_DefinitionFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"page_definition"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PageDefinition"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"url_path"}}]}}]} as unknown as DocumentNode<Page_DefinitionFragment, unknown>;
 export const Page_Block_DefinitionFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"page_block_definition"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PageBlockDefinition"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"page"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"fields"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"form_field"}}]}}]}}]} as unknown as DocumentNode<Page_Block_DefinitionFragment, unknown>;
 export const Page_BlockFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"page_block"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PageBlock"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"page"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"definition"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"page_block_definition"}}]}},{"kind":"Field","name":{"kind":"Name","value":"data"}}]}}]} as unknown as DocumentNode<Page_BlockFragment, unknown>;

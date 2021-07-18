@@ -432,6 +432,8 @@ fragment integration_config on IntegrationConfig {
 fragment integration_type on IntegrationType {
   id
   name
+  title
+  status
   automatic_order_management
   fields {
     ...form_field

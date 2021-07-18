@@ -404,6 +404,9 @@ export class FormFieldControl<T> {
   }
 
   #detachElement() {
+    // TODO: make unregistration conditional on FormFieldRegisterOptions
+    this.#form.unregister(this.#name);
+
     if (this.#getElementValue && this.#element) {
       this.#value = this.#getElementValue(this.#element);
     }

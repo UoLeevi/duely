@@ -115,6 +115,16 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     return field.props;
   }
 
+  unregister<TName extends string & keyof TFormFields>(name: TName) {
+    if (this.#fields.hasOwnProperty(name)) {
+      this.startUpdate();
+      delete this.#fields[name];
+      this.#valueChanged = true;
+      this.#stateChanged = true;
+      this.endUpdate();
+    }
+  }
+
   useFormState() {
     const rerender = useRerender();
     useEffect(() => this.#subscribeToStateChanged(rerender), []);
@@ -180,13 +190,16 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
       this.startUpdate();
       this.#isSubmitting = false;
       this.#isDirty = false;
-      Object.values(this.#fields).forEach((field) => field.isDirty = false);
+      Object.values(this.#fields).forEach((field) => (field.isDirty = false));
       this.#stateChanged = true;
       this.endUpdate();
     };
   }
 
-  setValue<TName extends string & keyof TFormFields>(name: TName, value: TFormFields[TName] | undefined) {
+  setValue<TName extends string & keyof TFormFields>(
+    name: TName,
+    value: TFormFields[TName] | undefined
+  ) {
     const field = this.#getOrAddField(name);
     field.setValue(value);
   }

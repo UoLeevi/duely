@@ -50,14 +50,12 @@ export function SettingsIntegrationsSettingsForm() {
     integration_types_Q,
     {
       filter: {
-        name: integration_type_name
+        status: 'live'
       }
-    },
-    {
-      skip: !integration_type_name
     }
   );
-  const integration_type = integration_types?.[0];
+
+  const integration_type = integration_types?.find((t) => t.name === integration_type_name);
   const fields = integration_type?.config_fields;
 
   const { data: integration_configs, loading: integration_configsLoading } = useQuery(
@@ -187,30 +185,32 @@ export function SettingsIntegrationsSettingsForm() {
         label="Integration type"
         className="max-w-sm"
         type="select"
-        options={[{ element: 'Teachable', value: 'teachable/enroll' }]}
+        loading={integration_typesLoading}
+        options={integration_types?.map((t) => ({ element: t.title, value: t.name })) ?? []}
         hint="You can integrate the product with third party services by setting integration type and options."
       />
 
-      <DynamicFormFields
-        loading={integration_typesLoading || integration_configsLoading}
-        fields={fields ?? []}
-        defaultValues={integration_config_values}
-        skeletonFieldCount={2}
-      />
-
-      {integration_type?.credential_type && (
-        <DynamicFormFields
-          loading={integration_typesLoading || integration_configsLoading || credentialLoading}
-          fields={integration_type.credential_type.fields ?? []}
-          defaultValues={credential_values}
-          skeletonFieldCount={2}
-        />
+      {integration_type && (
+        <>
+          <DynamicFormFields
+            loading={integration_configsLoading}
+            fields={fields ?? []}
+            defaultValues={integration_config_values}
+            skeletonFieldCount={2}
+          />
+          {integration_type?.credential_type && (
+            <DynamicFormFields
+              loading={integration_configsLoading || credentialLoading}
+              fields={integration_type.credential_type.fields ?? []}
+              defaultValues={credential_values}
+              skeletonFieldCount={2}
+            />
+          )}
+        </>
       )}
 
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton dense>
-          Save
-        </FormButton>
+        <FormButton dense>Save</FormButton>
         <FormButton type="reset" dense>
           Cancel
         </FormButton>
