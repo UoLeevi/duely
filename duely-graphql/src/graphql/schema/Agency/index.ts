@@ -58,7 +58,7 @@ export const Agency: GqlTypeDefinition = {
     extend type Query {
       agency(id: ID!): Agency
       agencies(
-        filter: Agency!
+        filter: AgencyFilter!
         token: String
         desc: Boolean
         order_by: String
