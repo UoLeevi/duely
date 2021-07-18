@@ -20,7 +20,7 @@ export default function Profile() {
 
   if (current_user == null) {
     return (
-      <div className="grid w-full h-full place-items-center">
+      <div className="flex flex-1 flex-col items-center justify-center">
         <div className="flex flex-col items-center m-3 space-y-1">
           <span className="font-medium text-gray-700 text">
             You need to log in before you can access your profile

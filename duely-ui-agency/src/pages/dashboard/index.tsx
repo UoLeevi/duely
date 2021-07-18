@@ -41,7 +41,7 @@ export default function Dashboard() {
 
   if (!authorized) {
     return (
-      <div className="grid w-full h-full place-items-center">
+      <div className="flex flex-1 flex-col items-center justify-center">
         <div className="flex flex-col items-center m-3 space-y-1">
           <span className="font-medium text-gray-700 text">Seems like you are not allowed to access this page</span>
           <Link className="text-lg font-medium text-indigo-600" to="/">Go to home page</Link>

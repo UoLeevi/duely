@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { useQuery, current_user_Q, useMutation, verify_password_reset_M } from '@duely/client';
+import { useMutation, verify_password_reset_M } from '@duely/client';
 import {
   Form,
   FormButton,
@@ -11,7 +11,6 @@ import {
 } from '../../forms';
 import { Util } from '../../../util';
 import { NotFoundScreen } from '../../NotFoundScreen';
-import { LoadingScreen } from '../../LoadingScreen';
 
 type SetNewPasswordFormFields = {
   password: string;
@@ -25,7 +24,6 @@ type SetNewPasswordFormProps = {
 export function SetNewPasswordForm({ className, redirectTo }: SetNewPasswordFormProps) {
   const form = useForm<SetNewPasswordFormFields>();
   const [resetPassword] = useMutation(verify_password_reset_M);
-  const { data: user, loading: userLoading } = useQuery(current_user_Q);
   const history = useHistory();
   const location = useLocation();
   const verification_code = (location.state as any)?.verification_code;
@@ -35,14 +33,12 @@ export function SetNewPasswordForm({ className, redirectTo }: SetNewPasswordForm
 
   if (!verification_code) return <NotFoundScreen />;
 
-  if (userLoading) return <LoadingScreen />;
-
   async function onSubmit(data: SetNewPasswordFormFields) {
-    const { success, message } = (await resetPassword({ verification_code, ...data })) ?? {};
-    if (success) {
+    const res = await resetPassword({ verification_code, ...data });
+    if (res?.success) {
       history.replace(redirectTo ?? '/log-in');
     } else {
-      setErrorMessage(message ?? 'Something went wrong');
+      setErrorMessage(res?.message ?? 'Something went wrong');
     }
   }
 
