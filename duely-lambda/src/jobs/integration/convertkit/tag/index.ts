@@ -49,31 +49,35 @@ async function main() {
 
       const url = `https://api.convertkit.com/v3/tags/${integrationData.convertkit_tag_id}/subscribe`;
 
-      const result = await axios.post(url, {
-        api_key: integrationConfigData.convertkit_api_key,
-        email: customer.email_address
-      });
+      try {
+        const result = await axios.post(url, {
+          api_key: integrationConfigData.convertkit_api_key,
+          email: customer.email_address
+        });
 
-      setResult({ success: true, tagment_id: result.data.id });
-      console.log(
-        `Integration convertkit/tag completed for order item: ${order_item_id}. Enrollment id: ${result.data.id}`
-      );
+        setResult({ success: true, subscription_id: result.data.subscription.id });
+        console.log(
+          `Integration convertkit/tag completed for order item: ${order_item_id}. Subscription id: ${result.data.subscription.id}`
+        );
+      } catch (err: any) {
+        if (err.response) {
+          // Request made and server responded
+          console.log(err.response.data);
+          console.log(err.response.status);
+          console.log(err.response.headers);
+        } else if (err.request) {
+          // The request was made but no response was received
+          console.log(err.request);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.log('Error', err.message);
+        }
+
+        throw err;
+      }
     });
   } catch (err: any) {
     console.error(`integration/convertkit/tag failed.`);
-
-    if (err.response) {
-      // Request made and server responded
-      console.log(err.response.data);
-      console.log(err.response.status);
-      console.log(err.response.headers);
-    } else if (err.request) {
-      // The request was made but no response was received
-      console.log(err.request);
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.log('Error', err.message);
-    }
 
     throw err;
   }

@@ -30,14 +30,14 @@ async function handle_run(req: Request, res: Response) {
   const scriptPath = path.resolve(scriptDirpath, `${decodeURIComponent(job)}/index.js`);
 
   if (!scriptPath.startsWith(scriptDirpath + path.sep)) {
-    res.sendStatus(400);
+    res.status(400).send('Invalid job path');
     return;
   }
 
   try {
     await fs.promises.access(scriptPath, fs.constants.F_OK);
   } catch {
-    res.sendStatus(400);
+    res.status(400).send('Invalid job path');
     return;
   }
 
@@ -57,9 +57,8 @@ async function handle_run(req: Request, res: Response) {
   process.on('error', function (err) {
     if (invoked) return;
     invoked = true;
-    console.error(`Error from job '${job}':`);
-    console.error(err);
-    res.sendStatus(400);
+    console.error(`Error from job '${job}':`, err.message);
+    res.status(400).send(`Job '${job}' failed with an error`);
   });
 
   // execute the callback once the process has finished running
@@ -74,7 +73,7 @@ async function handle_run(req: Request, res: Response) {
 
       res.send(result);
     } else {
-      res.sendStatus(400);
+      res.status(400).send(`Job '${job}' exited with code ${code}`);
     }
   });
 }

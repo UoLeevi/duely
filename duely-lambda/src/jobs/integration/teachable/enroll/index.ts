@@ -65,43 +65,47 @@ async function main() {
         `https://${integrationConfigData.school_domain}`
       ).toString();
 
-      const result = await axios.post(
-        url,
-        {
-          email: customer.email_address,
-          price: price.unit_amount,
-          product_id: +integrationData.product_id,
-          name: customer.name ?? customer.email_address,
-          src: order_item_id
-        },
-        {
-          auth: {
-            username: credentialData.email_address,
-            password: credentialData.password
+      try {
+        const result = await axios.post(
+          url,
+          {
+            email: customer.email_address,
+            price: price.unit_amount,
+            product_id: +integrationData.product_id,
+            name: customer.name ?? customer.email_address,
+            src: order_item_id
+          },
+          {
+            auth: {
+              username: credentialData.email_address,
+              password: credentialData.password
+            }
           }
-        }
-      );
+        );
 
-      setResult({ success: true, enrollment_id: result.data.id });
-      console.log(
-        `Integration teachable/enroll completed for order item: ${order_item_id}. Enrollment id: ${result.data.id}`
-      );
+        setResult({ success: true, enrollment_id: result.data.id });
+        console.log(
+          `Integration teachable/enroll completed for order item: ${order_item_id}. Enrollment id: ${result.data.id}`
+        );
+      } catch (err: any) {
+        if (err.response) {
+          // Request made and server responded
+          console.log(err.response.data);
+          console.log(err.response.status);
+          console.log(err.response.headers);
+        } else if (err.request) {
+          // The request was made but no response was received
+          console.log(err.request);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.log('Error', err.message);
+        }
+
+        throw err;
+      }
     });
   } catch (err: any) {
     console.error(`integration/teachable/enroll failed.`);
-
-    if (err.response) {
-      // Request made and server responded
-      console.log(err.response.data);
-      console.log(err.response.status);
-      console.log(err.response.headers);
-    } else if (err.request) {
-      // The request was made but no response was received
-      console.log(err.request);
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.log('Error', err.message);
-    }
 
     throw err;
   }

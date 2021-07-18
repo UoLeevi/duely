@@ -14,6 +14,10 @@ module.exports = merge(commonConfig, {
       import: './src/jobs/integration/teachable/enroll/index.ts',
       filename: 'jobs/integration/teachable/enroll/index.js'
     },
+    'integration/convertkit/tag': {
+      import: './src/jobs/integration/convertkit/tag/index.ts',
+      filename: 'jobs/integration/convertkit/tag/index.js'
+    },
     'webhook-event/stripe-agency/checkout.session.completed': {
       import: './src/jobs/webhook-event/stripe-agency/checkout.session.completed/index.ts',
       filename: 'jobs/webhook-event/stripe-agency/checkout.session.completed/index.js'
