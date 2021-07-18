@@ -6,6 +6,7 @@ import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import { URL } from 'url';
 import axios from 'axios';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource_name = 'sign up';
 
@@ -25,7 +26,7 @@ export const SignUp: GqlTypeDefinition = {
   resolvers: {
     Mutation: {
       async start_sign_up(source, { email_address, password, name, redirect_url, recaptcha_token }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         if (!validator.isEmail(email_address))
           return {
@@ -158,7 +159,7 @@ export const SignUp: GqlTypeDefinition = {
         };
       },
       async verify_sign_up(source, { verification_code }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           return await withSession(context, async ({ queryResource, updateResource }) => {

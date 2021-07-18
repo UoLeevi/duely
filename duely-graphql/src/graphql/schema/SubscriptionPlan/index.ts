@@ -5,6 +5,7 @@ import {
   createResolverForReferencedResourceAll
 } from '../../util';
 import { convertCurrency } from '../ExchangeRate';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'subscription plan',
@@ -17,7 +18,7 @@ export async function calculateTransactionFee(
   currency: string
 ) {
   const context = await getServiceAccountContext();
-  if (!context.jwt) throw new Error('Unauthorized');
+  if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
   const transaction_fees = await queryResourceAll(context, 'transaction fee', {
     subscription_plan_id: subscription_plan_id as Resources['subscription plan']['id']

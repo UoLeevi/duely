@@ -6,6 +6,7 @@ import {
 import validator from 'validator';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'image'
@@ -132,7 +133,7 @@ export const Image: GqlTypeDefinition = {
     },
     Mutation: {
       async create_image(obj, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         // validate and read image
 
@@ -168,7 +169,7 @@ export const Image: GqlTypeDefinition = {
         }
       },
       async update_image(obj, { image_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         if (args.data) {
           const [_, validationError] = validateAndReadDataUrlAsBuffer(args.data);

@@ -5,6 +5,7 @@ import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
 } from '../../util';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'theme'
@@ -78,7 +79,7 @@ export const Theme: GqlTypeDefinition = {
     },
     Mutation: {
       async update_theme(obj, { theme_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           // update theme resource

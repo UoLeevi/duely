@@ -5,6 +5,7 @@ import {
 } from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'integration'
@@ -84,7 +85,7 @@ export const Integration: GqlTypeDefinition = {
     },
     Mutation: {
       async create_integration(obj, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           // create integration resource
@@ -106,7 +107,7 @@ export const Integration: GqlTypeDefinition = {
         }
       },
       async update_integration(obj, { integration_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           // update integration resource

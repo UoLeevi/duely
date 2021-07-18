@@ -3,6 +3,7 @@ import { queryResource, queryResourceAccess } from '@duely/db';
 import stripe from '../../../stripe';
 import { GqlTypeDefinition } from '../../types';
 import { createResolverForReferencedResourceAll } from '../../util';
+import { DuelyGraphQLError } from '../../errors';
 
 // see: https://stripe.com/docs/api/accounts/object
 
@@ -121,7 +122,7 @@ export const StripeAccount: GqlTypeDefinition = {
         column_name: 'stripe_account_id'
       }),
       async account_update_url(source, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
@@ -148,7 +149,7 @@ export const StripeAccount: GqlTypeDefinition = {
         }
       },
       async balance(source, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
@@ -172,7 +173,7 @@ export const StripeAccount: GqlTypeDefinition = {
         context,
         info
       ) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
@@ -214,7 +215,7 @@ export const StripeAccount: GqlTypeDefinition = {
         context,
         info
       ) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
@@ -256,7 +257,7 @@ export const StripeAccount: GqlTypeDefinition = {
     },
     Query: {
       async stripe_account(source, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           const stripe_account = await queryResource(context, 'stripe account', args.id);

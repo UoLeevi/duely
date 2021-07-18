@@ -5,6 +5,7 @@ import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
 } from '../../util';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'page block',
@@ -76,7 +77,7 @@ export const PageBlock: GqlTypeDefinition = {
     },
     Mutation: {
       async create_page_block(obj, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           // create page block resource
@@ -98,7 +99,7 @@ export const PageBlock: GqlTypeDefinition = {
         }
       },
       async update_page_block(obj, { page_block_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           // update page_block resource
@@ -120,7 +121,7 @@ export const PageBlock: GqlTypeDefinition = {
         }
       },
       async delete_page_block(obj, { page_block_id }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           const page_block = await deleteResource(context, 'page block', page_block_id);

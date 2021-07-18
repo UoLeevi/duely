@@ -6,6 +6,7 @@ import {
 import md from '../../../markdown-it';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'markdown'
@@ -70,7 +71,7 @@ export const Markdown: GqlTypeDefinition = {
     },
     Mutation: {
       async create_markdown(obj, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           // validate markdown
@@ -104,7 +105,7 @@ export const Markdown: GqlTypeDefinition = {
         }
       },
       async update_markdown(obj, { markdown_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         if (args.data) {
           try {

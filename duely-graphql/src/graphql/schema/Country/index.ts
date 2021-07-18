@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 import Stripe from 'stripe';
 import stripe from '../../../stripe';
+import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
 
 let countriesPromise: Promise<Map<string, Stripe.CountrySpec>> | null = null;
@@ -67,7 +68,7 @@ export const Country: GqlTypeDefinition = {
   resolvers: {
     Query: {
       async country_codes(source, args, context) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         if (countriesPromise === null) {
           countriesPromise = fetchCountries();
@@ -77,7 +78,7 @@ export const Country: GqlTypeDefinition = {
         return country_codes;
       },
       async country_spec(source, { country_code }, context) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         if (countriesPromise === null) {
           countriesPromise = fetchCountries();

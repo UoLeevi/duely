@@ -5,6 +5,7 @@ import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResourceAll
 } from '../../util';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'page definition',
@@ -51,7 +52,7 @@ export const PageDefinition: GqlTypeDefinition = {
     Query: {
       ...createDefaultQueryResolversForResource(resource),
       async page_definition_by_url_path(source, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
         return await queryResource(context, 'page definition', { url_path: args.url_path });
       }
     }

@@ -7,6 +7,7 @@ import {
 import stripe from '../../../stripe';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'order'
@@ -77,7 +78,7 @@ export const Order: GqlTypeDefinition = {
         column_name: 'order_id'
       }),
       async stripe_checkout_session(order, args, context) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         const access = await queryResourceAccess(context, order.id);
 
@@ -113,7 +114,7 @@ export const Order: GqlTypeDefinition = {
     },
     Mutation: {
       async update_order(obj, { order_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           const order = await updateResource(context, 'order', order_id, args);

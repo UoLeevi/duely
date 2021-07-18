@@ -3,6 +3,7 @@
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import gql from 'graphql-tag';
 import stripe from '../../../stripe';
+import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
 import { withStripeAccountProperty } from '../../util';
 
@@ -101,7 +102,7 @@ export const StripeCheckoutSession: GqlTypeDefinition = {
           context,
           info
         ) {
-          if (!context.jwt) throw new Error('Unauthorized');
+          if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
   
           const stripe_env = source.livemode ? 'live' : 'test';
   

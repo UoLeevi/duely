@@ -10,6 +10,7 @@ import { GqlTypeDefinition } from '../../types';
 import { Currency, Price as TPrice } from '@duely/core';
 import Stripe from 'stripe';
 import { URL } from 'url';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'price',
@@ -93,7 +94,7 @@ export const Price: GqlTypeDefinition = {
     },
     Mutation: {
       async create_price(obj, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           return await withSession(
@@ -180,7 +181,7 @@ export const Price: GqlTypeDefinition = {
         }
       },
       async update_price(obj, { price_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           return await withSession(context, async ({ updateResource }) => {
@@ -204,7 +205,7 @@ export const Price: GqlTypeDefinition = {
         }
       },
       async delete_price(obj, { price_id }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           return await withSession(context, async ({ queryResource, deleteResource }) => {
@@ -266,7 +267,7 @@ export const Price: GqlTypeDefinition = {
         context,
         info
       ) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         const stripe_env = livemode ? 'live' : 'test';
 

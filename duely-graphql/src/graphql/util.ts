@@ -3,6 +3,7 @@ import { countResource, queryResource, queryResourceAll } from '@duely/db';
 import { DuelyQqlContext } from './context';
 import { Resources } from '@duely/db';
 import { Util } from '@duely/core';
+import { DuelyGraphQLError } from './errors';
 
 // Not yet used
 export async function withCache<TKey, TValue>(
@@ -50,7 +51,7 @@ export function createDefaultQueryResolversForResource<
       context: TContext,
       info: GraphQLResolveInfo
     ) {
-      if (!context.jwt) throw new Error('Unauthorized');
+      if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
       return await queryResource(context, name, args.id);
     },
     async [plural ?? (table_name ?? name) + 's'](
@@ -67,7 +68,7 @@ export function createDefaultQueryResolversForResource<
       context: TContext,
       info: GraphQLResolveInfo
     ) {
-      if (!context.jwt) throw new Error('Unauthorized');
+      if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
       return await queryResourceAll(
         context,
         name,
@@ -89,7 +90,7 @@ export function createDefaultQueryResolversForResource<
       context: TContext,
       info: GraphQLResolveInfo
     ) {
-      if (!context.jwt) throw new Error('Unauthorized');
+      if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
       return await countResource(context, name, args.filter, args.token);
     }
   };
@@ -144,7 +145,7 @@ export function createResolverForReferencedResource<
       context: TContext,
       info: GraphQLResolveInfo
     ) {
-      if (!context.jwt) throw new Error('Unauthorized');
+      if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
       const id_or_filter = createIdOrFilterArg(source, args);
 
@@ -191,7 +192,7 @@ export function createResolverForReferencedResourceAll<
       context: TContext,
       info: GraphQLResolveInfo
     ): Promise<Resources[K][]> {
-      if (!context.jwt) throw new Error('Unauthorized');
+      if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
       return await queryResourceAll(
         context,
         resource_name!,

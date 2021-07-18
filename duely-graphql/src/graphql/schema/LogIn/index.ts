@@ -3,6 +3,7 @@ import { logIn, logOut } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import { URL } from 'url';
 import axios from 'axios';
+import { DuelyGraphQLError } from '../../errors';
 
 export const LogIn: GqlTypeDefinition = {
   typeDef: gql`
@@ -23,7 +24,7 @@ export const LogIn: GqlTypeDefinition = {
   resolvers: {
     Mutation: {
       async log_in(obj, { email_address, password, recaptcha_token }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         if (recaptcha_token && process.env.RECAPTCHA_SECRET_KEY) {
           // https://developers.google.com/recaptcha/docs/verify
@@ -72,7 +73,7 @@ export const LogIn: GqlTypeDefinition = {
         }
       },
       async log_out(obj, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           await logOut(context);

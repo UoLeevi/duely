@@ -8,6 +8,7 @@ import stripe from '../../../stripe';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'customer'
@@ -78,7 +79,7 @@ export const Customer: GqlTypeDefinition = {
       }),
       ...createResolverForReferencedResource({ name: 'user' }),
       async default_stripe_customer(source, args, context) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           const stripe_account = await queryResource(
@@ -111,7 +112,7 @@ export const Customer: GqlTypeDefinition = {
         context,
         info
       ) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           const stripe_account = await queryResource(
@@ -150,7 +151,7 @@ export const Customer: GqlTypeDefinition = {
     },
     Mutation: {
       async create_customer(obj, { stripe_account_id, email_address, name }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         if (!validator.isEmail(email_address))
           return {
@@ -208,7 +209,7 @@ export const Customer: GqlTypeDefinition = {
         }
       },
       async update_customer(obj, { customer_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         if (args.email_address) {
           if (!validator.isEmail(args.email_address))
@@ -269,7 +270,7 @@ export const Customer: GqlTypeDefinition = {
         }
       },
       async delete_customer(obj, { customer_id }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           return await withSession(context, async ({ queryResource, deleteResource }) => {

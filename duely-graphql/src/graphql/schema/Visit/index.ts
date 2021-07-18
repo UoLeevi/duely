@@ -1,6 +1,7 @@
 import gql from 'graphql-tag';
 import { beginVisit, endVisit } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
+import { DuelyGraphQLError } from '../../errors';
 
 export const Visit: GqlTypeDefinition = {
   typeDef: gql`
@@ -33,7 +34,7 @@ export const Visit: GqlTypeDefinition = {
         }
       },
       async end_visit(obj, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           await endVisit(context);

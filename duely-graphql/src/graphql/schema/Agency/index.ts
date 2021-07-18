@@ -11,6 +11,7 @@ import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
 import { fetchCountries } from '../Country';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'agency',
@@ -57,7 +58,7 @@ export const Agency: GqlTypeDefinition = {
     extend type Query {
       agency(id: ID!): Agency
       agencies(
-        filter: AgencyFilter!
+        filter: Agency!
         token: String
         desc: Boolean
         order_by: String
@@ -103,7 +104,7 @@ export const Agency: GqlTypeDefinition = {
   resolvers: {
     Agency: {
       async stripe_account(source, { livemode }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         livemode = livemode ?? source.livemode;
         const stripe_env = livemode ? 'live' : 'test';
@@ -143,7 +144,7 @@ export const Agency: GqlTypeDefinition = {
       }),
       settings: (agency) => ({ agency_id: agency.id }),
       async supported_payment_currencies(source, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
@@ -181,7 +182,7 @@ export const Agency: GqlTypeDefinition = {
         },
         context
       ) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         // validate subdomain name
         const reservedSubdomains = ['api', 'test', 'example', 'admin'];
@@ -359,7 +360,7 @@ export const Agency: GqlTypeDefinition = {
         }
       },
       async update_agency(obj, { agency_id, default_currency, ...args }, context) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           return await withSession(context, async ({ queryResource, updateResource }) => {
@@ -415,7 +416,7 @@ export const Agency: GqlTypeDefinition = {
         }
       },
       async delete_agency(obj, { agency_id }, context) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           return await withSession(context, async ({ queryResource, deleteResource }) => {

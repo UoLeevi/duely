@@ -10,6 +10,7 @@ import { validateAndReadDataUrlAsBuffer } from '../Image';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'product'
@@ -138,7 +139,7 @@ export const Product: GqlTypeDefinition = {
     },
     Mutation: {
       async create_product(obj, { image_logo, image_hero, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         if (!validator.isSlug(args.url_name))
           return {
@@ -257,7 +258,7 @@ export const Product: GqlTypeDefinition = {
         }
       },
       async update_product(obj, { product_id, image_logo, image_hero, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         if (args.url_name != null && !validator.isSlug(args.url_name))
           return {
@@ -364,7 +365,7 @@ export const Product: GqlTypeDefinition = {
         }
       },
       async delete_product(obj, { product_id }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           return await withSession(context, async ({ queryResource, deleteResource }) => {

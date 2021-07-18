@@ -5,6 +5,7 @@ import {
 } from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'order item',
@@ -66,7 +67,7 @@ export const OrderItem: GqlTypeDefinition = {
     },
     Mutation: {
       async update_order_item(obj, { order_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           const order_item = await updateResource(context, 'order item', order_id, args);

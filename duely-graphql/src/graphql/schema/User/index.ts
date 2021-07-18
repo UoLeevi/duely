@@ -5,6 +5,7 @@ import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResourceAll
 } from '../../util';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   table_name: 'user',
@@ -58,7 +59,7 @@ export const User: GqlTypeDefinition = {
     },
     Query: {
       async current_user(source, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
         return await queryCurrentUser(context);
       },
       ...createDefaultQueryResolversForResource(resource)

@@ -3,6 +3,7 @@ import { URL } from 'url';
 import { createResource, deleteResource, updateResource } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import { createResolverForReferencedResource } from '../../util';
+import { DuelyGraphQLError } from '../../errors';
 
 export const ProductSettings: GqlTypeDefinition = {
   typeDef: gql`
@@ -48,7 +49,7 @@ export const ProductSettings: GqlTypeDefinition = {
     },
     Mutation: {
       async create_product_thank_you_page_setting(obj, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         let url;
 
@@ -95,7 +96,7 @@ export const ProductSettings: GqlTypeDefinition = {
         }
       },
       async update_product_thank_you_page_setting(obj, { setting_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         let url;
 
@@ -147,7 +148,7 @@ export const ProductSettings: GqlTypeDefinition = {
         }
       },
       async delete_product_thank_you_page_setting(obj, { setting_id }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           // delete resource

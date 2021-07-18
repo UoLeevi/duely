@@ -4,10 +4,14 @@ import { graphqlHTTP } from 'express-graphql';
 import schema from './graphql/schema';
 import { getContext } from './graphql/context';
 import expressPlayground from 'graphql-playground-middleware-express';
+import { GraphQLError } from 'graphql';
+import { getDbErrorCode } from '@duely/db';
 // import subscriptions from './graphql/subscriptions';
 
 // let's fail fast
-process.on('unhandledRejection', up => { throw up; });
+process.on('unhandledRejection', (up) => {
+  throw up;
+});
 
 const app = express();
 app.set('trust proxy', true);
@@ -18,7 +22,33 @@ app.use(
   graphqlHTTP(async (req) => {
     return {
       schema,
-      context: getContext(req)
+      context: getContext(req),
+      customFormatErrorFn(error: GraphQLError) {
+        const message = error.message ?? 'An unknown error occurred.';
+        const locations = error.locations;
+        const path = error.path;
+        let extensions = error.extensions;
+        const dbErrorCode = error.originalError && getDbErrorCode(error.originalError);
+
+        switch (dbErrorCode) {
+          case 'duely__invalid_jwt':
+          case 'duely__no_active_session':
+            extensions = {
+              ...extensions,
+              code: 'UNAUTHENTICATED'
+            };
+            break;
+
+          case 'duely__unauthorized':
+            extensions = {
+              ...extensions,
+              code: 'FORBIDDEN'
+            };
+            break;
+        }
+
+        return extensions ? { message, locations, path, extensions } : { message, locations, path };
+      }
     };
   })
 );

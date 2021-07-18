@@ -1,5 +1,6 @@
 import axios from 'axios';
 import gql from 'graphql-tag';
+import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
 
 let updateDateString: string | null = null;
@@ -64,7 +65,7 @@ export const ExchangeRate: GqlTypeDefinition = {
         { currency }: { currency: string },
         context: { jwt: string | null; ip?: string }
       ) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
         const rates = await fetchExhangeRates();
         currency = currency.toUpperCase();
         return {

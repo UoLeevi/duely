@@ -5,6 +5,7 @@ import {
 } from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
+import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
   name: 'credential'
@@ -69,7 +70,7 @@ export const Credential: GqlTypeDefinition = {
     },
     Mutation: {
       async create_credential(obj, args, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           // create credential resource
@@ -91,7 +92,7 @@ export const Credential: GqlTypeDefinition = {
         }
       },
       async update_credential(obj, { credential_id, ...args }, context, info) {
-        if (!context.jwt) throw new Error('Unauthorized');
+        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 
         try {
           // update credential resource
