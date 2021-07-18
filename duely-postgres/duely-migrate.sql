@@ -15,16 +15,44 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-INSERT INTO internal_.form_ (uuid_) VALUES (DEFAULT) RETURNING uuid_ INTO _form_uuid;
-INSERT INTO internal_.form_ (uuid_) VALUES (DEFAULT) RETURNING uuid_ INTO _config_form_uuid;
+CREATE TYPE public.publishing_status_ AS ENUM (
+    'draft',
+    'live'
+);
 
-INSERT INTO internal_.form_field_ (name_, type_, form_uuid_, default_, label_)
-SELECT 'convertkit_api_key', 'text', _config_form_uuid, NULL, 'ConvertKit API Key';
+CALL internal_.drop_auditing_('application_.price_');
+ALTER TABLE application_.price_ ALTER COLUMN status_ DROP DEFAULT;
+ALTER TABLE application_.price_ ALTER COLUMN status_ TYPE publishing_status_ USING status_::publishing_status_;
+ALTER TABLE application_.price_ ALTER COLUMN status_ SET DEFAULT 'draft'::publishing_status_;
+CALL internal_.setup_auditing_('application_.price_');
 
-INSERT INTO internal_.form_field_ (name_, type_, form_uuid_, default_, label_)
-SELECT 'convertkit_tag_id', 'text', _form_uuid, NULL, 'ConvertKit Tag ID';
+CALL internal_.drop_auditing_('application_.product_');
+ALTER TABLE application_.product_ ALTER COLUMN status_ DROP DEFAULT;
+ALTER TABLE application_.product_ ALTER COLUMN status_ TYPE publishing_status_ USING status_::publishing_status_;
+ALTER TABLE application_.product_ ALTER COLUMN status_ SET DEFAULT 'draft'::publishing_status_;
+CALL internal_.setup_auditing_('application_.product_');
 
-INSERT INTO internal_.integration_type_ (form_uuid_, config_form_uuid_, name_) VALUES (_form_uuid, _config_form_uuid, 'convertkit/tag');
+-- CALL internal_.drop_auditing_('internal_.integration_type_');
+ALTER TABLE internal_.integration_type_ ADD COLUMN title_ text;
+ALTER TABLE internal_.integration_type_ ADD COLUMN status_ publishing_status_ DEFAULT 'draft' NOT NULL;
+
+CALL internal_.setup_resource_('internal_.integration_type_', 'integration type', 'intetype', '{uuid_, config_form_uuid_, form_uuid_, name_, title_, status_}');
+
+UPDATE internal_.integration_type_ 
+SET 
+  title_ = 'Teachable',
+  status_ = 'live'
+WHERE name_ = 'teachable/enroll';
+
+UPDATE internal_.integration_type_ 
+SET 
+  title_ = 'ConvertKit',
+  status_ = 'live'
+WHERE name_ = 'convertkit/tag';
+
+ALTER TABLE internal_.integration_type_ ALTER COLUMN title_ SET NOT NULL;
+
+CALL internal_.setup_auditing_('internal_.integration_type_');
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
