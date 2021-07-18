@@ -68,7 +68,7 @@ export const SubscriptionPlan = {
     extend type Query {
       subscription_plan(id: ID!): SubscriptionPlan
       subscription_plans(
-        filter: SubscriptionPlan!
+        filter: SubscriptionPlanFilter!
         token: String
         desc: Boolean
         order_by: String

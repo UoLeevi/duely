@@ -29,7 +29,7 @@ export const Credential: GqlTypeDefinition = {
     extend type Query {
       credential(id: ID!): Credential
       credentials(
-        filter: Credential!
+        filter: CredentialFilter!
         token: String
         desc: Boolean
         order_by: String

@@ -39,7 +39,7 @@ export const Price: GqlTypeDefinition = {
     extend type Query {
       price(id: ID!): Price
       prices(
-        filter: Price!
+        filter: PriceFilter!
         token: String
         desc: Boolean
         order_by: String

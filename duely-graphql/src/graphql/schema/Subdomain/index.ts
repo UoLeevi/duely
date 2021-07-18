@@ -35,7 +35,7 @@ export const Subdomain: GqlTypeDefinition = {
     extend type Query {
       subdomain(id: ID!): Subdomain
       subdomains(
-        filter: Subdomain!
+        filter: SubdomainFilter!
         token: String
         desc: Boolean
         order_by: String

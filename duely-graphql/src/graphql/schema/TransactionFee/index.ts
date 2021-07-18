@@ -28,7 +28,7 @@ export const TransactionFee = {
     extend type Query {
       transaction_fee(id: ID!): TransactionFee
       transaction_fees(
-        filter: TransactionFee!
+        filter: TransactionFeeFilter!
         token: String
         desc: Boolean
         order_by: String

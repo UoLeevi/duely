@@ -32,7 +32,7 @@ export const Integration: GqlTypeDefinition = {
     extend type Query {
       integration(id: ID!): Integration
       integrations(
-        filter: Integration!
+        filter: IntegrationFilter!
         token: String
         desc: Boolean
         order_by: String

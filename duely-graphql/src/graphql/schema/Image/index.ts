@@ -89,7 +89,7 @@ export const Image: GqlTypeDefinition = {
     extend type Query {
       image(id: ID!): Image
       images(
-        filter: Image!
+        filter: ImageFilter!
         token: String
         desc: Boolean
         order_by: String

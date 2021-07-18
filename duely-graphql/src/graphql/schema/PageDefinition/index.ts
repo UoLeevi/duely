@@ -29,7 +29,7 @@ export const PageDefinition: GqlTypeDefinition = {
       page_definition(id: ID!): PageDefinition
       page_definition_by_url_path(url_path: String!): PageDefinition
       page_definitions(
-        filter: PageDefinition!
+        filter: PageDefinitionFilter!
         token: String
         desc: Boolean
         order_by: String

@@ -31,7 +31,7 @@ export const OrderItem: GqlTypeDefinition = {
     extend type Query {
       order_item(id: ID!, token: String): OrderItem
       order_items(
-        filter: OrderItem!
+        filter: OrderItemFilter!
         token: String
         desc: Boolean
         order_by: String

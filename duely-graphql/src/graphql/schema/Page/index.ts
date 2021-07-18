@@ -35,7 +35,7 @@ export const Page: GqlTypeDefinition = {
       page(id: ID!): Page
       page_by_url(url: String!): Page
       pages(
-        filter: Page!
+        filter: PageFilter!
         token: String
         desc: Boolean
         order_by: String

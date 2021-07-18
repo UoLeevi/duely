@@ -37,7 +37,7 @@ export const User: GqlTypeDefinition = {
       current_user: User
       user(id: ID!): User
       users(
-        filter: User!
+        filter: UserFilter!
         token: String
         desc: Boolean
         order_by: String

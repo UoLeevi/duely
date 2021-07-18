@@ -29,7 +29,7 @@ export const Markdown: GqlTypeDefinition = {
     extend type Query {
       markdown(id: ID!): Markdown
       markdowns(
-        filter: Markdown!
+        filter: MarkdownFilter!
         token: String
         desc: Boolean
         order_by: String

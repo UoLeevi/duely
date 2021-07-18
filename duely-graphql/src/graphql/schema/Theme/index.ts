@@ -35,7 +35,7 @@ export const Theme: GqlTypeDefinition = {
     extend type Query {
       theme(id: ID!): Theme
       themes(
-        filter: Theme!
+        filter: ThemeFilter!
         token: String
         desc: Boolean
         order_by: String

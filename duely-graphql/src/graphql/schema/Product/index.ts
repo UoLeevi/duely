@@ -60,7 +60,7 @@ export const Product: GqlTypeDefinition = {
     extend type Query {
       product(id: ID!): Product
       products(
-        filter: Product!
+        filter: ProductFilter!
         token: String
         desc: Boolean
         order_by: String

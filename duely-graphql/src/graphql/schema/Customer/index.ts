@@ -39,7 +39,7 @@ export const Customer: GqlTypeDefinition = {
     extend type Query {
       customer(id: ID!, token: String): Customer
       customers(
-        filter: Customer!
+        filter: CustomerFilter!
         token: String
         desc: Boolean
         order_by: String

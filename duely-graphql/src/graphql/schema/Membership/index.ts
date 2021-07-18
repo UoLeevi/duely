@@ -28,7 +28,7 @@ export const Membership: GqlTypeDefinition = {
     extend type Query {
       membership(id: ID!): Membership
       memberships(
-        filter: Membership!
+        filter: MembershipFilter!
         token: String
         desc: Boolean
         order_by: String
