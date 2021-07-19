@@ -147,7 +147,7 @@ export function PaginationControls({ pagination, loading }: PaginationControlsPr
         <select
           className="!font-semibold"
           onChange={(e) => pagination.setItemsPerPage(+e.target.value)}
-          defaultValue={pagination.itemsPerPage.toFixed()}
+          value={pagination.itemsPerPage.toFixed()}
         >
           <option value="5">5</option>
           <option value="10">10</option>
@@ -193,7 +193,7 @@ export function PaginationControls({ pagination, loading }: PaginationControlsPr
               <select
                 className="flex px-0.5 py-0.5 rounded-md font-bold"
                 onChange={(e) => pagination.setPage(+e.target.value)}
-                defaultValue={pagination.pageNumber.toFixed()}
+                value={pagination.pageNumber.toFixed()}
               >
                 {Array.from(new Array(pagination.lastPageNumber), (_, i) => (
                   <option key={i} value={(i + 1).toFixed()}>
