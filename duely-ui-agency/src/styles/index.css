@@ -1130,6 +1130,10 @@ body, #root {
   margin-top: 0.25rem;
 }
 
+.ml-0 {
+  margin-left: 0px;
+}
+
 .box-border {
   box-sizing: border-box;
 }
@@ -1310,10 +1314,6 @@ body, #root {
   min-width: -webkit-max-content;
   min-width: -moz-max-content;
   min-width: max-content;
-}
-
-.min-w-\[1em\] {
-  min-width: 1em;
 }
 
 .min-w-\[10ch\] {
@@ -1591,6 +1591,16 @@ body, #root {
        column-gap: 1.5rem;
 }
 
+.gap-x-3 {
+  -moz-column-gap: 0.75rem;
+       column-gap: 0.75rem;
+}
+
+.gap-x-5 {
+  -moz-column-gap: 1.25rem;
+       column-gap: 1.25rem;
+}
+
 .space-y-1 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-y-reverse: 0;
   margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));
@@ -1663,12 +1673,6 @@ body, #root {
   margin-left: calc(0.25rem * calc(1 - var(--tw-space-x-reverse)));
 }
 
-.space-x-5 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 0;
-  margin-right: calc(1.25rem * var(--tw-space-x-reverse));
-  margin-left: calc(1.25rem * calc(1 - var(--tw-space-x-reverse)));
-}
-
 .space-x-0\.5 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 0;
   margin-right: calc(0.125rem * var(--tw-space-x-reverse));
@@ -1679,6 +1683,12 @@ body, #root {
   --tw-space-x-reverse: 0;
   margin-right: calc(0px * var(--tw-space-x-reverse));
   margin-left: calc(0px * calc(1 - var(--tw-space-x-reverse)));
+}
+
+.space-x-5 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 0;
+  margin-right: calc(1.25rem * var(--tw-space-x-reverse));
+  margin-left: calc(1.25rem * calc(1 - var(--tw-space-x-reverse)));
 }
 
 .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
@@ -2072,19 +2082,9 @@ body, #root {
   padding-bottom: 0.375rem;
 }
 
-.px-0\.5 {
-  padding-left: 0.125rem;
-  padding-right: 0.125rem;
-}
-
 .py-0\.5 {
   padding-top: 0.125rem;
   padding-bottom: 0.125rem;
-}
-
-.px-0 {
-  padding-left: 0px;
-  padding-right: 0px;
 }
 
 .py-0 {
@@ -2149,6 +2149,18 @@ body, #root {
   padding-left: 0.75rem;
 }
 
+.pl-1\.5 {
+  padding-left: 0.375rem;
+}
+
+.pr-5 {
+  padding-right: 1.25rem;
+}
+
+.pl-1 {
+  padding-left: 0.25rem;
+}
+
 .pl-4 {
   padding-left: 1rem;
 }
@@ -2189,20 +2201,8 @@ body, #root {
   padding-bottom: 1.25rem;
 }
 
-.pl-2 {
-  padding-left: 0.5rem;
-}
-
-.pr-5 {
-  padding-right: 1.25rem;
-}
-
-.pl-1\.5 {
-  padding-left: 0.375rem;
-}
-
-.pl-1 {
-  padding-left: 0.25rem;
+.pt-1\.5 {
+  padding-top: 0.375rem;
 }
 
 .text-left {
@@ -3233,8 +3233,20 @@ body, #root {
     margin-top: 1.25rem;
   }
 
+  .sm\:ml-1 {
+    margin-left: 0.25rem;
+  }
+
+  .sm\:inline {
+    display: inline;
+  }
+
   .sm\:flex {
     display: flex;
+  }
+
+  .sm\:hidden {
+    display: none;
   }
 
   .sm\:h-72 {
@@ -3261,6 +3273,22 @@ body, #root {
     justify-content: center;
   }
 
+  .sm\:gap-x-4 {
+    -moz-column-gap: 1rem;
+         column-gap: 1rem;
+  }
+
+  .sm\:gap-x-6 {
+    -moz-column-gap: 1.5rem;
+         column-gap: 1.5rem;
+  }
+
+  .sm\:space-x-3 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-x-reverse: 0;
+    margin-right: calc(0.75rem * var(--tw-space-x-reverse));
+    margin-left: calc(0.75rem * calc(1 - var(--tw-space-x-reverse)));
+  }
+
   .sm\:p-2 {
     padding: 0.5rem;
   }
@@ -3285,8 +3313,71 @@ body, #root {
     padding-bottom: 1.5rem;
   }
 
+  .sm\:py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .sm\:py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .sm\:py-2 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
   .sm\:pb-16 {
     padding-bottom: 4rem;
+  }
+
+  .sm\:pl-4 {
+    padding-left: 1rem;
+  }
+
+  .sm\:pl-6 {
+    padding-left: 1.5rem;
+  }
+
+  .sm\:pr-4 {
+    padding-right: 1rem;
+  }
+
+  .sm\:pr-6 {
+    padding-right: 1.5rem;
+  }
+
+  .sm\:pt-4 {
+    padding-top: 1rem;
+  }
+
+  .sm\:pt-2 {
+    padding-top: 0.5rem;
+  }
+
+  .sm\:pt-6 {
+    padding-top: 1.5rem;
+  }
+
+  .sm\:pt-3 {
+    padding-top: 0.75rem;
+  }
+
+  .sm\:pb-4 {
+    padding-bottom: 1rem;
+  }
+
+  .sm\:pb-2 {
+    padding-bottom: 0.5rem;
+  }
+
+  .sm\:pb-6 {
+    padding-bottom: 1.5rem;
+  }
+
+  .sm\:pb-3 {
+    padding-bottom: 0.75rem;
   }
 
   .sm\:text-center {

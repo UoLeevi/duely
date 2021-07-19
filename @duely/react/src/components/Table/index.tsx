@@ -144,11 +144,11 @@ type PaginationControlsProps = {
 
 export function PaginationControls({ pagination, loading }: PaginationControlsProps) {
   return (
-    <div className="flex items-center justify-between w-full space-x-3 text-xs font-semibold">
-      <div className="flex items-center space-x-1">
-        <span>View </span>
+    <div className="flex items-center justify-between w-full space-x-2 text-xs font-semibold sm:space-x-3">
+      <div className="flex items-center">
+        <span className="hidden sm:inline">View </span>
 
-        <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
+        <div className="relative flex items-center ml-0 border border-gray-300 rounded-md shadow-sm outline-none sm:ml-1 dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
           <select
             className="w-full py-0.5 pl-1.5 pr-5 bg-transparent border-none rounded-md outline-none appearance-none"
             spellCheck="false"
@@ -178,9 +178,12 @@ export function PaginationControls({ pagination, loading }: PaginationControlsPr
           </svg>
         </div>
 
-        <span> entries per page</span>
+        <span className="ml-1">
+          <span className="hidden sm:inline"> entries</span>
+          <span> per page</span>
+        </span>
       </div>
-      <div className="flex items-center space-x-8">
+      <div className="flex items-center space-x-4 md:space-x-8">
         {loading ? (
           'Loading...'
         ) : pagination.lastPageNumber === 1 ? (
@@ -188,14 +191,14 @@ export function PaginationControls({ pagination, loading }: PaginationControlsPr
         ) : (
           <>
             <span>
-              Showing {pagination.firstIndex + 1} to {pagination.lastIndex + 1} of{' '}
-              {pagination.totalNumberOfItems} entries
+              Showing {pagination.firstIndex + 1} to {pagination.lastIndex + 1}
+              <br className="inline sm:hidden" /> of {pagination.totalNumberOfItems} entries
             </span>
             <div className="flex items-center space-x-0.5">
               <span>Page</span>
 
               <button
-                className={`flex rounded-md font-bold ${
+                className={`hidden sm:flex rounded-md font-bold ${
                   pagination.pageNumber !== 1 ? 'visible' : 'invisible'
                 }`}
                 onClick={pagination.previousPage}
@@ -244,7 +247,7 @@ export function PaginationControls({ pagination, loading }: PaginationControlsPr
               </div>
 
               <button
-                className={`flex rounded-md font-bold ${
+                className={`hidden sm:flex rounded-md font-bold ${
                   pagination.pageNumber !== pagination.lastPageNumber ? 'visible' : 'invisible'
                 }`}
                 onClick={pagination.nextPage}
@@ -310,7 +313,11 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
     ? `repeat(${headers.length}, auto)`
     : `repeat(${wrapOptions?.columns ?? 1}, auto)`;
 
-  className = Util.createClassName(className, 'grid auto-rows-auto', dense ? 'gap-x-4' : 'gap-x-6');
+  className = Util.createClassName(
+    className,
+    'grid auto-rows-auto',
+    dense ? 'gap-x-3 sm:gap-x-4' : 'gap-x-5 sm:gap-x-6'
+  );
   loading = !!loading;
   items = items ?? [];
 
@@ -330,11 +337,13 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
   }
 
   let rows;
+  let rowCount;
 
   if (error) {
     let message: string | boolean | null | undefined =
       typeof error === 'object' ? error?.message : error;
     message = message === 'string' ? message : null;
+    rowCount = 1;
     rows = (
       <TableErrorRow
         message={message as string | null}
@@ -345,6 +354,7 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
       />
     );
   } else if (loading) {
+    rowCount = 1;
     rows = (
       <TableLoadingRow
         row={isNotWrapped ? 2 : 1}
@@ -354,6 +364,7 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
       />
     );
   } else {
+    rowCount = items.length;
     rows = items.map((item, i) => {
       return (
         <TableRow
@@ -390,7 +401,7 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
 
       {footer && (
         <TableFooterRow
-          row={items.length + (isNotWrapped ? 2 : 1)}
+          row={rowCount + (isNotWrapped ? 2 : 1)}
           wrapColCount={wrapColCount}
           wrapColSpanSum={wrapColSpanSum}
           isNotWrapped={isNotWrapped}
@@ -414,9 +425,9 @@ function TableHeader({ children, column, dense, firstCol, lastCol }: TableHeader
   const gridArea = `1 / ${column} / 2 / ${column + 1}`;
 
   let className = 'grid text-xs tracking-wide text-gray-500 ';
-  className += dense ? 'py-3 ' : 'py-4 ';
-  if (firstCol) className += dense ? 'pl-4 ' : 'pl-6 ';
-  if (lastCol) className += dense ? 'pr-4 ' : 'pr-6 ';
+  className += dense ? 'py-2 sm:py-3 ' : 'py-3 sm:py-4 ';
+  if (firstCol) className += dense ? 'pl-3 sm:pl-4 ' : 'pl-4 sm:pl-6 ';
+  if (lastCol) className += dense ? 'pr-3 sm:pr-4 ' : 'pr-4 sm:pr-6 ';
 
   return (
     <div className={className} style={{ gridArea }}>
@@ -450,9 +461,9 @@ function TableCell({
   const gridArea = `${row} / ${column} / ${row + 1} / ${column + span}`;
 
   if (isNotWrapped) {
-    let className = 'relative grid items-center py-3 ';
-    if (firstCol) className += dense ? 'pl-4 ' : 'pl-6 ';
-    if (lastCol) className += dense ? 'pr-4 ' : 'pr-6 ';
+    let className = 'relative grid items-center py-2 sm:py-3 ';
+    if (firstCol) className += dense ? 'pl-3 sm:pl-4 ' : 'pl-4 sm:pl-6 ';
+    if (lastCol) className += dense ? 'pr-3 sm:pr-4 ' : 'pr-4 sm:pr-6 ';
 
     return (
       <div className={className} style={{ gridArea }}>
@@ -463,9 +474,21 @@ function TableCell({
 
   let className = 'flex flex-col space-y-2 ';
 
-  className += dense ? 'px-4 ' : 'px-6 ';
-  className += dense ? (firstCol ? 'pt-4 ' : 'pt-2 ') : firstCol ? 'pt-6 ' : 'pt-3 ';
-  className += dense ? (lastCol ? 'pb-4 ' : 'pb-2 ') : lastCol ? 'pb-6 ' : 'pb-3 ';
+  className += dense ? 'px-3 sm:px-4 ' : 'px-4 sm:px-6 ';
+  className += dense
+    ? firstCol
+      ? 'pt-3 sm:pt-4 '
+      : 'pt-1.5 sm:pt-2 '
+    : firstCol
+    ? 'pt-4 sm:pt-6 '
+    : 'pt-2 sm:pt-3 ';
+  className += dense
+    ? lastCol
+      ? 'pb-3 sm:pb-4 '
+      : 'pb-1.5 sm:pb-2 '
+    : lastCol
+    ? 'pb-4 sm:pb-6 '
+    : 'pb-2 sm:pb-3 ';
 
   return (
     <div className={className} style={{ gridArea }}>
@@ -587,8 +610,8 @@ function TableFooterRow({
 }: TableFooterRowProps) {
   let className =
     'grid text-gray-400 border-t border-gray-200 dark:border-gray-700 place-items-center ';
-  className += dense ? 'py-2 ' : 'py-3 ';
-  className += dense ? 'px-4 ' : 'px-6 ';
+  className += dense ? 'py-1.5 sm:py-2 ' : 'py-2 sm:py-3 ';
+  className += dense ? 'px-3 sm:px-4 ' : 'px-4 sm:px-6 ';
 
   let gridArea = `${row} / 1 / ${row + 1} / -1`;
 
