@@ -58,6 +58,7 @@ export const StripeCheckoutSession: GqlTypeDefinition = {
         starting_after_id: String
         ending_before_id: String
         limit: Int
+        offset: Int
       ): [LineItem!]!
       livemode: Boolean
       locale: String

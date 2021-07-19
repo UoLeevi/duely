@@ -26,6 +26,7 @@ export const Customer: GqlTypeDefinition = {
         starting_after_id: String
         ending_before_id: String
         limit: Int
+        offset: Int
       ): [StripeCustomer!]!
       user: User
       stripe_account: StripeAccount!
@@ -45,6 +46,7 @@ export const Customer: GqlTypeDefinition = {
         desc: Boolean
         order_by: String
         limit: Int
+        offset: Int
         before_id: ID
         after_id: ID
       ): [Customer!]

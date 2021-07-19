@@ -33,6 +33,7 @@ export const Product: GqlTypeDefinition = {
         desc: Boolean
         order_by: String
         limit: Int
+        offset: Int
         before_id: ID
         after_id: ID
       ): [Price!]
@@ -46,6 +47,7 @@ export const Product: GqlTypeDefinition = {
         desc: Boolean
         order_by: String
         limit: Int
+        offset: Int
         before_id: ID
         after_id: ID
       ): [Page!]
@@ -66,6 +68,7 @@ export const Product: GqlTypeDefinition = {
         desc: Boolean
         order_by: String
         limit: Int
+        offset: Int
         before_id: ID
         after_id: ID
       ): [Product!]

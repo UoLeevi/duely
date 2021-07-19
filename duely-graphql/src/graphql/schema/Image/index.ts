@@ -95,6 +95,7 @@ export const Image: GqlTypeDefinition = {
         desc: Boolean
         order_by: String
         limit: Int
+        offset: Int
         before_id: ID
         after_id: ID
       ): [Image!]

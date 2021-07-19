@@ -62,6 +62,7 @@ export function createDefaultQueryResolversForResource<
         desc?: boolean;
         order_by?: string & keyof Resources[K];
         limit?: number;
+        offset?: number;
         before_id?: Resources[K]['id'];
         after_id?: Resources[K]['id'];
       },
@@ -77,6 +78,7 @@ export function createDefaultQueryResolversForResource<
         args.desc,
         args.order_by,
         args.limit,
+        args.offset,
         args.before_id,
         args.after_id
       );
@@ -186,6 +188,7 @@ export function createResolverForReferencedResourceAll<
         desc?: boolean;
         order_by?: string & keyof Resources[K];
         limit?: number;
+        offset?: number;
         before_id?: Resources[K]['id'];
         after_id?: Resources[K]['id'];
       },
@@ -206,6 +209,7 @@ export function createResolverForReferencedResourceAll<
         args.desc,
         args.order_by,
         args.limit,
+        args.offset,
         args.before_id,
         args.after_id
       );

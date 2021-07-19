@@ -31,8 +31,18 @@ export const StripeAccount: GqlTypeDefinition = {
         starting_after_id: String
         ending_before_id: String
         limit: Int
+        offset: Int
       ): [PaymentIntent!]!
-      customers(filter: CustomerFilter, token: String, desc: Boolean, order_by: String, limit: Int, before_id: ID, after_id: ID): [Customer!]!
+      customers(
+        filter: CustomerFilter
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        offset: Int
+        before_id: ID
+        after_id: ID
+      ): [Customer!]!
       business_profile: BusinessProfile!
       business_type: String
       capabilities: StripeCapabilities!
@@ -122,7 +132,8 @@ export const StripeAccount: GqlTypeDefinition = {
         column_name: 'stripe_account_id'
       }),
       async account_update_url(source, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
@@ -149,7 +160,8 @@ export const StripeAccount: GqlTypeDefinition = {
         }
       },
       async balance(source, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
@@ -173,7 +185,8 @@ export const StripeAccount: GqlTypeDefinition = {
         context,
         info
       ) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
@@ -215,7 +228,8 @@ export const StripeAccount: GqlTypeDefinition = {
         context,
         info
       ) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         const stripe_env = source.livemode ? 'live' : 'test';
 
@@ -257,7 +271,8 @@ export const StripeAccount: GqlTypeDefinition = {
     },
     Query: {
       async stripe_account(source, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           const stripe_account = await queryResource(context, 'stripe account', args.id);
