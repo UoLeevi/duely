@@ -2715,10 +2715,10 @@ $$;
 ALTER FUNCTION operation_.query_resource_(_resource_name text, _id_or_filter text, _token text) OWNER TO postgres;
 
 --
--- Name: query_resource_(text, jsonb, boolean, text, integer, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: query_resource_(text, jsonb, boolean, text, integer, integer, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb, _desc boolean DEFAULT false, _order_by text DEFAULT NULL::text, _limit integer DEFAULT NULL::integer, _before_id text DEFAULT NULL::text, _after_id text DEFAULT NULL::text) RETURNS SETOF jsonb
+CREATE FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb, _desc boolean DEFAULT false, _order_by text DEFAULT NULL::text, _limit integer DEFAULT NULL::integer, _offset integer DEFAULT NULL::integer, _before_id text DEFAULT NULL::text, _after_id text DEFAULT NULL::text) RETURNS SETOF jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     AS $_$
 DECLARE
@@ -2804,23 +2804,23 @@ BEGIN
           AND ($4 IS NULL OR t.%1$I %3$s after_.%1$I OR (t.%1$I %3$s= after_.%1$I AND r.id_ < after_.id_))
           AND ($5 IS NULL OR t.%1$I %2$s before_.%1$I OR (t.%1$I %2$s= before_.%1$I AND r.id_ > before_.id_))
         ' || _order_by_sql || '
-        LIMIT $3
+        LIMIT $3 OFFSET $7
       )
     SELECT internal_.convert_from_internal_format_(all_.data_) query_resource_
     FROM all_;
   ', _order_by, _lt_gt_before, _lt_gt_after)
-  USING _table, _filter, _limit, _before_id, _after_id, _filter_keys;
+  USING _table, _filter, _limit, _before_id, _after_id, _filter_keys, _offset;
 END
 $_$;
 
 
-ALTER FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb, _desc boolean, _order_by text, _limit integer, _before_id text, _after_id text) OWNER TO postgres;
+ALTER FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb, _desc boolean, _order_by text, _limit integer, _offset integer, _before_id text, _after_id text) OWNER TO postgres;
 
 --
--- Name: query_resource_(text, jsonb, text, boolean, text, integer, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
+-- Name: query_resource_(text, jsonb, text, boolean, text, integer, integer, text, text); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
-CREATE FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb, _token text, _desc boolean DEFAULT false, _order_by text DEFAULT NULL::text, _limit integer DEFAULT NULL::integer, _before_id text DEFAULT NULL::text, _after_id text DEFAULT NULL::text) RETURNS SETOF jsonb
+CREATE FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb, _token text, _desc boolean DEFAULT false, _order_by text DEFAULT NULL::text, _limit integer DEFAULT NULL::integer, _offset integer DEFAULT NULL::integer, _before_id text DEFAULT NULL::text, _after_id text DEFAULT NULL::text) RETURNS SETOF jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     AS $_$
 DECLARE
@@ -2907,17 +2907,17 @@ BEGIN
           AND ($4 IS NULL OR t.%1$I %3$s after_.%1$I OR (t.%1$I %3$s= after_.%1$I AND r.id_ < after_.id_))
           AND ($5 IS NULL OR t.%1$I %2$s before_.%1$I OR (t.%1$I %2$s= before_.%1$I AND r.id_ > before_.id_))
         ' || _order_by_sql || '
-        LIMIT $3
+        LIMIT $3 OFFSET $8
       )
     SELECT internal_.convert_from_internal_format_(all_.data_) query_resource_
     FROM all_;
   ', _order_by, _lt_gt_before, _lt_gt_after)
-  USING _table, _filter, _limit, _before_id, _after_id, _token, _filter_keys;
+  USING _table, _filter, _limit, _before_id, _after_id, _token, _filter_keys, _offset;
 END
 $_$;
 
 
-ALTER FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb, _token text, _desc boolean, _order_by text, _limit integer, _before_id text, _after_id text) OWNER TO postgres;
+ALTER FUNCTION operation_.query_resource_(_resource_name text, _filter jsonb, _token text, _desc boolean, _order_by text, _limit integer, _offset integer, _before_id text, _after_id text) OWNER TO postgres;
 
 --
 -- Name: query_resource_access_(text); Type: FUNCTION; Schema: operation_; Owner: postgres
