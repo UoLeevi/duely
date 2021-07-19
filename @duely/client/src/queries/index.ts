@@ -53,7 +53,8 @@ import {
   CredentialDocument,
   CredentialsDocument,
   CredentialTypeDocument,
-  CredentialTypesDocument
+  CredentialTypesDocument,
+  CountOrdersDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -322,6 +323,11 @@ export const order_Q = {
 export const orders_Q = {
   query: OrdersDocument,
   result: (d: ResultOf<typeof OrdersDocument>) => d?.orders
+};
+
+export const count_orders_Q = {
+  query: CountOrdersDocument,
+  result: (d: ResultOf<typeof CountOrdersDocument>) => d?.count_orders
 };
 
 export const order_item_Q = {

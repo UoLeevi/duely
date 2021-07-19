@@ -183,7 +183,5 @@ export function ProfileBrandTable() {
     (agency: TAgency) => <StatusColumn agency={agency} />
   ];
 
-  return (
-    <Table className="px-6 py-4" rows={agencies} columns={columns} headers={headers} wrap={wrap} />
-  );
+  return <Table rows={agencies} columns={columns} headers={headers} wrap={wrap} />;
 }

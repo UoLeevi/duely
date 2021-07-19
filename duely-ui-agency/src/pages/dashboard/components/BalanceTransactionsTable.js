@@ -66,7 +66,6 @@ export function BalanceTransactionsTable() {
 
   return (
     <Table
-      className="px-6 py-4"
       rows={balance_transactions}
       columns={columns}
       headers={headers}

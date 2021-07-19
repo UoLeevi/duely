@@ -169,7 +169,7 @@ export default function DashboardSitePagesHome() {
   return (
     <>
       <DashboardSection title="Pages">
-        <Card className="max-w-screen-lg px-6 py-4 space-y-4">
+        <Card className="max-w-screen-lg space-y-4">
           <Table rows={rows} columns={columns} headers={headers} wrap={wrap} />
         </Card>
       </DashboardSection>

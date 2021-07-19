@@ -92,7 +92,6 @@ export default function ThankYouPage() {
 
           <Card>
             <Table
-              className="px-6 py-4"
               rows={order.items}
               columns={columns}
               headers={headers}

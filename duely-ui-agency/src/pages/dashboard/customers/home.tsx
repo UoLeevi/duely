@@ -149,7 +149,6 @@ export default function DashboardCustomersHome() {
       >
         <Card className="max-w-screen-lg">
           <Table
-            className="px-6 py-4"
             rows={customers}
             columns={columns}
             headers={headers}

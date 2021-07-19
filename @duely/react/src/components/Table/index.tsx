@@ -1,48 +1,232 @@
-import React, { Fragment, useMemo, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { Util } from '../../util';
 import { useBreakpoints } from '../../hooks';
 import { LoadingSpinner } from '../LoadingSpinner';
+import { produce } from 'immer';
 
-export function usePagination(initialState?: { limit?: number; page?: number }) {
+export function usePagination(initialState: {
+  totalNumberOfItems: number;
+  itemsPerPage?: number;
+  pageNumber?: number;
+}) {
+  const initialItemsPerPage = initialState.itemsPerPage ?? 50;
+  const initialLastPageNumber = Math.max(
+    1,
+    Math.floor((initialState.totalNumberOfItems - 1) / initialItemsPerPage) + 1
+  );
+  const initialPageNumber = Math.min(
+    initialLastPageNumber,
+    Math.max(1, initialState.pageNumber ?? 1)
+  );
+
   const [state, setState] = useState({
-    limit: initialState?.limit ?? 50,
-    page: initialState?.page ?? 1
+    itemsPerPage: initialItemsPerPage,
+    pageNumber: initialPageNumber,
+    firstIndex:
+      initialItemsPerPage === 0
+        ? 0
+        : Math.min(initialState.totalNumberOfItems, (initialPageNumber - 1) * initialItemsPerPage),
+    lastIndex:
+      initialItemsPerPage === 0
+        ? initialState.totalNumberOfItems - 1
+        : Math.min(initialState.totalNumberOfItems, initialPageNumber * initialItemsPerPage - 1),
+    lastPageNumber: initialLastPageNumber,
+    totalNumberOfItems: initialState.totalNumberOfItems
   });
+
+  useEffect(() => {
+    setState((state) => ({
+      itemsPerPage: initialItemsPerPage,
+      pageNumber: state.pageNumber,
+      firstIndex:
+        state.itemsPerPage === 0
+          ? 0
+          : Math.min(initialState.totalNumberOfItems, (state.pageNumber - 1) * state.itemsPerPage),
+      lastIndex:
+        initialItemsPerPage === 0
+          ? initialState.totalNumberOfItems - 1
+          : Math.min(initialState.totalNumberOfItems, state.pageNumber * state.itemsPerPage - 1),
+      lastPageNumber: Math.max(
+        1,
+        Math.floor((initialState.totalNumberOfItems - 1) / state.itemsPerPage) + 1
+      ),
+      totalNumberOfItems: initialState.totalNumberOfItems
+    }));
+  }, [initialState.totalNumberOfItems]);
 
   const functions = useMemo(
     () => ({
       nextPage() {
-        setState((state) => ({
-          limit: state.limit,
-          page: state.page + 1
-        }));
+        setState((state) =>
+          produce(state, (state) => {
+            if (state.itemsPerPage === 0) return;
+            if (state.pageNumber * state.itemsPerPage >= initialState.totalNumberOfItems) return;
+            state.pageNumber += 1;
+            state.firstIndex += state.itemsPerPage;
+            state.lastIndex = Math.min(
+              state.lastIndex + state.itemsPerPage,
+              initialState.totalNumberOfItems - 1
+            );
+          })
+        );
       },
       previousPage() {
-        setState((state) => ({
-          limit: state.limit,
-          page: state.page - 1
-        }));
+        setState((state) =>
+          produce(state, (state) => {
+            if (state.itemsPerPage === 0) return;
+            if (state.pageNumber === 1) return;
+            state.pageNumber -= 1;
+            state.firstIndex -= state.itemsPerPage;
+            state.lastIndex -= state.itemsPerPage;
+          })
+        );
       },
-      setPage(page: number) {
-        setState((state) => ({
-          limit: state.limit,
-          page
-        }));
+      setPage(pageNumber: number) {
+        setState((state) =>
+          produce(state, (state) => {
+            if (state.itemsPerPage === 0) return;
+            if ((pageNumber - 1) * state.itemsPerPage >= initialState.totalNumberOfItems) return;
+            state.pageNumber = pageNumber;
+            state.firstIndex = Math.min(
+              (pageNumber - 1) * state.itemsPerPage,
+              initialState.totalNumberOfItems - 1
+            );
+            state.lastIndex = Math.min(
+              pageNumber * state.itemsPerPage,
+              initialState.totalNumberOfItems - 1
+            );
+          })
+        );
       },
-      setLimit(limit: number) {
-        setState((state) => ({
-          limit,
-          page: state.page
-        }));
+      setItemsPerPage(itemsPerPage: number) {
+        setState((state) =>
+          produce(state, (state) => {
+            if (isNaN(itemsPerPage) || itemsPerPage < 0) itemsPerPage = 0;
+            state.itemsPerPage = itemsPerPage;
+
+            if (state.itemsPerPage === 0) {
+              state.firstIndex = 0;
+              state.lastIndex = initialState.totalNumberOfItems - 1;
+              state.pageNumber = 1;
+              return;
+            }
+
+            state.lastIndex = Math.min(
+              state.firstIndex + state.itemsPerPage,
+              initialState.totalNumberOfItems - 1
+            );
+
+            state.pageNumber = Math.floor(state.firstIndex / state.itemsPerPage) + 1;
+            state.lastPageNumber = Math.max(
+              1,
+              Math.floor((initialState.totalNumberOfItems - 1) / state.itemsPerPage) + 1
+            );
+          })
+        );
       }
     }),
-    []
+    [initialState.totalNumberOfItems]
   );
 
   return {
     ...state,
     ...functions
   };
+}
+
+type PaginationControlsProps = {
+  pagination: ReturnType<typeof usePagination>;
+  loading?: boolean;
+};
+
+export function PaginationControls({ pagination, loading }: PaginationControlsProps) {
+  return (
+    <div className="flex items-center justify-between w-full space-x-3 text-xs font-semibold">
+      <div>
+        <span>View </span>
+        <select
+          className="!font-semibold"
+          onChange={(e) => pagination.setItemsPerPage(+e.target.value)}
+          defaultValue={pagination.itemsPerPage.toFixed()}
+        >
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="500">500</option>
+          <option value="0">all</option>
+        </select>
+        <span> entries per page</span>
+      </div>
+      <div className="flex items-center space-x-4">
+        {loading ? (
+          'Loading...'
+        ) : pagination.lastPageNumber === 1 ? (
+          <span>Showing all {pagination.totalNumberOfItems} entries</span>
+        ) : (
+          <>
+            <span>
+              Showing {pagination.firstIndex + 1} to {pagination.lastIndex + 1} of{' '}
+              {pagination.totalNumberOfItems} entries
+            </span>
+            <div className="flex items-center space-x-1">
+              <button
+                className={`flex px-0.5 py-0.5 rounded-md font-bold ${
+                  pagination.pageNumber !== 1 ? 'visible' : 'invisible'
+                }`}
+                onClick={pagination.previousPage}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+
+              <select
+                className="flex px-0.5 py-0.5 rounded-md font-bold"
+                onChange={(e) => pagination.setPage(+e.target.value)}
+                defaultValue={pagination.pageNumber.toFixed()}
+              >
+                {Array.from(new Array(pagination.lastPageNumber), (_, i) => (
+                  <option key={i} value={(i + 1).toFixed()}>
+                    {(i + 1).toFixed()}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                className={`flex px-0.5 py-0.5 rounded-md font-bold ${
+                  pagination.pageNumber !== pagination.lastPageNumber ? 'visible' : 'invisible'
+                }`}
+                onClick={pagination.nextPage}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 type TableProps<TItem> = {
@@ -52,6 +236,7 @@ type TableProps<TItem> = {
     | ((item: TItem) => React.ReactNode)
   )[];
   headers: React.ReactNode[];
+  footer?: React.ReactNode;
   dense?: boolean;
   breakpoint?: keyof ReturnType<typeof useBreakpoints>;
   wrap?: {
@@ -71,7 +256,8 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
   breakpoint,
   wrap: wrapOptions,
   loading,
-  error
+  error,
+  footer
 }: TableProps<TItem>) {
   const breakpoints = useBreakpoints();
   const isNotWrapped = breakpoints[breakpoint ?? 'lg'];
@@ -83,32 +269,23 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
     ? `repeat(${headers.length}, auto)`
     : `repeat(${wrapOptions?.columns ?? 1}, auto)`;
 
-  className = Util.createClassName(className, 'grid auto-rows-auto gap-x-6');
+  className = Util.createClassName(className, 'grid auto-rows-auto', dense ? 'gap-x-4' : 'gap-x-6');
   loading = !!loading;
   items = items ?? [];
 
   if (isNotWrapped) {
-    if (error) {
-      headers = [
-        <TableHeader key={0} column={1}>
-          Error
+    headers = headers.map((header, j) => {
+      return (
+        <TableHeader
+          key={j}
+          column={j + 1}
+          firstCol={j % columns.length === 0}
+          lastCol={(j + 1) % columns.length === 0}
+        >
+          {header}
         </TableHeader>
-      ];
-    } else if (loading) {
-      headers = [
-        <TableHeader key={0} column={1}>
-          Loading...
-        </TableHeader>
-      ];
-    } else {
-      headers = headers.map((header, j) => {
-        return (
-          <TableHeader key={j} column={j + 1}>
-            {header}
-          </TableHeader>
-        );
-      });
-    }
+      );
+    });
   }
 
   let rows;
@@ -161,25 +338,47 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
       {isNotWrapped && (
         <Fragment>
           <div
-            className="h-8 border-b border-gray-200"
+            className="border-b border-gray-200 dark:border-gray-700"
             style={{ gridArea: `1 / 1 / 2 / -1` }}
           ></div>
           {headers}
         </Fragment>
       )}
+
       {rows}
+
+      {footer && (
+        <TableFooterRow
+          row={items.length + (isNotWrapped ? 2 : 1)}
+          wrapColCount={wrapColCount}
+          wrapColSpanSum={wrapColSpanSum}
+          isNotWrapped={isNotWrapped}
+          dense={dense}
+        >
+          {footer}
+        </TableFooterRow>
+      )}
     </div>
   );
 }
 
 type TableHeaderProps = {
   column: number;
+  dense?: boolean;
+  firstCol: boolean;
+  lastCol: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
-function TableHeader({ children, column }: TableHeaderProps) {
+function TableHeader({ children, column, dense, firstCol, lastCol }: TableHeaderProps) {
   const gridArea = `1 / ${column} / 2 / ${column + 1}`;
+
+  let className = 'grid text-xs tracking-wide text-gray-500 ';
+  className += dense ? 'py-3 ' : 'py-4 ';
+  if (firstCol) className += dense ? 'pl-4 ' : 'pl-6 ';
+  if (lastCol) className += dense ? 'pr-4 ' : 'pr-6 ';
+
   return (
-    <div className="grid text-xs tracking-wide text-gray-500" style={{ gridArea }}>
+    <div className={className} style={{ gridArea }}>
       {children}
     </div>
   );
@@ -191,8 +390,6 @@ type TableCellProps = {
   dense?: boolean;
   column: number;
   span: number;
-  firstRow: boolean;
-  lastRow: boolean;
   firstCol: boolean;
   lastCol: boolean;
   isNotWrapped: boolean;
@@ -205,8 +402,6 @@ function TableCell({
   span,
   header,
   dense,
-  firstRow,
-  lastRow,
   firstCol,
   lastCol,
   isNotWrapped
@@ -214,7 +409,9 @@ function TableCell({
   const gridArea = `${row} / ${column} / ${row + 1} / ${column + span}`;
 
   if (isNotWrapped) {
-    const className = 'relative grid items-center ' + (lastRow ? 'pt-3' : 'py-3');
+    let className = 'relative grid items-center py-3 ';
+    if (firstCol) className += dense ? 'pl-4 ' : 'pl-6 ';
+    if (lastCol) className += dense ? 'pr-4 ' : 'pr-6 ';
 
     return (
       <div className={className} style={{ gridArea }}>
@@ -225,13 +422,9 @@ function TableCell({
 
   let className = 'flex flex-col space-y-2 ';
 
-  if (!firstRow || !firstCol) {
-    className += dense ? (firstCol ? 'pt-4 ' : 'pt-2 ') : firstCol ? 'pt-6 ' : 'pt-3 ';
-  }
-
-  if (!lastRow || !lastCol) {
-    className += dense ? (lastCol ? 'pb-4 ' : 'pb-2 ') : lastCol ? 'pb-6 ' : 'pb-3 ';
-  }
+  className += dense ? 'px-4 ' : 'px-6 ';
+  className += dense ? (firstCol ? 'pt-4 ' : 'pt-2 ') : firstCol ? 'pt-6 ' : 'pt-3 ';
+  className += dense ? (lastCol ? 'pb-4 ' : 'pb-2 ') : lastCol ? 'pb-6 ' : 'pb-3 ';
 
   return (
     <div className={className} style={{ gridArea }}>
@@ -290,8 +483,6 @@ function TableRow<TItem>({
             header={headers[j]}
             dense={dense}
             isNotWrapped={isNotWrapped}
-            firstRow={first}
-            lastRow={last}
             firstCol={j % columns.length === 0}
             lastCol={(j + 1) % columns.length === 0}
           >
@@ -326,8 +517,6 @@ function TableRow<TItem>({
             header={headers[j]}
             dense={dense}
             isNotWrapped={isNotWrapped}
-            firstRow={first}
-            lastRow={last}
             firstCol={firstCol}
             lastCol={lastCol}
           >
@@ -336,6 +525,41 @@ function TableRow<TItem>({
         );
       })}
     </Fragment>
+  );
+}
+
+type TableFooterRowProps = {
+  row: number;
+  wrapColCount: number;
+  wrapColSpanSum: number;
+  isNotWrapped: boolean;
+  dense?: boolean;
+} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+
+function TableFooterRow({
+  row,
+  wrapColCount,
+  wrapColSpanSum,
+  isNotWrapped,
+  dense,
+  children
+}: TableFooterRowProps) {
+  let className =
+    'grid text-gray-400 border-t border-gray-200 dark:border-gray-700 place-items-center ';
+  className += dense ? 'py-2 ' : 'py-3 ';
+  className += dense ? 'px-4 ' : 'px-6 ';
+
+  let gridArea = `${row} / 1 / ${row + 1} / -1`;
+
+  if (!isNotWrapped) {
+    row = ((row - 1) * wrapColSpanSum) / wrapColCount + 1;
+    gridArea = `${row} / 1 / ${row + wrapColSpanSum / wrapColCount} / -1`;
+  }
+
+  return (
+    <div className={className} style={{ gridArea }}>
+      {children}
+    </div>
   );
 }
 
@@ -352,7 +576,7 @@ function TableLoadingRow({
   wrapColSpanSum,
   isNotWrapped
 }: TableLoadingRowProps) {
-  let className = 'grid p-4 text-gray-400 border-gray-200 place-items-center';
+  let className = 'grid p-4 text-gray-400 border-gray-200 dark:border-gray-700 place-items-center';
   let gridArea = `${row} / 1 / ${row + 1} / -1`;
 
   if (!isNotWrapped) {
@@ -382,7 +606,7 @@ function TableErrorRow({
   wrapColSpanSum,
   isNotWrapped
 }: TableErrorRowProps) {
-  let className = 'grid p-4 border-gray-200 place-items-center';
+  let className = 'grid p-4 border-gray-200 dark:border-gray-700 place-items-center';
   let gridArea = `${row} / 1 / ${row + 1} / -1`;
 
   message = message ?? 'Some error occurred';

@@ -1,11 +1,17 @@
 import { Link } from 'react-router-dom';
-import { useQuery, current_agency_Q, orders_Q, agency_stripe_account_Q } from '@duely/client';
+import {
+  useQuery,
+  current_agency_Q,
+  orders_Q,
+  count_orders_Q,
+  agency_stripe_account_Q
+} from '@duely/client';
 import {
   useBreakpoints,
   Table,
   DropMenu,
   Card,
-  LoadingScreen,
+  PaginationControls,
   ErrorScreen,
   Util,
   useForm,
@@ -40,7 +46,24 @@ export default function DashboardOrdersHome() {
     { skip: !agency }
   );
 
-  // const { page, limit } = usePagination({ limit: 2 });
+  const {
+    data: count_orders,
+    loading: count_ordersLoading,
+    error: count_ordersError
+  } = useQuery(
+    count_orders_Q,
+    {
+      filter: {
+        stripe_account_id: stripe_account?.id
+      }
+    },
+    { skip: !agency || !stripe_account }
+  );
+
+  const pagination = usePagination({
+    totalNumberOfItems: count_orders ?? -1,
+    itemsPerPage: 5
+  });
 
   const {
     data: orders,
@@ -52,17 +75,18 @@ export default function DashboardOrdersHome() {
       filter: {
         stripe_account_id: stripe_account?.id
       },
-      // limit
+      limit: pagination.itemsPerPage === 0 ? undefined : pagination.itemsPerPage,
+      offset: pagination.firstIndex < 0 ? undefined : pagination.firstIndex
     },
     { skip: !agency || !stripe_account }
   );
 
   const { sm } = useBreakpoints();
 
-  const loading = agencyLoading || ordersLoading || stripe_accountLoading;
-  const error = agencyError ?? ordersError ?? stripe_accountError;
+  const loading = agencyLoading || count_ordersLoading || ordersLoading || stripe_accountLoading;
+  const error = agencyError ?? count_ordersError ?? ordersError ?? stripe_accountError;
 
-  if (loading) return <LoadingScreen />;
+  // if (loading) return <LoadingScreen />;
   if (error) return <ErrorScreen />;
 
   type TOrder = NonNullable<typeof orders> extends readonly (infer T)[] ? T : never;
@@ -165,11 +189,17 @@ export default function DashboardOrdersHome() {
       <DashboardSection title="Orders">
         <Card className="max-w-screen-lg">
           <Table
-            className="px-6 py-4"
             rows={orders}
             columns={columns}
             headers={headers}
+            loading={loading}
             wrap={wrap}
+            footer={
+              <PaginationControls
+                pagination={pagination}
+                loading={agencyLoading || count_ordersLoading || stripe_accountLoading}
+              />
+            }
           />
         </Card>
       </DashboardSection>

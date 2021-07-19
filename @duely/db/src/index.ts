@@ -308,6 +308,7 @@ export async function queryResourceAll<K extends keyof Resources>(
   desc?: boolean,
   order_by?: string & keyof Resources[K],
   limit?: number,
+  offset?: number,
   before_id?: Resources[K]['id'],
   after_id?: Resources[K]['id']
 ): Promise<Resources[K][]>;
@@ -319,6 +320,7 @@ export async function queryResourceAll<K extends keyof Resources>(
   desc?: boolean,
   order_by?: string & keyof Resources[K],
   limit?: number,
+  offset?: number,
   before_id?: Resources[K]['id'],
   after_id?: Resources[K]['id']
 ): Promise<Resources[K][]>;
@@ -330,6 +332,7 @@ export async function queryResourceAll<K extends keyof Resources>(
   desc?: boolean,
   order_by?: string & keyof Resources[K],
   limit?: number,
+  offset?: number,
   before_id?: Resources[K]['id'],
   after_id?: Resources[K]['id']
 ): Promise<Resources[K][]> {
@@ -337,8 +340,8 @@ export async function queryResourceAll<K extends keyof Resources>(
 
   desc ??= false;
 
-  const parameterPgTypes = ['text', 'jsonb', 'boolean', 'text', 'integer', 'text', 'text'];
-  const parameters: any[] = [resource_name, filter, desc, order_by, limit, before_id, after_id];
+  const parameterPgTypes = ['text', 'jsonb', 'boolean', 'text', 'integer', 'integer', 'text', 'text'];
+  const parameters: any[] = [resource_name, filter, desc, order_by, limit, offset, before_id, after_id];
 
   if (token != undefined) {
     parameterPgTypes.splice(2, 0, 'text');
@@ -520,10 +523,11 @@ function useFunctions(client: ClientBase) {
       desc?: boolean,
       order_by?: string & keyof Resources[K],
       limit?: number,
+      offset?: number,
       before_id?: Resources[K]['id'],
       after_id?: Resources[K]['id']
     ): Promise<Resources[K][]> {
-      return await queryResourceAll(client, resource_name, filter, token, desc, order_by, limit, before_id, after_id);
+      return await queryResourceAll(client, resource_name, filter, token, desc, order_by, limit, offset, before_id, after_id);
     },
     async countResource<K extends keyof Resources>(
       resource_name: K,

@@ -169,7 +169,6 @@ export default function DashboardProductsHome() {
       <DashboardSection title="Products">
         <Card className="max-w-screen-lg">
           <Table
-            className="px-6 py-4"
             rows={rows}
             columns={columns}
             headers={headers}
