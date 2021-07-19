@@ -31,7 +31,6 @@ export const StripeAccount: GqlTypeDefinition = {
         starting_after_id: String
         ending_before_id: String
         limit: Int
-        offset: Int
       ): [PaymentIntent!]!
       customers(
         filter: CustomerFilter

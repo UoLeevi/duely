@@ -26,7 +26,6 @@ export const Customer: GqlTypeDefinition = {
         starting_after_id: String
         ending_before_id: String
         limit: Int
-        offset: Int
       ): [StripeCustomer!]!
       user: User
       stripe_account: StripeAccount!
