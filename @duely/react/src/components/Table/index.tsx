@@ -64,7 +64,7 @@ export function usePagination(initialState: {
             state.pageNumber += 1;
             state.firstIndex += state.itemsPerPage;
             state.lastIndex = Math.min(
-              state.lastIndex + state.itemsPerPage,
+              state.firstIndex + state.itemsPerPage - 1,
               initialState.totalNumberOfItems - 1
             );
           })
@@ -77,7 +77,10 @@ export function usePagination(initialState: {
             if (state.pageNumber === 1) return;
             state.pageNumber -= 1;
             state.firstIndex -= state.itemsPerPage;
-            state.lastIndex -= state.itemsPerPage;
+            state.lastIndex = Math.min(
+              state.firstIndex + state.itemsPerPage - 1,
+              initialState.totalNumberOfItems - 1
+            );
           })
         );
       },
@@ -92,7 +95,7 @@ export function usePagination(initialState: {
               initialState.totalNumberOfItems - 1
             );
             state.lastIndex = Math.min(
-              pageNumber * state.itemsPerPage,
+              state.firstIndex + state.itemsPerPage - 1,
               initialState.totalNumberOfItems - 1
             );
           })
@@ -112,7 +115,7 @@ export function usePagination(initialState: {
             }
 
             state.lastIndex = Math.min(
-              state.firstIndex + state.itemsPerPage,
+              state.firstIndex + state.itemsPerPage - 1,
               initialState.totalNumberOfItems - 1
             );
 
@@ -142,23 +145,42 @@ type PaginationControlsProps = {
 export function PaginationControls({ pagination, loading }: PaginationControlsProps) {
   return (
     <div className="flex items-center justify-between w-full space-x-3 text-xs font-semibold">
-      <div>
+      <div className="flex items-center space-x-1">
         <span>View </span>
-        <select
-          className="!font-semibold"
-          onChange={(e) => pagination.setItemsPerPage(+e.target.value)}
-          value={pagination.itemsPerPage.toFixed()}
-        >
-          <option value="5">5</option>
-          <option value="10">10</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-          <option value="500">500</option>
-          <option value="0">all</option>
-        </select>
+
+        <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
+          <select
+            className="w-full py-0.5 pl-1.5 pr-5 bg-transparent border-none rounded-md outline-none appearance-none"
+            spellCheck="false"
+            autoComplete="off"
+            onChange={(e) => pagination.setItemsPerPage(+e.target.value)}
+            value={pagination.itemsPerPage.toFixed()}
+          >
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="500">500</option>
+            <option value="0">all</option>
+          </select>
+
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="absolute right-0 w-4 h-4 mr-1 text-gray-600 pointer-events-none"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+
         <span> entries per page</span>
       </div>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-8">
         {loading ? (
           'Loading...'
         ) : pagination.lastPageNumber === 1 ? (
@@ -169,16 +191,18 @@ export function PaginationControls({ pagination, loading }: PaginationControlsPr
               Showing {pagination.firstIndex + 1} to {pagination.lastIndex + 1} of{' '}
               {pagination.totalNumberOfItems} entries
             </span>
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-0.5">
+              <span>Page</span>
+
               <button
-                className={`flex px-0.5 py-0.5 rounded-md font-bold ${
+                className={`flex rounded-md font-bold ${
                   pagination.pageNumber !== 1 ? 'visible' : 'invisible'
                 }`}
                 onClick={pagination.previousPage}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5"
+                  className="w-5 h-5 text-gray-600"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -190,27 +214,44 @@ export function PaginationControls({ pagination, loading }: PaginationControlsPr
                 </svg>
               </button>
 
-              <select
-                className="flex px-0.5 py-0.5 rounded-md font-bold"
-                onChange={(e) => pagination.setPage(+e.target.value)}
-                value={pagination.pageNumber.toFixed()}
-              >
-                {Array.from(new Array(pagination.lastPageNumber), (_, i) => (
-                  <option key={i} value={(i + 1).toFixed()}>
-                    {(i + 1).toFixed()}
-                  </option>
-                ))}
-              </select>
+              <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
+                <select
+                  className="w-full py-0.5 pl-1.5 pr-5 bg-transparent border-none rounded-md outline-none appearance-none"
+                  spellCheck="false"
+                  autoComplete="off"
+                  onChange={(e) => pagination.setPage(+e.target.value)}
+                  value={pagination.pageNumber.toFixed()}
+                >
+                  {Array.from(new Array(pagination.lastPageNumber), (_, i) => (
+                    <option key={i} value={(i + 1).toFixed()}>
+                      {(i + 1).toFixed()}
+                    </option>
+                  ))}
+                </select>
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="absolute right-0 w-4 h-4 mr-1 text-gray-600 pointer-events-none"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
 
               <button
-                className={`flex px-0.5 py-0.5 rounded-md font-bold ${
+                className={`flex rounded-md font-bold ${
                   pagination.pageNumber !== pagination.lastPageNumber ? 'visible' : 'invisible'
                 }`}
                 onClick={pagination.nextPage}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5"
+                  className="w-5 h-5 text-gray-600"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
