@@ -3195,7 +3195,7 @@ CREATE FUNCTION policy_.agent_can_query_price_(_resource_definition security_.re
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+    RETURN '{uuid_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3214,7 +3214,7 @@ CREATE FUNCTION policy_.agent_can_query_product_(_resource_definition security_.
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3398,12 +3398,14 @@ CREATE FUNCTION policy_.anyone_can_query_live_price_(_resource_definition securi
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF (
-    SELECT status_ = 'live'
+  IF EXISTS (
+    SELECT 1
     FROM application_.price_
     WHERE uuid_ = _resource.uuid_
+      AND status_ = 'live'
+      AND active_ = 't'
   ) THEN
-    RETURN '{uuid_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+    RETURN '{uuid_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3421,12 +3423,14 @@ CREATE FUNCTION policy_.anyone_can_query_live_product_(_resource_definition secu
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 BEGIN
-  IF (
-    SELECT status_ = 'live'
+  IF EXISTS (
+    SELECT 1
     FROM application_.product_
     WHERE uuid_ = _resource.uuid_
+      AND status_ = 'live'
+      AND active_ = 't'
   ) THEN
-    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4133,9 +4137,9 @@ BEGIN
         AND stripe_price_id_ext_live_ IS NULL
         AND stripe_price_id_ext_test_ IS NULL
     ) THEN
-      RETURN '{stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+      RETURN '{stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
     ELSE
-      RETURN '{unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+      RETURN '{unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
     END IF;
   ELSE
     RETURN '{}'::text[];
@@ -4162,9 +4166,9 @@ BEGIN
         AND stripe_prod_id_ext_live_ IS NULL
         AND stripe_prod_id_ext_test_ IS NULL
     ) THEN
-      RETURN '{name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+      RETURN '{name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
     ELSE
-      RETURN '{name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+      RETURN '{name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
     END IF;
   ELSE
     RETURN '{}'::text[];
@@ -4466,7 +4470,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_}'::text[];
+    RETURN '{product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4488,7 +4492,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -6382,6 +6386,7 @@ CREATE TABLE application_.price_ (
     status_ public.publishing_status_ DEFAULT 'draft'::public.publishing_status_ NOT NULL,
     stripe_price_id_ext_live_ text,
     stripe_price_id_ext_test_ text,
+    active_ boolean DEFAULT true NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6407,6 +6412,7 @@ CREATE TABLE application_.product_ (
     markdown_description_uuid_ uuid,
     stripe_prod_id_ext_live_ text,
     stripe_prod_id_ext_test_ text,
+    active_ boolean DEFAULT true NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6743,6 +6749,7 @@ CREATE TABLE application__audit_.price_ (
     status_ public.publishing_status_,
     stripe_price_id_ext_live_ text,
     stripe_price_id_ext_test_ text,
+    active_ boolean,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -6769,6 +6776,7 @@ CREATE TABLE application__audit_.product_ (
     markdown_description_uuid_ uuid,
     stripe_prod_id_ext_live_ text,
     stripe_prod_id_ext_test_ text,
+    active_ boolean,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -7956,7 +7964,6 @@ e79b9bed-9dcc-4e83-b2f8-09b134da1a03	sub	subdomain	security_.subdomain_	\N	{uuid
 f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	user	user	security_.user_	\N	{uuid_,name_,email_address_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 3b56d171-3e69-41ca-9a98-d1a3abc9170b	su	sign up	application_.sign_up_	\N	{verification_code_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 edc5f82c-c991-494c-90f0-cf6163902f40	pwd	password reset	application_.password_reset_	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	{verification_code_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
-7f589215-bdc7-4664-99c6-b7745349c352	prod	product	application_.product_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,url_name_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 d8f70962-229d-49eb-a99e-7c35a55719d5	md	markdown	application_.markdown_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 b54431c5-bbc4-47b6-9810-0a627e49cfe5	member	membership	application_.membership_	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	{uuid_,user_uuid_,subdomain_uuid_,access_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	notidef	notification definition	application_.notification_definition_	\N	{uuid_,name_,stripe_event_,feed_notification_enabled_,email_notifications_enabled_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
@@ -7974,7 +7981,6 @@ cbe96769-7f38-4220-82fb-c746c634bc99	pagedef	page definition	internal_.page_defi
 35bee174-fde7-4ae2-9cb2-4469b3eb8de5	subplan	subscription plan	internal_.subscription_plan_	\N	{uuid_,name_,stripe_prod_id_ext_live_,stripe_prod_id_ext_test_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	cus	customer	application_.customer_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,name_,email_address_,default_stripe_id_ext_,stripe_account_uuid_,user_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
 58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	whevt	webhook event	application_.webhook_event_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,id_ext_,source_,livemode_,agency_uuid_}	\N	2021-02-06 09:56:51.587869+00	00000000-0000-0000-0000-000000000000
-f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{product_uuid_,stripe_price_id_ext_live_,stripe_price_id_ext_test_}	\N	2021-02-17 14:48:13.97898+00	00000000-0000-0000-0000-000000000000
 20c1d214-27e8-4805-b645-2e5a00f32486	ord	order	application_.order_	3c7e93d6-b141-423a-a7e9-e11a734b3474	{uuid_,customer_uuid_,stripe_account_uuid_,stripe_checkout_session_id_ext_}	\N	2021-02-20 18:02:47.892503+00	00000000-0000-0000-0000-000000000000
 d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{agency_uuid_,integration_config_uuid_,integration_type_uuid_,product_uuid_}	\N	2021-07-15 07:22:39.535955+00	00000000-0000-0000-0000-000000000000
 677e43b0-6a66-4f84-b857-938f462fdf90	orditm	order item	application_.order_item_	20c1d214-27e8-4805-b645-2e5a00f32486	{uuid_,order_uuid_,stripe_line_item_id_ext_}	\N	2021-03-07 08:06:08.312786+00	00000000-0000-0000-0000-000000000000
@@ -7982,6 +7988,8 @@ d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	
 e82d9b56-e05d-4aa2-81b4-2af2643f224c	credtype	credential type	internal_.credential_type_	\N	{uuid_,form_uuid_,name_}	\N	2021-07-14 05:41:08.571837+00	00000000-0000-0000-0000-000000000000
 38d32095-8cfa-4e0e-92f8-079fb73002eb	cred	credential	application_.credential_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,credential_type_uuid_,name_}	\N	2021-07-14 05:41:08.571837+00	00000000-0000-0000-0000-000000000000
 30e49b72-e52a-467d-8300-8b5051f32d9a	intetype	integration type	internal_.integration_type_	\N	{uuid_,config_form_uuid_,form_uuid_,name_,title_,status_}	\N	2021-07-18 07:30:11.012379+00	00000000-0000-0000-0000-000000000000
+7f589215-bdc7-4664-99c6-b7745349c352	prod	product	application_.product_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,url_name_,agency_uuid_,status_,active_}	\N	2021-07-20 06:40:28.130717+00	00000000-0000-0000-0000-000000000000
+f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{product_uuid_,stripe_price_id_ext_live_,stripe_price_id_ext_test_,type_,status_,active_}	\N	2021-07-20 06:40:28.130717+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -8111,6 +8119,8 @@ e82d9b56-e05d-4aa2-81b4-2af2643f224c	credtype	credential type	internal_.credenti
 38d32095-8cfa-4e0e-92f8-079fb73002eb	cred	credential	application_.credential_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_,credential_type_uuid_,name_}	\N	2021-07-14 05:41:08.571837+00	00000000-0000-0000-0000-000000000000	U
 d3def2c7-9265-4a3c-8473-0a0f071c4193	inte	integration	application_.integration_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{agency_uuid_,integration_config_uuid_,integration_type_uuid_,product_uuid_}	\N	2021-07-15 07:22:39.535955+00	00000000-0000-0000-0000-000000000000	U
 30e49b72-e52a-467d-8300-8b5051f32d9a	intetype	integration type	internal_.integration_type_	\N	{uuid_,config_form_uuid_,form_uuid_,name_,title_,status_}	\N	2021-07-18 07:30:11.012379+00	00000000-0000-0000-0000-000000000000	U
+7f589215-bdc7-4664-99c6-b7745349c352	prod	product	application_.product_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,name_,url_name_,agency_uuid_,status_,active_}	\N	2021-07-20 06:40:28.130717+00	00000000-0000-0000-0000-000000000000	U
+f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{product_uuid_,stripe_price_id_ext_live_,stripe_price_id_ext_test_,type_,status_,active_}	\N	2021-07-20 06:40:28.130717+00	00000000-0000-0000-0000-000000000000	U
 \.
 
 
