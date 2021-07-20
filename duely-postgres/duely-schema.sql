@@ -362,6 +362,31 @@ $$;
 ALTER FUNCTION internal_.check_credential_data_() OWNER TO postgres;
 
 --
+-- Name: check_current_user_is_insider_user_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.check_current_user_is_insider_user_() RETURNS boolean
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.security_data_ s
+    JOIN security_.user_ u ON s.key_ = 'email_address:' || u.email_address_
+    WHERE u.uuid_ = internal_.current_subject_uuid_()
+      AND (s.data_->>'is_insider_user')::boolean
+  ) THEN
+    RETURN 't';
+  ELSE
+    RETURN 'f';
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION internal_.check_current_user_is_insider_user_() OWNER TO postgres;
+
+--
 -- Name: check_current_user_is_serviceaccount_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -385,6 +410,31 @@ $$;
 
 
 ALTER FUNCTION internal_.check_current_user_is_serviceaccount_() OWNER TO postgres;
+
+--
+-- Name: check_current_user_is_test_user_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.check_current_user_is_test_user_() RETURNS boolean
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM security_.security_data_ s
+    JOIN security_.user_ u ON s.key_ = 'email_address:' || u.email_address_
+    WHERE u.uuid_ = internal_.current_subject_uuid_()
+      AND (s.data_->>'is_test_user')::boolean
+  ) THEN
+    RETURN 't';
+  ELSE
+    RETURN 'f';
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION internal_.check_current_user_is_test_user_() OWNER TO postgres;
 
 --
 -- Name: check_integration_config_data_(); Type: FUNCTION; Schema: internal_; Owner: postgres
@@ -3744,6 +3794,44 @@ $$;
 ALTER FUNCTION policy_.delete_forbidden_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: insider_user_can_create_agency_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.insider_user_can_create_agency_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_insider_user_() THEN
+    RETURN '{uuid_, subdomain_uuid_, name_, livemode_, default_pricing_currency_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.insider_user_can_create_agency_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: insider_user_can_create_subdomain_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.insider_user_can_create_subdomain_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_insider_user_() THEN
+    RETURN '{uuid_, name_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.insider_user_can_create_subdomain_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: invitee_of_user_invite_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -5327,6 +5415,44 @@ END
 ALTER FUNCTION policy_.subject_is_active_user_(_arg anyelement) OWNER TO postgres;
 
 --
+-- Name: test_user_can_create_test_agency_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.test_user_can_create_test_agency_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_test_user_() AND (_data->'livemode_')::boolean = 'f' THEN
+    RETURN '{uuid_, subdomain_uuid_, name_, livemode_, default_pricing_currency_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.test_user_can_create_test_agency_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: test_user_can_create_test_subdomain_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.test_user_can_create_test_subdomain_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_test_user_() AND _data->>'name_' = 'test' THEN
+    RETURN '{uuid_, name_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.test_user_can_create_test_subdomain_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
+
+--
 -- Name: user_can_change_name_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -5520,6 +5646,7 @@ CREATE FUNCTION security_.control_create_(_resource_definition security_.resourc
 DECLARE
   _policy_uuid uuid;
   _policy_function regprocedure;
+  _enabled boolean;
   _keys text[];
   _unauthorized_data jsonb;
   _fields_list text;
@@ -5535,7 +5662,7 @@ BEGIN
   _unauthorized_data := internal_.jsonb_strip_values_(_data);
 
   LOOP
-    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    SELECT uuid_, function_, enabled_ INTO _policy_uuid, _policy_function, _enabled
     FROM security_.policy_
     WHERE resource_definition_uuid_ = _resource_definition.uuid_
       AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
@@ -5545,13 +5672,15 @@ BEGIN
       EXIT;
     END IF;
 
-    EXECUTE '
-      SELECT ' || _policy_function::regproc || '($1, $2);
-    '
-    INTO _keys
-    USING _resource_definition, _data;
+    IF _enabled THEN
+      EXECUTE '
+        SELECT ' || _policy_function::regproc || '($1, $2);
+      '
+      INTO _keys
+      USING _resource_definition, _data;
 
-    _unauthorized_data := _unauthorized_data - COALESCE(_keys, '{}');
+      _unauthorized_data := _unauthorized_data - COALESCE(_keys, '{}');
+    END IF;
 
     IF _unauthorized_data = '{}'::jsonb THEN
       -- Result: authorized
@@ -5585,6 +5714,7 @@ CREATE FUNCTION security_.control_delete_(_resource_definition security_.resourc
 DECLARE
   _policy_uuid uuid;
   _policy_function regprocedure;
+  _enabled boolean;
 BEGIN
   IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
     RAISE 'No active session.' USING ERRCODE = '20000';
@@ -5600,7 +5730,7 @@ BEGIN
   END IF;
 
   LOOP
-    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    SELECT uuid_, function_, enabled_ INTO _policy_uuid, _policy_function, _enabled
     FROM security_.policy_
     WHERE resource_definition_uuid_ = _resource_definition.uuid_
       AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
@@ -5610,10 +5740,12 @@ BEGIN
       EXIT;
     END IF;
 
-    EXECUTE '
-      SELECT ' || _policy_function::regproc || '($1, $2);
-    '
-    USING _resource_definition, _resource;
+    IF _enabled THEN
+      EXECUTE '
+        SELECT ' || _policy_function::regproc || '($1, $2);
+      '
+      USING _resource_definition, _resource;
+    END IF;
   END LOOP;
 
   INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_)
@@ -5715,6 +5847,7 @@ CREATE FUNCTION security_.control_query_(_resource_definition security_.resource
 DECLARE
   _policy_uuid uuid;
   _policy_function regprocedure;
+  _enabled boolean;
   _keys text[];
   _authorized_keys text[] := '{}'::text[];
 BEGIN
@@ -5723,7 +5856,7 @@ BEGIN
   END IF;
 
   LOOP
-    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    SELECT uuid_, function_, enabled_ INTO _policy_uuid, _policy_function, _enabled
     FROM security_.policy_
     WHERE resource_definition_uuid_ = _resource_definition.uuid_
       AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
@@ -5733,13 +5866,15 @@ BEGIN
       EXIT;
     END IF;
 
-    EXECUTE '
-      SELECT ' || _policy_function::regproc || '($1, $2);
-    '
-    INTO _keys
-    USING _resource_definition, _resource;
+    IF _enabled THEN
+      EXECUTE '
+        SELECT ' || _policy_function::regproc || '($1, $2);
+      '
+      INTO _keys
+      USING _resource_definition, _resource;
 
-    _authorized_keys := array_cat(_authorized_keys, COALESCE(_keys, '{}'));
+      _authorized_keys := array_cat(_authorized_keys, COALESCE(_keys, '{}'));
+    END IF;
   END LOOP;
 
   IF array_length(COALESCE(_authorized_keys, '{}'), 1) = 0 THEN
@@ -5766,6 +5901,7 @@ CREATE FUNCTION security_.control_update_(_resource_definition security_.resourc
 DECLARE
   _policy_uuid uuid;
   _policy_function regprocedure;
+  _enabled boolean;
   _keys text[];
   _unauthorized_data jsonb;
   _fields_list text;
@@ -5781,7 +5917,7 @@ BEGIN
   _unauthorized_data := internal_.jsonb_strip_values_(_data);
 
   LOOP
-    SELECT uuid_, function_ INTO _policy_uuid, _policy_function
+    SELECT uuid_, function_, enabled_ INTO _policy_uuid, _policy_function, _enabled
     FROM security_.policy_
     WHERE resource_definition_uuid_ = _resource_definition.uuid_
       AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
@@ -5791,13 +5927,15 @@ BEGIN
       EXIT;
     END IF;
 
-    EXECUTE '
-      SELECT ' || _policy_function::regproc || '($1, $2, $3);
-    '
-    INTO _keys
-    USING _resource_definition, _resource, _data;
+    IF _enabled THEN
+      EXECUTE '
+        SELECT ' || _policy_function::regproc || '($1, $2, $3);
+      '
+      INTO _keys
+      USING _resource_definition, _resource, _data;
 
-    _unauthorized_data := _unauthorized_data - COALESCE(_keys, '{}');
+      _unauthorized_data := _unauthorized_data - COALESCE(_keys, '{}');
+    END IF;
 
     IF _unauthorized_data = '{}'::jsonb THEN
       -- Result: authorized
@@ -5958,7 +6096,8 @@ CREATE TABLE security_.policy_ (
     resource_definition_uuid_ uuid NOT NULL,
     function_ regprocedure NOT NULL,
     operation_type_ public.operation_type_ NOT NULL,
-    after_uuid_ uuid
+    after_uuid_ uuid,
+    enabled_ boolean DEFAULT true NOT NULL
 );
 
 
@@ -7823,133 +7962,137 @@ COPY security_.password_reset_ (uuid_, user_uuid_, data_, started_at_, expires_a
 -- Data for Name: policy_; Type: TABLE DATA; Schema: security_; Owner: postgres
 --
 
-COPY security_.policy_ (uuid_, resource_definition_uuid_, function_, operation_type_, after_uuid_) FROM stdin;
-4834193b-9666-4dbe-89d7-980fd4bab17a	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_create_subdomain_(security_.resource_definition_,jsonb)	create	\N
-5285f600-fb00-4861-8485-7b198c5a90c6	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_create_agency_(security_.resource_definition_,jsonb)	create	\N
-e84918a7-9e8e-4522-b400-4d258d8e1346	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-cdc2d6a0-b00e-4763-bad3-d2b43bf0c3c0	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-69d40b30-226f-4dbf-8e86-564022464cc7	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-7fe3d163-1f55-4916-9f1f-f345c01e7773	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_create_theme_(security_.resource_definition_,jsonb)	create	\N
-95c5b9d6-3df7-4ace-961a-b817262783e4	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_change_theme_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-781a2064-6530-4452-83d6-04347be6c845	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-e96b9766-d1d1-427a-9144-258e77ad6047	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.owner_can_create_image_(security_.resource_definition_,jsonb)	create	\N
-b8bb1737-fb4f-4d40-afba-b8d29a3ebb05	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.owner_can_change_image_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-fce05ef3-4cd5-4b5e-a011-55e20f683556	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-5eafba24-946e-42b5-b82f-b0ff99629965	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_query_themselves_(security_.resource_definition_,application_.resource_)	query	\N
-8c6d2f03-850b-428f-8304-6b9e667c1689	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-a8598fdb-0010-4a1b-9ad9-cfafc3f9e573	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_delete_only_themselves_(security_.resource_definition_,application_.resource_)	delete	\N
-cdeef182-edc7-4120-a301-c174a5e6a837	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_create_sign_up_(security_.resource_definition_,jsonb)	create	\N
-cb4cdf3a-a99b-44df-8027-8352de2333b9	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_cancel_sign_up_(security_.resource_definition_,application_.resource_)	delete	\N
-96be86e8-c8b4-430f-befa-1045f9ced98a	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.sign_up_can_be_queried_by_initiator_(security_.resource_definition_,application_.resource_)	query	\N
-aab7c301-7434-489a-bb03-5c91edfba106	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.password_reset_can_be_queried_by_initiator_(security_.resource_definition_,application_.resource_)	query	\N
-128a36c5-97fb-45f6-9e31-d804058cef95	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_can_create_password_reset_(security_.resource_definition_,jsonb)	create	\N
-d1a5960c-3f37-4c3f-864b-8807bf5a13c6	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_can_cancel_password_reset_(security_.resource_definition_,application_.resource_)	delete	\N
-acba9324-3aff-4951-a46d-51cd7eaa2691	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-b2257097-cb6d-4edc-a2b3-997e185dc415	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_password_reset_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-1946993a-7a51-40f2-9e89-91199bdbf9bb	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb)	update	b2257097-cb6d-4edc-a2b3-997e185dc415
-ffbdd939-d23b-4703-b0a3-78baa975133f	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_create_stripe_account_(security_.resource_definition_,jsonb)	create	\N
-be2e2434-7bb8-4b17-87bc-5a7bd97fdd13	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_change_stripe_account_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-1526bb13-417f-481f-981c-913d5f93dd0e	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-ab3fa4a3-413f-449b-bfb5-ed4981ba1de2	7f589215-bdc7-4664-99c6-b7745349c352	policy_.agent_can_query_product_(security_.resource_definition_,application_.resource_)	query	95c81a39-4ede-4ebd-9485-502ba1ad9a68
-0be43a88-13df-4bb2-8794-159800b90670	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_create_product_(security_.resource_definition_,jsonb)	create	\N
-37978625-4f1f-4c1a-a9da-0571a3e91fd4	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_change_product_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-b2cab51a-ad53-4ee2-9113-1566989be9dc	7f589215-bdc7-4664-99c6-b7745349c352	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-4bea3784-2dd2-46dc-9548-c55b4613f4b4	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.serviceaccount_can_query_stripe_account_for_agency_(security_.resource_definition_,application_.resource_)	query	\N
-98bbbedc-73b8-469b-bc84-797378745075	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_query_stripe_account_(security_.resource_definition_,application_.resource_)	query	4bea3784-2dd2-46dc-9548-c55b4613f4b4
-607ca062-c61b-461f-83bf-b2a5b56cd1d0	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-ae810fbb-9426-4580-96bc-f124a0d2ca9d	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.owner_can_query_markdown_(security_.resource_definition_,application_.resource_)	query	79cd2981-cf2c-4a6b-831c-873a8d140e2d
-5c87a82e-d302-45dd-adb8-7afdcac18236	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.serviceaccount_can_create_markdown_without_agency_(security_.resource_definition_,jsonb)	create	\N
-b20974c1-ea3c-4c62-86ba-7cbe533e4300	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.owner_can_create_markdown_(security_.resource_definition_,jsonb)	create	5c87a82e-d302-45dd-adb8-7afdcac18236
-feb75892-7dff-459c-87f7-afec68d96c17	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.serviceaccount_can_change_markdown_without_agency_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-154a632f-7102-4d53-9c0c-91b3fac16d94	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.owner_can_change_markdown_(security_.resource_definition_,application_.resource_,jsonb)	update	feb75892-7dff-459c-87f7-afec68d96c17
-5b4d9b4f-822b-4d54-bd4a-c1709c449349	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.can_query_markdown_based_on_access_level_(security_.resource_definition_,application_.resource_)	query	\N
-79cd2981-cf2c-4a6b-831c-873a8d140e2d	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.serviceaccount_can_query_markdown_without_agency_(security_.resource_definition_,application_.resource_)	query	5b4d9b4f-822b-4d54-bd4a-c1709c449349
-32268460-a5bf-4807-a3d0-9ef69c23b1d7	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.can_query_image_based_on_access_level_(security_.resource_definition_,application_.resource_)	query	\N
-d29e82dd-1151-4951-bac5-38051474a9b1	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.logged_in_user_can_query_image_(security_.resource_definition_,application_.resource_)	query	32268460-a5bf-4807-a3d0-9ef69c23b1d7
-67c85773-8203-463c-a73e-83de271f588b	b54431c5-bbc4-47b6-9810-0a627e49cfe5	policy_.anyone_can_query_own_membership_(security_.resource_definition_,application_.resource_)	query	\N
-0c06c7e3-7cdf-4bb1-b956-6fe90ab46a6f	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.anyone_can_query_theme_(security_.resource_definition_,application_.resource_)	query	\N
-21a0e344-7b24-4f76-b267-363419f490d3	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.logged_in_user_can_query_theme_(security_.resource_definition_,application_.resource_)	query	0c06c7e3-7cdf-4bb1-b956-6fe90ab46a6f
-fd641c3d-4052-49d5-96a3-1f83dc5fe3a4	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.anyone_can_query_subdomain_(security_.resource_definition_,application_.resource_)	query	\N
-3bd8acaf-e137-4d29-ac84-6c9ab020184e	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_query_name_(security_.resource_definition_,application_.resource_)	query	fd641c3d-4052-49d5-96a3-1f83dc5fe3a4
-badf0fcf-f502-4165-9353-197af5fde1ad	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.anyone_can_query_live_price_(security_.resource_definition_,application_.resource_)	query	\N
-7a2b81c8-1be0-47dd-b290-8be36a35e4d9	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.agent_can_query_price_(security_.resource_definition_,application_.resource_)	query	badf0fcf-f502-4165-9353-197af5fde1ad
-96a65b10-7da0-4a81-a52e-a7b8e67e0977	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.owner_can_create_price_(security_.resource_definition_,jsonb)	create	\N
-4dfc7859-04a2-450d-ad13-28617f157549	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.owner_can_change_price_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-57510ccd-6144-477e-b572-392c8f4948c9	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-80bf1108-87d3-482e-ac0d-9173883a142f	f8e2c163-8ebf-45dc-90b8-b850e1590c7c	policy_.user_can_query_their_notification_setting_(security_.resource_definition_,application_.resource_)	query	\N
-3efc0b81-3ef0-46c0-9e58-450eb69646e0	f8e2c163-8ebf-45dc-90b8-b850e1590c7c	policy_.user_can_create_their_notification_setting_(security_.resource_definition_,jsonb)	create	\N
-bfe85df9-030c-4173-abd7-52d25725ddd3	f8e2c163-8ebf-45dc-90b8-b850e1590c7c	policy_.user_can_change_their_notification_setting_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-cecdad34-bfee-4485-a35d-05c8b8f077c3	94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	policy_.anyone_can_query_notification_definition_(security_.resource_definition_,application_.resource_)	query	\N
-2ea74b1b-e0d4-4546-808b-f6a1b4597d0c	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.serviceaccount_can_query_agency_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	\N
-64e2d02e-7e13-45e0-8aa9-cd0edc508f86	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.agent_can_query_agency_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	2ea74b1b-e0d4-4546-808b-f6a1b4597d0c
-9cb7ba87-bc38-4ec0-ab7c-27328bf7d684	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.serviceaccount_can_query_product_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	\N
-1d508b64-b0f4-4418-bf95-0bec7cc64cda	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.agent_can_query_product_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	9cb7ba87-bc38-4ec0-ab7c-27328bf7d684
-50b54bad-9e8d-4e04-b71c-4596176e9258	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.owner_can_create_agency_thank_you_page_setting_(security_.resource_definition_,jsonb)	create	\N
-57aaadab-1383-4163-9da9-575c8b7ef82a	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.owner_can_create_product_thank_you_page_setting_(security_.resource_definition_,jsonb)	create	\N
-76e27529-d910-46ed-8e25-35d34a228b3e	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.owner_can_change_agency_thank_you_page_setting_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-1fbcbd75-06d6-4eaf-95c2-513ebc712570	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.owner_can_change_product_thank_you_page_setting_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-3905b875-0597-47e8-9084-36731c9e1610	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-83fb2b29-e69e-476f-93dc-c5c68c5a7814	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-026a7a57-3ed8-4c1b-93b5-0a0880ce255c	8248bebc-96c3-4f72-83df-ad4c68184470	policy_.anyone_can_query_form_(security_.resource_definition_,application_.resource_)	query	\N
-c32871f2-1540-438e-b375-a7671d40a81f	cbe96769-7f38-4220-82fb-c746c634bc99	policy_.anyone_can_query_page_definition_(security_.resource_definition_,application_.resource_)	query	\N
-6536c5ca-7960-42b5-ac89-ef75a1663b15	e61bae44-071d-4f80-9f53-c639f9b48661	policy_.anyone_can_query_page_block_definition_(security_.resource_definition_,application_.resource_)	query	\N
-cacf6b3b-c992-4f31-bcb4-43f3d157249d	c042e657-0005-42a1-b3c2-6ee25d62fb33	policy_.anyone_can_query_form_field_(security_.resource_definition_,application_.resource_)	query	\N
-60c14718-5559-47ae-ab3a-89bcef23c3fc	08b16cec-4d78-499a-a092-91fc2d360f86	policy_.can_query_page_based_on_access_level_(security_.resource_definition_,application_.resource_)	query	\N
-0b410b7a-9a8e-4781-ac7e-83a18d6ba010	08b16cec-4d78-499a-a092-91fc2d360f86	policy_.owner_can_change_page_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-3c066f80-65b5-470b-987a-2de1ec7cd06d	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-15cc0e4e-c216-4410-b1ea-bd6a550353ca	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.can_query_page_block_based_on_page_access_level_(security_.resource_definition_,application_.resource_)	query	\N
-2859ef7b-837f-4b6d-97ff-0e10c3d9acc1	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.owner_can_change_page_block_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-d0c11115-cef1-41c8-a9ca-5b57b0fa6dd3	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.owner_can_create_page_block_(security_.resource_definition_,jsonb)	create	\N
-e4afc5be-e025-4485-9591-094891ede563	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	policy_.anyone_can_query_subscription_plan_basic_fields_(security_.resource_definition_,application_.resource_)	query	\N
-2ed2bb80-6df7-477c-bb03-5c61b696d8bc	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	policy_.serviceaccount_can_query_subscription_plan_(security_.resource_definition_,application_.resource_)	query	e4afc5be-e025-4485-9591-094891ede563
-1eea3d78-a0e3-48b1-86b0-b09249dab127	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.anyone_can_query_basic_agency_fields_(security_.resource_definition_,application_.resource_)	query	1b6b5685-c684-46a8-9e3a-bbe277cbde31
-10d53e80-8f00-4af3-9bf3-c23cb47958c5	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.agent_can_query_agency_subscription_plan_(security_.resource_definition_,application_.resource_)	query	\N
-1b6b5685-c684-46a8-9e3a-bbe277cbde31	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.serviceaccount_can_query_agency_subscription_plan_(security_.resource_definition_,application_.resource_)	query	10d53e80-8f00-4af3-9bf3-c23cb47958c5
-4b67f569-b5a9-4377-b5c3-a623de78ed2b	76b04264-d560-48af-b49b-4440e96d3fc3	policy_.serviceaccount_can_query_transaction_fee_(security_.resource_definition_,application_.resource_)	query	\N
-fd0f32d1-1c12-483c-9563-1141abcf042d	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.owner_can_create_customer_(security_.resource_definition_,jsonb)	create	\N
-cd333795-a077-4e13-a0ab-4d79253c937c	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.serviceaccount_can_create_customer_(security_.resource_definition_,jsonb)	create	fd0f32d1-1c12-483c-9563-1141abcf042d
-f1a07913-fd07-45e9-b5ce-7fc49bd82280	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.agent_can_query_customer_(security_.resource_definition_,application_.resource_)	query	\N
-80345f82-f4f2-4580-bf4b-8653661bc391	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.serviceaccount_can_query_customer_(security_.resource_definition_,application_.resource_)	query	f1a07913-fd07-45e9-b5ce-7fc49bd82280
-3dd797d2-e9f0-428e-a205-72c1115819cd	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.owner_can_change_customer_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-6d262149-75c1-460d-aa1f-37742c1eb59d	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.serviceaccount_can_change_customer_(security_.resource_definition_,application_.resource_,jsonb)	update	3dd797d2-e9f0-428e-a205-72c1115819cd
-6cb5b5bd-e93f-425c-b3f3-fa8623d95cd7	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-e0877c45-1207-44cc-ba7a-3c1cc9dde4a7	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.serviceaccount_can_query_webhook_event_(security_.resource_definition_,application_.resource_)	query	\N
-77aa3647-a327-452d-9703-77268b1c8826	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.serviceaccount_can_create_webhook_event_(security_.resource_definition_,jsonb)	create	\N
-cee806e5-9134-4ebe-bae6-fd232c61200b	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.serviceaccount_can_change_webhook_event_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-63b8e82d-58c3-464b-8fdc-fc8f213ba352	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.delete_forbidden_(security_.resource_definition_,application_.resource_)	delete	\N
-6cdcc14c-c341-4da4-917f-3ff050c3183b	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.agent_can_query_order_(security_.resource_definition_,application_.resource_)	query	\N
-f03f8ac4-170e-4d35-a00c-f93d407bd605	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.serviceaccount_can_query_order_(security_.resource_definition_,application_.resource_)	query	6cdcc14c-c341-4da4-917f-3ff050c3183b
-09810f00-aee9-4e1f-a38b-20d55db0fd9d	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.owner_can_create_order_(security_.resource_definition_,jsonb)	create	\N
-f091ac1c-d855-4948-a1f7-c666346fae0c	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.serviceaccount_can_create_order_(security_.resource_definition_,jsonb)	create	09810f00-aee9-4e1f-a38b-20d55db0fd9d
-6b5534b5-5bca-460e-9c51-a37b4a8b1f45	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.owner_can_change_order_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-cc9d3837-7b8c-4940-b62e-b378ac6605c7	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.serviceaccount_can_change_order_(security_.resource_definition_,application_.resource_,jsonb)	update	6b5534b5-5bca-460e-9c51-a37b4a8b1f45
-6374e460-0c1f-4519-8c47-1441d41c67ed	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-d05aed6b-6cb5-4642-803d-7747dc9e5e5f	38d32095-8cfa-4e0e-92f8-079fb73002eb	policy_.owner_can_create_credential_(security_.resource_definition_,jsonb)	create	\N
-1a14571b-c7ca-4ce3-bb13-220d41caf44c	38d32095-8cfa-4e0e-92f8-079fb73002eb	policy_.owner_can_change_credential_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-ffcc1f8e-5131-4264-bfd6-2339208f0302	38d32095-8cfa-4e0e-92f8-079fb73002eb	policy_.owner_can_query_credential_(security_.resource_definition_,application_.resource_)	query	\N
-627b3fdd-725e-400e-81f6-278ece7898c5	38d32095-8cfa-4e0e-92f8-079fb73002eb	policy_.serviceaccount_can_query_credential_(security_.resource_definition_,application_.resource_)	query	ffcc1f8e-5131-4264-bfd6-2339208f0302
-34e4e9e2-7d20-433e-93a7-a431452e7156	38d32095-8cfa-4e0e-92f8-079fb73002eb	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-d1acaebc-ceab-4120-a4bd-58132426171a	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.owner_can_create_integration_(security_.resource_definition_,jsonb)	create	\N
-2cf2bcf5-c619-4e4a-bdbf-777eb08b9a92	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.owner_can_change_integration_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-2db0ef77-7432-42f5-8def-e3491bd3d26d	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.owner_can_query_integration_(security_.resource_definition_,application_.resource_)	query	\N
-c3a5aaf2-d9a0-481b-98ec-ce34c2c65cd3	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.serviceaccount_can_query_integration_(security_.resource_definition_,application_.resource_)	query	2db0ef77-7432-42f5-8def-e3491bd3d26d
-09e2dde5-d0ef-4c9d-9154-1b89b10c9bf5	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-cecd71c9-7e74-46ad-8fba-6aa5ac8ec3ca	7f589215-bdc7-4664-99c6-b7745349c352	policy_.serviceaccount_can_query_product_(security_.resource_definition_,application_.resource_)	query	\N
-72066618-a466-4b71-965f-891edcb33c6f	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	6f79da26-c71b-4560-91d0-cbd05150e062
-95c81a39-4ede-4ebd-9485-502ba1ad9a68	7f589215-bdc7-4664-99c6-b7745349c352	policy_.anyone_can_query_live_product_(security_.resource_definition_,application_.resource_)	query	cecd71c9-7e74-46ad-8fba-6aa5ac8ec3ca
-be8e7191-40dc-4a22-aced-d3d4416991f6	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.serviceaccount_can_create_order_item_(security_.resource_definition_,jsonb)	create	\N
-b509686c-6e80-4454-bb68-3ddaf855590d	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.serviceaccount_can_change_order_item_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-1b999022-6a49-4fb2-bf34-3f507a0e5ddb	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.owner_can_query_order_item_(security_.resource_definition_,application_.resource_)	query	\N
-142ccd96-d14a-413e-abbc-d08f9c1d9ffb	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.serviceaccount_can_query_order_item_(security_.resource_definition_,application_.resource_)	query	1b999022-6a49-4fb2-bf34-3f507a0e5ddb
-92343770-3065-48f4-8de9-b48ce1a9257e	30e49b72-e52a-467d-8300-8b5051f32d9a	policy_.anyone_can_query_integration_type_(security_.resource_definition_,application_.resource_)	query	\N
-c9f182bb-10ac-40a0-b8dc-107ed4f88d1d	30e49b72-e52a-467d-8300-8b5051f32d9a	policy_.delete_forbidden_(security_.resource_definition_,application_.resource_)	delete	\N
-6f79da26-c71b-4560-91d0-cbd05150e062	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_agency_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-0fe40001-8bdc-42a8-a01d-22a5629e19d6	6f6a79ba-b275-451f-9156-75740d01156f	policy_.serviceaccount_can_query_integration_config_(security_.resource_definition_,application_.resource_)	query	\N
-adb47a35-ae23-44c4-931a-cf9368c0524c	6f6a79ba-b275-451f-9156-75740d01156f	policy_.owner_can_query_integration_config_(security_.resource_definition_,application_.resource_)	query	0fe40001-8bdc-42a8-a01d-22a5629e19d6
-7b9f353d-1247-4d51-bf21-2964a5494dd9	6f6a79ba-b275-451f-9156-75740d01156f	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N
-5b7119cc-3e79-40ae-9d1e-c6cf3f9d5773	6f6a79ba-b275-451f-9156-75740d01156f	policy_.owner_can_change_integration_config_(security_.resource_definition_,application_.resource_,jsonb)	update	\N
-5a416245-3eb6-47b9-be14-ddcf7f224678	6f6a79ba-b275-451f-9156-75740d01156f	policy_.owner_can_create_integration_config_(security_.resource_definition_,jsonb)	create	\N
-b9fb70ad-f319-4e47-aac7-193d9d9e7ace	e82d9b56-e05d-4aa2-81b4-2af2643f224c	policy_.anyone_can_query_credential_type_(security_.resource_definition_,application_.resource_)	query	\N
+COPY security_.policy_ (uuid_, resource_definition_uuid_, function_, operation_type_, after_uuid_, enabled_) FROM stdin;
+e84918a7-9e8e-4522-b400-4d258d8e1346	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+cdc2d6a0-b00e-4763-bad3-d2b43bf0c3c0	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+69d40b30-226f-4dbf-8e86-564022464cc7	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+7fe3d163-1f55-4916-9f1f-f345c01e7773	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_create_theme_(security_.resource_definition_,jsonb)	create	\N	t
+95c5b9d6-3df7-4ace-961a-b817262783e4	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.owner_can_change_theme_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+781a2064-6530-4452-83d6-04347be6c845	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+e96b9766-d1d1-427a-9144-258e77ad6047	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.owner_can_create_image_(security_.resource_definition_,jsonb)	create	\N	t
+b8bb1737-fb4f-4d40-afba-b8d29a3ebb05	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.owner_can_change_image_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+fce05ef3-4cd5-4b5e-a011-55e20f683556	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+5eafba24-946e-42b5-b82f-b0ff99629965	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_query_themselves_(security_.resource_definition_,application_.resource_)	query	\N	t
+8c6d2f03-850b-428f-8304-6b9e667c1689	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+a8598fdb-0010-4a1b-9ad9-cfafc3f9e573	f8c5e08d-cd10-466e-9233-ae0e2ddbe81a	policy_.user_can_delete_only_themselves_(security_.resource_definition_,application_.resource_)	delete	\N	t
+cdeef182-edc7-4120-a301-c174a5e6a837	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_create_sign_up_(security_.resource_definition_,jsonb)	create	\N	t
+cb4cdf3a-a99b-44df-8027-8352de2333b9	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_can_cancel_sign_up_(security_.resource_definition_,application_.resource_)	delete	\N	t
+96be86e8-c8b4-430f-befa-1045f9ced98a	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.sign_up_can_be_queried_by_initiator_(security_.resource_definition_,application_.resource_)	query	\N	t
+aab7c301-7434-489a-bb03-5c91edfba106	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.password_reset_can_be_queried_by_initiator_(security_.resource_definition_,application_.resource_)	query	\N	t
+128a36c5-97fb-45f6-9e31-d804058cef95	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_can_create_password_reset_(security_.resource_definition_,jsonb)	create	\N	t
+d1a5960c-3f37-4c3f-864b-8807bf5a13c6	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_can_cancel_password_reset_(security_.resource_definition_,application_.resource_)	delete	\N	t
+acba9324-3aff-4951-a46d-51cd7eaa2691	3b56d171-3e69-41ca-9a98-d1a3abc9170b	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+b2257097-cb6d-4edc-a2b3-997e185dc415	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_password_reset_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+1946993a-7a51-40f2-9e89-91199bdbf9bb	edc5f82c-c991-494c-90f0-cf6163902f40	policy_.anyone_with_verification_code_can_verify_(security_.resource_definition_,application_.resource_,jsonb)	update	b2257097-cb6d-4edc-a2b3-997e185dc415	t
+ffbdd939-d23b-4703-b0a3-78baa975133f	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_create_stripe_account_(security_.resource_definition_,jsonb)	create	\N	t
+be2e2434-7bb8-4b17-87bc-5a7bd97fdd13	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_change_stripe_account_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+1526bb13-417f-481f-981c-913d5f93dd0e	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+ab3fa4a3-413f-449b-bfb5-ed4981ba1de2	7f589215-bdc7-4664-99c6-b7745349c352	policy_.agent_can_query_product_(security_.resource_definition_,application_.resource_)	query	95c81a39-4ede-4ebd-9485-502ba1ad9a68	t
+0be43a88-13df-4bb2-8794-159800b90670	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_create_product_(security_.resource_definition_,jsonb)	create	\N	t
+37978625-4f1f-4c1a-a9da-0571a3e91fd4	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_change_product_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+b2cab51a-ad53-4ee2-9113-1566989be9dc	7f589215-bdc7-4664-99c6-b7745349c352	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+4bea3784-2dd2-46dc-9548-c55b4613f4b4	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.serviceaccount_can_query_stripe_account_for_agency_(security_.resource_definition_,application_.resource_)	query	\N	t
+98bbbedc-73b8-469b-bc84-797378745075	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_query_stripe_account_(security_.resource_definition_,application_.resource_)	query	4bea3784-2dd2-46dc-9548-c55b4613f4b4	t
+607ca062-c61b-461f-83bf-b2a5b56cd1d0	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+ae810fbb-9426-4580-96bc-f124a0d2ca9d	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.owner_can_query_markdown_(security_.resource_definition_,application_.resource_)	query	79cd2981-cf2c-4a6b-831c-873a8d140e2d	t
+5c87a82e-d302-45dd-adb8-7afdcac18236	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.serviceaccount_can_create_markdown_without_agency_(security_.resource_definition_,jsonb)	create	\N	t
+b20974c1-ea3c-4c62-86ba-7cbe533e4300	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.owner_can_create_markdown_(security_.resource_definition_,jsonb)	create	5c87a82e-d302-45dd-adb8-7afdcac18236	t
+feb75892-7dff-459c-87f7-afec68d96c17	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.serviceaccount_can_change_markdown_without_agency_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+154a632f-7102-4d53-9c0c-91b3fac16d94	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.owner_can_change_markdown_(security_.resource_definition_,application_.resource_,jsonb)	update	feb75892-7dff-459c-87f7-afec68d96c17	t
+5b4d9b4f-822b-4d54-bd4a-c1709c449349	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.can_query_markdown_based_on_access_level_(security_.resource_definition_,application_.resource_)	query	\N	t
+79cd2981-cf2c-4a6b-831c-873a8d140e2d	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.serviceaccount_can_query_markdown_without_agency_(security_.resource_definition_,application_.resource_)	query	5b4d9b4f-822b-4d54-bd4a-c1709c449349	t
+32268460-a5bf-4807-a3d0-9ef69c23b1d7	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.can_query_image_based_on_access_level_(security_.resource_definition_,application_.resource_)	query	\N	t
+d29e82dd-1151-4951-bac5-38051474a9b1	2d77f11c-8271-4c07-a6b4-3e7ac2ae8378	policy_.logged_in_user_can_query_image_(security_.resource_definition_,application_.resource_)	query	32268460-a5bf-4807-a3d0-9ef69c23b1d7	t
+67c85773-8203-463c-a73e-83de271f588b	b54431c5-bbc4-47b6-9810-0a627e49cfe5	policy_.anyone_can_query_own_membership_(security_.resource_definition_,application_.resource_)	query	\N	t
+0c06c7e3-7cdf-4bb1-b956-6fe90ab46a6f	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.anyone_can_query_theme_(security_.resource_definition_,application_.resource_)	query	\N	t
+21a0e344-7b24-4f76-b267-363419f490d3	88bcb8b1-3826-4bcd-81af-ce4f683c5285	policy_.logged_in_user_can_query_theme_(security_.resource_definition_,application_.resource_)	query	0c06c7e3-7cdf-4bb1-b956-6fe90ab46a6f	t
+fd641c3d-4052-49d5-96a3-1f83dc5fe3a4	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.anyone_can_query_subdomain_(security_.resource_definition_,application_.resource_)	query	\N	t
+3bd8acaf-e137-4d29-ac84-6c9ab020184e	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_query_name_(security_.resource_definition_,application_.resource_)	query	fd641c3d-4052-49d5-96a3-1f83dc5fe3a4	t
+badf0fcf-f502-4165-9353-197af5fde1ad	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.anyone_can_query_live_price_(security_.resource_definition_,application_.resource_)	query	\N	t
+7a2b81c8-1be0-47dd-b290-8be36a35e4d9	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.agent_can_query_price_(security_.resource_definition_,application_.resource_)	query	badf0fcf-f502-4165-9353-197af5fde1ad	t
+96a65b10-7da0-4a81-a52e-a7b8e67e0977	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.owner_can_create_price_(security_.resource_definition_,jsonb)	create	\N	t
+4dfc7859-04a2-450d-ad13-28617f157549	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.owner_can_change_price_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+57510ccd-6144-477e-b572-392c8f4948c9	f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+80bf1108-87d3-482e-ac0d-9173883a142f	f8e2c163-8ebf-45dc-90b8-b850e1590c7c	policy_.user_can_query_their_notification_setting_(security_.resource_definition_,application_.resource_)	query	\N	t
+3efc0b81-3ef0-46c0-9e58-450eb69646e0	f8e2c163-8ebf-45dc-90b8-b850e1590c7c	policy_.user_can_create_their_notification_setting_(security_.resource_definition_,jsonb)	create	\N	t
+bfe85df9-030c-4173-abd7-52d25725ddd3	f8e2c163-8ebf-45dc-90b8-b850e1590c7c	policy_.user_can_change_their_notification_setting_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+cecdad34-bfee-4485-a35d-05c8b8f077c3	94a1ec9c-d7a6-4327-8221-6f00c6c09ccf	policy_.anyone_can_query_notification_definition_(security_.resource_definition_,application_.resource_)	query	\N	t
+2ea74b1b-e0d4-4546-808b-f6a1b4597d0c	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.serviceaccount_can_query_agency_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	\N	t
+64e2d02e-7e13-45e0-8aa9-cd0edc508f86	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.agent_can_query_agency_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	2ea74b1b-e0d4-4546-808b-f6a1b4597d0c	t
+9cb7ba87-bc38-4ec0-ab7c-27328bf7d684	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.serviceaccount_can_query_product_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	\N	t
+1d508b64-b0f4-4418-bf95-0bec7cc64cda	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.agent_can_query_product_thank_you_page_setting_(security_.resource_definition_,application_.resource_)	query	9cb7ba87-bc38-4ec0-ab7c-27328bf7d684	t
+50b54bad-9e8d-4e04-b71c-4596176e9258	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.owner_can_create_agency_thank_you_page_setting_(security_.resource_definition_,jsonb)	create	\N	t
+57aaadab-1383-4163-9da9-575c8b7ef82a	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.owner_can_create_product_thank_you_page_setting_(security_.resource_definition_,jsonb)	create	\N	t
+76e27529-d910-46ed-8e25-35d34a228b3e	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.owner_can_change_agency_thank_you_page_setting_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+1fbcbd75-06d6-4eaf-95c2-513ebc712570	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.owner_can_change_product_thank_you_page_setting_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+3905b875-0597-47e8-9084-36731c9e1610	6549cc83-4ce3-423d-88e1-263ac227608d	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+83fb2b29-e69e-476f-93dc-c5c68c5a7814	34f873e1-b837-4f1f-94d7-7bacf9c43d8d	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+026a7a57-3ed8-4c1b-93b5-0a0880ce255c	8248bebc-96c3-4f72-83df-ad4c68184470	policy_.anyone_can_query_form_(security_.resource_definition_,application_.resource_)	query	\N	t
+c32871f2-1540-438e-b375-a7671d40a81f	cbe96769-7f38-4220-82fb-c746c634bc99	policy_.anyone_can_query_page_definition_(security_.resource_definition_,application_.resource_)	query	\N	t
+6536c5ca-7960-42b5-ac89-ef75a1663b15	e61bae44-071d-4f80-9f53-c639f9b48661	policy_.anyone_can_query_page_block_definition_(security_.resource_definition_,application_.resource_)	query	\N	t
+cacf6b3b-c992-4f31-bcb4-43f3d157249d	c042e657-0005-42a1-b3c2-6ee25d62fb33	policy_.anyone_can_query_form_field_(security_.resource_definition_,application_.resource_)	query	\N	t
+60c14718-5559-47ae-ab3a-89bcef23c3fc	08b16cec-4d78-499a-a092-91fc2d360f86	policy_.can_query_page_based_on_access_level_(security_.resource_definition_,application_.resource_)	query	\N	t
+0b410b7a-9a8e-4781-ac7e-83a18d6ba010	08b16cec-4d78-499a-a092-91fc2d360f86	policy_.owner_can_change_page_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+3c066f80-65b5-470b-987a-2de1ec7cd06d	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+15cc0e4e-c216-4410-b1ea-bd6a550353ca	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.can_query_page_block_based_on_page_access_level_(security_.resource_definition_,application_.resource_)	query	\N	t
+2859ef7b-837f-4b6d-97ff-0e10c3d9acc1	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.owner_can_change_page_block_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+d0c11115-cef1-41c8-a9ca-5b57b0fa6dd3	bc2e81b9-be64-4068-ad32-3ed89151bbfa	policy_.owner_can_create_page_block_(security_.resource_definition_,jsonb)	create	\N	t
+e4afc5be-e025-4485-9591-094891ede563	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	policy_.anyone_can_query_subscription_plan_basic_fields_(security_.resource_definition_,application_.resource_)	query	\N	t
+2ed2bb80-6df7-477c-bb03-5c61b696d8bc	35bee174-fde7-4ae2-9cb2-4469b3eb8de5	policy_.serviceaccount_can_query_subscription_plan_(security_.resource_definition_,application_.resource_)	query	e4afc5be-e025-4485-9591-094891ede563	t
+1eea3d78-a0e3-48b1-86b0-b09249dab127	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.anyone_can_query_basic_agency_fields_(security_.resource_definition_,application_.resource_)	query	1b6b5685-c684-46a8-9e3a-bbe277cbde31	t
+10d53e80-8f00-4af3-9bf3-c23cb47958c5	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.agent_can_query_agency_subscription_plan_(security_.resource_definition_,application_.resource_)	query	\N	t
+1b6b5685-c684-46a8-9e3a-bbe277cbde31	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.serviceaccount_can_query_agency_subscription_plan_(security_.resource_definition_,application_.resource_)	query	10d53e80-8f00-4af3-9bf3-c23cb47958c5	t
+4b67f569-b5a9-4377-b5c3-a623de78ed2b	76b04264-d560-48af-b49b-4440e96d3fc3	policy_.serviceaccount_can_query_transaction_fee_(security_.resource_definition_,application_.resource_)	query	\N	t
+fd0f32d1-1c12-483c-9563-1141abcf042d	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.owner_can_create_customer_(security_.resource_definition_,jsonb)	create	\N	t
+cd333795-a077-4e13-a0ab-4d79253c937c	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.serviceaccount_can_create_customer_(security_.resource_definition_,jsonb)	create	fd0f32d1-1c12-483c-9563-1141abcf042d	t
+f1a07913-fd07-45e9-b5ce-7fc49bd82280	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.agent_can_query_customer_(security_.resource_definition_,application_.resource_)	query	\N	t
+80345f82-f4f2-4580-bf4b-8653661bc391	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.serviceaccount_can_query_customer_(security_.resource_definition_,application_.resource_)	query	f1a07913-fd07-45e9-b5ce-7fc49bd82280	t
+3dd797d2-e9f0-428e-a205-72c1115819cd	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.owner_can_change_customer_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+6d262149-75c1-460d-aa1f-37742c1eb59d	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.serviceaccount_can_change_customer_(security_.resource_definition_,application_.resource_,jsonb)	update	3dd797d2-e9f0-428e-a205-72c1115819cd	t
+6cb5b5bd-e93f-425c-b3f3-fa8623d95cd7	3d67b094-a2d5-475e-ac1b-6a98d3e49c5e	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+e0877c45-1207-44cc-ba7a-3c1cc9dde4a7	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.serviceaccount_can_query_webhook_event_(security_.resource_definition_,application_.resource_)	query	\N	t
+77aa3647-a327-452d-9703-77268b1c8826	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.serviceaccount_can_create_webhook_event_(security_.resource_definition_,jsonb)	create	\N	t
+cee806e5-9134-4ebe-bae6-fd232c61200b	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.serviceaccount_can_change_webhook_event_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+63b8e82d-58c3-464b-8fdc-fc8f213ba352	58c5bb7f-ddc0-4d71-a5ff-7f22b2d1c925	policy_.delete_forbidden_(security_.resource_definition_,application_.resource_)	delete	\N	t
+6cdcc14c-c341-4da4-917f-3ff050c3183b	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.agent_can_query_order_(security_.resource_definition_,application_.resource_)	query	\N	t
+f03f8ac4-170e-4d35-a00c-f93d407bd605	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.serviceaccount_can_query_order_(security_.resource_definition_,application_.resource_)	query	6cdcc14c-c341-4da4-917f-3ff050c3183b	t
+09810f00-aee9-4e1f-a38b-20d55db0fd9d	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.owner_can_create_order_(security_.resource_definition_,jsonb)	create	\N	t
+f091ac1c-d855-4948-a1f7-c666346fae0c	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.serviceaccount_can_create_order_(security_.resource_definition_,jsonb)	create	09810f00-aee9-4e1f-a38b-20d55db0fd9d	t
+6b5534b5-5bca-460e-9c51-a37b4a8b1f45	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.owner_can_change_order_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+cc9d3837-7b8c-4940-b62e-b378ac6605c7	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.serviceaccount_can_change_order_(security_.resource_definition_,application_.resource_,jsonb)	update	6b5534b5-5bca-460e-9c51-a37b4a8b1f45	t
+6374e460-0c1f-4519-8c47-1441d41c67ed	20c1d214-27e8-4805-b645-2e5a00f32486	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+d05aed6b-6cb5-4642-803d-7747dc9e5e5f	38d32095-8cfa-4e0e-92f8-079fb73002eb	policy_.owner_can_create_credential_(security_.resource_definition_,jsonb)	create	\N	t
+1a14571b-c7ca-4ce3-bb13-220d41caf44c	38d32095-8cfa-4e0e-92f8-079fb73002eb	policy_.owner_can_change_credential_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+ffcc1f8e-5131-4264-bfd6-2339208f0302	38d32095-8cfa-4e0e-92f8-079fb73002eb	policy_.owner_can_query_credential_(security_.resource_definition_,application_.resource_)	query	\N	t
+627b3fdd-725e-400e-81f6-278ece7898c5	38d32095-8cfa-4e0e-92f8-079fb73002eb	policy_.serviceaccount_can_query_credential_(security_.resource_definition_,application_.resource_)	query	ffcc1f8e-5131-4264-bfd6-2339208f0302	t
+34e4e9e2-7d20-433e-93a7-a431452e7156	38d32095-8cfa-4e0e-92f8-079fb73002eb	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+d1acaebc-ceab-4120-a4bd-58132426171a	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.owner_can_create_integration_(security_.resource_definition_,jsonb)	create	\N	t
+2cf2bcf5-c619-4e4a-bdbf-777eb08b9a92	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.owner_can_change_integration_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+2db0ef77-7432-42f5-8def-e3491bd3d26d	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.owner_can_query_integration_(security_.resource_definition_,application_.resource_)	query	\N	t
+c3a5aaf2-d9a0-481b-98ec-ce34c2c65cd3	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.serviceaccount_can_query_integration_(security_.resource_definition_,application_.resource_)	query	2db0ef77-7432-42f5-8def-e3491bd3d26d	t
+09e2dde5-d0ef-4c9d-9154-1b89b10c9bf5	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+cecd71c9-7e74-46ad-8fba-6aa5ac8ec3ca	7f589215-bdc7-4664-99c6-b7745349c352	policy_.serviceaccount_can_query_product_(security_.resource_definition_,application_.resource_)	query	\N	t
+72066618-a466-4b71-965f-891edcb33c6f	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	6f79da26-c71b-4560-91d0-cbd05150e062	t
+95c81a39-4ede-4ebd-9485-502ba1ad9a68	7f589215-bdc7-4664-99c6-b7745349c352	policy_.anyone_can_query_live_product_(security_.resource_definition_,application_.resource_)	query	cecd71c9-7e74-46ad-8fba-6aa5ac8ec3ca	t
+be8e7191-40dc-4a22-aced-d3d4416991f6	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.serviceaccount_can_create_order_item_(security_.resource_definition_,jsonb)	create	\N	t
+b509686c-6e80-4454-bb68-3ddaf855590d	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.serviceaccount_can_change_order_item_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+1b999022-6a49-4fb2-bf34-3f507a0e5ddb	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.owner_can_query_order_item_(security_.resource_definition_,application_.resource_)	query	\N	t
+142ccd96-d14a-413e-abbc-d08f9c1d9ffb	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.serviceaccount_can_query_order_item_(security_.resource_definition_,application_.resource_)	query	1b999022-6a49-4fb2-bf34-3f507a0e5ddb	t
+92343770-3065-48f4-8de9-b48ce1a9257e	30e49b72-e52a-467d-8300-8b5051f32d9a	policy_.anyone_can_query_integration_type_(security_.resource_definition_,application_.resource_)	query	\N	t
+c9f182bb-10ac-40a0-b8dc-107ed4f88d1d	30e49b72-e52a-467d-8300-8b5051f32d9a	policy_.delete_forbidden_(security_.resource_definition_,application_.resource_)	delete	\N	t
+6f79da26-c71b-4560-91d0-cbd05150e062	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_agency_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+0fe40001-8bdc-42a8-a01d-22a5629e19d6	6f6a79ba-b275-451f-9156-75740d01156f	policy_.serviceaccount_can_query_integration_config_(security_.resource_definition_,application_.resource_)	query	\N	t
+adb47a35-ae23-44c4-931a-cf9368c0524c	6f6a79ba-b275-451f-9156-75740d01156f	policy_.owner_can_query_integration_config_(security_.resource_definition_,application_.resource_)	query	0fe40001-8bdc-42a8-a01d-22a5629e19d6	t
+7b9f353d-1247-4d51-bf21-2964a5494dd9	6f6a79ba-b275-451f-9156-75740d01156f	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
+5b7119cc-3e79-40ae-9d1e-c6cf3f9d5773	6f6a79ba-b275-451f-9156-75740d01156f	policy_.owner_can_change_integration_config_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+5a416245-3eb6-47b9-be14-ddcf7f224678	6f6a79ba-b275-451f-9156-75740d01156f	policy_.owner_can_create_integration_config_(security_.resource_definition_,jsonb)	create	\N	t
+b9fb70ad-f319-4e47-aac7-193d9d9e7ace	e82d9b56-e05d-4aa2-81b4-2af2643f224c	policy_.anyone_can_query_credential_type_(security_.resource_definition_,application_.resource_)	query	\N	t
+4834193b-9666-4dbe-89d7-980fd4bab17a	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.logged_in_user_can_create_subdomain_(security_.resource_definition_,jsonb)	create	4d10e14e-3795-4d0b-b2d3-52d7f75bcf06	f
+5285f600-fb00-4861-8485-7b198c5a90c6	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_create_agency_(security_.resource_definition_,jsonb)	create	285d6379-8009-4a4d-bade-64280e90e644	f
+aff3da86-e54f-4265-bbb3-3f2ad945312d	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.test_user_can_create_test_subdomain_(security_.resource_definition_,jsonb)	create	\N	t
+4d10e14e-3795-4d0b-b2d3-52d7f75bcf06	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.insider_user_can_create_subdomain_(security_.resource_definition_,jsonb)	create	aff3da86-e54f-4265-bbb3-3f2ad945312d	t
+f85bed2d-608b-4b64-8e45-bfdecbdf6066	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.test_user_can_create_test_agency_(security_.resource_definition_,jsonb)	create	\N	t
+285d6379-8009-4a4d-bade-64280e90e644	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.insider_user_can_create_agency_(security_.resource_definition_,jsonb)	create	f85bed2d-608b-4b64-8e45-bfdecbdf6066	t
 \.
 
 
