@@ -2,6 +2,7 @@ import React, { Fragment } from 'react';
 import { Util } from '../../util';
 import { useBreakpoints } from '../../hooks';
 import { UsePaginationReturn } from './usePagination';
+import { PaginationControls } from '..';
 
 export * from './usePagination';
 export * from './PaginationControls';
@@ -12,7 +13,6 @@ type TableProps<TItem> = {
     | ((item: TItem | null) => React.ReactNode)
   )[];
   headers: React.ReactNode[];
-  footer?: React.ReactNode;
   dense?: boolean;
   breakpoint?: keyof ReturnType<typeof useBreakpoints>;
   wrap?: {
@@ -22,11 +22,19 @@ type TableProps<TItem> = {
   loading?: boolean;
   error?: boolean | string | Error | { message: string };
 } & (
-  | {
+  | ({
       pagination: UsePaginationReturn<TItem>;
-    }
+    } & (
+      | {
+          footer?: React.ReactNode;
+        }
+      | {
+          footerPaginationControls?: boolean;
+        }
+    ))
   | {
       items: TItem[] | undefined | null;
+      footer?: React.ReactNode;
     }
 ) &
   React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
@@ -40,7 +48,6 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
   wrap: wrapOptions,
   loading,
   error,
-  footer,
   ...rest
 }: TableProps<TItem>) {
   const skeletonRowCountFallback = 5;
@@ -123,6 +130,18 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
         />
       );
     });
+  } else if (items.length === 0) {
+    rowCount = 1;
+
+    rows = (
+      <TableInfoRow
+        message="No entries to show"
+        row={isNotWrapped ? 2 : 1}
+        wrapColCount={wrapColCount}
+        wrapColSpanSum={wrapColSpanSum}
+        isNotWrapped={isNotWrapped}
+      />
+    );
   } else {
     rowCount = items.length;
     rows = items.map((item, i) => {
@@ -143,6 +162,19 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
         />
       );
     });
+  }
+
+  let footer: React.ReactNode = undefined;
+
+  if (Util.hasProperty(rest, 'footer')) {
+    footer = rest.footer as React.ReactNode;
+  } else if (
+    Util.hasProperty(rest, 'footerPaginationControls') &&
+    rest.footerPaginationControls &&
+    pagination &&
+    (pagination.loadingTotalNumberOfItems || pagination.totalNumberOfItems > 0)
+  ) {
+    footer = <PaginationControls pagination={pagination} />;
   }
 
   return (
@@ -428,6 +460,56 @@ function TableErrorRow({
               strokeLinejoin="round"
               strokeWidth={2}
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        </div>
+        <span className="text-sm font-medium">{message}</span>
+      </div>
+    </div>
+  );
+}
+
+type TableInfoRowProps = {
+  row: number;
+  message: string | null;
+  wrapColCount: number;
+  wrapColSpanSum: number;
+  isNotWrapped: boolean;
+} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+
+function TableInfoRow({
+  row,
+  message,
+  wrapColCount,
+  wrapColSpanSum,
+  isNotWrapped
+}: TableInfoRowProps) {
+  let className = 'grid p-4 border-gray-200 dark:border-gray-700 place-items-center';
+  let gridArea = `${row} / 1 / ${row + 1} / -1`;
+
+  message = message ?? 'Some error occurred';
+
+  if (!isNotWrapped) {
+    row = ((row - 1) * wrapColSpanSum) / wrapColCount + 1;
+    gridArea = `${row} / 1 / ${row + wrapColSpanSum / wrapColCount} / -1`;
+  }
+
+  return (
+    <div className={className} style={{ gridArea }}>
+      <div className="flex items-center space-x-3 text-gray-400">
+        <div className="grid w-8 h-8 bg-gray-100 rounded-full place-items-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
         </div>

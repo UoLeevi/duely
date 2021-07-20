@@ -11,7 +11,6 @@ import {
   Table,
   DropMenu,
   Card,
-  PaginationControls,
   Util,
   usePagination,
   SkeletonText
@@ -223,7 +222,7 @@ export default function DashboardOrdersHome() {
             error={error}
             wrap={wrap}
             pagination={pagination}
-            footer={<PaginationControls pagination={pagination} />}
+            footerPaginationControls
           />
         </Card>
       </DashboardSection>

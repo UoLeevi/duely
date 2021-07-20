@@ -13,8 +13,7 @@ import {
   Card,
   Button,
   SkeletonText,
-  usePagination,
-  PaginationControls
+  usePagination
 } from '@duely/react';
 import { ConfirmCustomerDeletionModal } from './components';
 import { DashboardSection } from '../components';
@@ -219,7 +218,7 @@ export default function DashboardCustomersHome() {
             loading={loading}
             error={error}
             pagination={pagination}
-            footer={<PaginationControls pagination={pagination} />}
+            footerPaginationControls
           />
         </Card>
       </DashboardSection>

@@ -9,8 +9,7 @@ import {
   useDynamicNavigation,
   SkeletonText,
   SkeletonParagraph,
-  usePagination,
-  PaginationControls
+  usePagination
 } from '@duely/react';
 import { ConfirmProductDeletionModal } from './components';
 import {
@@ -38,7 +37,9 @@ export default function DashboardProductsHome() {
   const { sm } = useBreakpoints();
   const passAccessToken = useDynamicNavigation({ passAccessToken: true });
 
-  type TProduct = NonNullable<ReturnType<typeof products_Q.result>> extends readonly (infer T)[] ? T : never;
+  type TProduct = NonNullable<ReturnType<typeof products_Q.result>> extends readonly (infer T)[]
+    ? T
+    : never;
 
   const pagination = usePagination<TProduct>({
     getTotalNumberOfItems: () => {
@@ -51,7 +52,7 @@ export default function DashboardProductsHome() {
         {
           filter: {
             agency_id: agency?.id!,
-        active: true
+            active: true
           }
         },
         { skip: !agency }
@@ -69,7 +70,7 @@ export default function DashboardProductsHome() {
         {
           filter: {
             agency_id: agency?.id!,
-        active: true
+            active: true
           },
           limit: itemsPerPage === 0 ? undefined : itemsPerPage,
           offset: firstIndex < 0 ? 0 : firstIndex
@@ -130,7 +131,10 @@ export default function DashboardProductsHome() {
             <div className="flex pb-1 space-x-3 text-xs text-gray-500 products-center">
               {product.default_price && (
                 <span>
-                  {Currency.format(product.default_price.unit_amount, product.default_price.currency as Currency)}
+                  {Currency.format(
+                    product.default_price.unit_amount,
+                    product.default_price.currency as Currency
+                  )}
                 </span>
               )}
 
@@ -248,7 +252,7 @@ export default function DashboardProductsHome() {
             loading={loading}
             error={error}
             pagination={pagination}
-            footer={<PaginationControls pagination={pagination} />}
+            footerPaginationControls
           />
         </Card>
       </DashboardSection>
