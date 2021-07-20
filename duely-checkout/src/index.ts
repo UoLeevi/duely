@@ -6,7 +6,7 @@ import { GraphQLClient, gql } from 'graphql-request';
 import { getServiceAccountContext } from '@duely/db';
 
 const gql_subdomain = gql`
-  query($subdomain_name: String!, $livemode: Boolean) {
+  query ($subdomain_name: String!, $livemode: Boolean) {
     subdomains(filter: { name: $subdomain_name }) {
       id
       agency {
@@ -22,7 +22,7 @@ const gql_subdomain = gql`
 `;
 
 const gql_product = gql`
-  query($agency_id: ID!, $product_url_name: String!) {
+  query ($agency_id: ID!, $product_url_name: String!) {
     products(filter: { url_name: $product_url_name, agency_id: $agency_id }) {
       id
       default_price {
@@ -33,7 +33,7 @@ const gql_product = gql`
 `;
 
 const gql_create_stripe_checkout_session = gql`
-  mutation($price_id: ID!, $livemode: Boolean!) {
+  mutation ($price_id: ID!, $livemode: Boolean!) {
     create_stripe_checkout_session(livemode: $livemode, price_id: $price_id) {
       success
       message
@@ -47,7 +47,7 @@ main();
 
 let client: GraphQLClient;
 let context: {
-  jwt: string;
+  jwt: string | null;
 };
 
 async function main() {
@@ -111,7 +111,7 @@ async function get_checkout(req: Request, res: Response) {
   try {
     const { subdomains } = await client.request(gql_subdomain, {
       subdomain_name,
-      livemode: preview ? true : null
+      livemode: preview || preview === '' ? false : null
     });
 
     if (subdomains.length != 1) {
@@ -147,11 +147,8 @@ async function get_checkout(req: Request, res: Response) {
     return;
   }
 
-  const requestArgs: [
-    string,
-    { price_id: string; livemode: boolean },
-    { authorization: string }?
-  ] = [gql_create_stripe_checkout_session, { price_id, livemode }];
+  const requestArgs: [string, { price_id: string; livemode: boolean }, { authorization: string }?] =
+    [gql_create_stripe_checkout_session, { price_id, livemode }];
 
   const { access_token } = req.query ?? {};
 
