@@ -15,6 +15,8 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
+ALTER TABLE security_.policy_ ADD COLUMN enabled_ boolean NOT NULL DEFAULT 't';
+
 CREATE FUNCTION internal_.check_current_user_is_test_user_() RETURNS boolean
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     AS $$
@@ -63,8 +65,6 @@ PERFORM security_.register_policy_('application_.agency_', 'create', 'policy_.te
 
 INSERT INTO security_.security_data_ (key_, data_)
 VALUES ('email_address:test@duely.app', '{"is_test_user": true}');
-
-ALTER TABLE security_.policy_ ADD COLUMN enabled_ boolean NOT NULL DEFAULT 't';
 
 CREATE FUNCTION internal_.check_current_user_is_insider_user_() RETURNS boolean
     LANGUAGE plpgsql STABLE SECURITY DEFINER
