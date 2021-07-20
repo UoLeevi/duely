@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, start_password_reset_M } from '@duely/client';
-import { Form, FormButton, FormField, FormInfoMessage, useForm, useFormMessages } from '../../forms';
+import {
+  Form,
+  FormButton,
+  FormField,
+  FormInfoMessage,
+  useForm,
+  useFormMessages
+} from '../../forms';
 import { Button } from '../../buttons';
 import { Util } from '../../../util';
 
@@ -18,9 +25,8 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
   const form = useForm<StartPasswordResetFormValues>();
   const [sentToEmail, setSentToEmail] = useState<string>();
   const [completed, setCompleted] = useState(false);
-  const [startPasswordReset, { loading: startPasswordResetLoading }] = useMutation(
-    start_password_reset_M
-  );
+  const [startPasswordReset, { loading: startPasswordResetLoading }] =
+    useMutation(start_password_reset_M);
 
   const { errorMessage, setErrorMessage } = useFormMessages();
 
@@ -42,9 +48,9 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
   if (completed) {
     return (
       <div className="flex flex-col items-center space-y-4 text-center">
-        <div className="grid w-10 h-10 bg-green-200 rounded-full place-items-center">
+        <div className="grid w-10 h-10 bg-green-100 border-2 border-green-600 rounded-full place-items-center">
           <svg
-            className="text-green-600 h-7 w-7"
+            className="text-green-600 h-7 w-7 animate-stoke-draw"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -61,15 +67,10 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
           <span>Please check your inbox.</span>
         </p>
         <div className="flex pt-3 space-x-5">
-          <Button className="text-white bg-indigo-500 whitespace-nowrap" type="button">
+          <Button color="indigo" className="whitespace-nowrap" type="button">
             <Link to="/">Go to home</Link>
           </Button>
-          <Button
-            onClick={() => setCompleted(false)}
-            dense
-            className="bg-gray-50 whitespace-nowrap"
-            type="button"
-          >
+          <Button color="gray" onClick={() => setCompleted(false)} dense type="button">
             Use different email
           </Button>
         </div>
@@ -89,13 +90,14 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
         registerOptions={{ required: true }}
       />
       <div className="flex flex-col items-center pt-4">
-        <FormButton disabled={startPasswordResetLoading}>
-          Send a verification link
-        </FormButton>
+        <FormButton disabled={startPasswordResetLoading}>Send a verification link</FormButton>
       </div>
       <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
         <span>Don't have an account?</span>
-        <Link to="/sign-up" className="font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none">
+        <Link
+          to="/sign-up"
+          className="font-semibold text-indigo-600 focus-visible:text-indigo-700 focus:outline-none"
+        >
           Sign up
         </Link>
       </div>

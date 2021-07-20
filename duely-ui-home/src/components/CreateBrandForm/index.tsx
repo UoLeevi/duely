@@ -6,7 +6,8 @@ import {
   useForm,
   FormField,
   useDynamicNavigation,
-  Form
+  Form,
+  AnchorButton
 } from '@duely/react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useModal } from '~/hooks';
@@ -63,7 +64,7 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
     await createAgency({
       ...data,
       image_logo: image_logo!,
-      livemode: false,
+      livemode: true,
       return_url: `${window.location.origin}/profile`
     });
   }
@@ -81,10 +82,10 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
 
     return (
       <div className="flex flex-col items-center space-y-4 text-center">
-        <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
+        <div className="grid w-12 h-12 bg-green-100 border-2 border-green-600 rounded-full place-items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-[1em] w-[1em] text-3xl text-green-600"
+            className="h-[1em] w-[1em] text-3xl text-green-600 animate-stroke-draw"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -108,13 +109,13 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           </a>{' '}
           to enable payments.
         </p>
-        <a
+        <AnchorButton
           href={dashboard_url}
           onClick={passAccessToken}
-          className="px-12 py-3 mt-2 font-medium text-white bg-indigo-500 rounded-md"
+          color="indigo"
         >
           Go to dashboard
-        </a>
+        </AnchorButton>
       </div>
     );
   }

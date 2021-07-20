@@ -4,14 +4,20 @@ import {
   current_user_agencies_Q,
   agency_stripe_account_update_url_Q
 } from '@duely/client';
-import { useDynamicNavigation, Table, LoadingScreen, ErrorScreen } from '@duely/react';
+import {
+  useDynamicNavigation,
+  Table,
+  LoadingScreen,
+  ErrorScreen,
+  SkeletonText
+} from '@duely/react';
 
 type AgencyColumnProps = {
-  agency: NonNullable<
+  agency: (NonNullable<
     ReturnType<typeof current_user_agencies_Q.result>
   > extends readonly (infer T)[]
     ? T
-    : never;
+    : never) | null;
 };
 
 const wrap = {
@@ -22,6 +28,27 @@ const wrap = {
 const headers = ['Brand', 'Plan', 'Action required'];
 
 function BrandColumn({ agency }: AgencyColumnProps) {
+  if (!agency) {
+    return (
+      <div className="flex items-center space-x-3">
+        <div className="w-16 h-16 bg-gray-200 rounded-full sm:h-18 sm:w-18 animate-pulse" />
+        <SkeletonText />
+        <SkeletonText />
+        <div className="flex items-center space-x-2 text-sm text-gray-400">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-5 h-5 text-gray-300"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+          </svg>
+          <SkeletonText className="text-xs" />
+        </div>
+      </div>
+    );
+  }
+
   const members = agency.subdomain.memberships
     .filter((m) => m.access !== 'CLIENT')
     .map((m) => m.user.name);
@@ -58,6 +85,14 @@ function BrandColumn({ agency }: AgencyColumnProps) {
 }
 
 function PlanColumn({ agency }: AgencyColumnProps) {
+  if (!agency) {
+    return (
+      <div className="flex items-center p-3 space-x-3 text-sm font-bold text-gray-600">
+        <SkeletonText />
+      </div>
+    );
+  }
+
   const plan = agency.subscription_plan;
 
   return (
@@ -70,11 +105,19 @@ function PlanColumn({ agency }: AgencyColumnProps) {
 function StatusColumn({ agency }: AgencyColumnProps) {
   const navigateToStripeAccountUpdate = useDynamicNavigation({
     resolveUrl: async () => {
-      const url = await query(agency_stripe_account_update_url_Q, { agency_id: agency.id });
+      const url = await query(agency_stripe_account_update_url_Q, { agency_id: agency!.id });
       if (!url) throw new Error('Unable to get account update URL');
       return url;
     }
   });
+
+  if (!agency) {
+    return (
+      <div className="flex items-center p-3 space-x-3 text-sm font-bold text-gray-600">
+        <SkeletonText />
+      </div>
+    );
+  }
 
   if (!agency.stripe_account.charges_enabled) {
     return (
@@ -174,13 +217,13 @@ export function ProfileBrandTable() {
 
   const columns = [
     // Brand
-    (agency: TAgency) => <BrandColumn agency={agency} />,
+    (agency: TAgency | null) => <BrandColumn agency={agency} />,
 
     // Plan
-    (agency: TAgency) => <PlanColumn agency={agency} />,
+    (agency: TAgency | null) => <PlanColumn agency={agency} />,
 
     // Action required
-    (agency: TAgency) => <StatusColumn agency={agency} />
+    (agency: TAgency | null) => <StatusColumn agency={agency} />
   ];
 
   return <Table items={agencies} columns={columns} headers={headers} wrap={wrap} />;

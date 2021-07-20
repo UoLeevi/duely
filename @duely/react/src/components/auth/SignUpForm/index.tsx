@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, start_sign_up_M } from '@duely/client';
-import { Form, FormButton, FormField, FormInfoMessage, useForm, useFormMessages } from '../../forms';
+import {
+  Form,
+  FormButton,
+  FormField,
+  FormInfoMessage,
+  useForm,
+  useFormMessages
+} from '../../forms';
 import { Button } from '../../buttons';
 import { Util } from '../../../util';
 import { useClassName } from '../../../hooks';
@@ -50,9 +57,9 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   if (completed) {
     return (
       <div className="flex flex-col items-center space-y-4 text-center">
-        <div className="grid w-10 h-10 bg-green-200 rounded-full place-items-center">
+        <div className="grid w-10 h-10 bg-green-100 border-2 border-green-600 rounded-full place-items-center">
           <svg
-            className="text-green-600 h-7 w-7"
+            className="text-green-600 h-7 w-7 animate-stoke-draw"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -69,15 +76,10 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
           <span>Please check your inbox.</span>
         </p>
         <div className="flex pt-3 space-x-5">
-          <Button className="text-white bg-indigo-500 whitespace-nowrap" type="button">
+          <Button color="indigo" className="whitespace-nowrap" type="button">
             <Link to="/">Go to home</Link>
           </Button>
-          <Button
-            onClick={() => setCompleted(false)}
-            dense
-            className="bg-gray-50 whitespace-nowrap"
-            type="button"
-          >
+          <Button color="gray" onClick={() => setCompleted(false)} dense type="button">
             Use different email
           </Button>
         </div>
@@ -90,12 +92,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>
       <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Sign up</h2>
-      <FormField
-        label="Name"
-        name="name"
-        type="text"
-        registerOptions={{ required: true }}
-      />
+      <FormField label="Name" name="name" type="text" registerOptions={{ required: true }} />
       <FormField
         label="Email address"
         name="email_address"
@@ -117,9 +114,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
         </label>
       </div>
       <div className="flex flex-col items-center pt-4">
-        <FormButton disabled={startSignUpLoading}>
-          Sign up
-        </FormButton>
+        <FormButton disabled={startSignUpLoading}>Sign up</FormButton>
       </div>
       <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
         <span>Already have an account?</span>
