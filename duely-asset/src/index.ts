@@ -1,44 +1,11 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { GraphQLClient, gql } from 'graphql-request';
-
-const gql_begin_visit = gql`
-  mutation {
-    begin_visit {
-      success
-      jwt
-      message
-    }
-  }
-`;
-
-const gql_log_in_serviceaccount = gql`
-  mutation($password: String!) {
-    log_in(email_address: "serviceaccount@duely.app", password: $password) {
-      success
-      jwt
-      message
-    }
-  }
-`;
-
-const gql_image = gql`
-  query($image_id: ID!) {
-    image(id: $image_id) {
-      id
-      name
-      color
-      data
-    }
-  }
-`;
+import { IncomingMessage } from 'http';
+import { beginVisit, endVisit, queryResource } from '@duely/db';
 
 main();
 
-let client: GraphQLClient;
-
 async function main() {
-  client = await createGraphQLClient();
   const app = express();
   app.set('trust proxy', true);
   app.use(cors());
@@ -51,41 +18,27 @@ async function main() {
   });
 }
 
-async function createGraphQLClient() {
-  const endpoint = 'https://api.duely.app/graphql';
-  const client = new GraphQLClient(endpoint);
-
-  const { begin_visit } = await client.request(gql_begin_visit);
-
-  if (!begin_visit.success) {
-    throw new Error("Unable to get access token.");
-  }
-
-  client.setHeader('authorization', `Bearer ${begin_visit.jwt}`);
-
-  const { log_in } = await client.request(gql_log_in_serviceaccount, { password: process.env.DUELY_SERVICE_ACCOUNT_PASSWORD });
-
-  if (!log_in.success) {
-    throw new Error("Unable to get access token.");
-  }
-
-  client.setHeader('authorization', `Bearer ${log_in.jwt}`);
-
-  return client;
-}
-
 async function get_image(req: Request, res: Response) {
-  const requestArgs: [string, { image_id: string }, { authorization: string }?] = [gql_image, { image_id: req.params.image_id }];
+  const image_id = req.params.image_id;
+  const ip = parseIp(req);
   const { access_token } = req.query ?? {};
+  let visit_jwt: string | undefined = undefined;
+  let jwt: string;
 
-  if (access_token) {
-    requestArgs.push({
-      authorization: `Bearer ${access_token}`
-    });
+  if (access_token && typeof access_token === 'string') {
+    jwt = access_token;
+  } else {
+    visit_jwt = await beginVisit();
+    jwt = visit_jwt;
   }
+
+  const context = {
+    jwt,
+    ip
+  };
 
   try {
-    const { image } = await client.request(...requestArgs);
+    const image = await queryResource(context, 'image', image_id);
 
     if (!image) {
       res.sendStatus(404);
@@ -98,10 +51,21 @@ async function get_image(req: Request, res: Response) {
     const buffer = Buffer.from(data, 'base64');
     res.setHeader('content-type', mimeType);
     res.send(buffer);
-
-  } catch (error: any) {
-    console.error(error);
+  } catch (err: any) {
+    console.error(err);
     res.sendStatus(404);
-    return;
+  } finally {
+    if (visit_jwt) {
+      await endVisit(context);
+    }
   }
+}
+
+function parseIp(req: IncomingMessage) {
+  const xForwardedFor = req.headers['x-forwarded-for'];
+
+  return (
+    (typeof xForwardedFor === 'string' && xForwardedFor.split(',').shift()) ||
+    req.socket.remoteAddress
+  );
 }

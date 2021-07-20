@@ -82,6 +82,16 @@ spec:
             secretKeyRef:
               name: duely-webhook-secret
               key: stripe-whsec_agency_test
+        - name: STRIPE_WHSEC_PLATFORM_LIVE
+          valueFrom:
+            secretKeyRef:
+              name: duely-webhook-secret
+              key: stripe-whsec_platform_live
+        - name: STRIPE_WHSEC_AGENCY_LIVE
+          valueFrom:
+            secretKeyRef:
+              name: duely-webhook-secret
+              key: stripe-whsec_agency_live
         - name: DUELY_SERVICE_ACCOUNT_PASSWORD
           valueFrom:
             secretKeyRef:
