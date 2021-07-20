@@ -40,11 +40,13 @@ import {
   UpdatePageDocument,
   UpdateProductDocument,
   UpdateProductThankYouPageSettingDocument,
+  Util,
   VerifyPasswordResetDocument,
   VerifySignUpDocument
 } from '@duely/core';
 import { client } from '../apollo/client';
 import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-document-node/core';
+import { count_customers_Q, count_products_Q, customers_Q, products_Q } from '../queries';
 // import produce from 'immer';
 // import { query } from './queries';
 
@@ -101,6 +103,18 @@ export async function mutate<
   }
 
   return res;
+}
+
+function evictQuery(cache: ApolloCache<NormalizedCacheObject>, query: TypedDocumentNode) {
+  query.definitions.forEach((definition) => {
+    if (definition.kind === 'OperationDefinition') {
+      definition.selectionSet.selections.forEach((selection) => {
+        if (selection.kind === 'Field') {
+          cache.evict({ id: 'ROOT_QUERY', fieldName: selection.name.value });
+        }
+      });
+    }
+  });
 }
 
 const log_in_R = (d: ResultOf<typeof LogInDocument>) => d?.log_in;
@@ -201,6 +215,11 @@ export const create_product_M = {
         }
       }
     });
+
+    evictQuery(cache, products_Q.query);
+    evictQuery(cache, count_products_Q.query);
+
+    cache.gc();
   }
 };
 
@@ -221,6 +240,10 @@ export const delete_product_M = {
 
     const id = cache.identify(result.product);
     cache.evict({ id });
+
+    evictQuery(cache, products_Q.query);
+    evictQuery(cache, count_products_Q.query);
+
     cache.gc();
   }
 };
@@ -257,6 +280,11 @@ export const create_customer_M = {
         }
       }
     });
+
+    evictQuery(cache, customers_Q.query);
+    evictQuery(cache, count_customers_Q.query);
+
+    cache.gc();
   }
 };
 
@@ -277,6 +305,10 @@ export const delete_customer_M = {
 
     const id = cache.identify(result.customer);
     cache.evict({ id });
+
+    evictQuery(cache, customers_Q.query);
+    evictQuery(cache, count_customers_Q.query);
+
     cache.gc();
   }
 };
@@ -492,7 +524,6 @@ export const update_credential_M = {
   mutation: UpdateCredentialDocument,
   result: (d: ResultOf<typeof UpdateCredentialDocument>) => d?.update_credential
 };
-
 
 export const create_integration_M = {
   mutation: CreateIntegrationDocument,
