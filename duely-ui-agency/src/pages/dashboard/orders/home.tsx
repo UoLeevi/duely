@@ -12,14 +12,9 @@ import {
   DropMenu,
   Card,
   PaginationControls,
-  ErrorScreen,
   Util,
-  useForm,
-  Form,
-  useFormContext,
-  useDropMenu,
-  useFormMessages,
-  usePagination
+  usePagination,
+  SkeletonText
 } from '@duely/react';
 import { DashboardSection } from '../components';
 import { Currency, OrderFragment } from '@duely/core';
@@ -46,100 +41,133 @@ export default function DashboardOrdersHome() {
     { skip: !agency }
   );
 
-  const {
-    data: count_orders,
-    loading: count_ordersLoading,
-    error: count_ordersError
-  } = useQuery(
-    count_orders_Q,
-    {
-      filter: {
-        stripe_account_id: stripe_account?.id
-      }
-    },
-    { skip: !agency || !stripe_account }
-  );
+  type TOrder = NonNullable<ReturnType<typeof orders_Q.result>> extends readonly (infer T)[] ? T : never;
 
-  const pagination = usePagination({
-    totalNumberOfItems: count_orders ?? -1,
+  const pagination = usePagination<TOrder>({
+    getTotalNumberOfItems: () => {
+      const {
+        data: count_orders,
+        loading: count_ordersLoading,
+        error
+      } = useQuery(
+        count_orders_Q,
+        {
+          filter: {
+            stripe_account_id: stripe_account?.id
+          }
+        },
+        { skip: !agency || !stripe_account }
+      );
+
+      return {
+        count: count_orders ?? -1,
+        loading: agencyLoading || stripe_accountLoading || count_ordersLoading,
+        error
+      };
+    },
+    getPageItems: ({ itemsPerPage, firstIndex }) => {
+      const { data, loading, error } = useQuery(
+        orders_Q,
+        {
+          filter: {
+            stripe_account_id: stripe_account?.id
+          },
+          limit: itemsPerPage === 0 ? undefined : itemsPerPage,
+          offset: firstIndex < 0 ? 0 : firstIndex
+        },
+        { skip: !agency || !stripe_account }
+      );
+
+      return { items: data ?? [], loading, error };
+    },
     itemsPerPage: 5
   });
 
-  const {
-    data: orders,
-    loading: ordersLoading,
-    error: ordersError
-  } = useQuery(
-    orders_Q,
-    {
-      filter: {
-        stripe_account_id: stripe_account?.id
-      },
-      limit: pagination.itemsPerPage === 0 ? undefined : pagination.itemsPerPage,
-      offset: pagination.firstIndex < 0 ? undefined : pagination.firstIndex
-    },
-    { skip: !agency || !stripe_account }
-  );
-
   const { sm } = useBreakpoints();
 
-  const loading = agencyLoading || count_ordersLoading || ordersLoading || stripe_accountLoading;
-  const error = agencyError ?? count_ordersError ?? ordersError ?? stripe_accountError;
-
-  // if (loading) return <LoadingScreen />;
-  if (error) return <ErrorScreen />;
-
-  type TOrder = NonNullable<typeof orders> extends readonly (infer T)[] ? T : never;
+  const loading = agencyLoading || stripe_accountLoading || pagination.loading;
+  const error = agencyError ?? stripe_accountError ?? pagination.error;
 
   const columns = [
     // product name & order id
-    (order: TOrder) => (
-      <div className="flex flex-col space-y-2">
-        <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-          {Util.truncate(order.items.map((item) => item.price.product.name).join(', '), 50)}
-        </span>
-        <span className="text-xs text-gray-600">{order.id}</span>
-      </div>
-    ),
+    (order: TOrder | null) =>
+      !order ? (
+        <div className="flex flex-col space-y-2">
+          <SkeletonText className="text-sm" />
+          <SkeletonText className="text-xs" />
+        </div>
+      ) : (
+        <div className="flex flex-col space-y-2">
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+            {Util.truncate(order.items.map((item) => item.price.product.name).join(', '), 50)}
+          </span>
+          <span className="text-xs text-gray-600">{order.id}</span>
+        </div>
+      ),
 
     // customer info
-    (order: TOrder) => (
-      <div className="flex flex-col space-y-2">
-        <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-          {order.customer.name ?? order.customer.email_address.split('@')[0]}
-        </span>
-        <span className="text-xs text-gray-800 dark:text-gray-300">
-          {order.customer.email_address}
-        </span>
-      </div>
-    ),
+    (order: TOrder | null) =>
+      !order ? (
+        <div className="flex flex-col space-y-2">
+          <SkeletonText className="text-sm" />
+          <SkeletonText className="text-xs" />
+        </div>
+      ) : (
+        <div className="flex flex-col space-y-2">
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+            {order.customer.name ?? order.customer.email_address.split('@')[0]}
+          </span>
+          <span className="text-xs text-gray-800 dark:text-gray-300">
+            {order.customer.email_address}
+          </span>
+        </div>
+      ),
 
     // amount info
-    (order: TOrder) => (
-      <div className="flex flex-col space-y-2">
-        <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-          {Currency.format(
-            order.items.reduce((sum, item) => sum + item.price.unit_amount, 0),
-            order.items[0].price.currency as Currency
-          )}
-        </span>
-      </div>
-    ),
+    (order: TOrder | null) =>
+      !order ? (
+        <div className="flex flex-col space-y-2">
+          <SkeletonText className="text-sm" />
+        </div>
+      ) : (
+        <div className="flex flex-col space-y-2">
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+            {Currency.format(
+              order.items.reduce((sum, item) => sum + item.price.unit_amount, 0),
+              order.items[0].price.currency as Currency
+            )}
+          </span>
+        </div>
+      ),
 
     // date & time
-    (order: TOrder) => (
-      <div className="flex flex-col space-y-2">
-        <span className="text-xs text-gray-800 dark:text-gray-300">
-          {Util.formatDate(new Date(order.ordered_at))}
-        </span>
-      </div>
-    ),
+    (order: TOrder | null) =>
+      !order ? (
+        <div className="flex flex-col space-y-2">
+          <SkeletonText className="text-xs" />
+        </div>
+      ) : (
+        <div className="flex flex-col space-y-2">
+          <span className="text-xs text-gray-800 dark:text-gray-300">
+            {Util.formatDate(new Date(order.ordered_at))}
+          </span>
+        </div>
+      ),
 
     // product product status
-    (order: TOrder) => <OrderStatusColumn order={order} />,
+    (order: TOrder | null) =>
+      !order ? (
+        <ColoredChip color={statusColors} />
+      ) : (
+        <ColoredChip color={statusColors} text={order.state} />
+      ),
 
     // actions
-    (order: TOrder) => {
+    (order: TOrder | null) => {
+      if (!order) {
+        return <SkeletonText />;
+      }
+
       const actions = [
         {
           key: 'edit',
@@ -189,17 +217,13 @@ export default function DashboardOrdersHome() {
       <DashboardSection title="Orders">
         <Card className="max-w-screen-lg">
           <Table
-            rows={orders}
             columns={columns}
             headers={headers}
             loading={loading}
+            error={error}
             wrap={wrap}
-            footer={
-              <PaginationControls
-                pagination={pagination}
-                loading={agencyLoading || count_ordersLoading || stripe_accountLoading}
-              />
-            }
+            pagination={pagination}
+            footer={<PaginationControls pagination={pagination} />}
           />
         </Card>
       </DashboardSection>
@@ -207,115 +231,108 @@ export default function DashboardOrdersHome() {
   );
 }
 
-const orderStatuses = {
-  pending: 'not started',
-  processing: 'started',
-  processed: 'completed',
-  failed: 'cancelled'
-};
-
 const statusColors = {
-  'not started': 'orange',
-  started: 'blue',
-  completed: 'green',
-  cancelled: 'gray'
+  pending: 'orange',
+  processing: 'blue',
+  processed: 'green',
+  failed: 'red'
 };
 
 type OrderStatusColumnProps = {
   order: OrderFragment;
 };
 
-function OrderStatusColumn({ order }: OrderStatusColumnProps) {
-  const dropMenu = useDropMenu();
+// function OrderStatusColumn({ order }: OrderStatusColumnProps) {
+//   const dropMenu = useDropMenu();
 
-  return (
-    <div className="flex">
-      <DropMenu
-        origin="center"
-        control={dropMenu.control}
-        button={
-          <div className="p-2">
-            <ColoredChip
-              color={statusColors}
-              text={orderStatuses[order.state as keyof typeof orderStatuses]}
-            />
-          </div>
-        }
-      >
-        <ChangeOrderStatusForm status={order.state} order_id={order.id} onDone={dropMenu.close} />
-      </DropMenu>
-    </div>
-  );
-}
+//   return (
+//     <div className="flex">
+//       <DropMenu
+//         origin="center"
+//         control={dropMenu.control}
+//         button={
+//           <div className="p-2">
+//             <ColoredChip
+//               color={statusColors}
+//               text={order.state}
+//             />
+//           </div>
+//         }
+//       >
+//         <ChangeOrderStatusForm status={order.state} order_id={order.id} onDone={dropMenu.close} />
+//       </DropMenu>
+//     </div>
+//   );
+// }
 
-type ChangeOrderStatusFormProps = {
-  order_id: string;
-  status: string;
-  onDone: () => void;
-};
+// type ChangeOrderStatusFormProps = {
+//   order_id: string;
+//   status: string;
+//   onDone: () => void;
+// };
 
-type UpdateOrderStatusFormFields = {
-  status: keyof typeof orderStatuses;
-};
+// type UpdateOrderStatusFormFields = {
+//   status: keyof typeof orderStatuses;
+// };
 
-function ChangeOrderStatusForm({ order_id, status, onDone }: ChangeOrderStatusFormProps) {
-  const otherStatuses = Object.keys(orderStatuses).filter(
-    (processingState) => processingState !== status
-  );
+// function ChangeOrderStatusForm({ order_id, status, onDone }: ChangeOrderStatusFormProps) {
+//   const otherStatuses = Object.keys(orderStatuses).filter(
+//     (processingState) => processingState !== status
+//   );
 
-  // TODO
-  const form = useForm<UpdateOrderStatusFormFields>();
+//   // TODO
+//   const form = useForm<UpdateOrderStatusFormFields>();
 
-  const {
-    infoMessage,
-    setInfoMessage,
-    successMessage,
-    setSuccessMessage,
-    errorMessage,
-    setErrorMessage
-  } = useFormMessages();
+//   const {
+//     infoMessage,
+//     setInfoMessage,
+//     successMessage,
+//     setSuccessMessage,
+//     errorMessage,
+//     setErrorMessage
+//   } = useFormMessages();
 
-  async function onSubmit({ ...data }: UpdateOrderStatusFormFields) {
-    // const res = await updateOrder({ order_id, ...data });
+//   async function onSubmit({ ...data }: UpdateOrderStatusFormFields) {
+//     // const res = await updateOrder({ order_id, ...data });
 
-    // if (res?.success) {
-    //   setSuccessMessage('Saved');
-    //   return;
-    // } else {
-    //   setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
-    // }
-    console.log(data);
-    onDone();
-  }
+//     // if (res?.success) {
+//     //   setSuccessMessage('Saved');
+//     //   return;
+//     // } else {
+//     //   setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
+//     // }
+//     console.log(data);
+//     onDone();
+//   }
 
-  return (
-    <Form form={form} onSubmit={onSubmit}>
-      <div className="flex flex-col pb-2 space-y-2">
-        <div>
-          <span className="text-xs font-medium text-gray-800 dark:text-gray-300 whitespace-nowrap">
-            Change status
-          </span>
-        </div>
-        {otherStatuses.map((processingState) => (
-          <ChangeOrderStatusButton status={processingState} key={processingState} />
-        ))}
-      </div>
-    </Form>
-  );
-}
+//   return (
+//     <Form form={form} onSubmit={onSubmit}>
+//       <div className="flex flex-col pb-2 space-y-2">
+//         <div>
+//           <span className="text-xs font-medium text-gray-800 dark:text-gray-300 whitespace-nowrap">
+//             Change status
+//           </span>
+//         </div>
+//         {otherStatuses.map((processingState) => (
+//           <ChangeOrderStatusButton status={processingState} key={processingState} />
+//         ))}
+//       </div>
+//     </Form>
+//   );
+// }
 
-type ChangeOrderStatusButtonProps = {
-  status: string;
-};
+// type ChangeOrderStatusButtonProps = {
+//   status: string;
+// };
 
-function ChangeOrderStatusButton({ status }: ChangeOrderStatusButtonProps) {
-  const form = useFormContext();
-  return (
-    <button value={status} {...form.register('status')}>
-      <ColoredChip
-        color={statusColors}
-        text={orderStatuses[status as keyof typeof orderStatuses]}
-      />
-    </button>
-  );
-}
+// function ChangeOrderStatusButton({ status }: ChangeOrderStatusButtonProps) {
+//   const form = useFormContext();
+//   return (
+//     <button value={status} {...form.register('status')}>
+//       <ColoredChip
+//         color={statusColors}
+//         text={orderStatuses[status as keyof typeof orderStatuses]}
+//       />
+//     </button>
+//   );
+// }

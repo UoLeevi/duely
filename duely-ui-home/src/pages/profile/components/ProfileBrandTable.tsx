@@ -183,5 +183,5 @@ export function ProfileBrandTable() {
     (agency: TAgency) => <StatusColumn agency={agency} />
   ];
 
-  return <Table rows={agencies} columns={columns} headers={headers} wrap={wrap} />;
+  return <Table items={agencies} columns={columns} headers={headers} wrap={wrap} />;
 }

@@ -11,7 +11,6 @@ import {
   AgencyCustomersDocument,
   CurrentUserAgenciesDocument,
   SubdomainPublicDocument,
-  AgencyProductsDocument,
   ProductDocument,
   OrderDocument,
   OrdersDocument,
@@ -54,7 +53,10 @@ import {
   CredentialsDocument,
   CredentialTypeDocument,
   CredentialTypesDocument,
-  CountOrdersDocument
+  CountOrdersDocument,
+  CountProductsDocument,
+  CustomersDocument,
+  CountCustomersDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -179,6 +181,16 @@ export const customer_Q = {
   result: (d: ResultOf<typeof CustomerDocument>) => d?.customer
 };
 
+export const customers_Q = {
+  query: CustomersDocument,
+  result: (d: ResultOf<typeof CustomersDocument>) => d?.customers
+};
+
+export const count_customers_Q = {
+  query: CountCustomersDocument,
+  result: (d: ResultOf<typeof CountCustomersDocument>) => d?.count_customers
+};
+
 export const current_user_agencies_Q = {
   query: CurrentUserAgenciesDocument,
   notifyOnNetworkStatusChange: true,
@@ -240,11 +252,6 @@ function resolveSubdomain(): string | null {
   return null;
 }
 
-export const agency_products_Q = {
-  query: AgencyProductsDocument,
-  result: (d: ResultOf<typeof AgencyProductsDocument>) => d?.agency?.products
-};
-
 export const product_Q = {
   query: ProductDocument,
   result: (d: ResultOf<typeof ProductDocument>) => d?.product
@@ -253,6 +260,10 @@ export const product_Q = {
 export const products_Q = {
   query: ProductsDocument,
   result: (d: ResultOf<typeof ProductsDocument>) => d?.products
+};
+export const count_products_Q = {
+  query: CountProductsDocument,
+  result: (d: ResultOf<typeof CountProductsDocument>) => d?.count_products
 };
 
 export const form_field_Q = {

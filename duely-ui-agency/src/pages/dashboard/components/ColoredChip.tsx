@@ -1,19 +1,21 @@
-import { Util } from '@duely/react';
+import { SkeletonText, Util } from '@duely/react';
 
 type Color = 'gray' | 'green' | 'orange' | 'red' | 'indigo' | 'blue';
 
 type ColoredChipProps = {
-  text: string;
+  text?: string;
   color: Color | string | ((text: string) => string) | { [text: string]: string };
 };
 
 export function ColoredChip({ text, color }: ColoredChipProps) {
   let colorClassName: string;
 
-  if (typeof color === 'function') {
-    color = color(text);
-  } else if (typeof color === 'object') {
-    color = color[text];
+  if (text !== undefined) {
+    if (typeof color === 'function') {
+      color = color(text);
+    } else if (typeof color === 'object') {
+      color = color[text];
+    }
   }
 
   // NOTE: simple concatenation would mess up the PurgeCSS
@@ -42,5 +44,7 @@ export function ColoredChip({ text, color }: ColoredChipProps) {
     'w-16 px-2 py-1 text-xs font-medium tracking-wider text-center rounded-md min-w-max whitespace-nowrap ' +
     colorClassName;
 
-  return <span className={className}>{Util.sentenceCase(text)}</span>;
+  return (
+    <span className={className}>{text ? Util.sentenceCase(text) : <SkeletonText ch={6} />}</span>
+  );
 }

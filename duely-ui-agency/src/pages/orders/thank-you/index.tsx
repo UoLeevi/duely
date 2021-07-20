@@ -1,6 +1,6 @@
 import { useQuery, current_agency_Q, orders_Q } from '@duely/client';
 import { Currency, ElementType } from '@duely/core';
-import { Card, LoadingScreen, Table, NotFoundScreen } from '@duely/react';
+import { Card, LoadingScreen, Table, NotFoundScreen, SkeletonText } from '@duely/react';
 import { Link, useLocation } from 'react-router-dom';
 
 const wrap = {
@@ -44,20 +44,30 @@ export default function ThankYouPage() {
 
   const columns = [
     // name
-    (order_item: ElementType<typeof order.items>) => (
-      <div className="flex flex-col space-y-2">
-        <span className="text-sm font-medium text-gray-800">{order_item.price.product.name}</span>
-      </div>
-    ),
+    (order_item: ElementType<typeof order.items> | null) =>
+      !order_item ? (
+        <div className="flex flex-col space-y-2">
+          <SkeletonText className="text-sm" />
+        </div>
+      ) : (
+        <div className="flex flex-col space-y-2">
+          <span className="text-sm font-medium text-gray-800">{order_item.price.product.name}</span>
+        </div>
+      ),
 
     // price
-    (order_item: ElementType<typeof order.items>) => (
-      <div className="flex flex-col space-y-2">
-        <span className="text-sm font-medium text-gray-800">
-          {Currency.format(order_item.price.unit_amount, order_item.price.currency as Currency)}
-        </span>
-      </div>
-    )
+    (order_item: ElementType<typeof order.items> | null) =>
+      !order_item ? (
+        <div className="flex flex-col space-y-2">
+          <SkeletonText className="text-sm" />
+        </div>
+      ) : (
+        <div className="flex flex-col space-y-2">
+          <span className="text-sm font-medium text-gray-800">
+            {Currency.format(order_item.price.unit_amount, order_item.price.currency as Currency)}
+          </span>
+        </div>
+      )
   ];
 
   // TODO: Show order info
@@ -91,12 +101,7 @@ export default function ThankYouPage() {
           </div>
 
           <Card>
-            <Table
-              rows={order.items}
-              columns={columns}
-              headers={headers}
-              wrap={wrap}
-            />
+            <Table items={order.items} columns={columns} headers={headers} wrap={wrap} />
           </Card>
 
           <div className="flex flex-col">

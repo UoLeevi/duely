@@ -198,6 +198,34 @@ query AgencyCustomers(
   }
 }
 
+query Customers(
+  $filter: CustomerFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $offset: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  customers(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    offset: $offset
+    before_id: $before_id
+    after_id: $after_id
+  ) {
+    ...customer
+  }
+}
+
+query CountCustomers($filter: CustomerFilter!, $token: String) {
+  count_customers(filter: $filter, token: $token)
+}
+
 query AgencySubscriptionPlan($agency_id: ID!) {
   agency(id: $agency_id) {
     id
@@ -280,15 +308,6 @@ query SubdomainPublic($subdomain_name: String!) {
   }
 }
 
-query AgencyProducts($agency_id: ID!) {
-  agency(id: $agency_id) {
-    id
-    products {
-      ...product
-    }
-  }
-}
-
 query Product($product_id: ID!) {
   product(id: $product_id) {
     ...product
@@ -317,6 +336,10 @@ query Products(
   ) {
     ...product
   }
+}
+
+query CountProducts($filter: ProductFilter!, $token: String) {
+  count_products(filter: $filter, token: $token)
 }
 
 query Order($order_id: ID!, $token: String) {
@@ -421,9 +444,6 @@ query SubdomainAgency($subdomain_name: String!) {
     name
     agency {
       ...agency
-      products {
-        ...product
-      }
     }
   }
 }
@@ -434,9 +454,6 @@ query SubdomainAgencyExtended($subdomain_name: String!) {
     name
     agency {
       ...agency
-      products {
-        ...product
-      }
       supported_payment_currencies
     }
   }

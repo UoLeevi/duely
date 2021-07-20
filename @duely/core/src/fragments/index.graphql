@@ -92,6 +92,8 @@ fragment price on Price {
   name
   unit_amount
   currency
+  status
+  active
   type
   recurring_interval
   recurring_interval_count
@@ -257,6 +259,7 @@ fragment product on Product {
   description
   duration
   status
+  active
   default_price {
     ...price
   }

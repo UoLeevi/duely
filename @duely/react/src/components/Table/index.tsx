@@ -1,283 +1,15 @@
-import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import React, { Fragment } from 'react';
 import { Util } from '../../util';
 import { useBreakpoints } from '../../hooks';
-import { LoadingSpinner } from '../LoadingSpinner';
-import { produce } from 'immer';
+import { UsePaginationReturn } from './usePagination';
 
-export function usePagination(initialState: {
-  totalNumberOfItems: number;
-  itemsPerPage?: number;
-  pageNumber?: number;
-}) {
-  const initialItemsPerPage = initialState.itemsPerPage ?? 50;
-  const initialLastPageNumber = Math.max(
-    1,
-    Math.floor((initialState.totalNumberOfItems - 1) / initialItemsPerPage) + 1
-  );
-  const initialPageNumber = Math.min(
-    initialLastPageNumber,
-    Math.max(1, initialState.pageNumber ?? 1)
-  );
-
-  const [state, setState] = useState({
-    itemsPerPage: initialItemsPerPage,
-    pageNumber: initialPageNumber,
-    firstIndex:
-      initialItemsPerPage === 0
-        ? 0
-        : Math.min(initialState.totalNumberOfItems, (initialPageNumber - 1) * initialItemsPerPage),
-    lastIndex:
-      initialItemsPerPage === 0
-        ? initialState.totalNumberOfItems - 1
-        : Math.min(initialState.totalNumberOfItems, initialPageNumber * initialItemsPerPage - 1),
-    lastPageNumber: initialLastPageNumber,
-    totalNumberOfItems: initialState.totalNumberOfItems
-  });
-
-  useEffect(() => {
-    setState((state) => ({
-      itemsPerPage: initialItemsPerPage,
-      pageNumber: state.pageNumber,
-      firstIndex:
-        state.itemsPerPage === 0
-          ? 0
-          : Math.min(initialState.totalNumberOfItems, (state.pageNumber - 1) * state.itemsPerPage),
-      lastIndex:
-        initialItemsPerPage === 0
-          ? initialState.totalNumberOfItems - 1
-          : Math.min(initialState.totalNumberOfItems, state.pageNumber * state.itemsPerPage - 1),
-      lastPageNumber: Math.max(
-        1,
-        Math.floor((initialState.totalNumberOfItems - 1) / state.itemsPerPage) + 1
-      ),
-      totalNumberOfItems: initialState.totalNumberOfItems
-    }));
-  }, [initialState.totalNumberOfItems]);
-
-  const functions = useMemo(
-    () => ({
-      nextPage() {
-        setState((state) =>
-          produce(state, (state) => {
-            if (state.itemsPerPage === 0) return;
-            if (state.pageNumber * state.itemsPerPage >= initialState.totalNumberOfItems) return;
-            state.pageNumber += 1;
-            state.firstIndex += state.itemsPerPage;
-            state.lastIndex = Math.min(
-              state.firstIndex + state.itemsPerPage - 1,
-              initialState.totalNumberOfItems - 1
-            );
-          })
-        );
-      },
-      previousPage() {
-        setState((state) =>
-          produce(state, (state) => {
-            if (state.itemsPerPage === 0) return;
-            if (state.pageNumber === 1) return;
-            state.pageNumber -= 1;
-            state.firstIndex -= state.itemsPerPage;
-            state.lastIndex = Math.min(
-              state.firstIndex + state.itemsPerPage - 1,
-              initialState.totalNumberOfItems - 1
-            );
-          })
-        );
-      },
-      setPage(pageNumber: number) {
-        setState((state) =>
-          produce(state, (state) => {
-            if (state.itemsPerPage === 0) return;
-            if ((pageNumber - 1) * state.itemsPerPage >= initialState.totalNumberOfItems) return;
-            state.pageNumber = pageNumber;
-            state.firstIndex = Math.min(
-              (pageNumber - 1) * state.itemsPerPage,
-              initialState.totalNumberOfItems - 1
-            );
-            state.lastIndex = Math.min(
-              state.firstIndex + state.itemsPerPage - 1,
-              initialState.totalNumberOfItems - 1
-            );
-          })
-        );
-      },
-      setItemsPerPage(itemsPerPage: number) {
-        setState((state) =>
-          produce(state, (state) => {
-            if (isNaN(itemsPerPage) || itemsPerPage < 0) itemsPerPage = 0;
-            state.itemsPerPage = itemsPerPage;
-
-            if (state.itemsPerPage === 0) {
-              state.firstIndex = 0;
-              state.lastIndex = initialState.totalNumberOfItems - 1;
-              state.pageNumber = 1;
-              return;
-            }
-
-            state.lastIndex = Math.min(
-              state.firstIndex + state.itemsPerPage - 1,
-              initialState.totalNumberOfItems - 1
-            );
-
-            state.pageNumber = Math.floor(state.firstIndex / state.itemsPerPage) + 1;
-            state.lastPageNumber = Math.max(
-              1,
-              Math.floor((initialState.totalNumberOfItems - 1) / state.itemsPerPage) + 1
-            );
-          })
-        );
-      }
-    }),
-    [initialState.totalNumberOfItems]
-  );
-
-  return {
-    ...state,
-    ...functions
-  };
-}
-
-type PaginationControlsProps = {
-  pagination: ReturnType<typeof usePagination>;
-  loading?: boolean;
-};
-
-export function PaginationControls({ pagination, loading }: PaginationControlsProps) {
-  return (
-    <div className="flex items-center justify-between w-full space-x-2 text-xs font-semibold sm:space-x-3">
-      <div className="flex items-center">
-        <span className="hidden sm:inline">View </span>
-
-        <div className="relative flex items-center ml-0 border border-gray-300 rounded-md shadow-sm outline-none sm:ml-1 dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
-          <select
-            className="w-full py-0.5 pl-1.5 pr-5 bg-transparent border-none rounded-md outline-none appearance-none"
-            spellCheck="false"
-            autoComplete="off"
-            onChange={(e) => pagination.setItemsPerPage(+e.target.value)}
-            value={pagination.itemsPerPage.toFixed()}
-          >
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-            <option value="500">500</option>
-            <option value="0">all</option>
-          </select>
-
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="absolute right-0 w-4 h-4 mr-1 text-gray-600 pointer-events-none"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </div>
-
-        <span className="ml-1">
-          <span className="hidden sm:inline"> entries</span>
-          <span> per page</span>
-        </span>
-      </div>
-      <div className="flex items-center space-x-4 md:space-x-8">
-        {loading ? (
-          'Loading...'
-        ) : pagination.lastPageNumber === 1 ? (
-          <span>Showing all {pagination.totalNumberOfItems} entries</span>
-        ) : (
-          <>
-            <span>
-              Showing {pagination.firstIndex + 1} to {pagination.lastIndex + 1}
-              <br className="inline sm:hidden" /> of {pagination.totalNumberOfItems} entries
-            </span>
-            <div className="flex items-center space-x-0.5">
-              <span>Page</span>
-
-              <button
-                className={`hidden sm:flex rounded-md font-bold ${
-                  pagination.pageNumber !== 1 ? 'visible' : 'invisible'
-                }`}
-                onClick={pagination.previousPage}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5 text-gray-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-
-              <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
-                <select
-                  className="w-full py-0.5 pl-1.5 pr-5 bg-transparent border-none rounded-md outline-none appearance-none"
-                  spellCheck="false"
-                  autoComplete="off"
-                  onChange={(e) => pagination.setPage(+e.target.value)}
-                  value={pagination.pageNumber.toFixed()}
-                >
-                  {Array.from(new Array(pagination.lastPageNumber), (_, i) => (
-                    <option key={i} value={(i + 1).toFixed()}>
-                      {(i + 1).toFixed()}
-                    </option>
-                  ))}
-                </select>
-
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="absolute right-0 w-4 h-4 mr-1 text-gray-600 pointer-events-none"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-
-              <button
-                className={`hidden sm:flex rounded-md font-bold ${
-                  pagination.pageNumber !== pagination.lastPageNumber ? 'visible' : 'invisible'
-                }`}
-                onClick={pagination.nextPage}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5 text-gray-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
+export * from './usePagination';
+export * from './PaginationControls';
 
 type TableProps<TItem> = {
-  rows: TItem[] | undefined | null;
   columns: (
-    | ((item: TItem, column: number) => React.ReactNode)
-    | ((item: TItem) => React.ReactNode)
+    | ((item: TItem | null, column: number) => React.ReactNode)
+    | ((item: TItem | null) => React.ReactNode)
   )[];
   headers: React.ReactNode[];
   footer?: React.ReactNode;
@@ -289,10 +21,17 @@ type TableProps<TItem> = {
   };
   loading?: boolean;
   error?: boolean | string | Error | { message: string };
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+} & (
+  | {
+      pagination: UsePaginationReturn<TItem>;
+    }
+  | {
+      items: TItem[] | undefined | null;
+    }
+) &
+  React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
 export function Table<TItem extends { key?: string | number | null; id?: string | number | null }>({
-  rows: items,
   columns,
   headers,
   className,
@@ -301,8 +40,10 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
   wrap: wrapOptions,
   loading,
   error,
-  footer
+  footer,
+  ...rest
 }: TableProps<TItem>) {
+  const skeletonRowCountFallback = 5;
   const breakpoints = useBreakpoints();
   const isNotWrapped = breakpoints[breakpoint ?? 'lg'];
   const wrapColCount = wrapOptions?.columns ?? 1;
@@ -318,8 +59,12 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
     'grid auto-rows-auto',
     dense ? 'gap-x-3 sm:gap-x-4' : 'gap-x-5 sm:gap-x-6'
   );
-  loading = !!loading;
-  items = items ?? [];
+
+  const pagination = Util.hasProperty(rest, 'pagination') ? rest.pagination : undefined;
+
+  loading = !!pagination?.loading || !!loading;
+  error = pagination?.error ?? error;
+  const items = pagination?.items ?? (Util.hasProperty(rest, 'items') ? rest.items : []) ?? [];
 
   if (isNotWrapped) {
     headers = headers.map((header, j) => {
@@ -337,7 +82,7 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
   }
 
   let rows;
-  let rowCount;
+  let rowCount: number;
 
   if (error) {
     let message: string | boolean | null | undefined =
@@ -354,21 +99,36 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
       />
     );
   } else if (loading) {
-    rowCount = 1;
-    rows = (
-      <TableLoadingRow
-        row={isNotWrapped ? 2 : 1}
-        wrapColCount={wrapColCount}
-        wrapColSpanSum={wrapColSpanSum}
-        isNotWrapped={isNotWrapped}
-      />
-    );
+    rowCount = pagination
+      ? pagination.loadingTotalNumberOfItems
+        ? pagination.itemsPerPage
+        : pagination.lastIndex - pagination.firstIndex + 1
+      : skeletonRowCountFallback;
+
+    rows = Array.from(new Array(rowCount), (_, i) => {
+      return (
+        <TableRow
+          key={i}
+          item={null}
+          row={i + (isNotWrapped ? 2 : 1)}
+          columns={columns}
+          headers={headers}
+          dense={dense}
+          wrapColCount={wrapColCount}
+          wrapColSpans={wrapColSpans}
+          wrapColSpanSum={wrapColSpanSum}
+          isNotWrapped={isNotWrapped}
+          first={i === 0}
+          last={i === rowCount - 1}
+        />
+      );
+    });
   } else {
     rowCount = items.length;
     rows = items.map((item, i) => {
       return (
         <TableRow
-          key={item.key ?? item.id ?? i}
+          key={i}
           item={item}
           row={i + (isNotWrapped ? 2 : 1)}
           columns={columns}
@@ -623,34 +383,6 @@ function TableFooterRow({
   return (
     <div className={className} style={{ gridArea }}>
       {children}
-    </div>
-  );
-}
-
-type TableLoadingRowProps = {
-  row: number;
-  wrapColCount: number;
-  wrapColSpanSum: number;
-  isNotWrapped: boolean;
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
-
-function TableLoadingRow({
-  row,
-  wrapColCount,
-  wrapColSpanSum,
-  isNotWrapped
-}: TableLoadingRowProps) {
-  let className = 'grid p-4 text-gray-400 border-gray-200 dark:border-gray-700 place-items-center';
-  let gridArea = `${row} / 1 / ${row + 1} / -1`;
-
-  if (!isNotWrapped) {
-    row = ((row - 1) * wrapColSpanSum) / wrapColCount + 1;
-    gridArea = `${row} / 1 / ${row + wrapColSpanSum / wrapColCount} / -1`;
-  }
-
-  return (
-    <div className={className} style={{ gridArea }}>
-      <LoadingSpinner loading className="w-10 h-10" />
     </div>
   );
 }

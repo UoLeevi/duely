@@ -1,7 +1,17 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery, current_agency_Q, image_Q } from '@duely/client';
-import { Util, useBreakpoints, Table, DropMenu, Card, useDynamicNavigation } from '@duely/react';
+import { useQuery, current_agency_Q, image_Q, products_Q, count_products_Q } from '@duely/client';
+import {
+  Util,
+  useBreakpoints,
+  Table,
+  DropMenu,
+  Card,
+  useDynamicNavigation,
+  SkeletonText,
+  SkeletonParagraph,
+  usePagination,
+  PaginationControls
+} from '@duely/react';
 import { ConfirmProductDeletionModal } from './components';
 import {
   DashboardFlexGrid,
@@ -24,57 +34,111 @@ const wrap = {
 const headers = ['Product', 'Status', 'Action'];
 
 export default function DashboardProductsHome() {
-  const { data: agency } = useQuery(current_agency_Q);
+  const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
   const { sm } = useBreakpoints();
   const passAccessToken = useDynamicNavigation({ passAccessToken: true });
 
-  const rows =
-    agency?.products?.map((product) => {
-      const { default_price } = product;
+  type TProduct = NonNullable<ReturnType<typeof products_Q.result>> extends readonly (infer T)[] ? T : never;
+
+  const pagination = usePagination<TProduct>({
+    getTotalNumberOfItems: () => {
+      const {
+        data: count_products,
+        loading: count_productsLoading,
+        error
+      } = useQuery(
+        count_products_Q,
+        {
+          filter: {
+            agency_id: agency?.id!,
+        active: true
+          }
+        },
+        { skip: !agency }
+      );
 
       return {
-        key: product.id,
-        product,
-        price: default_price
+        count: count_products ?? -1,
+        loading: agencyLoading || count_productsLoading,
+        error
       };
-    }) ?? [];
+    },
+    getPageItems: ({ itemsPerPage, firstIndex }) => {
+      const { data, loading, error } = useQuery(
+        products_Q,
+        {
+          filter: {
+            agency_id: agency?.id!,
+        active: true
+          },
+          limit: itemsPerPage === 0 ? undefined : itemsPerPage,
+          offset: firstIndex < 0 ? 0 : firstIndex
+        },
+        { skip: !agency }
+      );
 
-  type TItem = typeof rows extends readonly (infer T)[] ? T : never;
+      return { items: data ?? [], loading, error };
+    },
+    itemsPerPage: 5
+  });
+
+  const loading = agencyLoading || pagination.loading;
+  const error = agencyError ?? pagination.error;
 
   const columns = [
     // product name & description
-    (item: TItem) => {
-      const { data: image_logo, loading: image_logoLoading } = useQuery(image_Q, { image_id: item.product?.image_logo?.id! }, { skip: !item.product?.image_logo });
+    (product: TProduct | null) => {
+      if (!product) {
+        return (
+          <div className="flex space-x-6">
+            <div className="w-32 h-20 bg-gray-200 rounded-lg animate-pulse flex-shrink-1"></div>
+
+            <div className="flex flex-col space-y-1">
+              <SkeletonText />
+              <SkeletonParagraph className="text-xs" words={10} />
+              <SkeletonText className="text-xs" />
+            </div>
+          </div>
+        );
+      }
+
+      const { data: image_logo, loading: image_logoLoading } = useQuery(
+        image_Q,
+        { image_id: product.image_logo?.id! },
+        { skip: !product.image_logo }
+      );
 
       return (
         <div className="flex space-x-6">
-          {image_logo ? (
+          {image_logoLoading ? (
+            <div className="w-32 h-20 bg-gray-200 rounded-lg animate-pulse flex-shrink-1"></div>
+          ) : image_logo ? (
             <img
               className="object-cover w-32 h-20 rounded-lg flex-shrink-1"
               src={image_logo.data}
-              alt={`${item.product.name} logo`}
+              alt={`${product.name} logo`}
             />
           ) : (
             <div className="w-32 h-20 bg-gray-200 rounded-lg flex-shrink-1"></div>
           )}
 
           <div className="flex flex-col space-y-1">
-            <span className="font-medium">{item.product.name}</span>
+            <span className="font-medium">{product.name}</span>
             <p className="flex-1 text-xs text-gray-500">
-              {Util.truncate(item.product.description ?? '', 120)}
+              {Util.truncate(product.description ?? '', 120)}
             </p>
-            <div className="flex items-center pb-1 space-x-3 text-xs text-gray-500">
-              {item.price && (
+            <div className="flex pb-1 space-x-3 text-xs text-gray-500 products-center">
+              {product.default_price && (
                 <span>
-                  {Currency.format(item.price.unit_amount, item.price.currency as Currency)}
+                  {Currency.format(product.default_price.unit_amount, product.default_price.currency as Currency)}
                 </span>
               )}
 
               <a
                 className="px-1 rounded-sm hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600"
                 onClick={passAccessToken}
-                target={`preview ${item.product.url_name}`}
-                href={`https://${agency?.subdomain.name}.duely.app/checkout/${item.product.url_name}?preview`}
+                target={`preview ${product.url_name}`}
+                href={`https://${agency?.subdomain.name}.duely.app/checkout/${product.url_name}?preview`}
               >
                 preview checkout
               </a>
@@ -85,17 +149,26 @@ export default function DashboardProductsHome() {
     },
 
     // product product status
-    (item: TItem) => <ColoredChip color={statusColors} text={item.product.status} />,
+    (product: TProduct | null) =>
+      !product ? (
+        <ColoredChip color={statusColors} />
+      ) : (
+        <ColoredChip color={statusColors} text={product.status} />
+      ),
 
     // actions
-    (item: TItem) => {
+    (product: TProduct | null) => {
+      if (!product) {
+        return <SkeletonText />;
+      }
+
       const actions = [
         {
           key: 'edit',
           className:
             'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
           children: (
-            <div className="flex items-center space-x-2">
+            <div className="flex space-x-2 products-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="w-6 h-6"
@@ -113,14 +186,14 @@ export default function DashboardProductsHome() {
               <span>Edit</span>
             </div>
           ),
-          to: `products/${item.product.url_name}/edit`
+          to: `products/${product.url_name}/edit`
         },
         {
           key: 'delete',
           className:
             'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
           children: (
-            <div className="flex items-center space-x-2">
+            <div className="flex space-x-2 products-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="w-6 h-6"
@@ -138,7 +211,7 @@ export default function DashboardProductsHome() {
               <span>Delete</span>
             </div>
           ),
-          to: '?delete_product=' + item.product.id
+          to: '?delete_product=' + product.id
         }
       ];
 
@@ -169,10 +242,13 @@ export default function DashboardProductsHome() {
       <DashboardSection title="Products">
         <Card className="max-w-screen-lg">
           <Table
-            rows={rows}
             columns={columns}
             headers={headers}
             wrap={wrap}
+            loading={loading}
+            error={error}
+            pagination={pagination}
+            footer={<PaginationControls pagination={pagination} />}
           />
         </Card>
       </DashboardSection>

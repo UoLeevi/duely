@@ -97,6 +97,7 @@ export type ProductResource = {
   name: string;
   url_name: string;
   status: string;
+  active: boolean;
   description?: string | null;
   duration?: string | null;
   image_logo_id?: ResourceId<'image'> | null;
@@ -261,6 +262,7 @@ export type PriceResource = {
   stripe_price_id_ext_live?: string | null;
   stripe_price_id_ext_test?: string | null;
   status: string;
+  active: boolean;
 };
 
 export type OrderResource = {

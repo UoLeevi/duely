@@ -17,7 +17,16 @@ type TItem = NonNullable<ReturnType<typeof agency_pages_Q.result>> extends reado
   ? T
   : never;
 
-function PageColumn(page: TItem) {
+function PageColumn(page: TItem | null) {
+  if (!page) {
+    return (
+      <div className="flex flex-col space-y-2">
+        <SkeletonText className="text-sm" />
+        <SkeletonText className="text-xs" />
+      </div>
+    );
+  }
+
   const isProductLevelPage = !!page.product?.id;
   const { data: product, loading: productLoading } = useQuery(
     product_Q,
@@ -85,12 +94,19 @@ export default function DashboardSitePagesHome() {
     PageColumn,
 
     // status
-    (page: TItem) => (
-      <ColoredChip color={statusColors} text={page.access === 'PUBLIC' ? 'live' : 'draft'} />
-    ),
+    (page: TItem | null) =>
+      !page ? (
+        <ColoredChip color={statusColors} text={'loading'} />
+      ) : (
+        <ColoredChip color={statusColors} text={page.access === 'PUBLIC' ? 'live' : 'draft'} />
+      ),
 
     // actions
-    (page: TItem) => {
+    (page: TItem | null) => {
+      if (!page) {
+        return <SkeletonText />;
+      }
+
       const actions = [
         {
           key: 'edit',
@@ -170,7 +186,7 @@ export default function DashboardSitePagesHome() {
     <>
       <DashboardSection title="Pages">
         <Card className="max-w-screen-lg space-y-4">
-          <Table rows={rows} columns={columns} headers={headers} wrap={wrap} />
+          <Table items={rows} columns={columns} headers={headers} wrap={wrap} />
         </Card>
       </DashboardSection>
 

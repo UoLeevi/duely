@@ -12,7 +12,12 @@ export function useQuery<
   options?: QueryFunctionOptions<TData, TVariables>
 ) {
   const { query, result, variables: defaultVariables, ...defaultOptions } = queryDef;
-  const { data: rawData, networkStatus, loading: initialLoading, ...rest } = useApolloQuery(query, {
+  const {
+    data: rawData,
+    networkStatus,
+    loading: initialLoading,
+    ...rest
+  } = useApolloQuery(query, {
     variables: {
       ...defaultVariables,
       ...variables
