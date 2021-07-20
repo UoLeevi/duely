@@ -1597,6 +1597,27 @@ $_$;
 ALTER FUNCTION internal_.resource_update_(_resource_definition security_.resource_definition_, _record jsonb) OWNER TO postgres;
 
 --
+-- Name: resource_update_from_(regclass); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.resource_update_from_(_table regclass) RETURNS void
+    LANGUAGE plpgsql
+    AS $_$
+BEGIN
+  EXECUTE '
+    SELECT internal_.resource_update_(d, to_jsonb(r))
+    FROM ' || _table || ' r
+    CROSS JOIN security_.resource_definition_ d
+    WHERE d.table_ = $1;
+  '
+  USING _table;
+END
+$_$;
+
+
+ALTER FUNCTION internal_.resource_update_from_(_table regclass) OWNER TO postgres;
+
+--
 -- Name: resource_update_membership_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
