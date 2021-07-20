@@ -23,6 +23,7 @@ export const Product: GqlTypeDefinition = {
       name: String!
       url_name: String!
       status: String!
+      active: Boolean!
       description: String
       duration: String
       default_price: Price
@@ -58,6 +59,8 @@ export const Product: GqlTypeDefinition = {
       name: String
       agency_id: ID
       url_name: String
+      status: String
+      active: Boolean
     }
 
     extend type Query {
@@ -142,7 +145,8 @@ export const Product: GqlTypeDefinition = {
     },
     Mutation: {
       async create_product(obj, { image_logo, image_hero, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         if (!validator.isSlug(args.url_name))
           return {
@@ -261,7 +265,8 @@ export const Product: GqlTypeDefinition = {
         }
       },
       async update_product(obj, { product_id, image_logo, image_hero, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         if (args.url_name != null && !validator.isSlug(args.url_name))
           return {
@@ -344,7 +349,11 @@ export const Product: GqlTypeDefinition = {
 
                 // update product at stripe
                 await stripe[stripe_env].products.update(
-                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] as string,
+                  product[
+                    `stripe_prod_id_ext_${stripe_env}` as
+                      | 'stripe_prod_id_ext_live'
+                      | 'stripe_prod_id_ext_test'
+                  ]!,
                   stripe_product_args,
                   { stripeAccount: stripe_account.stripe_id_ext }
                 );
@@ -368,11 +377,12 @@ export const Product: GqlTypeDefinition = {
         }
       },
       async delete_product(obj, { product_id }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
-          return await withSession(context, async ({ queryResource, deleteResource }) => {
-            const product = await deleteResource('product', product_id);
+          return await withSession(context, async ({ queryResource, updateResource }) => {
+            const product = await updateResource('product', product_id, { active: false });
 
             if (product == null) {
               return {
@@ -395,21 +405,12 @@ export const Product: GqlTypeDefinition = {
                 agency_id: product.agency_id
               });
 
-              // delete or deactivate product from stripe
-              try {
-                await stripe[stripe_env].products.del(
-                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] as string,
-                  {
-                    stripeAccount: stripe_account.stripe_id_ext
-                  }
-                );
-              } catch {
-                await stripe[stripe_env].products.update(
-                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] as string,
-                  { active: false },
-                  { stripeAccount: stripe_account.stripe_id_ext }
-                );
-              }
+              // deactivate product from stripe
+              await stripe[stripe_env].products.update(
+                product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] as string,
+                { active: false },
+                { stripeAccount: stripe_account.stripe_id_ext }
+              );
             }
 
             // success

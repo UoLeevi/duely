@@ -23,6 +23,7 @@ export const Price: GqlTypeDefinition = {
       id: ID!
       name: String!
       status: String!
+      active: Boolean!
       type: String!
       unit_amount: Int!
       currency: String!
@@ -35,6 +36,9 @@ export const Price: GqlTypeDefinition = {
       product_id: ID
       stripe_price_id_ext_live: String
       stripe_price_id_ext_test: String
+      type: String
+      status: String
+      active: Boolean
     }
 
     extend type Query {
@@ -95,7 +99,8 @@ export const Price: GqlTypeDefinition = {
     },
     Mutation: {
       async create_price(obj, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           return await withSession(
@@ -147,7 +152,11 @@ export const Price: GqlTypeDefinition = {
                 });
 
                 stripe_price_args.product =
-                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] ?? undefined;
+                  product[
+                    `stripe_prod_id_ext_${stripe_env}` as
+                      | 'stripe_prod_id_ext_live'
+                      | 'stripe_prod_id_ext_test'
+                  ] ?? undefined;
 
                 // create price object at stripe
                 stripe_price[stripe_env] = await stripe[stripe_env].prices.create(
@@ -182,7 +191,8 @@ export const Price: GqlTypeDefinition = {
         }
       },
       async update_price(obj, { price_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           return await withSession(context, async ({ updateResource }) => {
@@ -206,11 +216,12 @@ export const Price: GqlTypeDefinition = {
         }
       },
       async delete_price(obj, { price_id }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
-          return await withSession(context, async ({ queryResource, deleteResource }) => {
-            const price = await deleteResource('price', price_id);
+          return await withSession(context, async ({ queryResource, updateResource }) => {
+            const price = await updateResource('price', price_id, { active: false });
 
             if (price == null) {
               return {
@@ -241,8 +252,14 @@ export const Price: GqlTypeDefinition = {
                   { active: false },
                   { stripeAccount: stripe_account.stripe_id_ext }
                 );
-              } catch {
+              } catch (err: any) {
                 // ignore error
+                console.log(
+                  `Unable to deactivate price ${
+                    price[`stripe_price_id_ext_${stripe_env}` as keyof PriceResource] as string
+                  } at Stripe (${stripe_env})`,
+                  err.message
+                );
               }
             }
 
@@ -268,7 +285,8 @@ export const Price: GqlTypeDefinition = {
         context,
         info
       ) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         const stripe_env = livemode ? 'live' : 'test';
 
