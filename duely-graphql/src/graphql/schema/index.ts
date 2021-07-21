@@ -46,6 +46,7 @@ import { OrderItem } from './OrderItem';
 import { IntegrationType } from './IntegrationType';
 import { IntegrationConfig } from './IntegrationConfig';
 import { CredentialType } from './CredentialType';
+import { BankAccount } from './BankAccount';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -100,6 +101,7 @@ const types: GqlTypeDefinition[] = [
   Integration,
   IntegrationConfig,
   IntegrationType,
+  BankAccount,
   DateTime,
   Json
 ];

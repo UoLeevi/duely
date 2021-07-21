@@ -85,7 +85,7 @@ export const Order: GqlTypeDefinition = {
         const access = await queryResourceAccess(context, order.id);
 
         if (access !== 'owner') {
-          throw new Error('Only owner can access this information');
+          throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
         }
 
         try {

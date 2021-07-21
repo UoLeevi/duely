@@ -1,11 +1,14 @@
 import gql from 'graphql-tag';
-import { queryResource, queryResourceAccess } from '@duely/db';
+import { queryResource, queryResourceAccess, Resources } from '@duely/db';
 import stripe from '../../../stripe';
 import { GqlTypeDefinition } from '../../types';
 import { createResolverForReferencedResourceAll } from '../../util';
 import { DuelyGraphQLError } from '../../errors';
+import Stripe from 'stripe';
 
 // see: https://stripe.com/docs/api/accounts/object
+
+type StripeAccount_Source = Resources['stripe account'] & Omit<Stripe.Account, 'id' | 'object'>;
 
 export const StripeAccount: GqlTypeDefinition = {
   typeDef: gql`
@@ -54,6 +57,11 @@ export const StripeAccount: GqlTypeDefinition = {
       details_submitted: Boolean!
       email: String
       payouts_enabled: Boolean!
+      bank_accounts(
+        starting_after_id: String
+        ending_before_id: String
+        limit: Int
+      ): [BankAccount!]!
     }
 
     extend type Query {
@@ -123,14 +131,14 @@ export const StripeAccount: GqlTypeDefinition = {
   `,
   resolvers: {
     StripeAccount: {
-      id_ext: (source) => source.stripe_id_ext,
-      created: (source) => new Date(source.created * 1000),
+      id_ext: (source: StripeAccount_Source) => source.stripe_id_ext,
+      created: (source: StripeAccount_Source) => new Date(source.created! * 1000),
       ...createResolverForReferencedResourceAll({
         name: 'customers',
         resource_name: 'customer',
         column_name: 'stripe_account_id'
       }),
-      async account_update_url(source, args, context, info) {
+      async account_update_url(source: StripeAccount_Source, args, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
@@ -140,10 +148,10 @@ export const StripeAccount: GqlTypeDefinition = {
           const access = await queryResourceAccess(context, source.id);
 
           if (access !== 'owner') {
-            throw new Error('Only owner can access this information');
+            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
           }
 
-          const return_url = `https://${source.business_profile.url}`;
+          const return_url = `https://${source.business_profile?.url ?? 'duely.app'}`;
 
           // create stripe account verification url
           // see: https://stripe.com/docs/api/account_links/create
@@ -151,14 +159,17 @@ export const StripeAccount: GqlTypeDefinition = {
             account: source.stripe_id_ext,
             refresh_url: return_url,
             return_url,
-            type: source.requirements.eventually_due.length === 0 ? 'account_update' : 'account_onboarding',
+            type:
+              (source.requirements?.eventually_due ?? []).length === 0
+                ? 'account_update'
+                : 'account_onboarding',
             collect: 'eventually_due'
           });
         } catch (error: any) {
           throw new Error(error.message);
         }
       },
-      async balance(source, args, context, info) {
+      async balance(source: StripeAccount_Source, args, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
@@ -168,7 +179,7 @@ export const StripeAccount: GqlTypeDefinition = {
           const access = await queryResourceAccess(context, source.id);
 
           if (access !== 'owner') {
-            throw new Error('Only owner can access this information');
+            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
           }
 
           // retrive connected account balance
@@ -179,7 +190,7 @@ export const StripeAccount: GqlTypeDefinition = {
         }
       },
       async balance_transactions(
-        source,
+        source: StripeAccount_Source,
         { payout_id, starting_after_id, ending_before_id, ...args },
         context,
         info
@@ -193,7 +204,7 @@ export const StripeAccount: GqlTypeDefinition = {
           const access = await queryResourceAccess(context, source.id);
 
           if (access !== 'owner') {
-            throw new Error('Only owner can access this information');
+            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
           }
 
           if (payout_id) {
@@ -222,7 +233,7 @@ export const StripeAccount: GqlTypeDefinition = {
         }
       },
       async payment_intents(
-        source,
+        source: StripeAccount_Source,
         { customer_id, starting_after_id, ending_before_id, ...args },
         context,
         info
@@ -236,7 +247,7 @@ export const StripeAccount: GqlTypeDefinition = {
           const access = await queryResourceAccess(context, source.id);
 
           if (access !== 'owner') {
-            throw new Error('Only owner can access this information');
+            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
           }
 
           if (customer_id) {
@@ -259,6 +270,48 @@ export const StripeAccount: GqlTypeDefinition = {
             stripeAccount: source.stripe_id_ext,
             ...pi
           }));
+        } catch (error: any) {
+          throw new Error(error.message);
+        }
+      },
+      async bank_accounts(
+        source: StripeAccount_Source,
+        { starting_after_id, ending_before_id, ...args },
+        context,
+        info
+      ) {
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+
+        const stripe_env = source.livemode ? 'live' : 'test';
+
+        try {
+          const access = await queryResourceAccess(context, source.id);
+
+          if (access !== 'owner') {
+            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+          }
+
+          if (starting_after_id) {
+            args.starting_after = starting_after_id;
+          }
+
+          if (ending_before_id) {
+            args.ending_before = ending_before_id;
+          }
+
+          // see: https://stripe.com/docs/api/external_account_bank_accounts/list
+          const list = await stripe[stripe_env].accounts.listExternalAccounts(
+            source.stripe_id_ext,
+            args
+          );
+          return list.data
+            ?.filter((external_account) => external_account.object === 'bank_account')
+            .map((external_account) => ({
+              livemode: source.livemode,
+              stripeAccount: source.stripe_id_ext,
+              ...external_account
+            }));
         } catch (error: any) {
           throw new Error(error.message);
         }
