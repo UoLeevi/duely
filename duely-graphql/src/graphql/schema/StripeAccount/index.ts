@@ -151,7 +151,7 @@ export const StripeAccount: GqlTypeDefinition = {
             account: source.stripe_id_ext,
             refresh_url: return_url,
             return_url,
-            type: source.details_submitted ? 'account_onboarding' : 'account_update',
+            type: source.eventually_due.length === 0 ? 'account_update' : 'account_onboarding',
             collect: 'eventually_due'
           });
         } catch (error: any) {
