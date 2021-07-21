@@ -145,7 +145,12 @@ export const Agency: GqlTypeDefinition = {
         resource_name: 'page',
         column_name: 'agency_id'
       }),
-      settings: (agency) => ({ agency_id: agency.id }),
+      ...createResolverForReferencedResource({
+        name: 'settings',
+        resource_name: 'agency settings',
+        reverse: true,
+        column_name: 'agency_id'
+      }),
       async supported_payment_currencies(source, args, context, info) {
         if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
 

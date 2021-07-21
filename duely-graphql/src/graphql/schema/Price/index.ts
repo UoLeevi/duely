@@ -302,32 +302,36 @@ export const Price: GqlTypeDefinition = {
             });
             const agency = await queryResource('agency', product.agency_id);
             const subdomain = await queryResource('subdomain', agency.subdomain_id);
+            const product_settings = await queryResource('product settings', {
+              product_id: product.id
+            });
+            const agency_settings = await queryResource('agency settings', {
+              agency_id: product.agency_id
+            });
 
-            if (!success_url) {
-              const product_thank_you_page_setting = await queryResource(
-                'product thank you page setting',
-                { product_id: product.id }
-              );
-              success_url = product_thank_you_page_setting?.url;
-            }
-
-            if (!success_url) {
-              const agency_thank_you_page_setting = await queryResource(
-                'agency thank you page setting',
-                { agency_id: product.agency_id }
-              );
-              success_url = agency_thank_you_page_setting?.url;
-            }
-
-            if (!success_url) {
-              success_url = `https://${subdomain.name}.duely.app/orders/thank-you`;
-            }
+            success_url =
+              success_url ||
+              product_settings?.checkout_success_url ||
+              agency_settings?.checkout_success_url ||
+              `https://${subdomain.name}.duely.app/orders/thank-you`;
+              
+            cancel_url =
+              cancel_url ||
+              product_settings?.checkout_cancel_url ||
+              agency_settings?.checkout_cancel_url ||
+              context.referer ||
+              `https://${subdomain.name}.duely.app`;
 
             try {
               // validate and normalize url
-              const url = new URL(success_url);
-              url.searchParams.append('session_id', '{CHECKOUT_SESSION_ID}');
-              success_url = url.href.replace('%7B', '{').replace('%7D', '}');
+              const success_url_obj = new URL(success_url);
+              success_url_obj.searchParams.append('session_id', '{CHECKOUT_SESSION_ID}');
+              success_url = success_url_obj.href.replace('%7B', '{').replace('%7D', '}');
+
+              // validate and normalize url
+              const cancel_url_obj = new URL(cancel_url);
+              cancel_url_obj.searchParams.append('session_id', '{CHECKOUT_SESSION_ID}');
+              cancel_url = cancel_url_obj.href.replace('%7B', '{').replace('%7D', '}');
             } catch (error: any) {
               return {
                 // error
@@ -335,10 +339,6 @@ export const Price: GqlTypeDefinition = {
                 message: error.message,
                 type: 'CreateStripeCheckoutSessionResult'
               };
-            }
-
-            if (!cancel_url) {
-              cancel_url = context.referer ?? `https://${subdomain.name}.duely.app`;
             }
 
             const application_fee_amount = await calculateTransactionFee(

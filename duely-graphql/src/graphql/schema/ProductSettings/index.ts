@@ -1,175 +1,132 @@
 import gql from 'graphql-tag';
 import { URL } from 'url';
-import { createResource, deleteResource, updateResource } from '@duely/db';
+import { updateResource } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
-import { createResolverForReferencedResource } from '../../util';
+import { createDefaultQueryResolversForResource } from '../../util';
 import { DuelyGraphQLError } from '../../errors';
+
+const resource = {
+  name: 'product settings',
+  table_name: 'product_settings',
+  plural: 'products_settings'
+} as const;
 
 export const ProductSettings: GqlTypeDefinition = {
   typeDef: gql`
     type ProductSettings {
       id: ID!
-      thank_you_page_setting: ProductThankYouPageSetting
+      checkout_success_url: String
+      checkout_cancel_url: String
     }
 
-    type ProductThankYouPageSetting {
-      id: ID!
-      url: String!
+    input ProductSettingsFilter {
+      product_id: ID
+    }
+
+    extend type Query {
+      product_settings(id: ID!): ProductSettings
+      products_settings(
+        filter: ProductSettingsFilter!
+        token: String
+        desc: Boolean
+        order_by: String
+        limit: Int
+        offset: Int
+        before_id: ID
+        after_id: ID
+      ): [ProductSettings!]
+      count_products_settings(filter: ProductSettingsFilter!, token: String): Int!
     }
 
     extend type Mutation {
-      create_product_thank_you_page_setting(
-        product_id: ID!
-        url: String!
-      ): ProductThankYouPageSettingMutationResult!
-      update_product_thank_you_page_setting(
-        setting_id: ID!
-        url: String!
-      ): ProductThankYouPageSettingMutationResult!
-      delete_product_thank_you_page_setting(
-        setting_id: ID!
-      ): ProductThankYouPageSettingMutationResult!
+      update_product_settings(setting_id: ID!, url: String!): ProductSettingsMutationResult!
     }
 
-    type ProductThankYouPageSettingMutationResult implements MutationResult {
+    type ProductSettingsMutationResult implements MutationResult {
       success: Boolean!
       message: String
-      setting: ProductThankYouPageSetting
+      setting: ProductSettings
     }
   `,
   resolvers: {
-    ProductSettings: {
-      id: (source) => `set${source.product_id}_x`,
-      ...createResolverForReferencedResource({
-        name: 'thank_you_page_setting',
-        resource_name: 'product thank you page setting',
-        reverse: true,
-        column_name: 'product_id'
-      })
+    Query: {
+      ...createDefaultQueryResolversForResource(resource)
     },
     Mutation: {
-      async create_product_thank_you_page_setting(obj, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+      async update_product_settings(obj, { setting_id, ...args }, context, info) {
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
-        let url;
+        if (args.checkout_success_url) {
+          let url;
 
-        try {
-          // validate and normalize url
-          url = new URL(args.url);
-        } catch (error: any) {
-          return {
-            // error
-            success: false,
-            message: error.message,
-            type: 'ProductThankYouPageSettingMutationResult'
-          };
+          try {
+            // validate and normalize url
+            url = new URL(args.checkout_success_url);
+          } catch (error: any) {
+            return {
+              // error
+              success: false,
+              message: error.message,
+              type: 'ProductSettingsMutationResult'
+            };
+          }
+
+          if (url.protocol !== 'https:') {
+            return {
+              // error
+              success: false,
+              message: 'URL should use https protocol.',
+              type: 'ProductSettingsMutationResult'
+            };
+          }
+
+          args.checkout_success_url = url.href;
         }
 
-        if (url.protocol !== 'https:') {
-          return {
-            // error
-            success: false,
-            message: 'URL should use https protocol.',
-            type: 'ProductThankYouPageSettingMutationResult'
-          };
+        if (args.checkout_cancel_url) {
+          let url;
+
+          try {
+            // validate and normalize url
+            url = new URL(args.checkout_cancel_url);
+          } catch (error: any) {
+            return {
+              // error
+              success: false,
+              message: error.message,
+              type: 'ProductSettingsMutationResult'
+            };
+          }
+
+          if (url.protocol !== 'https:') {
+            return {
+              // error
+              success: false,
+              message: 'URL should use https protocol.',
+              type: 'ProductSettingsMutationResult'
+            };
+          }
+
+          args.checkout_cancel_url = url.href;
         }
-
-        args.url = url.href;
-
-        try {
-          // create resource
-          const setting = await createResource(context, 'product thank you page setting', args);
-
-          // success
-          return {
-            success: true,
-            setting,
-            type: 'ProductThankYouPageSettingMutationResult'
-          };
-        } catch (error: any) {
-          return {
-            // error
-            success: false,
-            message: error.message,
-            type: 'ProductThankYouPageSettingMutationResult'
-          };
-        }
-      },
-      async update_product_thank_you_page_setting(obj, { setting_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
-
-        let url;
-
-        try {
-          // validate and normalize url
-          url = new URL(args.url);
-        } catch (error: any) {
-          return {
-            // error
-            success: false,
-            message: error.message,
-            type: 'ProductThankYouPageSettingMutationResult'
-          };
-        }
-
-        if (url.protocol !== 'https:') {
-          return {
-            // error
-            success: false,
-            message: 'URL should use https protocol.',
-            type: 'ProductThankYouPageSettingMutationResult'
-          };
-        }
-
-        args.url = url.href;
 
         try {
           // update resource
-          const setting = await updateResource(
-            context,
-            'product thank you page setting',
-            setting_id,
-            args
-          );
+          const setting = await updateResource(context, 'product settings', setting_id, args);
 
           // success
           return {
             success: true,
             setting,
-            type: 'ProductThankYouPageSettingMutationResult'
+            type: 'ProductSettingsMutationResult'
           };
         } catch (error: any) {
           return {
             // error
             success: false,
             message: error.message,
-            type: 'ProductThankYouPageSettingMutationResult'
-          };
-        }
-      },
-      async delete_product_thank_you_page_setting(obj, { setting_id }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
-
-        try {
-          // delete resource
-          const setting = await deleteResource(
-            context,
-            'product thank you page setting',
-            setting_id
-          );
-
-          // success
-          return {
-            success: true,
-            setting,
-            type: 'ProductThankYouPageSettingMutationResult'
-          };
-        } catch (error: any) {
-          return {
-            // error
-            success: false,
-            message: error.message,
-            type: 'ProductThankYouPageSettingMutationResult'
+            type: 'ProductSettingsMutationResult'
           };
         }
       }

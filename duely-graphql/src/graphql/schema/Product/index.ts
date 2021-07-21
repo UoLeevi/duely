@@ -138,7 +138,12 @@ export const Product: GqlTypeDefinition = {
         resource_name: 'integration',
         column_name: 'product_id'
       }),
-      settings: (product) => ({ product_id: product.id })
+      ...createResolverForReferencedResource({
+        name: 'settings',
+        resource_name: 'product settings',
+        reverse: true,
+        column_name: 'product_id'
+      }),
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
