@@ -146,7 +146,7 @@ async function get_checkout(req: Request, res: Response) {
       return;
     }
 
-    res.redirect(result.checkout_session_url);
+    res.redirect(303, result.checkout_session_url);
   } catch (error: any) {
     console.error(error);
     res.sendStatus(404);
