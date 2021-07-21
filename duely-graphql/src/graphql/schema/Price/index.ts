@@ -85,6 +85,7 @@ export const Price: GqlTypeDefinition = {
       success: Boolean!
       message: String
       checkout_session_id: String
+      checkout_session_url: String
     }
   `,
   resolvers: {
@@ -386,6 +387,7 @@ export const Price: GqlTypeDefinition = {
             return {
               success: true,
               checkout_session_id: checkout_session.id,
+              checkout_session_url: checkout_session.url,
               type: 'CreateStripeCheckoutSessionResult'
             };
           });
