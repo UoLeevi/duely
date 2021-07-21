@@ -238,6 +238,66 @@ mutation DeleteCustomer($customer_id: ID!) {
   }
 }
 
+mutation CreateBankAccount(
+  $stripe_account_id: ID!
+  $country: String!
+  $currency: String!
+  $account_number: String!
+  $account_holder_name: String
+  $account_holder_type: String
+  $routing_number: String
+  $default_for_currency: Boolean
+) {
+  create_bank_account(
+    stripe_account_id: $stripe_account_id
+    account_holder_name: $account_holder_name
+    country: $country
+    currency: $currency
+    account_number: $account_number
+    account_holder_type: $account_holder_type
+    routing_number: $routing_number
+    default_for_currency: $default_for_currency
+  ) {
+    success
+    message
+    bank_account {
+      ...bank_account
+    }
+  }
+}
+
+mutation UpdateBankAccount(
+  $stripe_account_id: ID!
+  $bank_account_id: ID!
+  $account_holder_name: String
+  $account_holder_type: String
+  $default_for_currency: Boolean
+) {
+  update_bank_account(
+    stripe_account_id: $stripe_account_id
+    bank_account_id: $bank_account_id
+    account_holder_name: $account_holder_name
+    account_holder_type: $account_holder_type
+    default_for_currency: $default_for_currency
+  ) {
+    success
+    message
+    bank_account {
+      ...bank_account
+    }
+  }
+}
+
+mutation DeleteBankAccount($stripe_account_id: ID!, $bank_account_id: ID!) {
+  delete_bank_account(stripe_account_id: $stripe_account_id, bank_account_id: $bank_account_id) {
+    success
+    message
+    bank_account {
+      id
+    }
+  }
+}
+
 mutation UpdateAgencySettings(
   $setting_id: ID!
   $checkout_success_url: String

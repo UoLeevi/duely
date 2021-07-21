@@ -100,7 +100,7 @@ export default function DashboardOrdersHome() {
           <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
             {Util.truncate(order.items.map((item) => item.price.product.name).join(', '), 50)}
           </span>
-          <span className="text-xs text-gray-600">{order.id}</span>
+          <span className="font-mono text-xs text-gray-600">{order.id}</span>
         </div>
       ),
 

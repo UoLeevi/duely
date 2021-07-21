@@ -161,6 +161,27 @@ query AgencyStripeAccountPaymentIntents(
   }
 }
 
+query AgencyStripeAccountBankAccounts(
+  $agency_id: ID!
+  $starting_after_id: String
+  $ending_before_id: String
+  $limit: Int
+) {
+  agency(id: $agency_id) {
+    id
+    stripe_account {
+      id
+      bank_accounts(
+        starting_after_id: $starting_after_id
+        ending_before_id: $ending_before_id
+        limit: $limit
+      ) {
+        ...bank_account
+      }
+    }
+  }
+}
+
 query Customer($customer_id: ID!) {
   customer(id: $customer_id) {
     ...customer

@@ -561,3 +561,19 @@ fragment order on Order {
   ordered_at
   processed_at
 }
+
+fragment bank_account on BankAccount {
+  id
+  id_ext
+  account_holder_name
+  account_holder_type
+  available_payout_methods
+  bank_name
+  country
+  currency
+  default_for_currency
+  fingerprint
+  last4
+  routing_number
+  status
+}

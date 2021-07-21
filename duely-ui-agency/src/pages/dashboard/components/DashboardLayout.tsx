@@ -157,6 +157,10 @@ const sidebarLinks: SidebarProps['links'] = [
     ),
     items: [
       {
+        text: 'Payments',
+        to: '/dashboard/settings/payments'
+      },
+      {
         text: 'Checkout',
         to: '/dashboard/settings/checkout'
       },

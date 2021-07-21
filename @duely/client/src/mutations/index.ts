@@ -1,11 +1,7 @@
-import {
-  ApolloCache,
-  MutationOptions,
-  NormalizedCacheObject,
-  Reference
-} from '@apollo/client';
+import { ApolloCache, MutationOptions, NormalizedCacheObject, Reference } from '@apollo/client';
 import {
   CreateAgencyDocument,
+  CreateBankAccountDocument,
   CreateCredentialDocument,
   CreateCustomerDocument,
   CreateIntegrationConfigDocument,
@@ -14,6 +10,7 @@ import {
   CreatePriceDocument,
   CreateProductDocument,
   CustomerFragmentDoc,
+  DeleteBankAccountDocument,
   DeleteCustomerDocument,
   DeletePageBlockDocument,
   DeleteProductDocument,
@@ -25,6 +22,7 @@ import {
   StartSignUpDocument,
   UpdateAgencyDocument,
   UpdateAgencySettingsDocument,
+  UpdateBankAccountDocument,
   UpdateCredentialDocument,
   UpdateCustomerDocument,
   UpdateIntegrationConfigDocument,
@@ -38,7 +36,13 @@ import {
 } from '@duely/core';
 import { client } from '../apollo/client';
 import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-document-node/core';
-import { count_customers_Q, count_products_Q, customers_Q, products_Q } from '../queries';
+import {
+  agency_stripe_account_bank_accounts_Q,
+  count_customers_Q,
+  count_products_Q,
+  customers_Q,
+  products_Q
+} from '../queries';
 // import produce from 'immer';
 // import { query } from './queries';
 
@@ -173,6 +177,48 @@ export const create_agency_M = {
 export const update_agency_M = {
   mutation: UpdateAgencyDocument,
   result: (d: ResultOf<typeof UpdateAgencyDocument>) => d?.update_agency
+};
+
+const create_bank_account_R = (d: ResultOf<typeof CreateBankAccountDocument>) =>
+  d?.create_bank_account;
+export const create_bank_account_M = {
+  mutation: CreateBankAccountDocument,
+  result: create_bank_account_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof create_bank_account_R> | null
+  ) {
+    if (!result?.success || !result.bank_account) return;
+
+    evictQuery(cache, agency_stripe_account_bank_accounts_Q.query);
+
+    cache.gc();
+  }
+};
+
+export const update_bank_account_M = {
+  mutation: UpdateBankAccountDocument,
+  result: (d: ResultOf<typeof UpdateBankAccountDocument>) => d?.update_bank_account
+};
+
+const delete_bank_account_R = (d: ResultOf<typeof DeleteBankAccountDocument>) =>
+  d?.delete_bank_account;
+export const delete_bank_account_M = {
+  mutation: DeleteBankAccountDocument,
+  result: delete_bank_account_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof delete_bank_account_R> | null
+  ) {
+    if (!result?.success || !result.bank_account) return;
+
+    const id = cache.identify(result.bank_account);
+    cache.evict({ id });
+
+    evictQuery(cache, agency_stripe_account_bank_accounts_Q.query);
+
+    cache.gc();
+  }
 };
 
 const create_product_R = (d: ResultOf<typeof CreateProductDocument>) => d?.create_product;
@@ -310,9 +356,8 @@ export const create_price_M = {
   result: (d: ResultOf<typeof CreatePriceDocument>) => d?.create_price
 };
 
-const update_agency_settings_R = (
-  d: ResultOf<typeof UpdateAgencySettingsDocument>
-) => d?.update_agency_settings;
+const update_agency_settings_R = (d: ResultOf<typeof UpdateAgencySettingsDocument>) =>
+  d?.update_agency_settings;
 export const update_agency_settings_M = {
   mutation: UpdateAgencySettingsDocument,
   result: update_agency_settings_R
@@ -320,8 +365,7 @@ export const update_agency_settings_M = {
 
 export const update_product_settings_M = {
   mutation: UpdateProductSettingsDocument,
-  result: (d: ResultOf<typeof UpdateProductSettingsDocument>) =>
-    d?.update_product_settings
+  result: (d: ResultOf<typeof UpdateProductSettingsDocument>) => d?.update_product_settings
 };
 
 export const update_page_M = {

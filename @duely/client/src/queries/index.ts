@@ -56,7 +56,8 @@ import {
   CountOrdersDocument,
   CountProductsDocument,
   CustomersDocument,
-  CountCustomersDocument
+  CountCustomersDocument,
+  AgencyStripeAccountBankAccountsDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -397,6 +398,11 @@ export const agency_pages_Q = {
 export const agency_subscription_plan_Q = {
   query: AgencySubscriptionPlanDocument,
   result: (d: ResultOf<typeof AgencySubscriptionPlanDocument>) => d?.agency?.subscription_plan
+};
+
+export const agency_stripe_account_bank_accounts_Q = {
+  query: AgencyStripeAccountBankAccountsDocument,
+  result: (d: ResultOf<typeof AgencyStripeAccountBankAccountsDocument>) => d?.agency?.stripe_account?.bank_accounts
 };
 
 export const page_Q = {

@@ -10,6 +10,7 @@ export type FormFieldRadioBlocksElementProps<
 > = Override<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
   FormFieldElementProps<TName, TFormFields> & {
+    dense?: boolean;
     options: (
       | string
       | {
@@ -29,6 +30,7 @@ export function FormFieldRadioBlocksElement<
   registerOptions,
   options,
   loading,
+  dense,
   ...props
 }: FormFieldRadioBlocksElementProps<TName, TFormFields>) {
   const form = useFormContext();
@@ -44,7 +46,8 @@ export function FormFieldRadioBlocksElement<
         fieldValue === value &&
           (props.readOnly || props.disabled ? 'border-gray-400 dark:border-gray-700' : 'border-blue-400'),
         fieldValue !== value && (props.readOnly || props.disabled) && 'opacity-50',
-        'text-gray-700 dark:text-gray-300 px-4 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm flex items-center h-20 flex-1'
+        dense ? 'h-14 text-sm' : 'h-20',
+        'text-gray-700 dark:text-gray-300 px-4 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm flex items-center flex-1'
       );
 
       return (
