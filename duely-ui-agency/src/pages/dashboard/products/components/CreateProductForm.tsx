@@ -4,7 +4,8 @@ import {
   FormField,
   useImageInputFromFileList,
   useForm,
-  Form
+  Form,
+  LinkButton
 } from '@duely/react';
 import {
   useMutation,
@@ -175,12 +176,9 @@ export function CreateProductForm() {
           <span className="whitespace-nowrap">{product!.name}</span>{' '}
           <span className="whitespace-nowrap">created succesfully</span>
         </h3>
-        <Link
-          className="px-12 py-3 mt-2 font-medium text-white bg-indigo-500 rounded-md"
-          to="/dashboard/products"
-        >
+        <LinkButton color="indigo" to="/dashboard/products">
           Go to products
-        </Link>
+        </LinkButton>
       </div>
     );
   }

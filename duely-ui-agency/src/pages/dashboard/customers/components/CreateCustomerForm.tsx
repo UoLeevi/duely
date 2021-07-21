@@ -1,4 +1,4 @@
-import { FormButton, FormInfoMessage, FormField, useForm, Form } from '@duely/react';
+import { FormButton, FormInfoMessage, FormField, useForm, Form, LinkButton } from '@duely/react';
 import {
   useMutation,
   useQuery,
@@ -64,12 +64,9 @@ export function CreateCustomerForm() {
           <span className="whitespace-nowrap">{customer!.name}</span>{' '}
           <span className="whitespace-nowrap">created succesfully</span>
         </h3>
-        <Link
-          className="px-12 py-3 mt-2 font-medium text-white bg-indigo-500 rounded-md"
-          to="/dashboard/customers"
-        >
+        <LinkButton color="indigo" to="/dashboard/customers">
           Go to customers
-        </Link>
+        </LinkButton>
       </div>
     );
   }
@@ -78,14 +75,14 @@ export function CreateCustomerForm() {
     <>
       <h2 className="mb-3 text-xl font-medium">Create a customer</h2>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        < FormField
+        <FormField
           label="Customer name"
           className="max-w-xl"
           name="name"
           type="text"
           registerOptions={{ required: true }}
         />
-        < FormField
+        <FormField
           label="Email address"
           className="max-w-xl"
           name="email_address"
@@ -93,9 +90,7 @@ export function CreateCustomerForm() {
           registerOptions={{ required: true }}
         />
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <FormButton>
-            Create customer
-          </FormButton>
+          <FormButton>Create customer</FormButton>
           <FormInfoMessage error={state.error} />
         </div>
       </Form>
