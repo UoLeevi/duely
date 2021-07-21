@@ -39,7 +39,11 @@ export const AgencySettings: GqlTypeDefinition = {
     }
 
     extend type Mutation {
-      update_agency_settings(setting_id: ID!, url: String!): AgencySettingsMutationResult!
+      update_agency_settings(
+        setting_id: ID!
+        checkout_success_url: String
+        checkout_cancel_url: String
+      ): AgencySettingsMutationResult!
     }
 
     type AgencySettingsMutationResult implements MutationResult {

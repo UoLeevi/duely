@@ -39,7 +39,11 @@ export const ProductSettings: GqlTypeDefinition = {
     }
 
     extend type Mutation {
-      update_product_settings(setting_id: ID!, url: String!): ProductSettingsMutationResult!
+      update_product_settings(
+        setting_id: ID!
+        checkout_success_url: String
+        checkout_cancel_url: String
+      ): ProductSettingsMutationResult!
     }
 
     type ProductSettingsMutationResult implements MutationResult {
