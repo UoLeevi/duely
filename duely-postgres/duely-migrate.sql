@@ -15,325 +15,157 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-ALTER TABLE security_.policy_ ADD COLUMN enabled_ boolean NOT NULL DEFAULT 't';
+CALL internal_.drop_resource_('application_.agency_thank_you_page_setting_');
+CALL internal_.drop_resource_('application_.product_thank_you_page_setting_');
 
-CREATE FUNCTION internal_.check_current_user_is_test_user_() RETURNS boolean
-    LANGUAGE plpgsql STABLE SECURITY DEFINER
-    AS $$
-BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM security_.security_data_ s
-    JOIN security_.user_ u ON s.key_ = 'email_address:' || u.email_address_
-    WHERE u.uuid_ = internal_.current_subject_uuid_()
-      AND (s.data_->>'is_test_user')::boolean
-  ) THEN
-    RETURN 't';
-  ELSE
-    RETURN 'f';
-  END IF;
-END
-$$;
+DROP TABLE application_.agency_thank_you_page_setting_;
+DROP TABLE application_.product_thank_you_page_setting_;
 
-CREATE FUNCTION policy_.test_user_can_create_test_subdomain_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_current_user_is_test_user_() AND _data->>'name_' = 'test' THEN
-    RETURN '{uuid_, name_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
+DROP FUNCTION policy_.agent_can_query_agency_thank_you_page_setting_;
+DROP FUNCTION policy_.agent_can_query_product_thank_you_page_setting_;
+DROP FUNCTION policy_.owner_can_change_agency_thank_you_page_setting_;
+DROP FUNCTION policy_.owner_can_change_product_thank_you_page_setting_;
+DROP FUNCTION policy_.owner_can_create_agency_thank_you_page_setting_;
+DROP FUNCTION policy_.owner_can_create_product_thank_you_page_setting_;
+DROP FUNCTION policy_.serviceaccount_can_query_agency_thank_you_page_setting_;
+DROP FUNCTION policy_.serviceaccount_can_query_product_thank_you_page_setting_;
 
-PERFORM security_.register_policy_('security_.subdomain_', 'create', 'policy_.test_user_can_create_test_subdomain_');
-
-CREATE OR REPLACE FUNCTION policy_.test_user_can_create_test_agency_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_current_user_is_test_user_() AND (_data->'livemode_')::boolean = 'f' THEN
-    RETURN '{uuid_, subdomain_uuid_, name_, livemode_, default_pricing_currency_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-PERFORM security_.register_policy_('application_.agency_', 'create', 'policy_.test_user_can_create_test_agency_');
-
-INSERT INTO security_.security_data_ (key_, data_)
-VALUES ('email_address:test@duely.app', '{"is_test_user": true}');
-
-CREATE FUNCTION internal_.check_current_user_is_insider_user_() RETURNS boolean
-    LANGUAGE plpgsql STABLE SECURITY DEFINER
-    AS $$
-BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM security_.security_data_ s
-    JOIN security_.user_ u ON s.key_ = 'email_address:' || u.email_address_
-    WHERE u.uuid_ = internal_.current_subject_uuid_()
-      AND (s.data_->>'is_insider_user')::boolean
-  ) THEN
-    RETURN 't';
-  ELSE
-    RETURN 'f';
-  END IF;
-END
-$$;
-
-CREATE FUNCTION policy_.insider_user_can_create_subdomain_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_current_user_is_insider_user_() THEN
-    RETURN '{uuid_, name_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-PERFORM security_.register_policy_('security_.subdomain_', 'create', 'policy_.insider_user_can_create_subdomain_');
-
-CREATE FUNCTION policy_.insider_user_can_create_agency_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-BEGIN
-  IF internal_.check_current_user_is_insider_user_() THEN
-    RETURN '{uuid_, subdomain_uuid_, name_, livemode_, default_pricing_currency_}'::text[];
-  ELSE
-    RETURN '{}'::text[];
-  END IF;
-END
-$$;
-
-PERFORM security_.register_policy_('application_.agency_', 'create', 'policy_.insider_user_can_create_agency_');
-
-UPDATE security_.policy_
-SET enabled_ = 'f'
-WHERE function_::regproc IN (
-  'policy_.logged_in_user_can_create_subdomain_'::regproc, 
-  'policy_.owner_can_create_agency_'::regproc
+CREATE TABLE application_.agency_settings_ (
+    uuid_ uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    agency_uuid_ uuid NOT NULL UNIQUE REFERENCES application_.agency_(uuid_) ON DELETE CASCADE,
+    checkout_success_url_ text,
+    checkout_cancel_url_ text
 );
 
-CREATE OR REPLACE FUNCTION security_.control_create_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS void
+CREATE FUNCTION internal_.insert_agency_settings_() RETURNS trigger
     LANGUAGE plpgsql
-    AS $_$
-DECLARE
-  _policy_uuid uuid;
-  _policy_function regprocedure;
-  _enabled boolean;
-  _keys text[];
-  _unauthorized_data jsonb;
-  _fields_list text;
+    AS $$
 BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
-  END IF;
+  INSERT INTO application_.agency_settings_ (agency_uuid_)
+  SELECT a.uuid_
+  FROM _new_table a;
 
-  IF _data IS NULL OR _data = '{}'::jsonb THEN
-    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
-  END IF;
+  RETURN NULL;
+END;
+$$;
 
-  _unauthorized_data := internal_.jsonb_strip_values_(_data);
+CREATE TRIGGER tr_after_insert_insert_agency_settings_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_agency_settings_();
 
-  LOOP
-    SELECT uuid_, function_, enabled_ INTO _policy_uuid, _policy_function, _enabled
-    FROM security_.policy_
-    WHERE resource_definition_uuid_ = _resource_definition.uuid_
-      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
-      AND operation_type_ = 'create';
+CREATE TABLE application_.product_settings_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    product_uuid_ uuid NOT NULL UNIQUE REFERENCES application_.product_(uuid_) ON DELETE CASCADE,
+    checkout_success_url_ text,
+    checkout_cancel_url_ text
+);
 
-    IF _policy_function IS NULL THEN
-      EXIT;
-    END IF;
-
-    IF _enabled THEN
-      EXECUTE '
-        SELECT ' || _policy_function::regproc || '($1, $2);
-      '
-      INTO _keys
-      USING _resource_definition, _data;
-
-      _unauthorized_data := _unauthorized_data - COALESCE(_keys, '{}');
-    END IF;
-
-    IF _unauthorized_data = '{}'::jsonb THEN
-      -- Result: authorized
-      INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, data_)
-      VALUES ('create', _resource_definition.uuid_, _data);
-      RETURN;
-    END IF;
-  END LOOP;
-
-  -- Result: not authorized
-
-  _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
-
-  SELECT string_agg(k, ', ') INTO _fields_list
-  FROM jsonb_object_keys(_unauthorized_data) k;
-
-  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = 'DUNAU';
-END
-$_$;
-
-CREATE OR REPLACE FUNCTION security_.control_delete_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS void
+CREATE FUNCTION internal_.insert_product_settings_() RETURNS trigger
     LANGUAGE plpgsql
-    AS $_$
-DECLARE
-  _policy_uuid uuid;
-  _policy_function regprocedure;
-  _enabled boolean;
+    AS $$
 BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = '20000';
-  END IF;
+  INSERT INTO application_.product_settings_ (product_uuid_)
+  SELECT p.uuid_
+  FROM _new_table p;
 
-  IF NOT EXISTS (
-    SELECT 1
-    FROM security_.policy_
-    WHERE resource_definition_uuid_ = _resource_definition.uuid_
-      AND operation_type_ = 'delete'
-  ) THEN
-    RAISE 'Unauthorized. No access policies defined.' USING ERRCODE = 'DUNAU';
-  END IF;
+  RETURN NULL;
+END;
+$$;
 
-  LOOP
-    SELECT uuid_, function_, enabled_ INTO _policy_uuid, _policy_function, _enabled
-    FROM security_.policy_
-    WHERE resource_definition_uuid_ = _resource_definition.uuid_
-      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
-      AND operation_type_ = 'delete';
+CREATE TRIGGER tr_after_insert_insert_product_settings_ AFTER INSERT ON application_.product_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.insert_product_settings_();
 
-    IF _policy_function IS NULL THEN
-      EXIT;
-    END IF;
+CALL internal_.setup_resource_('application_.agency_settings_', 'agency settings', 'agcyset', '{uuid_,agency_uuid_}', 'application_.agency_');
+CALL internal_.setup_resource_('application_.product_settings_', 'product settings', 'prodset', '{uuid_,product_uuid_}', 'application_.product_');
 
-    IF _enabled THEN
-      EXECUTE '
-        SELECT ' || _policy_function::regproc || '($1, $2);
-      '
-      USING _resource_definition, _resource;
-    END IF;
-  END LOOP;
-
-  INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_)
-  VALUES ('delete', _resource_definition.uuid_, _resource.uuid_);
-END
-$_$;
-
-
-CREATE OR REPLACE FUNCTION security_.control_query_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
-    LANGUAGE plpgsql
-    AS $_$
-DECLARE
-  _policy_uuid uuid;
-  _policy_function regprocedure;
-  _enabled boolean;
-  _keys text[];
-  _authorized_keys text[] := '{}'::text[];
+CREATE FUNCTION policy_.agent_can_query_agency_settings_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
 BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
+    RETURN '{uuid_, agency_uuid_, checkout_success_url_, checkout_cancel_url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
   END IF;
-
-  LOOP
-    SELECT uuid_, function_, enabled_ INTO _policy_uuid, _policy_function, _enabled
-    FROM security_.policy_
-    WHERE resource_definition_uuid_ = _resource_definition.uuid_
-      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
-      AND operation_type_ = 'query';
-
-    IF _policy_function IS NULL THEN
-      EXIT;
-    END IF;
-
-    IF _enabled THEN
-      EXECUTE '
-        SELECT ' || _policy_function::regproc || '($1, $2);
-      '
-      INTO _keys
-      USING _resource_definition, _resource;
-
-      _authorized_keys := array_cat(_authorized_keys, COALESCE(_keys, '{}'));
-    END IF;
-  END LOOP;
-
-  IF array_length(COALESCE(_authorized_keys, '{}'), 1) = 0 THEN
-    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
-  END IF;
-
-  SELECT array_agg(DISTINCT k) INTO _authorized_keys
-  FROM unnest(_authorized_keys) k;
-
-  RETURN _authorized_keys;
 END
-$_$;
+$$;
 
+PERFORM security_.register_policy_('application_.product_settings_', 'query', 'policy_.agent_can_query_agency_settings_');
 
-CREATE OR REPLACE FUNCTION security_.control_update_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS void
-    LANGUAGE plpgsql
-    AS $_$
-DECLARE
-  _policy_uuid uuid;
-  _policy_function regprocedure;
-  _enabled boolean;
-  _keys text[];
-  _unauthorized_data jsonb;
-  _fields_list text;
+CREATE FUNCTION policy_.owner_can_change_agency_settings_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
 BEGIN
-  IF (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text)::uuid = '00000000-0000-0000-0000-000000000000'::uuid) THEN
-    RAISE 'No active session.' USING ERRCODE = 'DNOSE';
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{checkout_success_url_, checkout_cancel_url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
   END IF;
-
-  IF _data IS NULL OR _data = '{}'::jsonb THEN
-    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
-  END IF;
-
-  _unauthorized_data := internal_.jsonb_strip_values_(_data);
-
-  LOOP
-    SELECT uuid_, function_, enabled_ INTO _policy_uuid, _policy_function, _enabled
-    FROM security_.policy_
-    WHERE resource_definition_uuid_ = _resource_definition.uuid_
-      AND after_uuid_ IS NOT DISTINCT FROM _policy_uuid
-      AND operation_type_ = 'update';
-
-    IF _policy_function IS NULL THEN
-      EXIT;
-    END IF;
-
-    IF _enabled THEN
-      EXECUTE '
-        SELECT ' || _policy_function::regproc || '($1, $2, $3);
-      '
-      INTO _keys
-      USING _resource_definition, _resource, _data;
-
-      _unauthorized_data := _unauthorized_data - COALESCE(_keys, '{}');
-    END IF;
-
-    IF _unauthorized_data = '{}'::jsonb THEN
-      -- Result: authorized
-      INSERT INTO security_.event_log_ (operation_type_, resource_definition_uuid_, resource_uuid_, data_)
-      VALUES ('update', _resource_definition.uuid_, _resource.uuid_, _data);
-      RETURN;
-    END IF;
-  END LOOP;
-
-  -- Result: not authorized
-
-  _unauthorized_data := internal_.convert_from_internal_format_(_unauthorized_data);
-
-  SELECT string_agg(k, ', ') INTO _fields_list
-  FROM jsonb_object_keys(_unauthorized_data) k;
-
-  RAISE 'Unauthorized. Not allowed to set fields: %', _fields_list USING ERRCODE = 'DUNAU';
 END
-$_$;
+$$;
+
+PERFORM security_.register_policy_('application_.product_settings_', 'update', 'policy_.owner_can_change_agency_settings_');
+
+CREATE FUNCTION policy_.serviceaccount_can_query_agency_settings_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, agency_uuid_, checkout_success_url_, checkout_cancel_url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+PERFORM security_.register_policy_('application_.product_settings_', 'query', 'policy_.serviceaccount_can_query_agency_settings_');
+
+CREATE FUNCTION policy_.agent_can_query_product_settings_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
+    RETURN '{uuid_, product_uuid_, checkout_success_url_, checkout_cancel_url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+PERFORM security_.register_policy_('application_.product_settings_', 'query', 'policy_.agent_can_query_product_settings_');
+
+CREATE FUNCTION policy_.owner_can_change_product_settings_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{checkout_success_url_, checkout_cancel_url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+PERFORM security_.register_policy_('application_.product_settings_', 'update', 'policy_.owner_can_change_product_settings_');
+
+CREATE FUNCTION policy_.serviceaccount_can_query_product_settings_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, product_uuid_, checkout_success_url_, checkout_cancel_url_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+PERFORM security_.register_policy_('application_.product_settings_', 'query', 'policy_.serviceaccount_can_query_product_settings_');
+
+INSERT INTO application_.agency_settings_ (agency_uuid_)
+SELECT a.uuid_
+FROM application_.agency_ a;
+
+INSERT INTO application_.product_settings_ (product_uuid_)
+SELECT a.uuid_
+FROM application_.product_ a;
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
