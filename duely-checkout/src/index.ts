@@ -1,7 +1,5 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import fs from 'fs';
-import validator from 'validator';
 import { GraphQLClient, gql } from 'graphql-request';
 import { getServiceAccountContext } from '@duely/db';
 
@@ -38,11 +36,11 @@ const gql_create_stripe_checkout_session = gql`
       success
       message
       checkout_session_id
+      checkout_session_url
     }
   }
 `;
 
-setupEnvironment();
 main();
 
 let client: GraphQLClient;
@@ -74,22 +72,6 @@ async function createGraphQLClient() {
   });
 }
 
-function setupEnvironment() {
-  if (!process.env.STRIPE_PK_TEST || !process.env.STRIPE_PK_LIVE) {
-    if (!process.env.STRIPECONFIGFILE) throw new Error('Invalid configuration.');
-
-    const config = JSON.parse(fs.readFileSync(process.env.STRIPECONFIGFILE, 'utf8'));
-    process.env = {
-      ...config.env,
-      ...process.env
-    };
-
-    if (!process.env.STRIPE_PK_TEST || !process.env.STRIPE_PK_LIVE) {
-      throw new Error('Invalid configuration.');
-    }
-  }
-}
-
 async function get_checkout(req: Request, res: Response) {
   let subdomain_name = req.params.subdomain_name;
 
@@ -104,14 +86,13 @@ async function get_checkout(req: Request, res: Response) {
   }
 
   let agency_id: string;
-  let stripe_id_ext: string;
   let livemode: boolean;
-  const preview = req.query?.preview;
+  const preview = req.query?.preview || req.query.preview === '';
 
   try {
     const { subdomains } = await client.request(gql_subdomain, {
       subdomain_name,
-      livemode: preview || preview === '' ? false : null
+      livemode: preview ? false : null
     });
 
     if (subdomains.length != 1) {
@@ -121,7 +102,6 @@ async function get_checkout(req: Request, res: Response) {
 
     const { agency } = subdomains[0];
     agency_id = agency.id;
-    stripe_id_ext = agency.stripe_account.id_ext;
     livemode = agency.stripe_account.livemode;
   } catch (error: any) {
     console.error(error);
@@ -129,7 +109,6 @@ async function get_checkout(req: Request, res: Response) {
     return;
   }
 
-  const stripe_pk = process.env[livemode ? 'STRIPE_PK_LIVE' : 'STRIPE_PK_TEST'];
   let price_id;
   const product_url_name = req.params.product_url_name;
 
@@ -158,39 +137,19 @@ async function get_checkout(req: Request, res: Response) {
     });
   }
 
-  let checkout_session_id;
-
   try {
     const { create_stripe_checkout_session: result } = await client.request(...requestArgs);
 
-    if (!result.success) {
+    if (!result.success || !result.checkout_session_url) {
       console.error(result.message);
       res.sendStatus(404);
       return;
     }
 
-    checkout_session_id = validator.escape(result.checkout_session_id);
+    res.redirect(result.checkout_session_url);
   } catch (error: any) {
     console.error(error);
     res.sendStatus(404);
     return;
   }
-
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <title>Duely</title>
-        <script src="https://js.stripe.com/v3/"></script>
-        <script>
-          var stripe = Stripe('${stripe_pk}', { stripeAccount: '${stripe_id_ext}' });
-          var redirect = stripe.redirectToCheckout({ sessionId: '${checkout_session_id}' });
-        </script>
-      </head>
-      <body>
-        <noscript>You need to enable JavaScript to run this app.</noscript>
-      </body>
-    </html>
-  `);
 }

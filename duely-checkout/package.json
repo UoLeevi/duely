@@ -1,6 +1,6 @@
 {
   "name": "duely-checkout",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Web server handling HTTP and javascript redirects for duely related to checkout.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -29,15 +29,13 @@
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "graphql": "^15.5.0",
-    "graphql-request": "^3.4.0",
-    "validator": "^13.5.2"
+    "graphql-request": "^3.4.0"
   },
   "devDependencies": {
     "@duely/build": "0.4.2",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.9",
     "@types/node": "^14.14.37",
-    "@types/validator": "^13.1.1",
     "cross-env": "^7.0.3",
     "webpack": "^5.31.2",
     "webpack-cli": "^4.6.0"

@@ -32,7 +32,7 @@ spec:
           secretName: duely-checkout-secret
       containers:
       - name: duely-checkout
-        image: uoleevi/duely-checkout:v0.3.0
+        image: uoleevi/duely-checkout:v0.3.1
         resources:
           requests:
             memory: 64Mi
@@ -52,26 +52,6 @@ spec:
           value: duely-postgres-master-service
         - name: PGPORT
           value: "5432"
-        - name: STRIPE_PK_TEST
-          valueFrom:
-            secretKeyRef:
-              name: duely-checkout-secret
-              key: stripe-pk_test
-        - name: STRIPE_SK_TEST
-          valueFrom:
-            secretKeyRef:
-              name: duely-checkout-secret
-              key: stripe-sk_test
-        - name: STRIPE_PK_LIVE
-          valueFrom:
-            secretKeyRef:
-              name: duely-checkout-secret
-              key: stripe-pk_live
-        - name: STRIPE_SK_LIVE
-          valueFrom:
-            secretKeyRef:
-              name: duely-checkout-secret
-              key: stripe-sk_live
         - name: DUELY_SERVICE_ACCOUNT_PASSWORD
           valueFrom:
             secretKeyRef:
