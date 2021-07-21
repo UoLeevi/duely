@@ -8075,12 +8075,12 @@ aff3da86-e54f-4265-bbb3-3f2ad945312d	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy
 4d10e14e-3795-4d0b-b2d3-52d7f75bcf06	e79b9bed-9dcc-4e83-b2f8-09b134da1a03	policy_.insider_user_can_create_subdomain_(security_.resource_definition_,jsonb)	create	aff3da86-e54f-4265-bbb3-3f2ad945312d	t
 f85bed2d-608b-4b64-8e45-bfdecbdf6066	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.test_user_can_create_test_agency_(security_.resource_definition_,jsonb)	create	\N	t
 285d6379-8009-4a4d-bade-64280e90e644	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.insider_user_can_create_agency_(security_.resource_definition_,jsonb)	create	f85bed2d-608b-4b64-8e45-bfdecbdf6066	t
-3a75177d-96c3-453f-be32-f2635a781d31	a398f8c1-a34c-4f2f-a52a-144d86c475a1	policy_.agent_can_query_agency_settings_(security_.resource_definition_,application_.resource_)	query	f7a7e52f-7801-4e78-bad5-531ac3dda5ae	t
-f7a7e52f-7801-4e78-bad5-531ac3dda5ae	a398f8c1-a34c-4f2f-a52a-144d86c475a1	policy_.serviceaccount_can_query_agency_settings_(security_.resource_definition_,application_.resource_)	query	39b2421d-b365-4909-82a3-06dc43a8f6e8	t
 b2bdb50a-269f-462e-a36f-4d7a8daee35a	a398f8c1-a34c-4f2f-a52a-144d86c475a1	policy_.owner_can_change_product_settings_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
-f8c457cb-7474-4beb-9389-4d4511bc8da3	a398f8c1-a34c-4f2f-a52a-144d86c475a1	policy_.owner_can_change_agency_settings_(security_.resource_definition_,application_.resource_,jsonb)	update	b2bdb50a-269f-462e-a36f-4d7a8daee35a	t
 bf241cc6-6559-4373-9ea4-20684aa7bc55	a398f8c1-a34c-4f2f-a52a-144d86c475a1	policy_.serviceaccount_can_query_product_settings_(security_.resource_definition_,application_.resource_)	query	\N	t
 39b2421d-b365-4909-82a3-06dc43a8f6e8	a398f8c1-a34c-4f2f-a52a-144d86c475a1	policy_.agent_can_query_product_settings_(security_.resource_definition_,application_.resource_)	query	bf241cc6-6559-4373-9ea4-20684aa7bc55	t
+655c3941-ea3f-4f28-ae0c-58539488f1d5	054285c5-0127-47b4-a8e6-87c685b4e4c0	policy_.owner_can_change_agency_settings_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
+c0b491c4-7a59-40ff-850f-677dcd368971	054285c5-0127-47b4-a8e6-87c685b4e4c0	policy_.serviceaccount_can_query_agency_settings_(security_.resource_definition_,application_.resource_)	query	\N	t
+258cf599-2d34-45f4-872c-febb2a7b1f39	054285c5-0127-47b4-a8e6-87c685b4e4c0	policy_.agent_can_query_agency_settings_(security_.resource_definition_,application_.resource_)	query	c0b491c4-7a59-40ff-850f-677dcd368971	t
 \.
 
 
