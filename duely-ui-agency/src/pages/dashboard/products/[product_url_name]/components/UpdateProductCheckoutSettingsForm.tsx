@@ -1,22 +1,29 @@
 import {
-  agency_thank_you_page_settings_Q,
-  create_product_thank_you_page_setting_M,
+  agency_settings_Q,
   current_agency_Q,
-  delete_product_thank_you_page_setting_M,
   product_Q,
-  product_thank_you_page_settings_Q,
-  update_product_thank_you_page_setting_M,
+  product_settings_Q,
+  update_product_settings_M,
   useMutation,
   useQuery
 } from '@duely/client';
-import { MutationResult } from '@duely/core';
-import { Form, FormButton, FormField, FormInfoMessage, useFormMessages, useForm } from '@duely/react';
+import {
+  Form,
+  FormButton,
+  FormField,
+  FormInfoMessage,
+  useFormMessages,
+  useForm
+} from '@duely/react';
 
 type ProductProps = {
   product_id?: string;
 };
 
-type UpdateProductCheckoutSettingsFormFields = { url: string | null | undefined };
+type UpdateProductCheckoutSettingsFormFields = {
+  checkout_success_url: string;
+  checkout_cancel_url: string;
+};
 
 export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) {
   const form = useForm<UpdateProductCheckoutSettingsFormFields>();
@@ -26,22 +33,19 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
     { skip: !product_id }
   );
 
-  const { data: product_thank_you_page_settings, loading: settingsLoading } = useQuery(
-    product_thank_you_page_settings_Q,
+  const { data: product_settings, loading: settingsLoading } = useQuery(
+    product_settings_Q,
     { product_id: product_id! },
     { skip: !product_id }
   );
 
   const { data: current_agency } = useQuery(current_agency_Q);
 
-  const { data: agency_thank_you_page_settings, loading: agencySettingsLoading } = useQuery(
-    agency_thank_you_page_settings_Q,
-    { agency_id: current_agency!.id }
-  );
+  const { data: agency_settings, loading: agencySettingsLoading } = useQuery(agency_settings_Q, {
+    agency_id: current_agency!.id
+  });
 
-  const [createSetting, stateCreate] = useMutation(create_product_thank_you_page_setting_M);
-  const [updateSetting, stateUpdate] = useMutation(update_product_thank_you_page_setting_M);
-  const [deleteSetting, stateDelete] = useMutation(delete_product_thank_you_page_setting_M);
+  const [updateSetting, stateUpdate] = useMutation(update_product_settings_M);
 
   const {
     infoMessage,
@@ -56,54 +60,57 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
     loading: !product_id || productLoading || agencySettingsLoading || settingsLoading
   };
 
-  const updateLoading = stateUpdate.loading || stateCreate.loading || stateDelete.loading;
+  const updateLoading = stateUpdate.loading;
 
-  async function onSubmit({ url }: UpdateProductCheckoutSettingsFormFields) {
-    url = url?.trim();
+  async function onSubmit({
+    checkout_success_url,
+    checkout_cancel_url
+  }: UpdateProductCheckoutSettingsFormFields) {
+    checkout_success_url = checkout_success_url.trim() || '';
+    checkout_cancel_url = checkout_cancel_url.trim() || '';
 
-    if (url === '') {
-      if (product_thank_you_page_settings == null) {
-        return;
-      } else {
-        await deleteSetting({ setting_id: product_thank_you_page_settings.id });
-      }
+    if (checkout_success_url !== '') {
+      checkout_success_url = `https://${checkout_success_url}`;
+    }
+
+    if (checkout_cancel_url !== '') {
+      checkout_cancel_url = `https://${checkout_cancel_url}`;
+    }
+
+    if (
+      checkout_success_url === (agency_settings?.checkout_success_url ?? '') &&
+      checkout_cancel_url === (agency_settings?.checkout_cancel_url ?? '')
+    ) {
+      setInfoMessage('No changes to be saved');
+      form.reset();
+      return;
+    }
+
+    let res = await updateSetting({
+      checkout_success_url,
+      checkout_cancel_url,
+      setting_id: agency_settings!.id
+    });
+
+    if (res?.success) {
+      setSuccessMessage('Saved');
+      return;
     } else {
-      url = `https://${url}`;
-
-      if (url === agency_thank_you_page_settings?.url) {
-        setInfoMessage('No changes to be saved');
-        form.reset();
-        return;
-      }
-
-      let res: MutationResult | null | undefined;
-
-      if (product_thank_you_page_settings == null) {
-        res = await createSetting({ url, product_id: product_id! });
-      } else {
-        res = await updateSetting({ url, setting_id: product_thank_you_page_settings.id });
-      }
-
-      if (res?.success) {
-        setSuccessMessage('Saved');
-        return;
-      } else {
-        setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
-      }
+      setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
     }
   }
 
   return (
     <>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        < FormField
-          defaultValue={product_thank_you_page_settings?.url?.replace('https://', '')}
-          name="url"
+        <FormField
+          defaultValue={product_settings?.checkout_success_url?.replace('https://', '') ?? undefined}
+          name="checkout_success_url"
           className="max-w-xl"
           label="Thank you page URL"
           prefix="https://"
-          placeholder={agency_thank_you_page_settings?.url?.replace('https://', '')}
-          loading={state.loading}
+          placeholder={agency_settings?.checkout_success_url?.replace('https://', '')}
+          loading={settingsLoading}
           hint={
             <span>
               Set a thank you page URL for this product. Your customers will be redirected here
@@ -112,10 +119,19 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
           }
         />
 
+        <FormField
+          defaultValue={product_settings?.checkout_cancel_url?.replace('https://', '') ?? undefined}
+          name="checkout_cancel_url"
+          className="max-w-xl"
+          label="Checkout cancelled redirect URL"
+          prefix="https://"
+          placeholder={agency_settings?.checkout_cancel_url?.replace('https://', '')}
+          loading={settingsLoading}
+          hint={<span>Your customers will be redirected here after cancelled checkout.</span>}
+        />
+
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton dense>
-            Save
-          </FormButton>
+          <FormButton dense>Save</FormButton>
           <FormButton type="reset" dense>
             Cancel
           </FormButton>

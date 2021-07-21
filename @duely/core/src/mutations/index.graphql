@@ -238,68 +238,38 @@ mutation DeleteCustomer($customer_id: ID!) {
   }
 }
 
-mutation CreateAgencyThankYouPageSetting($agency_id: ID!, $url: String!) {
-  create_agency_thank_you_page_setting(agency_id: $agency_id, url: $url) {
+mutation UpdateAgencySettings(
+  $setting_id: ID!
+  $checkout_success_url: String
+  $checkout_cancel_url: String
+) {
+  update_agency_settings(
+    setting_id: $setting_id
+    checkout_success_url: $checkout_success_url
+    checkout_cancel_url: $checkout_cancel_url
+  ) {
     success
     message
     setting {
-      id
-      url
+      ...agency_settings
     }
   }
 }
 
-mutation UpdateAgencyThankYouPageSetting($setting_id: ID!, $url: String!) {
-  update_agency_thank_you_page_setting(setting_id: $setting_id, url: $url) {
+mutation UpdateProductSettings(
+  $setting_id: ID!
+  $checkout_success_url: String
+  $checkout_cancel_url: String
+) {
+  update_product_settings(
+    setting_id: $setting_id
+    checkout_success_url: $checkout_success_url
+    checkout_cancel_url: $checkout_cancel_url
+  ) {
     success
     message
     setting {
-      id
-      url
-    }
-  }
-}
-
-mutation DeleteAgencyThankYouPageSetting($setting_id: ID!) {
-  delete_agency_thank_you_page_setting(setting_id: $setting_id) {
-    success
-    message
-    setting {
-      id
-      url
-    }
-  }
-}
-
-mutation CreateProductThankYouPageSetting($product_id: ID!, $url: String!) {
-  create_product_thank_you_page_setting(product_id: $product_id, url: $url) {
-    success
-    message
-    setting {
-      id
-      url
-    }
-  }
-}
-
-mutation UpdateProductThankYouPageSetting($setting_id: ID!, $url: String!) {
-  update_product_thank_you_page_setting(setting_id: $setting_id, url: $url) {
-    success
-    message
-    setting {
-      id
-      url
-    }
-  }
-}
-
-mutation DeleteProductThankYouPageSetting($setting_id: ID!) {
-  delete_product_thank_you_page_setting(setting_id: $setting_id) {
-    success
-    message
-    setting {
-      id
-      url
+      ...product_settings
     }
   }
 }
@@ -354,12 +324,7 @@ mutation DeletePageBlock($page_block_id: ID!) {
   }
 }
 
-mutation CreateCredential(
-  $agency_id: ID!
-  $credential_type_id: ID!
-  $data: Json!
-  $name: String!
-) {
+mutation CreateCredential($agency_id: ID!, $credential_type_id: ID!, $data: Json!, $name: String!) {
   create_credential(
     agency_id: $agency_id
     credential_type_id: $credential_type_id

@@ -21,9 +21,9 @@
   ],
   "dependencies": {
     "@apollo/client": "^3.3.21",
-    "@duely/client": "0.4.24",
-    "@duely/core": "0.4.19",
-    "@duely/react": "0.4.45",
+    "@duely/client": "0.4.26",
+    "@duely/core": "0.4.21",
+    "@duely/react": "0.4.47",
     "@headlessui/react": "^1.2.0",
     "@tailwindcss/typography": "^0.4.0",
     "@types/node": "^14.14.44",

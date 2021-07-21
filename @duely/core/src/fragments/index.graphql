@@ -278,12 +278,15 @@ fragment product on Product {
   agency {
     id
   }
-  settings {
-    id
-  }
   integrations {
     id
   }
+}
+
+fragment product_settings on ProductSettings {
+  id
+  checkout_success_url
+  checkout_cancel_url
 }
 
 fragment membership on Membership {
@@ -331,10 +334,13 @@ fragment agency on Agency {
   theme {
     ...theme
   }
-  settings {
-    id
-  }
   default_pricing_currency
+}
+
+fragment agency_settings on AgencySettings {
+  id
+  checkout_success_url
+  checkout_cancel_url
 }
 
 fragment customer on Customer {

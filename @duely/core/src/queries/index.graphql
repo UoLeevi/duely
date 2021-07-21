@@ -474,28 +474,20 @@ query SubdomainAgencyStripeAccountUpdateUrl($subdomain_name: String!) {
   }
 }
 
-query AgencyThankYouPageSetting($agency_id: ID!) {
+query AgencySettings($agency_id: ID!) {
   agency(id: $agency_id) {
     id
     settings {
-      id
-      thank_you_page_setting {
-        id
-        url
-      }
+      ...agency_settings
     }
   }
 }
 
-query ProductThankYouPageSetting($product_id: ID!) {
+query ProductSettings($product_id: ID!) {
   product(id: $product_id) {
     id
     settings {
-      id
-      thank_you_page_setting {
-        id
-        url
-      }
+      ...product_settings
     }
   }
 }

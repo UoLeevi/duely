@@ -18,8 +18,8 @@ import {
   OrderItemsDocument,
   SubdomainAgencyDocument,
   SubdomainAgencyStripeAccountUpdateUrlDocument,
-  AgencyThankYouPageSettingDocument,
-  ProductThankYouPageSettingDocument,
+  AgencySettingsDocument,
+  ProductSettingsDocument,
   ProductAndAgencyFromUrlPartsDocument,
   AgencyPagesDocument,
   AgencySubscriptionPlanDocument,
@@ -377,16 +377,16 @@ export const current_agency_stripe_account_update_url_Q = {
     d?.subdomains?.[0]?.agency?.stripe_account?.account_update_url?.url
 } as const;
 
-export const agency_thank_you_page_settings_Q = {
-  query: AgencyThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof AgencyThankYouPageSettingDocument>) =>
-    d?.agency?.settings?.thank_you_page_setting
+export const agency_settings_Q = {
+  query: AgencySettingsDocument,
+  result: (d: ResultOf<typeof AgencySettingsDocument>) =>
+    d?.agency?.settings
 };
 
-export const product_thank_you_page_settings_Q = {
-  query: ProductThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof ProductThankYouPageSettingDocument>) =>
-    d?.product?.settings?.thank_you_page_setting
+export const product_settings_Q = {
+  query: ProductSettingsDocument,
+  result: (d: ResultOf<typeof ProductSettingsDocument>) =>
+    d?.product?.settings
 };
 
 export const agency_pages_Q = {

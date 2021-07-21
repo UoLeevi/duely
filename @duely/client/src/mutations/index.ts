@@ -1,14 +1,11 @@
 import {
   ApolloCache,
-  gql,
   MutationOptions,
   NormalizedCacheObject,
   Reference
 } from '@apollo/client';
 import {
-  AgencyThankYouPageSettingDocument,
   CreateAgencyDocument,
-  CreateAgencyThankYouPageSettingDocument,
   CreateCredentialDocument,
   CreateCustomerDocument,
   CreateIntegrationConfigDocument,
@@ -16,22 +13,18 @@ import {
   CreatePageBlockDocument,
   CreatePriceDocument,
   CreateProductDocument,
-  CreateProductThankYouPageSettingDocument,
   CustomerFragmentDoc,
-  DeleteAgencyThankYouPageSettingDocument,
   DeleteCustomerDocument,
   DeletePageBlockDocument,
   DeleteProductDocument,
-  DeleteProductThankYouPageSettingDocument,
   LogInDocument,
   LogOutDocument,
   Page_BlockFragmentDoc,
   ProductFragmentDoc,
-  ProductThankYouPageSettingDocument,
   StartPasswordResetDocument,
   StartSignUpDocument,
   UpdateAgencyDocument,
-  UpdateAgencyThankYouPageSettingDocument,
+  UpdateAgencySettingsDocument,
   UpdateCredentialDocument,
   UpdateCustomerDocument,
   UpdateIntegrationConfigDocument,
@@ -39,8 +32,7 @@ import {
   UpdatePageBlockDocument,
   UpdatePageDocument,
   UpdateProductDocument,
-  UpdateProductThankYouPageSettingDocument,
-  Util,
+  UpdateProductSettingsDocument,
   VerifyPasswordResetDocument,
   VerifySignUpDocument
 } from '@duely/core';
@@ -318,140 +310,18 @@ export const create_price_M = {
   result: (d: ResultOf<typeof CreatePriceDocument>) => d?.create_price
 };
 
-const create_agency_thank_you_page_setting_R = (
-  d: ResultOf<typeof CreateAgencyThankYouPageSettingDocument>
-) => d?.create_agency_thank_you_page_setting;
-export const create_agency_thank_you_page_setting_M = {
-  mutation: CreateAgencyThankYouPageSettingDocument,
-  result: create_agency_thank_you_page_setting_R,
-  async after(
-    cache: ApolloCache<NormalizedCacheObject>,
-    result: ReturnType<typeof create_agency_thank_you_page_setting_R> | null,
-    variables: VariablesOf<typeof CreateAgencyThankYouPageSettingDocument>
-  ) {
-    if (!result?.success || !result.setting) return;
-
-    const { agency = null } =
-      client.readQuery({
-        query: AgencyThankYouPageSettingDocument,
-        variables: {
-          agency_id: variables.agency_id
-        }
-      }) ?? {};
-
-    if (!agency?.settings) return;
-
-    cache.modify({
-      id: cache.identify(agency.settings),
-      fields: {
-        thank_you_page_setting() {
-          return cache.writeFragment({
-            data: result.setting,
-            fragment: gql`
-              fragment agency_thank_you_page_setting on AgencyThankYouPageSetting {
-                id
-                url
-              }
-            `,
-            fragmentName: 'agency_thank_you_page_setting'
-          });
-        }
-      }
-    });
-  }
+const update_agency_settings_R = (
+  d: ResultOf<typeof UpdateAgencySettingsDocument>
+) => d?.update_agency_settings;
+export const update_agency_settings_M = {
+  mutation: UpdateAgencySettingsDocument,
+  result: update_agency_settings_R
 };
 
-const create_product_thank_you_page_setting_R = (
-  d: ResultOf<typeof CreateProductThankYouPageSettingDocument>
-) => d?.create_product_thank_you_page_setting;
-export const create_product_thank_you_page_setting_M = {
-  mutation: CreateProductThankYouPageSettingDocument,
-  result: create_product_thank_you_page_setting_R,
-  async after(
-    cache: ApolloCache<NormalizedCacheObject>,
-    result: ReturnType<typeof create_product_thank_you_page_setting_R> | null,
-    variables: VariablesOf<typeof CreateProductThankYouPageSettingDocument>
-  ) {
-    if (!result?.success || !result.setting) return;
-
-    const { product = null } =
-      client.readQuery({
-        query: ProductThankYouPageSettingDocument,
-        variables: {
-          product_id: variables.product_id
-        }
-      }) ?? {};
-
-    if (!product?.settings) return;
-
-    cache.modify({
-      id: cache.identify(product.settings),
-      fields: {
-        thank_you_page_setting() {
-          return cache.writeFragment({
-            data: result.setting,
-            fragment: gql`
-              fragment product_thank_you_page_setting on ProductThankYouPageSetting {
-                id
-                url
-              }
-            `,
-            fragmentName: 'product_thank_you_page_setting'
-          });
-        }
-      }
-    });
-  }
-};
-
-const update_agency_thank_you_page_setting_R = (
-  d: ResultOf<typeof UpdateAgencyThankYouPageSettingDocument>
-) => d?.update_agency_thank_you_page_setting;
-export const update_agency_thank_you_page_setting_M = {
-  mutation: UpdateAgencyThankYouPageSettingDocument,
-  result: update_agency_thank_you_page_setting_R
-};
-
-export const update_product_thank_you_page_setting_M = {
-  mutation: UpdateProductThankYouPageSettingDocument,
-  result: (d: ResultOf<typeof UpdateProductThankYouPageSettingDocument>) =>
-    d?.update_product_thank_you_page_setting
-};
-
-const delete_agency_thank_you_page_setting_R = (
-  d: ResultOf<typeof DeleteAgencyThankYouPageSettingDocument>
-) => d?.delete_agency_thank_you_page_setting;
-export const delete_agency_thank_you_page_setting_M = {
-  mutation: DeleteAgencyThankYouPageSettingDocument,
-  result: delete_agency_thank_you_page_setting_R,
-  async after(
-    cache: ApolloCache<NormalizedCacheObject>,
-    result: ReturnType<typeof delete_agency_thank_you_page_setting_R> | null
-  ) {
-    if (!result?.success || !result.setting) return;
-
-    const id = cache.identify(result.setting);
-    cache.evict({ id });
-    cache.gc();
-  }
-};
-
-const delete_product_thank_you_page_setting_R = (
-  d: ResultOf<typeof DeleteProductThankYouPageSettingDocument>
-) => d?.delete_product_thank_you_page_setting;
-export const delete_product_thank_you_page_setting_M = {
-  mutation: DeleteProductThankYouPageSettingDocument,
-  result: delete_product_thank_you_page_setting_R,
-  async after(
-    cache: ApolloCache<NormalizedCacheObject>,
-    result: ReturnType<typeof delete_product_thank_you_page_setting_R> | null
-  ) {
-    if (!result?.success || !result.setting) return;
-
-    const id = cache.identify(result.setting);
-    cache.evict({ id });
-    cache.gc();
-  }
+export const update_product_settings_M = {
+  mutation: UpdateProductSettingsDocument,
+  result: (d: ResultOf<typeof UpdateProductSettingsDocument>) =>
+    d?.update_product_settings
 };
 
 export const update_page_M = {

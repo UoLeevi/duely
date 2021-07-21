@@ -145,10 +145,11 @@ export type UserNotificationSettingResource = {
   email_notification?: boolean | null;
 };
 
-export type AgencyThankYouPageSettingResource = {
-  id: ResourceId<'agency thank you page setting'>;
+export type AgencySettingsResource = {
+  id: ResourceId<'agency settings'>;
   agency_id: ResourceId<'agency'>;
-  url: string;
+  checkout_success_url?: string | null;
+  checkout_cancel_url?: string | null;
 };
 
 export type PageBlockDefinitionResource = {
@@ -158,10 +159,11 @@ export type PageBlockDefinitionResource = {
   name: string;
 };
 
-export type ProductThankYouPageSettingResource = {
-  id: ResourceId<'product thank you page setting'>;
+export type ProductSettingsResource = {
+  id: ResourceId<'product settings'>;
   product_id: ResourceId<'product'>;
-  url: string;
+  checkout_success_url?: string | null;
+  checkout_cancel_url?: string | null;
 };
 
 export type FormFieldResource = {
@@ -403,11 +405,11 @@ export type ResourceDefinitions = {
     table_name: 'form';
     resource: FormResource;
   };
-  'agency thank you page setting': {
-    name: 'agency thank you page setting';
+  'agency settings': {
+    name: 'agency settings';
     prefix: 'set';
-    table_name: 'agency_thank_you_page_setting';
-    resource: AgencyThankYouPageSettingResource;
+    table_name: 'agency_settings';
+    resource: AgencySettingsResource;
   };
   'page block definition': {
     name: 'page block definition';
@@ -415,11 +417,11 @@ export type ResourceDefinitions = {
     table_name: 'page_block_definition';
     resource: PageBlockDefinitionResource;
   };
-  'product thank you page setting': {
-    name: 'product thank you page setting';
+  'product settings': {
+    name: 'product settings';
     prefix: 'set';
-    table_name: 'product_thank_you_page_setting';
-    resource: ProductThankYouPageSettingResource;
+    table_name: 'product_settings';
+    resource: ProductSettingsResource;
   };
   'form field': {
     name: 'form field';
