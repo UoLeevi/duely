@@ -13,16 +13,18 @@ import {
 } from '@duely/react';
 
 type AgencyColumnProps = {
-  agency: (NonNullable<
-    ReturnType<typeof current_user_agencies_Q.result>
-  > extends readonly (infer T)[]
-    ? T
-    : never) | null;
+  agency:
+    | (NonNullable<ReturnType<typeof current_user_agencies_Q.result>> extends readonly (infer T)[]
+        ? T
+        : never)
+    | null;
 };
 
 const wrap = {
-  columns: 1,
-  spans: [1, 1, 1]
+  md: {
+    columns: 1,
+    spans: [1, 1, 1]
+  }
 };
 
 const headers = ['Brand', 'Plan', 'Action required'];

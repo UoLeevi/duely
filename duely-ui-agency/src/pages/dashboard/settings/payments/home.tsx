@@ -5,19 +5,21 @@ import {
   Table,
   DropMenu,
   Card,
-  Button,
   SkeletonText,
-  LinkButton
+  LinkButton,
+  ColoredChip
 } from '@duely/react';
 import { ConfirmBankAccountDeletionModal } from './components';
 import { DashboardSection } from '../../components';
 
 const wrap = {
-  columns: 1,
-  spans: [1, 1]
+  xs: {
+    columns: 2,
+    spans: [2, 1, 1]
+  }
 };
 
-const headers = ['Bank account', 'Action'];
+const headers = ['Bank account', 'Currency', 'Action'];
 
 export default function DashboardSettingsPaymentsHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
@@ -46,19 +48,30 @@ export default function DashboardSettingsPaymentsHome() {
   const error = agencyError ?? bank_accountsError;
 
   const columns = [
-    // bank_account number and currency
+    // bank_account number
     (bank_account: TBankAccount | null) =>
       !bank_account ? (
-        <div className="flex flex-col space-y-2">
-          <SkeletonText className="text-sm" />
-          <SkeletonText className="text-xs" />
+        <div className="flex items-center h-8 space-x-4 min-h-min">
+          <SkeletonText className="text-base" />
         </div>
       ) : (
-        <div className="flex flex-col space-y-2">
-          <span className="font-mono text-sm font-medium text-gray-800 dark:text-gray-300">
+        <div className="flex items-center h-8 space-x-4 min-h-min">
+          <span className="font-mono text-base font-medium text-gray-800 dark:text-gray-300">
             ********{bank_account.last4}
           </span>
-          <span className="text-xs font-medium text-gray-800 dark:text-gray-300">
+          {bank_account.default_for_currency && <ColoredChip text="default" color="blue" />}
+        </div>
+      ),
+
+    // currency
+    (bank_account: TBankAccount | null) =>
+      !bank_account ? (
+        <div className="flex items-center h-8 space-x-4 min-h-min">
+          <SkeletonText className="text-sm" />
+        </div>
+      ) : (
+        <div className="flex items-center h-8 space-x-4 min-h-min">
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
             {bank_account.currency.toUpperCase()}
           </span>
         </div>
@@ -124,7 +137,7 @@ export default function DashboardSettingsPaymentsHome() {
               dense
               color="indigo"
               to="payments/new-bank-account"
-              icon="plus"
+              icon="plus.solid"
               className="text-sm"
             >
               New bank account

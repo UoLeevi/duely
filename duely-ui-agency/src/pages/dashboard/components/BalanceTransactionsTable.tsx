@@ -1,12 +1,20 @@
 import React from 'react';
 import { Currency } from '@duely/core';
-import { Util, Table, SkeletonText } from '@duely/react';
+import { Util, Table, SkeletonText,ColoredChip } from '@duely/react';
 import {
   useQuery,
   agency_stripe_account_balance_transactions_Q,
   current_agency_Q
 } from '@duely/client';
-import { ColoredChip } from './ColoredChip';
+
+const wrap = {
+  md: {
+    columns: 2,
+    spans: [1, 1, 2, 1, 1]
+  }
+};
+
+const headers = ['Type', 'Date', 'Description', 'Amount', 'Status'];
 
 export function BalanceTransactionsTable() {
   const { data: agency } = useQuery(current_agency_Q);
@@ -15,8 +23,6 @@ export function BalanceTransactionsTable() {
     loading,
     error
   } = useQuery(agency_stripe_account_balance_transactions_Q, { agency_id: agency!.id });
-
-  const headers = ['Type', 'Date', 'Description', 'Amount', 'Status'];
 
   type TBalanceTransaction = NonNullable<typeof balance_transactions> extends readonly (infer T)[]
     ? T
@@ -104,6 +110,7 @@ export function BalanceTransactionsTable() {
       columns={columns}
       headers={headers}
       dense={true}
+      wrap={wrap}
       loading={loading}
       error={error}
     />

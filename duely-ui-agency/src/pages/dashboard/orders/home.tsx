@@ -13,18 +13,24 @@ import {
   Card,
   Util,
   usePagination,
-  SkeletonText
+  SkeletonText,
+  ColoredChip
 } from '@duely/react';
 import { DashboardSection } from '../components';
-import { Currency, OrderFragment } from '@duely/core';
-import { ColoredChip } from '../components/ColoredChip';
+import { Currency } from '@duely/core';
 
 const wrap = {
-  columns: 2,
-  spans: [2, 2, 1, 1, 1, 1]
+  sm: {
+    columns: 2,
+    spans: [2, 2, 2, 1, 1]
+  },
+  md: {
+    columns: 4,
+    spans: [2, 2, 2, 1, 1]
+  }
 };
 
-const headers = ['Order', 'Customer', 'Amount', 'Order date', 'Status', 'Action'];
+const headers = ['Order', 'Customer', 'Amount', 'Order date', 'Action'];
 
 export default function DashboardOrdersHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
@@ -40,7 +46,9 @@ export default function DashboardOrdersHome() {
     { skip: !agency }
   );
 
-  type TOrder = NonNullable<ReturnType<typeof orders_Q.result>> extends readonly (infer T)[] ? T : never;
+  type TOrder = NonNullable<ReturnType<typeof orders_Q.result>> extends readonly (infer T)[]
+    ? T
+    : never;
 
   const pagination = usePagination<TOrder>({
     getTotalNumberOfItems: () => {
@@ -93,14 +101,17 @@ export default function DashboardOrdersHome() {
       !order ? (
         <div className="flex flex-col space-y-2">
           <SkeletonText className="text-sm" />
-          <SkeletonText className="text-xs" />
+          <SkeletonText className="text-sm" />
         </div>
       ) : (
         <div className="flex flex-col space-y-2">
           <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
             {Util.truncate(order.items.map((item) => item.price.product.name).join(', '), 50)}
           </span>
-          <span className="font-mono text-xs text-gray-600">{order.id}</span>
+          <div className="flex items-center h-8 space-x-4 min-h-min">
+            <span className="font-mono text-sm text-gray-600">{order.id}</span>
+            {order.state !== 'processed' && <ColoredChip color={statusColors} text={order.state} />}
+          </div>
         </div>
       ),
 
@@ -125,17 +136,29 @@ export default function DashboardOrdersHome() {
     // amount info
     (order: TOrder | null) =>
       !order ? (
-        <div className="flex flex-col space-y-2">
-          <SkeletonText className="text-sm" />
+        <div className="flex items-center space-x-4">
+          <div className="flex flex-col space-y-2">
+            <SkeletonText className="text-sm" ch={8} />
+          </div>
+          <ColoredChip color={paymentStatusColors} />
         </div>
       ) : (
-        <div className="flex flex-col space-y-2">
-          <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-            {Currency.format(
-              order.items.reduce((sum, item) => sum + item.price.unit_amount, 0),
-              order.items[0].price.currency as Currency
-            )}
-          </span>
+        <div className="flex items-center space-x-4">
+          <div className="flex flex-col space-y-2">
+            <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+              {Currency.format(
+                order.stripe_checkout_session.amount_total ?? 0,
+                order.stripe_checkout_session.currency as Currency
+              )}
+            </span>
+          </div>
+          <ColoredChip
+            color={paymentStatusColors}
+            icon={
+              order.stripe_checkout_session.payment_status === 'paid' ? 'check.solid' : undefined
+            }
+            text={order.stripe_checkout_session.payment_status ?? undefined}
+          />
         </div>
       ),
 
@@ -151,14 +174,6 @@ export default function DashboardOrdersHome() {
             {Util.formatDate(new Date(order.ordered_at))}
           </span>
         </div>
-      ),
-
-    // product product status
-    (order: TOrder | null) =>
-      !order ? (
-        <ColoredChip color={statusColors} />
-      ) : (
-        <ColoredChip color={statusColors} text={order.state} />
       ),
 
     // actions
@@ -231,15 +246,20 @@ export default function DashboardOrdersHome() {
 }
 
 const statusColors = {
-  pending: 'orange',
-  processing: 'blue',
-  processed: 'green',
-  failed: 'red'
+  pending: 'orange-text',
+  processing: 'blue-text',
+  processed: 'green-text',
+  failed: 'red-text'
 };
 
-type OrderStatusColumnProps = {
-  order: OrderFragment;
+const paymentStatusColors = {
+  unpaid: 'orange',
+  paid: 'green'
 };
+
+// type OrderStatusColumnProps = {
+//   order: OrderFragment;
+// };
 
 // function OrderStatusColumn({ order }: OrderStatusColumnProps) {
 //   const dropMenu = useDropMenu();

@@ -11,7 +11,6 @@ import {
   Table,
   DropMenu,
   Card,
-  Button,
   SkeletonText,
   usePagination,
   LinkButton
@@ -20,8 +19,10 @@ import { ConfirmCustomerDeletionModal } from './components';
 import { DashboardSection } from '../components';
 
 const wrap = {
-  columns: 1,
-  spans: [1, 1]
+  xs: {
+    columns: 1,
+    spans: [1, 1]
+  }
 };
 
 const headers = ['Customer', 'Action'];
@@ -193,7 +194,7 @@ export default function DashboardCustomersHome() {
               dense
               color="indigo"
               to="customers/new-customer"
-              icon="plus"
+              icon="plus.solid"
               className="text-sm"
             >
               New customer

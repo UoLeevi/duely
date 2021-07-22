@@ -3,10 +3,7 @@ import { Currency, ElementType } from '@duely/core';
 import { Card, LoadingScreen, Table, NotFoundScreen, SkeletonText } from '@duely/react';
 import { Link, useLocation } from 'react-router-dom';
 
-const wrap = {
-  columns: 1,
-  spans: [1, 1]
-};
+const wrap = { lg: { columns: 1, spans: [1, 1] } };
 
 const headers = ['Item', 'Amount'];
 

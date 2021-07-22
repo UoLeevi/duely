@@ -6,11 +6,11 @@ import {
   ErrorScreen,
   Table,
   DropMenu,
-  SkeletonText
+  SkeletonText,
+  ColoredChip
 } from '@duely/react';
 import { Link } from 'react-router-dom';
 import { DashboardSection } from '../../components';
-import { ColoredChip } from '../../components/ColoredChip';
 import { ConfirmPagePublishModal } from './components';
 
 type TItem = NonNullable<ReturnType<typeof agency_pages_Q.result>> extends readonly (infer T)[]
@@ -64,10 +64,7 @@ const statusColors = {
   live: 'green'
 };
 
-const wrap = {
-  columns: 5,
-  spans: [5, 2, 3]
-};
+const wrap = { lg: { columns: 5, spans: [5, 2, 3] } };
 
 const headers = ['Page', 'Status', 'Action'];
 

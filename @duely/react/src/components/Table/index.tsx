@@ -14,11 +14,15 @@ type TableProps<TItem> = {
   )[];
   headers: React.ReactNode[];
   dense?: boolean;
-  breakpoint?: keyof ReturnType<typeof useBreakpoints>;
-  wrap?: {
-    columns: number;
-    spans: number[];
-  };
+  wrap?: Partial<
+    Record<
+      keyof ReturnType<typeof useBreakpoints> | 'xs',
+      {
+        columns: number;
+        spans: number[];
+      }
+    >
+  >;
   loading?: boolean;
   error?: boolean | string | Error | { message: string };
 } & (
@@ -44,7 +48,6 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
   headers,
   className,
   dense,
-  breakpoint,
   wrap: wrapOptions,
   loading,
   error,
@@ -52,14 +55,43 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
 }: TableProps<TItem>) {
   const skeletonRowCountFallback = 5;
   const breakpoints = useBreakpoints();
-  const isNotWrapped = breakpoints[breakpoint ?? 'lg'];
-  const wrapColCount = wrapOptions?.columns ?? 1;
-  const wrapColSpans = wrapOptions?.spans ?? new Array(headers.length).fill(1);
+
+  const wrapOption_2xl = wrapOptions?.['2xl'];
+  const wrapOption_xl = wrapOptions?.['xl'] ?? wrapOption_2xl;
+  const wrapOption_lg = wrapOptions?.['lg'] ?? wrapOption_xl;
+  const wrapOption_md = wrapOptions?.['md'] ?? wrapOption_lg;
+  const wrapOption_sm = wrapOptions?.['sm'] ?? wrapOption_md;
+  const wrapOption_xs = wrapOptions?.['xs'] ?? wrapOption_sm;
+
+  let selectedWrap:
+    | {
+        columns: number;
+        spans: number[];
+      }
+    | undefined;
+
+  if (breakpoints['2xl']) {
+    selectedWrap = wrapOption_2xl;
+  } else if (breakpoints['xl']) {
+    selectedWrap = wrapOption_xl;
+  } else if (breakpoints['lg']) {
+    selectedWrap = wrapOption_lg;
+  } else if (breakpoints['md']) {
+    selectedWrap = wrapOption_md;
+  } else if (breakpoints['sm']) {
+    selectedWrap = wrapOption_sm;
+  } else {
+    selectedWrap = wrapOption_xs;
+  }
+
+  const isNotWrapped = !selectedWrap;
+  const wrapColCount = selectedWrap?.columns ?? 1;
+  const wrapColSpans = selectedWrap?.spans ?? new Array(headers.length).fill(1);
   const wrapColSpanSum = wrapColSpans.reduce((a, b) => a + b, 0);
 
   const gridTemplateColumns = isNotWrapped
     ? `repeat(${headers.length}, auto)`
-    : `repeat(${wrapOptions?.columns ?? 1}, auto)`;
+    : `repeat(${selectedWrap?.columns ?? 1}, auto)`;
 
   className = Util.createClassName(
     className,

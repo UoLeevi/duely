@@ -10,12 +10,12 @@ import {
   SkeletonText,
   SkeletonParagraph,
   usePagination,
-  LinkButton
+  LinkButton,
+  ColoredChip
 } from '@duely/react';
 import { ConfirmProductDeletionModal } from './components';
-import { DashboardFlexGrid, DashboardSection } from '../components';
+import { DashboardSection } from '../components';
 import { Currency } from '@duely/core';
-import { ColoredChip } from '../components/ColoredChip';
 
 const statusColors = {
   draft: 'orange',
@@ -23,8 +23,10 @@ const statusColors = {
 };
 
 const wrap = {
-  columns: 5,
-  spans: [5, 2, 3]
+  sm: {
+    columns: 5,
+    spans: [5, 2, 3]
+  }
 };
 
 const headers = ['Product', 'Status', 'Action'];
@@ -242,7 +244,7 @@ export default function DashboardProductsHome() {
               dense
               color="indigo"
               to="products/new-product"
-              icon="plus"
+              icon="plus.solid"
               className="text-sm"
             >
               New product

@@ -374,6 +374,14 @@ query Order($order_id: ID!, $token: String) {
       name
       email_address
     }
+    stripe_checkout_session {
+      id
+      id_ext
+      amount_subtotal
+      amount_total
+      currency
+      payment_status
+    }
   }
 }
 
@@ -405,6 +413,14 @@ query Orders(
       id
       name
       email_address
+    }
+    stripe_checkout_session {
+      id
+      id_ext
+      amount_subtotal
+      amount_total
+      currency
+      payment_status
     }
   }
 }

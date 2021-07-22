@@ -1,6 +1,6 @@
 {
   "name": "@duely/client",
-  "version": "0.4.27",
+  "version": "0.4.28",
   "description": "GraphQL client by Duely (wrapper for @apollo/client)",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -32,7 +32,7 @@
   },
   "peerDependencies": {
     "@apollo/client": "^3.3.21",
-    "@duely/core": "0.4.22",
+    "@duely/core": "0.4.23",
     "react": "^17.0.2"
   }
 }

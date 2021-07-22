@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@duely/build": "0.4.2",
-    "@duely/core": "0.4.22",
+    "@duely/core": "0.4.23",
     "pg": "^8.6.0"
   },
   "devDependencies": {
