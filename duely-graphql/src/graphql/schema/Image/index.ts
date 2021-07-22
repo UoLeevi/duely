@@ -54,7 +54,7 @@ export function validateAndReadDataUrlAsBuffer(
     return [null, 'File type should be one of ' + extensions.join(',')];
   }
 
-  if (!validator.isByteLength(dataUrl, { max: Math.round((options.maxSize / 4) * 3) })) {
+  if (!validator.isByteLength(dataUrl, { max: Math.round(options.maxSize * (4 / 3)) })) {
     return [null, `File max size is ${formatFileSize(options.maxSize)}.`];
   }
 
@@ -134,7 +134,8 @@ export const Image: GqlTypeDefinition = {
     },
     Mutation: {
       async create_image(obj, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         // validate and read image
 
@@ -170,7 +171,8 @@ export const Image: GqlTypeDefinition = {
         }
       },
       async update_image(obj, { image_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         if (args.data) {
           const [_, validationError] = validateAndReadDataUrlAsBuffer(args.data);
