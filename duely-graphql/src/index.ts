@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { json } from 'express';
 import cors from 'cors';
 import { graphqlHTTP } from 'express-graphql';
 import schema from './graphql/schema';
@@ -16,7 +16,7 @@ process.on('unhandledRejection', (up) => {
 const app = express();
 app.set('trust proxy', true);
 app.use(cors());
-
+app.use(json({ limit: '8mb' }));
 app.use(
   '/graphql',
   graphqlHTTP(async (req) => {
