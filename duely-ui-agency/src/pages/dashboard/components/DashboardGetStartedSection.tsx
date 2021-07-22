@@ -108,7 +108,7 @@ export function DashboardGetStartedSection() {
           />
         )}
 
-        {productsCreated && (
+        {!productsCreated && (
           <DashboardGetStartedCard
             title="Create products"
             description="Start selling online by creating your first product."

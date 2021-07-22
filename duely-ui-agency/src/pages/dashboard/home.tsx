@@ -20,7 +20,7 @@ export default function DashboardHome() {
       </DashboardSection>
 
       <DashboardSection title="Recent transactions">
-        <Card>
+        <Card className="max-w-screen-lg">
           <BalanceTransactionsTable />
         </Card>
       </DashboardSection>

@@ -97,7 +97,7 @@ export default function ThankYouPage() {
             </p>
           </div>
 
-          <Card>
+          <Card className="max-w-screen-lg">
             <Table items={order.items} columns={columns} headers={headers} wrap={wrap} />
           </Card>
 

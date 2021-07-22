@@ -89,8 +89,8 @@ export function CreateBankAccountForm() {
           <span className="font-mono whitespace-nowrap">********{bank_account?.last4}</span>{' '}
           <span className="whitespace-nowrap">created succesfully</span>
         </h3>
-        <LinkButton color="indigo" to="/dashboard/bank_accounts">
-          Go to bank_accounts
+        <LinkButton color="indigo" to="/dashboard/settings/payments">
+          Go back to settings
         </LinkButton>
       </div>
     );

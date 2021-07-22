@@ -95,7 +95,7 @@ export default function DashboardProductsHome() {
 
             <div className="flex flex-col space-y-1">
               <SkeletonText />
-              <SkeletonParagraph className="text-xs" words={10} />
+              <SkeletonParagraph className="max-w-sm text-xs" words={10} />
               <SkeletonText className="text-xs" />
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function DashboardProductsHome() {
 
           <div className="flex flex-col space-y-1">
             <span className="font-medium">{product.name}</span>
-            <p className="flex-1 text-xs text-gray-500">
+            <p className="flex-1 max-w-sm text-xs text-gray-500">
               {Util.truncate(product.description ?? '', 120)}
             </p>
             <div className="flex pb-1 space-x-3 text-xs text-gray-500 products-center">

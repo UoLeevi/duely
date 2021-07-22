@@ -8,7 +8,7 @@ export default function DashboardPayments() {
   return (
     <>
       <DashboardSection title="Payments">
-        <Card className="table">
+        <Card className="max-w-screen-lg">
           <BalanceTransactionsTable />
         </Card>
       </DashboardSection>
