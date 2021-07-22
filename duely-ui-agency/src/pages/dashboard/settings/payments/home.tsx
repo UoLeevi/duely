@@ -1,6 +1,14 @@
 import { Link } from 'react-router-dom';
 import { useQuery, current_agency_Q, agency_stripe_account_bank_accounts_Q } from '@duely/client';
-import { useBreakpoints, Table, DropMenu, Card, Button, SkeletonText } from '@duely/react';
+import {
+  useBreakpoints,
+  Table,
+  DropMenu,
+  Card,
+  Button,
+  SkeletonText,
+  LinkButton
+} from '@duely/react';
 import { ConfirmBankAccountDeletionModal } from './components';
 import { DashboardSection } from '../../components';
 
@@ -112,25 +120,15 @@ export default function DashboardSettingsPaymentsHome() {
         title="Bank accounts"
         actions={
           <div className="flex flex-row justify-end">
-            <Button dense color="green" className="text-sm">
-              <Link to="payments/new-bank-account" className="flex space-x-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="w-5 h-5 -ml-1.5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                <span>New bank account</span>
-              </Link>
-            </Button>
+            <LinkButton
+              dense
+              color="indigo"
+              to="payments/new-bank-account"
+              icon="plus"
+              className="text-sm"
+            >
+              New bank account
+            </LinkButton>
           </div>
         }
       >

@@ -9,6 +9,7 @@ export type ButtonBaseProps = {
   color?: keyof typeof colorClassName;
   children: React.ReactNode;
   className?: string;
+  icon?: keyof typeof icons | React.ReactNode;
 };
 
 export type ElementPropsWithoutRef<T extends React.ElementType> = Pick<
@@ -20,12 +21,30 @@ type BaseComponent<T extends React.ElementType> = {
   render: T;
 };
 
+const icons = {
+  plus: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-5 h-5"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path
+        fillRule="evenodd"
+        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+        clipRule="evenodd"
+      />
+    </svg>
+  )
+} as const;
+
 const colorClassName = {
   gray: 'text-gray-600 dark:text-white bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-500',
   indigo: 'bg-indigo-600 hover:bg-indigo-700 text-white dark:border-gray-600',
   red: 'bg-red-600 hover:bg-red-700 text-white dark:border-gray-700',
-  green: 'bg-green-600 hover:bg-green-700 text-white dark:border-gray-700'
-};
+  green: 'bg-green-600 hover:bg-green-700 text-white dark:border-gray-700',
+  white: 'bg-white hover:bg-gray-50 text-black'
+} as const;
 
 export function ButtonBase<T extends React.ElementType = 'button'>({
   children,
@@ -35,6 +54,7 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
   color,
   className,
   render,
+  icon,
   ...props
 }: ButtonBaseProps &
   BaseComponent<T> &
@@ -51,6 +71,10 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
 
   const Component: React.ElementType = render;
 
+  if (icon && typeof icon === 'string' && Util.hasProperty(icons, icon)) {
+    icon = icons[icon] as React.ReactNode;
+  }
+
   return (
     <Component disabled={disabled} className={className} {...props}>
       <LoadingSpinner
@@ -61,10 +85,12 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
       <span
         className={Util.createClassName(
           'transform transition-transform',
-          loading && 'translate-x-4'
+          loading && 'translate-x-4',
+          icon && 'flex items-center space-x-2'
         )}
       >
-        {children}
+        {icon}
+        <span>{children}</span>
       </span>
 
       {loading && (

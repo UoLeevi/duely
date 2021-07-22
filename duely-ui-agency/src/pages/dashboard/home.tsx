@@ -1,23 +1,17 @@
 import { Card } from '@duely/react';
 import {
   DashboardFlexGrid,
-  DashboardCardGetStartedCreateProducts,
-  DashboardCardGetStartedEnablePayouts,
   DashboardCardBalance,
   DashboardSection,
   BalanceTransactionsTable
 } from './components';
+import { DashboardGetStartedSection } from './components/DashboardGetStartedSection';
 
 export default function DashboardHome() {
 
   return (
     <>
-      <DashboardSection title="Get started">
-        <DashboardFlexGrid>
-          <DashboardCardGetStartedEnablePayouts />
-          <DashboardCardGetStartedCreateProducts />
-        </DashboardFlexGrid>
-      </DashboardSection>
+      <DashboardGetStartedSection />
 
       <DashboardSection title="Overview">
         <DashboardFlexGrid>

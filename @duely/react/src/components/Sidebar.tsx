@@ -48,7 +48,7 @@ export function Sidebar({ className, links, topContent, bottomContent, ...props 
 
   className = Util.createClassName(
     className,
-    'z-10 w-full h-16 bg-white dark:bg-gray-800 border-t dark:border-gray-700 md:bg-gray-25 dark:md:bg-gray-900 md:border-none border-box md:w-48 xl:w-64 md:h-full md:p-2'
+    'z-20 w-full h-16 bg-white dark:bg-gray-800 border-t dark:border-gray-700 md:bg-gray-25 dark:md:bg-gray-900 md:border-none border-box md:w-48 xl:w-64 md:h-full md:p-2'
   );
 
   return (

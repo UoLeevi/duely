@@ -41,6 +41,10 @@ export function CreateBankAccountForm() {
     ?.map((c) => ({ value: c, element: c.toUpperCase() }))
     ?.sort((a, b) => a.element.localeCompare(b.element));
 
+  const businessType = ['individual', 'company'].includes(stripe_account?.business_type ?? '')
+    ? stripe_account!.business_type
+    : undefined;
+
   const state = {
     loading: stateBankAccount.loading || agencyLoading || stripe_accountLoading,
     error: stateBankAccount.error,
@@ -118,6 +122,8 @@ export function CreateBankAccountForm() {
           hint="The type of entity that holds the account."
           type="radio-blocks"
           dense
+          defaultValue={businessType}
+          loading={stripe_accountLoading}
           options={[
             {
               value: 'individual',

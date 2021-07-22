@@ -20,7 +20,7 @@ export function ScreenOverlayContextProvider({ children }: Props) {
   return (
     <ScreenOverlayContext.Provider value={ref}>
       <div
-        className="fixed inset-0 z-20 grid w-full h-full bg-transparent pointer-events-none place-items-center"
+        className="fixed inset-0 z-30 grid w-full h-full bg-transparent pointer-events-none place-items-center"
         ref={ref}
       >
         {/* used as a portal container */}

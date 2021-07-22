@@ -34,7 +34,7 @@ export function Modal({ children, show, close, openerRef, className }: ModalProp
     >
       <div
         style={backdropStyle}
-        className="z-30 flex items-center justify-center bg-gray-100 bg-opacity-75 pointer-events-auto bg-blur"
+        className="z-40 flex items-center justify-center bg-gray-100 bg-opacity-75 pointer-events-auto bg-blur"
       >
         <ModalContent openerRef={openerRef} close={close} className={className}>
           {children}

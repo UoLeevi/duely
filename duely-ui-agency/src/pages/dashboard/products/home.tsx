@@ -9,14 +9,11 @@ import {
   useDynamicNavigation,
   SkeletonText,
   SkeletonParagraph,
-  usePagination
+  usePagination,
+  LinkButton
 } from '@duely/react';
 import { ConfirmProductDeletionModal } from './components';
-import {
-  DashboardFlexGrid,
-  DashboardCardGetStartedCreateProducts,
-  DashboardSection
-} from '../components';
+import { DashboardFlexGrid, DashboardSection } from '../components';
 import { Currency } from '@duely/core';
 import { ColoredChip } from '../components/ColoredChip';
 
@@ -237,13 +234,22 @@ export default function DashboardProductsHome() {
 
   return (
     <>
-      <DashboardSection title="Get started">
-        <DashboardFlexGrid>
-          <DashboardCardGetStartedCreateProducts />
-        </DashboardFlexGrid>
-      </DashboardSection>
-
-      <DashboardSection title="Products">
+      <DashboardSection
+        title="Products"
+        actions={
+          <div className="flex flex-row justify-end">
+            <LinkButton
+              dense
+              color="indigo"
+              to="products/new-product"
+              icon="plus"
+              className="text-sm"
+            >
+              New product
+            </LinkButton>
+          </div>
+        }
+      >
         <Card className="max-w-screen-lg">
           <Table
             columns={columns}

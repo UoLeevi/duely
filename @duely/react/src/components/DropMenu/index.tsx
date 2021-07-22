@@ -108,7 +108,7 @@ function DropMenuItems({ children, close, buttonRef, origin, ...props }: DropMen
 
   const className = Util.createClassName(
     originClassNames[origin ?? 'right'],
-    'absolute z-10 flex flex-col px-4 py-2 space-y-2 bg-white border rounded-md shadow-md dark:bg-gray-900 dark:border-gray-700 focus:outline-none'
+    'absolute z-20 flex flex-col px-4 py-2 space-y-2 bg-white border rounded-md shadow-md dark:bg-gray-900 dark:border-gray-700 focus:outline-none'
   );
 
   return (
