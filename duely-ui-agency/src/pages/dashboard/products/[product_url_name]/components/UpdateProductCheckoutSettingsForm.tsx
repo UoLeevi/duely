@@ -89,7 +89,7 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
     let res = await updateSetting({
       checkout_success_url,
       checkout_cancel_url,
-      setting_id: agency_settings!.id
+      setting_id: product_settings?.id!
     });
 
     if (res?.success) {
