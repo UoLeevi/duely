@@ -11,7 +11,8 @@ import {
   SkeletonParagraph,
   usePagination,
   LinkButton,
-  ColoredChip
+  ColoredChip,
+  icons
 } from '@duely/react';
 import { ConfirmProductDeletionModal } from './components';
 import { DashboardSection } from '../components';
@@ -127,7 +128,7 @@ export default function DashboardProductsHome() {
             <p className="flex-1 max-w-sm text-xs text-gray-500">
               {Util.truncate(product.description ?? '', 120)}
             </p>
-            <div className="flex pb-1 space-x-3 text-xs text-gray-500 products-center">
+            <div className="flex items-center pb-1 space-x-3 text-xs text-gray-500 whitespace-nowrap">
               {product.default_price && (
                 <span>
                   {Currency.format(
@@ -171,48 +172,35 @@ export default function DashboardProductsHome() {
           className:
             'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
           children: (
-            <div className="flex space-x-2 products-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                />
-              </svg>
+            <span className="flex items-center space-x-2 whitespace-nowrap">
+              {icons.pencil}
               <span>Edit</span>
-            </div>
+            </span>
           ),
           to: `products/${product.url_name}/edit`
+        },
+        {
+          key: 'copy-checkout-url',
+          className:
+            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800 cursor-pointer',
+          children: (
+            <span className="flex items-center space-x-2 whitespace-nowrap">
+              {icons.clipboard}
+              <span>Copy checkout URL</span>
+            </span>
+          ),
+          onClick: () =>
+            navigator.clipboard.writeText(`https://${agency?.subdomain.name}.duely.app/checkout/${product.url_name}`)
         },
         {
           key: 'delete',
           className:
             'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
           children: (
-            <div className="flex space-x-2 products-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
+            <span className="flex items-center space-x-2 whitespace-nowrap">
+              {icons.trash}
               <span>Delete</span>
-            </div>
+            </span>
           ),
           to: '?delete_product=' + product.id
         }
@@ -222,13 +210,12 @@ export default function DashboardProductsHome() {
         <div className="flex space-x-6 font-medium">
           {sm && (
             <DropMenu>
-              {actions.map((action) => (
-                <Link {...action} />
-              ))}
+              {actions.map((action) => (action.to ? <Link {...action} /> : <span {...action} />))}
             </DropMenu>
           )}
 
-          {!sm && actions.map((action) => <Link {...action} />)}
+          {!sm &&
+            actions.map((action) => (action.to ? <Link {...action} /> : <span {...action} />))}
         </div>
       );
     }

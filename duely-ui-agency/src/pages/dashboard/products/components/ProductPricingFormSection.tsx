@@ -1,5 +1,5 @@
 import { agency_stripe_account_Q, current_agency_Q, useQuery } from '@duely/client';
-import { FormField, UseFormReturn } from '@duely/react';
+import { FormField, InputFilters, UseFormReturn, ValidationRules } from '@duely/react';
 
 type ProductPricingFormSectionFields = {
   unit_amount_major: string;
@@ -26,6 +26,7 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
   const currencyPrefix: React.ReactChild = <span className="pr-1">{currency?.toUpperCase()}</span>;
 
   const payment_type = form.useFormFieldValue('payment_type');
+
   return (
     <>
       <FormField
@@ -44,59 +45,44 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
             description: 'Charge on a recurring basis'
           }
         ]}
+        registerOptions={{ required: true }}
       />
 
-      {payment_type === 'one_time' && (
-        <>
-          <div className="flex flex-col -m-2 sm:flex-row">
-            <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-              <FormField
-                label="Price of product"
-                name="unit_amount_major"
-                type="text"
-                inputMode="numeric"
-                prefix={currencyPrefix}
-                registerOptions={{ required: true }}
-                loading={stripe_accountLoading}
-              />
-            </div>
+      <div className="flex flex-col -m-2 sm:flex-row">
+        <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
+          <FormField
+            label={payment_type === 'one_time' ? 'Price of product' : 'Amount'}
+            name="unit_amount_major"
+            type="text"
+            inputMode="numeric"
+            prefix={currencyPrefix}
+            registerOptions={{
+              required: true,
+              rules: [ValidationRules.isPositiveNumber],
+              inputFilter: InputFilters.numeric
+            }}
+            loading={stripe_accountLoading}
+          />
+        </div>
+        {payment_type === 'recurring' && (
+          <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
+            <FormField
+              label="Frequency"
+              name="frequency"
+              type="select"
+              options={[
+                { value: '1:week', element: 'Every week' },
+                { value: '2:week', element: 'Every 2 weeks' },
+                { value: '1:month', element: 'Every month' },
+                { value: '3:month', element: 'Every 3 months' },
+                { value: '6:month', element: 'Every 6 months' },
+                { value: '1:year', element: 'Every year' }
+              ]}
+              registerOptions={{ required: true }}
+            />
           </div>
-        </>
-      )}
-
-      {payment_type === 'recurring' && (
-        <>
-          <div className="flex flex-col -m-2 sm:flex-row">
-            <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-              <FormField
-                label="Amount"
-                name="unit_amount_major"
-                type="text"
-                inputMode="numeric"
-                prefix={currencyPrefix}
-                registerOptions={{ required: true }}
-                loading={stripe_accountLoading}
-              />
-            </div>
-            <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-              <FormField
-                label="Frequency"
-                name="frequency"
-                type="select"
-                options={[
-                  { value: '1:week', element: 'Every week' },
-                  { value: '2:week', element: 'Every 2 weeks' },
-                  { value: '1:month', element: 'Every month' },
-                  { value: '3:month', element: 'Every 3 months' },
-                  { value: '6:month', element: 'Every 6 months' },
-                  { value: '1:year', element: 'Every year' }
-                ]}
-                registerOptions={{ required: true }}
-              />
-            </div>
-          </div>
-        </>
-      )}
+        )}
+      </div>
     </>
   );
 }

@@ -212,6 +212,7 @@ export class FormFieldControl<T> {
   #stateChangedListeners: (() => void)[] = [];
   #updateCounter = 0;
   #options: FormFieldRegisterOptions<T>;
+  #refCount = 0;
 
   constructor(name: string, form: FormControl) {
     this.#name = name;
@@ -371,6 +372,7 @@ export class FormFieldControl<T> {
 
   #attachElement(element: FormFieldHTMLElement) {
     this.startUpdate();
+    ++this.#refCount;
     this.#element = element;
 
     // I encountered issues with react's SynteticEvents not firing in some cases.
@@ -405,13 +407,15 @@ export class FormFieldControl<T> {
 
   #detachElement() {
     // TODO: make unregistration conditional on FormFieldRegisterOptions
-    this.#form.unregister(this.#name);
+    if (--this.#refCount === 0) {
+      this.#form.unregister(this.#name);
 
-    if (this.#getElementValue && this.#element) {
-      this.#value = this.#getElementValue(this.#element);
+      if (this.#getElementValue && this.#element) {
+        this.#value = this.#getElementValue(this.#element);
+      }
+
+      this.#element = null;
     }
-
-    this.#element = null;
   }
 
   setValue(value: T | undefined, options?: SetValueOptions) {
