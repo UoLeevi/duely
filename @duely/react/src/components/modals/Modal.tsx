@@ -1,18 +1,43 @@
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Util } from '../../util';
 import { ScreenOverlayContext } from '../../contexts';
 import ReactDOM from 'react-dom';
 import { Transition } from '@headlessui/react';
+import { getIconElement, IconProp, icons } from '../icons';
+
+export type UseModalReturn = {
+  isOpen: boolean;
+  open: () => void;
+  close: () => void;
+  control: UseModalReturn;
+};
+
+export function useModal(initialIsOpen: boolean): UseModalReturn {
+  const [isOpen, setIsOpen] = useState(initialIsOpen);
+  const open = useCallback(() => setIsOpen(true), []);
+  const close = useCallback(() => setIsOpen(false), []);
+
+  const control: Partial<UseModalReturn> = {
+    isOpen,
+    open,
+    close
+  };
+
+  control.control = control as UseModalReturn;
+
+  return control as UseModalReturn;
+}
 
 type ModalProps = {
   children: React.ReactNode;
-  show: boolean;
-  close?: () => void;
+  control: UseModalReturn;
   openerRef?: React.RefObject<Node>;
   className?: string;
+  dismissable?: boolean;
+  unstyled?: boolean;
 };
 
-export function Modal({ children, show, close, openerRef, className }: ModalProps) {
+function ModalRoot({ children, control, openerRef, className, dismissable, unstyled }: ModalProps) {
   const screenOverlayRef = useContext(ScreenOverlayContext);
   if (!screenOverlayRef?.current) return null;
 
@@ -23,7 +48,7 @@ export function Modal({ children, show, close, openerRef, className }: ModalProp
 
   return ReactDOM.createPortal(
     <Transition
-      show={show}
+      show={control.isOpen}
       enter="transition ease-out duration-75"
       enterFrom="transform opacity-0 scale-95"
       enterTo="transform opacity-100 scale-100"
@@ -36,7 +61,12 @@ export function Modal({ children, show, close, openerRef, className }: ModalProp
         style={backdropStyle}
         className="z-40 flex items-center justify-center bg-gray-100 bg-opacity-75 pointer-events-auto bg-blur"
       >
-        <ModalContent openerRef={openerRef} close={close} className={className}>
+        <ModalContent
+          openerRef={openerRef}
+          control={control}
+          className={className}
+          dismissable={dismissable}
+        >
           {children}
         </ModalContent>
       </div>
@@ -49,25 +79,54 @@ type ModalContentProps = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLSpanElement>,
   HTMLSpanElement
 > & {
-  close?: () => void;
+  control: UseModalReturn;
   openerRef?: React.RefObject<Node>;
+  dismissable?: boolean;
+  unstyled?: boolean;
 };
 
-function ModalContent({ children, close, openerRef, className }: ModalContentProps) {
+function ModalContent({
+  children,
+  control,
+  openerRef,
+  className,
+  dismissable,
+  unstyled
+}: ModalContentProps) {
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => ref.current?.focus(), []);
+  useEffect(() => {
+    if (!control.isOpen) return;
+
+    const body = document.documentElement;
+    const overflow = body.style.overflow;
+    const paddingRight = body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - body.clientWidth;
+
+    body.style.overflow = 'hidden';
+    body.style.paddingRight = `${scrollbarWidth}px`;
+
+    ref.current?.focus();
+
+    return () => {
+      body.style.overflow = overflow;
+      body.style.paddingRight = paddingRight;
+    };
+
+  }, [control.isOpen]);
 
   function onBlur(e: React.FocusEvent) {
+    if (!dismissable) return;
     const container = ref.current;
     const focusedEl = e.relatedTarget as Node;
     if (focusedEl === openerRef?.current) return;
     if (!focusedEl || !container?.contains(focusedEl)) {
-      close?.();
+      control.close?.();
     }
   }
 
   className = Util.createClassName(
+    !unstyled && 'max-w-lg rounded-lg',
     className,
     'box-border relative flex flex-col shadow-lg focus:outline-none'
   );
@@ -80,8 +139,63 @@ function ModalContent({ children, close, openerRef, className }: ModalContentPro
       onClick={(e) => e.stopPropagation()}
       onBlur={onBlur}
     >
-      {/* {close && <BsX onClick={close} className="absolute top-0 right-0 m-3 text-2xl text-gray-600" />} */}
+      {dismissable && (
+        <span
+          onClick={control.close}
+          className="absolute top-0 right-0 m-3 text-2xl text-gray-600 cursor-default"
+        >
+          {icons['x.solid']}
+        </span>
+      )}
       {children}
     </div>
   );
 }
+
+type ModalBodyProps = React.DetailedHTMLProps<
+  React.HTMLAttributes<HTMLDivElement>,
+  HTMLDivElement
+> & {
+  heading?: React.ReactNode;
+  icon?: IconProp;
+  iconClassNames?: string;
+};
+
+function Body({ children, heading, icon, iconClassNames }: ModalBodyProps) {
+  icon = getIconElement(icon);
+
+  return (
+    <div className="flex p-6 space-x-4 bg-white rounded-t-lg">
+      {icon && (
+        <div
+          className={`grid w-10 h-10 text-xl rounded-full place-items-center ${
+            iconClassNames ?? ''
+          }`}
+        >
+          {icon}
+        </div>
+      )}
+
+      <div className="flex flex-col flex-1 space-y-4 w-96 min-w-min">
+        {heading && <h3 className="text-xl font-medium">{heading}</h3>}
+
+        {children}
+      </div>
+    </div>
+  );
+}
+
+type ModalFooterProps = React.DetailedHTMLProps<
+  React.HTMLAttributes<HTMLDivElement>,
+  HTMLDivElement
+>;
+
+function Footer({ children }: ModalFooterProps) {
+  return (
+    <div className="flex flex-row-reverse px-6 py-4 space-x-4 space-x-reverse text-sm font-medium text-white rounded-b-lg bg-gray-50">
+      {children}
+    </div>
+  );
+}
+
+export const Modal = Object.assign(ModalRoot, { Body, Footer });

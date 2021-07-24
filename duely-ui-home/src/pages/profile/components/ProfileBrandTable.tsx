@@ -21,7 +21,7 @@ type AgencyColumnProps = {
 };
 
 const wrap = {
-  md: {
+  sm: {
     columns: 1,
     spans: [1, 1, 1]
   }

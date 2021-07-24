@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useQuery, useMutation, page_Q, update_page_M } from '@duely/client';
-import { ConfirmationModal } from '@duely/react';
+import { ConfirmationModal, useModal } from '@duely/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import produce from 'immer';
 import { usePrevious } from '~/hooks';
@@ -15,6 +15,15 @@ export function ConfirmPagePublishModal() {
   const show = page_id != null;
   const prev = usePrevious(page_id);
   page_id = page_id ?? prev;
+
+  const modal = useModal(false);
+
+  useEffect(() => {
+    if (show !== modal.isOpen) {
+      if (show) modal.open();
+      else modal.close();
+    }
+  }, [show, modal]);
 
   const { data: page, loading: loadingPage } = useQuery(
     page_Q,
@@ -49,7 +58,7 @@ export function ConfirmPagePublishModal() {
 
   return (
     <ConfirmationModal
-      show={show}
+      control={modal}
       confirm={confirmPublish}
       cancel={close}
       heading={published ? 'Unpublish page' : 'Publish page'}
@@ -76,7 +85,8 @@ export function ConfirmPagePublishModal() {
         <p className="text-sm text-gray-600">
           Are you sure you want to unpublish the page with URL:
           <br />
-          <span className="font-semibold">{page?.url_path}</span><br />
+          <span className="font-semibold">{page?.url_path}</span>
+          <br />
           The page would marked as draft and not be visible to public.
         </p>
       )}
@@ -85,7 +95,8 @@ export function ConfirmPagePublishModal() {
         <p className="text-sm text-gray-600">
           Are you sure you want to publish the page with URL:
           <br />
-          <span className="font-semibold">{page?.url_path}</span><br />
+          <span className="font-semibold">{page?.url_path}</span>
+          <br />
           The page would be marked as live and visible to public.
         </p>
       )}

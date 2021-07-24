@@ -28,7 +28,8 @@ export const Util = {
   template,
   createGraphQLPlaygroundUrl,
   fetchRecapthcaToken,
-  isPrivateIp
+  isPrivateIp,
+  getReactElement
 };
 
 // see: https://github.com/graphql/graphql-playground/issues/1018#issuecomment-762935106
@@ -361,4 +362,8 @@ function fetchRecapthcaToken(action?: string): Promise<string | undefined> {
         });
     });
   });
+}
+
+function getReactElement(node: React.ReactNode, props?: Record<string, any>) {
+  return typeof node === 'function' ? node(props) : node;
 }

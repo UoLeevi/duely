@@ -7,10 +7,11 @@ import {
   FormField,
   useDynamicNavigation,
   Form,
-  AnchorButton
+  AnchorButton,
+  Modal,
+  useModal
 } from '@duely/react';
-import { useEffect, useMemo, useRef } from 'react';
-import { useModal } from '~/hooks';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ServicesAgreement from '~/components/ServicesAgreement';
 import { useQuery, countries_Q, useMutation, create_agency_M } from '@duely/client';
 
@@ -28,6 +29,8 @@ type CreateBrandFormProps = {
 
 export default function CreateBrandForm({ className }: CreateBrandFormProps) {
   const form = useForm<CreateBrandFormFields>();
+  const modal = useModal(false);
+
   const [createAgency, state] = useMutation(create_agency_M);
 
   // countries
@@ -45,9 +48,8 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
   const subdomain_name_field = form.useFormFieldState('subdomain_name');
 
   // image logo
-  const { image: image_logo, loading: imageLogoLoading } = useImageInputFromFileList(
-    image_logo_file_list
-  );
+  const { image: image_logo, loading: imageLogoLoading } =
+    useImageInputFromFileList(image_logo_file_list);
 
   // subdomain name
   useEffect(() => {
@@ -68,11 +70,6 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
       return_url: `${window.location.origin}/profile`
     });
   }
-
-  const hideTosRef = useRef();
-  const showTosModal = useModal(<ServicesAgreement ok={hideTosRef.current} />, {
-    hideModalRef: hideTosRef
-  });
 
   const passAccessToken = useDynamicNavigation({ passAccessToken: true });
 
@@ -109,11 +106,7 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           </a>{' '}
           to enable payments.
         </p>
-        <AnchorButton
-          href={dashboard_url}
-          onClick={passAccessToken}
-          color="indigo"
-        >
+        <AnchorButton href={dashboard_url} onClick={passAccessToken} color="indigo">
           Go to dashboard
         </AnchorButton>
       </div>
@@ -165,7 +158,7 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
         <div className="flex flex-col pt-4">
           <p className="text-xs text-center">
             By creating an agency on Duely, you agree to our{' '}
-            <button type="button" onClick={showTosModal} className="text-indigo-600">
+            <button type="button" onClick={modal.open} className="text-indigo-600">
               Services Agreement
             </button>{' '}
             and the{' '}
@@ -187,6 +180,10 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           <FormInfoMessage error={state.error} />
         </div>
       </Form>
+
+      <Modal control={modal}>
+        <ServicesAgreement ok={modal.close} />
+      </Modal>
     </>
   );
 }

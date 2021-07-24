@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useQuery, useMutation, product_Q, delete_product_M } from '@duely/client';
-import { Modal, Button, SkeletonParagraph, ConfirmationModal } from '@duely/react';
+import { Modal, Button, SkeletonParagraph, ConfirmationModal, useModal } from '@duely/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import produce from 'immer';
 import { usePrevious } from '~/hooks';
@@ -14,6 +14,15 @@ export function ConfirmProductDeletionModal() {
   const show = product_id != null;
   const prev = usePrevious(product_id);
   product_id = product_id ?? prev;
+
+  const modal = useModal(false);
+
+  useEffect(() => {
+    if (show !== modal.isOpen) {
+      if (show) modal.open();
+      else modal.close();
+    }
+  }, [show, modal]);
 
   const { data: product, loading: loadingProduct } = useQuery(
     product_Q,
@@ -42,7 +51,7 @@ export function ConfirmProductDeletionModal() {
 
   return (
     <ConfirmationModal
-      show={show}
+      control={modal}
       confirm={confirmDeletion}
       cancel={close}
       heading="Delete product"

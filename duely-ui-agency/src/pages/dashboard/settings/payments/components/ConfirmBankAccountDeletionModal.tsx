@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   useQuery,
   useMutation,
@@ -7,7 +7,7 @@ import {
   agency_stripe_account_Q,
   agency_stripe_account_bank_accounts_Q
 } from '@duely/client';
-import { ConfirmationModal } from '@duely/react';
+import { ConfirmationModal, useModal } from '@duely/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import produce from 'immer';
 import { usePrevious } from '~/hooks';
@@ -21,6 +21,15 @@ export function ConfirmBankAccountDeletionModal() {
   const show = bank_account_id != null;
   const prev = usePrevious(bank_account_id);
   bank_account_id = bank_account_id ?? prev;
+
+  const modal = useModal(false);
+
+  useEffect(() => {
+    if (show !== modal.isOpen) {
+      if (show) modal.open();
+      else modal.close();
+    }
+  }, [show, modal]);
 
   const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
@@ -68,7 +77,7 @@ export function ConfirmBankAccountDeletionModal() {
 
   return (
     <ConfirmationModal
-      show={show}
+      control={modal}
       confirm={confirmDeletion}
       cancel={close}
       heading="Delete bank_account"

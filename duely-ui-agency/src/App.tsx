@@ -1,7 +1,6 @@
 import { BrowserRouter as Router } from 'react-router-dom';
 import { ApolloProvider } from '@apollo/client';
 import MessageContextProvider from '~/contexts/MessageContext';
-import ModalContextProvider from '~/contexts/ModalContext';
 import DomainManager from '~/components/DomainManager';
 import Pages from '~/pages';
 import { ScreenOverlayContextProvider, ViewportContextProvider, AuthManager } from '@duely/react';
@@ -14,13 +13,11 @@ export default function App() {
         <ViewportContextProvider>
           <ScreenOverlayContextProvider>
             <MessageContextProvider>
-              <ModalContextProvider>
-                <AuthManager>
-                  <DomainManager>
-                    <Pages />
-                  </DomainManager>
-                </AuthManager>
-              </ModalContextProvider>
+              <AuthManager>
+                <DomainManager>
+                  <Pages />
+                </DomainManager>
+              </AuthManager>
             </MessageContextProvider>
           </ScreenOverlayContextProvider>
         </ViewportContextProvider>

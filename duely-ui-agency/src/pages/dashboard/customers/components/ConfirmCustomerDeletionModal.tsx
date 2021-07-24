@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useQuery, useMutation, customer_Q, delete_customer_M } from '@duely/client';
-import { ConfirmationModal } from '@duely/react';
+import { ConfirmationModal, useModal } from '@duely/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import produce from 'immer';
 import { usePrevious } from '~/hooks';
@@ -14,6 +14,15 @@ export function ConfirmCustomerDeletionModal() {
   const show = customer_id != null;
   const prev = usePrevious(customer_id);
   customer_id = customer_id ?? prev;
+
+  const modal = useModal(false);
+
+  useEffect(() => {
+    if (show !== modal.isOpen) {
+      if (show) modal.open();
+      else modal.close();
+    }
+  }, [show, modal]);
 
   const { data: customer, loading: loadingCustomer } = useQuery(
     customer_Q,
@@ -42,7 +51,7 @@ export function ConfirmCustomerDeletionModal() {
 
   return (
     <ConfirmationModal
-      show={show}
+      control={modal}
       confirm={confirmDeletion}
       cancel={close}
       heading="Delete customer"
