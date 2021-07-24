@@ -23,7 +23,7 @@
     "../@duely/react"
   ],
   "dependencies": {
-    "@duely/core": "0.4.23",
+    "@duely/core": "0.4.25",
     "@duely/db": "0.4.17",
     "@graphql-tools/schema": "^7.1.3",
     "axios": "^0.21.1",

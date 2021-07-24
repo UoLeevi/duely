@@ -112,7 +112,6 @@ function ModalContent({
       body.style.overflow = overflow;
       body.style.paddingRight = paddingRight;
     };
-
   }, [control.isOpen]);
 
   function onBlur(e: React.FocusEvent) {
@@ -161,11 +160,12 @@ type ModalBodyProps = React.DetailedHTMLProps<
   iconClassNames?: string;
 };
 
-function Body({ children, heading, icon, iconClassNames }: ModalBodyProps) {
+function Body({ children, heading, icon, className, iconClassNames }: ModalBodyProps) {
   icon = getIconElement(icon);
+  className = Util.createClassName('flex p-6 space-x-4 bg-white rounded-t-lg', className);
 
   return (
-    <div className="flex p-6 space-x-4 bg-white rounded-t-lg">
+    <div className={className}>
       {icon && (
         <div
           className={`grid w-10 h-10 text-xl rounded-full place-items-center ${
@@ -190,12 +190,12 @@ type ModalFooterProps = React.DetailedHTMLProps<
   HTMLDivElement
 >;
 
-function Footer({ children }: ModalFooterProps) {
-  return (
-    <div className="flex flex-row-reverse px-6 py-4 space-x-4 space-x-reverse text-sm font-medium text-white rounded-b-lg bg-gray-50">
-      {children}
-    </div>
+function Footer({ children, className }: ModalFooterProps) {
+  className = Util.createClassName(
+    'flex flex-row-reverse px-6 py-4 space-x-4 space-x-reverse text-sm font-medium text-white rounded-b-lg bg-gray-50',
+    className
   );
+  return <div className={className}>{children}</div>;
 }
 
 export const Modal = Object.assign(ModalRoot, { Body, Footer });

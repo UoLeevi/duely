@@ -3,7 +3,6 @@ import {
   CountryCode,
   CountryUtil,
   CurrentUserDocument,
-  ServicesAgreementDocument,
   AgencyStripeAccountUpdateUrlDocument,
   AgencyStripeAccountBalanceDocument,
   AgencyStripeAccountBalanceTransactionsDocument,
@@ -57,7 +56,9 @@ import {
   CountProductsDocument,
   CustomersDocument,
   CountCustomersDocument,
-  AgencyStripeAccountBankAccountsDocument
+  AgencyStripeAccountBankAccountsDocument,
+  MarkdownDocument,
+  MarkdownsDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -117,6 +118,17 @@ export const country_spec_Q = {
   result: (d: ResultOf<typeof CountrySpecDocument>) => d?.country_spec
 };
 
+export const markdown_Q = {
+  query: MarkdownDocument,
+  result: (d: ResultOf<typeof MarkdownDocument>) => d?.markdown
+};
+
+export const markdowns_Q = {
+  query: MarkdownsDocument,
+  result: (d: ResultOf<typeof MarkdownsDocument>) => d?.markdowns
+};
+
+
 export const image_Q = {
   query: ImageDocument,
   result: (d: ResultOf<typeof ImageDocument>) => d?.image
@@ -125,11 +137,6 @@ export const image_Q = {
 export const images_Q = {
   query: ImagesDocument,
   result: (d: ResultOf<typeof ImagesDocument>) => d?.images
-};
-
-export const services_agreement_Q = {
-  query: ServicesAgreementDocument,
-  result: (d: ResultOf<typeof ServicesAgreementDocument>) => d?.markdowns?.[0]?.data
 };
 
 export const agency_Q = {

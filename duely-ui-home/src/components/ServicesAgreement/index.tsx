@@ -1,5 +1,5 @@
 import Markdown from 'markdown-to-jsx';
-import { useQuery, services_agreement_Q } from '@duely/client';
+import { useQuery, markdown_Q } from '@duely/client';
 import { SkeletonParagraph, Modal, Button } from '@duely/react';
 
 type ServicesAgreementModalContentProps = {
@@ -7,14 +7,16 @@ type ServicesAgreementModalContentProps = {
 };
 
 export default function ServicesAgreement({ ok }: ServicesAgreementModalContentProps) {
-  const { data, loading, error } = useQuery(services_agreement_Q);
+  const { data, loading, error } = useQuery(markdown_Q, {
+    markdown_id: 'duely-files/legal/services-agreement.md'
+  });
 
   return (
     <>
-      <Modal.Body className="prose-sm prose sm:prose lg:prose-lg">
+      <Modal.Body className="prose-sm prose">
         {error && error.message}
         {loading && <SkeletonParagraph />}
-        {data && <Markdown>{data}</Markdown>}
+        {data && <Markdown>{data.data}</Markdown>}
       </Modal.Body>
       <Modal.Footer>
         <Button type="button" onClick={ok} dense color="gray">
