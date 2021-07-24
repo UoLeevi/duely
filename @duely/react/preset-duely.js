@@ -4,7 +4,18 @@ const path = require('path');
 const tailwindcssCliPath = require.main.path;
 
 const modulesPath = path.resolve(tailwindcssCliPath, '../../');
-const requireLocal = (module) => require(path.resolve(modulesPath, module));
+const requireLocal = (module) => {
+  const localModule = path.resolve(modulesPath, module);
+  try {
+    return require(localModule);
+  } catch (e) {
+    if (module.startsWith('@duely/react/')) {
+      module = './' + module.substring('@duely/react'.length);
+    }
+
+    return require(module);
+  }
+};
 
 const colors = requireLocal('tailwindcss/colors');
 
@@ -68,7 +79,41 @@ module.exports = {
           from: { strokeDashoffset: '200', strokeDasharray: '200' },
           to: { strokeDashoffset: '0', strokeDasharray: '200' }
         }
-      }
+      },
+      typography: (theme) => ({
+        DEFAULT: {
+          css: {
+            h1: {
+              color: theme('colors.gray.900'),
+              fontWeight: '700'
+            },
+            'h1 strong': {
+              fontWeight: '800'
+            },
+            h2: {
+              color: theme('colors.gray.900'),
+              fontWeight: '700'
+            },
+            'h2 strong': {
+              fontWeight: '800'
+            },
+            h3: {
+              color: theme('colors.gray.900'),
+              fontWeight: '600'
+            },
+            'h3 strong': {
+              fontWeight: '700'
+            },
+            h4: {
+              color: theme('colors.gray.900'),
+              fontWeight: '600'
+            },
+            'h4 strong': {
+              fontWeight: '700'
+            }
+          }
+        }
+      })
     }
   },
   plugins: [requireLocal('@tailwindcss/typography'), requireLocal('@tailwindcss/aspect-ratio')]

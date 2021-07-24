@@ -2,9 +2,20 @@ const path = require('path');
 
 // {projectPath}\node_modules\tailwindcss\lib
 const tailwindcssCliPath = require.main.path;
-
 const modulesPath = path.resolve(tailwindcssCliPath, '../../');
-const requireLocal = module => require(path.resolve(modulesPath, module));
+
+const requireLocal = (module) => {
+  const localModule = path.resolve(modulesPath, module);
+  try {
+    return require(localModule);
+  } catch (e) {
+    if (module.startsWith('@duely/react/')) {
+      module = './' + module.substring('@duely/react'.length);
+    }
+
+    return require(module);
+  }
+};
 
 const plugin = requireLocal('tailwindcss/plugin');
 
@@ -27,6 +38,6 @@ module.exports = {
     './src/**/*.jsx',
     './src/**/*.ts',
     './src/**/*.tsx',
-    './node_modules/\@duely/react/dist/**/*.js'
+    './node_modules/@duely/react/dist/**/*.js'
   ]
 };

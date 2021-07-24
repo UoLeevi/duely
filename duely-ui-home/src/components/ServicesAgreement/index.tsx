@@ -13,7 +13,7 @@ export default function ServicesAgreement({ ok }: ServicesAgreementModalContentP
 
   return (
     <>
-      <Modal.Body className="prose-sm prose">
+      <Modal.Body className="prose-sm prose prose-indigo">
         {error && error.message}
         {loading && <SkeletonParagraph />}
         {data && <Markdown>{data.data}</Markdown>}
