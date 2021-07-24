@@ -11,7 +11,7 @@ import {
   Modal,
   useModal
 } from '@duely/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import ServicesAgreement from '~/components/ServicesAgreement';
 import { useQuery, countries_Q, useMutation, create_agency_M } from '@duely/client';
 
@@ -83,6 +83,7 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-[1em] w-[1em] text-3xl text-green-600 animate-stroke-draw"
+            pathLength="1"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

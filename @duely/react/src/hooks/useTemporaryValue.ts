@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 
-export function useTemporaryValue<T>(durationMs: number) {
+export function useTemporaryValue<T>(defaultDurationMs: number) {
   const timeoutRef = useRef<number>();
   const isMountedRef = useRef<boolean>();
 
@@ -15,7 +15,7 @@ export function useTemporaryValue<T>(durationMs: number) {
   return {
     value,
     setValue: useCallback(
-      (value: T) => {
+      (value: T, durationMs?: number) => {
         if (timeoutRef.current) {
           window.clearTimeout(timeoutRef.current);
         }
@@ -23,11 +23,11 @@ export function useTemporaryValue<T>(durationMs: number) {
         timeoutRef.current = window.setTimeout(() => {
           timeoutRef.current = undefined;
           if (isMountedRef.current) setValue(undefined);
-        }, durationMs);
+        }, durationMs ?? defaultDurationMs);
 
         setValue(value);
       },
-      [durationMs]
+      [defaultDurationMs]
     ),
     reset: useCallback(() => {
       if (timeoutRef.current) {
@@ -35,6 +35,7 @@ export function useTemporaryValue<T>(durationMs: number) {
       }
 
       timeoutRef.current = undefined;
+      if (isMountedRef.current) setValue(undefined);
     }, [])
   };
 }

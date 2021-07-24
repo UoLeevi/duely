@@ -1,4 +1,4 @@
-import { PageLayout } from '@duely/react';
+import { Button, PageLayout, useMessage } from '@duely/react';
 import Markdown from 'markdown-to-jsx';
 
 const markdown = `## Services Agreement
@@ -7,9 +7,11 @@ Payment processing services for agencies on Duely are provided by Stripe and are
 `;
 
 export default function Workspace() {
+  const { showMessage } = useMessage();
   return (
     <PageLayout className="prose prose-indigo">
       <Markdown>{markdown}</Markdown>
+      <Button onClick={() => showMessage('Text copied to clipboard')}>Copy</Button>
     </PageLayout>
   );
 }

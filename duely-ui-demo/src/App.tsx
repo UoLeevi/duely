@@ -1,9 +1,13 @@
 import { BrowserRouter as Router } from 'react-router-dom';
 import { ApolloProvider } from '@apollo/client';
 import { client } from '@duely/client';
-import { ViewportContextProvider, ScreenOverlayContextProvider, AuthManager } from '@duely/react';
+import {
+  ViewportContextProvider,
+  ScreenOverlayContextProvider,
+  MessageContextProvider,
+  AuthManager
+} from '@duely/react';
 import Workspace from './Workspace';
-import React from 'react';
 
 export default function App() {
   return (
@@ -11,9 +15,11 @@ export default function App() {
       <Router>
         <ViewportContextProvider>
           <ScreenOverlayContextProvider>
-            <AuthManager>
-              <Workspace />
-            </AuthManager>
+            <MessageContextProvider>
+              <AuthManager>
+                <Workspace />
+              </AuthManager>
+            </MessageContextProvider>
           </ScreenOverlayContextProvider>
         </ViewportContextProvider>
       </Router>

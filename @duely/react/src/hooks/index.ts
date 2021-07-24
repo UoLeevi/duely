@@ -7,3 +7,5 @@ export * from './useTemporaryValue';
 export * from './useOnce';
 export * from './usePromise';
 export * from './useScript';
+export * from './useMessage';
+export * from './usePrevious';

@@ -4,6 +4,7 @@ import { ScreenOverlayContext } from '../../contexts';
 import ReactDOM from 'react-dom';
 import { Transition } from '@headlessui/react';
 import { getIconElement, IconProp, icons } from '../icons';
+import { usePrevious } from '../../hooks/usePrevious';
 
 export type UseModalReturn = {
   isOpen: boolean;
@@ -46,6 +47,8 @@ function ModalRoot({ children, control, openerRef, className, dismissable, unsty
     height: '110%'
   };
 
+  const leavingChildren = usePrevious(children, { retain: true });
+
   return ReactDOM.createPortal(
     <Transition
       show={control.isOpen}
@@ -55,7 +58,7 @@ function ModalRoot({ children, control, openerRef, className, dismissable, unsty
       leave="transition ease-in duration-75"
       leaveFrom="transform opacity-100 scale-100"
       leaveTo="transform opacity-0 scale-95"
-      className="grid w-full h-full place-items-center"
+      className="grid w-full h-full origin-center place-items-center"
     >
       <div
         style={backdropStyle}
@@ -66,8 +69,9 @@ function ModalRoot({ children, control, openerRef, className, dismissable, unsty
           control={control}
           className={className}
           dismissable={dismissable}
+          unstyled={unstyled}
         >
-          {children}
+          {children ?? leavingChildren}
         </ModalContent>
       </div>
     </Transition>,

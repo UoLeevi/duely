@@ -12,7 +12,8 @@ import {
   usePagination,
   LinkButton,
   ColoredChip,
-  icons
+  icons,
+  useMessage
 } from '@duely/react';
 import { ConfirmProductDeletionModal } from './components';
 import { DashboardSection } from '../components';
@@ -35,6 +36,7 @@ const headers = ['Product', 'Status', 'Action'];
 export default function DashboardProductsHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
   const { sm } = useBreakpoints();
+  const { showMessage } = useMessage();
   const passAccessToken = useDynamicNavigation({ passAccessToken: true });
 
   type TProduct = NonNullable<ReturnType<typeof products_Q.result>> extends readonly (infer T)[]
@@ -189,8 +191,12 @@ export default function DashboardProductsHome() {
               <span>Copy checkout URL</span>
             </span>
           ),
-          onClick: () =>
-            navigator.clipboard.writeText(`https://${agency?.subdomain.name}.duely.app/checkout/${product.url_name}`)
+          onClick: async () => {
+            await navigator.clipboard.writeText(
+              `https://${agency?.subdomain.name}.duely.app/checkout/${product.url_name}`
+            );
+            showMessage('Copied!');
+          }
         },
         {
           key: 'delete',

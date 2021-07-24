@@ -58,8 +58,7 @@ module.exports = {
     extend: {
       animation: {
         progress: 'progress 1800ms cubic-bezier(.02,.25,1,.61) infinite',
-        'stroke-draw-100': 'stroke-draw-100 800ms ease-in-out 300ms',
-        'stroke-draw-200': 'stroke-draw-200 800ms ease-in-out 300ms'
+        'stroke-draw': 'stroke-draw 800ms ease-in 300ms',
       },
       colors: {
         gray: {
@@ -71,14 +70,10 @@ module.exports = {
           from: { transform: 'translateX(-100%)' },
           to: { transform: 'translateX(110%)' }
         },
-        'stroke-draw-100': {
-          from: { strokeDashoffset: '100', strokeDasharray: '100' },
-          to: { strokeDashoffset: '0', strokeDasharray: '100' }
+        'stroke-draw': {
+          from: { strokeDashoffset: '1', strokeDasharray: '1' },
+          to: { strokeDashoffset: '0', strokeDasharray: '1' }
         },
-        'stroke-draw-200': {
-          from: { strokeDashoffset: '200', strokeDasharray: '200' },
-          to: { strokeDashoffset: '0', strokeDasharray: '200' }
-        }
       },
       typography: (theme) => ({
         DEFAULT: {
@@ -90,12 +85,24 @@ module.exports = {
             'h1 strong': {
               fontWeight: '800'
             },
+            'h1:first-child': {
+              marginTop: '0',
+            },
+            'h1:last-child': {
+              marginBottom: '0',
+            },
             h2: {
               color: theme('colors.gray.900'),
               fontWeight: '700'
             },
             'h2 strong': {
               fontWeight: '800'
+            },
+            'h2:first-child': {
+              marginTop: '0',
+            },
+            'h2:last-child': {
+              marginBottom: '0',
             },
             h3: {
               color: theme('colors.gray.900'),
@@ -104,12 +111,24 @@ module.exports = {
             'h3 strong': {
               fontWeight: '700'
             },
+            'h3:first-child': {
+              marginTop: '0',
+            },
+            'h3:last-child': {
+              marginBottom: '0',
+            },
             h4: {
               color: theme('colors.gray.900'),
               fontWeight: '600'
             },
             'h4 strong': {
               fontWeight: '700'
+            },
+            'h4:first-child': {
+              marginTop: '0',
+            },
+            'h4:last-child': {
+              marginBottom: '0',
             }
           }
         }
