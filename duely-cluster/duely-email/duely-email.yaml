@@ -40,6 +40,8 @@ spec:
         ports:
         - containerPort: 8080
         env:
+        - name: PORT
+          value: "8080"
         - name: GSERVICEACCOUNTFILE
           value: /usr/src/app/gserviceaccount.json
         livenessProbe:
