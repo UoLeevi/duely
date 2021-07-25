@@ -52,14 +52,15 @@ async function main() {
   context = await getServiceAccountContext();
   client = await createGraphQLClient();
   const app = express();
+  app.set('port', process.env.PORT ?? 3000);
   app.set('trust proxy', true);
   app.use(cors());
   app.get('/checkout/:subdomain_name/products/:product_url_name', get_checkout);
   app.get('/checkout/:product_url_name', get_checkout);
   app.get('/.well-known/server-health', (req, res) => res.send('ok'));
 
-  app.listen({ port: process.env.PORT }, () => {
-    console.log(`🚀 Server ready at http://localhost:${process.env.PORT}`);
+  app.listen({ port: app.get('port') }, () => {
+    console.log(`🚀 Server ready at http://localhost:${app.get('port')}`);
   });
 }
 

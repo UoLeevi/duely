@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: duely-email-service
+spec:
+  type: ClusterIP
+  selector:
+    app: duely-email
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: duely-email-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: duely-email
+  template:
+    metadata:
+      labels:
+        app: duely-email
+    spec:
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: duely-email-secret
+        secret:
+          secretName: duely-email-secret
+      containers:
+      - name: duely-email
+        image: uoleevi/duely-email:v0.0.1
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 20m
+        ports:
+        - containerPort: 8080
+        env:
+        - name: GSERVICEACCOUNTFILE
+          value: /usr/src/app/gserviceaccount.json
+        livenessProbe:
+          httpGet:
+            path: /.well-known/server-health
+            port: 8080
+          failureThreshold: 6
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /.well-known/server-health
+            port: 8080
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
+        volumeMounts:
+        - name: duely-email-secret
+          subPath: gserviceaccount.json
+          mountPath: /usr/src/app/gserviceaccount.json

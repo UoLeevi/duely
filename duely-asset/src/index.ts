@@ -7,14 +7,15 @@ main();
 
 async function main() {
   const app = express();
+  app.set('port', process.env.PORT ?? 3000);
   app.set('trust proxy', true);
   app.use(cors());
   app.get('/asset/:subdomain_name/image/:image_id', get_image);
   app.get('/asset/image/:image_id', get_image);
   app.get('/.well-known/server-health', (req, res) => res.send('ok'));
 
-  app.listen({ port: process.env.PORT }, () => {
-    console.log(`🚀 Server ready at http://localhost:${process.env.PORT}`);
+  app.listen({ port: app.get('port') }, () => {
+    console.log(`🚀 Server ready at http://localhost:${app.get('port')}`);
   });
 }
 

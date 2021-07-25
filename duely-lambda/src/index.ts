@@ -14,14 +14,15 @@ main();
 
 async function main() {
   const app = express();
+  app.set('port', process.env.PORT ?? 3000);
   app.set('trust proxy', true);
   app.use(cors());
-  app.use('/run/', express.raw({ type: 'application/json' }));
+  app.use('/run/', express.json());
   app.post('/run/:job/:arg1?/:arg2?/:arg3?/:arg4?/:arg5?/:arg6?/:arg7?/:arg8?', handle_run);
   app.get('/.well-known/server-health', (req, res) => res.send('ok'));
 
-  app.listen({ port: process.env.PORT }, () => {
-    console.log(`🚀 Server ready at http://localhost:${process.env.PORT}`);
+  app.listen({ port: app.get('port') }, () => {
+    console.log(`🚀 Server ready at http://localhost:${app.get('port')}`);
   });
 }
 
