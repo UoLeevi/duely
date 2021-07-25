@@ -5,8 +5,6 @@ import { Link, useLocation } from 'react-router-dom';
 
 const wrap = { lg: { columns: 1, spans: [1, 1] } };
 
-const headers = ['Item', 'Amount'];
-
 export default function ThankYouPage() {
   // Get stripe checkout session id from url query string
   const location = useLocation();
@@ -38,34 +36,6 @@ export default function ThankYouPage() {
   }
 
   const order = orders[0];
-
-  const columns = [
-    // name
-    (order_item: ElementType<typeof order.items> | null) =>
-      !order_item ? (
-        <div className="flex flex-col space-y-2">
-          <SkeletonText className="text-sm" />
-        </div>
-      ) : (
-        <div className="flex flex-col space-y-2">
-          <span className="text-sm font-medium text-gray-800">{order_item.price.product.name}</span>
-        </div>
-      ),
-
-    // price
-    (order_item: ElementType<typeof order.items> | null) =>
-      !order_item ? (
-        <div className="flex flex-col space-y-2">
-          <SkeletonText className="text-sm" />
-        </div>
-      ) : (
-        <div className="flex flex-col space-y-2">
-          <span className="text-sm font-medium text-gray-800">
-            {Currency.format(order_item.price.unit_amount, order_item.price.currency as Currency)}
-          </span>
-        </div>
-      )
-  ];
 
   // TODO: Show order info
 
@@ -99,7 +69,42 @@ export default function ThankYouPage() {
           </div>
 
           <Card className="max-w-screen-lg">
-            <Table items={order.items} columns={columns} headers={headers} wrap={wrap} />
+            <Table items={order.items} wrap={wrap}>
+              <Table.Column header="Item">
+                {(order_item: ElementType<typeof order.items> | null) =>
+                  !order_item ? (
+                    <div className="flex flex-col space-y-2">
+                      <SkeletonText className="text-sm" />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col space-y-2">
+                      <span className="text-sm font-medium text-gray-800">
+                        {order_item.price.product.name}
+                      </span>
+                    </div>
+                  )
+                }
+              </Table.Column>
+
+              <Table.Column header="Amount">
+                {(order_item: ElementType<typeof order.items> | null) =>
+                  !order_item ? (
+                    <div className="flex flex-col space-y-2">
+                      <SkeletonText className="text-sm" />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col space-y-2">
+                      <span className="text-sm font-medium text-gray-800">
+                        {Currency.format(
+                          order_item.price.unit_amount,
+                          order_item.price.currency as Currency
+                        )}
+                      </span>
+                    </div>
+                  )
+                }
+              </Table.Column>
+            </Table>
           </Card>
 
           <div className="flex flex-col">

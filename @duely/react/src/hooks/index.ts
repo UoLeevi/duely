@@ -9,3 +9,6 @@ export * from './usePromise';
 export * from './useScript';
 export * from './useMessage';
 export * from './usePrevious';
+export * from './useResizeObserver';
+export * from './useIntersectionObserver';
+export * from './useCssRect';

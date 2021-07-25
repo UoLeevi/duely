@@ -27,8 +27,6 @@ const wrap = {
   }
 };
 
-const headers = ['Brand', 'Plan', 'Action required'];
-
 function BrandColumn({ agency }: AgencyColumnProps) {
   if (!agency) {
     return (
@@ -217,16 +215,19 @@ export function ProfileBrandTable() {
 
   type TAgency = NonNullable<typeof agencies> extends readonly (infer T)[] ? T : never;
 
-  const columns = [
-    // Brand
-    (agency: TAgency | null) => <BrandColumn agency={agency} />,
+  return (
+    <Table items={agencies} wrap={wrap}>
+      <Table.Column header="Brand">
+        {(agency: TAgency | null) => <BrandColumn agency={agency} />}
+      </Table.Column>
 
-    // Plan
-    (agency: TAgency | null) => <PlanColumn agency={agency} />,
+      <Table.Column header="Plan">
+        {(agency: TAgency | null) => <PlanColumn agency={agency} />}
+      </Table.Column>
 
-    // Action required
-    (agency: TAgency | null) => <StatusColumn agency={agency} />
-  ];
-
-  return <Table items={agencies} columns={columns} headers={headers} wrap={wrap} />;
+      <Table.Column header="Action required">
+        {(agency: TAgency | null) => <StatusColumn agency={agency} />}
+      </Table.Column>
+    </Table>
+  );
 }

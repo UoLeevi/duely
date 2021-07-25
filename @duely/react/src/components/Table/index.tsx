@@ -7,12 +7,21 @@ import { PaginationControls } from '..';
 export * from './usePagination';
 export * from './PaginationControls';
 
-type TableProps<TItem> = {
-  columns: (
+export const Table = Object.assign(TableRoot, { Column });
+
+type ColumnProps<TItem> = {
+  header: React.ReactNode;
+  children:
     | ((item: TItem | null, column: number) => React.ReactNode)
-    | ((item: TItem | null) => React.ReactNode)
-  )[];
-  headers: React.ReactNode[];
+    | ((item: TItem | null) => React.ReactNode);
+};
+
+function Column<TItem>(props: ColumnProps<TItem>) {
+  return null;
+}
+
+type TableProps<TItem> = {
+  children: React.ReactElement<ColumnProps<TItem>, typeof Column>[];
   dense?: boolean;
   wrap?: Partial<
     Record<
@@ -43,9 +52,8 @@ type TableProps<TItem> = {
 ) &
   React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
-export function Table<TItem extends { key?: string | number | null; id?: string | number | null }>({
-  columns,
-  headers,
+function TableRoot<TItem extends { key?: string | number | null; id?: string | number | null }>({
+  children,
   className,
   dense,
   wrap: wrapOptions,
@@ -54,6 +62,16 @@ export function Table<TItem extends { key?: string | number | null; id?: string 
   ...rest
 }: TableProps<TItem>) {
   const skeletonRowCountFallback = 5;
+
+  const columnDefinitions =
+    React.Children.map(children, (child) => ({
+      header: child!.props.header,
+      render: child!.props.children
+    })) ?? [];
+
+  const columns = columnDefinitions.map((c) => c.render);
+  let headers = columnDefinitions.map((c) => c.header);
+
   const breakpoints = useBreakpoints();
 
   const wrapOption_2xl = wrapOptions?.['2xl'];

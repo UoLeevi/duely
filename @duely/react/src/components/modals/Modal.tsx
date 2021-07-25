@@ -131,7 +131,7 @@ function ModalContent({
   className = Util.createClassName(
     !unstyled && 'max-w-lg rounded-lg',
     className,
-    'box-border relative flex flex-col shadow-lg focus:outline-none'
+    'box-border relative flex flex-col shadow-lg focus:outline-none ring-1 ring-black ring-opacity-5'
   );
 
   return (

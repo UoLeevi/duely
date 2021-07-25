@@ -7,10 +7,9 @@ import {
   agency_stripe_account_Q,
   agency_stripe_account_bank_accounts_Q
 } from '@duely/client';
-import { ConfirmationModal, useModal } from '@duely/react';
+import { ConfirmationModal, useModal, usePrevious } from '@duely/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import produce from 'immer';
-import { usePrevious } from '~/hooks';
 
 export function ConfirmBankAccountDeletionModal() {
   // Get bank_account id from url query string and replace history entry if cancelled

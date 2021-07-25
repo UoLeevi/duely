@@ -31,8 +31,6 @@ const wrap = {
   }
 };
 
-const headers = ['Order', 'Customer', 'Amount', 'Order date', 'Action'];
-
 export default function DashboardOrdersHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
   const {
@@ -96,137 +94,128 @@ export default function DashboardOrdersHome() {
   const loading = agencyLoading || stripe_accountLoading || pagination.loading;
   const error = agencyError ?? stripe_accountError ?? pagination.error;
 
-  const columns = [
-    // product name & order id
-    (order: TOrder | null) =>
-      !order ? (
-        <div className="flex flex-col space-y-2">
-          <SkeletonText className="text-sm" />
-          <SkeletonText className="text-sm" />
-        </div>
-      ) : (
-        <div className="flex flex-col space-y-2">
-          <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-            {Util.truncate(order.items.map((item) => item.price.product.name).join(', '), 50)}
-          </span>
-          <div className="flex items-center h-8 space-x-4 min-h-min">
-            <span className="font-mono text-sm text-gray-600">{order.id}</span>
-            {order.state !== 'processed' && <ColoredChip color={statusColors} text={order.state} />}
-          </div>
-        </div>
-      ),
-
-    // customer info
-    (order: TOrder | null) =>
-      !order ? (
-        <div className="flex flex-col space-y-2">
-          <SkeletonText className="text-sm" />
-          <SkeletonText className="text-xs" />
-        </div>
-      ) : (
-        <div className="flex flex-col space-y-2">
-          <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-            {order.customer.name ?? order.customer.email_address.split('@')[0]}
-          </span>
-          <span className="text-xs text-gray-800 dark:text-gray-300">
-            {order.customer.email_address}
-          </span>
-        </div>
-      ),
-
-    // amount info
-    (order: TOrder | null) =>
-      !order ? (
-        <div className="flex items-center space-x-4">
-          <div className="flex flex-col space-y-2">
-            <SkeletonText className="text-sm" ch={8} />
-          </div>
-          <ColoredChip color={paymentStatusColors} />
-        </div>
-      ) : (
-        <div className="flex items-center space-x-4">
-          <div className="flex flex-col space-y-2">
-            <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-              {Currency.format(
-                order.stripe_checkout_session.amount_total ?? 0,
-                order.stripe_checkout_session.currency as Currency
-              )}
-            </span>
-          </div>
-          <ColoredChip
-            color={paymentStatusColors}
-            icon={
-              order.stripe_checkout_session.payment_status === 'paid' ? 'check.solid' : undefined
-            }
-            text={order.stripe_checkout_session.payment_status ?? undefined}
-          />
-        </div>
-      ),
-
-    // date & time
-    (order: TOrder | null) =>
-      !order ? (
-        <div className="flex flex-col space-y-2">
-          <SkeletonText className="text-xs" />
-        </div>
-      ) : (
-        <div className="flex flex-col space-y-2">
-          <span className="text-xs text-gray-800 dark:text-gray-300">
-            {Util.formatDate(new Date(order.ordered_at))}
-          </span>
-        </div>
-      ),
-
-    // actions
-    (order: TOrder | null) => {
-      if (!order) {
-        return <SkeletonText />;
-      }
-
-      const actions = [
-        {
-          key: 'edit',
-          className:
-            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800 dark:text-gray-300',
-          children: (
-            <div className="flex items-center space-x-2">
-              { icons.pencil }
-              <span>Edit</span>
-            </div>
-          ),
-          to: `orders/${order.id}/edit`
-        }
-      ];
-
-      return (
-        <div className="flex space-x-6 font-medium">
-          {sm && (
-            <DropMenu>
-              {actions.map((action) => (
-                <Link {...action} />
-              ))}
-            </DropMenu>
-          )}
-
-          {!sm && actions.map((action) => <Link {...action} />)}
-        </div>
-      );
-    }
-  ];
-
   return (
     <>
       <DashboardSection title="Orders">
         <Card className="max-w-screen-lg">
           <Table
-            columns={columns}
-            headers={headers}
             loading={loading}
             error={error}
             wrap={wrap}
             pagination={pagination}
             footerPaginationControls
-          />
+          >
+            <Table.Column header="Order">
+              {(order: TOrder | null) =>
+                !order ? (
+                  <div className="flex flex-col space-y-2">
+                    <SkeletonText className="text-sm" />
+                    <SkeletonText className="text-sm" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {Util.truncate(
+                        order.items.map((item) => item.price.product.name).join(', '),
+                        50
+                      )}
+                    </span>
+                    <div className="flex items-center h-8 space-x-4 min-h-min">
+                      <span className="font-mono text-sm text-gray-600">{order.id}</span>
+                      {order.state !== 'processed' && (
+                        <ColoredChip color={statusColors} text={order.state} />
+                      )}
+                    </div>
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Customer">
+              {(order: TOrder | null) =>
+                !order ? (
+                  <div className="flex flex-col space-y-2">
+                    <SkeletonText className="text-sm" />
+                    <SkeletonText className="text-xs" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {order.customer.name ?? order.customer.email_address.split('@')[0]}
+                    </span>
+                    <span className="text-xs text-gray-800 dark:text-gray-300">
+                      {order.customer.email_address}
+                    </span>
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Amount">
+              {(order: TOrder | null) =>
+                !order ? (
+                  <div className="flex items-center space-x-4">
+                    <div className="flex flex-col space-y-2">
+                      <SkeletonText className="text-sm" ch={8} />
+                    </div>
+                    <ColoredChip color={paymentStatusColors} />
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-4">
+                    <div className="flex flex-col space-y-2">
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                        {Currency.format(
+                          order.stripe_checkout_session.amount_total ?? 0,
+                          order.stripe_checkout_session.currency as Currency
+                        )}
+                      </span>
+                    </div>
+                    <ColoredChip
+                      color={paymentStatusColors}
+                      icon={
+                        order.stripe_checkout_session.payment_status === 'paid'
+                          ? 'check.solid'
+                          : undefined
+                      }
+                      text={order.stripe_checkout_session.payment_status ?? undefined}
+                    />
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Order date">
+              {(order: TOrder | null) =>
+                !order ? (
+                  <div className="flex flex-col space-y-2">
+                    <SkeletonText className="text-xs" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-xs text-gray-800 dark:text-gray-300">
+                      {Util.formatDate(new Date(order.ordered_at))}
+                    </span>
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Action">
+              {(order: TOrder | null) => {
+                if (!order) {
+                  return <SkeletonText />;
+                }
+
+                return (
+                  <DropMenu>
+                    <DropMenu.Item icon={icons.pencil} to={`orders/${order.id}/edit`}>
+                      Edit
+                    </DropMenu.Item>
+                  </DropMenu>
+                );
+              }}
+            </Table.Column>
+          </Table>
         </Card>
       </DashboardSection>
     </>

@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect } from 'react';
 import { useQuery, useMutation, product_Q, delete_product_M } from '@duely/client';
-import { Modal, Button, SkeletonParagraph, ConfirmationModal, useModal } from '@duely/react';
+import { ConfirmationModal, useModal, usePrevious } from '@duely/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import produce from 'immer';
-import { usePrevious } from '~/hooks';
 
 export function ConfirmProductDeletionModal() {
   // Get product id from url query string and replace history entry if cancelled

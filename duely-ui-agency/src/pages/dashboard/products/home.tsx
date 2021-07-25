@@ -31,8 +31,6 @@ const wrap = {
   }
 };
 
-const headers = ['Product', 'Status', 'Action'];
-
 export default function DashboardProductsHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
   const { sm } = useBreakpoints();
@@ -89,142 +87,10 @@ export default function DashboardProductsHome() {
   const error = agencyError ?? pagination.error;
 
   const columns = [
-    // product name & description
-    (product: TProduct | null) => {
-      if (!product) {
-        return (
-          <div className="flex space-x-6">
-            <div className="w-32 h-20 bg-gray-200 rounded-lg animate-pulse flex-shrink-1"></div>
-
-            <div className="flex flex-col space-y-1">
-              <SkeletonText />
-              <SkeletonParagraph className="max-w-sm text-xs" words={10} />
-              <SkeletonText className="text-xs" />
-            </div>
-          </div>
-        );
-      }
-
-      const { data: image_logo, loading: image_logoLoading } = useQuery(
-        image_Q,
-        { image_id: product.image_logo?.id! },
-        { skip: !product.image_logo }
-      );
-
-      return (
-        <div className="flex space-x-6">
-          {image_logoLoading ? (
-            <div className="w-32 h-20 bg-gray-200 rounded-lg animate-pulse flex-shrink-1"></div>
-          ) : image_logo ? (
-            <img
-              className="object-cover w-32 h-20 rounded-lg flex-shrink-1"
-              src={image_logo.data}
-              alt={`${product.name} logo`}
-            />
-          ) : (
-            <div className="w-32 h-20 bg-gray-200 rounded-lg flex-shrink-1"></div>
-          )}
-
-          <div className="flex flex-col space-y-1">
-            <span className="font-medium">{product.name}</span>
-            <p className="flex-1 max-w-sm text-xs text-gray-500">
-              {Util.truncate(product.description ?? '', 120)}
-            </p>
-            <div className="flex items-center pb-1 space-x-3 text-xs text-gray-500 whitespace-nowrap">
-              {product.default_price && (
-                <span>
-                  {Currency.format(
-                    product.default_price.unit_amount,
-                    product.default_price.currency as Currency
-                  )}
-                </span>
-              )}
-
-              <a
-                className="px-1 rounded-sm hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600"
-                onClick={passAccessToken}
-                target={`preview ${product.url_name}`}
-                href={`https://${agency?.subdomain.name}.duely.app/checkout/${product.url_name}?preview`}
-              >
-                preview checkout
-              </a>
-            </div>
-          </div>
-        </div>
-      );
-    },
-
+    ,
+    ,// product name & description
     // product product status
-    (product: TProduct | null) =>
-      !product ? (
-        <ColoredChip color={statusColors} />
-      ) : (
-        <ColoredChip color={statusColors} text={product.status} />
-      ),
-
     // actions
-    (product: TProduct | null) => {
-      if (!product) {
-        return <SkeletonText />;
-      }
-
-      const actions = [
-        {
-          key: 'edit',
-          className:
-            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
-          children: (
-            <span className="flex items-center space-x-2 whitespace-nowrap">
-              {icons.pencil}
-              <span>Edit</span>
-            </span>
-          ),
-          to: `products/${product.url_name}/edit`
-        },
-        {
-          key: 'copy-checkout-url',
-          className:
-            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800 cursor-pointer',
-          children: (
-            <span className="flex items-center space-x-2 whitespace-nowrap">
-              {icons.clipboard}
-              <span>Copy checkout URL</span>
-            </span>
-          ),
-          onClick: async () => {
-            await navigator.clipboard.writeText(
-              `https://${agency?.subdomain.name}.duely.app/checkout/${product.url_name}`
-            );
-            showMessage('Copied!');
-          }
-        },
-        {
-          key: 'delete',
-          className:
-            'text-sm text-center text-gray-500 focus:text-gray-700 focus:outline-none hover:text-gray-800',
-          children: (
-            <span className="flex items-center space-x-2 whitespace-nowrap">
-              {icons.trash}
-              <span>Delete</span>
-            </span>
-          ),
-          to: '?delete_product=' + product.id
-        }
-      ];
-
-      return (
-        <div className="flex space-x-6 font-medium">
-          {sm && (
-            <DropMenu>
-              {actions.map((action) => (action.to ? <Link {...action} /> : <span {...action} />))}
-            </DropMenu>
-          )}
-
-          {!sm &&
-            actions.map((action) => (action.to ? <Link {...action} /> : <span {...action} />))}
-        </div>
-      );
-    }
   ];
 
   return (
@@ -247,14 +113,120 @@ export default function DashboardProductsHome() {
       >
         <Card className="max-w-screen-lg">
           <Table
-            columns={columns}
-            headers={headers}
             wrap={wrap}
             loading={loading}
             error={error}
             pagination={pagination}
             footerPaginationControls
-          />
+          >
+            <Table.Column header="Product">
+              {(product: TProduct | null) => {
+                if (!product) {
+                  return (
+                    <div className="flex space-x-6">
+                      <div className="flex-shrink-0 w-32 h-20 bg-gray-200 rounded-lg animate-pulse"></div>
+
+                      <div className="flex flex-col space-y-1">
+                        <SkeletonText />
+                        <SkeletonParagraph className="max-w-sm text-xs" words={10} />
+                        <SkeletonText className="text-xs" />
+                      </div>
+                    </div>
+                  );
+                }
+
+                const { data: image_logo, loading: image_logoLoading } = useQuery(
+                  image_Q,
+                  { image_id: product.image_logo?.id! },
+                  { skip: !product.image_logo }
+                );
+
+                return (
+                  <div className="flex space-x-6">
+                    {image_logoLoading ? (
+                      <div className="flex-shrink-0 w-32 h-20 bg-gray-200 rounded-lg animate-pulse"></div>
+                    ) : image_logo ? (
+                      <img
+                        className="flex-shrink-0 object-cover w-32 h-20 rounded-lg"
+                        src={image_logo.data}
+                        alt={`${product.name} logo`}
+                      />
+                    ) : (
+                      <div className="flex-shrink-0 w-32 h-20 bg-gray-200 rounded-lg"></div>
+                    )}
+
+                    <div className="flex flex-col space-y-1">
+                      <span className="font-medium">{product.name}</span>
+                      <p className="flex-1 max-w-sm text-xs text-gray-500">
+                        {Util.truncate(product.description ?? '', 120)}
+                      </p>
+                      <div className="flex items-center pb-1 space-x-3 text-xs text-gray-500 whitespace-nowrap">
+                        {product.default_price && (
+                          <span>
+                            {Currency.format(
+                              product.default_price.unit_amount,
+                              product.default_price.currency as Currency
+                            )}
+                          </span>
+                        )}
+
+                        <a
+                          className="px-1 rounded-sm hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600"
+                          onClick={passAccessToken}
+                          target={`preview ${product.url_name}`}
+                          href={`https://${agency?.subdomain.name}.duely.app/checkout/${product.url_name}?preview`}
+                        >
+                          preview checkout
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }}
+            </Table.Column>
+
+            <Table.Column header="Status">
+              {(product: TProduct | null) =>
+                !product ? (
+                  <ColoredChip color={statusColors} />
+                ) : (
+                  <ColoredChip color={statusColors} text={product.status} />
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Action">
+              {(product: TProduct | null) => {
+                if (!product) {
+                  return <SkeletonText />;
+                }
+
+                return (
+                  <DropMenu>
+                    <DropMenu.Item icon={icons.pencil} to={`products/${product.url_name}/edit`}>
+                      Edit
+                    </DropMenu.Item>
+
+                    <DropMenu.Item
+                      icon={icons.clipboard}
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(
+                          `https://${agency?.subdomain.name}.duely.app/checkout/${product.url_name}`
+                        );
+                        showMessage('Copied!');
+                      }}
+                    >
+                      Copy checkout URL
+                    </DropMenu.Item>
+
+                    <DropMenu.Item icon={icons.trash} to={'?delete_product=' + product.id}>
+                      Delete
+                    </DropMenu.Item>
+                  </DropMenu>
+                );
+              }}
+            </Table.Column>
+          </Table>
         </Card>
       </DashboardSection>
 

@@ -26,8 +26,6 @@ const wrap = {
   }
 };
 
-const headers = ['Customer', 'Action'];
-
 export default function DashboardCustomersHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
   const {
@@ -91,74 +89,6 @@ export default function DashboardCustomersHome() {
   const loading = agencyLoading || stripe_accountLoading || pagination.loading;
   const error = agencyError ?? stripe_accountError ?? pagination.error;
 
-  const columns = [
-    // customer name & email address
-    (customer: TCustomer | null) =>
-      !customer ? (
-        <div className="flex flex-col space-y-2">
-          <SkeletonText className="text-sm" />
-          <SkeletonText className="text-xs" />
-        </div>
-      ) : (
-        <div className="flex flex-col space-y-2">
-          <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-            {customer.name ?? customer.email_address.split('@')[0]}
-          </span>
-          <span className="text-xs font-medium text-gray-800 dark:text-gray-300">
-            {customer.email_address}
-          </span>
-        </div>
-      ),
-
-    // actions
-    (customer: TCustomer | null) => {
-      if (!customer) {
-        return <SkeletonText />;
-      }
-
-      const actions = [
-        {
-          key: 'edit',
-          className:
-            'text-sm text-center text-gray-500 focus:text-gray-700 dark:focus:text-gray-300 focus:outline-none hover:text-gray-800 dark:hover:text-gray-200',
-          children: (
-            <div className="flex items-center space-x-2">
-              { icons.pencil }
-              <span>Edit</span>
-            </div>
-          ),
-          to: `customers/${customer.id}/edit`
-        },
-        {
-          key: 'delete',
-          className:
-            'text-sm text-center text-gray-500 focus:text-gray-700 dark:focus:text-gray-300 focus:outline-none hover:text-gray-800 dark:hover:text-gray-200',
-          children: (
-            <div className="flex items-center space-x-2">
-              { icons.trash }
-              <span>Delete</span>
-            </div>
-          ),
-          to: '?delete_customer=' + customer.id
-        }
-      ];
-
-      return (
-        <div className="flex space-x-6 font-medium">
-          {sm && (
-            <DropMenu>
-              {actions.map((action) => (
-                <Link {...action} />
-              ))}
-            </DropMenu>
-          )}
-
-          {!sm && actions.map((action) => <Link {...action} />)}
-        </div>
-      );
-    }
-  ];
-
   return (
     <>
       <DashboardSection
@@ -179,14 +109,52 @@ export default function DashboardCustomersHome() {
       >
         <Card className="max-w-screen-lg">
           <Table
-            columns={columns}
-            headers={headers}
             wrap={wrap}
             loading={loading}
             error={error}
             pagination={pagination}
             footerPaginationControls
-          />
+          >
+            <Table.Column header="Customer">
+              {(customer: TCustomer | null) =>
+                !customer ? (
+                  <div className="flex flex-col space-y-2">
+                    <SkeletonText className="text-sm" />
+                    <SkeletonText className="text-xs" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {customer.name ?? customer.email_address.split('@')[0]}
+                    </span>
+                    <span className="text-xs font-medium text-gray-800 dark:text-gray-300">
+                      {customer.email_address}
+                    </span>
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Action">
+              {(customer: TCustomer | null) => {
+                if (!customer) {
+                  return <SkeletonText />;
+                }
+
+                return (
+                  <DropMenu>
+                    <DropMenu.Item icon={icons.pencil} to={`customers/${customer.id}/edit`}>
+                      Edit
+                    </DropMenu.Item>
+
+                    <DropMenu.Item icon={icons.trash} to={'?delete_customer=' + customer.id}>
+                      Delete
+                    </DropMenu.Item>
+                  </DropMenu>
+                );
+              }}
+            </Table.Column>
+          </Table>
         </Card>
       </DashboardSection>
 

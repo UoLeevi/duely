@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect } from 'react';
 import { useQuery, useMutation, page_Q, update_page_M } from '@duely/client';
-import { ConfirmationModal, useModal } from '@duely/react';
+import { ConfirmationModal, useModal, usePrevious } from '@duely/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import produce from 'immer';
-import { usePrevious } from '~/hooks';
 import { AccessLevel } from '@duely/core';
 
 export function ConfirmPagePublishModal() {
