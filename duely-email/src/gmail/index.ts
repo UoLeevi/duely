@@ -25,7 +25,9 @@ async function updateAccountInfo() {
   });
 }
 
-async function issueJwtForAdminDuelyGmailSend() {
+// see: https://developers.google.com/identity/protocols/oauth2/service-account#httprest_1
+// Additionally, scopes need to be enabled here: https://admin.google.com/ac/owl/domainwidedelegation
+async function issueJwtForAdminDuely(...scopes: string[]) {
   if (!accountInfo) await updateAccountInfo();
 
   const iat = Math.floor(Date.now() / 1000);
@@ -34,7 +36,7 @@ async function issueJwtForAdminDuelyGmailSend() {
     {
       iss: accountInfo.client_email,
       sub: 'admin@duely.app',
-      scope: 'https://www.googleapis.com/auth/gmail.send',
+      scope: scopes.join(' '),
       aud: 'https://www.googleapis.com/oauth2/v4/token',
       exp: iat + 3600,
       iat
@@ -46,8 +48,8 @@ async function issueJwtForAdminDuelyGmailSend() {
   );
 }
 
-async function requestAccessTokenForAdminDuelyGmailSend() {
-  const jwt = await issueJwtForAdminDuelyGmailSend();
+async function requestAccessTokenForAdminDuely(...scopes: string[]) {
+  const jwt = await issueJwtForAdminDuely(...scopes);
   const data = `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`;
   const res = await axios.post('https://www.googleapis.com/oauth2/v4/token', data, {
     headers: {
@@ -58,18 +60,27 @@ async function requestAccessTokenForAdminDuelyGmailSend() {
   return res.data.access_token;
 }
 
-export async function sendEmailAsAdminDuely(
+async function requestAccessTokenForAdminDuelyGmailSend() {
+  return await requestAccessTokenForAdminDuely('https://www.googleapis.com/auth/gmail.send');
+}
+
+const sendAsAliases = ['admin@duely.app', 'noreply@duely.app', 'receipts@duely.app'];
+
+export async function sendEmail(
+  from: string,
   to: string,
   subject: string,
   body: string
 ): Promise<{ id: string }> {
-  subject = subject.replace(/[\r\n]/g, '');
+  if (!sendAsAliases.map((alias) => `<${alias}>`).some((alias) => from.endsWith(alias))) {
+    throw Error(`Specified 'From' address is not allowed`);
+  }
 
   const message = [
     `To: ${to}`,
     `Subject: ${subject}`,
     'Content-Type: text/html; charset="UTF-8"',
-    'From: Duely <admin@duely.app>',
+    `From: ${from}`,
     'MIME-Version: 1.0',
     'Content-Transfer-Encoding: 7bit',
     '',
@@ -79,11 +90,15 @@ export async function sendEmailAsAdminDuely(
 
   const access_token = await requestAccessTokenForAdminDuelyGmailSend();
   const data = { raw: base64url.encode(message) };
-  const res = await axios.post('/gmail/v1/users/admin%40duely.app/messages/send', data, {
-    headers: {
-      Authorization: `Bearer ${access_token}`
+  const res = await axios.post(
+    'https://www.googleapis.com/gmail/v1/users/admin%40duely.app/messages/send',
+    data,
+    {
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      }
     }
-  });
+  );
 
   return res.data;
 }

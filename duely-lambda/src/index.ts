@@ -17,7 +17,8 @@ async function main() {
   app.set('port', process.env.PORT ?? 3000);
   app.set('trust proxy', true);
   app.use(cors());
-  app.use('/run/', express.json());
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
   app.post('/run/:job/:arg1?/:arg2?/:arg3?/:arg4?/:arg5?/:arg6?/:arg7?/:arg8?', handle_run);
   app.get('/.well-known/server-health', (req, res) => res.send('ok'));
 

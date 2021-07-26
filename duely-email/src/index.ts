@@ -7,7 +7,7 @@ import path from 'path';
 import cors from 'cors';
 import isEmail from 'validator/es/lib/isEmail';
 import Handlebars from 'handlebars';
-import { sendEmailAsAdminDuely } from './gmail';
+import { sendEmail } from './gmail';
 
 const templatesDirpath = path.resolve(__dirname, 'templates');
 const templates = new Map<string, Promise<HandlebarsTemplateDelegate>>();
@@ -75,7 +75,14 @@ async function handle_send(req: Request, res: Response) {
     return;
   }
 
-  let { to, subject, ...context } = req.body;
+  let { from, to, subject, ...context } = req.body;
+
+  from ??= 'Duely <admin@duely.app>';
+
+  if (typeof from !== 'string') {
+    res.status(400).send(`Invalid data type for field 'from'`);
+    return;
+  }
 
   if (typeof to !== 'string') {
     res.status(400).send(`Invalid data type for field 'to'`);
@@ -85,6 +92,18 @@ async function handle_send(req: Request, res: Response) {
   if (typeof subject !== 'string') {
     res.status(400).send(`Invalid data type for field 'subject'`);
     return;
+  }
+
+  if (!from.includes('<')) {
+    from = `<${from}>`;
+  }
+
+  if (!isEmail(from, { require_display_name: true })) {
+    from = from.substring(from.lastIndexOf('<'));
+    if (!isEmail('Dummy Display Name ' + from, { require_display_name: true })) {
+      res.status(400).send('Invalid email address');
+      return;
+    }
   }
 
   if (!to.includes('<')) {
@@ -99,6 +118,8 @@ async function handle_send(req: Request, res: Response) {
     }
   }
 
+  subject = subject.replace(/[\r\n]/g, '');
+
   let document: string;
 
   try {
@@ -109,9 +130,11 @@ async function handle_send(req: Request, res: Response) {
   }
 
   try {
-    const { id } = await sendEmailAsAdminDuely(to, subject, document);
+    const { id } = await sendEmail(from, to, subject, document);
     res.send({ success: true, id });
-    console.log(`Email sent to '${to}' with template '${templatePath}'. Id: ${id}'`);
+    console.log(
+      `Email sent from '${from}' to '${to}' with subject '${subject}' using template '${templatePath}'. Message id: ${id}'`
+    );
   } catch (error: any) {
     console.error('Error: ', error.message);
     res.status(500).send('Unable to send email due to an error');
