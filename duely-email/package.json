@@ -1,6 +1,6 @@
 {
   "name": "duely-email",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Web server for sending email using gmail API.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",

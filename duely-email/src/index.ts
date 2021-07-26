@@ -1,11 +1,11 @@
 // usage with kubectl:
-// kubectl run -it --rm --restart=Never curl --image=curlimages/curl -- -X POST -d "body=test" http://duely-email-service:8080/preview/:template
+// kubectl run -it --rm --restart=Never curl --image=curlimages/curl -- -X POST --data-urlencode "body=test" http://duely-email-service:8080/preview/:template
 
 import express, { Request, Response } from 'express';
 import { readFile } from 'fs';
 import path from 'path';
 import cors from 'cors';
-import validator from 'validator';
+import isEmail from 'validator/es/lib/isEmail';
 import Handlebars from 'handlebars';
 import { sendEmailAsAdminDuely } from './gmail';
 
@@ -91,9 +91,9 @@ async function handle_send(req: Request, res: Response) {
     to = `<${to}>`;
   }
 
-  if (!validator.isEmail(to, { require_display_name: true })) {
+  if (!isEmail(to, { require_display_name: true })) {
     to = to.substring(to.lastIndexOf('<'));
-    if (!validator.isEmail(to, { require_display_name: true })) {
+    if (!isEmail('Dummy Display Name ' + to, { require_display_name: true })) {
       res.status(400).send('Invalid email address');
       return;
     }
