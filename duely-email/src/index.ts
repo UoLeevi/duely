@@ -1,5 +1,5 @@
 // usage with kubectl:
-// kubectl run -it --rm --restart=Never curl --image=curlimages/curl -- -X POST -H "Content-Type: application/json" -d '{"body":"test"}' http://duely-email-service:8080/preview/:template
+// kubectl run -it --rm --restart=Never curl --image=curlimages/curl -- -X POST -d "body=test" http://duely-email-service:8080/preview/:template
 
 import express, { Request, Response } from 'express';
 import { readFile } from 'fs';
@@ -44,8 +44,8 @@ async function main() {
   app.set('port', process.env.PORT ?? 3000);
   app.set('trust proxy', true);
   app.use(cors());
-  app.use('/send/', express.json());
-  app.use('/preview/', express.json());
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
   app.post('/send/:template', handle_send);
   app.post('/preview/:template', handle_preview);
   app.get('/.well-known/server-health', (req, res) => res.send('ok'));
