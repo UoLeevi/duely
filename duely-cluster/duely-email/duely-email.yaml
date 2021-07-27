@@ -32,7 +32,7 @@ spec:
           secretName: duely-email-secret
       containers:
       - name: duely-email
-        image: uoleevi/duely-email:v0.0.4
+        image: uoleevi/duely-email:v0.0.5
         resources:
           requests:
             memory: 64Mi

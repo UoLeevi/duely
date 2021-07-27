@@ -2,80 +2,80 @@
 // kubectl run -it --rm --restart=Never curl --image=curlimages/curl -- -X POST --data-urlencode "body=test" http://duely-email-service:8080/preview/:template
 
 import express, { Request, Response } from 'express';
-import { readFile } from 'fs';
 import path from 'path';
 import cors from 'cors';
 import isEmail from 'validator/es/lib/isEmail';
-import Handlebars from 'handlebars';
+import hbs from 'hbs';
+import fs from 'fs';
 import { sendEmail } from './gmail';
 
-const templatesDirpath = path.resolve(__dirname, 'templates');
-const templates = new Map<string, Promise<HandlebarsTemplateDelegate>>();
+const templateInfos = new Map<
+  string,
+  {
+    exists: boolean;
+  }
+>();
 
-async function getTemplate(templatePath: string = 'default') {
-  let promise = templates.get(templatePath);
+const app = express();
 
-  if (!promise) {
-    promise = new Promise((resolve, reject) => {
-      readFile(
-        path.resolve(templatesDirpath, `${templatePath}.html`),
-        'utf8',
-        function (error, data: string) {
-          if (error) {
-            reject(error);
-          } else {
-            const template = Handlebars.compile(data);
-            resolve(template);
-          }
-        }
-      );
-    });
+hbs.registerPartials(path.join(__dirname, '/templates/partials'), (error?: Error) => {
+  if (error) {
+    console.error('Error while registering partials', error.message);
+  }
+});
 
-    templates.set(templatePath, promise);
+app.set('port', process.env.PORT ?? 3000);
+app.set('trust proxy', true);
+app.set('views', path.join(__dirname, '/templates'));
+app.set('view engine', 'hbs');
+app.engine('hbs', hbs.__express);
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.post('/send/:template', handle_send);
+app.post('/preview/:template', handle_preview);
+app.get('/preview/:template', handle_preview);
+app.get('/.well-known/server-health', (req, res) => res.send('ok'));
+
+app.listen({ port: app.get('port') }, () => {
+  console.log(`🚀 Server ready at http://localhost:${app.get('port')}`);
+});
+
+async function getTemplateInfo(template: string) {
+  let info = templateInfos.get(template);
+
+  if (!info) {
+    const templateDirPath = path.resolve(app.get('views'));
+    const templatePath = path.resolve(`${templateDirPath}/${template}.hbs`);
+
+    if (!templatePath.startsWith(templateDirPath)) {
+      info = { exists: false };
+      templateInfos.set(template, info);
+    } else {
+      try {
+        await fs.promises.access(templatePath, fs.constants.F_OK);
+        info = { exists: true };
+        templateInfos.set(template, info);
+      } catch {
+        info = { exists: false };
+        templateInfos.set(template, info);
+      }
+    }
   }
 
-  return await promise;
-}
-
-main();
-
-async function main() {
-  const app = express();
-  app.set('port', process.env.PORT ?? 3000);
-  app.set('trust proxy', true);
-  app.use(cors());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
-  app.post('/send/:template', handle_send);
-  app.post('/preview/:template', handle_preview);
-  app.get('/.well-known/server-health', (req, res) => res.send('ok'));
-
-  app.listen({ port: app.get('port') }, () => {
-    console.log(`🚀 Server ready at http://localhost:${app.get('port')}`);
-  });
+  return info;
 }
 
 async function handle_send(req: Request, res: Response) {
-  let { template: templatePath } = req.params;
-  templatePath = path.resolve(templatesDirpath, `${decodeURIComponent(templatePath)}`);
+  let { template } = req.params;
+  const info = await getTemplateInfo(template);
 
-  if (!templatePath.startsWith(templatesDirpath + path.sep)) {
-    res.status(400).send('Invalid template path');
+  if (!info.exists) {
+    res.status(404);
     return;
   }
 
-  templatePath = templatePath.substring(templatesDirpath.length + path.sep.length);
-
-  let template: HandlebarsTemplateDelegate;
-
-  try {
-    template = await getTemplate(templatePath);
-  } catch {
-    res.status(400).send('Invalid template path');
-    return;
-  }
-
-  let { from, to, subject, ...context } = req.body;
+  let { from, to, subject, ...context } = { ...req.body, ...req.query } as Record<string, any>;
 
   from ??= 'Duely <admin@duely.app>';
 
@@ -120,57 +120,29 @@ async function handle_send(req: Request, res: Response) {
 
   subject = subject.replace(/[\r\n]/g, '');
 
-  let document: string;
-
-  try {
-    document = template(context);
-  } catch {
-    res.status(400).send('Unable to compile HTML document from template');
-    return;
-  }
-
-  try {
-    const { id } = await sendEmail(from, to, subject, document);
-    res.send({ success: true, id });
-    console.log(
-      `Email sent from '${from}' to '${to}' with subject '${subject}' using template '${templatePath}'. Message id: ${id}'`
-    );
-  } catch (error: any) {
-    console.error('Error: ', error.message);
-    res.status(500).send('Unable to send email due to an error');
-  }
+  res.render(template, context, async (err: Error, html: string) => {
+    try {
+      const { id } = await sendEmail(from, to, subject, html);
+      res.send({ success: true, id });
+      console.log(
+        `Email sent from '${from}' to '${to}' with subject '${subject}' using template '${template}'. Message id: ${id}'`
+      );
+    } catch (error: any) {
+      console.error('Error: ', error.message);
+      res.status(500).send('Unable to send email due to an error');
+    }
+  });
 }
 
 async function handle_preview(req: Request, res: Response) {
-  let { template: templatePath } = req.params;
-  templatePath = path.resolve(templatesDirpath, `${decodeURIComponent(templatePath)}`);
+  let { template } = req.params;
+  const info = await getTemplateInfo(template);
 
-  if (!templatePath.startsWith(templatesDirpath + path.sep)) {
-    res.status(400).send('Invalid template path');
+  if (!info.exists) {
+    res.sendStatus(404);
     return;
   }
 
-  templatePath = templatePath.substring(templatesDirpath.length + path.sep.length);
-
-  let template: HandlebarsTemplateDelegate;
-
-  try {
-    template = await getTemplate(templatePath);
-  } catch {
-    res.status(400).send('Invalid template path');
-    return;
-  }
-
-  let context = req.body;
-  let document: string;
-
-  try {
-    document = template(context);
-  } catch {
-    res.status(400).send('Unable to compile HTML document from template');
-    return;
-  }
-
-  res.set('Content-Type', 'text/html');
-  res.send(document);
+  const context = { ...req.body, ...req.query };
+  res.render(template, context);
 }
