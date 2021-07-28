@@ -1,11 +1,10 @@
 import { createResource, withSession } from '@duely/db';
-import gmail from '../../../gmail';
-import { p, br, strong, em, a } from '../../../gmail/utilities';
 import validator from 'validator';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import { URL } from 'url';
 import { DuelyGraphQLError } from '../../errors';
+import { sendEmail } from '@duely/email';
 
 const resource_name = 'password reset';
 
@@ -95,36 +94,37 @@ export const PasswordReset: GqlTypeDefinition = {
           redirect_url.searchParams.set('verify', 'password_reset');
         }
 
-        const messages = await gmail.sendEmailAsAdminDuely({
-          to: email_address,
-          subject: 'Verify your email for Duely',
-          body: (redirect_url
-            ? [
-                p`Hi, 👋`,
-                p`Click the link below to verify your email address for Duely.${br``}* this link ${strong`expires in 24 hours`}. After that you will need to request another link.${br``}* this link ${strong`can only be used once`}. After you click the link it will no longer work.`,
-                p`${strong`==&gt; ${a`${redirect_url.href}Click here to verify your email and access Duely`}`}`,
-                p`${em`This link expires in 24 hours and can only be used once. You can always request another link to be sent if this one has been used or is expired.`}`
-              ]
-            : [
-                p`Hi, 👋`,
-                p`Your password reset verification code is ${strong`${password_reset.verification_code!}`}.`,
-                p`${em`This code expires in 24 hours and can only be used once. You can always request another verification code to be sent if this one has been used or is expired.`}`
-              ]
-          ).join('\r\n')
-        });
+        try {
+          const res = await sendEmail({
+            template: 'password-reset',
+            from: 'Duely <noreply@duely.app>',
+            to: email_address,
+            subject: 'Verify your email for Duely',
+            context: {
+              redirect_url: redirect_url.href,
+              verification_code: password_reset.verification_code
+            }
+          });
 
-        if (!messages.id)
+          if (!res.success)
+            return {
+              success: false,
+              message: `Error while sending verification code email to '${email_address}'.`,
+              type: 'SimpleResult'
+            };
+
+          return {
+            success: true,
+            message: `Verification code sent to '${email_address}'.`,
+            type: 'SimpleResult'
+          };
+        } catch (error) {
           return {
             success: false,
             message: `Error while sending verification code email to '${email_address}'.`,
             type: 'SimpleResult'
           };
-
-        return {
-          success: true,
-          message: `Verification code sent to '${email_address}'.`,
-          type: 'SimpleResult'
-        };
+        }
       },
       async verify_password_reset(source, { verification_code, password }, context, info) {
         if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");

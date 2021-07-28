@@ -1,0 +1,33 @@
+{
+  "name": "@duely/email",
+  "version": "0.4.0",
+  "description": "Utilities for sending and preparing emails.",
+  "repository": "github:uoleevi/duely",
+  "license": "MIT",
+  "author": "Leevi Uotinen",
+  "main": "dist/index.js",
+  "source": "src/index.ts",
+  "types": "dist/index.d.ts",
+  "workspaces": [
+    "../build",
+    "../core"
+  ],
+  "scripts": {
+    "build": "cross-env NODE_ENV='production' webpack",
+    "test": "jest",
+    "watch": "webpack --watch"
+  },
+  "dependencies": {
+    "@duely/build": "0.4.3",
+    "@duely/core": "0.4.25",
+    "axios": "^0.21.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.20",
+    "cross-env": "^7.0.3",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.5.3",
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.2"
+  }
+}
