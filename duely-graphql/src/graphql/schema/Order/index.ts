@@ -29,7 +29,7 @@ export const Order: GqlTypeDefinition = {
         after_id: ID
       ): [OrderItem!]!
       stripe_account: StripeAccount!
-      stripe_checkout_session: StripeCheckoutSession!
+      stripe_checkout_session(token: String): StripeCheckoutSession!
       state: String!
       error: String
       ordered_at: DateTime!
@@ -80,12 +80,15 @@ export const Order: GqlTypeDefinition = {
         column_name: 'order_id'
       }),
       async stripe_checkout_session(order, args, context) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
-        const access = await queryResourceAccess(context, order.id);
+        if (args?.token !== order.stripe_checkout_session_id_ext) {
+          const access = await queryResourceAccess(context, order.id);
 
-        if (access !== 'owner') {
-          throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+          if (access !== 'owner') {
+            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+          }
         }
 
         try {
@@ -116,7 +119,8 @@ export const Order: GqlTypeDefinition = {
     },
     Mutation: {
       async update_order(obj, { order_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           const order = await updateResource(context, 'order', order_id, args);
