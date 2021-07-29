@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { readFile } from 'fs';
 import base64url from 'base64url';
 import axios from 'axios';
+import MailComposer from 'nodemailer/lib/mail-composer';
 
 let accountInfo: {
   client_email: string;
@@ -75,26 +76,22 @@ export async function sendEmail(
   from: string,
   to: string,
   subject: string,
-  body: string
+  html: string
 ): Promise<{ id: string }> {
   if (!sendAsAliases.map((alias) => `<${alias}>`).some((alias) => from.endsWith(alias))) {
     throw Error(`Specified 'From' address is not allowed`);
   }
 
-  const message = [
-    `To: ${to}`,
-    `Subject: ${subject}`,
-    'Content-Type: text/html; charset="UTF-8"',
-    `From: ${from}`,
-    'MIME-Version: 1.0',
-    'Content-Transfer-Encoding: 7bit',
-    '',
-    body,
-    ''
-  ].join('\r\n');
+  var mail = new MailComposer({
+    to,
+    from,
+    subject,
+    html
+  });
 
-  const access_token = await requestAccessTokenForAdminDuelyGmailSend();
+  const message = await mail.compile().build();
   const data = { raw: base64url.encode(message) };
+  const access_token = await requestAccessTokenForAdminDuelyGmailSend();
   const res = await axios.post(
     'https://www.googleapis.com/gmail/v1/users/admin%40duely.app/messages/send',
     data,

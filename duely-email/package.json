@@ -1,6 +1,6 @@
 {
   "name": "duely-email",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Web server for sending email using gmail API.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -34,6 +34,7 @@
     "express": "^4.16.4",
     "hbs": "^4.1.2",
     "jsonwebtoken": "^8.5.1",
+    "nodemailer": "^6.6.3",
     "validator": "^13.6.0"
   },
   "devDependencies": {
@@ -43,6 +44,7 @@
     "@types/hbs": "^4.0.1",
     "@types/jsonwebtoken": "^8.5.1",
     "@types/node": "^14.14.37",
+    "@types/nodemailer": "^6.4.4",
     "copy-webpack-plugin": "^7.0.0",
     "cross-env": "^7.0.3",
     "webpack": "^5.31.2",
