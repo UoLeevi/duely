@@ -52,8 +52,6 @@ spec:
           value: duely-postgres-master-service
         - name: PGPORT
           value: "5432"
-        - name: GSERVICEACCOUNTFILE
-          value: /usr/src/app/gserviceaccount.json
         - name: STRIPE_PK_TEST
           valueFrom:
             secretKeyRef:
@@ -107,7 +105,3 @@ spec:
           periodSeconds: 5
           successThreshold: 1
           timeoutSeconds: 3
-        volumeMounts:
-        - name: duely-graphql-secret
-          subPath: gserviceaccount.json
-          mountPath: /usr/src/app/gserviceaccount.json

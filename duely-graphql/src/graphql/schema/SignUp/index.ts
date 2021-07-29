@@ -136,9 +136,10 @@ export const SignUp: GqlTypeDefinition = {
           const res = await sendEmail({
             template: 'sign-up',
             from: 'Duely <noreply@duely.app>',
-            to: email_address,
+            to: `${name} <${email_address}>`,
             subject: 'Verify your email for Duely',
             context: {
+              name,
               redirect_url: redirect_url.href,
               verification_code: sign_up.verification_code
             }

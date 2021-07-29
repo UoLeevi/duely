@@ -25,7 +25,7 @@
 
   <!-- Some preview text. -->
   <div style="display: none; max-height: 0; overflow: hidden;">
-    {{summary}}
+    {{customer_name}} just purchased {{product_name}} for {{price}}.
   </div>
   <!-- Get rid of unwanted preview text. -->
   <div style="display: none; max-height: 0px; overflow: hidden;">
@@ -34,14 +34,15 @@
 
   <div class="content" style="max-width:600px;margin:0 auto;mso-element-frame-width:600px;mso-element:para-border-div;mso-element-left:center;mso-element-wrap:no-wrap-beside;">
     <span class="text-lg font-medium">
-      {{summary}}
+      {{customer_name}} just purchased {{product_name}} for {{price}}.
     </span>
     <hr/>
-    {{#each paragraphs}}
-      <p>
-        {{this}}
-      </p>
-    {{/each}}
+    <p>
+    Congratulations! {{agency_name}} just made a sale of product {{product_name}} for {{price}}. You can view the full details of this order right from your dashboard.
+    </p>
+    <p>
+      <a class="w-full text-center text-white bg-indigo-600 button-link" href="https://{{subdomain_name}}.duely.app/dashboard/orders">View dashboard</a>
+    </p>
     <p>
       <span>
       Have questions? You can find us at <a href="https://support.duely.app/">https://support.duely.app/</a>.

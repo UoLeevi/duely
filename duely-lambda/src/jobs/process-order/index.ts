@@ -1,7 +1,13 @@
-import { getServiceAccountContext, updateProcessingState, withSession } from '@duely/db';
+import {
+  getServiceAccountContext,
+  ResourceId,
+  updateProcessingState,
+  withSession
+} from '@duely/db';
+import { sendEmailNotificationAboutNewSales } from '@duely/email';
 import { runLambda } from '@duely/lambda';
 
-const order_id = process.argv[2];
+const order_id = process.argv[2] as ResourceId<'order'>;
 
 main();
 
@@ -45,10 +51,17 @@ async function main() {
         }
       }
     });
+
     await updateProcessingState(context, 'order', order_id, 'processed');
   } catch (err: any) {
     console.error(`Order processing failed:\n${err}`);
     await updateProcessingState(context, 'order', order_id, err);
     throw err;
+  }
+
+  try {
+    await sendEmailNotificationAboutNewSales(order_id);
+  } catch (error: any) {
+    console.error('Error while trying to send new sales notification email:', error.message);
   }
 }

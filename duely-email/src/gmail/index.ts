@@ -64,7 +64,12 @@ async function requestAccessTokenForAdminDuelyGmailSend() {
   return await requestAccessTokenForAdminDuely('https://www.googleapis.com/auth/gmail.send');
 }
 
-const sendAsAliases = ['admin@duely.app', 'noreply@duely.app', 'receipts@duely.app'];
+const sendAsAliases = [
+  'admin@duely.app',
+  'noreply@duely.app',
+  'receipts@duely.app',
+  'support@duely.app'
+];
 
 export async function sendEmail(
   from: string,
