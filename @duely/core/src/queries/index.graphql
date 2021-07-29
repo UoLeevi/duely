@@ -438,7 +438,7 @@ query Orders(
       name
       email_address
     }
-    stripe_checkout_session {
+    stripe_checkout_session(token: $token) {
       id
       id_ext
       amount_subtotal

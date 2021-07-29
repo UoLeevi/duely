@@ -25,7 +25,7 @@
     "../@duely/react"
   ],
   "dependencies": {
-    "@duely/core": "0.4.25",
+    "@duely/core": "0.4.26",
     "@duely/db": "0.4.17",
     "@duely/email": "0.4.1",
     "@duely/lambda": "0.4.0",
