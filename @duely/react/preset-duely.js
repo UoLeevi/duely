@@ -26,7 +26,7 @@ module.exports = {
       transparent: 'transparent',
       current: 'currentColor',
       black: '#000000',
-      black: '#ffffff',
+      white: '#ffffff',
 
       gray: colors.blueGray,
       red: colors.rose,
@@ -62,7 +62,8 @@ module.exports = {
       },
       colors: {
         gray: {
-          25: '#fbfcfd'
+          25: '#FBFCFD',
+          75: '#F5F8FB'
         }
       },
       keyframes: {
