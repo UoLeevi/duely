@@ -1,6 +1,6 @@
 {
   "name": "duely-email",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Web server for sending email using gmail API.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -10,9 +10,11 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "start": "node dist/index.js",
-    "build": "cross-env NODE_ENV='production' webpack",
+    "build": "cross-env-shell NODE_ENV='production' tailwindcss -i tailwind.css -c tailwind.config.js -o src/templates/partials/styles-css.hbs && webpack",
     "build+profile": "cross-env NODE_ENV='production' webpack --profile --json > stats.json",
+    "build:css": "cross-env NODE_ENV='production' tailwindcss -i tailwind.css -c tailwind.config.js -o src/templates/partials/styles-css.hbs",
     "watch": "webpack --watch",
+    "watch:css": "cross-env tailwindcss -w -i tailwind.css -c tailwind.config.js -o src/templates/partials/styles-css.hbs",
     "analyze": "npx webpack-bundle-analyzer stats.json"
   },
   "workspaces": [
@@ -33,8 +35,10 @@
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "hbs": "^4.1.2",
+    "hbs-utils": "^0.0.4",
     "jsonwebtoken": "^8.5.1",
     "nodemailer": "^6.6.3",
+    "tailwindcss": "^2.2.7",
     "validator": "^13.6.0"
   },
   "devDependencies": {

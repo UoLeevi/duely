@@ -18,11 +18,12 @@ const templateInfos = new Map<
 
 const app = express();
 
-hbs.registerPartials(path.join(__dirname, '/templates/partials'), (error?: Error) => {
-  if (error) {
-    console.error('Error while registering partials', error.message);
-  }
-});
+if (process.env.NODE_ENV === 'production') {
+  hbs.registerPartials(path.join(__dirname, '/templates/partials'));
+} else {
+  const hbsutils = require('hbs-utils')(hbs);
+  hbsutils.registerWatchedPartials(path.join(__dirname, '/templates/partials'));
+}
 
 app.set('port', process.env.PORT ?? 3000);
 app.set('trust proxy', true);
