@@ -1,6 +1,6 @@
 {
   "name": "@duely/email",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Utilities for sending and preparing emails.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",

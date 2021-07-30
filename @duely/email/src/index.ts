@@ -19,7 +19,7 @@ export async function sendEmail({
 }: SendEmailOptions): Promise<{ success: true; id: string }> {
   template = encodeURIComponent(template);
   const url = new URL(`send/${template}`, emailServiceBaseUrl);
-  const res = await axios.post(url.href, { context, ...options });
+  const res = await axios.post(url.href, { ...context, ...options });
   return res.data;
 }
 
