@@ -63,7 +63,8 @@ module.exports = {
       colors: {
         gray: {
           25: '#FBFCFD',
-          75: '#F5F8FB'
+          75: '#F5F8FB',
+          550: '#56657A'
         }
       },
       keyframes: {

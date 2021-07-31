@@ -83,10 +83,19 @@ export async function sendEmailNotificationAboutNewSales(order_id: ResourceId<'o
   // TODO: send email to actual agency owner
 
   await sendEmail({
-    template: 'sales-notification',
+    template: 'default',
     from: 'Duely <support@duely.app>',
     to: 'Duely <admin@duely.app>',
     subject: `Sold ${data.product_name} for ${data.price}`,
-    context: data
+    context: {
+      preheader: `${data.customer_name} just purchased ${data.product_name} for ${data.price}`,
+      header: `${data.customer_name} just purchased ${data.product_name} for ${data.price}`,
+      paragraphs: [
+        `Congratulations! ${data.agency_name} just made a sale of product ${data.product_name} for ${data.price}. You can view the full details of this order right from your dashboard. You can also [view the receipt in your browser](https://duely.app).`,
+        `[View dashboard](https://${data.subdomain_name}.duely.app/dashboard/orders){.button}`,
+        `Have questions? You can find us at <https://support.duely.app/>.`
+      ],
+      footer: 'Duely'
+    }
   });
 }

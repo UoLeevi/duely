@@ -1,54 +1,396 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>{{ title }}</title>
-  <!-- Allow for better image rendering on Windows hi-DPI displays. -->
-  <!--[if mso]>
-    <xml>
-      <o:OfficeDocumentSettings>
-        <o:AllowPNG/>
-        <o:PixelsPerInch>96</o:PixelsPerInch>
-      </o:OfficeDocumentSettings>
-    </xml>
-  <![endif]-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 
-<style type="text/css">
-  {{> styles_css }}
-</style>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>{{title}}</title>
+    <style>
+      /**
+        * # Root
+        * - CSS resets and general styles go here.
+      **/
 
-</head>
-<body class="bg-gray-75">
+      html,
+      body,
+      a,
+      span,
+      div[style*="margin: 16px 0"] {
+        border: 0 !important;
+        margin: 0 !important;
+        outline: 0 !important;
+        padding: 0 !important;
+        text-decoration: none !important;
+      }
 
-  <!-- Some preview text. -->
-  <div class="hidden">
-    {{summary}}
-  </div>
-  <!-- Get rid of unwanted preview text. -->
-  <div class="hidden">
-    &nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;
-  </div>
+      a,
+      span,
+      td,
+      th {
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+      }
 
-  <div class="container px-8 pt-4 pb-6 mx-auto text-gray-600 bg-white">
-    <span class="text-xl font-medium">
-      {{summary}}
-    </span>
-    <hr class="my-4"/>
-    {{#each paragraphs}}
-      <p class="pb-4">
-        {{this}}
-      </p>
-    {{/each}}
-    <p class="pb-4">
-      <span>
-      Have questions? You can find us at <a class="text-indigo-600" href="https://support.duely.app/">https://support.duely.app/</a>.
-      </span>
-    </p>
-    <hr class="my-4"/>
-    <span class="text-sm font-medium text-gray-400">Duely</span>
-  </div>
+      /**
+        * # Delink
+        * - Classes for overriding clients which creates links out of things like
+        *   emails, addresses, phone numbers, etc.
+      **/
 
-</body>
+      /** Modifier: preheader */
+      span.delink.delink--preheader a {
+        color: white !important;
+        text-decoration: none !important;
+      }
+
+      /** */
+
+      /** Modifier: footer */
+      span.delink.delink--footer a {
+        color: {{{@theme.footer.textColor}}} !important;
+        text-decoration: none !important;
+      }
+
+      /** */
+
+      /**
+        * # Header
+      **/
+
+      table.header td.header-background div.header-area {
+        height: 76px !important;
+        width: 600px !important;
+        background-repeat: no-repeat !important;
+        background-size: 600px 76px !important;
+      }
+
+      table.header td.header-logo div.header-area {
+        height: 21px !important;
+        background-repeat: no-repeat !important;
+      }
+
+      /**
+        * # Mobile
+        * - This affects emails views in clients less than 600px wide.
+      **/
+
+      @media all and (max-width: 600px) {
+
+        /**
+          * # Wrapper
+        **/
+
+        body[override] table.wrapper,
+        body[override] table.width.width--mobile {
+          min-width: 100% !important;
+          width: 100% !important;
+        }
+
+        /**
+          * # Spacer
+        **/
+
+        /** Modifier: gutter */
+        body[override] td.spacer.spacer--gutter {
+          width: 32px !important;
+        }
+
+        /** */
+
+        /** Modifier: emailEnd */
+        body[override] td.spacer.spacer--emailEnd {
+          height: 32px !important;
+        }
+
+        /** */
+
+        /**
+          * # Font
+        **/
+
+        /** Modifier: header */
+        body[override] td.font.font--header,
+        body[override] td.font.font--header span,
+        body[override] td.font.font--header a {
+          font-size: 24px !important;
+          line-height: 32px !important;
+        }
+
+        /** */
+
+        /** Modifier: body */
+        body[override] td.font.font--body,
+        body[override] td.font.font--body span,
+        body[override] td.font.font--body a {
+          font-size: 18px !important;
+          line-height: 28px !important;
+        }
+
+        /** */
+
+        /** Modifier: caption */
+        body[override] td.font.font--caption,
+        body[override] td.font.font--caption span,
+        body[override] td.font.font--caption a {
+          font-size: 14px !important;
+          line-height: 20px !important;
+        }
+
+        /** */
+
+        /**
+          * # Header
+        **/
+        body[override] table.header td.header-background div.header-area {
+          margin: 0 auto !important;
+          width: auto !important;
+          background-position: 0 0 !important;
+        }
+
+        /** */
+
+        /** Modifier: simplified */
+        body[override] table.header.header--simplified td.header-logo {
+          width: auto !important;
+        }
+
+        body[override] table.header.header--simplified td.header-spacing {
+          width: 0 !important;
+        }
+
+        /** */
+
+        /**
+          * # Divider
+        **/
+
+        body[override] table.divider td.spacer.spacer--gutter,
+        body[override] tr.divider td.spacer.spacer--gutter {
+          background-color: {{{@theme.divider.backgroundColor}}};
+        }
+
+        /**
+          * # Hero Units
+        **/
+
+        /* Hides dividers in hero units so that vertical spacing remains consistent */
+        body[override] table.hero-Container td.spacer--divider {
+          display: none !important;
+          margin: 0 !important;
+          max-height: 0 !important;
+          min-height: 0 !important;
+          mso-hide: all !important;
+          padding: 0 !important;
+
+          font-size: 0 !important;
+          line-height: 0 !important;
+        }
+
+        /**
+          * # Button
+        **/
+
+        body[override] table.button {
+          margin: 0 auto !important;
+          width: 100% !important;
+        }
+
+        body[override] table.button td.button-area,
+        body[override] table.button td.button-area a.button-link,
+        body[override] table.button td.button-area span.button-internal {
+          height: 44px !important;
+          line-height: 44px !important;
+          font-size: 18px !important;
+          vertical-align: middle !important;
+        }
+      }
+
+    </style>
+  </head>
+
+  <body class="email" bgcolor="{{{@theme.backgroundColor}}}" style="border: 0; margin: 0; padding: 0; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; min-width: 100%; width: 100%;" override="fix">
+
+    <!-- Background -->
+    <table class="background" bgcolor="{{{@theme.backgroundColor}}}" border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 0; margin: 0; padding: 0;">
+      <tbody>
+        <tr>
+          <td style="border: 0; margin: 0; padding: 0;">
+
+            <!-- Wrapper -->
+            <table class="wrapper" align="center" bgcolor="#ffffff" border="0" cellpadding="0" cellspacing="0" width="600" style="border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; margin: 0 auto; min-width: 600px;">
+              <tbody>
+                <tr>
+                  <td style="border: 0; margin: 0; padding: 0;">
+                    <table class="preheader width width--mobile" border="0" cellpadding="0" cellspacing="0" width="600" style="min-width: 600px;">
+                      <tbody>
+                        <tr>
+                          <td align="center" height="0" style="border: 0; margin: 0; padding: 0; color: #ffffff; display: none !important; font-size: 1px; line-height: 1px; max-height: 0; max-width: 0; mso-hide: all !important; opacity: 0; overflow: hidden; visibility: hidden;">
+                            <span class="delink delink--preheader" style="color: #ffffff; text-decoration: none;">
+                              {{preheader}}
+                              <!-- Prevents elements showing up in email client preheader text -->
+                              ‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;‌&nbsp;
+                              <!-- /Prevents elements showing up in email client preheader text -->
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    <table class="header header--simplified width width--mobile" border="0" cellpadding="0" cellspacing="0" width="600" style="min-width: 600px;">
+                      <tbody>
+                        <tr>
+                          <td class="spacer spacer--divider" colspan="4" height="19" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                          <td class="header-logo" align="left" height="21" style="border: 0; margin: 0; padding: 0;">
+                            <div class="header-area">
+                              <a style="border: 0; margin: 0; padding: 0; text-decoration: none;">
+                                <img alt="Stripe" border="0" class="header-source" height="21" style="border: 0; margin: 0; padding: 0; display: block; font-family: {{{@theme.fontFamily}}}; font-size: 12px; font-weight: normal;" src="https://testagency.duely.app/asset/image/img_48e721">
+                              </a>
+                            </div>
+                          </td>
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="spacer spacer--divider" colspan="4" height="19" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                        <tr class="divider">
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                          <td bgcolor="{{{@theme.divider.backgroundColor}}}" colspan="2" height="1" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="spacer spacer--divider" colspan="4" height="20" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    <table class="copy copy--header width width--mobile" border="0" cellpadding="0" cellspacing="0" width="600" style="min-width: 600px;">
+                      <tbody>
+                        <tr>
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                          <td class="font font--header" style="border: 0; margin: 0; padding: 0; color: {{{@theme.header.textColor}}}; font-family: {{{@theme.fontFamily}}}; font-size: 20px; line-height: 28px;">
+                            {{header}}
+                          </td>
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="spacer spacer--stacked" colspan="3" height="4" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <table class="divider width width--mobile" border="0" cellpadding="0" cellspacing="0" width="600" style="min-width: 600px;">
+                      <tbody>
+                        <tr>
+                          <td class="spacer spacer--divider" colspan="3" height="20" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                          <td bgcolor="{{{@theme.divider.backgroundColor}}}" height="1" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="spacer spacer--divider" colspan="3" height="20" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    {{#each paragraphs}}
+                      {{{markdown this}}}
+                    {{/each}}
+
+                    <table class="footer width width--mobile" border="0" cellpadding="0" cellspacing="0" width="600" style="min-width: 600px;">
+                      <tbody>
+                        <tr>
+                          <td class="spacer spacer--divider" colspan="3" height="20" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                        <tr class="divider">
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                          <td bgcolor="{{{@theme.divider.backgroundColor}}}" colspan="2" height="1" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; max-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="spacer spacer--divider" colspan="3" height="20" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                          <td class="font font--caption" style="border: 0; margin: 0; padding: 0; color: {{{@theme.footer.textColor}}}; font-family: {{{@theme.fontFamily}}}; font-size: 12px; line-height: 16px;">
+                            <span class="delink delink--footer" style="border: 0; margin: 0; padding: 0; color: {{{@theme.footer.textColor}}}; text-decoration: none;">
+                              {{footer}}
+                            </span>
+                          </td>
+                          <td class="spacer spacer--gutter" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;" width="64">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td class="spacer spacer--emailEnd" colspan="3" height="64" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;">
+                            <div class="spacer spacer--filler"> </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <!-- /Wrapper -->
+
+          </td>
+        </tr>
+        <tr>
+          <td class="spacer spacer--emailEnd" height="64" style="border: 0; margin: 0; padding: 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;">
+            <div class="spacer spacer--filler">&nbsp;</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <!-- /Background -->
+  </body>
+
 </html>

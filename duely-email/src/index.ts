@@ -8,6 +8,8 @@ import isEmail from 'validator/es/lib/isEmail';
 import hbs from 'hbs';
 import fs from 'fs';
 import { sendEmail } from './gmail';
+import { theme } from './theme';
+import { md } from './markdown-it';
 
 const templateInfos = new Map<
   string,
@@ -17,6 +19,20 @@ const templateInfos = new Map<
 >();
 
 const app = express();
+
+hbs.localsAsTemplateData(app);
+app.locals.theme = theme;
+
+function renderMarkdown (markdown: string) {
+  try {
+    return md.render(markdown);
+  } catch(error: any) {
+    console.error('Error while rendering markdown:', error.message);
+    return '';
+  }
+}
+
+hbs.registerHelper('markdown', renderMarkdown);
 
 if (process.env.NODE_ENV === 'production') {
   hbs.registerPartials(path.join(__dirname, '/templates/partials'));
