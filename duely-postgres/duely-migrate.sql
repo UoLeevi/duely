@@ -111,6 +111,7 @@ BEGIN
 END
 $_$;
 
+
 PERFORM security_.register_policy_('application_.stripe_account_', 'query', 'policy_.anyone_can_query_stripe_account_for_agency_');
 
 -- MIGRATION CODE END
