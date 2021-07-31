@@ -1,4 +1,4 @@
-import stripe from '../../../../stripe';
+import stripe from '@duely/stripe';
 import Stripe from 'stripe';
 import { queryResource, withSession, updateProcessingState, getServiceAccountContext } from '@duely/db';
 import { runLambda } from '@duely/lambda';
@@ -24,7 +24,7 @@ async function main() {
   try {
     await updateProcessingState(context, 'webhook event', webhook_event_id, 'processing');
     await withSession(context, async ({ queryResource, createResource }) => {
-      const { id: stripe_account_id } = await queryResource('stripe account', {
+      const stripe_account = await queryResource('stripe account', {
         stripe_id_ext: event.account,
         livemode: event.livemode
       });
@@ -34,14 +34,14 @@ async function main() {
       }
 
       const customer = await queryResource('customer', {
-        stripe_account_id,
+        stripe_account_id: stripe_account.id,
         email_address: session.customer_details?.email
       });
 
       // Create order
       const order = await createResource('order', {
         customer_id: customer.id,
-        stripe_account_id: stripe_account_id,
+        stripe_account_id: stripe_account.id,
         stripe_checkout_session_id_ext: session.id,
         state: 'pending'
       });

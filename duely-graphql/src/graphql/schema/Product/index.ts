@@ -5,7 +5,7 @@ import {
   createResolverForReferencedResourceAll
 } from '../../util';
 import validator from 'validator';
-import stripe from '../../../stripe';
+import stripe from '@duely/stripe';
 import { validateAndReadDataUrlAsBuffer } from '../Image';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
@@ -143,7 +143,7 @@ export const Product: GqlTypeDefinition = {
         resource_name: 'product settings',
         reverse: true,
         column_name: 'product_id'
-      }),
+      })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)
@@ -222,11 +222,11 @@ export const Product: GqlTypeDefinition = {
               // create product resource
               let product = await createResource('product', args);
 
-              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
-                ? ['test', 'live']
-                : ['test'];
+              const stripe_envs = agency.livemode
+                ? ['test', 'live'] as const
+                : ['test'] as const;
 
-              const stripe_product: Record<keyof typeof stripe, Stripe.Product | undefined> = {
+              const stripe_product: Record<'test' | 'live', Stripe.Product | undefined> = {
                 test: undefined,
                 live: undefined
               };
@@ -342,9 +342,9 @@ export const Product: GqlTypeDefinition = {
               stripe_product_args.description = description ?? undefined;
               stripe_product_args.active = status === 'live';
 
-              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
-                ? ['test', 'live']
-                : ['test'];
+              const stripe_envs = agency.livemode
+                ? ['test', 'live'] as const
+                : ['test'] as const;
 
               for (const stripe_env of stripe_envs) {
                 const stripe_account = await queryResource('stripe account', {
@@ -400,9 +400,7 @@ export const Product: GqlTypeDefinition = {
 
             const agency = await queryResource('agency', product.agency_id);
 
-            const stripe_envs: (keyof typeof stripe)[] = agency.livemode
-              ? ['test', 'live']
-              : ['test'];
+            const stripe_envs = agency.livemode ? (['test', 'live'] as const) : (['test'] as const);
 
             for (const stripe_env of stripe_envs) {
               const stripe_account = await queryResource('stripe account', {

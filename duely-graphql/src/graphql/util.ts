@@ -41,18 +41,21 @@ type CreateDefaultQueryResolversForResourceArgs<K extends keyof Resources> = {
 
 export function createDefaultQueryResolversForResource<
   K extends keyof Resources,
-  TSource extends { id?: string },
+  TSource extends { id?: string; token?: string },
   TContext extends DuelyQqlContext
 >({ name, table_name, plural, ...rest }: CreateDefaultQueryResolversForResourceArgs<K>) {
   return {
     async [table_name ?? name](
       source: TSource,
-      args: { id: string },
+      args: { id: string; token?: string },
       context: TContext,
       info: GraphQLResolveInfo
     ) {
-      if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
-      return await queryResource(context, name, args.id);
+      if (!context.jwt) {
+        throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+      }
+
+      return await queryResource(context, name, args.id, args.token);
     },
     async [plural ?? (table_name ?? name) + 's'](
       source: TSource,
@@ -69,7 +72,10 @@ export function createDefaultQueryResolversForResource<
       context: TContext,
       info: GraphQLResolveInfo
     ) {
-      if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+      if (!context.jwt) {
+        throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+      }
+
       return await queryResourceAll(
         context,
         name,
@@ -92,7 +98,10 @@ export function createDefaultQueryResolversForResource<
       context: TContext,
       info: GraphQLResolveInfo
     ) {
-      if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+      if (!context.jwt) {
+        throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+      }
+
       return await countResource(context, name, args.filter, args.token);
     }
   };
@@ -147,7 +156,9 @@ export function createResolverForReferencedResource<
       context: TContext,
       info: GraphQLResolveInfo
     ) {
-      if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+      if (!context.jwt) {
+        throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+      }
 
       const id_or_filter = createIdOrFilterArg(source, args);
 
@@ -195,7 +206,10 @@ export function createResolverForReferencedResourceAll<
       context: TContext,
       info: GraphQLResolveInfo
     ): Promise<Resources[K][]> {
-      if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+      if (!context.jwt) {
+        throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+      }
+
       return await queryResourceAll(
         context,
         resource_name!,

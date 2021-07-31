@@ -4,7 +4,7 @@ import {
   createResolverForReferencedResource
 } from '../../util';
 import validator from 'validator';
-import stripe from '../../../stripe';
+import stripe from '@duely/stripe';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';

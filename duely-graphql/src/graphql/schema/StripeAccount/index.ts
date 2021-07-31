@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { queryResource, queryResourceAccess, Resources } from '@duely/db';
-import stripe from '../../../stripe';
+import stripe from '@duely/stripe';
 import { GqlTypeDefinition } from '../../types';
 import { createResolverForReferencedResourceAll } from '../../util';
 import { DuelyGraphQLError } from '../../errors';

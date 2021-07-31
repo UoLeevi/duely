@@ -3,7 +3,7 @@ import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
 } from '../../util';
-import stripe from '../../../stripe';
+import stripe from '@duely/stripe';
 import { calculateTransactionFee } from '../SubscriptionPlan';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
@@ -137,14 +137,14 @@ export const Price: GqlTypeDefinition = {
                 };
               }
 
-              const stripe_price: Record<keyof typeof stripe, Stripe.Price | undefined> = {
+              const stripe_price: Record<'test' | 'live', Stripe.Price | undefined> = {
                 test: undefined,
                 live: undefined
               };
 
-              const stripe_envs: (keyof typeof stripe)[] = agency.livemode
-                ? ['test', 'live']
-                : ['test'];
+              const stripe_envs = agency.livemode
+                ? (['test', 'live'] as const)
+                : (['test'] as const);
 
               for (const stripe_env of stripe_envs) {
                 const stripe_account = await queryResource('stripe account', {
@@ -236,9 +236,7 @@ export const Price: GqlTypeDefinition = {
             const product = await queryResource('product', price.product_id);
             const agency = await queryResource('agency', product.agency_id);
 
-            const stripe_envs: (keyof typeof stripe)[] = agency.livemode
-              ? ['test', 'live']
-              : ['test'];
+            const stripe_envs = agency.livemode ? (['test', 'live'] as const) : (['test'] as const);
 
             for (const stripe_env of stripe_envs) {
               const stripe_account = await queryResource('stripe account', {
@@ -314,7 +312,7 @@ export const Price: GqlTypeDefinition = {
               product_settings?.checkout_success_url ||
               agency_settings?.checkout_success_url ||
               `https://${subdomain.name}.duely.app/orders/thank-you`;
-              
+
             cancel_url =
               cancel_url ||
               product_settings?.checkout_cancel_url ||

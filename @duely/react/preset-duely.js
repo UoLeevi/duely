@@ -58,7 +58,7 @@ module.exports = {
     extend: {
       animation: {
         progress: 'progress 1800ms cubic-bezier(.02,.25,1,.61) infinite',
-        'stroke-draw': 'stroke-draw 800ms ease-in 300ms',
+        'stroke-draw': 'stroke-draw 400ms ease-in 300ms',
       },
       colors: {
         gray: {

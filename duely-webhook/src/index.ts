@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import stripe from './stripe';
+import stripe from '@duely/stripe';
 import Stripe from 'stripe';
 import {
   createResource,

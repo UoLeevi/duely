@@ -1,6 +1,6 @@
 // see: https://stripe.com/docs/api/charges/object
 
-import stripe from '../../../stripe';
+import stripe from '@duely/stripe';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import { withStripeAccountProperty } from '../../util';
 import gql from 'graphql-tag';

@@ -1,6 +1,6 @@
 {
   "name": "duely-graphql",
-  "version": "0.105.40",
+  "version": "0.105.41",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
   "author": "Leevi Uotinen",
@@ -21,12 +21,14 @@
     "../@duely/db",
     "../@duely/email",
     "../@duely/lambda",
-    "../@duely/react"
+    "../@duely/react",
+    "../@duely/stripe"
   ],
   "dependencies": {
     "@duely/core": "0.4.26",
     "@duely/db": "0.4.17",
-    "@duely/email": "0.4.3",
+    "@duely/email": "0.4.5",
+    "@duely/stripe": "0.4.1",
     "@graphql-tools/schema": "^7.1.3",
     "axios": "^0.21.1",
     "cors": "^2.8.5",
@@ -38,7 +40,6 @@
     "graphql-subscriptions": "^1.2.1",
     "graphql-tag": "^2.11.0",
     "markdown-it": "^12.0.6",
-    "stripe": "^8.144.0",
     "validator": "^13.6.0"
   },
   "devDependencies": {

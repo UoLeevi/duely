@@ -2,7 +2,7 @@
 
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import gql from 'graphql-tag';
-import stripe from '../../../stripe';
+import stripe from '@duely/stripe';
 import { GqlTypeDefinition } from '../../types';
 import { withStripeAccountProperty } from '../../util';
 

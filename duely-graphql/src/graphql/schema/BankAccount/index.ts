@@ -2,7 +2,7 @@ import { withSession } from '@duely/db';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import { DuelyGraphQLError } from '../../errors';
-import stripe from '../../../stripe';
+import stripe from '@duely/stripe';
 
 // interface BankAccount {
 //   /**

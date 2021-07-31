@@ -1,6 +1,6 @@
 {
   "name": "duely-webhook",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Web server handling webhook endpoints.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -21,15 +21,16 @@
     "../@duely/client",
     "../@duely/db",
     "../@duely/lambda",
-    "../@duely/react"
+    "../@duely/react",
+    "../@duely/stripe"
   ],
   "dependencies": {
     "@duely/core": "0.4.26",
     "@duely/db": "0.4.17",
     "@duely/lambda": "0.4.0",
+    "@duely/stripe": "0.4.1",
     "cors": "^2.8.5",
     "express": "^4.16.4",
-    "stripe": "^8.142.0",
     "validator": "^13.5.2"
   },
   "devDependencies": {

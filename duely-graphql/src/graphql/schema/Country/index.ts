@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import Stripe from 'stripe';
-import stripe from '../../../stripe';
+import stripe from '@duely/stripe';
 import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
 

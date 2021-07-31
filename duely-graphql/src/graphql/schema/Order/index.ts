@@ -1,10 +1,10 @@
-import { countResource, queryResource, queryResourceAccess, updateResource } from '@duely/db';
+import { queryResource, queryResourceAccess, Resources, updateResource } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
   createResolverForReferencedResourceAll
 } from '../../util';
-import stripe from '../../../stripe';
+import stripe from '@duely/stripe';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import { DuelyGraphQLError } from '../../errors';
@@ -79,11 +79,14 @@ export const Order: GqlTypeDefinition = {
         resource_name: 'order item',
         column_name: 'order_id'
       }),
-      async stripe_checkout_session(order, args, context) {
+      async stripe_checkout_session(order: Resources['order'], args: { token?: string }, context) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
-        if (args?.token !== order.stripe_checkout_session_id_ext) {
+        if (
+          !order.stripe_checkout_session_id_ext ||
+          args?.token !== order.stripe_checkout_session_id_ext
+        ) {
           const access = await queryResourceAccess(context, order.id);
 
           if (access !== 'owner') {
@@ -97,13 +100,10 @@ export const Order: GqlTypeDefinition = {
             'stripe account',
             order.stripe_account_id
           );
-          const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
-          const { object, ...stripe_checkout_session } = await stripe[
-            stripe_env
-          ].checkout.sessions.retrieve(order.stripe_checkout_session_id_ext, {
-            stripeAccount: stripe_account.stripe_id_ext
-          });
+          const { object, ...stripe_checkout_session } = await stripe
+            .get(stripe_account)
+            .checkout.sessions.retrieve(order.stripe_checkout_session_id_ext);
 
           return {
             stripeAccount: stripe_account.stripe_id_ext,

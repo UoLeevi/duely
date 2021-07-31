@@ -2,7 +2,7 @@
 
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import gql from 'graphql-tag';
-import stripe from '../../../stripe';
+import stripe from '@duely/stripe';
 import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
 import { withStripeAccountProperty } from '../../util';
@@ -32,6 +32,7 @@ export const StripeCheckoutSession: GqlTypeDefinition = {
       mode: String
       payment_method_types: [String]
       payment_status: String
+      payment_intent: PaymentIntent
       submit_type: String
       success_url: String
     }
@@ -63,6 +64,21 @@ export const StripeCheckoutSession: GqlTypeDefinition = {
           stripeAccount: source.stripeAccount
         });
         return withStripeAccountProperty(customer, source);
+      },
+      async payment_intent(source, args, context, info) {
+        if (source.payment_intent == null) return null;
+        if (typeof source.payment_intent === 'object') return source.payment_intent;
+
+        const stripe_env = source.livemode ? 'live' : 'test';
+
+        const resolveTree = parseResolveInfo(info) as ResolveTree;
+        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
+        if (fields.length === 1 && fields[0] === 'id') return { id: source.payment_intent };
+
+        const payment_intent = await stripe[stripe_env].paymentIntents.retrieve(source.payment_intent, {
+          stripeAccount: source.stripeAccount
+        });
+        return withStripeAccountProperty(payment_intent, source);
       },
       async line_items(
           source,

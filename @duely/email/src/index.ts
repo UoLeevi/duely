@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { getServiceAccountContext, withSession, ResourceId } from '@duely/db';
 import { Currency } from '@duely/core';
+import stripe from '@duely/stripe';
+import Stripe from 'stripe';
 
 const emailServiceBaseUrl = new URL('http://duely-email-service:8080/');
 
@@ -42,56 +44,53 @@ export async function previewEmail({
 export async function sendEmailNotificationAboutNewSales(order_id: ResourceId<'order'>) {
   const context = await getServiceAccountContext();
 
-  const data = await withSession(context, async ({ queryResource, queryResourceAll }) => {
+  const data = await withSession(context, async ({ queryResource }) => {
     const order = await queryResource('order', order_id);
     const stripe_account = await queryResource('stripe account', order.stripe_account_id);
+    const checkout_session = await stripe
+      .get(stripe_account)
+      .checkout.sessions.retrieve(order.stripe_checkout_session_id_ext, {
+        expand: ['payment_intent', 'line_items']
+      });
+
+    const payment_intent = checkout_session.payment_intent as Stripe.PaymentIntent;
+    const charge = payment_intent.charges.data[0];
+    const receipt_url = charge.receipt_url;
+
+    const line_items = checkout_session.line_items!.data;
     const agency = await queryResource('agency', stripe_account.agency_id);
     const subdomain = await queryResource('subdomain', agency.subdomain_id);
     const customer = await queryResource('customer', order.customer_id);
-    const order_items = await queryResourceAll('order item', { order_id });
 
-    const item_summaries = await Promise.all(
-      order_items.map(async (order_item) => {
-        const price = await queryResource('price', order_item.price_id);
-        const product = await queryResource('product', price.product_id);
-
-        return {
-          product_name: product.name,
-          amount: price.unit_amount,
-          currency: price.currency as Currency
-        };
-      })
-    );
-
-    const amount_total = item_summaries.map((s) => s.amount).reduce((a, b) => a + b, 0);
+    const account = await stripe.get(stripe_account).accounts.retrieve();
 
     return {
+      account_email: account.email!,
       agency_name: agency.name,
       subdomain_name: subdomain.name,
       customer_name: customer.name,
+      receipt_url,
       product_name:
-        item_summaries[0].product_name +
-        (item_summaries.length === 1
+        line_items[0].description +
+        (line_items.length === 1
           ? ''
-          : ` and ${item_summaries.length - 1} other product${
-              item_summaries.length === 2 ? '' : 's'
-            }`),
-      price: Currency.format(amount_total, item_summaries[0].currency as Currency)
+          : ` and ${line_items.length - 1} other product${line_items.length === 2 ? '' : 's'}`),
+      price: Currency.format(
+        checkout_session.amount_total ?? 0,
+        checkout_session.currency as Currency
+      )
     };
   });
-
-  // TODO: send email to actual agency owner
 
   await sendEmail({
     template: 'default',
     from: 'Duely <support@duely.app>',
-    to: 'Duely <admin@duely.app>',
-    subject: `Sold ${data.product_name} for ${data.price}`,
+    to: data.account_email,
+    subject: `${data.customer_name} just purchased ${data.product_name} for ${data.price}`,
     context: {
-      preheader: `${data.customer_name} just purchased ${data.product_name} for ${data.price}`,
       header: `${data.customer_name} just purchased ${data.product_name} for ${data.price}`,
       paragraphs: [
-        `Congratulations! ${data.agency_name} just made a sale of product ${data.product_name} for ${data.price}. You can view the full details of this order right from your dashboard. You can also [view the receipt in your browser](https://duely.app).`,
+        `Congratulations! ${data.agency_name} just made a sale of product ${data.product_name} for ${data.price}. You can view the full details of this order right from your dashboard. You can also [view the receipt in your browser](${data.receipt_url}).`,
         `[View dashboard](https://${data.subdomain_name}.duely.app/dashboard/orders){.button}`,
         `Have questions? You can find us at <https://support.duely.app/>.`
       ],
