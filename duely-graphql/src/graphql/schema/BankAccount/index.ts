@@ -1,8 +1,9 @@
-import { withSession } from '@duely/db';
+import { Resources, withSession } from '@duely/db';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
+import Stripe from 'stripe';
 
 // interface BankAccount {
 //   /**
@@ -92,7 +93,9 @@ import stripe from '@duely/stripe';
 //    status: string;
 //  }
 
-export const BankAccount: GqlTypeDefinition = {
+export const BankAccount: GqlTypeDefinition<
+  Stripe.BankAccount & { stripe_account: Resources['stripe account'] }
+> = {
   typeDef: gql`
     type BankAccount implements Node {
       id: ID!

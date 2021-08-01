@@ -4,13 +4,14 @@ import {
 } from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
+import { Resources } from '@duely/db';
 
 const resource = {
   name: 'credential type',
   table_name: 'credential_type'
 } as const;
 
-export const CredentialType: GqlTypeDefinition = {
+export const CredentialType: GqlTypeDefinition<Resources['credential type']> = {
   typeDef: gql`
     type CredentialType implements Node {
       id: ID!

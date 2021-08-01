@@ -1,4 +1,4 @@
-import { createResource, updateResource } from '@duely/db';
+import { createResource, Resources, updateResource } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -11,7 +11,7 @@ const resource = {
   name: 'integration'
 } as const;
 
-export const Integration: GqlTypeDefinition = {
+export const Integration: GqlTypeDefinition<Resources['integration']> = {
   typeDef: gql`
     type Integration {
       id: ID!
@@ -86,7 +86,8 @@ export const Integration: GqlTypeDefinition = {
     },
     Mutation: {
       async create_integration(obj, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           // create integration resource
@@ -108,7 +109,8 @@ export const Integration: GqlTypeDefinition = {
         }
       },
       async update_integration(obj, { integration_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           // update integration resource

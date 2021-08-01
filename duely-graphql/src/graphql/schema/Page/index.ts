@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { URL } from 'url';
-import { updateResource, withSession } from '@duely/db';
+import { Resources, updateResource, withSession } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
@@ -13,7 +13,7 @@ const resource = {
   name: 'page'
 } as const;
 
-export const Page: GqlTypeDefinition = {
+export const Page: GqlTypeDefinition<Resources['page']> = {
   typeDef: gql`
     type Page {
       id: ID!
@@ -76,7 +76,8 @@ export const Page: GqlTypeDefinition = {
     Query: {
       ...createDefaultQueryResolversForResource(resource),
       async page_by_url(source, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         let url;
 
@@ -113,7 +114,8 @@ export const Page: GqlTypeDefinition = {
     },
     Mutation: {
       async update_page(obj, { page_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           // update page resource

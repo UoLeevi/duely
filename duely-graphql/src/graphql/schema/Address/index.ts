@@ -1,7 +1,8 @@
 import gql from 'graphql-tag';
+import Stripe from 'stripe';
 import { GqlTypeDefinition } from '../../types';
 
-export const Address: GqlTypeDefinition = {
+export const Address: GqlTypeDefinition<Stripe.Address> = {
   typeDef: gql`
     type Address {
       city: String

@@ -1,4 +1,4 @@
-import { queryResource, withSession } from '@duely/db';
+import { queryResource, Resources, withSession } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
@@ -18,7 +18,7 @@ const resource = {
   plural: 'agencies'
 } as const;
 
-export const Agency: GqlTypeDefinition = {
+export const Agency: GqlTypeDefinition<Resources['agency']> = {
   typeDef: gql`
     type Agency implements Node {
       id: ID!
@@ -118,9 +118,9 @@ export const Agency: GqlTypeDefinition = {
             agency_id: source.id,
             livemode
           });
-          const { id, object, ...stripe_account_ext } = await stripe[stripe_env].accounts.retrieve(
-            stripe_account.stripe_id_ext
-          );
+          const { id, object, ...stripe_account_ext } = await stripe
+            .get(stripe_account)
+            .accounts.retrieve();
           return { ...stripe_account, ...stripe_account_ext };
         } catch (error: any) {
           throw new Error(error.message);

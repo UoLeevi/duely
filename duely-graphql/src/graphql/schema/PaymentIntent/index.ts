@@ -5,8 +5,12 @@ import gql from 'graphql-tag';
 import stripe from '@duely/stripe';
 import { GqlTypeDefinition } from '../../types';
 import { withStripeAccountProperty } from '../../util';
+import Stripe from 'stripe';
+import { Resources } from '@duely/db';
 
-export const PaymentIntent: GqlTypeDefinition = {
+export const PaymentIntent: GqlTypeDefinition<
+  Stripe.PaymentIntent & { stripe_account: Resources['stripe account'] }
+> = {
   typeDef: gql`
     type PaymentIntent {
       id: ID!
@@ -50,21 +54,19 @@ export const PaymentIntent: GqlTypeDefinition = {
       id_ext: (source) => source.id,
       created: (source) => new Date(source.created * 1000),
       canceled_at: (source) => new Date(source.created * 1000),
-      charges: (source) => withStripeAccountProperty(source.charges?.data, source),
+      charges: (source) => withStripeAccountProperty(source.charges?.data, source.stripe_account),
       async customer(source, args, context, info) {
         if (source.customer == null) return null;
         if (typeof source.customer === 'object') return source.customer;
-
-        const stripe_env = source.livemode ? 'live' : 'test';
 
         const resolveTree = parseResolveInfo(info) as ResolveTree;
         const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
         if (fields.length === 1 && fields[0] === 'id') return { id: source.customer };
 
-        const customer = await stripe[stripe_env].customers.retrieve(source.customer, {
-          stripeAccount: source.stripeAccount
-        });
-        return withStripeAccountProperty(customer, source);
+        const customer = await stripe
+          .get(source.stripe_account)
+          .customers.retrieve(source.customer);
+        return withStripeAccountProperty(customer, source.stripe_account);
       }
     }
   }

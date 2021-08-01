@@ -1,4 +1,4 @@
-import { createResource, withSession } from '@duely/db';
+import { createResource, Resources, withSession } from '@duely/db';
 import validator from 'validator';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
@@ -8,7 +8,7 @@ import { sendEmail } from '@duely/email';
 
 const resource_name = 'password reset';
 
-export const PasswordReset: GqlTypeDefinition = {
+export const PasswordReset: GqlTypeDefinition<Resources['password reset']> = {
   typeDef: gql`
     extend type Mutation {
       start_password_reset(email_address: String!, redirect_url: String): SimpleResult!
@@ -18,7 +18,8 @@ export const PasswordReset: GqlTypeDefinition = {
   resolvers: {
     Mutation: {
       async start_password_reset(source, { email_address, redirect_url }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         if (!validator.isEmail(email_address))
           return {
@@ -127,11 +128,16 @@ export const PasswordReset: GqlTypeDefinition = {
         }
       },
       async verify_password_reset(source, { verification_code, password }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           return await withSession(context, async ({ queryResource, updateResource }) => {
-            let password_reset = await queryResource(resource_name, { verification_code }, verification_code);
+            let password_reset = await queryResource(
+              resource_name,
+              { verification_code },
+              verification_code
+            );
 
             if (!password_reset?.id) {
               return {

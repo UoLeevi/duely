@@ -5,7 +5,7 @@ import {
 } from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
-import { createResource, updateResource } from '@duely/db';
+import { createResource, Resources, updateResource } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 
 const resource = {
@@ -13,7 +13,7 @@ const resource = {
   table_name: 'integration_config'
 } as const;
 
-export const IntegrationConfig: GqlTypeDefinition = {
+export const IntegrationConfig: GqlTypeDefinition<Resources['integration config']> = {
   typeDef: gql`
     type IntegrationConfig implements Node {
       id: ID!
@@ -81,7 +81,8 @@ export const IntegrationConfig: GqlTypeDefinition = {
     },
     Mutation: {
       async create_integration_config(obj, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           // create integration config resource
@@ -103,7 +104,8 @@ export const IntegrationConfig: GqlTypeDefinition = {
         }
       },
       async update_integration_config(obj, { integration_config_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           // update integration config resource

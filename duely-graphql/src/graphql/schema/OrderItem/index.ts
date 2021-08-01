@@ -1,4 +1,4 @@
-import { updateResource } from '@duely/db';
+import { Resources, updateResource } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -12,7 +12,7 @@ const resource = {
   table_name: 'order_item'
 } as const;
 
-export const OrderItem: GqlTypeDefinition = {
+export const OrderItem: GqlTypeDefinition<Resources['order item']> = {
   typeDef: gql`
     type OrderItem {
       id: ID!
@@ -68,7 +68,8 @@ export const OrderItem: GqlTypeDefinition = {
     },
     Mutation: {
       async update_order_item(obj, { order_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           const order_item = await updateResource(context, 'order item', order_id, args);

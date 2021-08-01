@@ -19,7 +19,7 @@ const resource = {
   name: 'markdown'
 } as const;
 
-export const Markdown: GqlTypeDefinition = {
+export const Markdown: GqlTypeDefinition<Resources['markdown']> = {
   typeDef: gql`
     type Markdown implements Node {
       id: ID!

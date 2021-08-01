@@ -6,6 +6,7 @@ import {
 } from '../../util';
 import { convertCurrency } from '../ExchangeRate';
 import { DuelyGraphQLError } from '../../errors';
+import { GqlTypeDefinition } from '../../types';
 
 const resource = {
   name: 'subscription plan',
@@ -18,7 +19,7 @@ export async function calculateTransactionFee(
   currency: string
 ) {
   const context = await getServiceAccountContext();
-  if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+  if (!context.jwt) throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
   const transaction_fees = await queryResourceAll(context, 'transaction fee', {
     subscription_plan_id: subscription_plan_id as Resources['subscription plan']['id']
@@ -53,7 +54,7 @@ export async function calculateTransactionFee(
   return Math.round(amount * application_fee_percent);
 }
 
-export const SubscriptionPlan = {
+export const SubscriptionPlan: GqlTypeDefinition<Resources['subscription plan']> = {
   typeDef: gql`
     type SubscriptionPlan {
       id: ID!

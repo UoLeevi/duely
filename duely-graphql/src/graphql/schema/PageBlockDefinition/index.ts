@@ -1,3 +1,4 @@
+import { Resources } from '@duely/db';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import {
@@ -11,7 +12,7 @@ const resource = {
   table_name: 'page_block_definition'
 } as const;
 
-export const PageBlockDefinition: GqlTypeDefinition = {
+export const PageBlockDefinition: GqlTypeDefinition<Resources['page block definition']> = {
   typeDef: gql`
     type PageBlockDefinition implements Node {
       id: ID!

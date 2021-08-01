@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { queryResource } from '@duely/db';
+import { queryResource, Resources } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
@@ -12,7 +12,7 @@ const resource = {
   table_name: 'page_definition'
 } as const;
 
-export const PageDefinition: GqlTypeDefinition = {
+export const PageDefinition: GqlTypeDefinition<Resources['page definition']> = {
   typeDef: gql`
     type PageDefinition implements Node {
       id: ID!
@@ -53,7 +53,8 @@ export const PageDefinition: GqlTypeDefinition = {
     Query: {
       ...createDefaultQueryResolversForResource(resource),
       async page_definition_by_url_path(source, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
         return await queryResource(context, 'page definition', { url_path: args.url_path });
       }
     }

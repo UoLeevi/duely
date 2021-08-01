@@ -1,7 +1,8 @@
-import { queryResource, withSession } from '@duely/db';
+import { queryResource, Resources, withSession } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
-  createResolverForReferencedResource
+  createResolverForReferencedResource,
+  withStripeAccountProperty
 } from '../../util';
 import validator from 'validator';
 import stripe from '@duely/stripe';
@@ -14,7 +15,7 @@ const resource = {
   name: 'customer'
 } as const;
 
-export const Customer: GqlTypeDefinition = {
+export const Customer: GqlTypeDefinition<Resources['customer']> = {
   typeDef: gql`
     type Customer {
       id: ID!
@@ -80,7 +81,8 @@ export const Customer: GqlTypeDefinition = {
       }),
       ...createResolverForReferencedResource({ name: 'user' }),
       async default_stripe_customer(source, args, context) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           const stripe_account = await queryResource(
@@ -92,17 +94,11 @@ export const Customer: GqlTypeDefinition = {
           const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
           // see: https://stripe.com/docs/api/customers/retrieve
-          const stripe_customer = await stripe[stripe_env].customers.retrieve(
-            source.default_stripe_id_ext,
-            {
-              stripeAccount: stripe_account.stripe_id_ext
-            }
-          );
+          const stripe_customer = await stripe
+            .get(stripe_account)
+            .customers.retrieve(source.default_stripe_id_ext);
 
-          return {
-            stripeAccount: stripe_account.stripe_id_ext,
-            ...stripe_customer
-          };
+          return withStripeAccountProperty(stripe_customer, stripe_account);
         } catch (error: any) {
           throw new Error(error.message);
         }
@@ -113,7 +109,8 @@ export const Customer: GqlTypeDefinition = {
         context,
         info
       ) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           const stripe_account = await queryResource(
@@ -121,8 +118,6 @@ export const Customer: GqlTypeDefinition = {
             'stripe account',
             source.stripe_account_id
           );
-
-          const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
           args.email = source.email_address;
 
@@ -135,13 +130,8 @@ export const Customer: GqlTypeDefinition = {
           }
 
           // see: https://stripe.com/docs/api/customers/list
-          const list = await stripe[stripe_env].customers.list(args, {
-            stripeAccount: stripe_account.stripe_id_ext
-          });
-          return list.data?.map((cus) => ({
-            stripeAccount: stripe_account.stripe_id_ext,
-            ...cus
-          }));
+          const list = await stripe.get(stripe_account).customers.list(args);
+          return withStripeAccountProperty(list.data, stripe_account);
         } catch (error: any) {
           throw new Error(error.message);
         }
@@ -152,7 +142,8 @@ export const Customer: GqlTypeDefinition = {
     },
     Mutation: {
       async create_customer(obj, { stripe_account_id, email_address, name }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         if (!validator.isEmail(email_address))
           return {
@@ -175,15 +166,10 @@ export const Customer: GqlTypeDefinition = {
               }
             };
 
-            const stripe_env = stripe_account.livemode ? 'live' : 'test';
-
             // create customer at stripe
-            const stripe_customer = await stripe[stripe_env].customers.create(
-              stripe_customer_args,
-              {
-                stripeAccount: stripe_account.stripe_id_ext
-              }
-            );
+            const stripe_customer = await stripe
+              .get(stripe_account)
+              .customers.create(stripe_customer_args);
 
             // create customer resource
             const customer = await createResource('customer', {
@@ -210,7 +196,8 @@ export const Customer: GqlTypeDefinition = {
         }
       },
       async update_customer(obj, { customer_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         if (args.email_address) {
           if (!validator.isEmail(args.email_address))
@@ -245,14 +232,10 @@ export const Customer: GqlTypeDefinition = {
             stripe_customer_args.name = customer.name ?? undefined;
             stripe_customer_args.email = customer.email_address;
 
-            const stripe_env = stripe_account.livemode ? 'live' : 'test';
-
             // update customer at stripe
-            await stripe[stripe_env].customers.update(
-              customer.default_stripe_id_ext,
-              stripe_customer_args,
-              { stripeAccount: stripe_account.stripe_id_ext }
-            );
+            await stripe
+              .get(stripe_account)
+              .customers.update(customer.default_stripe_id_ext, stripe_customer_args);
 
             // success
             return {
@@ -271,7 +254,8 @@ export const Customer: GqlTypeDefinition = {
         }
       },
       async delete_customer(obj, { customer_id }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           return await withSession(context, async ({ queryResource, deleteResource }) => {
@@ -294,9 +278,7 @@ export const Customer: GqlTypeDefinition = {
             const stripe_env = stripe_account.livemode ? 'live' : 'test';
 
             // delete customer from stripe
-            await stripe[stripe_env].customers.del(customer.default_stripe_id_ext, {
-              stripeAccount: stripe_account.stripe_id_ext
-            });
+            await stripe.get(stripe_account).customers.del(customer.default_stripe_id_ext);
 
             // success
             return {

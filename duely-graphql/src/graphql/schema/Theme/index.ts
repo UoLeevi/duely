@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { updateResource } from '@duely/db';
+import { Resources, updateResource } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
@@ -11,7 +11,7 @@ const resource = {
   name: 'theme'
 } as const;
 
-export const Theme: GqlTypeDefinition = {
+export const Theme: GqlTypeDefinition<Resources['theme']> = {
   typeDef: gql`
     type Theme implements Node {
       id: ID!
@@ -80,7 +80,8 @@ export const Theme: GqlTypeDefinition = {
     },
     Mutation: {
       async update_theme(obj, { theme_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           // update theme resource

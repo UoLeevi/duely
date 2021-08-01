@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import { URL } from 'url';
-import { updateResource } from '@duely/db';
+import { Resources, updateResource } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import { createDefaultQueryResolversForResource } from '../../util';
 import { DuelyGraphQLError } from '../../errors';
@@ -11,7 +11,7 @@ const resource = {
   plural: 'products_settings'
 } as const;
 
-export const ProductSettings: GqlTypeDefinition = {
+export const ProductSettings: GqlTypeDefinition<Resources['product settings']> = {
   typeDef: gql`
     type ProductSettings {
       id: ID!

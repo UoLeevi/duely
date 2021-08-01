@@ -1,3 +1,4 @@
+import { Resources } from '@duely/db';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import {
@@ -11,7 +12,7 @@ const resource = {
   name: 'subdomain'
 } as const;
 
-export const Subdomain: GqlTypeDefinition = {
+export const Subdomain: GqlTypeDefinition<Resources['subdomain']> = {
   typeDef: gql`
     type Subdomain implements Node {
       id: ID!

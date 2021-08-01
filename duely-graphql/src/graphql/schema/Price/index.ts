@@ -1,4 +1,4 @@
-import { withSession, PriceResource, ProductResource } from '@duely/db';
+import { withSession, PriceResource, ProductResource, Resources } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -17,7 +17,7 @@ const resource = {
   table_name: 'price'
 } as const;
 
-export const Price: GqlTypeDefinition = {
+export const Price: GqlTypeDefinition<Resources['price']> = {
   typeDef: gql`
     type Price implements Node {
       id: ID!
@@ -160,12 +160,9 @@ export const Price: GqlTypeDefinition = {
                   ] ?? undefined;
 
                 // create price object at stripe
-                stripe_price[stripe_env] = await stripe[stripe_env].prices.create(
-                  stripe_price_args,
-                  {
-                    stripeAccount: stripe_account.stripe_id_ext
-                  }
-                );
+                stripe_price[stripe_env] = await stripe
+                  .get(stripe_account)
+                  .prices.create(stripe_price_args);
               }
 
               // update price resource
@@ -246,11 +243,12 @@ export const Price: GqlTypeDefinition = {
 
               try {
                 // try deactivate price at stripe
-                await stripe[stripe_env].prices.update(
-                  price[`stripe_price_id_ext_${stripe_env}` as keyof PriceResource] as string,
-                  { active: false },
-                  { stripeAccount: stripe_account.stripe_id_ext }
-                );
+                await stripe
+                  .get(stripe_account)
+                  .prices.update(
+                    price[`stripe_price_id_ext_${stripe_env}` as keyof PriceResource] as string,
+                    { active: false }
+                  );
               } catch (err: any) {
                 // ignore error
                 console.log(
@@ -374,12 +372,9 @@ export const Price: GqlTypeDefinition = {
               };
             }
 
-            const checkout_session = await stripe[stripe_env].checkout.sessions.create(
-              stripe_checkout_session_args,
-              {
-                stripeAccount: stripe_account.stripe_id_ext
-              }
-            );
+            const checkout_session = await stripe
+              .get(stripe_account)
+              .checkout.sessions.create(stripe_checkout_session_args);
 
             // success
             return {

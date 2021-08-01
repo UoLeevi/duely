@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { queryCurrentUser } from '@duely/db';
+import { queryCurrentUser, Resources } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
@@ -12,7 +12,7 @@ const resource = {
   name: 'user'
 } as const;
 
-export const User: GqlTypeDefinition = {
+export const User: GqlTypeDefinition<Resources['user']> = {
   typeDef: gql`
     type User implements Node {
       id: ID!
@@ -61,7 +61,8 @@ export const User: GqlTypeDefinition = {
     },
     Query: {
       async current_user(source, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
         return await queryCurrentUser(context);
       },
       ...createDefaultQueryResolversForResource(resource)

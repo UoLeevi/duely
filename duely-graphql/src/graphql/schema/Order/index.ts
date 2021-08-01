@@ -2,7 +2,8 @@ import { queryResource, queryResourceAccess, Resources, updateResource } from '@
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
-  createResolverForReferencedResourceAll
+  createResolverForReferencedResourceAll,
+  withStripeAccountProperty
 } from '../../util';
 import stripe from '@duely/stripe';
 import gql from 'graphql-tag';
@@ -13,7 +14,7 @@ const resource = {
   name: 'order'
 } as const;
 
-export const Order: GqlTypeDefinition = {
+export const Order: GqlTypeDefinition<Resources['order']> = {
   typeDef: gql`
     type Order {
       id: ID!
@@ -105,10 +106,7 @@ export const Order: GqlTypeDefinition = {
             .get(stripe_account)
             .checkout.sessions.retrieve(order.stripe_checkout_session_id_ext);
 
-          return {
-            stripeAccount: stripe_account.stripe_id_ext,
-            ...stripe_checkout_session
-          };
+          return withStripeAccountProperty(stripe_checkout_session, stripe_account);
         } catch (error: any) {
           throw new Error(error.message);
         }

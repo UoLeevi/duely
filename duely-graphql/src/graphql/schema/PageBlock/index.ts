@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import { createResource, deleteResource, updateResource } from '@duely/db';
+import { createResource, deleteResource, Resources, updateResource } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
@@ -12,7 +12,7 @@ const resource = {
   table_name: 'page_block'
 } as const;
 
-export const PageBlock: GqlTypeDefinition = {
+export const PageBlock: GqlTypeDefinition<Resources['page block']> = {
   typeDef: gql`
     type PageBlock {
       id: ID!
@@ -78,7 +78,8 @@ export const PageBlock: GqlTypeDefinition = {
     },
     Mutation: {
       async create_page_block(obj, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           // create page block resource
@@ -100,7 +101,8 @@ export const PageBlock: GqlTypeDefinition = {
         }
       },
       async update_page_block(obj, { page_block_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           // update page_block resource
@@ -122,7 +124,8 @@ export const PageBlock: GqlTypeDefinition = {
         }
       },
       async delete_page_block(obj, { page_block_id }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           const page_block = await deleteResource(context, 'page block', page_block_id);

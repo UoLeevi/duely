@@ -1,4 +1,4 @@
-import { createResource, updateResource } from '@duely/db';
+import { createResource, Resources, updateResource } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -11,7 +11,7 @@ const resource = {
   name: 'credential'
 } as const;
 
-export const Credential: GqlTypeDefinition = {
+export const Credential: GqlTypeDefinition<Resources['credential']> = {
   typeDef: gql`
     type Credential implements Node {
       id: ID!
@@ -71,7 +71,8 @@ export const Credential: GqlTypeDefinition = {
     },
     Mutation: {
       async create_credential(obj, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           // create credential resource
@@ -93,7 +94,8 @@ export const Credential: GqlTypeDefinition = {
         }
       },
       async update_credential(obj, { credential_id, ...args }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           // update credential resource

@@ -1,4 +1,4 @@
-import { withSession, ProductResource } from '@duely/db';
+import { withSession, ProductResource, Resources } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
@@ -16,7 +16,7 @@ const resource = {
   name: 'product'
 } as const;
 
-export const Product: GqlTypeDefinition = {
+export const Product: GqlTypeDefinition<Resources['product']> = {
   typeDef: gql`
     type Product implements Node {
       id: ID!
@@ -223,8 +223,8 @@ export const Product: GqlTypeDefinition = {
               let product = await createResource('product', args);
 
               const stripe_envs = agency.livemode
-                ? ['test', 'live'] as const
-                : ['test'] as const;
+                ? (['test', 'live'] as const)
+                : (['test'] as const);
 
               const stripe_product: Record<'test' | 'live', Stripe.Product | undefined> = {
                 test: undefined,
@@ -238,12 +238,9 @@ export const Product: GqlTypeDefinition = {
                 });
 
                 // create product at stripe
-                stripe_product[stripe_env] = await stripe[stripe_env].products.create(
-                  stripe_product_args,
-                  {
-                    stripeAccount: stripe_account.stripe_id_ext
-                  }
-                );
+                stripe_product[stripe_env] = await stripe
+                  .get(stripe_account)
+                  .products.create(stripe_product_args);
               }
 
               // update product resource
@@ -343,8 +340,8 @@ export const Product: GqlTypeDefinition = {
               stripe_product_args.active = status === 'live';
 
               const stripe_envs = agency.livemode
-                ? ['test', 'live'] as const
-                : ['test'] as const;
+                ? (['test', 'live'] as const)
+                : (['test'] as const);
 
               for (const stripe_env of stripe_envs) {
                 const stripe_account = await queryResource('stripe account', {
@@ -353,15 +350,16 @@ export const Product: GqlTypeDefinition = {
                 });
 
                 // update product at stripe
-                await stripe[stripe_env].products.update(
-                  product[
-                    `stripe_prod_id_ext_${stripe_env}` as
-                      | 'stripe_prod_id_ext_live'
-                      | 'stripe_prod_id_ext_test'
-                  ]!,
-                  stripe_product_args,
-                  { stripeAccount: stripe_account.stripe_id_ext }
-                );
+                await stripe
+                  .get(stripe_account)
+                  .products.update(
+                    product[
+                      `stripe_prod_id_ext_${stripe_env}` as
+                        | 'stripe_prod_id_ext_live'
+                        | 'stripe_prod_id_ext_test'
+                    ]!,
+                    stripe_product_args
+                  );
               }
 
               // success
@@ -409,11 +407,12 @@ export const Product: GqlTypeDefinition = {
               });
 
               // deactivate product from stripe
-              await stripe[stripe_env].products.update(
-                product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] as string,
-                { active: false },
-                { stripeAccount: stripe_account.stripe_id_ext }
-              );
+              await stripe
+                .get(stripe_account)
+                .products.update(
+                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] as string,
+                  { active: false }
+                );
             }
 
             // success

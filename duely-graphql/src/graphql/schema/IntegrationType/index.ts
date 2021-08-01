@@ -5,13 +5,14 @@ import {
 } from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
+import { Resources } from '@duely/db';
 
 const resource = {
   name: 'integration type',
   table_name: 'integration_type'
 } as const;
 
-export const IntegrationType: GqlTypeDefinition = {
+export const IntegrationType: GqlTypeDefinition<Resources['integration type']> = {
   typeDef: gql`
     type IntegrationType implements Node {
       id: ID!

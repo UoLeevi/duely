@@ -1,6 +1,11 @@
 import stripe from '@duely/stripe';
 import Stripe from 'stripe';
-import { queryResource, withSession, updateProcessingState, getServiceAccountContext } from '@duely/db';
+import {
+  queryResource,
+  withSession,
+  updateProcessingState,
+  getServiceAccountContext
+} from '@duely/db';
 import { runLambda } from '@duely/lambda';
 
 const webhook_event_id = process.argv[2];
@@ -48,11 +53,9 @@ async function main() {
 
       // Create order items
 
-      const lineItemsList = await stripe[stripe_env].checkout.sessions.listLineItems(
-        session.id,
-        { limit: 100 },
-        { stripeAccount: event.account }
-      );
+      const lineItemsList = await stripe
+        .get(stripe_account)
+        .checkout.sessions.listLineItems(session.id, { limit: 100 });
 
       for (const lineItem of lineItemsList.data) {
         if (!lineItem.price) {

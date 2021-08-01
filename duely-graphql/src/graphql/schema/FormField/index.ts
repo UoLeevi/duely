@@ -1,3 +1,4 @@
+import { Resources } from '@duely/db';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import { createDefaultQueryResolversForResource } from '../../util';
@@ -7,7 +8,7 @@ const resource = {
   table_name: 'form_field'
 } as const;
 
-export const FormField: GqlTypeDefinition = {
+export const FormField: GqlTypeDefinition<Resources['form field']> = {
   typeDef: gql`
     type FormField implements Node {
       id: ID!

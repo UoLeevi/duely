@@ -8,10 +8,7 @@ import { DuelyGraphQLError } from '../../errors';
 export const LogIn: GqlTypeDefinition = {
   typeDef: gql`
     extend type Mutation {
-      log_in(
-        email_address: String!,
-        password: String!,
-        recaptcha_token: String): LogInResult!
+      log_in(email_address: String!, password: String!, recaptcha_token: String): LogInResult!
       log_out: SimpleResult!
     }
 
@@ -24,14 +21,15 @@ export const LogIn: GqlTypeDefinition = {
   resolvers: {
     Mutation: {
       async log_in(obj, { email_address, password, recaptcha_token }, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         if (recaptcha_token && process.env.RECAPTCHA_SECRET_KEY) {
           // https://developers.google.com/recaptcha/docs/verify
           const url = new URL('https://www.google.com/recaptcha/api/siteverify');
           url.searchParams.set('secret', process.env.RECAPTCHA_SECRET_KEY);
           url.searchParams.set('response', recaptcha_token);
-          
+
           if (context.ip) {
             url.searchParams.set('remoteip', context.ip);
           }
@@ -73,7 +71,8 @@ export const LogIn: GqlTypeDefinition = {
         }
       },
       async log_out(obj, args, context, info) {
-        if (!context.jwt) throw new DuelyGraphQLError("UNAUTHENTICATED", "JWT token was not provided");
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
           await logOut(context);

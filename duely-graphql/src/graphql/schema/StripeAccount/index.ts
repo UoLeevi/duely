@@ -2,15 +2,15 @@ import gql from 'graphql-tag';
 import { queryResource, queryResourceAccess, Resources } from '@duely/db';
 import stripe from '@duely/stripe';
 import { GqlTypeDefinition } from '../../types';
-import { createResolverForReferencedResourceAll } from '../../util';
+import { createResolverForReferencedResourceAll, withStripeAccountProperty } from '../../util';
 import { DuelyGraphQLError } from '../../errors';
 import Stripe from 'stripe';
 
 // see: https://stripe.com/docs/api/accounts/object
 
-type StripeAccount_Source = Resources['stripe account'] & Omit<Stripe.Account, 'id' | 'object'>;
-
-export const StripeAccount: GqlTypeDefinition = {
+export const StripeAccount: GqlTypeDefinition<
+  Resources['stripe account'] & Omit<Stripe.Account, 'id' | 'object'>
+> = {
   typeDef: gql`
     type StripeAccount {
       id: ID!
@@ -104,13 +104,6 @@ export const StripeAccount: GqlTypeDefinition = {
       secondary_color: String
     }
 
-    type StripeAccountLink {
-      type: String!
-      url: String!
-      created: DateTime!
-      expires_at: DateTime!
-    }
-
     type StripeBalance {
       available: [StripeCurrencyBalance!]!
       pending: [StripeCurrencyBalance!]!
@@ -131,14 +124,14 @@ export const StripeAccount: GqlTypeDefinition = {
   `,
   resolvers: {
     StripeAccount: {
-      id_ext: (source: StripeAccount_Source) => source.stripe_id_ext,
-      created: (source: StripeAccount_Source) => new Date(source.created! * 1000),
+      id_ext: (source) => source.stripe_id_ext,
+      created: (source) => new Date(source.created! * 1000),
       ...createResolverForReferencedResourceAll({
         name: 'customers',
         resource_name: 'customer',
         column_name: 'stripe_account_id'
       }),
-      async account_update_url(source: StripeAccount_Source, args, context, info) {
+      async account_update_url(source, args, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
@@ -155,7 +148,7 @@ export const StripeAccount: GqlTypeDefinition = {
 
           // create stripe account verification url
           // see: https://stripe.com/docs/api/account_links/create
-          return await stripe[stripe_env].accountLinks.create({
+          return await stripe.get(source).accountLinks.create({
             account: source.stripe_id_ext,
             refresh_url: return_url,
             return_url,
@@ -169,11 +162,9 @@ export const StripeAccount: GqlTypeDefinition = {
           throw new Error(error.message);
         }
       },
-      async balance(source: StripeAccount_Source, args, context, info) {
+      async balance(source, args, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        const stripe_env = source.livemode ? 'live' : 'test';
 
         try {
           const access = await queryResourceAccess(context, source.id);
@@ -184,13 +175,14 @@ export const StripeAccount: GqlTypeDefinition = {
 
           // retrive connected account balance
           // see: https://stripe.com/docs/api/balance/balance_retrieve
-          return await stripe[stripe_env].balance.retrieve({ stripeAccount: source.stripe_id_ext });
+          const balance = await stripe.get(source).balance.retrieve();
+          return withStripeAccountProperty(balance, source);
         } catch (error: any) {
           throw new Error(error.message);
         }
       },
       async balance_transactions(
-        source: StripeAccount_Source,
+        source,
         { payout_id, starting_after_id, ending_before_id, ...args },
         context,
         info
@@ -220,20 +212,14 @@ export const StripeAccount: GqlTypeDefinition = {
           }
 
           // see: https://stripe.com/docs/api/balance_transactions/list
-          const list = await stripe[stripe_env].balanceTransactions.list(args, {
-            stripeAccount: source.stripe_id_ext
-          });
-          return list.data?.map((txn) => ({
-            livemode: source.livemode,
-            stripeAccount: source.stripe_id_ext,
-            ...txn
-          }));
+          const list = await stripe.get(source).balanceTransactions.list(args);
+          return withStripeAccountProperty(list.data, source);
         } catch (error: any) {
           throw new Error(error.message);
         }
       },
       async payment_intents(
-        source: StripeAccount_Source,
+        source,
         { customer_id, starting_after_id, ending_before_id, ...args },
         context,
         info
@@ -263,27 +249,15 @@ export const StripeAccount: GqlTypeDefinition = {
           }
 
           // see: https://stripe.com/docs/api/payment_intents/list
-          const list = await stripe[stripe_env].paymentIntents.list(args, {
-            stripeAccount: source.stripe_id_ext
-          });
-          return list.data?.map((pi) => ({
-            stripeAccount: source.stripe_id_ext,
-            ...pi
-          }));
+          const list = await stripe.get(source).paymentIntents.list(args);
+          return withStripeAccountProperty(list.data, source);
         } catch (error: any) {
           throw new Error(error.message);
         }
       },
-      async bank_accounts(
-        source: StripeAccount_Source,
-        { starting_after_id, ending_before_id, ...args },
-        context,
-        info
-      ) {
+      async bank_accounts(source, { starting_after_id, ending_before_id, ...args }, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        const stripe_env = source.livemode ? 'live' : 'test';
 
         try {
           const access = await queryResourceAccess(context, source.id);
@@ -301,25 +275,17 @@ export const StripeAccount: GqlTypeDefinition = {
           }
 
           // see: https://stripe.com/docs/api/external_account_bank_accounts/list
-          const list = await stripe[stripe_env].accounts.listExternalAccounts(
-            source.stripe_id_ext,
-            args
+          const list = await stripe
+            .get(source)
+            .accounts.listExternalAccounts(source.stripe_id_ext, args);
+          return withStripeAccountProperty(
+            list.data?.filter((external_account) => external_account.object === 'bank_account'),
+            source
           );
-          return list.data
-            ?.filter((external_account) => external_account.object === 'bank_account')
-            .map((external_account) => ({
-              livemode: source.livemode,
-              stripeAccount: source.stripe_id_ext,
-              ...external_account
-            }));
         } catch (error: any) {
           throw new Error(error.message);
         }
       }
-    },
-    StripeAccountLink: {
-      created: (source) => new Date(source.created * 1000),
-      expires_at: (source) => new Date(source.expires_at * 1000)
     },
     Query: {
       async stripe_account(source, args, context, info) {
@@ -328,16 +294,31 @@ export const StripeAccount: GqlTypeDefinition = {
 
         try {
           const stripe_account = await queryResource(context, 'stripe account', args.id);
-          const stripe_env = stripe_account.livemode ? 'live' : 'test';
-
-          const { id, object, ...stripe_account_ext } = await stripe[stripe_env].accounts.retrieve(
-            stripe_account.stripe_id_ext
-          );
+          const { id, object, ...stripe_account_ext } = await stripe
+            .get(stripe_account)
+            .accounts.retrieve(stripe_account.stripe_id_ext);
           return { ...stripe_account, ...stripe_account_ext };
         } catch (error: any) {
           throw new Error(error.message);
         }
       }
+    }
+  }
+};
+
+export const StripeAccountLink: GqlTypeDefinition<Stripe.AccountLink> = {
+  typeDef: gql`
+    type StripeAccountLink {
+      type: String!
+      url: String!
+      created: DateTime!
+      expires_at: DateTime!
+    }
+  `,
+  resolvers: {
+    StripeAccountLink: {
+      created: (source) => new Date(source.created * 1000),
+      expires_at: (source) => new Date(source.expires_at * 1000)
     }
   }
 };

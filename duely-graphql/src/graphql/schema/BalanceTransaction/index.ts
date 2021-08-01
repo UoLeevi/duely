@@ -1,10 +1,14 @@
 // see: https://stripe.com/docs/api/balance_transactions/object
 // see also: https://stripe.com/docs/reports/reporting-categories
 
+import { Resources } from '@duely/db';
 import gql from 'graphql-tag';
+import Stripe from 'stripe';
 import { GqlTypeDefinition } from '../../types';
 
-export const BalanceTransaction: GqlTypeDefinition = {
+export const BalanceTransaction: GqlTypeDefinition<
+  Stripe.BalanceTransaction & { stripe_account: Resources['stripe account'] }
+> = {
   typeDef: gql`
     type BalanceTransaction {
       id: ID!

@@ -21,16 +21,38 @@ export async function withCache<TKey, TValue>(
   return await promise;
 }
 
+export function withStripeAccountProperty(
+  data: null,
+  stripe_account: Resources['stripe account']
+): null;
+export function withStripeAccountProperty(
+  data: undefined,
+  stripe_account: Resources['stripe account']
+): undefined;
 export function withStripeAccountProperty<TData>(
-  data: TData | Iterable<TData>,
-  source: { livemode: boolean; stripeAccount?: string; stripe_id_ext?: string }
-) {
-  if (data == null) return data;
-  const stripeAccount = source.stripeAccount ?? source.stripe_id_ext;
-  const livemode = source.livemode;
+  data: TData[],
+  stripe_account: Resources['stripe account']
+): (TData & { stripe_account: Resources['stripe account'] })[];
+export function withStripeAccountProperty<TData>(
+  data: TData,
+  stripe_account: Resources['stripe account']
+): TData & { stripe_account: Resources['stripe account'] };
+export function withStripeAccountProperty<TData>(
+  data: TData | TData[],
+  stripe_account: Resources['stripe account']
+):
+  | (TData & { stripe_account: Resources['stripe account'] })
+  | (TData & { stripe_account: Resources['stripe account'] })[]
+  | null
+  | undefined {
+  if (data === null) return null;
+  if (data === undefined) return undefined;
   return Array.isArray(data)
-    ? data.map((item) => ({ stripeAccount, ...item }))
-    : { stripeAccount, livemode, ...data };
+    ? data.map<TData & { stripe_account: Resources['stripe account'] }>((item) => ({
+      ...item,
+        stripe_account
+      }))
+    : { stripe_account, ...data };
 }
 
 type CreateDefaultQueryResolversForResourceArgs<K extends keyof Resources> = {

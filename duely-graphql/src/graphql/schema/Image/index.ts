@@ -1,4 +1,4 @@
-import { withSession } from '@duely/db';
+import { Resources, withSession } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -65,7 +65,7 @@ export function validateAndReadDataUrlAsBuffer(
   }
 }
 
-export const Image: GqlTypeDefinition = {
+export const Image: GqlTypeDefinition<Resources['image']> = {
   typeDef: gql`
     type Image implements Node {
       id: ID!

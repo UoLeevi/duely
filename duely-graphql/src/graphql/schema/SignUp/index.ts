@@ -1,4 +1,4 @@
-import { createResource, withSession } from '@duely/db';
+import { createResource, Resources, withSession } from '@duely/db';
 import { sendEmail } from '@duely/email';
 import validator from 'validator';
 import gql from 'graphql-tag';
@@ -9,7 +9,7 @@ import { DuelyGraphQLError } from '../../errors';
 
 const resource_name = 'sign up';
 
-export const SignUp: GqlTypeDefinition = {
+export const SignUp: GqlTypeDefinition<Resources['sign up']> = {
   typeDef: gql`
     extend type Mutation {
       start_sign_up(

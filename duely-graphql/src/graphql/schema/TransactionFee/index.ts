@@ -1,4 +1,7 @@
+import { Resources } from '@duely/db';
 import gql from 'graphql-tag';
+import Stripe from 'stripe';
+import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -9,7 +12,7 @@ const resource = {
   table_name: 'transaction_fee'
 } as const;
 
-export const TransactionFee = {
+export const TransactionFee: GqlTypeDefinition<Resources['transaction fee']> = {
   typeDef: gql`
     type TransactionFee {
       id: ID!

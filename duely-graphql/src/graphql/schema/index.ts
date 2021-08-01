@@ -16,7 +16,7 @@ import { PasswordReset } from './PasswordReset';
 import { User } from './User';
 import { Agency } from './Agency';
 import { AgencySettings } from './AgencySettings';
-import { StripeAccount } from './StripeAccount';
+import { StripeAccount, StripeAccountLink } from './StripeAccount';
 import { StripeCustomer } from './StripeCustomer';
 import { ProductSettings } from './ProductSettings';
 import { Product } from './Product';
@@ -84,6 +84,7 @@ const types: GqlTypeDefinition[] = [
   AgencySettings,
   Price,
   StripeAccount,
+  StripeAccountLink,
   StripeCustomer,
   StripeCheckoutSession,
   BalanceTransaction,
