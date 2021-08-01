@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-home",
-  "version": "0.10.28",
+  "version": "0.10.29",
   "private": true,
   "scripts": {
     "start": "webpack serve",
@@ -20,10 +20,10 @@
     "../@duely/react"
   ],
   "dependencies": {
-    "@apollo/client": "^3.3.21",
-    "@duely/client": "0.4.31",
-    "@duely/core": "0.4.26",
-    "@duely/react": "0.4.63",
+    "@apollo/client": "^3.4.1",
+    "@duely/client": "0.4.32",
+    "@duely/core": "0.4.27",
+    "@duely/react": "0.4.65",
     "@headlessui/react": "^1.2.0",
     "@tailwindcss/typography": "^0.4.0",
     "@types/node": "^14.14.44",
@@ -36,7 +36,7 @@
     "react-router-dom": "^5.2.0"
   },
   "devDependencies": {
-    "@duely/build": "0.4.3",
+    "@duely/build": "0.4.4",
     "@tailwindcss/aspect-ratio": "^0.2.1",
     "@types/react": "^17.0.5",
     "@types/react-router-dom": "^5.1.7",

@@ -17,12 +17,12 @@
     "../build"
   ],
   "devDependencies": {
-    "@duely/build": "0.4.3",
+    "@duely/build": "0.4.4",
     "@types/jest": "^26.0.23",
     "@types/react": "^17.0.5",
     "cross-env": "^7.0.3",
-    "jest": "^26.6.3",
-    "webpack": "^5.38.1",
+    "jest": "^27.0.6",
+    "webpack": "^5.47.1",
     "webpack-cli": "^4.7.2"
   },
   "peerDependencies": {

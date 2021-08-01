@@ -25,16 +25,16 @@
     "../@duely/stripe"
   ],
   "dependencies": {
-    "@duely/core": "0.4.26",
-    "@duely/db": "0.4.17",
-    "@duely/lambda": "0.4.0",
-    "@duely/stripe": "0.4.1",
+    "@duely/core": "0.4.27",
+    "@duely/db": "0.4.18",
+    "@duely/lambda": "0.4.1",
+    "@duely/stripe": "0.4.2",
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "validator": "^13.5.2"
   },
   "devDependencies": {
-    "@duely/build": "0.4.3",
+    "@duely/build": "0.4.4",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.9",
     "@types/node": "^14.14.37",

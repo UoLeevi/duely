@@ -20,7 +20,7 @@ export function useQuery<
   } = useApolloQuery(query, {
     variables: {
       ...defaultVariables,
-      ...variables
+      ...variables!
     },
     ...defaultOptions,
     ...options

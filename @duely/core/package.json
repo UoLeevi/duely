@@ -1,6 +1,6 @@
 {
   "name": "@duely/core",
-  "version": "0.4.26",
+  "version": "0.4.27",
   "description": "Shared types and functions used by the Duely APIs.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "graphql": "^15.5.0"
   },
   "devDependencies": {
-    "@duely/build": "0.4.3",
+    "@duely/build": "0.4.4",
     "@graphql-codegen/cli": "^1.21.5",
     "@graphql-codegen/typed-document-node": "^1.18.7",
     "@graphql-codegen/typescript": "^1.22.2",
@@ -30,9 +30,9 @@
     "@graphql-typed-document-node/core": "^3.1.0",
     "@types/jest": "^26.0.23",
     "cross-env": "^7.0.3",
-    "jest": "^26.6.3",
-    "ts-jest": "^26.5.6",
-    "webpack": "^5.38.1",
+    "jest": "^27.0.6",
+    "ts-jest": "^27.0.4",
+    "webpack": "^5.47.1",
     "webpack-cli": "^4.7.2"
   }
 }

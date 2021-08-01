@@ -64,10 +64,13 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
   const skeletonRowCountFallback = 5;
 
   const columnDefinitions =
-    React.Children.map(children, (child) => ({
-      header: child!.props.header,
-      render: child!.props.children
-    })) ?? [];
+    React.Children.map(
+      children,
+      (child: React.ReactElement<ColumnProps<TItem>, typeof Column>) => ({
+        header: child!.props.header,
+        render: child!.props.children
+      })
+    ) ?? [];
 
   const columns = columnDefinitions.map((c) => c.render);
   let headers = columnDefinitions.map((c) => c.header);

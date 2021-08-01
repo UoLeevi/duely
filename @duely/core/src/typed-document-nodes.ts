@@ -2038,6 +2038,7 @@ export type StripeCheckoutSession = {
   mode?: Maybe<Scalars['String']>;
   payment_method_types?: Maybe<Array<Maybe<Scalars['String']>>>;
   payment_status?: Maybe<Scalars['String']>;
+  payment_intent?: Maybe<PaymentIntent>;
   submit_type?: Maybe<Scalars['String']>;
   success_url?: Maybe<Scalars['String']>;
 };
