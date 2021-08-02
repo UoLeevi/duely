@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-agency",
-  "version": "0.8.51",
+  "version": "0.8.52",
   "private": true,
   "scripts": {
     "start": "webpack serve",
@@ -23,7 +23,7 @@
     "@apollo/client": "^3.4.1",
     "@duely/client": "0.4.32",
     "@duely/core": "0.4.27",
-    "@duely/react": "0.4.65",
+    "@duely/react": "0.4.66",
     "@headlessui/react": "^1.2.0",
     "@tailwindcss/typography": "^0.4.0",
     "@types/node": "^14.14.44",

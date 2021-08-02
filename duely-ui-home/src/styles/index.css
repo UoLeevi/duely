@@ -1640,10 +1640,6 @@ body, #root {
   margin-bottom: 0px;
 }
 
-.mb-2 {
-  margin-bottom: 0.5rem;
-}
-
 .mt-6 {
   margin-top: 1.5rem;
 }
@@ -1744,6 +1740,10 @@ body, #root {
   height: 1.5rem;
 }
 
+.h-10 {
+  height: 2.5rem;
+}
+
 .h-8 {
   height: 2rem;
 }
@@ -1786,10 +1786,6 @@ body, #root {
 
 .h-4 {
   height: 1rem;
-}
-
-.h-10 {
-  height: 2.5rem;
 }
 
 .h-7 {
@@ -2521,6 +2517,10 @@ body, #root {
           background-clip: text;
 }
 
+.fill-current {
+  fill: currentColor;
+}
+
 .object-contain {
   -o-object-fit: contain;
      object-fit: contain;
@@ -2740,14 +2740,14 @@ body, #root {
   line-height: 1.25rem;
 }
 
-.text-xl {
-  font-size: 1.25rem;
-  line-height: 1.75rem;
-}
-
 .text-4xl {
   font-size: 2.25rem;
   line-height: 2.5rem;
+}
+
+.text-3xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
 }
 
 .text-2xl {
@@ -2755,9 +2755,9 @@ body, #root {
   line-height: 2rem;
 }
 
-.text-3xl {
-  font-size: 1.875rem;
-  line-height: 2.25rem;
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
 }
 
 .text-xs {
@@ -2821,9 +2821,9 @@ body, #root {
   color: rgba(255, 255, 255, var(--tw-text-opacity));
 }
 
-.text-gray-900 {
+.text-indigo-300 {
   --tw-text-opacity: 1;
-  color: rgba(15, 23, 42, var(--tw-text-opacity));
+  color: rgba(163, 191, 250, var(--tw-text-opacity));
 }
 
 .text-green-600 {
@@ -2849,6 +2849,11 @@ body, #root {
 .text-indigo-500 {
   --tw-text-opacity: 1;
   color: rgba(102, 126, 234, var(--tw-text-opacity));
+}
+
+.text-gray-900 {
+  --tw-text-opacity: 1;
+  color: rgba(15, 23, 42, var(--tw-text-opacity));
 }
 
 .text-gray-300 {
@@ -2933,6 +2938,16 @@ body, #root {
 .text-red-400 {
   --tw-text-opacity: 1;
   color: rgba(251, 113, 133, var(--tw-text-opacity));
+}
+
+.text-indigo-900 {
+  --tw-text-opacity: 1;
+  color: rgba(60, 54, 107, var(--tw-text-opacity));
+}
+
+.text-indigo-200 {
+  --tw-text-opacity: 1;
+  color: rgba(195, 218, 254, var(--tw-text-opacity));
 }
 
 .opacity-100 {
@@ -3159,6 +3174,16 @@ body, #root {
 .hover\:text-gray-100:hover {
   --tw-text-opacity: 1;
   color: rgba(241, 245, 249, var(--tw-text-opacity));
+}
+
+.hover\:text-gray-600:hover {
+  --tw-text-opacity: 1;
+  color: rgba(71, 85, 105, var(--tw-text-opacity));
+}
+
+.hover\:text-indigo-600:hover {
+  --tw-text-opacity: 1;
+  color: rgba(90, 103, 216, var(--tw-text-opacity));
 }
 
 .focus\:border-blue-300:focus {
@@ -3481,14 +3506,14 @@ body, #root {
     padding-bottom: 0.75rem;
   }
 
-  .sm\:text-2xl {
-    font-size: 1.5rem;
-    line-height: 2rem;
-  }
-
   .sm\:text-6xl {
     font-size: 3.75rem;
     line-height: 1;
+  }
+
+  .sm\:text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
   }
 
   .sm\:text-xl {

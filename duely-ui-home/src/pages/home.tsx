@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { PageLayout } from '@duely/react';
+import { PageLayout, DuelyLogo } from '@duely/react';
 
 export default function Home() {
   // useMessage(
@@ -25,7 +25,7 @@ export default function Home() {
   return (
     <PageLayout>
       <div className="flex flex-col items-center">
-        <div className="mb-2 text-xl font-bold text-gray-400 sm:text-2xl">Duely</div>
+        <DuelyLogo className="h-10 text-gray-400" />
         <h3 className="text-4xl font-bold text-center sm:text-6xl md:text-7xl lg:text-8xl">
           <span>Platform for</span>
           <br />
