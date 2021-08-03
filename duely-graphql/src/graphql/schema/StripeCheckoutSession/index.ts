@@ -43,8 +43,50 @@ export const StripeCheckoutSession: GqlTypeDefinition<
       amount_total: Int!
       currency: String!
       description: String!
-      price: String
+      price: StripePrice
       quantity: Int
+    }
+
+    type StripePrice {
+      id: String!
+      id_ext: String!
+      active: Boolean!
+      billing_scheme: String!
+      created: DateTime
+      currency: String!
+      livemode: Boolean!
+      lookup_key: String
+      nickname: String
+      product: String
+      recurring: StripePriceRecurring
+      tax_behavior: String
+      tiers: [StripePriceTier!]
+      tiers_mode: String
+      transform_quantity: StripePriceTransformQuantity
+      type: String!
+      unit_amount: Int
+      unit_amount_decimal: String
+    }
+
+    type StripePriceRecurring {
+      aggregate_usage: String
+      interval: String!
+      interval_count: Int!
+      trial_period_days: Int
+      usage_type: String
+    }
+
+    type StripePriceTier {
+      flat_amount: Int
+      flat_amount_decimal: String
+      unit_amount: Int
+      unit_amount_decimal: String
+      up_to: Int
+    }
+
+    type StripePriceTransformQuantity {
+      divide_by: Int
+      round: String
     }
   `,
   resolvers: {
@@ -100,6 +142,10 @@ export const StripeCheckoutSession: GqlTypeDefinition<
           throw new Error(error.message);
         }
       }
+    },
+    StripePrice: {
+      id_ext: (source) => source.id,
+      created: (source: Stripe.Price) => new Date(source.created * 1000),
     }
   }
 };
