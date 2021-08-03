@@ -1,6 +1,6 @@
 {
   "name": "@duely/stripe",
-  "version": "0.4.2",
+  "version": "0.4.4",
   "description": "Utilities for working with Stripe API.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -31,7 +31,7 @@
     "webpack-cli": "^4.7.2"
   },
   "peerDependencies": {
-    "@duely/core": "0.4.27",
-    "@duely/db": "0.4.18"
+    "@duely/core": "0.4.29",
+    "@duely/db": "0.4.19"
   }
 }

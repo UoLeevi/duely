@@ -58,7 +58,8 @@ import {
   CountCustomersDocument,
   AgencyStripeAccountBankAccountsDocument,
   MarkdownDocument,
-  MarkdownsDocument
+  MarkdownsDocument,
+  OrderDetailsDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -127,7 +128,6 @@ export const markdowns_Q = {
   query: MarkdownsDocument,
   result: (d: ResultOf<typeof MarkdownsDocument>) => d?.markdowns
 };
-
 
 export const image_Q = {
   query: ImageDocument,
@@ -239,7 +239,7 @@ function resolveSubdomain(): string | null {
   if (hostname === 'localhost' || isPrivateIp(hostname)) {
     // development environment
     let subdomain = url.searchParams.get('subdomain')?.toLowerCase() ?? null;
-    
+
     if (subdomain !== null) {
       sessionStorage.setItem('development-subdomain', subdomain);
       return subdomain;
@@ -334,6 +334,11 @@ export const integration_types_Q = {
   result: (d: ResultOf<typeof IntegrationTypesDocument>) => d?.integration_types
 };
 
+export const order_details_Q = {
+  query: OrderDetailsDocument,
+  result: (d: ResultOf<typeof OrderDetailsDocument>) => d?.order
+};
+
 export const order_Q = {
   query: OrderDocument,
   result: (d: ResultOf<typeof OrderDocument>) => d?.order
@@ -387,14 +392,12 @@ export const current_agency_stripe_account_update_url_Q = {
 
 export const agency_settings_Q = {
   query: AgencySettingsDocument,
-  result: (d: ResultOf<typeof AgencySettingsDocument>) =>
-    d?.agency?.settings
+  result: (d: ResultOf<typeof AgencySettingsDocument>) => d?.agency?.settings
 };
 
 export const product_settings_Q = {
   query: ProductSettingsDocument,
-  result: (d: ResultOf<typeof ProductSettingsDocument>) =>
-    d?.product?.settings
+  result: (d: ResultOf<typeof ProductSettingsDocument>) => d?.product?.settings
 };
 
 export const agency_pages_Q = {
@@ -409,7 +412,8 @@ export const agency_subscription_plan_Q = {
 
 export const agency_stripe_account_bank_accounts_Q = {
   query: AgencyStripeAccountBankAccountsDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountBankAccountsDocument>) => d?.agency?.stripe_account?.bank_accounts
+  result: (d: ResultOf<typeof AgencyStripeAccountBankAccountsDocument>) =>
+    d?.agency?.stripe_account?.bank_accounts
 };
 
 export const page_Q = {

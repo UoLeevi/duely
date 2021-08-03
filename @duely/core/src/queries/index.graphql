@@ -387,6 +387,26 @@ query CountProducts($filter: ProductFilter!, $token: String) {
   count_products(filter: $filter, token: $token)
 }
 
+query OrderDetails($order_id: ID!, $token: String) {
+  order(id: $order_id, token: $token) {
+    ...order
+    items(token: $token) {
+      ...order_item
+    }
+    customer(token: $token) {
+      id
+      name
+      email_address
+    }
+    stripe_checkout_session {
+      ...stripe_checkout_session
+      payment_intent {
+        ...payment_intent
+      }
+    }
+  }
+}
+
 query Order($order_id: ID!, $token: String) {
   order(id: $order_id, token: $token) {
     ...order

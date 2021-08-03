@@ -507,8 +507,46 @@ fragment line_item on LineItem {
   amount_total
   currency
   description
-  price
+  price {
+    ...stripe_price
+  }
   quantity
+}
+
+fragment stripe_price on StripePrice {
+  id
+  id_ext
+  active
+  billing_scheme
+  created
+  currency
+  livemode
+  lookup_key
+  nickname
+  product
+  recurring {
+    aggregate_usage
+    interval
+    interval_count
+    trial_period_days
+    usage_type
+  }
+  tax_behavior
+  tiers {
+    flat_amount
+    flat_amount_decimal
+    unit_amount
+    unit_amount_decimal
+    up_to
+  }
+  tiers_mode
+  transform_quantity {
+    divide_by
+    round
+  }
+  type
+  unit_amount
+  unit_amount_decimal
 }
 
 fragment stripe_checkout_session on StripeCheckoutSession {

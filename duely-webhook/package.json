@@ -25,10 +25,10 @@
     "../@duely/stripe"
   ],
   "dependencies": {
-    "@duely/core": "0.4.27",
-    "@duely/db": "0.4.18",
+    "@duely/core": "0.4.29",
+    "@duely/db": "0.4.19",
     "@duely/lambda": "0.4.1",
-    "@duely/stripe": "0.4.2",
+    "@duely/stripe": "0.4.4",
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "validator": "^13.5.2"

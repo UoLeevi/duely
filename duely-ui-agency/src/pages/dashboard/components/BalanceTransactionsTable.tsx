@@ -108,7 +108,7 @@ export function BalanceTransactionsTable() {
             </div>
           ) : (
             <div className="flex flex-col items-center">
-              <ColoredChip text={txn.status} color={{ pending: 'gray', available: 'green' }} />
+              <ColoredChip text={txn.status} color={{ pending: 'orange', available: 'green' }} />
             </div>
           )
         }

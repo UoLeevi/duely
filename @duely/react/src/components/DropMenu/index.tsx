@@ -5,6 +5,7 @@ import { ElementType } from 'react';
 import { IconProp } from '../icons';
 import { Link } from 'react-router-dom';
 import { useIntersectionObserver } from '../../hooks';
+import { SkeletonText } from '../skeletons';
 
 type ButtonProps = {
   as?: ElementType;
@@ -38,27 +39,45 @@ type ItemProps = {
   icon: IconProp;
   children: React.ReactNode;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  loading?: boolean;
 } & Partial<React.ComponentProps<Link>>;
 
-function DropMenuItem({ key, icon, children, to, onClick, ...props }: ItemProps) {
+function DropMenuItem({ key, icon, children, to, href, loading, onClick, ...props }: ItemProps) {
   const createClassName = ({ active, disabled }: { active: boolean; disabled: boolean }) =>
     Util.createClassName(
       active ? 'bg-gray-100 dark:text-gray-100 text-gray-900' : 'dark:text-gray-300 text-gray-700',
-      'first:rounded-t-md last:rounded-b-md flex px-4 py-2 items-center space-x-2 whitespace-nowrap text-sm text-center focus:outline-none font-medium'
+      'group first:rounded-t-md last:rounded-b-md flex px-4 py-2 items-center space-x-2 whitespace-nowrap text-sm text-center focus:outline-none font-medium'
     );
 
   return (
     <Menu.Item>
       {(arg) =>
-        to ? (
+        loading ? (
+          <span className={createClassName(arg)}>
+            {icon}
+            <span className="flex items-center flex-1 space-x-2 animate-pulse">Loading...</span>
+          </span>
+        ) : href ? (
+          <a
+            className={createClassName(arg)}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClick}
+            {...props}
+          >
+            {icon}
+            <span className="flex items-center flex-1 space-x-2">{children}</span>
+          </a>
+        ) : to ? (
           <Link className={createClassName(arg)} to={to} onClick={onClick} {...props}>
             {icon}
-            <span>{children}</span>
+            <span className="flex items-center flex-1 space-x-2">{children}</span>
           </Link>
         ) : (
           <button className={createClassName(arg)} onClick={onClick}>
             {icon}
-            <span>{children}</span>
+            <span className="flex items-center flex-1 space-x-2">{children}</span>
           </button>
         )
       }

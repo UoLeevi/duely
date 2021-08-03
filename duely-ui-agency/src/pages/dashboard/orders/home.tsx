@@ -1,10 +1,10 @@
-import { Link } from 'react-router-dom';
 import {
   useQuery,
   current_agency_Q,
   orders_Q,
   count_orders_Q,
-  agency_stripe_account_Q
+  agency_stripe_account_Q,
+  order_details_Q
 } from '@duely/client';
 import {
   useBreakpoints,
@@ -211,6 +211,7 @@ export default function DashboardOrdersHome() {
                     <DropMenu.Item icon={icons.pencil} to={`orders/${order.id}/edit`}>
                       Edit
                     </DropMenu.Item>
+                    <OrderActionsViewReceiptDropMenuItem order_id={order.id} />
                   </DropMenu>
                 );
               }}
@@ -219,6 +220,33 @@ export default function DashboardOrdersHome() {
         </Card>
       </DashboardSection>
     </>
+  );
+}
+
+type OrderActionsViewReceiptDropMenuItemProps = {
+  order_id: string;
+};
+
+function OrderActionsViewReceiptDropMenuItem({
+  order_id
+}: OrderActionsViewReceiptDropMenuItemProps) {
+  const {
+    data: order,
+    loading: orderLoading,
+    error: orderError
+  } = useQuery(order_details_Q, {
+    order_id
+  });
+
+  const receipt_url = order?.stripe_checkout_session.payment_intent?.charges?.[0]?.receipt_url ?? undefined;
+
+  return (
+    <DropMenu.Item icon={icons['receipt-tax']} href={receipt_url} loading={orderLoading}>
+      <span className="flex-1 text-left">View receipt</span>
+      <span className="mr-auto text-gray-400 transition-colors group-hover:text-gray-800">
+        {icons['external-link.solid']}
+      </span>
+    </DropMenu.Item>
   );
 }
 
