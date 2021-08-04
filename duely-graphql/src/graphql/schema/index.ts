@@ -47,6 +47,7 @@ import { IntegrationType } from './IntegrationType';
 import { IntegrationConfig } from './IntegrationConfig';
 import { CredentialType } from './CredentialType';
 import { BankAccount } from './BankAccount';
+import { Coupon } from './Coupon';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -103,6 +104,7 @@ const types: GqlTypeDefinition[] = [
   IntegrationConfig,
   IntegrationType,
   BankAccount,
+  Coupon,
   DateTime,
   Json
 ];
