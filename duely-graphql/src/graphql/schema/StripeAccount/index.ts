@@ -50,7 +50,7 @@ export const StripeAccount: GqlTypeDefinition<
         starting_after_id: String
         ending_before_id: String
         limit: Int
-      ): [PaymentIntent!]!
+      ): [Coupon!]!
       business_profile: BusinessProfile!
       business_type: String
       capabilities: StripeCapabilities!
@@ -328,7 +328,7 @@ export const StripeAccount: GqlTypeDefinition<
           const stripe_account = await queryResource(context, 'stripe account', args.id);
           const { id, object, ...stripe_account_ext } = await stripe
             .get(stripe_account)
-            .accounts.retrieve(stripe_account.stripe_id_ext);
+            .accounts.retrieve();
           return { ...stripe_account, ...stripe_account_ext };
         } catch (error: any) {
           throw new Error(error.message);
