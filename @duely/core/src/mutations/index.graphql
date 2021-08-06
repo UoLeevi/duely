@@ -204,6 +204,60 @@ mutation CreatePrice(
   }
 }
 
+mutation CreateCoupon(
+  $stripe_account_id: ID!
+  $amount_off: Int
+  $currency: String
+  $percent_off: Int
+  $duration: String
+  $duration_in_months: Int
+  $name: String
+  $id: String
+  $applies_to: CouponAppliesToInput
+  $max_redemptions: Int
+  $redeem_by: Int
+) {
+  create_coupon(
+    stripe_account_id: $stripe_account_id
+    amount_off: $amount_off
+    currency: $currency
+    percent_off: $percent_off
+    duration: $duration
+    duration_in_months: $duration_in_months
+    name: $name
+    id: $id
+    applies_to: $applies_to
+    max_redemptions: $max_redemptions
+    redeem_by: $redeem_by
+  ) {
+    success
+    message
+    coupon {
+      ...coupon
+    }
+  }
+}
+
+mutation UpdateCoupon($stripe_account_id: ID!, $coupon_id: ID!, $name: String) {
+  update_coupon(stripe_account_id: $stripe_account_id, coupon_id: $coupon_id, name: $name) {
+    success
+    message
+    coupon {
+      ...coupon
+    }
+  }
+}
+
+mutation DeleteCoupon($stripe_account_id: ID!, $coupon_id: ID!) {
+  delete_coupon(stripe_account_id: $stripe_account_id, coupon_id: $coupon_id) {
+    success
+    message
+    coupon {
+      id
+    }
+  }
+}
+
 mutation CreateCustomer($stripe_account_id: ID!, $email_address: String!, $name: String!) {
   create_customer(
     stripe_account_id: $stripe_account_id

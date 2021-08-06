@@ -206,6 +206,33 @@ query AgencyStripeAccountBankAccounts(
   }
 }
 
+query AgencyStripeAccountCoupons(
+  $agency_id: ID!
+  $starting_after_id: String
+  $ending_before_id: String
+  $limit: Int
+) {
+  agency(id: $agency_id) {
+    id
+    stripe_account {
+      id
+      coupons(
+        starting_after_id: $starting_after_id
+        ending_before_id: $ending_before_id
+        limit: $limit
+      ) {
+        ...coupon
+      }
+    }
+  }
+}
+
+query Coupon($stripe_account_id: ID!, $coupon_id: ID!) {
+  coupon(stripe_account_id: $stripe_account_id, coupon_id: $coupon_id) {
+    ...coupon
+  }
+}
+
 query Customer($customer_id: ID!) {
   customer(id: $customer_id) {
     ...customer

@@ -145,6 +145,26 @@ fragment stripe_customer on StripeCustomer {
   }
 }
 
+fragment coupon on Coupon {
+  id
+  id_ext
+  amount_off
+  applies_to {
+    products
+  }
+  created
+  currency
+  duration
+  duration_in_months
+  livemode
+  max_redemptions
+  name
+  percent_off
+  redeem_by
+  times_redeemed
+  valid
+}
+
 fragment charge on Charge {
   id
   id_ext
