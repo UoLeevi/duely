@@ -59,7 +59,9 @@ import {
   AgencyStripeAccountBankAccountsDocument,
   MarkdownDocument,
   MarkdownsDocument,
-  OrderDetailsDocument
+  OrderDetailsDocument,
+  AgencyStripeAccountCouponsDocument,
+  CouponDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -414,6 +416,17 @@ export const agency_stripe_account_bank_accounts_Q = {
   query: AgencyStripeAccountBankAccountsDocument,
   result: (d: ResultOf<typeof AgencyStripeAccountBankAccountsDocument>) =>
     d?.agency?.stripe_account?.bank_accounts
+};
+
+export const agency_stripe_account_coupons_Q = {
+  query: AgencyStripeAccountCouponsDocument,
+  result: (d: ResultOf<typeof AgencyStripeAccountCouponsDocument>) =>
+    d?.agency?.stripe_account?.coupons
+};
+
+export const coupon_Q = {
+  query: CouponDocument,
+  result: (d: ResultOf<typeof CouponDocument>) => d?.coupon
 };
 
 export const page_Q = {

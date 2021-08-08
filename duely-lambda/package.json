@@ -26,11 +26,11 @@
     "../@duely/stripe"
   ],
   "dependencies": {
-    "@duely/core": "0.4.29",
-    "@duely/db": "0.4.19",
-    "@duely/email": "0.4.8",
+    "@duely/core": "0.4.30",
+    "@duely/db": "0.4.20",
+    "@duely/email": "0.4.9",
     "@duely/lambda": "0.4.1",
-    "@duely/stripe": "0.4.4",
+    "@duely/stripe": "0.4.5",
     "axios": "^0.21.1",
     "cors": "^2.8.5",
     "express": "^4.16.4"

@@ -2,6 +2,7 @@ import { ApolloCache, MutationOptions, NormalizedCacheObject, Reference } from '
 import {
   CreateAgencyDocument,
   CreateBankAccountDocument,
+  CreateCouponDocument,
   CreateCredentialDocument,
   CreateCustomerDocument,
   CreateIntegrationConfigDocument,
@@ -11,6 +12,7 @@ import {
   CreateProductDocument,
   CustomerFragmentDoc,
   DeleteBankAccountDocument,
+  DeleteCouponDocument,
   DeleteCustomerDocument,
   DeletePageBlockDocument,
   DeleteProductDocument,
@@ -23,6 +25,7 @@ import {
   UpdateAgencyDocument,
   UpdateAgencySettingsDocument,
   UpdateBankAccountDocument,
+  UpdateCouponDocument,
   UpdateCredentialDocument,
   UpdateCustomerDocument,
   UpdateIntegrationConfigDocument,
@@ -38,6 +41,7 @@ import { client } from '../apollo/client';
 import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-document-node/core';
 import {
   agency_stripe_account_bank_accounts_Q,
+  agency_stripe_account_coupons_Q,
   count_customers_Q,
   count_products_Q,
   customers_Q,
@@ -216,6 +220,46 @@ export const delete_bank_account_M = {
     cache.evict({ id });
 
     evictQuery(cache, agency_stripe_account_bank_accounts_Q.query);
+
+    cache.gc();
+  }
+};
+
+const create_coupon_R = (d: ResultOf<typeof CreateCouponDocument>) => d?.create_coupon;
+export const create_coupon_M = {
+  mutation: CreateCouponDocument,
+  result: create_coupon_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof create_coupon_R> | null
+  ) {
+    if (!result?.success || !result.coupon) return;
+
+    evictQuery(cache, agency_stripe_account_coupons_Q.query);
+
+    cache.gc();
+  }
+};
+
+export const update_coupon_M = {
+  mutation: UpdateCouponDocument,
+  result: (d: ResultOf<typeof UpdateCouponDocument>) => d?.update_coupon
+};
+
+const delete_coupon_R = (d: ResultOf<typeof DeleteCouponDocument>) => d?.delete_coupon;
+export const delete_coupon_M = {
+  mutation: DeleteCouponDocument,
+  result: delete_coupon_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof delete_coupon_R> | null
+  ) {
+    if (!result?.success || !result.coupon) return;
+
+    const id = cache.identify(result.coupon);
+    cache.evict({ id });
+
+    evictQuery(cache, agency_stripe_account_coupons_Q.query);
 
     cache.gc();
   }
