@@ -15,6 +15,7 @@ export type FormFieldImageElementProps<
     hintRef: React.MutableRefObject<React.ReactNode>;
     label?: React.ReactNode;
     hint?: React.ReactNode;
+    contain?: boolean;
   }
 >;
 
@@ -30,6 +31,7 @@ export function FormFieldImageElement<
   hintRef,
   hint,
   label,
+  contain,
   ...props
 }: FormFieldImageElementProps<TName, TFormFields>) {
   const form = useFormContext();
@@ -56,7 +58,9 @@ export function FormFieldImageElement<
     <label htmlFor={name} className={className}>
       {image && (
         <img
-          className="flex-1 object-cover rounded-md"
+          className={`flex-1 rounded-md ${
+            contain ? 'object-contain' : 'object-cover'
+          }`}
           src={image.data}
           alt={typeof label === 'string' ? label : ''}
         />

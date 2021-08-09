@@ -1,4 +1,5 @@
 import { RouteProps } from 'react-router-dom';
+import DashboardSettingsBranding from './branding';
 import DashboardSettingsCheckout from './checkout';
 import DashboardSettingsIntegrations from './integrations';
 import DashboardSettingsMiscellaneous from './miscellaneous';
@@ -13,6 +14,10 @@ export const routes: RouteProps[] = [
   {
     path: '/dashboard/settings/integrations',
     component: DashboardSettingsIntegrations
+  },
+  {
+    path: '/dashboard/settings/branding',
+    component: DashboardSettingsBranding
   },
   {
     path: '/dashboard/settings/miscellaneous',

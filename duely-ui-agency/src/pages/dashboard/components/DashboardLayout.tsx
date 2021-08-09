@@ -169,6 +169,10 @@ const sidebarLinks: SidebarProps['links'] = [
         to: '/dashboard/settings/integrations'
       },
       {
+        text: 'Branding',
+        to: '/dashboard/settings/branding'
+      },
+      {
         text: 'Miscellaneous',
         to: '/dashboard/settings/miscellaneous'
       }
