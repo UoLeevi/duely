@@ -1,11 +1,14 @@
 import gql from 'graphql-tag';
-import { Resources, updateResource } from '@duely/db';
+import { Resources, updateResource, withSession } from '@duely/db';
 import { GqlTypeDefinition } from '../../types';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
 } from '../../util';
 import { DuelyGraphQLError } from '../../errors';
+import { validateAndReadDataUrlAsBuffer } from '../Image';
+import Stripe from 'stripe';
+import stripe from '@duely/stripe';
 
 const resource = {
   name: 'theme'
@@ -84,15 +87,61 @@ export const Theme: GqlTypeDefinition<Resources['theme']> = {
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
-          // update theme resource
-          const theme = await updateResource(context, 'theme', theme_id, args);
+          return await withSession(context, async ({ queryResource, updateResource }) => {
+            // update theme resource
+            const theme = await updateResource('theme', theme_id, args);
 
-          // success
-          return {
-            success: true,
-            theme,
-            type: 'UpdateThemeResult'
-          };
+            if (args.image_logo_id) {
+              const image_logo = await queryResource('image', args.image_logo_id);
+              // validate and read logo image
+              const [image_buffer, validationError] = validateAndReadDataUrlAsBuffer(
+                image_logo.data
+              );
+
+              if (validationError) throw new Error(validationError);
+
+              const agency = await queryResource('agency', theme.agency_id);
+              const stripe_envs = agency.livemode
+                ? (['test', 'live'] as const)
+                : (['test'] as const);
+
+              for (const stripe_env of stripe_envs) {
+                const stripe_account = await queryResource('stripe account', {
+                  agency_id: agency.id,
+                  livemode: stripe_env === 'live'
+                });
+
+                // upload logo image to stripe
+                const logo_upload = await stripe[stripe_env].files.create({
+                  file: {
+                    data: image_buffer,
+                    name: image_logo.name,
+                    type: 'application/octet-stream'
+                  },
+                  purpose: 'business_logo'
+                });
+
+                // update stripe account branding settings
+                const account = await stripe[stripe_env].accounts.update(
+                  stripe_account.stripe_id_ext,
+                  {
+                    settings: {
+                      branding: {
+                        logo: logo_upload.id
+                      }
+                    }
+                  }
+                );
+              }
+            }
+
+            // success
+            return {
+              success: true,
+              theme,
+              type: 'UpdateThemeResult'
+            };
+          });
         } catch (error: any) {
           return {
             // error

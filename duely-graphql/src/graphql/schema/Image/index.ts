@@ -33,7 +33,7 @@ function formatFileSize(size: number) {
 export function validateAndReadDataUrlAsBuffer(
   dataUrl: string,
   options?: typeof defaultValidationOptions
-) {
+): [Buffer | null, string | null] {
   options = {
     ...defaultValidationOptions,
     ...options
