@@ -23,6 +23,36 @@ query CountrySpec($country_code: ID!) {
   }
 }
 
+query Theme($theme_id: ID!) {
+  theme(id: $theme_id) {
+    ...theme
+  }
+}
+
+query Themes(
+  $filter: ThemeFilter!
+  $token: String
+  $desc: Boolean
+  $order_by: String
+  $limit: Int
+  $offset: Int
+  $before_id: ID
+  $after_id: ID
+) {
+  themes(
+    filter: $filter
+    token: $token
+    desc: $desc
+    order_by: $order_by
+    limit: $limit
+    offset: $offset
+    before_id: $before_id
+    after_id: $after_id
+  ) {
+    ...theme
+  }
+}
+
 query Markdown($markdown_id: ID!) {
   markdown(id: $markdown_id) {
     ...markdown

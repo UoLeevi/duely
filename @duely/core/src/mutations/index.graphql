@@ -112,6 +112,38 @@ mutation UpdateAgency($agency_id: ID!, $default_pricing_currency: String) {
   }
 }
 
+mutation UpdateTheme(
+  $theme_id: ID!
+  $image_logo_id: ID
+  $image_hero_id: ID
+  $color_primary: String
+  $color_secondary: String
+  $color_accent: String
+  $color_background: String
+  $color_surface: String
+  $color_error: String
+  $color_success: String
+) {
+  update_theme(
+    theme_id: $theme_id
+    image_logo_id: $image_logo_id
+    image_hero_id: $image_hero_id
+    color_primary: $color_primary
+    color_secondary: $color_secondary
+    color_accent: $color_accent
+    color_background: $color_background
+    color_surface: $color_surface
+    color_error: $color_error
+    color_success: $color_success
+  ) {
+    message
+    success
+    theme {
+      ...theme
+    }
+  }
+}
+
 mutation CreateProduct(
   $agency_id: ID!
   $name: String!

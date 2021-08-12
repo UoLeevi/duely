@@ -34,6 +34,7 @@ import {
   UpdatePageDocument,
   UpdateProductDocument,
   UpdateProductSettingsDocument,
+  UpdateThemeDocument,
   VerifyPasswordResetDocument,
   VerifySignUpDocument
 } from '@duely/core';
@@ -181,6 +182,11 @@ export const create_agency_M = {
 export const update_agency_M = {
   mutation: UpdateAgencyDocument,
   result: (d: ResultOf<typeof UpdateAgencyDocument>) => d?.update_agency
+};
+
+export const update_theme_M = {
+  mutation: UpdateThemeDocument,
+  result: (d: ResultOf<typeof UpdateThemeDocument>) => d?.update_theme
 };
 
 const create_bank_account_R = (d: ResultOf<typeof CreateBankAccountDocument>) =>

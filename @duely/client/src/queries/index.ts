@@ -61,7 +61,9 @@ import {
   MarkdownsDocument,
   OrderDetailsDocument,
   AgencyStripeAccountCouponsDocument,
-  CouponDocument
+  CouponDocument,
+  ThemeDocument,
+  ThemesDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -261,6 +263,16 @@ function resolveSubdomain(): string | null {
 
   return null;
 }
+
+export const theme_Q = {
+  query: ThemeDocument,
+  result: (d: ResultOf<typeof ThemeDocument>) => d?.theme
+};
+
+export const themes_Q = {
+  query: ThemesDocument,
+  result: (d: ResultOf<typeof ThemesDocument>) => d?.themes
+};
 
 export const product_Q = {
   query: ProductDocument,

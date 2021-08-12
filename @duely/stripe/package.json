@@ -31,7 +31,7 @@
     "webpack-cli": "^4.7.2"
   },
   "peerDependencies": {
-    "@duely/core": "0.4.30",
+    "@duely/core": "0.4.31",
     "@duely/db": "0.4.20"
   }
 }

@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@duely/build": "0.4.4",
-    "@duely/core": "0.4.30",
+    "@duely/core": "0.4.31",
     "axios": "^0.21.1"
   },
   "devDependencies": {
