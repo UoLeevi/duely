@@ -24,7 +24,7 @@
     "../@duely/react"
   ],
   "dependencies": {
-    "@duely/core": "0.4.30",
+    "@duely/core": "0.4.31",
     "@duely/db": "0.4.20",
     "cors": "^2.8.5",
     "express": "^4.16.4",
