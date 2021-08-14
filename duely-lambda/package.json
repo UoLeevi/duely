@@ -26,7 +26,7 @@
     "../@duely/stripe"
   ],
   "dependencies": {
-    "@duely/core": "0.4.31",
+    "@duely/core": "0.4.32",
     "@duely/db": "0.4.20",
     "@duely/email": "0.4.9",
     "@duely/lambda": "0.4.1",

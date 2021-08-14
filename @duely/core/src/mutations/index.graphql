@@ -144,6 +144,38 @@ mutation UpdateTheme(
   }
 }
 
+mutation CreateImage(
+  $agency_id: ID
+  $name: String!
+  $data: String!
+  $color: String!
+  $access: AccessLevel
+) {
+  create_image(agency_id: $agency_id, name: $name, data: $data, color: $color, access: $access) {
+    success
+    message
+    image {
+      ...image
+    }
+  }
+}
+
+mutation UpdateImage(
+  $image_id: ID!
+  $name: String
+  $data: String
+  $color: String
+  $access: AccessLevel
+) {
+  update_image(image_id: $image_id, name: $name, data: $data, color: $color, access: $access) {
+    success
+    message
+    image {
+      ...image
+    }
+  }
+}
+
 mutation CreateProduct(
   $agency_id: ID!
   $name: String!

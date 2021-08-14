@@ -5,6 +5,7 @@ import {
   CreateCouponDocument,
   CreateCredentialDocument,
   CreateCustomerDocument,
+  CreateImageDocument,
   CreateIntegrationConfigDocument,
   CreateIntegrationDocument,
   CreatePageBlockDocument,
@@ -28,6 +29,7 @@ import {
   UpdateCouponDocument,
   UpdateCredentialDocument,
   UpdateCustomerDocument,
+  UpdateImageDocument,
   UpdateIntegrationConfigDocument,
   UpdateIntegrationDocument,
   UpdatePageBlockDocument,
@@ -187,6 +189,16 @@ export const update_agency_M = {
 export const update_theme_M = {
   mutation: UpdateThemeDocument,
   result: (d: ResultOf<typeof UpdateThemeDocument>) => d?.update_theme
+};
+
+export const create_image_M = {
+  mutation: CreateImageDocument,
+  result: (d: ResultOf<typeof CreateImageDocument>) => d?.create_image
+};
+
+export const update_image_M = {
+  mutation: UpdateImageDocument,
+  result: (d: ResultOf<typeof UpdateImageDocument>) => d?.update_image
 };
 
 const create_bank_account_R = (d: ResultOf<typeof CreateBankAccountDocument>) =>

@@ -1,5 +1,7 @@
+import { Util as CoreUtil } from '@duely/core';
 import {
   update_theme_M,
+  update_image_M,
   useMutation,
   useQuery,
   image_Q,
@@ -14,13 +16,15 @@ import {
   FormInfoMessage,
   useFormMessages,
   ValidationRules,
-  useImageInputFromFileList
+  useImageInputFromFileList,
+  Util
 } from '@duely/react';
 
 type SettingsBrandingSettingsFormValues = { image_logo_file_list: FileList };
 
 export function SettingsBrandingSettingsForm() {
   const [updateTheme, stateUpdate] = useMutation(update_theme_M);
+  const [updateImage] = useMutation(update_image_M);
 
   const form = useForm<SettingsBrandingSettingsFormValues>();
 
@@ -58,7 +62,37 @@ export function SettingsBrandingSettingsForm() {
     image_logo_file_list,
     ...data
   }: SettingsBrandingSettingsFormValues) => {
-    const res = await updateTheme({ theme_id: theme?.id!, ...data });
+    const diff = {
+      ...Util.diff(CoreUtil.pick(data, theme!), theme!)
+    };
+
+    let image_update_res = null;
+
+    if (image_logo && image_logo?.data !== current_image_logo?.data) {
+      image_update_res = await updateImage({ image_id: current_image_logo?.id!, ...image_logo });
+
+      if (!image_update_res?.success) {
+        setErrorMessage(
+          image_update_res?.message ?? 'Unable to save changes. Something went wrong.'
+        );
+        return;
+      }
+    }
+
+    if (Object.keys(diff).length === 0) {
+      if (image_update_res) {
+        if (image_update_res?.success) {
+          setSuccessMessage('Saved');
+          return;
+        }
+      }
+
+      setInfoMessage('No changes to be saved');
+      form.reset();
+      return;
+    }
+
+    const res = await updateTheme({ theme_id: theme?.id!, ...diff });
     if (res?.success) {
       setSuccessMessage('Saved');
       return;
