@@ -1,4 +1,4 @@
-// see: https://stripe.com/docs/api/coupons/object
+// see: https://stripe.com/docs/api/invoices/object
 
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
@@ -7,39 +7,95 @@ import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
 import { withStripeAccountProperty } from '../../util';
+import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 
-export const Coupon: GqlTypeDefinition<
-  Stripe.Coupon & { stripe_account: Resources['stripe account'] }
+export const Invoice: GqlTypeDefinition<
+  Stripe.Invoice & { stripe_account: Resources['stripe account'] }
 > = {
   typeDef: gql`
-    type Coupon {
-      id: ID!
-      id_ext: ID!
-      amount_off: Int
-      applies_to: CouponAppliesTo
-      created: DateTime
-      currency: String
-      duration: String
-      duration_in_months: Int
-      livemode: Boolean
-      max_redemptions: Int
-      name: String
-      percent_off: Int
-      redeem_by: DateTime
-      times_redeemed: Int
-      valid: Boolean
+    type Invoice {
+      id: String!
+      account_country: String
+      account_name: String
+      account_tax_ids: [String!]!
+      amount_due: Int!
+      amount_paid: Int!
+      amount_remaining: Int!
+      application_fee_amount: Int!
+      attempt_count: Int!
+      attempted: Boolean!
+      auto_advance: Boolean
+      automatic_tax: InvoiceAutomaticTax!;
+      billing_reason: String;
+      charge: Charge;
+      collection_method: Invoice.CollectionMethod | null;
+      created: DateTime!
+      currency: String!
+      custom_fields: Array<Invoice.CustomField> | null;
+      customer: StripeCustomer
+      customer_address: Address
+      customer_email: String
+      customer_name: String
+      customer_phone: String
+      customer_shipping: Invoice.CustomerShipping | null;
+      customer_tax_exempt: Invoice.CustomerTaxExempt | null;
+      customer_tax_ids: Array<Invoice.CustomerTaxId> | null;
+      default_payment_method: string | Stripe.PaymentMethod | null;
+      default_source: string | Stripe.CustomerSource | null;
+      default_tax_rates: Array<Stripe.TaxRate>;
+      description: String
+      discount: Stripe.Discount | null;
+      discounts: Array<
+        string | Stripe.Discount | Stripe.DeletedDiscount
+      > | null;
+      due_date: Int!
+      ending_balance: Int!
+      footer: String
+      hosted_invoice_url: String
+      invoice_pdf: String
+      last_finalization_error: Invoice.LastFinalizationError | null;
+      lines: ApiList<Stripe.InvoiceLineItem>;
+      livemode: Boolean!
+      metadata: Stripe.Metadata | null;
+      next_payment_attempt: Int!
+      number: String
+      on_behalf_of: string | Stripe.Account | null;
+      paid: Boolean!
+      payment_intent: string | Stripe.PaymentIntent | null;
+      payment_settings: Invoice.PaymentSettings;
+      period_end: Int!
+      period_start: Int!
+      post_payment_credit_notes_amount: Int!
+      pre_payment_credit_notes_amount: Int!
+      quote: string | Stripe.Quote | null;
+      receipt_number: String
+      starting_balance: Int!
+      statement_descriptor: String
+      status: Invoice.Status | null;
+      status_transitions: Invoice.StatusTransitions;
+      subscription: string | Stripe.Subscription | null;
+      subscription_proration_date?: Int!
+      subtotal: Int!
+      tax: Int!
+      threshold_reason?: Invoice.ThresholdReason;
+      total: Int!
+      total_discount_amounts: Array<Invoice.TotalDiscountAmount> | null;
+      total_tax_amounts: Array<Invoice.TotalTaxAmount>;
+      transfer_data: Invoice.TransferData | null;
+      webhooks_delivered_at: Int!
     }
 
-    type CouponAppliesTo {
-      products: [String!]
+    type InvoiceAutomaticTax {
+      enabled: Boolean!
+      status: String
     }
 
-    input CouponAppliesToInput {
+    input InvoiceAppliesToInput {
       products: [String!]
     }
 
     extend type Query {
-      coupon(stripe_account_id: ID!, coupon_id: ID!): Coupon
+      coupon(stripe_account_id: ID!, coupon_id: ID!): Invoice
     }
 
     extend type Mutation {
@@ -52,25 +108,37 @@ export const Coupon: GqlTypeDefinition<
         duration_in_months: Int
         name: String
         id: String
-        applies_to: CouponAppliesToInput
+        applies_to: InvoiceAppliesToInput
         max_redemptions: Int
         redeem_by: Int
-      ): CouponMutationResult!
-      update_coupon(stripe_account_id: ID!, coupon_id: ID!, name: String): CouponMutationResult!
-      delete_coupon(stripe_account_id: ID!, coupon_id: ID!): CouponMutationResult!
+      ): InvoiceMutationResult!
+      update_coupon(stripe_account_id: ID!, coupon_id: ID!, name: String): InvoiceMutationResult!
+      delete_coupon(stripe_account_id: ID!, coupon_id: ID!): InvoiceMutationResult!
     }
 
-    type CouponMutationResult implements MutationResult {
+    type InvoiceMutationResult implements MutationResult {
       success: Boolean!
       message: String
-      coupon: Coupon
+      coupon: Invoice
     }
   `,
   resolvers: {
-    Coupon: {
+    Invoice: {
       id_ext: (source) => source.id,
       created: (source) => new Date(source.created * 1000),
-      redeem_by: (source) => source.redeem_by && new Date(source.redeem_by * 1000)
+      async customer(source, args, context, info) {
+        if (source.customer == null) return null;
+        if (typeof source.customer === 'object') return source.customer;
+
+        const resolveTree = parseResolveInfo(info) as ResolveTree;
+        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
+        if (fields.length === 1 && fields[0] === 'id') return { id: source.customer };
+
+        const customer = await stripe
+          .get(source.stripe_account)
+          .customers.retrieve(source.customer);
+        return withStripeAccountProperty(customer, source.stripe_account);
+      }
     },
     Query: {
       async coupon(source, { stripe_account_id, coupon_id }, context, info) {
@@ -97,7 +165,7 @@ export const Coupon: GqlTypeDefinition<
     Mutation: {
       async create_coupon(
         obj,
-        { stripe_account_id, ...args }: { stripe_account_id: string } & Stripe.CouponCreateParams,
+        { stripe_account_id, ...args }: { stripe_account_id: string } & Stripe.InvoiceCreateParams,
         context,
         info
       ) {
@@ -119,7 +187,7 @@ export const Coupon: GqlTypeDefinition<
             return {
               success: true,
               coupon,
-              type: 'CouponMutationResult'
+              type: 'InvoiceMutationResult'
             };
           });
         } catch (error: any) {
@@ -127,7 +195,7 @@ export const Coupon: GqlTypeDefinition<
             // error
             success: false,
             message: error.message,
-            type: 'CouponMutationResult'
+            type: 'InvoiceMutationResult'
           };
         }
       },
@@ -150,7 +218,7 @@ export const Coupon: GqlTypeDefinition<
             return {
               success: true,
               coupon,
-              type: 'CouponMutationResult'
+              type: 'InvoiceMutationResult'
             };
           });
         } catch (error: any) {
@@ -158,7 +226,7 @@ export const Coupon: GqlTypeDefinition<
             // error
             success: false,
             message: error.message,
-            type: 'CouponMutationResult'
+            type: 'InvoiceMutationResult'
           };
         }
       },
@@ -181,7 +249,7 @@ export const Coupon: GqlTypeDefinition<
             return {
               success: true,
               coupon,
-              type: 'CouponMutationResult'
+              type: 'InvoiceMutationResult'
             };
           });
         } catch (error: any) {
@@ -189,7 +257,7 @@ export const Coupon: GqlTypeDefinition<
             // error
             success: false,
             message: error.message,
-            type: 'CouponMutationResult'
+            type: 'InvoiceMutationResult'
           };
         }
       }
