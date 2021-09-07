@@ -61,7 +61,7 @@ export const Invoice: GqlTypeDefinition<
       number: String
       on_behalf_of: string | Stripe.Account | null;
       paid: Boolean!
-      payment_intent: string | Stripe.PaymentIntent | null;
+      payment_intent: PaymentIntent;
       payment_settings: Invoice.PaymentSettings;
       period_end: Int!
       period_start: Int!
@@ -138,6 +138,19 @@ export const Invoice: GqlTypeDefinition<
           .get(source.stripe_account)
           .customers.retrieve(source.customer);
         return withStripeAccountProperty(customer, source.stripe_account);
+      },
+      async payment_intent(source, args, context, info) {
+        if (source.payment_intent == null) return null;
+        if (typeof source.payment_intent === 'object') return source.payment_intent;
+
+        const resolveTree = parseResolveInfo(info) as ResolveTree;
+        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
+        if (fields.length === 1 && fields[0] === 'id') return { id: source.payment_intent };
+
+        const payment_intent = await stripe
+          .get(source.stripe_account)
+          .paymentIntents.retrieve(source.payment_intent);
+        return withStripeAccountProperty(payment_intent, source.stripe_account);
       }
     },
     Query: {
