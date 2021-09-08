@@ -25,22 +25,22 @@ export const Invoice: GqlTypeDefinition<
       attempt_count: Int!
       attempted: Boolean!
       auto_advance: Boolean
-      automatic_tax: InvoiceAutomaticTax!;
-      billing_reason: String;
-      charge: Charge;
-      collection_method: Invoice.CollectionMethod | null;
+      automatic_tax: InvoiceAutomaticTax!
+      billing_reason: String
+      charge: Charge
+      collection_method: String
       created: DateTime!
       currency: String!
-      custom_fields: Array<Invoice.CustomField> | null;
+      custom_fields: [InvoiceCustomField!]
       customer: StripeCustomer
       customer_address: Address
       customer_email: String
       customer_name: String
       customer_phone: String
-      customer_shipping: Invoice.CustomerShipping | null;
-      customer_tax_exempt: Invoice.CustomerTaxExempt | null;
-      customer_tax_ids: Array<Invoice.CustomerTaxId> | null;
-      default_payment_method: string | Stripe.PaymentMethod | null;
+      customer_shipping: InvoiceCustomerShipping
+      customer_tax_exempt: String
+      customer_tax_ids: [CustomerTaxId!]
+      default_payment_method: String
       default_source: string | Stripe.CustomerSource | null;
       default_tax_rates: Array<Stripe.TaxRate>;
       description: String
@@ -74,7 +74,7 @@ export const Invoice: GqlTypeDefinition<
       status: Invoice.Status | null;
       status_transitions: Invoice.StatusTransitions;
       subscription: string | Stripe.Subscription | null;
-      subscription_proration_date?: Int!
+      subscription_proration_date: DateTime
       subtotal: Int!
       tax: Int!
       threshold_reason?: Invoice.ThresholdReason;
@@ -82,7 +82,7 @@ export const Invoice: GqlTypeDefinition<
       total_discount_amounts: Array<Invoice.TotalDiscountAmount> | null;
       total_tax_amounts: Array<Invoice.TotalTaxAmount>;
       transfer_data: Invoice.TransferData | null;
-      webhooks_delivered_at: Int!
+      webhooks_delivered_at: DateTime!
     }
 
     type InvoiceAutomaticTax {
@@ -90,8 +90,22 @@ export const Invoice: GqlTypeDefinition<
       status: String
     }
 
-    input InvoiceAppliesToInput {
-      products: [String!]
+    type InvoiceCustomField {
+      name: String!
+      value: String!
+    }
+
+    type InvoiceCustomerShipping {
+      address: Address
+      carrier: String
+      name: String
+      phone: String
+      tracking_number: String
+    }
+
+    type CustomerTaxId {
+      type: String
+      value: String
     }
 
     extend type Query {
@@ -126,6 +140,8 @@ export const Invoice: GqlTypeDefinition<
     Invoice: {
       id_ext: (source) => source.id,
       created: (source) => new Date(source.created * 1000),
+      subscription_proration_date: (source) => source.subscription_proration_date && new Date(source.subscription_proration_date * 1000),
+      webhooks_delivered_at: (source) => source.webhooks_delivered_at && new Date(source.webhooks_delivered_at * 1000),
       async customer(source, args, context, info) {
         if (source.customer == null) return null;
         if (typeof source.customer === 'object') return source.customer;
