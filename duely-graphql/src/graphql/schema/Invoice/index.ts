@@ -44,10 +44,8 @@ export const Invoice: GqlTypeDefinition<
       default_source: string | Stripe.CustomerSource | null;
       default_tax_rates: Array<Stripe.TaxRate>;
       description: String
-      discount: Stripe.Discount | null;
-      discounts: Array<
-        string | Stripe.Discount | Stripe.DeletedDiscount
-      > | null;
+      discount: Discount
+      discounts: [Discount!]
       due_date: Int!
       ending_balance: Int!
       footer: String
