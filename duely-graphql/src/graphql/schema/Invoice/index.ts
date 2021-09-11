@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
-import { withStripeAccountProperty } from '../../util';
+import { withStripeAccountProperty, timestampToDate } from '../../util';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 
 export const Invoice: GqlTypeDefinition<
@@ -137,9 +137,12 @@ export const Invoice: GqlTypeDefinition<
   resolvers: {
     Invoice: {
       id_ext: (source) => source.id,
-      created: (source) => new Date(source.created * 1000),
-      subscription_proration_date: (source) => source.subscription_proration_date && new Date(source.subscription_proration_date * 1000),
-      webhooks_delivered_at: (source) => source.webhooks_delivered_at && new Date(source.webhooks_delivered_at * 1000),
+      created: (source) => timestampToDate(source.created),
+      subscription_proration_date: (source) =>
+        source.subscription_proration_date &&
+        timestampToDate(source.subscription_proration_date),
+      webhooks_delivered_at: (source) =>
+        source.webhooks_delivered_at && new Date(source.webhooks_delivered_at * 1000),
       async customer(source, args, context, info) {
         if (source.customer == null) return null;
         if (typeof source.customer === 'object') return source.customer;

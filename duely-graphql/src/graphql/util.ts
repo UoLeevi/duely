@@ -21,6 +21,15 @@ export async function withCache<TKey, TValue>(
   return await promise;
 }
 
+// TODO: remove this and import { Util } from '@duely/core'; and use Util.isNonNullable
+function isNonNullable<T>(value: T): value is NonNullable<T> {
+  return value !== undefined && value !== null;
+}
+
+export function timestampToDate(timestamp: number): Date {
+  return new Date(timestamp * 1000);
+}
+
 export function withStripeAccountProperty(
   data: null,
   stripe_account: Resources['stripe account']
@@ -49,7 +58,7 @@ export function withStripeAccountProperty<TData>(
   if (data === undefined) return undefined;
   return Array.isArray(data)
     ? data.map<TData & { stripe_account: Resources['stripe account'] }>((item) => ({
-      ...item,
+        ...item,
         stripe_account
       }))
     : { stripe_account, ...data };
