@@ -13,13 +13,12 @@ export const InvoiceLineItem: GqlTypeDefinition<
   Stripe.InvoiceLineItem & { stripe_account: Resources['stripe account'] }
 > = {
   typeDef: gql`
-    interface InvoiceLineItem {
-   */
+    type InvoiceLineItem {
       id: String!
       amount: Int!
       currency: String!
       description: String
-      discount_amounts: Array<InvoiceLineItem.DiscountAmount> | null;
+      discount_amounts: [InvoiceLineItemDiscountAmount!]
       discountable: Boolean!
       discounts: Array<string | Stripe.Discount> | null;
       invoice_item?: String!
@@ -40,6 +39,22 @@ export const InvoiceLineItem: GqlTypeDefinition<
   resolvers: {
     InvoiceLineItem: {
       id_ext: (source) => source.id
+    }
+  }
+};
+
+export const InvoiceLineItemDiscountAmount: GqlTypeDefinition<
+  Stripe.InvoiceLineItem.DiscountAmount & { stripe_account: Resources['stripe account'] }
+> = {
+  typeDef: gql`
+    type InvoiceLineItemDiscountAmount {
+      amount: Int
+      discount: string | Stripe.Discount | Stripe.DeletedDiscount;
+    }
+  `,
+  resolvers: {
+    InvoiceLineItemDiscountAmount: {
+
     }
   }
 };

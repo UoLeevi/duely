@@ -2,7 +2,7 @@ import type { GraphQLResolveInfo } from 'graphql';
 import { countResource, queryResource, queryResourceAll } from '@duely/db';
 import { DuelyQqlContext } from './context';
 import { Resources } from '@duely/db';
-import { Util } from '@duely/core';
+import { Tail, Util, Awaited } from '@duely/core';
 import { DuelyGraphQLError } from './errors';
 
 // Not yet used
