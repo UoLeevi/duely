@@ -13,7 +13,8 @@ export const Discount: GqlTypeDefinition<
 > = {
   typeDef: gql`
     type Discount {
-      id: ID
+      id: ID!
+      id_ext: ID!
       checkout_session: String
       coupon: Coupon
       customer: StripeCustomer

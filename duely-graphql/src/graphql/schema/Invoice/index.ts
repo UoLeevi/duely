@@ -14,7 +14,8 @@ export const Invoice: GqlTypeDefinition<
 > = {
   typeDef: gql`
     type Invoice {
-      id: String!
+      id: ID!
+      id_ext: ID!
       account_country: String
       account_name: String
       account_tax_ids: [String!]!
@@ -41,8 +42,8 @@ export const Invoice: GqlTypeDefinition<
       customer_tax_exempt: String
       customer_tax_ids: [CustomerTaxId!]
       default_payment_method: String
-      default_source: string | Stripe.CustomerSource | null;
-      default_tax_rates: Array<Stripe.TaxRate>;
+      # default_source: string | Stripe.CustomerSource | null;
+      # default_tax_rates: Array<Stripe.TaxRate>;
       description: String
       discount: Discount
       discounts: [Discount!]
@@ -51,35 +52,35 @@ export const Invoice: GqlTypeDefinition<
       footer: String
       hosted_invoice_url: String
       invoice_pdf: String
-      last_finalization_error: Invoice.LastFinalizationError | null;
-      lines: ApiList<Stripe.InvoiceLineItem>;
+      # last_finalization_error: Invoice.LastFinalizationError | null;
+      lines(starting_after_id: String, ending_before_id: String, limit: Int): [InvoiceLineItem!]!
       livemode: Boolean!
-      metadata: Stripe.Metadata | null;
+      # metadata: Stripe.Metadata | null;
       next_payment_attempt: Int!
       number: String
-      on_behalf_of: string | Stripe.Account | null;
+      # on_behalf_of: string | Stripe.Account | null;
       paid: Boolean!
-      payment_intent: PaymentIntent;
-      payment_settings: Invoice.PaymentSettings;
+      payment_intent: PaymentIntent
+      # payment_settings: Invoice.PaymentSettings;
       period_end: Int!
       period_start: Int!
       post_payment_credit_notes_amount: Int!
       pre_payment_credit_notes_amount: Int!
-      quote: string | Stripe.Quote | null;
+      # quote: string | Stripe.Quote | null;
       receipt_number: String
       starting_balance: Int!
       statement_descriptor: String
-      status: Invoice.Status | null;
-      status_transitions: Invoice.StatusTransitions;
-      subscription: string | Stripe.Subscription | null;
+      status: String
+      # status_transitions: Invoice.StatusTransitions;
+      # subscription: string | Stripe.Subscription | null;
       subscription_proration_date: DateTime
       subtotal: Int!
       tax: Int!
-      threshold_reason?: Invoice.ThresholdReason;
+      # threshold_reason?: Invoice.ThresholdReason;
       total: Int!
-      total_discount_amounts: Array<Invoice.TotalDiscountAmount> | null;
-      total_tax_amounts: Array<Invoice.TotalTaxAmount>;
-      transfer_data: Invoice.TransferData | null;
+      # total_discount_amounts: Array<Invoice.TotalDiscountAmount> | null;
+      # total_tax_amounts: Array<Invoice.TotalTaxAmount>;
+      # transfer_data: Invoice.TransferData | null;
       webhooks_delivered_at: DateTime!
     }
 
@@ -107,25 +108,15 @@ export const Invoice: GqlTypeDefinition<
     }
 
     extend type Query {
-      coupon(stripe_account_id: ID!, coupon_id: ID!): Invoice
+      invoice(stripe_account_id: ID!, invoice_id: ID!): Invoice
     }
 
     extend type Mutation {
-      create_coupon(
+      create_invoice(
         stripe_account_id: ID!
-        amount_off: Int
-        currency: String
-        percent_off: Int
-        duration: String
-        duration_in_months: Int
-        name: String
-        id: String
-        applies_to: InvoiceAppliesToInput
-        max_redemptions: Int
-        redeem_by: Int
       ): InvoiceMutationResult!
-      update_coupon(stripe_account_id: ID!, coupon_id: ID!, name: String): InvoiceMutationResult!
-      delete_coupon(stripe_account_id: ID!, coupon_id: ID!): InvoiceMutationResult!
+      update_invoice(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
+      delete_invoice(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
     }
 
     type InvoiceMutationResult implements MutationResult {
@@ -139,8 +130,7 @@ export const Invoice: GqlTypeDefinition<
       id_ext: (source) => source.id,
       created: (source) => timestampToDate(source.created),
       subscription_proration_date: (source) =>
-        source.subscription_proration_date &&
-        timestampToDate(source.subscription_proration_date),
+        source.subscription_proration_date && timestampToDate(source.subscription_proration_date),
       webhooks_delivered_at: (source) =>
         source.webhooks_delivered_at && new Date(source.webhooks_delivered_at * 1000),
       async customer(source, args, context, info) {
@@ -168,10 +158,33 @@ export const Invoice: GqlTypeDefinition<
           .get(source.stripe_account)
           .paymentIntents.retrieve(source.payment_intent);
         return withStripeAccountProperty(payment_intent, source.stripe_account);
+      },
+      async lines(source, { starting_after_id, ending_before_id, ...args }, context, info) {
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+
+        try {
+          if (starting_after_id) {
+            args.starting_after = starting_after_id;
+          }
+
+          if (ending_before_id) {
+            args.ending_before = ending_before_id;
+          }
+
+          // see: https://stripe.com/docs/api/invoices/invoice_lines
+          const list = await stripe
+            .get(source.stripe_account)
+            .invoices.listLineItems(source.id, args);
+
+          return withStripeAccountProperty(list.data, source.stripe_account);
+        } catch (error: any) {
+          throw new Error(error.message);
+        }
       }
     },
     Query: {
-      async coupon(source, { stripe_account_id, coupon_id }, context, info) {
+      async invoice(source, { stripe_account_id, invoice_id }, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
@@ -184,8 +197,8 @@ export const Invoice: GqlTypeDefinition<
               throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
             }
 
-            const coupon = await stripe.get(stripe_account).coupons.retrieve(coupon_id);
-            return withStripeAccountProperty(coupon, stripe_account);
+            const invoice = await stripe.get(stripe_account).invoices.retrieve(invoice_id);
+            return withStripeAccountProperty(invoice, stripe_account);
           });
         } catch (error: any) {
           throw new Error(error.message);
@@ -193,7 +206,7 @@ export const Invoice: GqlTypeDefinition<
       }
     },
     Mutation: {
-      async create_coupon(
+      async create_invoice(
         obj,
         { stripe_account_id, ...args }: { stripe_account_id: string } & Stripe.InvoiceCreateParams,
         context,
@@ -211,12 +224,12 @@ export const Invoice: GqlTypeDefinition<
               throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
             }
 
-            const coupon = await stripe.get(stripe_account).coupons.create(args);
+            const invoice = await stripe.get(stripe_account).invoices.create(args);
 
             // success
             return {
               success: true,
-              coupon,
+              invoice,
               type: 'InvoiceMutationResult'
             };
           });
@@ -229,7 +242,7 @@ export const Invoice: GqlTypeDefinition<
           };
         }
       },
-      async update_coupon(obj, { stripe_account_id, coupon_id, ...args }, context, info) {
+      async update_invoice(obj, { stripe_account_id, invoice_id, ...args }, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
@@ -242,12 +255,12 @@ export const Invoice: GqlTypeDefinition<
               throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
             }
 
-            const coupon = await stripe.get(stripe_account).coupons.update(coupon_id, args);
+            const invoice = await stripe.get(stripe_account).invoices.update(invoice_id, args);
 
             // success
             return {
               success: true,
-              coupon,
+              invoice,
               type: 'InvoiceMutationResult'
             };
           });
@@ -260,7 +273,7 @@ export const Invoice: GqlTypeDefinition<
           };
         }
       },
-      async delete_coupon(obj, { stripe_account_id, coupon_id }, context, info) {
+      async delete_invoice(obj, { stripe_account_id, invoice_id }, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
@@ -273,12 +286,12 @@ export const Invoice: GqlTypeDefinition<
               throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
             }
 
-            const coupon = await stripe.get(stripe_account).coupons.del(coupon_id);
+            const invoice = await stripe.get(stripe_account).invoices.del(invoice_id);
 
             // success
             return {
               success: true,
-              coupon,
+              invoice,
               type: 'InvoiceMutationResult'
             };
           });

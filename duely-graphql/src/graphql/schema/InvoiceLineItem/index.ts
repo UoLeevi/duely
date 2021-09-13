@@ -14,26 +14,27 @@ export const InvoiceLineItem: GqlTypeDefinition<
 > = {
   typeDef: gql`
     type InvoiceLineItem {
-      id: String!
+      id: ID!
+      id_ext: ID!
       amount: Int!
       currency: String!
       description: String
       discount_amounts: [InvoiceLineItemDiscountAmount!]
       discountable: Boolean!
-      discounts: Array<string | Stripe.Discount> | null;
-      invoice_item?: String!
+      # discounts: Array<string | Stripe.Discount> | null;
+      invoice_item: String
       livemode: Boolean!
-      metadata: Stripe.Metadata;
-      period: InvoiceLineItem.Period;
-      plan: Stripe.Plan | null;
-      price: Stripe.Price | null;
+      # metadata: Stripe.Metadata;
+      # period: InvoiceLineItem.Period;
+      # plan: Stripe.Plan | null;
+      price: StripePrice
       proration: Boolean!
       quantity: Int
       subscription: String
-      subscription_item?: String!
-      tax_amounts?: Array<InvoiceLineItem.TaxAmount>;
-      tax_rates?: Array<Stripe.TaxRate>;
-      type: InvoiceLineItem.Type;
+      subscription_item: String
+      # tax_amounts?: Array<InvoiceLineItem.TaxAmount>;
+      # tax_rates?: Array<Stripe.TaxRate>;
+      type: String!
     }
   `,
   resolvers: {
@@ -49,12 +50,13 @@ export const InvoiceLineItemDiscountAmount: GqlTypeDefinition<
   typeDef: gql`
     type InvoiceLineItemDiscountAmount {
       amount: Int
-      discount: string | Stripe.Discount | Stripe.DeletedDiscount;
+      discount: Discount
     }
   `,
   resolvers: {
     InvoiceLineItemDiscountAmount: {
 
+      
     }
   }
 };

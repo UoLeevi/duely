@@ -50,7 +50,7 @@ import { BankAccount } from './BankAccount';
 import { Coupon } from './Coupon';
 import { Invoice } from './Invoice';
 import { Discount } from './Discount';
-import { InvoiceLineItem } from './InvoiceLineItem';
+import { InvoiceLineItem, InvoiceLineItemDiscountAmount } from './InvoiceLineItem';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -93,6 +93,7 @@ const types: GqlTypeDefinition[] = [
   StripeCheckoutSession,
   Invoice,
   InvoiceLineItem,
+  InvoiceLineItemDiscountAmount,
   BalanceTransaction,
   ProductSettings,
   Product,
