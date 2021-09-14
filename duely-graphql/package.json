@@ -12,7 +12,8 @@
     "build": "cross-env NODE_ENV='production' webpack",
     "build+profile": "cross-env NODE_ENV='production' webpack --profile --json > stats.json",
     "watch": "webpack --watch",
-    "analyze": "npx webpack-bundle-analyzer stats.json"
+    "analyze": "npx webpack-bundle-analyzer stats.json",
+    "genschema-stripe": "node node_modules\\openapi-to-graphql-cli\\dist\\index.js generated-schemas\\stripe\\spec3.yaml --save generated-schemas\\stripe\\schema-stripe.graphql --no-viewer --no-equivalentToMessages"
   },
   "workspaces": [
     "../@duely/build",
@@ -51,6 +52,7 @@
     "@types/validator": "^13.1.3",
     "cross-env": "^7.0.3",
     "jest": "^27.0.6",
+    "openapi-to-graphql-cli": "^2.5.1",
     "ts-jest": "^27.0.4",
     "webpack": "^5.35.0",
     "webpack-cli": "^4.6.0",

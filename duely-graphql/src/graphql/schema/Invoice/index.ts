@@ -114,6 +114,7 @@ export const Invoice: GqlTypeDefinition<
     extend type Mutation {
       create_invoice(
         stripe_account_id: ID!
+        customer: ID!
       ): InvoiceMutationResult!
       update_invoice(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
       delete_invoice(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
