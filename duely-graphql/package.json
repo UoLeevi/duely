@@ -13,6 +13,7 @@
     "build+profile": "cross-env NODE_ENV='production' webpack --profile --json > stats.json",
     "watch": "webpack --watch",
     "analyze": "npx webpack-bundle-analyzer stats.json",
+    "about:genschema-stripe": "echo 'After using the script, convert field names to snake case using find regex $\\s+\\w+[(:] with Transform to Snake Case command from vscode command palette'",
     "genschema-stripe": "node node_modules\\openapi-to-graphql-cli\\dist\\index.js generated-schemas\\stripe\\spec3.yaml --save generated-schemas\\stripe\\schema-stripe.graphql --no-viewer --no-equivalentToMessages"
   },
   "workspaces": [
