@@ -20,7 +20,7 @@
     "watch": "webpack --watch"
   },
   "dependencies": {
-    "@duely/build": "0.4.4",
+    "@duely/build": "0.4.5",
     "axios": "^0.21.1"
   },
   "devDependencies": {

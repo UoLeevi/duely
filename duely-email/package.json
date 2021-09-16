@@ -41,7 +41,7 @@
     "validator": "^13.6.0"
   },
   "devDependencies": {
-    "@duely/build": "0.4.4",
+    "@duely/build": "0.4.5",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.9",
     "@types/hbs": "^4.0.1",

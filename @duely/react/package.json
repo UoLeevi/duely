@@ -26,7 +26,7 @@
     "watch": "webpack --watch"
   },
   "devDependencies": {
-    "@duely/build": "0.4.4",
+    "@duely/build": "0.4.5",
     "@tailwindcss/aspect-ratio": "^0.2.1",
     "@tailwindcss/typography": "^0.4.1",
     "@types/jest": "^26.0.23",
