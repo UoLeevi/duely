@@ -597,6 +597,156 @@ fragment stripe_checkout_session on StripeCheckoutSession {
   url
 }
 
+fragment discount on Discount {
+  id
+  id_ext
+  checkout_session
+  coupon {
+    id
+  }
+  customer {
+    id
+  }
+  end
+  invoice {
+    id
+  }
+  invoice_item
+  promotion_code
+  start
+  subscription
+}
+
+fragment invoice on Invoice {
+  id
+  id_ext
+  account_country
+  account_name
+  account_tax_ids
+  amount_due
+  amount_paid
+  amount_remaining
+  application_fee_amount
+  attempt_count
+  attempted
+  auto_advance
+  automatic_tax {
+    enabled
+    status
+  }
+  billing_reason
+  charge {
+    id
+  }
+  collection_method
+  created
+  currency
+  custom_fields {
+    name
+    value
+  }
+  customer {
+    id
+  }
+  customer_address {
+    ...address
+  }
+  customer_email
+  customer_name
+  customer_phone
+  customer_shipping {
+    address {
+      ...address
+    }
+    carrier
+    name
+    phone
+    tracking_number
+  }
+  customer_tax_exempt
+  customer_tax_ids {
+    type
+    value
+  }
+  default_payment_method
+  # default_source: string | Stripe.CustomerSource | null;
+  # default_tax_rates: Array<Stripe.TaxRate>;
+  description
+  discount {
+    ...discount
+  }
+  discounts {
+    ...discount
+  }
+  due_date
+  ending_balance
+  footer
+  hosted_invoice_url
+  invoice_pdf
+  # last_finalization_error: Invoice.LastFinalizationError | null;
+  livemode
+  # metadata: Stripe.Metadata | null;
+  next_payment_attempt
+  number
+  # on_behalf_of: string | Stripe.Account | null;
+  paid
+  payment_intent {
+    id
+  }
+  # payment_settings: Invoice.PaymentSettings;
+  period_end
+  period_start
+  post_payment_credit_notes_amount
+  pre_payment_credit_notes_amount
+  # quote: string | Stripe.Quote | null;
+  receipt_number
+  starting_balance
+  statement_descriptor
+  status
+  # status_transitions: Invoice.StatusTransitions;
+  # subscription: string | Stripe.Subscription | null;
+  subscription_proration_date
+  subtotal
+  tax
+  # threshold_reason?: Invoice.ThresholdReason;
+  total
+  # total_discount_amounts: Array<Invoice.TotalDiscountAmount> | null;
+  # total_tax_amounts: Array<Invoice.TotalTaxAmount>;
+  # transfer_data: Invoice.TransferData | null;
+  webhooks_delivered_at
+}
+
+fragment invoice_item on InvoiceLineItem {
+  id
+  id_ext
+  amount
+  currency
+  description
+  discount_amounts {
+    amount
+    discount {
+      ...discount
+    }
+  }
+  discountable
+  # discounts: Array<string | Stripe.Discount> | null;
+  invoice_item
+  livemode
+  # metadata: Stripe.Metadata;
+  # period: InvoiceLineItem.Period;
+  # plan: Stripe.Plan | null;
+  price {
+    id
+  }
+  proration
+  quantity
+  subscription
+  subscription_item
+  # tax_amounts?: Array<InvoiceLineItem.TaxAmount>;
+  # tax_rates?: Array<Stripe.TaxRate>;
+  type
+}
+
 fragment order_item on OrderItem {
   id
   order {

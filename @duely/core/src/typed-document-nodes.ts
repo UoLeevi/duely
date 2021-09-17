@@ -371,6 +371,27 @@ export type CustomerMutationResult = MutationResult & {
   customer?: Maybe<Customer>;
 };
 
+export type CustomerTaxId = {
+  __typename?: 'CustomerTaxId';
+  type?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['String']>;
+};
+
+
+export type Discount = {
+  __typename?: 'Discount';
+  id: Scalars['ID'];
+  id_ext: Scalars['ID'];
+  checkout_session?: Maybe<Scalars['String']>;
+  coupon?: Maybe<Coupon>;
+  customer?: Maybe<StripeCustomer>;
+  end?: Maybe<Scalars['DateTime']>;
+  invoice?: Maybe<Invoice>;
+  invoice_item?: Maybe<Scalars['String']>;
+  promotion_code?: Maybe<Scalars['String']>;
+  start: Scalars['DateTime'];
+  subscription?: Maybe<Scalars['String']>;
+};
 
 export type ExchangeRate = {
   __typename?: 'ExchangeRate';
@@ -498,6 +519,125 @@ export type IntegrationTypeFilter = {
   config_form_id?: Maybe<Scalars['ID']>;
 };
 
+export type Invoice = {
+  __typename?: 'Invoice';
+  id: Scalars['ID'];
+  id_ext: Scalars['ID'];
+  account_country?: Maybe<Scalars['String']>;
+  account_name?: Maybe<Scalars['String']>;
+  account_tax_ids: Array<Scalars['String']>;
+  amount_due: Scalars['Int'];
+  amount_paid: Scalars['Int'];
+  amount_remaining: Scalars['Int'];
+  application_fee_amount: Scalars['Int'];
+  attempt_count: Scalars['Int'];
+  attempted: Scalars['Boolean'];
+  auto_advance?: Maybe<Scalars['Boolean']>;
+  automatic_tax: InvoiceAutomaticTax;
+  billing_reason?: Maybe<Scalars['String']>;
+  charge?: Maybe<Charge>;
+  collection_method?: Maybe<Scalars['String']>;
+  created: Scalars['DateTime'];
+  currency: Scalars['String'];
+  custom_fields?: Maybe<Array<InvoiceCustomField>>;
+  customer?: Maybe<StripeCustomer>;
+  customer_address?: Maybe<Address>;
+  customer_email?: Maybe<Scalars['String']>;
+  customer_name?: Maybe<Scalars['String']>;
+  customer_phone?: Maybe<Scalars['String']>;
+  customer_shipping?: Maybe<InvoiceCustomerShipping>;
+  customer_tax_exempt?: Maybe<Scalars['String']>;
+  customer_tax_ids?: Maybe<Array<CustomerTaxId>>;
+  default_payment_method?: Maybe<Scalars['String']>;
+  description?: Maybe<Scalars['String']>;
+  discount?: Maybe<Discount>;
+  discounts?: Maybe<Array<Discount>>;
+  due_date: Scalars['Int'];
+  ending_balance: Scalars['Int'];
+  footer?: Maybe<Scalars['String']>;
+  hosted_invoice_url?: Maybe<Scalars['String']>;
+  invoice_pdf?: Maybe<Scalars['String']>;
+  lines: Array<InvoiceLineItem>;
+  livemode: Scalars['Boolean'];
+  next_payment_attempt: Scalars['Int'];
+  number?: Maybe<Scalars['String']>;
+  paid: Scalars['Boolean'];
+  payment_intent?: Maybe<PaymentIntent>;
+  period_end: Scalars['Int'];
+  period_start: Scalars['Int'];
+  post_payment_credit_notes_amount: Scalars['Int'];
+  pre_payment_credit_notes_amount: Scalars['Int'];
+  receipt_number?: Maybe<Scalars['String']>;
+  starting_balance: Scalars['Int'];
+  statement_descriptor?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['String']>;
+  subscription_proration_date?: Maybe<Scalars['DateTime']>;
+  subtotal: Scalars['Int'];
+  tax: Scalars['Int'];
+  total: Scalars['Int'];
+  webhooks_delivered_at: Scalars['DateTime'];
+};
+
+
+export type InvoiceLinesArgs = {
+  starting_after_id?: Maybe<Scalars['String']>;
+  ending_before_id?: Maybe<Scalars['String']>;
+  limit?: Maybe<Scalars['Int']>;
+};
+
+export type InvoiceAutomaticTax = {
+  __typename?: 'InvoiceAutomaticTax';
+  enabled: Scalars['Boolean'];
+  status?: Maybe<Scalars['String']>;
+};
+
+export type InvoiceCustomField = {
+  __typename?: 'InvoiceCustomField';
+  name: Scalars['String'];
+  value: Scalars['String'];
+};
+
+export type InvoiceCustomerShipping = {
+  __typename?: 'InvoiceCustomerShipping';
+  address?: Maybe<Address>;
+  carrier?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  phone?: Maybe<Scalars['String']>;
+  tracking_number?: Maybe<Scalars['String']>;
+};
+
+export type InvoiceLineItem = {
+  __typename?: 'InvoiceLineItem';
+  id: Scalars['ID'];
+  id_ext: Scalars['ID'];
+  amount: Scalars['Int'];
+  currency: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  discount_amounts?: Maybe<Array<InvoiceLineItemDiscountAmount>>;
+  discountable: Scalars['Boolean'];
+  invoice_item?: Maybe<Scalars['String']>;
+  livemode: Scalars['Boolean'];
+  price?: Maybe<StripePrice>;
+  proration: Scalars['Boolean'];
+  quantity?: Maybe<Scalars['Int']>;
+  subscription?: Maybe<Scalars['String']>;
+  subscription_item?: Maybe<Scalars['String']>;
+  type: Scalars['String'];
+};
+
+export type InvoiceLineItemDiscountAmount = {
+  __typename?: 'InvoiceLineItemDiscountAmount';
+  amount?: Maybe<Scalars['Int']>;
+  discount?: Maybe<Discount>;
+};
+
+export type InvoiceMutationResult = MutationResult & {
+  __typename?: 'InvoiceMutationResult';
+  success: Scalars['Boolean'];
+  message?: Maybe<Scalars['String']>;
+  coupon?: Maybe<Invoice>;
+};
+
 
 export type LineItem = {
   __typename?: 'LineItem';
@@ -580,6 +720,9 @@ export type Mutation = {
   update_price: PriceMutationResult;
   delete_price: PriceMutationResult;
   create_stripe_checkout_session: CreateStripeCheckoutSessionResult;
+  create_invoice: InvoiceMutationResult;
+  update_invoice: InvoiceMutationResult;
+  delete_invoice: InvoiceMutationResult;
   update_product_settings: ProductSettingsMutationResult;
   create_product: ProductMutationResult;
   update_product: ProductMutationResult;
@@ -755,6 +898,24 @@ export type MutationCreate_Stripe_Checkout_SessionArgs = {
   livemode: Scalars['Boolean'];
   success_url?: Maybe<Scalars['String']>;
   cancel_url?: Maybe<Scalars['String']>;
+};
+
+
+export type MutationCreate_InvoiceArgs = {
+  stripe_account_id: Scalars['ID'];
+  customer: Scalars['ID'];
+};
+
+
+export type MutationUpdate_InvoiceArgs = {
+  stripe_account_id: Scalars['ID'];
+  invoice_id: Scalars['ID'];
+};
+
+
+export type MutationDelete_InvoiceArgs = {
+  stripe_account_id: Scalars['ID'];
+  invoice_id: Scalars['ID'];
 };
 
 
@@ -1305,6 +1466,7 @@ export type Query = {
   prices?: Maybe<Array<Price>>;
   count_prices: Scalars['Int'];
   stripe_account?: Maybe<StripeAccount>;
+  invoice?: Maybe<Invoice>;
   product_settings?: Maybe<ProductSettings>;
   products_settings?: Maybe<Array<ProductSettings>>;
   count_products_settings: Scalars['Int'];
@@ -1649,6 +1811,12 @@ export type QueryCount_PricesArgs = {
 
 export type QueryStripe_AccountArgs = {
   id: Scalars['ID'];
+};
+
+
+export type QueryInvoiceArgs = {
+  stripe_account_id: Scalars['ID'];
+  invoice_id: Scalars['ID'];
 };
 
 
@@ -2001,6 +2169,7 @@ export type StripeAccount = {
   payment_intents: Array<PaymentIntent>;
   customers: Array<Customer>;
   coupons: Array<Coupon>;
+  invoices: Array<Invoice>;
   business_profile: BusinessProfile;
   business_type?: Maybe<Scalars['String']>;
   capabilities: StripeCapabilities;
@@ -2052,6 +2221,15 @@ export type StripeAccountCustomersArgs = {
 
 export type StripeAccountCouponsArgs = {
   created?: Maybe<Scalars['DateTime']>;
+  starting_after_id?: Maybe<Scalars['String']>;
+  ending_before_id?: Maybe<Scalars['String']>;
+  limit?: Maybe<Scalars['Int']>;
+};
+
+
+export type StripeAccountInvoicesArgs = {
+  customer_id?: Maybe<Scalars['ID']>;
+  status?: Maybe<Scalars['String']>;
   starting_after_id?: Maybe<Scalars['String']>;
   ending_before_id?: Maybe<Scalars['String']>;
   limit?: Maybe<Scalars['Int']>;
@@ -2738,6 +2916,77 @@ export type Stripe_Checkout_SessionFragment = (
   )>, line_items: Array<(
     { __typename?: 'LineItem' }
     & Line_ItemFragment
+  )> }
+);
+
+export type DiscountFragment = (
+  { __typename?: 'Discount' }
+  & Pick<Discount, 'id' | 'id_ext' | 'checkout_session' | 'end' | 'invoice_item' | 'promotion_code' | 'start' | 'subscription'>
+  & { coupon?: Maybe<(
+    { __typename?: 'Coupon' }
+    & Pick<Coupon, 'id'>
+  )>, customer?: Maybe<(
+    { __typename?: 'StripeCustomer' }
+    & Pick<StripeCustomer, 'id'>
+  )>, invoice?: Maybe<(
+    { __typename?: 'Invoice' }
+    & Pick<Invoice, 'id'>
+  )> }
+);
+
+export type InvoiceFragment = (
+  { __typename?: 'Invoice' }
+  & Pick<Invoice, 'id' | 'id_ext' | 'account_country' | 'account_name' | 'account_tax_ids' | 'amount_due' | 'amount_paid' | 'amount_remaining' | 'application_fee_amount' | 'attempt_count' | 'attempted' | 'auto_advance' | 'billing_reason' | 'collection_method' | 'created' | 'currency' | 'customer_email' | 'customer_name' | 'customer_phone' | 'customer_tax_exempt' | 'default_payment_method' | 'description' | 'due_date' | 'ending_balance' | 'footer' | 'hosted_invoice_url' | 'invoice_pdf' | 'livemode' | 'next_payment_attempt' | 'number' | 'paid' | 'period_end' | 'period_start' | 'post_payment_credit_notes_amount' | 'pre_payment_credit_notes_amount' | 'receipt_number' | 'starting_balance' | 'statement_descriptor' | 'status' | 'subscription_proration_date' | 'subtotal' | 'tax' | 'total' | 'webhooks_delivered_at'>
+  & { automatic_tax: (
+    { __typename?: 'InvoiceAutomaticTax' }
+    & Pick<InvoiceAutomaticTax, 'enabled' | 'status'>
+  ), charge?: Maybe<(
+    { __typename?: 'Charge' }
+    & Pick<Charge, 'id'>
+  )>, custom_fields?: Maybe<Array<(
+    { __typename?: 'InvoiceCustomField' }
+    & Pick<InvoiceCustomField, 'name' | 'value'>
+  )>>, customer?: Maybe<(
+    { __typename?: 'StripeCustomer' }
+    & Pick<StripeCustomer, 'id'>
+  )>, customer_address?: Maybe<(
+    { __typename?: 'Address' }
+    & AddressFragment
+  )>, customer_shipping?: Maybe<(
+    { __typename?: 'InvoiceCustomerShipping' }
+    & Pick<InvoiceCustomerShipping, 'carrier' | 'name' | 'phone' | 'tracking_number'>
+    & { address?: Maybe<(
+      { __typename?: 'Address' }
+      & AddressFragment
+    )> }
+  )>, customer_tax_ids?: Maybe<Array<(
+    { __typename?: 'CustomerTaxId' }
+    & Pick<CustomerTaxId, 'type' | 'value'>
+  )>>, discount?: Maybe<(
+    { __typename?: 'Discount' }
+    & DiscountFragment
+  )>, discounts?: Maybe<Array<(
+    { __typename?: 'Discount' }
+    & DiscountFragment
+  )>>, payment_intent?: Maybe<(
+    { __typename?: 'PaymentIntent' }
+    & Pick<PaymentIntent, 'id'>
+  )> }
+);
+
+export type Invoice_ItemFragment = (
+  { __typename?: 'InvoiceLineItem' }
+  & Pick<InvoiceLineItem, 'id' | 'id_ext' | 'amount' | 'currency' | 'description' | 'discountable' | 'invoice_item' | 'livemode' | 'proration' | 'quantity' | 'subscription' | 'subscription_item' | 'type'>
+  & { discount_amounts?: Maybe<Array<(
+    { __typename?: 'InvoiceLineItemDiscountAmount' }
+    & Pick<InvoiceLineItemDiscountAmount, 'amount'>
+    & { discount?: Maybe<(
+      { __typename?: 'Discount' }
+      & DiscountFragment
+    )> }
+  )>>, price?: Maybe<(
+    { __typename?: 'StripePrice' }
+    & Pick<StripePrice, 'id'>
   )> }
 );
 
@@ -4660,6 +4909,9 @@ export const PageFragmentDoc = {"kind":"Document","definitions":[{"kind":"Fragme
 export const Stripe_PriceFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"stripe_price"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"StripePrice"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"id_ext"}},{"kind":"Field","name":{"kind":"Name","value":"active"}},{"kind":"Field","name":{"kind":"Name","value":"billing_scheme"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"livemode"}},{"kind":"Field","name":{"kind":"Name","value":"lookup_key"}},{"kind":"Field","name":{"kind":"Name","value":"nickname"}},{"kind":"Field","name":{"kind":"Name","value":"product"}},{"kind":"Field","name":{"kind":"Name","value":"recurring"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"aggregate_usage"}},{"kind":"Field","name":{"kind":"Name","value":"interval"}},{"kind":"Field","name":{"kind":"Name","value":"interval_count"}},{"kind":"Field","name":{"kind":"Name","value":"trial_period_days"}},{"kind":"Field","name":{"kind":"Name","value":"usage_type"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tax_behavior"}},{"kind":"Field","name":{"kind":"Name","value":"tiers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"flat_amount"}},{"kind":"Field","name":{"kind":"Name","value":"flat_amount_decimal"}},{"kind":"Field","name":{"kind":"Name","value":"unit_amount"}},{"kind":"Field","name":{"kind":"Name","value":"unit_amount_decimal"}},{"kind":"Field","name":{"kind":"Name","value":"up_to"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tiers_mode"}},{"kind":"Field","name":{"kind":"Name","value":"transform_quantity"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"divide_by"}},{"kind":"Field","name":{"kind":"Name","value":"round"}}]}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"unit_amount"}},{"kind":"Field","name":{"kind":"Name","value":"unit_amount_decimal"}}]}}]} as unknown as DocumentNode<Stripe_PriceFragment, unknown>;
 export const Line_ItemFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"line_item"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"LineItem"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"amount_subtotal"}},{"kind":"Field","name":{"kind":"Name","value":"amount_total"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"price"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"stripe_price"}}]}},{"kind":"Field","name":{"kind":"Name","value":"quantity"}}]}}]} as unknown as DocumentNode<Line_ItemFragment, unknown>;
 export const Stripe_Checkout_SessionFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"stripe_checkout_session"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"StripeCheckoutSession"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"id_ext"}},{"kind":"Field","name":{"kind":"Name","value":"allow_promotion_codes"}},{"kind":"Field","name":{"kind":"Name","value":"amount_subtotal"}},{"kind":"Field","name":{"kind":"Name","value":"amount_total"}},{"kind":"Field","name":{"kind":"Name","value":"billing_address_collection"}},{"kind":"Field","name":{"kind":"Name","value":"cancel_url"}},{"kind":"Field","name":{"kind":"Name","value":"client_reference_id"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"customer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"customer_email"}},{"kind":"Field","name":{"kind":"Name","value":"line_items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"line_item"}}]}},{"kind":"Field","name":{"kind":"Name","value":"livemode"}},{"kind":"Field","name":{"kind":"Name","value":"locale"}},{"kind":"Field","name":{"kind":"Name","value":"mode"}},{"kind":"Field","name":{"kind":"Name","value":"payment_method_types"}},{"kind":"Field","name":{"kind":"Name","value":"payment_status"}},{"kind":"Field","name":{"kind":"Name","value":"submit_type"}},{"kind":"Field","name":{"kind":"Name","value":"success_url"}},{"kind":"Field","name":{"kind":"Name","value":"cancel_url"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]} as unknown as DocumentNode<Stripe_Checkout_SessionFragment, unknown>;
+export const DiscountFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"discount"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Discount"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"id_ext"}},{"kind":"Field","name":{"kind":"Name","value":"checkout_session"}},{"kind":"Field","name":{"kind":"Name","value":"coupon"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"customer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"end"}},{"kind":"Field","name":{"kind":"Name","value":"invoice"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"invoice_item"}},{"kind":"Field","name":{"kind":"Name","value":"promotion_code"}},{"kind":"Field","name":{"kind":"Name","value":"start"}},{"kind":"Field","name":{"kind":"Name","value":"subscription"}}]}}]} as unknown as DocumentNode<DiscountFragment, unknown>;
+export const InvoiceFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"invoice"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Invoice"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"id_ext"}},{"kind":"Field","name":{"kind":"Name","value":"account_country"}},{"kind":"Field","name":{"kind":"Name","value":"account_name"}},{"kind":"Field","name":{"kind":"Name","value":"account_tax_ids"}},{"kind":"Field","name":{"kind":"Name","value":"amount_due"}},{"kind":"Field","name":{"kind":"Name","value":"amount_paid"}},{"kind":"Field","name":{"kind":"Name","value":"amount_remaining"}},{"kind":"Field","name":{"kind":"Name","value":"application_fee_amount"}},{"kind":"Field","name":{"kind":"Name","value":"attempt_count"}},{"kind":"Field","name":{"kind":"Name","value":"attempted"}},{"kind":"Field","name":{"kind":"Name","value":"auto_advance"}},{"kind":"Field","name":{"kind":"Name","value":"automatic_tax"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}},{"kind":"Field","name":{"kind":"Name","value":"billing_reason"}},{"kind":"Field","name":{"kind":"Name","value":"charge"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"collection_method"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"custom_fields"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"customer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"customer_address"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"address"}}]}},{"kind":"Field","name":{"kind":"Name","value":"customer_email"}},{"kind":"Field","name":{"kind":"Name","value":"customer_name"}},{"kind":"Field","name":{"kind":"Name","value":"customer_phone"}},{"kind":"Field","name":{"kind":"Name","value":"customer_shipping"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"address"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"address"}}]}},{"kind":"Field","name":{"kind":"Name","value":"carrier"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"tracking_number"}}]}},{"kind":"Field","name":{"kind":"Name","value":"customer_tax_exempt"}},{"kind":"Field","name":{"kind":"Name","value":"customer_tax_ids"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}},{"kind":"Field","name":{"kind":"Name","value":"default_payment_method"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"discount"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"discount"}}]}},{"kind":"Field","name":{"kind":"Name","value":"discounts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"discount"}}]}},{"kind":"Field","name":{"kind":"Name","value":"due_date"}},{"kind":"Field","name":{"kind":"Name","value":"ending_balance"}},{"kind":"Field","name":{"kind":"Name","value":"footer"}},{"kind":"Field","name":{"kind":"Name","value":"hosted_invoice_url"}},{"kind":"Field","name":{"kind":"Name","value":"invoice_pdf"}},{"kind":"Field","name":{"kind":"Name","value":"livemode"}},{"kind":"Field","name":{"kind":"Name","value":"next_payment_attempt"}},{"kind":"Field","name":{"kind":"Name","value":"number"}},{"kind":"Field","name":{"kind":"Name","value":"paid"}},{"kind":"Field","name":{"kind":"Name","value":"payment_intent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"period_end"}},{"kind":"Field","name":{"kind":"Name","value":"period_start"}},{"kind":"Field","name":{"kind":"Name","value":"post_payment_credit_notes_amount"}},{"kind":"Field","name":{"kind":"Name","value":"pre_payment_credit_notes_amount"}},{"kind":"Field","name":{"kind":"Name","value":"receipt_number"}},{"kind":"Field","name":{"kind":"Name","value":"starting_balance"}},{"kind":"Field","name":{"kind":"Name","value":"statement_descriptor"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"subscription_proration_date"}},{"kind":"Field","name":{"kind":"Name","value":"subtotal"}},{"kind":"Field","name":{"kind":"Name","value":"tax"}},{"kind":"Field","name":{"kind":"Name","value":"total"}},{"kind":"Field","name":{"kind":"Name","value":"webhooks_delivered_at"}}]}}]} as unknown as DocumentNode<InvoiceFragment, unknown>;
+export const Invoice_ItemFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"invoice_item"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"InvoiceLineItem"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"id_ext"}},{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"discount_amounts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"amount"}},{"kind":"Field","name":{"kind":"Name","value":"discount"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"discount"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"discountable"}},{"kind":"Field","name":{"kind":"Name","value":"invoice_item"}},{"kind":"Field","name":{"kind":"Name","value":"livemode"}},{"kind":"Field","name":{"kind":"Name","value":"price"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"proration"}},{"kind":"Field","name":{"kind":"Name","value":"quantity"}},{"kind":"Field","name":{"kind":"Name","value":"subscription"}},{"kind":"Field","name":{"kind":"Name","value":"subscription_item"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]} as unknown as DocumentNode<Invoice_ItemFragment, unknown>;
 export const PriceFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"price"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Price"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"unit_amount"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"active"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"recurring_interval"}},{"kind":"Field","name":{"kind":"Name","value":"recurring_interval_count"}}]}}]} as unknown as DocumentNode<PriceFragment, unknown>;
 export const MarkdownFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"markdown"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Markdown"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"data"}}]}}]} as unknown as DocumentNode<MarkdownFragment, unknown>;
 export const ProductFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"product"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Product"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"url_name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"duration"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"active"}},{"kind":"Field","name":{"kind":"Name","value":"default_price"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"price"}}]}},{"kind":"Field","name":{"kind":"Name","value":"prices"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"price"}}]}},{"kind":"Field","name":{"kind":"Name","value":"image_logo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"image_hero"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"markdown_description"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"markdown"}}]}},{"kind":"Field","name":{"kind":"Name","value":"agency"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"integrations"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<ProductFragment, unknown>;
