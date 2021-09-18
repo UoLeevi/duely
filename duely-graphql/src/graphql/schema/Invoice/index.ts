@@ -47,7 +47,7 @@ export const Invoice: GqlTypeDefinition<
       description: String
       discount: Discount
       discounts: [Discount!]
-      due_date: Int!
+      due_date: DateTime
       ending_balance: Int!
       footer: String
       hosted_invoice_url: String
@@ -56,14 +56,14 @@ export const Invoice: GqlTypeDefinition<
       lines(starting_after_id: String, ending_before_id: String, limit: Int): [InvoiceLineItem!]!
       livemode: Boolean!
       # metadata: Stripe.Metadata | null;
-      next_payment_attempt: Int!
+      next_payment_attempt: DateTime
       number: String
       # on_behalf_of: string | Stripe.Account | null;
       paid: Boolean!
       payment_intent: PaymentIntent
       # payment_settings: Invoice.PaymentSettings;
-      period_end: Int!
-      period_start: Int!
+      period_end: DateTime!
+      period_start: DateTime!
       post_payment_credit_notes_amount: Int!
       pre_payment_credit_notes_amount: Int!
       # quote: string | Stripe.Quote | null;
@@ -71,7 +71,7 @@ export const Invoice: GqlTypeDefinition<
       starting_balance: Int!
       statement_descriptor: String
       status: String
-      # status_transitions: Invoice.StatusTransitions;
+      status_transitions: InvoiceStatusTransitions
       # subscription: string | Stripe.Subscription | null;
       subscription_proration_date: DateTime
       subtotal: Int!
@@ -107,15 +107,19 @@ export const Invoice: GqlTypeDefinition<
       value: String
     }
 
+    type InvoiceStatusTransitions {
+      finalized_at: DateTime
+      marked_uncollectible_at: DateTime
+      paid_at: DateTime
+      voided_at: DateTime
+    }
+
     extend type Query {
       invoice(stripe_account_id: ID!, invoice_id: ID!): Invoice
     }
 
     extend type Mutation {
-      create_invoice(
-        stripe_account_id: ID!
-        customer: ID!
-      ): InvoiceMutationResult!
+      create_invoice(stripe_account_id: ID!, customer: ID!): InvoiceMutationResult!
       update_invoice(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
       delete_invoice(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
     }
@@ -130,10 +134,12 @@ export const Invoice: GqlTypeDefinition<
     Invoice: {
       id_ext: (source) => source.id,
       created: (source) => timestampToDate(source.created),
-      subscription_proration_date: (source) =>
-        source.subscription_proration_date && timestampToDate(source.subscription_proration_date),
-      webhooks_delivered_at: (source) =>
-        source.webhooks_delivered_at && new Date(source.webhooks_delivered_at * 1000),
+      due_date: (source) => timestampToDate(source.due_date),
+      next_payment_attempt: (source) => timestampToDate(source.next_payment_attempt),
+      period_start: (source) => timestampToDate(source.period_start),
+      period_end: (source) => timestampToDate(source.period_end),
+      subscription_proration_date: (source) => timestampToDate(source.subscription_proration_date),
+      webhooks_delivered_at: (source) => timestampToDate(source.webhooks_delivered_at),
       async customer(source, args, context, info) {
         if (source.customer == null) return null;
         if (typeof source.customer === 'object') return source.customer;
@@ -305,6 +311,25 @@ export const Invoice: GqlTypeDefinition<
           };
         }
       }
+    }
+  }
+};
+
+export const InvoiceStatusTransitions: GqlTypeDefinition<Stripe.Invoice.StatusTransitions> = {
+  typeDef: gql`
+    type InvoiceStatusTransitions {
+      finalized_at: DateTime
+      marked_uncollectible_at: DateTime
+      paid_at: DateTime
+      voided_at: DateTime
+    }
+  `,
+  resolvers: {
+    InvoiceStatusTransitions: {
+      finalized_at: (source) => timestampToDate(source.finalized_at),
+      marked_uncollectible_at: (source) => timestampToDate(source.marked_uncollectible_at),
+      paid_at: (source) => timestampToDate(source.paid_at),
+      voided_at: (source) => timestampToDate(source.voided_at)
     }
   }
 };

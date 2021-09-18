@@ -26,8 +26,17 @@ function isNonNullable<T>(value: T): value is NonNullable<T> {
   return value !== undefined && value !== null;
 }
 
-export function timestampToDate(timestamp: number): Date {
-  return new Date(timestamp * 1000);
+export function timestampToDate(timestamp: number): Date;
+export function timestampToDate(timestamp: number | null): Date | null;
+export function timestampToDate(timestamp: number | undefined): Date | undefined;
+export function timestampToDate(timestamp: null): null;
+export function timestampToDate(timestamp: undefined): undefined;
+export function timestampToDate(timestamp: number | null | undefined): Date | null | undefined {
+  return timestamp === undefined
+    ? undefined
+    : timestamp === null
+    ? null
+    : new Date(timestamp * 1000);
 }
 
 export function withStripeAccountProperty(

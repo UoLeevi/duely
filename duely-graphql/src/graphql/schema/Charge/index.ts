@@ -2,7 +2,7 @@
 
 import stripe from '@duely/stripe';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
-import { withStripeAccountProperty } from '../../util';
+import { timestampToDate, withStripeAccountProperty } from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
@@ -81,7 +81,7 @@ export const Charge: GqlTypeDefinition<
   resolvers: {
     Charge: {
       id_ext: (source) => source.id,
-      created: (source) => new Date(source.created * 1000),
+      created: (source) => timestampToDate(source.created),
       async balance_transaction(source, args, context, info) {
         if (source.balance_transaction == null) return null;
         if (typeof source.balance_transaction === 'object') return source.balance_transaction;

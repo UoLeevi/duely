@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 import { queryResource, queryResourceAccess, Resources } from '@duely/db';
 import stripe from '@duely/stripe';
 import { GqlTypeDefinition } from '../../types';
-import { createResolverForReferencedResourceAll, withStripeAccountProperty } from '../../util';
+import { createResolverForReferencedResourceAll, timestampToDate, withStripeAccountProperty } from '../../util';
 import { DuelyGraphQLError } from '../../errors';
 import Stripe from 'stripe';
 
@@ -386,8 +386,8 @@ export const StripeAccountLink: GqlTypeDefinition<Stripe.AccountLink> = {
   `,
   resolvers: {
     StripeAccountLink: {
-      created: (source) => new Date(source.created * 1000),
-      expires_at: (source) => new Date(source.expires_at * 1000)
+      created: (source) => timestampToDate(source.created),
+      expires_at: (source) => timestampToDate(source.expires_at)
     }
   }
 };

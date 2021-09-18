@@ -4,7 +4,7 @@ import { Resources } from '@duely/db';
 import gql from 'graphql-tag';
 import Stripe from 'stripe';
 import { GqlTypeDefinition } from '../../types';
-import { createResolverForReferencedResource } from '../../util';
+import { createResolverForReferencedResource, timestampToDate } from '../../util';
 
 export const StripeCustomer: GqlTypeDefinition<
   Stripe.Customer & { stripe_account: Resources['stripe account'] }
@@ -31,7 +31,7 @@ export const StripeCustomer: GqlTypeDefinition<
   resolvers: {
     StripeCustomer: {
       id_ext: (source) => source.id,
-      created: (source) => new Date(source.created * 1000),
+      created: (source) => timestampToDate(source.created),
       ...createResolverForReferencedResource({
         name: 'customer',
         reverse: true,

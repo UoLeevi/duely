@@ -5,7 +5,7 @@ import gql from 'graphql-tag';
 import stripe from '@duely/stripe';
 import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
-import { withStripeAccountProperty } from '../../util';
+import { timestampToDate, withStripeAccountProperty } from '../../util';
 import Stripe from 'stripe';
 import { Resources } from '@duely/db';
 
@@ -145,7 +145,7 @@ export const StripeCheckoutSession: GqlTypeDefinition<
     },
     StripePrice: {
       id_ext: (source) => source.id,
-      created: (source: Stripe.Price) => new Date(source.created * 1000),
+      created: (source: Stripe.Price) => timestampToDate(source.created),
     }
   }
 };

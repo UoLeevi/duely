@@ -10,7 +10,14 @@ type GqlResolvers = Exclude<
 
 export type GqlResolver = GqlResolvers[keyof GqlResolvers];
 
+export type IResolver<TSource = any, TContext = any> = IResolvers<
+  TSource,
+  TContext
+>[keyof IResolvers];
+
 export type GqlTypeDefinition<TSource = any> = {
   typeDef?: DocumentNode;
-  resolvers?: IResolvers<TSource, DuelyQqlContext>;
+  resolvers?: {
+    Query?: IResolver<null, DuelyQqlContext>;
+  } & IResolvers<TSource, DuelyQqlContext>;
 };

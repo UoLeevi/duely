@@ -5,7 +5,7 @@ import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
 import { Resources } from '@duely/db';
 import stripe from '@duely/stripe';
-import { withStripeAccountProperty } from '../../util';
+import { timestampToDate, withStripeAccountProperty } from '../../util';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 
 export const Discount: GqlTypeDefinition<
@@ -29,8 +29,8 @@ export const Discount: GqlTypeDefinition<
   resolvers: {
     Discount: {
       id_ext: (source) => source.id,
-      end: (source) => source.end && new Date(source.end * 1000),
-      start: (source) => new Date(source.start * 1000),
+      end: (source) => timestampToDate(source.end),
+      start: (source) => timestampToDate(source.start),
       async customer(source, args, context, info) {
         if (source.customer == null) return null;
         if (typeof source.customer === 'object') return source.customer;

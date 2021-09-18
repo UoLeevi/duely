@@ -5,6 +5,7 @@ import { Resources } from '@duely/db';
 import gql from 'graphql-tag';
 import Stripe from 'stripe';
 import { GqlTypeDefinition } from '../../types';
+import { timestampToDate } from '../../util';
 
 export const BalanceTransaction: GqlTypeDefinition<
   Stripe.BalanceTransaction & { stripe_account: Resources['stripe account'] }
@@ -39,8 +40,8 @@ export const BalanceTransaction: GqlTypeDefinition<
   resolvers: {
     BalanceTransaction: {
       id_ext: (source) => source.id,
-      created: (source) => new Date(source.created * 1000),
-      available_on: (source) => new Date(source.created * 1000)
+      created: (source) => timestampToDate(source.created),
+      available_on: (source) => timestampToDate(source.created)
     }
   }
 };

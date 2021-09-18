@@ -48,7 +48,7 @@ import { IntegrationConfig } from './IntegrationConfig';
 import { CredentialType } from './CredentialType';
 import { BankAccount } from './BankAccount';
 import { Coupon } from './Coupon';
-import { Invoice } from './Invoice';
+import { Invoice, InvoiceStatusTransitions } from './Invoice';
 import { Discount } from './Discount';
 import { InvoiceLineItem, InvoiceLineItemDiscountAmount } from './InvoiceLineItem';
 
@@ -92,6 +92,7 @@ const types: GqlTypeDefinition[] = [
   StripeCustomer,
   StripeCheckoutSession,
   Invoice,
+  InvoiceStatusTransitions,
   InvoiceLineItem,
   InvoiceLineItemDiscountAmount,
   BalanceTransaction,

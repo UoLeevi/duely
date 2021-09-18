@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
-import { withStripeAccountProperty } from '../../util';
+import { timestampToDate, withStripeAccountProperty } from '../../util';
 
 export const Coupon: GqlTypeDefinition<
   Stripe.Coupon & { stripe_account: Resources['stripe account'] }
@@ -69,8 +69,8 @@ export const Coupon: GqlTypeDefinition<
   resolvers: {
     Coupon: {
       id_ext: (source) => source.id,
-      created: (source) => new Date(source.created * 1000),
-      redeem_by: (source) => source.redeem_by && new Date(source.redeem_by * 1000)
+      created: (source) => timestampToDate(source.created),
+      redeem_by: (source) => timestampToDate(source.redeem_by)
     },
     Query: {
       async coupon(source, { stripe_account_id, coupon_id }, context, info) {

@@ -4,7 +4,7 @@ import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import gql from 'graphql-tag';
 import stripe from '@duely/stripe';
 import { GqlTypeDefinition } from '../../types';
-import { withStripeAccountProperty } from '../../util';
+import { timestampToDate, withStripeAccountProperty } from '../../util';
 import Stripe from 'stripe';
 import { Resources } from '@duely/db';
 
@@ -52,8 +52,8 @@ export const PaymentIntent: GqlTypeDefinition<
   resolvers: {
     PaymentIntent: {
       id_ext: (source) => source.id,
-      created: (source) => new Date(source.created * 1000),
-      canceled_at: (source) => new Date(source.created * 1000),
+      created: (source) => timestampToDate(source.created),
+      canceled_at: (source) => timestampToDate(source.created),
       charges: (source) => withStripeAccountProperty(source.charges?.data, source.stripe_account),
       async customer(source, args, context, info) {
         if (source.customer == null) return null;
