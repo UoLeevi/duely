@@ -54,7 +54,7 @@ export function FormFieldDefaultElement<
           type={type}
           className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
           spellCheck="false"
-          autoComplete="off"
+          autoComplete={props.autoComplete ?? 'off'}
           disabled={loading}
           {...props}
         />

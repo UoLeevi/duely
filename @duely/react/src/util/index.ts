@@ -18,6 +18,7 @@ export const Util = {
   formatFileSize,
   findFirstFocusableChild,
   getNameInitials,
+  randomKey,
   pseudoRandom,
   poisson,
   truncate,
@@ -261,6 +262,19 @@ function findFirstFocusableChild(parent: ParentNode) {
 function getNameInitials(name: string) {
   const initials = name.match(/\b\w/g) || [];
   return ((initials.shift() || '') + (initials.pop() || '')).toUpperCase();
+}
+
+function randomKey(length?: number, seed?: number) {
+  length ??= 32;
+  seed ??= pseudoRandom(seed);
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let r = '';
+
+  for (let i = 0; i < length; ++i) {
+    r += characters[Math.floor(pseudoRandom(seed + i) * characters.length)];
+  }
+
+  return r;
 }
 
 function pseudoRandom(seed?: number) {

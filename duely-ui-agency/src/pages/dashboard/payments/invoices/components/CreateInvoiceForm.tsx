@@ -5,7 +5,12 @@ import {
   useForm,
   Form,
   LinkButton,
-  ValidationRules
+  ValidationRules,
+  FormSection,
+  Button,
+  Table,
+  Util,
+  InputFilters
 } from '@duely/react';
 import {
   useMutation,
@@ -16,10 +21,12 @@ import {
   customers_Q
 } from '@duely/client';
 import { Link } from 'react-router-dom';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import produce from 'immer';
 
 type CreateInvoiceFormFields = {
   customer_email_address: string;
+  message?: string;
 };
 
 export function CreateInvoiceForm() {
@@ -31,6 +38,10 @@ export function CreateInvoiceForm() {
     { agency_id: agency!.id },
     { skip: !agency }
   );
+
+  const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency;
+
+  const currencyPrefix: React.ReactChild = <span className="pr-1">{currency?.toUpperCase()}</span>;
 
   const {
     data: customers,
@@ -132,6 +143,32 @@ export function CreateInvoiceForm() {
       )
     : undefined;
 
+  type InvoiceItem = {
+    key: string;
+  };
+
+  const [items, setItems] = useState<InvoiceItem[]>([{ key: Util.randomKey() }]);
+  const addItem = useCallback(
+    () =>
+      setItems((items) =>
+        produce(items, (items) => {
+          items.push({
+            key: Util.randomKey()
+          });
+          return items;
+        })
+      ),
+    []
+  );
+
+  const removeItem = useCallback(
+    (item: InvoiceItem) =>
+      setItems((items) => produce(items, (items) => items.filter((i) => i.key !== item.key))),
+    []
+  );
+
+  console.log(form.useFormValue());
+
   return (
     <>
       <h2 className="mb-3 text-xl font-medium">Create an invoice</h2>
@@ -140,11 +177,73 @@ export function CreateInvoiceForm() {
           label="Customer"
           className="max-w-xl"
           name="customer_email_address"
-          type="email"
           suggestions={customerSuggestions}
           suffix={customer?.name}
           registerOptions={{ required: true }}
         />
+
+        <div className="pb-2">
+          <span className="font-medium text-gray-700">Items</span>
+          <div className="flex flex-col pb-3 border-b">
+            <Table items={items}>
+              <Table.Column header="Name">
+                {(item: InvoiceItem | null, i) => {
+                  if (!item) return null;
+                  return (
+                    <FormField
+                      type="text"
+                      name={`[${item.key}]-name`}
+                      placeholder={`Item ${i + 1}`}
+                    />
+                  );
+                }}
+              </Table.Column>
+
+              <Table.Column header="Amount">
+                {(item: InvoiceItem | null, i) => {
+                  if (!item) return null;
+                  return (
+                    <FormField
+                      name={`[${item.key}]-amount`}
+                      type="text"
+                      inputMode="numeric"
+                      prefix={currencyPrefix}
+                      registerOptions={{
+                        required: true,
+                        rules: [ValidationRules.isPositiveNumber],
+                        inputFilter: InputFilters.numeric
+                      }}
+                    />
+                  );
+                }}
+              </Table.Column>
+
+              <Table.Column header="">
+                {(item: InvoiceItem | null, i) => {
+                  if (!item) return null;
+                  return (
+                    <Button
+                      className="mb-auto text-sm w-max"
+                      dense
+                      shrink
+                      icon="trash"
+                      onClick={() => removeItem(item)}
+                    />
+                  );
+                }}
+              </Table.Column>
+            </Table>
+
+            <div className="flex">
+              <Button type="button" className="text-sm" dense icon="plus.solid" onClick={addItem}>
+                Add item
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <FormField label="Message to customer" name="message" type="textarea" rows={6} />
+
         <div className="flex flex-row items-center pt-3 space-x-8">
           <FormButton>Create invoice</FormButton>
           {/* <FormInfoMessage error={state.error} /> */}

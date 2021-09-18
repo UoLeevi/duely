@@ -6,9 +6,10 @@ import { LoadingSpinner } from '../LoadingSpinner';
 export type ButtonBaseProps = {
   loading?: boolean;
   disabled?: boolean;
+  shrink?: boolean;
   dense?: boolean;
   color?: keyof typeof colorClassName;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
   icon?: IconProp;
 };
@@ -35,6 +36,7 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
   disabled,
   loading,
   dense,
+  shrink,
   color,
   className,
   render,
@@ -47,11 +49,14 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
   color = color ?? 'gray';
   className = Util.createClassName(
     'relative flex justify-center tracking-wide whitespace-nowrap items-center border appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm',
-    dense ? 'min-w-[10ch] px-4 py-1.5' : 'min-w-[12ch] px-7 py-2.5',
+    dense ? 'px-4 py-1.5' : 'px-7 py-2.5',
+    !shrink && (dense ? 'min-w-[10ch]' : 'min-w-[12ch]'),
     !loading && 'disabled:opacity-50',
     color && colorClassName[color],
     className
   );
+
+  console.log('shring ', shrink);
 
   const Component: React.ElementType = render;
 
@@ -72,7 +77,7 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
         )}
       >
         {icon}
-        <span>{children}</span>
+        {children && <span>{children}</span>}
       </span>
 
       {loading && (

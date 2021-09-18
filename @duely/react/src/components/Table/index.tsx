@@ -11,9 +11,7 @@ export const Table = Object.assign(TableRoot, { Column });
 
 type ColumnProps<TItem> = {
   header: React.ReactNode;
-  children:
-    | ((item: TItem | null, column: number) => React.ReactNode)
-    | ((item: TItem | null) => React.ReactNode);
+  children: (item: TItem | null, row: number, column: number) => React.ReactNode;
 };
 
 function Column<TItem>(props: ColumnProps<TItem>) {
@@ -21,7 +19,9 @@ function Column<TItem>(props: ColumnProps<TItem>) {
 }
 
 type TableProps<TItem> = {
-  children: React.ReactElement<ColumnProps<TItem>, typeof Column>[];
+  children:
+    | React.ReactElement<ColumnProps<TItem>, typeof Column>
+    | React.ReactElement<ColumnProps<TItem>, typeof Column>[];
   dense?: boolean;
   wrap?: Partial<
     Record<
@@ -170,7 +170,7 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
         <TableRow
           key={i}
           item={null}
-          row={i + (isNotWrapped ? 2 : 1)}
+          row={i}
           columns={columns}
           headers={headers}
           dense={dense}
@@ -200,9 +200,9 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
     rows = items.map((item, i) => {
       return (
         <TableRow
-          key={i}
+          key={item.key ?? i}
           item={item}
-          row={i + (isNotWrapped ? 2 : 1)}
+          row={i}
           columns={columns}
           headers={headers}
           dense={dense}
@@ -346,10 +346,7 @@ function TableCell({
 type TableRowProps<TItem> = {
   item: TItem;
   row: number;
-  columns: (
-    | ((item: TItem, column: number) => React.ReactNode)
-    | ((item: TItem) => React.ReactNode)
-  )[];
+  columns: ((item: TItem, row: number, column: number) => React.ReactNode)[];
   headers: React.ReactNode[];
   dense?: boolean;
   wrapColSpans: number[];
@@ -374,7 +371,9 @@ function TableRow<TItem>({
   isNotWrapped
 }: TableRowProps<TItem>) {
   let className = 'border-gray-200 dark:border-gray-700' + (last ? '' : ' border-b');
-  const cells = columns.map((column, j) => column(item, j));
+  const cells = columns.map((column, j) => column(item, row, j));
+
+  row += isNotWrapped ? 2 : 1;
 
   if (isNotWrapped) {
     const gridArea = `${row} / 1 / ${row + 1} / -1`;
