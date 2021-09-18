@@ -1,5 +1,7 @@
 import type { Override } from '@duely/core';
-import React from 'react';
+import React, { useRef } from 'react';
+import { useFocus } from '../../../..';
+import { DropMenu } from '../../../DropMenu';
 import { useFormContext } from '../../Form';
 import { FormFieldElementProps } from './FormFieldElementProps';
 
@@ -11,6 +13,14 @@ export type FormFieldDefaultElementProps<
   FormFieldElementProps<TName, TFormFields> & {
     prefix?: React.ReactNode;
     suffix?: React.ReactNode;
+    suggestions?: (
+      | string
+      | {
+          value: string;
+          element?: React.ReactNode;
+          className?: string;
+        }
+    )[];
   }
 >;
 
@@ -23,24 +33,52 @@ export function FormFieldDefaultElement<
   loading,
   prefix,
   suffix,
+  suggestions,
   type,
   ...props
 }: FormFieldDefaultElementProps<TName, TFormFields>) {
   const form = useFormContext();
+  const ref = useRef<HTMLDivElement>(null);
+  const { focused } = useFocus(ref);
+
   return (
-    <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
-      {prefix && <span className="pl-3 text-gray-500">{prefix}</span>}
-      <input
-        id={name}
-        {...form.register(name, registerOptions)}
-        type={type}
-        className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
-        spellCheck="false"
-        autoComplete="off"
-        disabled={loading}
-        {...props}
-      />
-      {suffix && <span className="pr-3 text-gray-500">{suffix}</span>}
-    </div>
+    <>
+      <div
+        ref={ref}
+        className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5"
+      >
+        {prefix && <span className="pl-3 text-gray-500 whitespace-nowrap">{prefix}</span>}
+        <input
+          id={name}
+          {...form.register(name, registerOptions)}
+          type={type}
+          className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
+          spellCheck="false"
+          autoComplete="off"
+          disabled={loading}
+          {...props}
+        />
+        {suffix && <span className="pr-3 text-gray-500 whitespace-nowrap">{suffix}</span>}
+      </div>
+
+      {suggestions && suggestions.length > 0 && (
+        <DropMenu no-button open={focused}>
+          {suggestions.map((suggestion) => {
+            suggestion =
+              typeof suggestion === 'object'
+                ? suggestion
+                : { value: suggestion, element: undefined };
+
+            const value = suggestion.value;
+
+            return (
+              <DropMenu.Item key={suggestion.value} onClick={() => form.setValue(name, value)}>
+                {suggestion.element ?? suggestion.value}
+              </DropMenu.Item>
+            );
+          })}
+        </DropMenu>
+      )}
+    </>
   );
 }

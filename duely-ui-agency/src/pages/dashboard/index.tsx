@@ -6,19 +6,16 @@ import { routes as customerRoutes } from './customers';
 import { routes as siteRoutes } from './site';
 import { routes as orderRoutes } from './orders';
 import DashboardHome from './home';
-import DashboardPayments from './payments';
-import { routes as productRoutes } from './products';
+import { routes as paymentsRoutes } from './payments';
+import { routes as productsRoutes } from './products';
 import { routes as settingsRoutes } from './settings';
 
 const routes: RouteProps[] = [
   ...orderRoutes,
-  ...productRoutes,
+  ...productsRoutes,
   ...siteRoutes,
   ...customerRoutes,
-  {
-    path: '/dashboard/payments',
-    component: DashboardPayments
-  },
+  ...paymentsRoutes,
   ...settingsRoutes,
   {
     path: '/dashboard',
@@ -41,7 +38,7 @@ export default function Dashboard() {
 
   if (!authorized) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center">
+      <div className="flex flex-col items-center justify-center flex-1">
         <div className="flex flex-col items-center m-3 space-y-1">
           <span className="font-medium text-gray-700 text">Seems like you are not allowed to access this page</span>
           <Link className="text-lg font-medium text-indigo-600" to="/">Go to home page</Link>

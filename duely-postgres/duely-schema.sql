@@ -3006,7 +3006,7 @@ BEGIN
         FROM ' || _table || ' t
         JOIN application_.resource_ r ON r.uuid_ = t.uuid_
         JOIN security_.resource_definition_ d ON d.uuid_ = r.definition_uuid_
-        JOIN security_.resource_token_ x ON r.uuid_ = x.resource_uuid_ AND r.uuid_ = x.resource_uuid_
+        JOIN security_.resource_token_ x ON r.uuid_ = x.resource_uuid_
         LEFT JOIN after_ ON 1=1
         LEFT JOIN before_ ON 1=1
         WHERE d.table_ = $1
@@ -7983,7 +7983,6 @@ ab3fa4a3-413f-449b-bfb5-ed4981ba1de2	7f589215-bdc7-4664-99c6-b7745349c352	policy
 0be43a88-13df-4bb2-8794-159800b90670	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_create_product_(security_.resource_definition_,jsonb)	create	\N	t
 37978625-4f1f-4c1a-a9da-0571a3e91fd4	7f589215-bdc7-4664-99c6-b7745349c352	policy_.owner_can_change_product_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
 b2cab51a-ad53-4ee2-9113-1566989be9dc	7f589215-bdc7-4664-99c6-b7745349c352	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
-4bea3784-2dd2-46dc-9548-c55b4613f4b4	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.serviceaccount_can_query_stripe_account_for_agency_(security_.resource_definition_,application_.resource_)	query	\N	t
 98bbbedc-73b8-469b-bc84-797378745075	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.owner_can_query_stripe_account_(security_.resource_definition_,application_.resource_)	query	4bea3784-2dd2-46dc-9548-c55b4613f4b4	t
 607ca062-c61b-461f-83bf-b2a5b56cd1d0	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
 ae810fbb-9426-4580-96bc-f124a0d2ca9d	d8f70962-229d-49eb-a99e-7c35a55719d5	policy_.owner_can_query_markdown_(security_.resource_definition_,application_.resource_)	query	79cd2981-cf2c-4a6b-831c-873a8d140e2d	t
@@ -8055,6 +8054,7 @@ c3a5aaf2-d9a0-481b-98ec-ce34c2c65cd3	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy
 09e2dde5-d0ef-4c9d-9154-1b89b10c9bf5	d3def2c7-9265-4a3c-8473-0a0f071c4193	policy_.only_owner_can_delete_(security_.resource_definition_,application_.resource_)	delete	\N	t
 cecd71c9-7e74-46ad-8fba-6aa5ac8ec3ca	7f589215-bdc7-4664-99c6-b7745349c352	policy_.serviceaccount_can_query_product_(security_.resource_definition_,application_.resource_)	query	\N	t
 72066618-a466-4b71-965f-891edcb33c6f	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	policy_.owner_can_change_name_(security_.resource_definition_,application_.resource_,jsonb)	update	6f79da26-c71b-4560-91d0-cbd05150e062	t
+4bea3784-2dd2-46dc-9548-c55b4613f4b4	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.serviceaccount_can_query_stripe_account_for_agency_(security_.resource_definition_,application_.resource_)	query	a85c61cc-972d-4f95-a51d-8cb6601f13ed	t
 95c81a39-4ede-4ebd-9485-502ba1ad9a68	7f589215-bdc7-4664-99c6-b7745349c352	policy_.anyone_can_query_live_product_(security_.resource_definition_,application_.resource_)	query	cecd71c9-7e74-46ad-8fba-6aa5ac8ec3ca	t
 be8e7191-40dc-4a22-aced-d3d4416991f6	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.serviceaccount_can_create_order_item_(security_.resource_definition_,jsonb)	create	\N	t
 b509686c-6e80-4454-bb68-3ddaf855590d	677e43b0-6a66-4f84-b857-938f462fdf90	policy_.serviceaccount_can_change_order_item_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
@@ -8081,6 +8081,7 @@ bf241cc6-6559-4373-9ea4-20684aa7bc55	a398f8c1-a34c-4f2f-a52a-144d86c475a1	policy
 655c3941-ea3f-4f28-ae0c-58539488f1d5	054285c5-0127-47b4-a8e6-87c685b4e4c0	policy_.owner_can_change_agency_settings_(security_.resource_definition_,application_.resource_,jsonb)	update	\N	t
 c0b491c4-7a59-40ff-850f-677dcd368971	054285c5-0127-47b4-a8e6-87c685b4e4c0	policy_.serviceaccount_can_query_agency_settings_(security_.resource_definition_,application_.resource_)	query	\N	t
 258cf599-2d34-45f4-872c-febb2a7b1f39	054285c5-0127-47b4-a8e6-87c685b4e4c0	policy_.agent_can_query_agency_settings_(security_.resource_definition_,application_.resource_)	query	c0b491c4-7a59-40ff-850f-677dcd368971	t
+a85c61cc-972d-4f95-a51d-8cb6601f13ed	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.anyone_can_query_stripe_account_for_agency_(security_.resource_definition_,application_.resource_)	query	\N	t
 \.
 
 

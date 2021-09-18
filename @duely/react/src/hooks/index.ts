@@ -12,3 +12,4 @@ export * from './usePrevious';
 export * from './useResizeObserver';
 export * from './useIntersectionObserver';
 export * from './useCssRect';
+export * from './useFocus';

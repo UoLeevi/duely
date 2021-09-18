@@ -20,7 +20,7 @@
     "watch": "webpack --watch"
   },
   "dependencies": {
-    "@duely/build": "0.4.5",
+    "@duely/build": "^0.4.6",
     "axios": "^0.21.1"
   },
   "devDependencies": {
@@ -32,7 +32,7 @@
     "webpack-cli": "^4.7.2"
   },
   "peerDependencies": {
-    "@duely/core": "0.4.32",
+    "@duely/core": "^0.4.34",
     "@duely/db": "0.4.20",
     "@duely/stripe": "0.4.5"
   }

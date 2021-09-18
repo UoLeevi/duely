@@ -12,12 +12,14 @@ const commonConfig = require('./webpack.common.js');
 module.exports = merge(commonConfig, {
   devServer: {
     hot: true,
-    inline: true,
-    contentBase: path.resolve(projectPath, 'assets'),
-    writeToDisk: true,
     historyApiFallback: true,
-    host: '0.0.0.0',
-    useLocalIp: true
+    host: 'local-ip',
+    devMiddleware: {
+      writeToDisk: true
+    },
+    static: {
+      directory: path.resolve(projectPath, 'assets')
+    }
   },
   entry: path.resolve(projectPath, 'src/index.tsx'),
   module: {

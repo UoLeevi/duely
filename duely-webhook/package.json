@@ -25,7 +25,7 @@
     "../@duely/stripe"
   ],
   "dependencies": {
-    "@duely/core": "0.4.32",
+    "@duely/core": "^0.4.34",
     "@duely/db": "0.4.20",
     "@duely/lambda": "0.4.1",
     "@duely/stripe": "0.4.5",
@@ -34,7 +34,7 @@
     "validator": "^13.5.2"
   },
   "devDependencies": {
-    "@duely/build": "0.4.5",
+    "@duely/build": "^0.4.6",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.9",
     "@types/node": "^14.14.37",

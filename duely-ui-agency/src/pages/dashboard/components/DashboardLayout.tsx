@@ -89,6 +89,7 @@ const sidebarLinks: SidebarProps['links'] = [
   },
   {
     text: 'Payments',
+    name: 'payments',
     icon: ({ ...props }: React.SVGProps<SVGSVGElement>) => (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -106,7 +107,17 @@ const sidebarLinks: SidebarProps['links'] = [
         />
       </svg>
     ),
-    to: '/dashboard/payments'
+    to: '/dashboard/payments',
+    items: [
+      {
+        text: 'Transactions',
+        to: '/dashboard/payments/transactions'
+      },
+      {
+        text: 'Invoices',
+        to: '/dashboard/payments/invoices'
+      }
+    ]
   },
   {
     text: 'Site',

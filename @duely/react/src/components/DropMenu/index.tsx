@@ -36,13 +36,13 @@ function DropMenuButton({ children, as }: ButtonProps) {
 }
 
 type ItemProps = {
-  icon: IconProp;
+  icon?: IconProp;
   children: React.ReactNode;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   loading?: boolean;
 } & Partial<React.ComponentProps<Link>>;
 
-function DropMenuItem({ key, icon, children, to, href, loading, onClick, ...props }: ItemProps) {
+function DropMenuItem({ icon, children, to, href, loading, onClick, ...props }: ItemProps) {
   const createClassName = ({ active, disabled }: { active: boolean; disabled: boolean }) =>
     Util.createClassName(
       active ? 'bg-gray-100 dark:text-gray-100 text-gray-900' : 'dark:text-gray-300 text-gray-700',
@@ -93,19 +93,23 @@ export const DropMenu = Object.assign(DropMenuRoot, {
 type DropMenuProps = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,
   HTMLDivElement
-> & {};
+> & {
+  'no-button'?: boolean;
+  open?: boolean;
+};
 
-export function DropMenuRoot({ children }: DropMenuProps) {
+export function DropMenuRoot({ children, ...props }: DropMenuProps) {
   const childrenArray = React.Children.toArray(children);
   const menuRef = useRef<HTMLDivElement>(null);
   const itemsClassNamesRef = useRef<string>('-bottom-2 left-0 origin-top-left translate-y-full');
 
-  const button = childrenArray.find((child: any) => child.type === DropMenuButton) ?? (
-    <DropMenuButton />
-  );
+  const button = props['no-button']
+    ? null
+    : childrenArray.find((child: any) => child.type === DropMenuButton) ?? <DropMenuButton />;
+
   const items = childrenArray.filter((child) => child !== button);
 
-  const intersectionObsercerCallback = useCallback<Parameters<typeof useIntersectionObserver>[1]>(
+  const intersectionObserverCallback = useCallback<Parameters<typeof useIntersectionObserver>[1]>(
     (entry) => {
       const itemHeight = 40;
       const itemWidth = 250;
@@ -131,38 +135,42 @@ export function DropMenuRoot({ children }: DropMenuProps) {
     [items.length]
   );
 
-  useIntersectionObserver(menuRef, intersectionObsercerCallback);
+  useIntersectionObserver(menuRef, intersectionObserverCallback);
 
   return (
     <Menu as="div" className="relative inline-block">
-      {({ open }) => (
-        <>
-          <div
-            ref={menuRef}
-            className="absolute z-0 w-0 h-0 pointer-events-none left-1/2 top-1/2"
-          ></div>
+      {({ open }) => {
+        open = props.open ?? open;
 
-          {button}
+        return (
+          <>
+            <div
+              ref={menuRef}
+              className="absolute z-0 w-0 h-0 pointer-events-none left-1/2 top-1/2"
+            ></div>
 
-          <Transition
-            show={open}
-            as={React.Fragment}
-            enter="transition ease-out duration-100"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="transition ease-in duration-75"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
-            <Menu.Items
-              static
-              className={`transform absolute z-20 flex flex-col w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${itemsClassNamesRef.current}`}
+            {button}
+
+            <Transition
+              show={open}
+              as={React.Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
             >
-              {items}
-            </Menu.Items>
-          </Transition>
-        </>
-      )}
+              <Menu.Items
+                static
+                className={`transform absolute z-20 flex flex-col w-56 min-w-min bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${itemsClassNamesRef.current}`}
+              >
+                {items}
+              </Menu.Items>
+            </Transition>
+          </>
+        );
+      }}
     </Menu>
   );
 }

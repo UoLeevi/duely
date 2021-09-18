@@ -703,7 +703,12 @@ fragment invoice on Invoice {
   starting_balance
   statement_descriptor
   status
-  # status_transitions: Invoice.StatusTransitions;
+  status_transitions {
+    finalized_at
+    marked_uncollectible_at
+    paid_at
+    voided_at
+  }
   # subscription: string | Stripe.Subscription | null;
   subscription_proration_date
   subtotal
