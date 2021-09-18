@@ -107,13 +107,6 @@ export const Invoice: GqlTypeDefinition<
       value: String
     }
 
-    type InvoiceStatusTransitions {
-      finalized_at: DateTime
-      marked_uncollectible_at: DateTime
-      paid_at: DateTime
-      voided_at: DateTime
-    }
-
     extend type Query {
       invoice(stripe_account_id: ID!, invoice_id: ID!): Invoice
     }
