@@ -22,8 +22,7 @@ import {
 } from '@duely/client';
 import { ProductBasicInfoFormSection } from './ProductBasicInfoFormSection';
 import { ProductPricingFormSection } from './ProductPricingFormSection';
-import { Link } from 'react-router-dom';
-import { Currency, Util as CoreUtil } from '@duely/core';
+import { Currency, numberToMinorCurrencyAmount, pick } from '@duely/util';
 import { ProductIntegrationFormSection } from './ProductIntegrationFormSection';
 
 type CreateProductFormFields = {
@@ -102,7 +101,7 @@ export function CreateProductForm() {
     const { product } = res_product;
     const { unit_amount_major, payment_type, frequency } = data;
     const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency ?? 'usd'; // TODO: have an input or use default currency
-    const unit_amount = Currency.numberToMinorCurrencyAmount(
+    const unit_amount = numberToMinorCurrencyAmount(
       +unit_amount_major,
       currency as Currency
     );
@@ -130,7 +129,7 @@ export function CreateProductForm() {
 
     if (integration_type) {
       const integration_json = JSON.stringify(
-        CoreUtil.pick(
+        pick(
           data,
           integration_type.fields!.map((f) => f.name)
         )

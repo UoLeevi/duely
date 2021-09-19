@@ -117,7 +117,7 @@ export const current_user_Q = {
 export const countries_Q = {
   query: CountriesDocument,
   result: (d: ResultOf<typeof CountriesDocument>) =>
-    d?.country_codes?.map((code) => CountryUtil.fromCode(code as CountryCode))
+    d?.country_codes?.map((code) => CountryfromCode(code as CountryCode))
 };
 
 export const country_spec_Q = {

@@ -6,12 +6,11 @@ import {
   FormInfoMessage,
   useImageInputFromFileList,
   useFormMessages,
-  Util,
   useForm,
   ValidationRules
 } from '@duely/react';
 
-import { Util as CoreUtil } from '@duely/core';
+import { pick, diff } from '@duely/util';
 
 type ProductProps = {
   product_id?: string;
@@ -56,21 +55,21 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
     useImageInputFromFileList(image_logo_file_list);
 
   async function onSubmit({ image_logo_file_list, ...data }: UpdateProductBasicInfoFormFields) {
-    const diff = {
-      ...Util.diff(CoreUtil.pick(data, product!), product!)
+    const update = {
+      ...diff(pick(data, product!), product!)
     };
 
     if (image_logo && image_logo?.data !== current_image_logo?.data) {
-      diff.image_logo = image_logo;
+      update.image_logo = image_logo;
     }
 
-    if (Object.keys(diff).length === 0) {
+    if (Object.keys(update).length === 0) {
       setInfoMessage('No changes to be saved');
       form.reset();
       return;
     }
 
-    const res = await updateProduct({ product_id: product_id!, ...diff });
+    const res = await updateProduct({ product_id: product_id!, ...update });
 
     if (res?.success) {
       setSuccessMessage('Saved');
@@ -148,9 +147,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton dense>
-            Save
-          </FormButton>
+          <FormButton dense>Save</FormButton>
           <FormButton type="reset" dense>
             Cancel
           </FormButton>

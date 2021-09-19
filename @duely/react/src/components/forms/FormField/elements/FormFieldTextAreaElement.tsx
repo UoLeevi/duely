@@ -1,4 +1,4 @@
-import type { Override } from '@duely/core';
+import type { Override } from '@duely/util';
 import React from 'react';
 import { useFormContext } from '../../Form';
 import { FormFieldElementProps } from './FormFieldElementProps';

@@ -19,7 +19,7 @@ import {
   useFormMessages,
   DynamicFormFields
 } from '@duely/react';
-import { Awaited, Util as CoreUtil } from '@duely/core';
+import { Awaited, pick } from '@duely/util';
 import { useMemo } from 'react';
 
 type SettingsIntegrationsSettingsFormFields = { integration_type_name: string } & Record<
@@ -118,7 +118,7 @@ export function SettingsIntegrationsSettingsForm() {
 
     if (integration_type?.credential_type) {
       const credential_json = JSON.stringify(
-        CoreUtil.pick(
+        pick(
           data,
           integration_type.credential_type.fields!.map((f) => f.name)
         )
@@ -144,7 +144,7 @@ export function SettingsIntegrationsSettingsForm() {
       | Awaited<ReturnType<typeof updateIntegrationConfig>> = null;
 
     const integration_config_json = JSON.stringify(
-      CoreUtil.pick(
+      pick(
         data,
         integration_type!.config_fields!.map((f) => f.name)
       )

@@ -22,7 +22,8 @@
     "../@duely/db",
     "../@duely/lambda",
     "../@duely/react",
-    "../@duely/stripe"
+    "../@duely/stripe",
+    "../@duely/util"
   ],
   "dependencies": {
     "@duely/core": "^0.4.34",
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@duely/build": "^0.4.6",
+    "@duely/util": "^0.4.0",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.9",
     "@types/node": "^14.14.37",

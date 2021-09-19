@@ -1,6 +1,7 @@
 import React from 'react';
-import { Util } from '../util';
+import { createClassName } from '@duely/util';
 import { TopBar } from './TopBar';
+import { Util } from '../util';
 
 type PageLayoutDefaults = {
 };
@@ -18,7 +19,7 @@ type PageLayoutProps = React.DetailedHTMLProps<
 };
 
 function PageLayoutRoot({ children, className, topBarContent, ...props }: PageLayoutProps) {
-  className = Util.createClassName(
+  className = createClassName(
     'container box-border flex flex-col justify-around flex-1 py-6',
     className
   );

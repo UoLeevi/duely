@@ -2,7 +2,7 @@ import type { GraphQLResolveInfo } from 'graphql';
 import { countResource, queryResource, queryResourceAll } from '@duely/db';
 import { DuelyQqlContext } from './context';
 import { Resources } from '@duely/db';
-import { Tail, Util, Awaited } from '@duely/core';
+import { hasProperty } from '@duely/util';
 import { DuelyGraphQLError } from './errors';
 
 // Not yet used
@@ -19,24 +19,6 @@ export async function withCache<TKey, TValue>(
   }
 
   return await promise;
-}
-
-// TODO: remove this and import { Util } from '@duely/core'; and use Util.isNonNullable
-function isNonNullable<T>(value: T): value is NonNullable<T> {
-  return value !== undefined && value !== null;
-}
-
-export function timestampToDate(timestamp: number): Date;
-export function timestampToDate(timestamp: number | null): Date | null;
-export function timestampToDate(timestamp: number | undefined): Date | undefined;
-export function timestampToDate(timestamp: null): null;
-export function timestampToDate(timestamp: undefined): undefined;
-export function timestampToDate(timestamp: number | null | undefined): Date | null | undefined {
-  return timestamp === undefined
-    ? undefined
-    : timestamp === null
-    ? null
-    : new Date(timestamp * 1000);
 }
 
 export function withStripeAccountProperty(
@@ -168,7 +150,7 @@ export function createResolverForReferencedResource<
   ...rest
 }: CreateResolverForReferencedResourceArgs<K>) {
   column_name = column_name ?? `${name}_id`;
-  const resource_name = (Util.hasProperty(rest, 'resource_name') ? rest.resource_name : name) as K;
+  const resource_name = (hasProperty(rest, 'resource_name') ? rest.resource_name : name) as K;
 
   const createIdOrFilterArg: (
     source: TSource,
@@ -228,7 +210,7 @@ export function createResolverForReferencedResourceAll<
   ...rest
 }: CreateResolverForReferencedResourceAllArgs<K>) {
   column_name = column_name ?? `${name}_id`;
-  const resource_name = (Util.hasProperty(rest, 'resource_name') ? rest.resource_name : name) as K;
+  const resource_name = (hasProperty(rest, 'resource_name') ? rest.resource_name : name) as K;
 
   return {
     async [name](

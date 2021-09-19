@@ -12,6 +12,7 @@ import {
 import { Button } from '../../buttons';
 import { Util } from '../../../util';
 import { useClassName } from '../../../hooks';
+import { createClassName } from '@duely/util';
 
 type SignUpFormFields = {
   name: string;
@@ -87,7 +88,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
     );
   }
 
-  className = Util.createClassName('flex flex-col space-y-3', className);
+  className = createClassName('flex flex-col space-y-3', className);
 
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>

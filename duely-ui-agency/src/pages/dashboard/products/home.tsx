@@ -17,7 +17,7 @@ import {
 } from '@duely/react';
 import { ConfirmProductDeletionModal } from './components';
 import { DashboardSection } from '../components';
-import { Currency } from '@duely/core';
+import { Currency, formatCurrency, truncate } from '@duely/util';
 
 const statusColors = {
   draft: 'orange',
@@ -158,12 +158,12 @@ export default function DashboardProductsHome() {
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium">{product.name}</span>
                       <p className="flex-1 max-w-sm text-xs text-gray-500">
-                        {Util.truncate(product.description ?? '', 120)}
+                        {truncate(product.description ?? '', 120)}
                       </p>
                       <div className="flex items-center pb-1 space-x-3 text-xs text-gray-500 whitespace-nowrap">
                         {product.default_price && (
                           <span>
-                            {Currency.format(
+                            {formatCurrency(
                               product.default_price.unit_amount,
                               product.default_price.currency as Currency
                             )}

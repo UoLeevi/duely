@@ -1,6 +1,13 @@
 import { customer_Q, update_customer_M, useMutation, useQuery } from '@duely/client';
-import { Form, FormButton, FormField, FormInfoMessage, useFormMessages, Util, useForm } from '@duely/react';
-import { Util as CoreUtil } from '@duely/core';
+import {
+  Form,
+  FormButton,
+  FormField,
+  FormInfoMessage,
+  useFormMessages,
+  useForm
+} from '@duely/react';
+import { diff, pick } from '@duely/util';
 
 type CustomerProps = {
   customer_id: string;
@@ -30,7 +37,7 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
 
   async function onSubmit({ ...data }: UpdateCustomerBasicInfoFormFields) {
     const update = {
-      ...Util.diff(CoreUtil.pick(data, customer!), customer!)
+      ...diff(pick(data, customer!), customer!)
     };
 
     if (Object.keys(update).length === 0) {
@@ -51,12 +58,8 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
 
   return (
     <>
-      <Form
-        form={form}
-        onSubmit={onSubmit}
-        className="flex flex-col space-y-3"
-      >
-        < FormField
+      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
+        <FormField
           defaultValue={customer?.name}
           label="Customer name"
           className="max-w-xl"
@@ -64,7 +67,7 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
           type="text"
           registerOptions={{ required: true }}
         />
-        < FormField
+        <FormField
           defaultValue={customer?.email_address}
           label="Email address"
           className="max-w-xl"
@@ -74,9 +77,7 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton dense>
-            Save
-          </FormButton>
+          <FormButton dense>Save</FormButton>
           <FormButton type="reset" dense>
             Cancel
           </FormButton>

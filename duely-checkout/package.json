@@ -21,11 +21,13 @@
     "../@duely/client",
     "../@duely/db",
     "../@duely/lambda",
-    "../@duely/react"
+    "../@duely/react",
+    "../@duely/util"
   ],
   "dependencies": {
     "@duely/core": "^0.4.34",
     "@duely/db": "0.4.20",
+    "@duely/util": "^0.4.0",
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "graphql": "^15.5.0",

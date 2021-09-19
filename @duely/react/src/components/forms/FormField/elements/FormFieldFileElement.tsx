@@ -1,4 +1,4 @@
-import type { Override } from '@duely/core';
+import { formatFileSize, Override } from '@duely/util';
 import React from 'react';
 import { Util } from '../../../../util';
 import { useFormContext } from '../../Form';
@@ -37,7 +37,7 @@ export function FormFieldFileElement<
 
   hintRef.current = hasFile
     ? Array.from(fileList!)
-        .map((f) => Util.formatFileSize(f.size))
+        .map((f) => formatFileSize(f.size))
         .join(', ')
     : null;
 

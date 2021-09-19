@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Util } from '../../util';
+import { createClassName } from '@duely/util';
 
 type LoadingSpinnerProps = React.DetailedHTMLProps<
   React.SVGAttributes<SVGSVGElement>,
@@ -13,7 +13,7 @@ export function LoadingSpinner({ className, loading }: LoadingSpinnerProps) {
 
   const [playAnimation, setPlayAnimation] = useState(loading);
 
-  className = Util.createClassName(
+  className = createClassName(
     'transition-opacity duration-150',
     loading ? 'opacity-100 duration-100' : 'opacity-0',
     playAnimation && 'animate-spin',

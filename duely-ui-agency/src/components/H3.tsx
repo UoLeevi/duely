@@ -1,9 +1,10 @@
 import { Util, useHashScrolling } from '@duely/react';
+import { createClassName } from '@duely/util';
 
 type H3Props = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
 
 function H3({ children, className, ...props }: H3Props) {
-  className = Util.createClassName(className, 'font-bold tracking-wide text-gray-700 group');
+  className = createClassName(className, 'font-bold tracking-wide text-gray-700 group');
   const [linkRef, hashLink] = useHashScrolling<HTMLHeadingElement>();
 
   return (

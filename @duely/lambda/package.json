@@ -10,7 +10,8 @@
   "types": "dist/index.d.ts",
   "workspaces": [
     "../build",
-    "../core"
+    "../core",
+    "../util"
   ],
   "scripts": {
     "build": "cross-env NODE_ENV='production' webpack",
@@ -20,6 +21,7 @@
   "dependencies": {
     "@duely/build": "^0.4.6",
     "@duely/core": "^0.4.34",
+    "@duely/util": "^0.4.0",
     "axios": "^0.21.1"
   },
   "devDependencies": {

@@ -1,6 +1,12 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRerender } from './hooks/useRerender';
 import { FormFieldControl, FormFieldRegisterOptions } from './FormFieldControl';
+import { isString, push, randomKey, remove, removeAt } from '@duely/util';
+
+export type FieldArrayItem = {
+  key: string;
+  getName: (name: string) => string;
+}
 
 export class FormControl<TFormFields extends Record<string, any> = Record<string, any>> {
   #isSubmitting = false;
@@ -17,14 +23,66 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     }
   > = {};
 
+  #arrayFields: Partial<
+    {
+      [TName in keyof TFormFields]: string[];
+    }
+  > = {};
+
   constructor(options?: { defaultValues?: Partial<TFormFields> }) {
     this.#defaultValues = options?.defaultValues ?? {};
   }
 
   get value(): Partial<TFormFields> {
-    return Object.fromEntries(
-      Object.entries(this.#fields).map(([name, field]) => [name, field.value])
-    ) as any;
+    const value: Record<string, any> = {};
+    const fieldsByArray: Record<string, Set<string>> = {};
+
+    for (const [name, field] of Object.entries(this.#fields)) {
+      const leftBracketIndex = name.indexOf('[');
+      if (leftBracketIndex === -1) {
+        value[name] = field.value;
+        continue;
+      }
+
+      const arrayName = name.slice(0, leftBracketIndex);
+      const keys = this.#arrayFields[arrayName];
+
+      if (!keys) {
+        value[name] = field.value;
+        continue;
+      }
+
+      const rightBracketIndex = name.indexOf(']', leftBracketIndex);
+      const itemName = name.slice(rightBracketIndex + 2);
+
+      let fieldSet = fieldsByArray[arrayName];
+
+      if (!fieldSet) {
+        fieldSet = new Set();
+        fieldsByArray[arrayName] = fieldSet;
+      }
+
+      if (fieldSet.has(itemName)) continue;
+
+      fieldSet.add(itemName);
+
+      let arrayField = value[arrayName];
+
+      if (!arrayField) {
+        arrayField = keys.map((_) => ({}));
+        value[arrayName] = arrayField;
+      }
+
+      for (let i = 0; i < keys.length; ++i) {
+        const key = keys[i];
+        const field = this.#fields[`${arrayName}[${key}].${itemName}`];
+        if (field !== undefined) {
+          arrayField[i][itemName] = field.value;
+        }
+      }
+    }
+
+    return value as any;
   }
 
   get isDirty() {
@@ -151,6 +209,39 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     return this.value;
   }
 
+  useFieldArray<TName extends string & keyof TFormFields>(name: TName) {
+    const [items, setItems] = useState<string[]>([]);
+    const addItem = useCallback(() => setItems((items) => push(items, randomKey())), [name]);
+    const removeItem = useCallback(
+      (item: number | string) =>
+        setItems((items) =>
+          isString(item) ? remove(items, (key) => key === item) : removeAt(items, item)
+        ),
+      [name]
+    );
+
+    const arrayName = name;
+
+    if (items.length === 0) {
+      delete this.#arrayFields[name];
+    } else {
+      this.#arrayFields[name] = items;
+    }
+
+    return {
+      fields: useMemo(
+        () =>
+          items.map((key) => ({
+            key,
+            getName: (name: string) => `${arrayName}[${key}].${name}`
+          })),
+        [items]
+      ),
+      addItem,
+      removeItem
+    };
+  }
+
   reset(defaultValues?: Partial<TFormFields>) {
     this.startUpdate();
 
@@ -169,16 +260,15 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     const control = this;
     return async (event?: React.BaseSyntheticEvent) => {
       event?.preventDefault();
-      const data: any = {};
 
-      for (const [name, field] of Object.entries(control.#fields)) {
+      for (const field of Object.values(control.#fields)) {
         if (!field.validate()) {
           field.focus();
           return;
         }
-
-        data[name] = field.value;
       }
+
+      const data = this.value as TFormFields;
 
       this.startUpdate();
       this.#isSubmitting = true;

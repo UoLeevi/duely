@@ -1,3 +1,4 @@
+import { createClassName, hasProperty } from '@duely/util';
 import React from 'react';
 import { Util } from '../../../util';
 
@@ -18,7 +19,7 @@ export function FormInfoMessage({
   className,
   ...props
 }: FormInfoMessageProps) {
-  className = Util.createClassName(
+  className = createClassName(
     'flex flex-row items-center justify-center space-x-2 font-medium',
     error ? 'text-red-400' : 'text-gray-500',
     className
@@ -51,7 +52,7 @@ export function FormInfoMessage({
             />
           </svg>
           <p className="text-sm text-center">
-            {Util.hasProperty(error, 'message') ? error.message : error}
+            {hasProperty(error, 'message') ? error.message : error}
           </p>
         </>
       )}

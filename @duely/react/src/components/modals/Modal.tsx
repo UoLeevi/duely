@@ -1,10 +1,10 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { Util } from '../../util';
 import { ScreenOverlayContext } from '../../contexts';
 import ReactDOM from 'react-dom';
 import { Transition } from '@headlessui/react';
 import { getIconElement, IconProp, icons } from '../icons';
 import { usePrevious } from '../../hooks/usePrevious';
+import { createClassName } from '@duely/util';
 
 export type UseModalReturn = {
   isOpen: boolean;
@@ -128,7 +128,7 @@ function ModalContent({
     }
   }
 
-  className = Util.createClassName(
+  className = createClassName(
     !unstyled && 'max-w-lg rounded-lg',
     className,
     'box-border relative flex flex-col shadow-lg focus:outline-none ring-1 ring-black ring-opacity-5'
@@ -166,7 +166,7 @@ type ModalBodyProps = React.DetailedHTMLProps<
 
 function Body({ children, heading, icon, className, iconClassNames }: ModalBodyProps) {
   icon = getIconElement(icon);
-  className = Util.createClassName('flex p-6 space-x-4 bg-white rounded-t-lg', className);
+  className = createClassName('flex p-6 space-x-4 bg-white rounded-t-lg', className);
 
   return (
     <div className={className}>
@@ -195,7 +195,7 @@ type ModalFooterProps = React.DetailedHTMLProps<
 >;
 
 function Footer({ children, className }: ModalFooterProps) {
-  className = Util.createClassName(
+  className = createClassName(
     'flex flex-row-reverse px-6 py-4 space-x-4 space-x-reverse text-sm font-medium text-white rounded-b-lg bg-gray-50',
     className
   );

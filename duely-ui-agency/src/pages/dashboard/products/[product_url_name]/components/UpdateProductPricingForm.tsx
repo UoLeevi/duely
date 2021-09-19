@@ -7,20 +7,23 @@ import {
   current_agency_Q,
   agency_stripe_account_Q
 } from '@duely/client';
-import { Currency } from '@duely/core';
+import {
+  Currency,
+  diff,
+  numberToMinorCurrencyAmount,
+  pick,
+  minorCurrencyAmountToNumber
+} from '@duely/util';
 import {
   Form,
   FormButton,
   FormField,
   FormInfoMessage,
   useFormMessages,
-  Util,
   useForm,
   InputFilters,
   ValidationRules
 } from '@duely/react';
-
-import { Util as CoreUtil } from '@duely/core';
 
 type ProductProps = {
   product_id?: string;
@@ -74,7 +77,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
   const default_price = product?.default_price;
   const unit_amount_major =
     (default_price &&
-      Currency.minorCurrencyAmountToNumber(
+      minorCurrencyAmountToNumber(
         default_price.unit_amount,
         default_price.currency as Currency
       ).toString()) ??
@@ -91,10 +94,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
     payment_type,
     frequency
   }: UpdateProductPricingFormFields) {
-    const unit_amount = Currency.numberToMinorCurrencyAmount(
-      +unit_amount_major,
-      currency as Currency
-    );
+    const unit_amount = numberToMinorCurrencyAmount(+unit_amount_major, currency as Currency);
 
     const recurring: {
       recurring_interval_count?: number;
@@ -108,8 +108,8 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
     }
 
     if (product?.default_price) {
-      const update = Util.diff(
-        CoreUtil.pick(
+      const update = diff(
+        pick(
           {
             unit_amount,
             currency,

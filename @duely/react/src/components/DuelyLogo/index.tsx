@@ -1,12 +1,12 @@
 import React from 'react';
-import { Util } from '../../util';
+import { createClassName } from '@duely/util';
 
 type DuelyLogoProps = {
   className?: string;
 };
 
 export function DuelyLogo({ className, ...props }: DuelyLogoProps) {
-  className = Util.createClassName('fill-current', className);
+  className = createClassName('fill-current', className);
 
   return (
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 260" className={className} { ...props }>

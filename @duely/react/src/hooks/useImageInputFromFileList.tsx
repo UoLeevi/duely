@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ImageInput } from '@duely/core';
+import { createClassName } from '@duely/util';
 import { Util } from '../util';
 
 type ImageFromFileState = {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Currency } from '@duely/core';
+import { Currency, formatCurrency, formatDate, sentenceCase } from '@duely/util';
 import { Util, Table, SkeletonText, ColoredChip } from '@duely/react';
 import {
   useQuery,
@@ -38,10 +38,10 @@ export function BalanceTransactionsTable() {
           ) : (
             <div className="flex flex-col">
               <div className="text-sm font-semibold">
-                {Util.sentenceCase(txn.reporting_category)}
+                {sentenceCase(txn.reporting_category)}
               </div>
               {txn.reporting_category !== txn.type && (
-                <div className="text-xs text-gray-500">{Util.sentenceCase(txn.type)}</div>
+                <div className="text-xs text-gray-500">{sentenceCase(txn.type)}</div>
               )}
             </div>
           )
@@ -57,10 +57,10 @@ export function BalanceTransactionsTable() {
             </div>
           ) : (
             <div className="flex flex-col">
-              <div className="text-xs">{Util.formatDate(new Date(txn.created))}</div>
+              <div className="text-xs">{formatDate(new Date(txn.created))}</div>
               {txn.status === 'pending' && txn.available_on !== txn.created && (
                 <div className="text-xs text-gray-500">
-                  available on {Util.formatDate(new Date(txn.available_on))}
+                  available on {formatDate(new Date(txn.available_on))}
                 </div>
               )}
             </div>
@@ -91,9 +91,9 @@ export function BalanceTransactionsTable() {
             </div>
           ) : (
             <div className="flex flex-col">
-              <div className="text-sm">{Currency.format(txn.amount, txn.currency as Currency)}</div>
+              <div className="text-sm">{formatCurrency(txn.amount, txn.currency as Currency)}</div>
               <div className="text-xs text-gray-500">
-                net {Currency.format(txn.net, txn.currency as Currency)}
+                net {formatCurrency(txn.net, txn.currency as Currency)}
               </div>
             </div>
           )

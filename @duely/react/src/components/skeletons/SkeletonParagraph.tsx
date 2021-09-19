@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Util } from '../../util';
+import { createClassName, poisson, pseudoRandom } from '@duely/util';
 import { SkeletonText } from './SkeletonText';
 
 type SkeletonParagraphProps = React.DetailedHTMLProps<
@@ -26,10 +26,10 @@ export function SkeletonParagraph({ className, words, seed }: SkeletonParagraphP
 function* generateWordLengths(count: number, seed?: number) {
   const averageWordLength = 5;
   seed ??= 0;
-  const generateRandom = () => Util.pseudoRandom(++seed!);
+  const generateRandom = () => pseudoRandom(++seed!);
 
   while (count--) {
-    const wordLength = Util.poisson(averageWordLength, generateRandom);
+    const wordLength = poisson(averageWordLength, generateRandom);
     if (wordLength > 0) yield wordLength;
   }
 }

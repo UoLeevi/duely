@@ -1,5 +1,5 @@
 import React from 'react';
-import { Util } from '../../util';
+import { createClassName } from '@duely/util';
 import { getIconElement, IconProp, icons } from '../icons';
 import { LoadingSpinner } from '../LoadingSpinner';
 
@@ -47,7 +47,7 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
   Omit<ElementPropsWithoutRef<T>, keyof (ButtonBaseProps & BaseComponent<T>)>) {
   disabled = !!(disabled || loading);
   color = color ?? 'gray';
-  className = Util.createClassName(
+  className = createClassName(
     'relative flex justify-center tracking-wide whitespace-nowrap items-center border appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm',
     dense ? 'px-4 py-1.5' : 'px-7 py-2.5',
     !shrink && (dense ? 'min-w-[10ch]' : 'min-w-[12ch]'),
@@ -55,8 +55,6 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
     color && colorClassName[color],
     className
   );
-
-  console.log('shring ', shrink);
 
   const Component: React.ElementType = render;
 
@@ -70,7 +68,7 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
       />
 
       <span
-        className={Util.createClassName(
+        className={createClassName(
           'transform transition-transform',
           loading && 'translate-x-4',
           icon && 'flex items-center space-x-2'

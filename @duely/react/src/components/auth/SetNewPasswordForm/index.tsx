@@ -9,8 +9,8 @@ import {
   useForm,
   useFormMessages
 } from '../../forms';
-import { Util } from '../../../util';
 import { NotFoundScreen } from '../../NotFoundScreen';
+import { createClassName } from '@duely/util';
 
 type SetNewPasswordFormFields = {
   password: string;
@@ -42,7 +42,7 @@ export function SetNewPasswordForm({ className, redirectTo }: SetNewPasswordForm
     }
   }
 
-  className = Util.createClassName('flex flex-col space-y-3', className);
+  className = createClassName('flex flex-col space-y-3', className);
 
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>

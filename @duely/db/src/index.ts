@@ -1,7 +1,7 @@
 import { ClientBase, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
-import { ResolvableValue, Util } from '@duely/core';
+import { ResolvableValue, Util } from '@duely/util';
 import { AccessLevel, Resources, ResourcesWithState } from './resources';
 
 export * from './errors';
@@ -113,8 +113,8 @@ export async function withSessionEx<TArg = any, R = any>(
   }
 
   try {
-    context = await Util.resolve(context, client);
-    const resolvedArg: TArg = await Util.resolve(arg, client);
+    context = await resolve(context, client);
+    const resolvedArg: TArg = await resolve(arg, client);
 
     await client.query('SELECT operation_.begin_session_($1::text, $2::text)', [
       context.jwt,
@@ -160,7 +160,7 @@ async function logInServiceAccount() {
     };
   };
 
-  return await withSessionEx(context, callback, Util.identity);
+  return await withSessionEx(context, callback, identity);
 }
 
 const serviceAccountContextState: {
@@ -197,7 +197,7 @@ export async function withConnection<R = any>(
 }
 
 function isClient(contextOrClient: Context | ClientBase): contextOrClient is ClientBase {
-  return Util.hasMethod(contextOrClient, 'query');
+  return hasMethod(contextOrClient, 'query');
 }
 
 export async function queryAll<R = any, I extends any[] = any[]>(
@@ -229,7 +229,7 @@ export async function queryAll<R = any, I extends any[] = any[]>(
 
   const callback = async (client: ClientBase) => await queryAll(client, sql, ...parameters);
   const context = arg;
-  return await withSessionEx(context, callback, Util.identity);
+  return await withSessionEx(context, callback, identity);
 }
 
 export async function query<R = any, I extends any[] = any[]>(
@@ -508,7 +508,7 @@ function useFunctions(client: ClientBase) {
     ): Promise<R> {
       return await query(client, sql, ...parameters);
     },
-    queryResourceAccess: Util.partial(queryResourceAccess, client),
+    queryResourceAccess: partial(queryResourceAccess, client),
     async queryResource<K extends keyof Resources>(
       resource_name: K,
       id_or_filter: string | Partial<Resources[K]>,

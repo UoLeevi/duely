@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FormControl } from '../FormControl';
+import { FieldArrayItem, FormControl } from '../FormControl';
 import { FormFieldHTMLElement, FormFieldRegisterOptions } from '../FormFieldControl';
 
 export type UseFormReturn<TFormFields extends Record<string, any> = Record<string, any>> = {
@@ -26,6 +26,13 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
   useFormState(): {
     isDirty: boolean;
     isSubmitting: boolean;
+  };
+  useFieldArray<TName extends string & keyof TFormFields>(
+    name: TName
+  ): {
+    fields: FieldArrayItem[];
+    addItem: () => void;
+    removeItem: (item: number | string) => void;
   };
   reset(defaultValues?: Partial<TFormFields>): void;
   handleSubmit(
@@ -54,6 +61,7 @@ export function useForm<TFormFields extends Record<string, any> = Record<string,
       useFormFieldValue: control.useFormFieldValue.bind(control),
       useFormValue: control.useFormValue.bind(control),
       useFormState: control.useFormState.bind(control),
+      useFieldArray: control.useFieldArray.bind(control),
       reset: control.reset.bind(control),
       handleSubmit: control.handleSubmit.bind(control),
       setValue: control.setValue.bind(control),

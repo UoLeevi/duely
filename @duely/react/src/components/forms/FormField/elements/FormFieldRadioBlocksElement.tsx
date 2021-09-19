@@ -1,4 +1,4 @@
-import type { Override } from '@duely/core';
+import { createClassName, Override } from '@duely/util';
 import React from 'react';
 import { Util } from '../../../../util';
 import { useFormContext } from '../../Form';
@@ -42,7 +42,7 @@ export function FormFieldRadioBlocksElement<
         typeof option === 'object'
           ? option
           : { value: option, element: undefined, description: undefined };
-      const className = Util.createClassName(
+      const className = createClassName(
         fieldValue === value &&
           (props.readOnly || props.disabled ? 'border-gray-400 dark:border-gray-700' : 'border-blue-400'),
         fieldValue !== value && (props.readOnly || props.disabled) && 'opacity-50',

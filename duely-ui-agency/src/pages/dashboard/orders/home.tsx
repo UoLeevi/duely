@@ -18,7 +18,7 @@ import {
   icons
 } from '@duely/react';
 import { DashboardSection } from '../components';
-import { Currency } from '@duely/core';
+import { Currency, formatCurrency, formatDate, truncate } from '@duely/util';
 
 const wrap = {
   sm: {
@@ -115,7 +115,7 @@ export default function DashboardOrdersHome() {
                 ) : (
                   <div className="flex flex-col space-y-2">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {Util.truncate(
+                      {truncate(
                         order.items.map((item) => item.price.product.name).join(', '),
                         50
                       )}
@@ -164,7 +164,7 @@ export default function DashboardOrdersHome() {
                   <div className="flex items-center space-x-4">
                     <div className="flex flex-col space-y-2">
                       <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                        {Currency.format(
+                        {formatCurrency(
                           order.stripe_checkout_session.amount_total ?? 0,
                           order.stripe_checkout_session.currency as Currency
                         )}
@@ -193,7 +193,7 @@ export default function DashboardOrdersHome() {
                 ) : (
                   <div className="flex flex-col space-y-2">
                     <span className="text-xs text-gray-800 dark:text-gray-300">
-                      {Util.formatDate(new Date(order.ordered_at))}
+                      {formatDate(new Date(order.ordered_at))}
                     </span>
                   </div>
                 )

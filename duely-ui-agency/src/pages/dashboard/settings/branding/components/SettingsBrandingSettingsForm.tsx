@@ -1,4 +1,4 @@
-import { Util as CoreUtil } from '@duely/core';
+import { diff, pick } from '@duely/util';
 import {
   update_theme_M,
   update_image_M,
@@ -62,8 +62,8 @@ export function SettingsBrandingSettingsForm() {
     image_logo_file_list,
     ...data
   }: SettingsBrandingSettingsFormValues) => {
-    const diff = {
-      ...Util.diff(CoreUtil.pick(data, theme!), theme!)
+    const update = {
+      ...diff(pick(data, theme!), theme!)
     };
 
     let image_update_res = null;
@@ -79,7 +79,7 @@ export function SettingsBrandingSettingsForm() {
       }
     }
 
-    if (Object.keys(diff).length === 0) {
+    if (Object.keys(update).length === 0) {
       if (image_update_res) {
         if (image_update_res?.success) {
           setSuccessMessage('Saved');

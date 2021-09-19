@@ -1,4 +1,4 @@
-import { Util } from '@duely/core';
+import { Util } from '@duely/util';
 
 // see: https://www.postgresql.org/docs/current/errcodes-appendix.html
 // see: https://www.postgresql.org/docs/current/plpgsql-errors-and-messages.html
@@ -6,7 +6,7 @@ import { Util } from '@duely/core';
 // see: https://github.com/brianc/node-postgres/issues/2378
 // see: https://stackoverflow.com/a/22600394
 export function getDbErrorCode(err: Error) {
-  if (!Util.hasProperty(err, 'code')) return null;
+  if (!hasProperty(err, 'code')) return null;
 
   switch (err.code) {
     // Postgres standard errors

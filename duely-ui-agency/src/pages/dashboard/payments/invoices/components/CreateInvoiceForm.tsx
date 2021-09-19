@@ -1,32 +1,30 @@
 import {
   FormButton,
-  FormInfoMessage,
   FormField,
   useForm,
   Form,
-  LinkButton,
   ValidationRules,
-  FormSection,
   Button,
   Table,
-  Util,
-  InputFilters
+  InputFilters,
+  FieldArrayItem
 } from '@duely/react';
 import {
-  useMutation,
   useQuery,
   // create_invoice_M,
   current_agency_Q,
   agency_stripe_account_Q,
   customers_Q
 } from '@duely/client';
-import { Link } from 'react-router-dom';
-import { useCallback, useMemo, useState } from 'react';
-import produce from 'immer';
+import { useMemo } from 'react';
 
 type CreateInvoiceFormFields = {
   customer_email_address: string;
   message?: string;
+  items: {
+    name: string;
+    amount: number;
+  }[];
 };
 
 export function CreateInvoiceForm() {
@@ -96,7 +94,9 @@ export function CreateInvoiceForm() {
     // success: stateInvoice.data?.success
   };
 
-  async function onSubmit({ customer_email_address }: CreateInvoiceFormFields) {
+  async function onSubmit({ ...value }: CreateInvoiceFormFields) {
+    console.log(value);
+
     // const res_invoice = await createInvoice({
     //   stripe_account_id: stripe_account!.id,
     //   name,
@@ -143,31 +143,7 @@ export function CreateInvoiceForm() {
       )
     : undefined;
 
-  type InvoiceItem = {
-    key: string;
-  };
-
-  const [items, setItems] = useState<InvoiceItem[]>([{ key: Util.randomKey() }]);
-  const addItem = useCallback(
-    () =>
-      setItems((items) =>
-        produce(items, (items) => {
-          items.push({
-            key: Util.randomKey()
-          });
-          return items;
-        })
-      ),
-    []
-  );
-
-  const removeItem = useCallback(
-    (item: InvoiceItem) =>
-      setItems((items) => produce(items, (items) => items.filter((i) => i.key !== item.key))),
-    []
-  );
-
-  console.log(form.useFormValue());
+  const {fields, addItem, removeItem} = form.useFieldArray('items');
 
   return (
     <>
@@ -185,26 +161,27 @@ export function CreateInvoiceForm() {
         <div className="pb-2">
           <span className="font-medium text-gray-700">Items</span>
           <div className="flex flex-col pb-3 border-b">
-            <Table items={items}>
+            <Table items={fields}>
               <Table.Column header="Name">
-                {(item: InvoiceItem | null, i) => {
-                  if (!item) return null;
+                {(field: FieldArrayItem | null, i) => {
+                  if (!field) return null;
                   return (
                     <FormField
                       type="text"
-                      name={`[${item.key}]-name`}
+                      name={field.getName('name')}
                       placeholder={`Item ${i + 1}`}
+                      registerOptions={{ required: true }}
                     />
                   );
                 }}
               </Table.Column>
 
               <Table.Column header="Amount">
-                {(item: InvoiceItem | null, i) => {
-                  if (!item) return null;
+                {(field: FieldArrayItem | null, i) => {
+                  if (!field) return null;
                   return (
                     <FormField
-                      name={`[${item.key}]-amount`}
+                      name={field.getName('amount')}
                       type="text"
                       inputMode="numeric"
                       prefix={currencyPrefix}
@@ -219,15 +196,16 @@ export function CreateInvoiceForm() {
               </Table.Column>
 
               <Table.Column header="">
-                {(item: InvoiceItem | null, i) => {
-                  if (!item) return null;
+                {(field: FieldArrayItem | null, i) => {
+                  if (!field) return null;
                   return (
                     <Button
+                      type="button"
                       className="mb-auto text-sm w-max"
                       dense
                       shrink
                       icon="trash"
-                      onClick={() => removeItem(item)}
+                      onClick={() => removeItem(i)}
                     />
                   );
                 }}

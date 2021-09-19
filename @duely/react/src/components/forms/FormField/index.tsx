@@ -19,6 +19,7 @@ import {
   FormFieldTextAreaElement,
   FormFieldTextAreaElementProps
 } from './elements';
+import { createClassName } from '@duely/util';
 
 type FormFieldPropsPartial<
   TName extends string & keyof TFormFields,
@@ -234,7 +235,7 @@ export function FormField<
     }
   }
 
-  className = Util.createClassName('flex flex-col relative', className);
+  className = createClassName('flex flex-col relative', className);
 
   return (
     <div className={className}>

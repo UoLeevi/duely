@@ -1,6 +1,5 @@
-import type { Override } from '@duely/core';
+import { Override, sentenceCase } from '@duely/util';
 import React from 'react';
-import { Util } from '../../../../util';
 import { useFormContext } from '../../Form';
 import { FormFieldElementProps } from './FormFieldElementProps';
 
@@ -64,7 +63,7 @@ export function FormFieldRadioToggleElement<
         />
         <label htmlFor={`radio-toggle-option-${left.value}`} className="grid row-start-1">
           <span className="pr-3 font-medium tracking-wide text-right">
-            {left.element ?? Util.sentenceCase(left.value)}
+            {left.element ?? sentenceCase(left.value)}
           </span>
         </label>
 
@@ -88,7 +87,7 @@ export function FormFieldRadioToggleElement<
         />
         <label htmlFor={`radio-toggle-option-${right.value}`} className="grid row-start-1">
           <span className="pl-3 font-medium tracking-wide text-left">
-            {right.element ?? Util.sentenceCase(right.value)}
+            {right.element ?? sentenceCase(right.value)}
           </span>
         </label>
       </div>

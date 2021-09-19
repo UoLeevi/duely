@@ -1,6 +1,6 @@
 {
   "name": "@duely/core",
-  "version": "0.4.36",
+  "version": "0.4.37",
   "description": "Shared types and functions used by the Duely APIs.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -16,9 +16,11 @@
     "analyze": "npx webpack-bundle-analyzer stats.json"
   },
   "workspaces": [
-    "../build"
+    "../build",
+    "../util"
   ],
   "dependencies": {
+    "@duely/util": "^0.4.0",
     "graphql": "^15.5.0"
   },
   "devDependencies": {

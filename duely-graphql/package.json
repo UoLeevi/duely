@@ -24,13 +24,15 @@
     "../@duely/email",
     "../@duely/lambda",
     "../@duely/react",
-    "../@duely/stripe"
+    "../@duely/stripe",
+    "../@duely/util"
   ],
   "dependencies": {
     "@duely/core": "0.4.29",
     "@duely/db": "0.4.20",
     "@duely/email": "0.4.9",
     "@duely/stripe": "0.4.5",
+    "@duely/util": "^0.4.0",
     "@graphql-tools/schema": "^7.1.3",
     "axios": "^0.21.1",
     "cors": "^2.8.5",

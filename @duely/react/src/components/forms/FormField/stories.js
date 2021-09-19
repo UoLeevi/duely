@@ -58,7 +58,7 @@ Image.args = {
 };
 
 const countries = ['FI', 'SG', 'US', 'GB', 'JP']
-  .map(Util.countryByCode)
+  .map(countryByCode)
   .sort((a, b) => (a.name).localeCompare(b.name))
   .map(c => ({ value: c.alpha2code, element: c.shortName || c.name ? `${c.shortName || c.name} ${c.flag}` : c.alpha2code }));
 

@@ -1,5 +1,5 @@
 import { current_agency_Q, current_user_Q, useQuery } from '@duely/client';
-import { Util } from '@duely/react';
+import { template } from '@duely/util';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PageBlockComponentProps } from './page-blocks';
@@ -20,9 +20,9 @@ export function HeroWithAngledImage({
   imageSrc,
   imageAlt
 }: HeroWithAngledImageProps) {
-  headline1 = headline1 && Util.template(headline1, { agency });
-  headline2 = headline2 && Util.template(headline2, { agency });
-  paragraph = paragraph && Util.template(paragraph, { agency });
+  headline1 = headline1 && template(headline1, { agency });
+  headline2 = headline2 && template(headline2, { agency });
+  paragraph = paragraph && template(paragraph, { agency });
 
   return (
     <div className="relative overflow-hidden bg-white">

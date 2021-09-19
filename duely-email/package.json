@@ -21,12 +21,14 @@
     "../@duely/client",
     "../@duely/db",
     "../@duely/lambda",
-    "../@duely/react"
+    "../@duely/react",
+    "../@duely/util"
   ],
   "dependencies": {
     "@duely/core": "^0.4.34",
     "@duely/db": "0.4.20",
     "@duely/lambda": "0.4.1",
+    "@duely/util": "^0.4.0",
     "@types/validator": "^13.1.3",
     "axios": "^0.21.1",
     "base64url": "^3.0.1",

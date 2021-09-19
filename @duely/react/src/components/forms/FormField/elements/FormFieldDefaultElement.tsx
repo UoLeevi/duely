@@ -1,4 +1,4 @@
-import type { Override } from '@duely/core';
+import type { Override } from '@duely/util';
 import React, { useRef } from 'react';
 import { useFocus } from '../../../..';
 import { DropMenu } from '../../../DropMenu';

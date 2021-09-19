@@ -1,12 +1,12 @@
 import React from 'react';
-import { Util } from '../../util';
+import { hasProperty } from '@duely/util';
 
 export type IconName = keyof typeof icons;
 
 export type IconProp = IconName | React.ReactNode;
 
 export function getIconElement(icon: IconProp): React.ReactNode {
-  if (icon && typeof icon === 'string' && Util.hasProperty(icons, icon)) {
+  if (icon && typeof icon === 'string' && hasProperty(icons, icon)) {
     return icons[icon] as React.ReactNode;
   }
 

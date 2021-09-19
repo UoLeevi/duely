@@ -11,7 +11,8 @@
   "workspaces": [
     "../build",
     "../core",
-    "../db"
+    "../db",
+    "../util"
   ],
   "scripts": {
     "build": "cross-env NODE_ENV='production' webpack",
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "@duely/build": "^0.4.6",
+    "@duely/util": "^0.4.0",
     "stripe": "^8.167.0"
   },
   "devDependencies": {

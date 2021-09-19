@@ -15,7 +15,6 @@ import {
   FormInfoMessage,
   LoadingScreen,
   useFormMessages,
-  Util,
   useForm,
   UseFormReturn,
   DynamicFormFields
@@ -23,6 +22,7 @@ import {
 import { pageBlockComponents } from '~/components/page-blocks';
 import React, { useContext, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { createClassName } from '@duely/util';
 
 type PageEditorContextValue = {
   page: PageFragment;
@@ -106,7 +106,7 @@ type PageBlockPreviewProps = {
 
 function PageBlockPreview({ block }: PageBlockPreviewProps) {
   const { selectedBlock, selectBlock, page, agency, product, editBlockForm } = usePageEditor();
-  const className = Util.createClassName(block === selectedBlock && 'overlay-ring');
+  const className = createClassName(block === selectedBlock && 'overlay-ring');
   const data = useMemo(() => JSON.parse(block.data), [block.data]);
   const formValue = editBlockForm.useFormValue();
   const values = block === selectedBlock ? formValue : data;

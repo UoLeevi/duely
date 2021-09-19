@@ -1,4 +1,5 @@
-import { SkeletonText, Util, useHashScrolling } from '@duely/react';
+import { SkeletonText, useHashScrolling } from '@duely/react';
+import { createClassName } from '@duely/util';
 import React from 'react';
 
 type DashboardSectionProps = {
@@ -15,7 +16,7 @@ export function DashboardSection({
   className,
   ...props
 }: DashboardSectionProps) {
-  className = Util.createClassName(className, 'flex flex-col space-y-4 sm:p-2 md:p-3 xl:p-5');
+  className = createClassName(className, 'flex flex-col space-y-4 sm:p-2 md:p-3 xl:p-5');
 
   const [linkRef, hashLink] = useHashScrolling<HTMLHeadingElement>();
 

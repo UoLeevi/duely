@@ -15,7 +15,7 @@ import {
   DynamicFormFields
 } from '@duely/react';
 
-import { Util as CoreUtil } from '@duely/core';
+import { pick } from '@duely/util';
 import { useMemo } from 'react';
 
 type ProductProps = {
@@ -70,7 +70,7 @@ export function UpdateProductIntegrationForm({ product_id }: ProductProps) {
 
   async function onSubmit({ ...data }: UpdateProductIntegrationFormFields) {
     const integration_json = JSON.stringify(
-      CoreUtil.pick(
+      pick(
         data,
         integration_type!.fields!.map((f) => f.name)
       )

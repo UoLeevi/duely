@@ -1,6 +1,6 @@
 {
   "name": "@duely/react-form",
-  "version": "0.4.13",
+  "version": "0.4.14",
   "description": "React useFrom hook for duely.app",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -14,8 +14,12 @@
     "watch": "webpack --watch"
   },
   "workspaces": [
-    "../build"
+    "../build",
+    "../util"
   ],
+  "dependencies": {
+    "@duely/util": "^0.4.0"
+  },
   "devDependencies": {
     "@duely/build": "^0.4.6",
     "@types/jest": "^26.0.23",

@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Util } from '../../util';
+import { createClassName, hasProperty } from '@duely/util';
 import { useBreakpoints } from '../../hooks';
 import { UsePaginationReturn } from './usePagination';
 import { PaginationControls } from '..';
@@ -114,17 +114,17 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
     ? `repeat(${headers.length}, auto)`
     : `repeat(${selectedWrap?.columns ?? 1}, auto)`;
 
-  className = Util.createClassName(
+  className = createClassName(
     className,
     'grid auto-rows-auto',
     dense ? 'gap-x-3 sm:gap-x-4' : 'gap-x-5 sm:gap-x-6'
   );
 
-  const pagination = Util.hasProperty(rest, 'pagination') ? rest.pagination : undefined;
+  const pagination = hasProperty(rest, 'pagination') ? rest.pagination : undefined;
 
   loading = !!pagination?.loading || !!loading;
   error = pagination?.error ?? error;
-  const items = pagination?.items ?? (Util.hasProperty(rest, 'items') ? rest.items : []) ?? [];
+  const items = pagination?.items ?? (hasProperty(rest, 'items') ? rest.items : []) ?? [];
 
   if (isNotWrapped) {
     headers = headers.map((header, j) => {
@@ -219,10 +219,10 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
 
   let footer: React.ReactNode = undefined;
 
-  if (Util.hasProperty(rest, 'footer')) {
+  if (hasProperty(rest, 'footer')) {
     footer = rest.footer as React.ReactNode;
   } else if (
-    Util.hasProperty(rest, 'footerPaginationControls') &&
+    hasProperty(rest, 'footerPaginationControls') &&
     rest.footerPaginationControls &&
     pagination &&
     (pagination.loadingTotalNumberOfItems || pagination.totalNumberOfItems > 0)

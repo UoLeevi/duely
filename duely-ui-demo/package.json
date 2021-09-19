@@ -17,13 +17,15 @@
     "../@duely/client",
     "../@duely/db",
     "../@duely/lambda",
-    "../@duely/react"
+    "../@duely/react",
+    "../@duely/util"
   ],
   "dependencies": {
     "@apollo/client": "^3.4.1",
     "@duely/client": "^0.4.40",
     "@duely/core": "^0.4.34",
     "@duely/react": "^0.4.73",
+    "@duely/util": "^0.4.0",
     "@headlessui/react": "^1.2.0",
     "@tailwindcss/typography": "^0.4.0",
     "@types/node": "^14.14.44",

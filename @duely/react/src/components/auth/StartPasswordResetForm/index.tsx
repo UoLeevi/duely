@@ -11,6 +11,7 @@ import {
 } from '../../forms';
 import { Button } from '../../buttons';
 import { Util } from '../../../util';
+import { createClassName } from '@duely/util';
 
 type StartPasswordResetFormValues = {
   email_address: string;
@@ -78,7 +79,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
     );
   }
 
-  className = Util.createClassName('flex flex-col space-y-3', className);
+  className = createClassName('flex flex-col space-y-3', className);
 
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>

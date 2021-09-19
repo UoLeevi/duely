@@ -114,7 +114,7 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
     );
   }
 
-  className = Util.createClassName('flex flex-col space-y-3', className);
+  className = createClassName('flex flex-col space-y-3', className);
 
   return (
     <>

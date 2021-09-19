@@ -1,5 +1,5 @@
 import React from 'react';
-import { Util } from '../util';
+import { createClassName, sentenceCase } from '@duely/util';
 import { getIconElement, IconProp } from './icons';
 import { SkeletonText } from './skeletons';
 
@@ -82,7 +82,7 @@ export function ColoredChip({ text, color, icon }: ColoredChipProps) {
       break;
   }
 
-  const className = Util.createClassName(
+  const className = createClassName(
     'w-16 px-2 py-1 text-xs font-medium tracking-wider text-center rounded-md min-w-max whitespace-nowrap',
     icon && 'flex items-center space-x-1',
     colorClassName
@@ -92,7 +92,7 @@ export function ColoredChip({ text, color, icon }: ColoredChipProps) {
     <span className={className}>
       {text ? (
         <>
-          <span>{Util.sentenceCase(text)}</span>
+          <span>{sentenceCase(text)}</span>
           {icon}
         </>
       ) : (

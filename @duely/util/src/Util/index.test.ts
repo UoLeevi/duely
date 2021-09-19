@@ -1,7 +1,7 @@
-import { Util } from '.';
+import { lazy, memo } from '.';
 
-test('Util.memo', () => {
-  const createObject = Util.memo((...args: any[]) => new Object());
+test('memo', () => {
+  const createObject = memo((...args: any[]) => new Object());
   expect(createObject()).toBe(createObject());
   expect(createObject(1)).toBe(createObject(1));
   expect(createObject(1, 2)).toBe(createObject(1, 2));
@@ -18,9 +18,9 @@ test('Util.memo', () => {
   expect(createObject(arg0)).not.toBe(createObject(arg1));
 });
 
-test('Util.lazy', async () => {
+test('lazy', async () => {
   let i = 0;
-  const lazyObject = Util.lazy(() => {
+  const lazyObject = lazy(() => {
     ++i;
     return {
       i
@@ -35,6 +35,6 @@ test('Util.lazy', async () => {
   expect(lazyObject.i).toBe(2);
 
   const obj = {};
-  const fetchObject = Util.lazy(() => new Promise((resolve) => setTimeout(() => resolve(obj), 1)));
+  const fetchObject = lazy(() => new Promise((resolve) => setTimeout(() => resolve(obj), 1)));
   expect(await fetchObject).toBe(obj);
 });

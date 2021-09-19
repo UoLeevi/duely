@@ -1,5 +1,5 @@
 import React from 'react';
-import { Util } from '../../util';
+import { createClassName } from '@duely/util';
 import { LoadingBar } from '../LoadingBar';
 import { SkeletonText } from './SkeletonText';
 
@@ -29,7 +29,7 @@ export function SkeletonFormField({ type, className, label, ...props }: Skeleton
     }
   }
 
-  className = Util.createClassName('flex flex-col relative', className);
+  className = createClassName('flex flex-col relative', className);
 
   return (
     <div className={className}>

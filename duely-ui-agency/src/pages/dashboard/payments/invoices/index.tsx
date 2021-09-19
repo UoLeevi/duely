@@ -1,6 +1,6 @@
 import { Card, DropMenu, icons, LinkButton } from '@duely/react';
 import { DashboardSection } from '../../components';
-import { Currency } from '@duely/core';
+import { Currency, formatDate } from '@duely/util';
 import { Util, Table, SkeletonText, ColoredChip } from '@duely/react';
 import { useQuery, agency_stripe_account_invoices_Q, current_agency_Q } from '@duely/client';
 import { ConfirmInvoiceDeletionModal } from './components';
@@ -64,11 +64,11 @@ export default function DashboardPaymentsInvoices() {
                 ) : (
                   <div className="flex flex-col space-y-2">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {Util.formatDate(invoice.status_transitions?.finalized_at ?? invoice.created)}
+                      {formatDate(invoice.status_transitions?.finalized_at ?? invoice.created)}
                     </span>
                     {invoice.due_date && (
                       <span className="text-xs font-medium text-gray-800 dark:text-gray-300">
-                        Due date {Util.formatDate(invoice.due_date)}
+                        Due date {formatDate(invoice.due_date)}
                       </span>
                     )}
                   </div>

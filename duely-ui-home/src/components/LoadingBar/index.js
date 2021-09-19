@@ -4,13 +4,13 @@ import { Util } from '@duely/react';
 const LoadingBar = ({ loading = true, className, ...props }) => {
   loading = !!loading;
   const [playAnimation, setPlayAnimation] = useState(loading);
-  const progressClassName = Util.createClassName(
+  const progressClassName = createClassName(
     'w-full h-full transition-opacity duration-100 bg-gradient-to-r from-blue-400 via-teal-500 to-purple-500 bg-mask-x-transparent', 
     loading ? 'opacity-100 delay-100' : 'opacity-0',
     playAnimation && 'animate-progress'
     );
     
-  className = Util.createClassName('relative overflow-hidden w-full h-1 bg-mask-x-transparent', className);
+  className = createClassName('relative overflow-hidden w-full h-1 bg-mask-x-transparent', className);
   props = { className, ...props };
 
   useEffect(() => {

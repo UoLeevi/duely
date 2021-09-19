@@ -1,0 +1,31 @@
+{
+  "name": "@duely/util",
+  "version": "0.4.2",
+  "description": "Shared utility types and functions used by the Duely APIs.",
+  "repository": "github:uoleevi/duely",
+  "license": "MIT",
+  "author": "Leevi Uotinen",
+  "module": "dist/index.js",
+  "source": "src/index.ts",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "cross-env NODE_ENV='production' webpack",
+    "build+profile": "cross-env NODE_ENV='production' webpack --profile --json > stats.json",
+    "test": "jest",
+    "watch": "webpack --watch",
+    "analyze": "npx webpack-bundle-analyzer stats.json"
+  },
+  "workspaces": [
+    "../build"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "@duely/build": "^0.4.6",
+    "@types/jest": "^27.0.1",
+    "cross-env": "^7.0.3",
+    "jest": "^27.0.6",
+    "ts-jest": "^27.0.4",
+    "webpack": "^5.47.1",
+    "webpack-cli": "^4.7.2"
+  }
+}

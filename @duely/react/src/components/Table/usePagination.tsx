@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { produce } from 'immer';
-import { ElementType } from '@duely/core';
+import { ElementType } from '@duely/util';
 
 export const itemsPerPageOptions = [5, 10, 50, 100, 0] as const;
 const defaultItemsPerPage = 10;

@@ -1,4 +1,5 @@
 import { Card, LinkButton, Util } from '@duely/react';
+import { hasProperty } from '@duely/util';
 
 type DashboardGetStartedCardProps = {
   title: string;
@@ -30,7 +31,7 @@ export function DashboardGetStartedCard({
           <h2 className="text-lg font-medium">{title}</h2>
           <p className="flex-1 text-sm font-medium text-gray-600">{description}</p>
 
-          {Util.hasProperty(rest, 'button') ? (
+          {hasProperty(rest, 'button') ? (
             rest.button
           ) : (
             <LinkButton to={rest.to} color="indigo" className="text-sm">

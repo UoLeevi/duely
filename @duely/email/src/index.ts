@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getServiceAccountContext, withSession, ResourceId } from '@duely/db';
-import { Currency } from '@duely/core';
+import { Currency } from '@duely/util';
 import stripe from '@duely/stripe';
 import Stripe from 'stripe';
 
@@ -75,7 +75,7 @@ export async function sendEmailNotificationAboutNewSales(order_id: ResourceId<'o
         (line_items.length === 1
           ? ''
           : ` and ${line_items.length - 1} other product${line_items.length === 2 ? '' : 's'}`),
-      price: Currency.format(
+      price: formatCurrency(
         checkout_session.amount_total ?? 0,
         checkout_session.currency as Currency
       )

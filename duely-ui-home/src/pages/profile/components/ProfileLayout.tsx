@@ -8,12 +8,12 @@ type ProfileUserInfoProps = {
 };
 
 function ProfileUserInfo({ className }: ProfileUserInfoProps) {
-  className = Util.createClassName(className, 'flex flex-col items-center');
+  className = createClassName(className, 'flex flex-col items-center');
   const { data: current_user } = useQuery(current_user_Q);
   return (
     <div className={className}>
       <div className="grid self-center w-16 h-16 mb-3 text-3xl tracking-wider text-white bg-indigo-500 rounded-full shadow ring-2 ring-indigo-500 ring-offset-4 place-items-center">
-        {Util.getNameInitials(current_user!.name)}
+        {getNameInitials(current_user!.name)}
       </div>
       <span className="pt-1 font-medium">{current_user!.name}</span>
       <span className="text-xs text-center truncate w-44">{current_user!.email_address}</span>

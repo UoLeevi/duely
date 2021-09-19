@@ -1,5 +1,5 @@
 import { useQuery, current_agency_Q, orders_Q } from '@duely/client';
-import { Currency, ElementType } from '@duely/core';
+import { Currency, ElementType, formatCurrency } from '@duely/util';
 import { Card, LoadingScreen, Table, NotFoundScreen, SkeletonText } from '@duely/react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -95,7 +95,7 @@ export default function ThankYouPage() {
                   ) : (
                     <div className="flex flex-col space-y-2">
                       <span className="text-sm font-medium text-gray-800">
-                        {Currency.format(
+                        {formatCurrency(
                           order_item.price.unit_amount,
                           order_item.price.currency as Currency
                         )}

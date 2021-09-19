@@ -1,7 +1,7 @@
 import { Util } from '@duely/react';
 
 export function Image({ className, src, alt, loading, htmlFor, ...props }) {
-  className = Util.createClassName('relative grid place-items-center', className);
+  className = createClassName('relative grid place-items-center', className);
   const Element = htmlFor ? 'label' : 'div';
 
   return (

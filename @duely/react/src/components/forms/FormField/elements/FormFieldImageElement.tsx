@@ -1,6 +1,6 @@
-import { Override, ImageInput } from '@duely/core';
+import { ImageInput } from '@duely/core';
+import { Override, createClassName, formatFileSize } from '@duely/util';
 import React from 'react';
-import { Util } from '../../../../util';
 import { useFormContext } from '../../Form';
 import { FormFieldElementProps } from './FormFieldElementProps';
 
@@ -39,14 +39,14 @@ export function FormFieldImageElement<
   const hasFile = (fileList?.length ?? 0) > 0;
   hintRef.current = hasFile
     ? Array.from(fileList!)
-        .map((f) => `${f.name} ${Util.formatFileSize(f.size)}`)
+        .map((f) => `${f.name} ${formatFileSize(f.size)}`)
         .join(', ')
     : null;
 
   loading = !!loading;
   accept = accept ?? 'image/png, image/jpeg';
 
-  const className = Util.createClassName(
+  const className = createClassName(
     loading && 'animate-pulse border-indigo-400',
     !loading && 'border-gray-300 dark:border-gray-500',
     image && 'border m-px border-gray-300 dark:border-gray-500 shadow-sm',

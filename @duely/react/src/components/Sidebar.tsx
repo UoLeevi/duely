@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useRouteMatch, matchPath } from 'react-router-dom';
 import { useBreakpoints } from '../hooks';
-import { Util } from '../util';
+import { createClassName, hasProperty } from '@duely/util';
 
 export type SidebarProps = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLElement>,
@@ -33,7 +33,7 @@ export function Sidebar({ className, links, topContent, bottomContent, ...props 
   const { md } = useBreakpoints();
   const location = useLocation();
   const [toggledLinkWithItems, setToggledLinkWithItems] = useState(() =>
-    (links.filter((link) => Util.hasProperty(link, 'items')) as SidebarLinkWithItemsProps[]).find(
+    (links.filter((link) => hasProperty(link, 'items')) as SidebarLinkWithItemsProps[]).find(
       (link) => {
         const hash = `#${encodeURIComponent(link.name)}`;
         return (
@@ -46,7 +46,7 @@ export function Sidebar({ className, links, topContent, bottomContent, ...props 
     )
   );
 
-  className = Util.createClassName(
+  className = createClassName(
     className,
     'z-20 w-full h-16 bg-white dark:bg-gray-800 border-t dark:border-gray-700 md:bg-gray-25 dark:md:bg-gray-900 md:border-none border-box md:w-48 xl:w-64 md:h-full md:p-2'
   );
@@ -58,7 +58,7 @@ export function Sidebar({ className, links, topContent, bottomContent, ...props 
         <nav className="flex flex-row justify-center flex-1 p-1 space-x-1 md:flex-col md:justify-start md:space-y-2 md:space-x-0">
           {md &&
             links.map((link) =>
-              Util.hasProperty(link, 'items') ? (
+              hasProperty(link, 'items') ? (
                 <SidebarLinkWithItems
                   key={link.name}
                   {...link}
@@ -94,7 +94,7 @@ export function Sidebar({ className, links, topContent, bottomContent, ...props 
               </>
             ) : (
               links.map((link) =>
-                Util.hasProperty(link, 'items') ? (
+                hasProperty(link, 'items') ? (
                   <SidebarLinkWithItems
                     key={link.name}
                     {...link}
@@ -132,7 +132,7 @@ type SidebarLinkProps = React.DetailedHTMLProps<
 function SidebarLink({ text, icon, to, exact, className }: SidebarLinkProps) {
   const match = useRouteMatch({ path: to, exact });
   const Icon = icon;
-  className = Util.createClassName(
+  className = createClassName(
     className,
     match
       ? 'md:bg-white dark:md:bg-gray-800 md:shadow-sm dark:border-gray-700 text-gray-700 md:text-gray-500'
@@ -176,7 +176,7 @@ function SidebarLinkWithItems({
   const { md } = useBreakpoints();
 
   const Icon = icon;
-  className = Util.createClassName(
+  className = createClassName(
     className,
     isToggled ? 'text-gray-700 md:text-gray-500' : 'focus-visible:text-gray-700 hover:text-gray-700 text-gray-500',
     'flex flex-col md:flex-1 group md:flex-row items-center focus:outline-none md:border-transparent space-y-1 md:space-y-0 md:space-x-3 rounded-md text-xs shadow-gray-500 md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white dark:focus-visible:bg-gray-800'
@@ -222,7 +222,7 @@ type SidebarLinkItemProps = React.DetailedHTMLProps<
 
 function SidebarLinkItem({ text, to, exact, className }: SidebarLinkItemProps) {
   const match = useRouteMatch({ path: to, exact });
-  className = Util.createClassName(
+  className = createClassName(
     className,
     match
       ? 'md:bg-white dark:md:bg-gray-800 md:shadow-sm dark:border-gray-700 text-gray-700 md:text-gray-500'

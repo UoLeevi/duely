@@ -1,6 +1,6 @@
+import { createClassName } from '@duely/util';
 import React from 'react';
 import { useHashScrolling } from '../../../hooks';
-import { Util } from '../../../util';
 
 type FormSectionProps = {
   title: React.ReactNode;
@@ -16,7 +16,7 @@ export function FormSection({
   id,
   ...props
 }: FormSectionProps) {
-  className = Util.createClassName(className, 'relative flex flex-col px-5 pt-4 pb-5');
+  className = createClassName(className, 'relative flex flex-col px-5 pt-4 pb-5');
 
   const [linkRef, hashLink] = useHashScrolling<HTMLHeadingElement>();
 

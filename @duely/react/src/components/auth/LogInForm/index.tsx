@@ -12,6 +12,7 @@ import {
 import { Util } from '../../../util';
 import { useClassName } from '../../../hooks';
 import { LoadingScreen } from '../../LoadingScreen';
+import { createClassName } from '@duely/util';
 
 type LogInFormFields = {
   email_address: string;
@@ -47,7 +48,7 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
     }
   }
 
-  className = Util.createClassName('flex flex-col space-y-3', className);
+  className = createClassName('flex flex-col space-y-3', className);
 
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>
