@@ -20,17 +20,6 @@ import {
 import { DashboardSection } from '../components';
 import { Currency, formatCurrency, formatDate, truncate } from '@duely/util';
 
-const wrap = {
-  sm: {
-    columns: 2,
-    spans: [2, 2, 2, 1, 1]
-  },
-  md: {
-    columns: 4,
-    spans: [2, 2, 2, 1, 1]
-  }
-};
-
 export default function DashboardOrdersHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
   const {
@@ -101,7 +90,10 @@ export default function DashboardOrdersHome() {
           <Table
             loading={loading}
             error={error}
-            wrap={wrap}
+            wrap={{
+              sm: 4,
+              md: 2
+            }}
             pagination={pagination}
             footerPaginationControls
           >
@@ -115,10 +107,7 @@ export default function DashboardOrdersHome() {
                 ) : (
                   <div className="flex flex-col space-y-2">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {truncate(
-                        order.items.map((item) => item.price.product.name).join(', '),
-                        50
-                      )}
+                      {truncate(order.items.map((item) => item.price.product.name).join(', '), 50)}
                     </span>
                     <div className="flex items-center h-8 space-x-4 min-h-min">
                       <span className="font-mono text-sm text-gray-600">{order.id}</span>
@@ -238,7 +227,8 @@ function OrderActionsViewReceiptDropMenuItem({
     order_id
   });
 
-  const receipt_url = order?.stripe_checkout_session.payment_intent?.charges?.[0]?.receipt_url ?? undefined;
+  const receipt_url =
+    order?.stripe_checkout_session.payment_intent?.charges?.[0]?.receipt_url ?? undefined;
 
   return (
     <DropMenu.Item icon={icons['receipt-tax']} href={receipt_url} loading={orderLoading}>

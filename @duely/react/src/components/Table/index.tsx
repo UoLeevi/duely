@@ -12,6 +12,7 @@ export const Table = Object.assign(TableRoot, { Column });
 type ColumnProps<TItem> = {
   header: React.ReactNode;
   children: (item: TItem | null, row: number, column: number) => React.ReactNode;
+  span?: number | Partial<Record<keyof ReturnType<typeof useBreakpoints> | 'xs', number>>;
 };
 
 function Column<TItem>(props: ColumnProps<TItem>) {
@@ -23,15 +24,7 @@ type TableProps<TItem> = {
     | React.ReactElement<ColumnProps<TItem>, typeof Column>
     | React.ReactElement<ColumnProps<TItem>, typeof Column>[];
   dense?: boolean;
-  wrap?: Partial<
-    Record<
-      keyof ReturnType<typeof useBreakpoints> | 'xs',
-      {
-        columns: number;
-        spans: number[];
-      }
-    >
-  >;
+  wrap?: number | Partial<Record<keyof ReturnType<typeof useBreakpoints> | 'xs', number>>;
   loading?: boolean;
   error?: boolean | string | Error | { message: string };
 } & (
@@ -68,51 +61,72 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
       children,
       (child: React.ReactElement<ColumnProps<TItem>, typeof Column>) => ({
         header: child!.props.header,
+        span: child!.props.span,
         render: child!.props.children
       })
     ) ?? [];
 
+  const breakpoints = useBreakpoints();
   const columns = columnDefinitions.map((c) => c.render);
   let headers = columnDefinitions.map((c) => c.header);
+  const wrapColSpans = columnDefinitions.map((c) => {
+    if (!c.span) return 1;
+    if (typeof c.span === 'number') return c.span;
 
-  const breakpoints = useBreakpoints();
+    const span_2xl = c.span['2xl'] ?? 1;
+    const span_xl = c.span['xl'] ?? span_2xl;
+    const span_lg = c.span['lg'] ?? span_xl;
+    const span_md = c.span['md'] ?? span_lg;
+    const span_sm = c.span['sm'] ?? span_md;
+    const span_xs = c.span['xs'] ?? span_sm;
 
-  const wrapOption_2xl = wrapOptions?.['2xl'];
-  const wrapOption_xl = wrapOptions?.['xl'] ?? wrapOption_2xl;
-  const wrapOption_lg = wrapOptions?.['lg'] ?? wrapOption_xl;
-  const wrapOption_md = wrapOptions?.['md'] ?? wrapOption_lg;
-  const wrapOption_sm = wrapOptions?.['sm'] ?? wrapOption_md;
-  const wrapOption_xs = wrapOptions?.['xs'] ?? wrapOption_sm;
+    if (breakpoints['2xl']) {
+      return span_2xl;
+    } else if (breakpoints['xl']) {
+      return span_xl;
+    } else if (breakpoints['lg']) {
+      return span_lg;
+    } else if (breakpoints['md']) {
+      return span_md;
+    } else if (breakpoints['sm']) {
+      return span_sm;
+    } else {
+      return span_xs;
+    }
+  });
 
-  let selectedWrap:
-    | {
-        columns: number;
-        spans: number[];
-      }
-    | undefined;
+  let wrapRowCount: number;
 
-  if (breakpoints['2xl']) {
-    selectedWrap = wrapOption_2xl;
-  } else if (breakpoints['xl']) {
-    selectedWrap = wrapOption_xl;
-  } else if (breakpoints['lg']) {
-    selectedWrap = wrapOption_lg;
-  } else if (breakpoints['md']) {
-    selectedWrap = wrapOption_md;
-  } else if (breakpoints['sm']) {
-    selectedWrap = wrapOption_sm;
+  if (!wrapOptions) {
+    wrapRowCount = 1;
+  } else if (typeof wrapOptions === 'number') {
+    wrapRowCount = wrapOptions;
   } else {
-    selectedWrap = wrapOption_xs;
+    const wrapOption_2xl = wrapOptions?.['2xl'] ?? 1;
+    const wrapOption_xl = wrapOptions?.['xl'] ?? wrapOption_2xl;
+    const wrapOption_lg = wrapOptions?.['lg'] ?? wrapOption_xl;
+    const wrapOption_md = wrapOptions?.['md'] ?? wrapOption_lg;
+    const wrapOption_sm = wrapOptions?.['sm'] ?? wrapOption_md;
+    const wrapOption_xs = wrapOptions?.['xs'] ?? wrapOption_sm;
+
+    if (breakpoints['2xl']) {
+      wrapRowCount = wrapOption_2xl;
+    } else if (breakpoints['xl']) {
+      wrapRowCount = wrapOption_xl;
+    } else if (breakpoints['lg']) {
+      wrapRowCount = wrapOption_lg;
+    } else if (breakpoints['md']) {
+      wrapRowCount = wrapOption_md;
+    } else if (breakpoints['sm']) {
+      wrapRowCount = wrapOption_sm;
+    } else {
+      wrapRowCount = wrapOption_xs;
+    }
   }
 
-  const isNotWrapped = !selectedWrap;
-  const wrapColCount = selectedWrap?.columns ?? 1;
-  const wrapColSpans = selectedWrap?.spans ?? new Array(headers.length).fill(1);
-  const wrapColSpanSum = wrapColSpans.reduce((a, b) => a + b, 0);
-
-  const gridTemplateColumns = isNotWrapped
-    ? `repeat(${headers.length}, auto)`
-    : `repeat(${selectedWrap?.columns ?? 1}, auto)`;
+  const wrapColCount = Math.ceil(wrapColSpans.reduce((a, b) => a + b, 0) / wrapRowCount);
+  const gridTemplateColumns = `repeat(${wrapColCount}, 1fr)`;
+  const hasHeaderRow = wrapRowCount === 1;
 
   className = createClassName(
     className,
@@ -126,18 +140,23 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
   error = pagination?.error ?? error;
   const items = pagination?.items ?? (hasProperty(rest, 'items') ? rest.items : []) ?? [];
 
-  if (isNotWrapped) {
+  if (hasHeaderRow) {
+    let headerColumn = 1;
     headers = headers.map((header, j) => {
-      return (
+      const span = wrapColSpans[j];
+      const element = (
         <TableHeader
           key={j}
-          column={j + 1}
+          column={headerColumn}
+          span={span}
           firstCol={j % columns.length === 0}
           lastCol={(j + 1) % columns.length === 0}
         >
           {header}
         </TableHeader>
       );
+      headerColumn += span;
+      return element;
     });
   }
 
@@ -152,10 +171,10 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
     rows = (
       <TableErrorRow
         message={message as string | null}
-        row={isNotWrapped ? 2 : 1}
+        row={hasHeaderRow ? 2 : 1}
         wrapColCount={wrapColCount}
-        wrapColSpanSum={wrapColSpanSum}
-        isNotWrapped={isNotWrapped}
+        wrapRowCount={wrapRowCount}
+        hasHeaderRow={hasHeaderRow}
       />
     );
   } else if (loading) {
@@ -176,8 +195,8 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
           dense={dense}
           wrapColCount={wrapColCount}
           wrapColSpans={wrapColSpans}
-          wrapColSpanSum={wrapColSpanSum}
-          isNotWrapped={isNotWrapped}
+          wrapRowCount={wrapRowCount}
+          hasHeaderRow={hasHeaderRow}
           first={i === 0}
           last={i === rowCount - 1}
         />
@@ -189,10 +208,10 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
     rows = (
       <TableInfoRow
         message="No entries to show"
-        row={isNotWrapped ? 2 : 1}
+        row={hasHeaderRow ? 2 : 1}
         wrapColCount={wrapColCount}
-        wrapColSpanSum={wrapColSpanSum}
-        isNotWrapped={isNotWrapped}
+        wrapRowCount={wrapRowCount}
+        hasHeaderRow={hasHeaderRow}
       />
     );
   } else {
@@ -208,8 +227,8 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
           dense={dense}
           wrapColCount={wrapColCount}
           wrapColSpans={wrapColSpans}
-          wrapColSpanSum={wrapColSpanSum}
-          isNotWrapped={isNotWrapped}
+          wrapRowCount={wrapRowCount}
+          hasHeaderRow={hasHeaderRow}
           first={i === 0}
           last={i === items!.length - 1}
         />
@@ -232,7 +251,7 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
 
   return (
     <div className={className} style={{ gridTemplateColumns }}>
-      {isNotWrapped && (
+      {hasHeaderRow && (
         <Fragment>
           <div
             className="border-b border-gray-200 dark:border-gray-700"
@@ -246,10 +265,10 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
 
       {footer && (
         <TableFooterRow
-          row={rowCount + (isNotWrapped ? 2 : 1)}
+          row={rowCount + (hasHeaderRow ? 2 : 1)}
           wrapColCount={wrapColCount}
-          wrapColSpanSum={wrapColSpanSum}
-          isNotWrapped={isNotWrapped}
+          wrapRowCount={wrapRowCount}
+          hasHeaderRow={hasHeaderRow}
           dense={dense}
         >
           {footer}
@@ -261,13 +280,14 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
 
 type TableHeaderProps = {
   column: number;
+  span: number;
   dense?: boolean;
   firstCol: boolean;
   lastCol: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
-function TableHeader({ children, column, dense, firstCol, lastCol }: TableHeaderProps) {
-  const gridArea = `1 / ${column} / 2 / ${column + 1}`;
+function TableHeader({ children, column, span, dense, firstCol, lastCol }: TableHeaderProps) {
+  const gridArea = `1 / ${column} / 2 / ${column + span}`;
 
   let className = 'grid text-xs tracking-wide text-gray-500 ';
   className += dense ? 'py-2 sm:py-3 ' : 'py-3 sm:py-4 ';
@@ -289,7 +309,7 @@ type TableCellProps = {
   span: number;
   firstCol: boolean;
   lastCol: boolean;
-  isNotWrapped: boolean;
+  hasHeaderRow: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
 function TableCell({
@@ -301,11 +321,11 @@ function TableCell({
   dense,
   firstCol,
   lastCol,
-  isNotWrapped
+  hasHeaderRow
 }: TableCellProps) {
   const gridArea = `${row} / ${column} / ${row + 1} / ${column + span}`;
 
-  if (isNotWrapped) {
+  if (hasHeaderRow) {
     let className = 'relative grid items-center py-2 sm:py-3 ';
     if (firstCol) className += dense ? 'pl-3 sm:pl-4 ' : 'pl-4 sm:pl-6 ';
     if (lastCol) className += dense ? 'pr-3 sm:pr-4 ' : 'pr-4 sm:pr-6 ';
@@ -353,8 +373,8 @@ type TableRowProps<TItem> = {
   first: boolean;
   last: boolean;
   wrapColCount: number;
-  wrapColSpanSum: number;
-  isNotWrapped: boolean;
+  wrapRowCount: number;
+  hasHeaderRow: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
 function TableRow<TItem>({
@@ -365,44 +385,48 @@ function TableRow<TItem>({
   dense,
   wrapColCount,
   wrapColSpans,
-  wrapColSpanSum,
+  wrapRowCount,
   first,
   last,
-  isNotWrapped
+  hasHeaderRow
 }: TableRowProps<TItem>) {
   let className = 'border-gray-200 dark:border-gray-700' + (last ? '' : ' border-b');
   const cells = columns.map((column, j) => column(item, row, j));
 
-  row += isNotWrapped ? 2 : 1;
+  row += hasHeaderRow ? 2 : 1;
 
-  if (isNotWrapped) {
+  if (hasHeaderRow) {
     const gridArea = `${row} / 1 / ${row + 1} / -1`;
-
+    let column = 1;
     return (
       <Fragment>
         <div className={className} style={{ gridArea }}></div>
-
-        {cells.map((cell, j) => (
-          <TableCell
-            key={j}
-            row={row}
-            column={j + 1}
-            span={1}
-            header={headers[j]}
-            dense={dense}
-            isNotWrapped={isNotWrapped}
-            firstCol={j % columns.length === 0}
-            lastCol={(j + 1) % columns.length === 0}
-          >
-            {cell}
-          </TableCell>
-        ))}
+        {cells.map((cell, j) => {
+          const span = wrapColSpans[j];
+          const element = (
+            <TableCell
+              key={j}
+              row={row}
+              column={column}
+              span={span}
+              header={headers[j]}
+              dense={dense}
+              hasHeaderRow={hasHeaderRow}
+              firstCol={j % columns.length === 0}
+              lastCol={(j + 1) % columns.length === 0}
+            >
+              {cell}
+            </TableCell>
+          );
+          column += span;
+          return element;
+        })}
       </Fragment>
     );
   }
 
-  row = ((row - 1) * wrapColSpanSum) / wrapColCount + 1;
-  const gridArea = `${row} / 1 / ${row + wrapColSpanSum / wrapColCount} / -1`;
+  row = ((row - 1) * wrapRowCount * wrapColCount) / wrapColCount + 1;
+  const gridArea = `${row} / 1 / ${row + (wrapRowCount * wrapColCount) / wrapColCount} / -1`;
   let next = 1;
 
   return (
@@ -414,7 +438,7 @@ function TableRow<TItem>({
         const span = wrapColSpans[j];
         const cellRow = row + Math.floor((next - 1) / wrapColCount);
         const firstCol = cellRow === row;
-        const lastCol = cellRow + 1 - row === wrapColSpanSum / wrapColCount;
+        const lastCol = cellRow + 1 - row === wrapRowCount;
         next += span;
         return (
           <TableCell
@@ -424,7 +448,7 @@ function TableRow<TItem>({
             span={span}
             header={headers[j]}
             dense={dense}
-            isNotWrapped={isNotWrapped}
+            hasHeaderRow={hasHeaderRow}
             firstCol={firstCol}
             lastCol={lastCol}
           >
@@ -439,16 +463,16 @@ function TableRow<TItem>({
 type TableFooterRowProps = {
   row: number;
   wrapColCount: number;
-  wrapColSpanSum: number;
-  isNotWrapped: boolean;
+  wrapRowCount: number;
+  hasHeaderRow: boolean;
   dense?: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
 function TableFooterRow({
   row,
   wrapColCount,
-  wrapColSpanSum,
-  isNotWrapped,
+  wrapRowCount,
+  hasHeaderRow,
   dense,
   children
 }: TableFooterRowProps) {
@@ -459,9 +483,9 @@ function TableFooterRow({
 
   let gridArea = `${row} / 1 / ${row + 1} / -1`;
 
-  if (!isNotWrapped) {
-    row = ((row - 1) * wrapColSpanSum) / wrapColCount + 1;
-    gridArea = `${row} / 1 / ${row + wrapColSpanSum / wrapColCount} / -1`;
+  if (!hasHeaderRow) {
+    row = ((row - 1) * wrapRowCount * wrapColCount) / wrapColCount + 1;
+    gridArea = `${row} / 1 / ${row + wrapRowCount} / -1`;
   }
 
   return (
@@ -475,25 +499,25 @@ type TableErrorRowProps = {
   row: number;
   message: string | null;
   wrapColCount: number;
-  wrapColSpanSum: number;
-  isNotWrapped: boolean;
+  wrapRowCount: number;
+  hasHeaderRow: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
 function TableErrorRow({
   row,
   message,
   wrapColCount,
-  wrapColSpanSum,
-  isNotWrapped
+  wrapRowCount,
+  hasHeaderRow
 }: TableErrorRowProps) {
   let className = 'grid p-4 border-gray-200 dark:border-gray-700 place-items-center';
   let gridArea = `${row} / 1 / ${row + 1} / -1`;
 
   message = message ?? 'Some error occurred';
 
-  if (!isNotWrapped) {
-    row = ((row - 1) * wrapColSpanSum) / wrapColCount + 1;
-    gridArea = `${row} / 1 / ${row + wrapColSpanSum / wrapColCount} / -1`;
+  if (!hasHeaderRow) {
+    row = ((row - 1) * wrapRowCount * wrapColCount) / wrapColCount + 1;
+    gridArea = `${row} / 1 / ${row + wrapRowCount} / -1`;
   }
 
   return (
@@ -525,25 +549,25 @@ type TableInfoRowProps = {
   row: number;
   message: string | null;
   wrapColCount: number;
-  wrapColSpanSum: number;
-  isNotWrapped: boolean;
+  wrapRowCount: number;
+  hasHeaderRow: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
 function TableInfoRow({
   row,
   message,
   wrapColCount,
-  wrapColSpanSum,
-  isNotWrapped
+  wrapRowCount,
+  hasHeaderRow
 }: TableInfoRowProps) {
   let className = 'grid p-4 border-gray-200 dark:border-gray-700 place-items-center';
   let gridArea = `${row} / 1 / ${row + 1} / -1`;
 
   message = message ?? 'Some error occurred';
 
-  if (!isNotWrapped) {
-    row = ((row - 1) * wrapColSpanSum) / wrapColCount + 1;
-    gridArea = `${row} / 1 / ${row + wrapColSpanSum / wrapColCount} / -1`;
+  if (!hasHeaderRow) {
+    row = ((row - 1) * wrapRowCount * wrapColCount) / wrapColCount + 1;
+    gridArea = `${row} / 1 / ${row + wrapRowCount} / -1`;
   }
 
   return (

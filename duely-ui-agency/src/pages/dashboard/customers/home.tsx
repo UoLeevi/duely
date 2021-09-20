@@ -19,13 +19,6 @@ import {
 import { ConfirmCustomerDeletionModal } from './components';
 import { DashboardSection } from '../components';
 
-const wrap = {
-  xs: {
-    columns: 1,
-    spans: [1, 1]
-  }
-};
-
 export default function DashboardCustomersHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
   const {
@@ -109,7 +102,7 @@ export default function DashboardCustomersHome() {
       >
         <Card className="max-w-screen-lg">
           <Table
-            wrap={wrap}
+            wrap={{ xs: 2 }}
             loading={loading}
             error={error}
             pagination={pagination}

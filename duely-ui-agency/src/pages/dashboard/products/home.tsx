@@ -24,13 +24,6 @@ const statusColors = {
   live: 'green'
 };
 
-const wrap = {
-  sm: {
-    columns: 5,
-    spans: [5, 2, 3]
-  }
-};
-
 export default function DashboardProductsHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
   const { sm } = useBreakpoints();
@@ -113,13 +106,13 @@ export default function DashboardProductsHome() {
       >
         <Card className="max-w-screen-lg">
           <Table
-            wrap={wrap}
+            wrap={{ sm: 2 }}
             loading={loading}
             error={error}
             pagination={pagination}
             footerPaginationControls
           >
-            <Table.Column header="Product">
+            <Table.Column header="Product" span={8}>
               {(product: TProduct | null) => {
                 if (!product) {
                   return (
@@ -185,7 +178,7 @@ export default function DashboardProductsHome() {
               }}
             </Table.Column>
 
-            <Table.Column header="Status">
+            <Table.Column header="Status" span={3}>
               {(product: TProduct | null) =>
                 !product ? (
                   <ColoredChip color={statusColors} />
@@ -195,10 +188,10 @@ export default function DashboardProductsHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Action">
+            <Table.Column header="Action" span={2}>
               {(product: TProduct | null) => {
                 if (!product) {
-                  return <SkeletonText />;
+                  return <SkeletonText ch={5} />;
                 }
 
                 return (

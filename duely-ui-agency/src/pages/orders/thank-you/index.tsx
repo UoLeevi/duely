@@ -3,8 +3,6 @@ import { Currency, ElementType, formatCurrency } from '@duely/util';
 import { Card, LoadingScreen, Table, NotFoundScreen, SkeletonText } from '@duely/react';
 import { Link, useLocation } from 'react-router-dom';
 
-const wrap = { lg: { columns: 1, spans: [1, 1] } };
-
 export default function ThankYouPage() {
   // Get stripe checkout session id from url query string
   const location = useLocation();
@@ -69,7 +67,7 @@ export default function ThankYouPage() {
           </div>
 
           <Card className="max-w-screen-lg">
-            <Table items={order.items} wrap={wrap}>
+            <Table items={order.items} wrap={{ lg: 2 }}>
               <Table.Column header="Item">
                 {(order_item: ElementType<typeof order.items> | null) =>
                   !order_item ? (

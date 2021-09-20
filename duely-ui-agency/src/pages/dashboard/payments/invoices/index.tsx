@@ -5,13 +5,6 @@ import { Util, Table, SkeletonText, ColoredChip } from '@duely/react';
 import { useQuery, agency_stripe_account_invoices_Q, current_agency_Q } from '@duely/client';
 import { ConfirmInvoiceDeletionModal } from './components';
 
-const wrap = {
-  md: {
-    columns: 2,
-    spans: [1, 1, 2, 1, 1]
-  }
-};
-
 export default function DashboardPaymentsInvoices() {
   const { data: agency } = useQuery(current_agency_Q);
   const {
@@ -24,7 +17,9 @@ export default function DashboardPaymentsInvoices() {
 
   return (
     <>
-      <DashboardSection title="Invoices" actions={
+      <DashboardSection
+        title="Invoices"
+        actions={
           <div className="flex flex-row justify-end">
             <LinkButton
               dense
@@ -36,9 +31,10 @@ export default function DashboardPaymentsInvoices() {
               New invoice
             </LinkButton>
           </div>
-        }>
+        }
+      >
         <Card className="max-w-screen-lg">
-          <Table items={invoices} dense={true} wrap={wrap} loading={loading} error={error}>
+          <Table items={invoices} dense={true} wrap={{ md: 3 }} loading={loading} error={error}>
             <Table.Column header="Number">
               {(invoice: TInvoice | null) =>
                 !invoice ? (
@@ -76,7 +72,7 @@ export default function DashboardPaymentsInvoices() {
               }
             </Table.Column>
 
-            <Table.Column header="Customer">
+            <Table.Column header="Customer" span={{ md: 2 }}>
               {(invoice: TInvoice | null) =>
                 !invoice ? (
                   <div className="flex flex-col space-y-2">

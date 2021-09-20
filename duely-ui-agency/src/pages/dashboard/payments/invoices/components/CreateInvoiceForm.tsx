@@ -21,9 +21,10 @@ import { useMemo } from 'react';
 type CreateInvoiceFormFields = {
   customer_email_address: string;
   message?: string;
-  items: {
-    name: string;
-    amount: number;
+  lines: {
+    description: string;
+    unit_amount: number;
+    quantity: number;
   }[];
 };
 
@@ -143,7 +144,7 @@ export function CreateInvoiceForm() {
       )
     : undefined;
 
-  const {fields, addItem, removeItem} = form.useFieldArray('items');
+  const {fields, addItem, removeItem} = form.useFieldArray('lines');
 
   return (
     <>
@@ -162,13 +163,13 @@ export function CreateInvoiceForm() {
           <span className="font-medium text-gray-700">Items</span>
           <div className="flex flex-col pb-3 border-b">
             <Table items={fields}>
-              <Table.Column header="Name">
+              <Table.Column header="Description" span={6}>
                 {(field: FieldArrayItem | null, i) => {
                   if (!field) return null;
                   return (
                     <FormField
                       type="text"
-                      name={field.getName('name')}
+                      name={field.getName('description')}
                       placeholder={`Item ${i + 1}`}
                       registerOptions={{ required: true }}
                     />
@@ -176,12 +177,12 @@ export function CreateInvoiceForm() {
                 }}
               </Table.Column>
 
-              <Table.Column header="Amount">
+              <Table.Column header="Unit amount" span={3}>
                 {(field: FieldArrayItem | null, i) => {
                   if (!field) return null;
                   return (
                     <FormField
-                      name={field.getName('amount')}
+                      name={field.getName('unit_amount')}
                       type="text"
                       inputMode="numeric"
                       prefix={currencyPrefix}
@@ -195,7 +196,27 @@ export function CreateInvoiceForm() {
                 }}
               </Table.Column>
 
-              <Table.Column header="">
+              <Table.Column header="Quantity" span={3}>
+                {(field: FieldArrayItem | null, i) => {
+                  if (!field) return null;
+                  return (
+                    <FormField
+                      name={field.getName('quantity')}
+                      type="text"
+                      inputMode="numeric"
+                      prefix={<span className="pr-1">x</span>}
+                      defaultValue={1}
+                      registerOptions={{
+                        required: true,
+                        rules: [ValidationRules.isPositiveNumber],
+                        inputFilter: InputFilters.numeric
+                      }}
+                    />
+                  );
+                }}
+              </Table.Column>
+
+              <Table.Column header="" span={2}>
                 {(field: FieldArrayItem | null, i) => {
                   if (!field) return null;
                   return (

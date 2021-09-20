@@ -13,13 +13,6 @@ import {
 import { ConfirmBankAccountDeletionModal } from './components';
 import { DashboardSection } from '../../components';
 
-const wrap = {
-  xs: {
-    columns: 2,
-    spans: [2, 1, 1]
-  }
-};
-
 export default function DashboardSettingsPaymentsHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
 
@@ -72,8 +65,8 @@ export default function DashboardSettingsPaymentsHome() {
         }
       >
         <Card className="max-w-screen-lg">
-          <Table wrap={wrap} loading={loading} error={error} items={bank_accounts}>
-            <Table.Column header="Bank account">
+          <Table wrap={{ xs: 2 }} loading={loading} error={error} items={bank_accounts}>
+            <Table.Column header="Bank account" span={{ xs: 2 }}>
               {(bank_account: TBankAccount | null) =>
                 !bank_account ? (
                   <div className="flex items-center h-8 space-x-4 min-h-min">
@@ -116,7 +109,10 @@ export default function DashboardSettingsPaymentsHome() {
 
                 return (
                   <DropMenu>
-                    <DropMenu.Item icon={icons.trash} to={'?delete_bank_account=' + bank_account.id}>
+                    <DropMenu.Item
+                      icon={icons.trash}
+                      to={'?delete_bank_account=' + bank_account.id}
+                    >
                       Delete
                     </DropMenu.Item>
                   </DropMenu>

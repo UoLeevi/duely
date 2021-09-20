@@ -27,7 +27,13 @@ export function BalanceTransactionsTable() {
     : never;
 
   return (
-    <Table items={balance_transactions} dense={true} wrap={wrap} loading={loading} error={error}>
+    <Table
+      items={balance_transactions}
+      dense={true}
+      wrap={{ md: 3 }}
+      loading={loading}
+      error={error}
+    >
       <Table.Column header="Type">
         {(txn: TBalanceTransaction | null) =>
           !txn ? (
@@ -37,9 +43,7 @@ export function BalanceTransactionsTable() {
             </div>
           ) : (
             <div className="flex flex-col">
-              <div className="text-sm font-semibold">
-                {sentenceCase(txn.reporting_category)}
-              </div>
+              <div className="text-sm font-semibold">{sentenceCase(txn.reporting_category)}</div>
               {txn.reporting_category !== txn.type && (
                 <div className="text-xs text-gray-500">{sentenceCase(txn.type)}</div>
               )}
@@ -68,7 +72,7 @@ export function BalanceTransactionsTable() {
         }
       </Table.Column>
 
-      <Table.Column header="Description">
+      <Table.Column header="Description" span={{ md: 2 }}>
         {(txn: TBalanceTransaction | null) =>
           !txn ? (
             <div className="flex flex-col space-y-2">

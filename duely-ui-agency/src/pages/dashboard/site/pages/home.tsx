@@ -23,8 +23,6 @@ const statusColors = {
   live: 'green'
 };
 
-const wrap = { lg: { columns: 5, spans: [5, 2, 3] } };
-
 export default function DashboardSitePagesHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
   const {
@@ -47,8 +45,8 @@ export default function DashboardSitePagesHome() {
     <>
       <DashboardSection title="Pages">
         <Card className="max-w-screen-lg space-y-4">
-          <Table items={rows} wrap={wrap}>
-            <Table.Column header="Page">
+          <Table items={rows} wrap={{ lg: 2 }}>
+            <Table.Column header="Page" span={{ lg: 5 }}>
               {(page: TItem | null) => {
                 if (!page) {
                   return (
@@ -92,7 +90,7 @@ export default function DashboardSitePagesHome() {
               }}
             </Table.Column>
 
-            <Table.Column header="Status">
+            <Table.Column header="Status" span={{ lg: 2 }}>
               {(page: TItem | null) =>
                 !page ? (
                   <ColoredChip color={statusColors} text={'loading'} />
@@ -105,7 +103,7 @@ export default function DashboardSitePagesHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Action">
+            <Table.Column header="Action" span={{ lg: 3 }}>
               {(page: TItem | null) => {
                 if (!page) {
                   return <SkeletonText />;
