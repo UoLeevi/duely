@@ -51,6 +51,7 @@ import { Coupon } from './Coupon';
 import { Invoice, InvoiceStatusTransitions } from './Invoice';
 import { Discount } from './Discount';
 import { InvoiceLineItem, InvoiceLineItemDiscountAmount } from './InvoiceLineItem';
+import { InvoiceItem } from './InvoiceItem';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -93,6 +94,7 @@ const types: GqlTypeDefinition[] = [
   StripeCheckoutSession,
   Invoice,
   InvoiceStatusTransitions,
+  InvoiceItem,
   InvoiceLineItem,
   InvoiceLineItemDiscountAmount,
   BalanceTransaction,

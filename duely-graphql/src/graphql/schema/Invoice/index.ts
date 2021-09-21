@@ -6,8 +6,9 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
-import { withStripeAccountProperty, timestampToDate } from '../../util';
+import { withStripeAccountProperty } from '../../util';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
+import { timestampToDate } from '@duely/util';
 
 export const Invoice: GqlTypeDefinition<
   Stripe.Invoice & { stripe_account: Resources['stripe account'] }
@@ -120,7 +121,7 @@ export const Invoice: GqlTypeDefinition<
     type InvoiceMutationResult implements MutationResult {
       success: Boolean!
       message: String
-      coupon: Invoice
+      invoice: Invoice
     }
   `,
   resolvers: {

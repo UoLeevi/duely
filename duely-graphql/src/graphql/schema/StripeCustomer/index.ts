@@ -1,10 +1,11 @@
 // see: https://stripe.com/docs/api/customers/object
 
 import { Resources } from '@duely/db';
+import { timestampToDate } from '@duely/util';
 import gql from 'graphql-tag';
 import Stripe from 'stripe';
 import { GqlTypeDefinition } from '../../types';
-import { createResolverForReferencedResource, timestampToDate } from '../../util';
+import { createResolverForReferencedResource } from '../../util';
 
 export const StripeCustomer: GqlTypeDefinition<
   Stripe.Customer & { stripe_account: Resources['stripe account'] }

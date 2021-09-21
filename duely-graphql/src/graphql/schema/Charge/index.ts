@@ -2,7 +2,8 @@
 
 import stripe from '@duely/stripe';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
-import { timestampToDate, withStripeAccountProperty } from '../../util';
+import { timestampToDate } from '@duely/util';
+import { withStripeAccountProperty } from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';

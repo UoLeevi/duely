@@ -1,4 +1,4 @@
-// see: https://stripe.com/docs/api/invoices/object
+// see: https://stripe.com/docs/api/invoices/line_item
 
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';

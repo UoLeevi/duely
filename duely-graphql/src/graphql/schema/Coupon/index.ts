@@ -6,7 +6,8 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
-import { timestampToDate, withStripeAccountProperty } from '../../util';
+import { withStripeAccountProperty } from '../../util';
+import { timestampToDate } from '@duely/util';
 
 export const Coupon: GqlTypeDefinition<
   Stripe.Coupon & { stripe_account: Resources['stripe account'] }

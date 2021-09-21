@@ -7,7 +7,7 @@ import stripe from '@duely/stripe';
 import { calculateTransactionFee } from '../SubscriptionPlan';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
-import { Currency, Price as TPrice } from '@duely/util';
+import { Currency, formatCurrency } from '@duely/util';
 import Stripe from 'stripe';
 import { URL } from 'url';
 import { DuelyGraphQLError } from '../../errors';
@@ -90,7 +90,7 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
   `,
   resolvers: {
     Price: {
-      name(price: TPrice) {
+      name(price) {
         return formatCurrency(price.unit_amount, price.currency as Currency);
       },
       ...createResolverForReferencedResource({ name: 'product' })

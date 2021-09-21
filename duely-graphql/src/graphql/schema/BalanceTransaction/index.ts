@@ -5,7 +5,7 @@ import { Resources } from '@duely/db';
 import gql from 'graphql-tag';
 import Stripe from 'stripe';
 import { GqlTypeDefinition } from '../../types';
-import { timestampToDate } from '../../util';
+import { timestampToDate } from '@duely/util';
 
 export const BalanceTransaction: GqlTypeDefinition<
   Stripe.BalanceTransaction & { stripe_account: Resources['stripe account'] }

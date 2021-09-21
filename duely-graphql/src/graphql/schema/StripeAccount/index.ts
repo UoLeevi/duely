@@ -2,7 +2,8 @@ import gql from 'graphql-tag';
 import { queryResource, queryResourceAccess, Resources } from '@duely/db';
 import stripe from '@duely/stripe';
 import { GqlTypeDefinition } from '../../types';
-import { createResolverForReferencedResourceAll, timestampToDate, withStripeAccountProperty } from '../../util';
+import { timestampToDate } from '@duely/util';
+import { createResolverForReferencedResourceAll, withStripeAccountProperty } from '../../util';
 import { DuelyGraphQLError } from '../../errors';
 import Stripe from 'stripe';
 

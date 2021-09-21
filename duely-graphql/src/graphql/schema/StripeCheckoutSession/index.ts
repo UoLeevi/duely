@@ -5,7 +5,8 @@ import gql from 'graphql-tag';
 import stripe from '@duely/stripe';
 import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
-import { timestampToDate, withStripeAccountProperty } from '../../util';
+import { timestampToDate } from '@duely/util';
+import { withStripeAccountProperty } from '../../util';
 import Stripe from 'stripe';
 import { Resources } from '@duely/db';
 
