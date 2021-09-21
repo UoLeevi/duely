@@ -45,7 +45,7 @@ export default function DashboardSitePagesHome() {
     <>
       <DashboardSection title="Pages">
         <Card className="max-w-screen-lg space-y-4">
-          <Table items={rows} wrap={{ lg: 2 }}>
+          <Table items={rows} wrap={{ lg: 2 }} keyField="id">
             <Table.Column header="Page" span={{ lg: 5 }}>
               {(page: TItem | null) => {
                 if (!page) {

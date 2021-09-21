@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getServiceAccountContext, withSession, ResourceId } from '@duely/db';
-import { Currency } from '@duely/util';
+import { Currency, formatCurrency } from '@duely/util';
 import stripe from '@duely/stripe';
 import Stripe from 'stripe';
 

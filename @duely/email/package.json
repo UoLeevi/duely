@@ -1,6 +1,6 @@
 {
   "name": "@duely/email",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "description": "Utilities for sending and preparing emails.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -10,9 +10,7 @@
   "types": "dist/index.d.ts",
   "workspaces": [
     "../build",
-    "../core",
     "../db",
-    "../stripe",
     "../util"
   ],
   "scripts": {
@@ -34,7 +32,6 @@
     "webpack-cli": "^4.7.2"
   },
   "peerDependencies": {
-    "@duely/core": "^0.4.34",
     "@duely/db": "0.4.20",
     "@duely/stripe": "0.4.5"
   }

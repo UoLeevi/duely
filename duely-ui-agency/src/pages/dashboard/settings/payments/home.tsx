@@ -65,7 +65,13 @@ export default function DashboardSettingsPaymentsHome() {
         }
       >
         <Card className="max-w-screen-lg">
-          <Table wrap={{ xs: 2 }} loading={loading} error={error} items={bank_accounts}>
+          <Table
+            wrap={{ xs: 2 }}
+            loading={loading}
+            error={error}
+            items={bank_accounts}
+            keyField="id"
+          >
             <Table.Column header="Bank account" span={{ xs: 2 }}>
               {(bank_account: TBankAccount | null) =>
                 !bank_account ? (

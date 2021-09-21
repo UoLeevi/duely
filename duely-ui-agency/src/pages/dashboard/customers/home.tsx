@@ -107,6 +107,7 @@ export default function DashboardCustomersHome() {
             error={error}
             pagination={pagination}
             footerPaginationControls
+            keyField="id"
           >
             <Table.Column header="Customer">
               {(customer: TCustomer | null) =>

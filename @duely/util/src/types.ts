@@ -1,4 +1,5 @@
 export type Override<T1, T2> = T2 & Omit<T1, keyof T2>;
+export type FilterKeys<T, U> = { [P in keyof T]: T[P] extends U ? P : never }[keyof T];
 
 export type NotFunction<T> = T extends Function ? never : T;
 export type GenericFunction<R = any, TArgs extends readonly any[] = any[]> = (...args: TArgs) => R;

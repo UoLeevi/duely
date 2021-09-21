@@ -1,4 +1,4 @@
-import { Util } from '@duely/util';
+import { hasProperty } from '@duely/util';
 
 // see: https://www.postgresql.org/docs/current/errcodes-appendix.html
 // see: https://www.postgresql.org/docs/current/plpgsql-errors-and-messages.html

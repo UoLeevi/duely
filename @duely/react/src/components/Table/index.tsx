@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, Key } from 'react';
 import { createClassName, hasProperty } from '@duely/util';
 import { useBreakpoints } from '../../hooks';
 import { UsePaginationReturn } from './usePagination';
@@ -19,10 +19,11 @@ function Column<TItem>(props: ColumnProps<TItem>) {
   return null;
 }
 
-type TableProps<TItem> = {
+type TableProps<TItem extends Record<TKeyField, Key>, TKeyField extends keyof TItem> = {
   children:
     | React.ReactElement<ColumnProps<TItem>, typeof Column>
     | React.ReactElement<ColumnProps<TItem>, typeof Column>[];
+  keyField?: TKeyField;
   dense?: boolean;
   wrap?: number | Partial<Record<keyof ReturnType<typeof useBreakpoints> | 'xs', number>>;
   loading?: boolean;
@@ -45,15 +46,16 @@ type TableProps<TItem> = {
 ) &
   React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
-function TableRoot<TItem extends { key?: string | number | null; id?: string | number | null }>({
+function TableRoot<TItem extends Record<TKeyField, Key>, TKeyField extends keyof TItem>({
   children,
+  keyField,
   className,
   dense,
   wrap: wrapOptions,
   loading,
   error,
   ...rest
-}: TableProps<TItem>) {
+}: TableProps<TItem, TKeyField>) {
   const skeletonRowCountFallback = 5;
 
   const columnDefinitions =
@@ -219,7 +221,7 @@ function TableRoot<TItem extends { key?: string | number | null; id?: string | n
     rows = items.map((item, i) => {
       return (
         <TableRow
-          key={item.key ?? i}
+          key={keyField ? item[keyField] : i}
           item={item}
           row={i}
           columns={columns}

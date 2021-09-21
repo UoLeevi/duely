@@ -1,14 +1,14 @@
-type FilteredKeys<T, U> = { [P in keyof T]: T[P] extends U ? P : never }[keyof T];
+import { FilterKeys } from '@duely/util';
 
 export type Resources = {
-  [K in FilteredKeys<
+  [K in FilterKeys<
     ResourceDefinitions,
     Record<'resource', unknown>
   >]: ResourceDefinitions[K]['resource'];
 };
 
 export type ResourcesWithState = {
-  [K in FilteredKeys<Resources, ResourceState>]: Resources[K];
+  [K in FilterKeys<Resources, ResourceState>]: Resources[K];
 };
 
 export type Resource = Resources[keyof Resources];
@@ -17,7 +17,7 @@ export type ResourceWithState = ResourcesWithState[keyof ResourcesWithState];
 export type ResourceId<K extends keyof ResourceDefinitions> =
   `${ResourceDefinitions[K]['prefix']}_${string}`;
 
-export type ResourceName<R extends Resource> = FilteredKeys<Resources, R>;
+export type ResourceName<R extends Resource> = FilterKeys<Resources, R>;
 
 export type ResourceState = {
   state: ProcessingState;

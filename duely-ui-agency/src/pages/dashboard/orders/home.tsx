@@ -96,6 +96,7 @@ export default function DashboardOrdersHome() {
             }}
             pagination={pagination}
             footerPaginationControls
+            keyField="id"
           >
             <Table.Column header="Order">
               {(order: TOrder | null) =>

@@ -144,7 +144,7 @@ export function CreateInvoiceForm() {
       )
     : undefined;
 
-  const {fields, addItem, removeItem} = form.useFieldArray('lines');
+  const { fields, addItem, removeItem } = form.useFieldArray('lines');
 
   return (
     <>
@@ -162,7 +162,7 @@ export function CreateInvoiceForm() {
         <div className="pb-2">
           <span className="font-medium text-gray-700">Items</span>
           <div className="flex flex-col pb-3 border-b">
-            <Table items={fields}>
+            <Table items={fields} keyField="key">
               <Table.Column header="Description" span={6}>
                 {(field: FieldArrayItem | null, i) => {
                   if (!field) return null;

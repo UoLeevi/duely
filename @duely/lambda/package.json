@@ -1,6 +1,6 @@
 {
   "name": "@duely/lambda",
-  "version": "0.4.2",
+  "version": "0.4.4",
   "description": "Utilities for working with Duely infrastructure lambda functions.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -10,7 +10,6 @@
   "types": "dist/index.d.ts",
   "workspaces": [
     "../build",
-    "../core",
     "../util"
   ],
   "scripts": {
@@ -20,7 +19,6 @@
   },
   "dependencies": {
     "@duely/build": "^0.4.6",
-    "@duely/core": "^0.4.34",
     "@duely/util": "^0.4.0",
     "axios": "^0.21.1"
   },

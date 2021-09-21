@@ -1,7 +1,7 @@
 import { ClientBase, Pool, PoolClient, QueryConfig } from 'pg';
 import config from './config';
 import fs from 'fs';
-import { ResolvableValue, Util } from '@duely/util';
+import { hasMethod, identity, partial, ResolvableValue, resolve } from '@duely/util';
 import { AccessLevel, Resources, ResourcesWithState } from './resources';
 
 export * from './errors';

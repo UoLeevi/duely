@@ -67,7 +67,7 @@ export default function ThankYouPage() {
           </div>
 
           <Card className="max-w-screen-lg">
-            <Table items={order.items} wrap={{ lg: 2 }}>
+            <Table items={order.items} keyField="id" wrap={{ lg: 2 }}>
               <Table.Column header="Item">
                 {(order_item: ElementType<typeof order.items> | null) =>
                   !order_item ? (

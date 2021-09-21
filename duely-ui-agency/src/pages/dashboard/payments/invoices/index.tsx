@@ -34,7 +34,14 @@ export default function DashboardPaymentsInvoices() {
         }
       >
         <Card className="max-w-screen-lg">
-          <Table items={invoices} dense={true} wrap={{ md: 3 }} loading={loading} error={error}>
+          <Table
+            items={invoices}
+            dense={true}
+            wrap={{ md: 3 }}
+            loading={loading}
+            error={error}
+            keyField="id"
+          >
             <Table.Column header="Number">
               {(invoice: TInvoice | null) =>
                 !invoice ? (

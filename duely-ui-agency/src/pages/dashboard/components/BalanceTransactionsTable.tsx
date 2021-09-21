@@ -29,6 +29,7 @@ export function BalanceTransactionsTable() {
   return (
     <Table
       items={balance_transactions}
+      keyField="id"
       dense={true}
       wrap={{ md: 3 }}
       loading={loading}

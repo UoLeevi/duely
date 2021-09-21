@@ -111,6 +111,7 @@ export default function DashboardProductsHome() {
             error={error}
             pagination={pagination}
             footerPaginationControls
+            keyField="id"
           >
             <Table.Column header="Product" span={8}>
               {(product: TProduct | null) => {
