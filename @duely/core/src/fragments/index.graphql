@@ -721,7 +721,7 @@ fragment invoice on Invoice {
   webhooks_delivered_at
 }
 
-fragment invoice_item on InvoiceLineItem {
+fragment invoice_line_item on InvoiceLineItem {
   id
   id_ext
   amount
@@ -750,6 +750,40 @@ fragment invoice_item on InvoiceLineItem {
   # tax_amounts?: Array<InvoiceLineItem.TaxAmount>;
   # tax_rates?: Array<Stripe.TaxRate>;
   type
+}
+
+fragment invoiceitem on InvoiceItem {
+  id
+  id_ext
+  amount
+  currency
+  customer {
+    id
+  }
+  date
+  description
+  discountable
+  discounts {
+    id
+  }
+  invoice {
+    id
+  }
+  livemode
+  # metadata: Stripe.Metadata | null;
+
+  # period: InvoiceItem.Period;
+
+  price {
+    id
+  }
+  proration
+  quantity
+  # subscription: string | Stripe.Subscription | null;
+  # subscription_item?: string;
+  # tax_rates: Array<Stripe.TaxRate> | null;
+  unit_amount
+  unit_amount_decimal
 }
 
 fragment order_item on OrderItem {

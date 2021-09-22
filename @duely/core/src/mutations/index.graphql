@@ -322,6 +322,42 @@ mutation DeleteCoupon($stripe_account_id: ID!, $coupon_id: ID!) {
   }
 }
 
+mutation CreateInvoiceItem(
+  $stripe_account_id: ID!
+  $customer: ID!
+) {
+  create_invoiceitem(
+    stripe_account_id: $stripe_account_id
+    customer: $customer
+  ) {
+    success
+    message
+    invoiceitem {
+      ...invoiceitem
+    }
+  }
+}
+
+mutation UpdateInvoiceItem($stripe_account_id: ID!, $invoiceitem_id: ID!) {
+  update_invoiceitem(stripe_account_id: $stripe_account_id, invoiceitem_id: $invoiceitem_id) {
+    success
+    message
+    invoiceitem {
+      ...invoiceitem
+    }
+  }
+}
+
+mutation DeleteInvoiceItem($stripe_account_id: ID!, $invoiceitem_id: ID!) {
+  delete_invoiceitem(stripe_account_id: $stripe_account_id, invoiceitem_id: $invoiceitem_id) {
+    success
+    message
+    invoiceitem {
+      id
+    }
+  }
+}
+
 mutation CreateCustomer($stripe_account_id: ID!, $email_address: String!, $name: String!) {
   create_customer(
     stripe_account_id: $stripe_account_id

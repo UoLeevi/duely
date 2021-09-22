@@ -263,6 +263,12 @@ query Coupon($stripe_account_id: ID!, $coupon_id: ID!) {
   }
 }
 
+query InvoiceItem($stripe_account_id: ID!, $invoiceitem_id: ID!) {
+  invoiceitem(stripe_account_id: $stripe_account_id, invoiceitem_id: $invoiceitem_id) {
+    ...invoiceitem
+  }
+}
+
 query AgencyStripeAccountInvoices(
   $agency_id: ID!
   $customer_id: ID
