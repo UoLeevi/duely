@@ -1,4 +1,4 @@
-import { lazy, memo } from '.';
+import { get, lazy, memo } from '.';
 
 test('memo', () => {
   const createObject = memo((...args: any[]) => new Object());
@@ -37,4 +37,31 @@ test('lazy', async () => {
   const obj = {};
   const fetchObject = lazy(() => new Promise((resolve) => setTimeout(() => resolve(obj), 1)));
   expect(await fetchObject).toBe(obj);
+});
+
+test('get', () => {
+  const obj = {
+    a: 1,
+    b: {
+      ba: { baa: 2 },
+      bb: 3
+    },
+    c: {
+      ca: {
+        caa: 4
+      }
+    }
+  } as const;
+
+  const a = get(obj, 'a');
+  expect(a).toBe(obj['a']);
+
+  const ba = get(obj, 'b.ba');
+  expect(ba).toBe(obj['b']['ba']);
+
+  const bb = get(obj, 'b.bb');
+  expect(bb).toBe(obj['b']['bb']);
+
+  const caa = get(obj, 'c.ca.caa');
+  expect(caa).toBe(obj['c']['ca']['caa']);
 });

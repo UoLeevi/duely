@@ -1,3 +1,4 @@
+import { PathValue, SplitString } from '..';
 import {
   GenericFunction,
   LeadingTypes,
@@ -97,19 +98,25 @@ export function diff(fromObject: object, omitObject: object) {
   );
 }
 
-type NestedDictionary = {
-  [key: string]: NestedDictionary | any;
-};
+export function get<T, TPath extends string | readonly string[]>(
+  obj: T,
+  path: TPath
+): (
+  TPath extends readonly string[]
+    ? PathValue<T, TPath>
+    : TPath extends string
+    ? PathValue<T, SplitString<TPath, '.'>>
+    : never
+) {
+  const parts: readonly string[] =
+    typeof path === 'string'
+      ? path
+          .replace(/\[(\w+)\]/g, '.$1')
+          .replace(/^\./, '')
+          .split('.')
+      : path;
 
-export function get(obj: NestedDictionary, path: string): string | null | undefined {
-  return path
-    .replace(/\[(\w+)\]/g, '.$1')
-    .replace(/^\./, '')
-    .split('.')
-    .reduce(
-      (prev, key) => (prev as NestedDictionary)?.[key] as NestedDictionary,
-      obj
-    ) as unknown as string | null | undefined;
+  return parts.reduce((prev, key) => prev?.[key], obj as any);
 }
 
 export function template(template: string, variables: Record<string, any>) {

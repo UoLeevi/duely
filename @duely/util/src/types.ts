@@ -107,3 +107,18 @@ export type PartialApplication<
     ? PartialApplication<Tail<T>, Tail<TPartials>>
     : never
   : never;
+
+export type PathValue<T, TPath extends readonly string[]> = TPath extends []
+  ? T
+  : Head<TPath> extends keyof T
+  ? Tail<TPath> extends readonly string[]
+    ? PathValue<T[Head<TPath>], Tail<TPath>>
+    : never
+  : never;
+
+export type SplitString<
+  TString extends string,
+  TSep extends string
+> = TString extends `${infer THead}${TSep}${infer TTail}`
+  ? [THead, ...SplitString<TTail, TSep>]
+  : [TString];
