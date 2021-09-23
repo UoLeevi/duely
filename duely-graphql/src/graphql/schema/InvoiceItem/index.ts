@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
-import { withStripeAccountProperty } from '../../util';
+import { createStripeRetrieveQueryResolver, withStripeAccountProperty } from '../../util';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import { timestampToDate } from '@duely/util';
 
@@ -45,9 +45,38 @@ export const InvoiceItem: GqlTypeDefinition<
     }
 
     extend type Mutation {
-      create_invoiceitem(stripe_account_id: ID!, customer: ID!): InvoiceItemMutationResult!
-      update_invoiceitem(stripe_account_id: ID!, invoiceitem_id: ID!): InvoiceItemMutationResult!
+      create_invoiceitem(
+        stripe_account_id: ID!
+        customer: ID!
+        invoice: ID
+        amount: Int
+        currency: String
+        description: String
+        period: PeriodInput
+        price: ID
+        discountable: Boolean
+        quantity: Int
+        unit_amount: Int
+        unit_amount_decimal: String
+      ): InvoiceItemMutationResult!
+      update_invoiceitem(
+        stripe_account_id: ID!
+        invoiceitem_id: ID!
+        amount: Int
+        description: String
+        period: PeriodInput
+        price: ID
+        discountable: Boolean
+        quantity: Int
+        unit_amount: Int
+        unit_amount_decimal: String
+      ): InvoiceItemMutationResult!
       delete_invoiceitem(stripe_account_id: ID!, invoiceitem_id: ID!): InvoiceItemMutationResult!
+    }
+
+    input PeriodInput {
+      start: Int!
+      end: Int!
     }
 
     type InvoiceItemMutationResult implements MutationResult {
@@ -88,31 +117,18 @@ export const InvoiceItem: GqlTypeDefinition<
       }
     },
     Query: {
-      async invoiceitem(source, { stripe_account_id, invoiceitem_id }, context, info) {
-        if (!context.jwt)
-          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        try {
-          return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
-            const stripe_account = await queryResource('stripe account', stripe_account_id);
-            const access = await queryResourceAccess(stripe_account.id);
-
-            if (access !== 'owner') {
-              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
-            }
-
-            const invoiceitem = await stripe.get(stripe_account).invoiceItems.retrieve(invoiceitem_id);
-            return withStripeAccountProperty(invoiceitem, stripe_account);
-          });
-        } catch (error: any) {
-          throw new Error(error.message);
-        }
-      }
+      ...createStripeRetrieveQueryResolver({
+        name: 'invoiceitem',
+        endpoint: 'invoiceItems'
+      })
     },
     Mutation: {
       async create_invoiceitem(
         obj,
-        { stripe_account_id, ...args }: { stripe_account_id: string } & Stripe.InvoiceItemCreateParams,
+        {
+          stripe_account_id,
+          ...args
+        }: { stripe_account_id: string } & Stripe.InvoiceItemCreateParams,
         context,
         info
       ) {
@@ -146,7 +162,16 @@ export const InvoiceItem: GqlTypeDefinition<
           };
         }
       },
-      async update_invoiceitem(obj, { stripe_account_id, invoiceitem_id, ...args }, context, info) {
+      async update_invoiceitem(
+        obj,
+        {
+          stripe_account_id,
+          invoiceitem_id,
+          ...args
+        }: { stripe_account_id: string; invoiceitem_id: string } & Stripe.InvoiceItemUpdateParams,
+        context,
+        info
+      ) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
@@ -159,7 +184,9 @@ export const InvoiceItem: GqlTypeDefinition<
               throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
             }
 
-            const invoiceitem = await stripe.get(stripe_account).invoiceItems.update(invoiceitem_id, args);
+            const invoiceitem = await stripe
+              .get(stripe_account)
+              .invoiceItems.update(invoiceitem_id, args);
 
             // success
             return {

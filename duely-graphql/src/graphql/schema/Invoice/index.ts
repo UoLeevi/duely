@@ -8,7 +8,8 @@ import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
 import { withStripeAccountProperty } from '../../util';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
-import { timestampToDate } from '@duely/util';
+import { dateToTimestamp, timestampToDate } from '@duely/util';
+import { calculateTransactionFee } from '../SubscriptionPlan';
 
 export const Invoice: GqlTypeDefinition<
   Stripe.Invoice & { stripe_account: Resources['stripe account'] }
@@ -113,8 +114,32 @@ export const Invoice: GqlTypeDefinition<
     }
 
     extend type Mutation {
-      create_invoice(stripe_account_id: ID!, customer: ID!): InvoiceMutationResult!
-      update_invoice(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
+      create_invoice(
+        stripe_account_id: ID!
+        customer: ID!
+        auto_advance: Boolean
+        collection_method: String
+        description: String
+        footer: String
+        subscription: ID
+        days_until_due: Int
+        default_payment_method: ID
+        default_source: ID
+        due_date: Int
+      ): InvoiceMutationResult!
+      update_invoice(
+        stripe_account_id: ID!
+        invoice_id: ID!
+        auto_advance: Boolean
+        collection_method: String
+        description: String
+        footer: String
+        subscription: ID
+        days_until_due: Int
+        default_payment_method: ID
+        default_source: ID
+        due_date: Int
+      ): InvoiceMutationResult!
       delete_invoice(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
     }
 

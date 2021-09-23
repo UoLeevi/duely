@@ -2,10 +2,11 @@ import type { GraphQLResolveInfo } from 'graphql';
 import { countResource, queryResource, queryResourceAll, withSession } from '@duely/db';
 import { DuelyQqlContext } from './context';
 import { Resources } from '@duely/db';
-import { FilterKeys, hasProperty } from '@duely/util';
+import { FilterKeys, hasProperty, Awaited } from '@duely/util';
 import { DuelyGraphQLError } from './errors';
 import stripe from '@duely/stripe';
 import Stripe from 'stripe';
+import { IResolvers } from '@graphql-tools/utils';
 
 // Not yet used
 export async function withCache<TKey, TValue>(
@@ -127,6 +128,64 @@ export function createDefaultQueryResolversForResource<
       }
 
       return await countResource(context, name, args.filter, args.token);
+    }
+  };
+}
+
+type CreateStripeRetrieveQueryResolverArgs<
+  TResolverName extends string,
+  TStripeResourceEndpoint extends FilterKeys<Stripe, Record<'retrieve', (id: string) => unknown>>
+> = {
+  name: TResolverName;
+  endpoint: TStripeResourceEndpoint;
+};
+
+export function createStripeRetrieveQueryResolver<
+  TResolverName extends string,
+  TStripeResourceEndpoint extends FilterKeys<Stripe, Record<'retrieve', (id: string) => unknown>>,
+  TArgs extends { stripe_account_id: string } & Record<`${TResolverName}_id`, string> &
+    Parameters<Stripe[TStripeResourceEndpoint]['retrieve']>[1],
+  TContext extends DuelyQqlContext
+>({
+  name,
+  endpoint
+}: CreateStripeRetrieveQueryResolverArgs<TResolverName, TStripeResourceEndpoint>): IResolvers<
+  unknown,
+  DuelyQqlContext,
+  TArgs,
+  Promise<
+    Awaited<Stripe[TStripeResourceEndpoint]['retrieve']> & {
+      stripe_account: Resources['stripe account'];
+    }
+  >
+> {
+  return {
+    async [name](
+      source,
+      { stripe_account_id, [`${name}_id` as const]: id, ...params },
+      context: TContext,
+      info: GraphQLResolveInfo
+    ) {
+      if (!context.jwt)
+        throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+
+      try {
+        return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
+          const stripe_account = await queryResource('stripe account', stripe_account_id);
+          const access = await queryResourceAccess(stripe_account.id);
+
+          if (access !== 'owner') {
+            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+          }
+
+          const resource = await stripe
+            .get(stripe_account)
+            [endpoint].retrieve(id as unknown as string, params, undefined);
+          return withStripeAccountProperty(resource, stripe_account);
+        });
+      } catch (error: any) {
+        throw new Error(error.message);
+      }
     }
   };
 }

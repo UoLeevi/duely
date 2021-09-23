@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
-import { withStripeAccountProperty } from '../../util';
+import { createStripeRetrieveQueryResolver, withStripeAccountProperty } from '../../util';
 import { timestampToDate } from '@duely/util';
 
 export const Coupon: GqlTypeDefinition<
@@ -74,26 +74,10 @@ export const Coupon: GqlTypeDefinition<
       redeem_by: (source) => timestampToDate(source.redeem_by)
     },
     Query: {
-      async coupon(source, { stripe_account_id, coupon_id }, context, info) {
-        if (!context.jwt)
-          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        try {
-          return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
-            const stripe_account = await queryResource('stripe account', stripe_account_id);
-            const access = await queryResourceAccess(stripe_account.id);
-
-            if (access !== 'owner') {
-              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
-            }
-
-            const coupon = await stripe.get(stripe_account).coupons.retrieve(coupon_id);
-            return withStripeAccountProperty(coupon, stripe_account);
-          });
-        } catch (error: any) {
-          throw new Error(error.message);
-        }
-      }
+      ...createStripeRetrieveQueryResolver({
+        name: 'coupon',
+        endpoint: 'coupons'
+      })
     },
     Mutation: {
       async create_coupon(

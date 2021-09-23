@@ -11,6 +11,15 @@ export function timestampToDate(timestamp: number | null | undefined): Date | nu
     : new Date(timestamp * 1000);
 }
 
+export function dateToTimestamp(date: Date): number;
+export function dateToTimestamp(date: Date | null): number | null;
+export function dateToTimestamp(date: Date | undefined): number | undefined;
+export function dateToTimestamp(date: null): null;
+export function dateToTimestamp(date: undefined): undefined;
+export function dateToTimestamp(date: Date | null | undefined): number | null | undefined {
+  return date === undefined ? undefined : date === null ? null : Math.round(date.getTime() / 1000);
+}
+
 const shortMonthNames = [
   'Jan',
   'Feb',
