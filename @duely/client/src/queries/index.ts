@@ -1,7 +1,5 @@
 import {
   CountriesDocument,
-  CountryCode,
-  CountryUtil,
   CurrentUserDocument,
   AgencyStripeAccountUpdateUrlDocument,
   AgencyStripeAccountBalanceDocument,
@@ -70,6 +68,7 @@ import {
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
 import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-document-node/core';
+import { CountryCode, countryFromCode } from '@duely/util';
 
 export interface TypedQueryOptions<TDocumentNode extends TypedDocumentNode<unknown, unknown>>
   extends QueryOptions<VariablesOf<TDocumentNode>, ResultOf<TDocumentNode>> {
@@ -117,7 +116,7 @@ export const current_user_Q = {
 export const countries_Q = {
   query: CountriesDocument,
   result: (d: ResultOf<typeof CountriesDocument>) =>
-    d?.country_codes?.map((code) => CountryfromCode(code as CountryCode))
+    d?.country_codes?.map((code) => countryFromCode(code as CountryCode))
 };
 
 export const country_spec_Q = {

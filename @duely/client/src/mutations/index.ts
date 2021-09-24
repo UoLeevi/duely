@@ -8,6 +8,8 @@ import {
   CreateImageDocument,
   CreateIntegrationConfigDocument,
   CreateIntegrationDocument,
+  CreateInvoiceDocument,
+  CreateInvoiceItemDocument,
   CreatePageBlockDocument,
   CreatePriceDocument,
   CreateProductDocument,
@@ -15,6 +17,8 @@ import {
   DeleteBankAccountDocument,
   DeleteCouponDocument,
   DeleteCustomerDocument,
+  DeleteInvoiceDocument,
+  DeleteInvoiceItemDocument,
   DeletePageBlockDocument,
   DeleteProductDocument,
   LogInDocument,
@@ -32,6 +36,8 @@ import {
   UpdateImageDocument,
   UpdateIntegrationConfigDocument,
   UpdateIntegrationDocument,
+  UpdateInvoiceDocument,
+  UpdateInvoiceItemDocument,
   UpdatePageBlockDocument,
   UpdatePageDocument,
   UpdateProductDocument,
@@ -45,6 +51,7 @@ import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-documen
 import {
   agency_stripe_account_bank_accounts_Q,
   agency_stripe_account_coupons_Q,
+  agency_stripe_account_invoices_Q,
   count_customers_Q,
   count_products_Q,
   customers_Q,
@@ -278,6 +285,86 @@ export const delete_coupon_M = {
     cache.evict({ id });
 
     evictQuery(cache, agency_stripe_account_coupons_Q.query);
+
+    cache.gc();
+  }
+};
+
+const create_invoice_R = (d: ResultOf<typeof CreateInvoiceDocument>) => d?.create_invoice;
+export const create_invoice_M = {
+  mutation: CreateInvoiceDocument,
+  result: create_invoice_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof create_invoice_R> | null
+  ) {
+    if (!result?.success || !result.invoice) return;
+
+    evictQuery(cache, agency_stripe_account_invoices_Q.query);
+
+    cache.gc();
+  }
+};
+
+export const update_invoice_M = {
+  mutation: UpdateInvoiceDocument,
+  result: (d: ResultOf<typeof UpdateInvoiceDocument>) => d?.update_invoice
+};
+
+const delete_invoice_R = (d: ResultOf<typeof DeleteInvoiceDocument>) => d?.delete_invoice;
+export const delete_invoice_M = {
+  mutation: DeleteInvoiceDocument,
+  result: delete_invoice_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof delete_invoice_R> | null
+  ) {
+    if (!result?.success || !result.invoice) return;
+
+    const id = cache.identify(result.invoice);
+    cache.evict({ id });
+
+    evictQuery(cache, agency_stripe_account_invoices_Q.query);
+
+    cache.gc();
+  }
+};
+
+const create_invoiceitem_R = (d: ResultOf<typeof CreateInvoiceItemDocument>) => d?.create_invoiceitem;
+export const create_invoiceitem_M = {
+  mutation: CreateInvoiceItemDocument,
+  result: create_invoiceitem_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof create_invoiceitem_R> | null
+  ) {
+    if (!result?.success || !result.invoiceitem) return;
+
+    // evictQuery(cache, agency_stripe_account_invoiceitems_Q.query);
+
+    cache.gc();
+  }
+};
+
+export const update_invoiceitem_M = {
+  mutation: UpdateInvoiceItemDocument,
+  result: (d: ResultOf<typeof UpdateInvoiceItemDocument>) => d?.update_invoiceitem
+};
+
+const delete_invoiceitem_R = (d: ResultOf<typeof DeleteInvoiceItemDocument>) => d?.delete_invoiceitem;
+export const delete_invoiceitem_M = {
+  mutation: DeleteInvoiceItemDocument,
+  result: delete_invoiceitem_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof delete_invoiceitem_R> | null
+  ) {
+    if (!result?.success || !result.invoiceitem) return;
+
+    const id = cache.identify(result.invoiceitem);
+    cache.evict({ id });
+
+    // evictQuery(cache, agency_stripe_account_invoiceitems_Q.query);
 
     cache.gc();
   }
