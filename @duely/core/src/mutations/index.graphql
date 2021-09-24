@@ -322,13 +322,111 @@ mutation DeleteCoupon($stripe_account_id: ID!, $coupon_id: ID!) {
   }
 }
 
+mutation CreateInvoice(
+  $stripe_account_id: ID!
+  $customer: ID!
+  $auto_advance: Boolean
+  $collection_method: String
+  $description: String
+  $footer: String
+  $subscription: ID
+  $days_until_due: Int
+  $default_payment_method: ID
+  $default_source: ID
+  $due_date: Int
+) {
+  create_invoice(
+    stripe_account_id: $stripe_account_id
+    customer: $customer
+    auto_advance: $auto_advance
+    collection_method: $collection_method
+    description: $description
+    footer: $footer
+    subscription: $subscription
+    days_until_due: $days_until_due
+    default_payment_method: $default_payment_method
+    default_source: $default_source
+    due_date: $due_date
+  ) {
+    success
+    message
+    invoice {
+      ...invoice
+    }
+  }
+}
+
+mutation UpdateInvoice(
+  $stripe_account_id: ID!
+  $invoice_id: ID!
+  $auto_advance: Boolean
+  $collection_method: String
+  $description: String
+  $footer: String
+  $subscription: ID
+  $days_until_due: Int
+  $default_payment_method: ID
+  $default_source: ID
+  $due_date: Int
+) {
+  update_invoice(
+    stripe_account_id: $stripe_account_id
+    invoice_id: $invoice_id
+    auto_advance: $auto_advance
+    collection_method: $collection_method
+    description: $description
+    footer: $footer
+    subscription: $subscription
+    days_until_due: $days_until_due
+    default_payment_method: $default_payment_method
+    default_source: $default_source
+    due_date: $due_date
+  ) {
+    success
+    message
+    invoice {
+      ...invoice
+    }
+  }
+}
+
+mutation DeleteInvoice($stripe_account_id: ID!, $invoice_id: ID!) {
+  delete_invoice(stripe_account_id: $stripe_account_id, invoice_id: $invoice_id) {
+    success
+    message
+    invoice {
+      id
+    }
+  }
+}
+
 mutation CreateInvoiceItem(
   $stripe_account_id: ID!
   $customer: ID!
+  $invoice: ID
+  $amount: Int
+  $currency: String
+  $description: String
+  $period: PeriodInput
+  $price: ID
+  $discountable: Boolean
+  $quantity: Int
+  $unit_amount: Int
+  $unit_amount_decimal: String
 ) {
   create_invoiceitem(
     stripe_account_id: $stripe_account_id
     customer: $customer
+    invoice: $invoice
+    amount: $amount
+    currency: $currency
+    description: $description
+    period: $period
+    price: $price
+    discountable: $discountable
+    quantity: $quantity
+    unit_amount: $unit_amount
+    unit_amount_decimal: $unit_amount_decimal
   ) {
     success
     message
@@ -338,8 +436,30 @@ mutation CreateInvoiceItem(
   }
 }
 
-mutation UpdateInvoiceItem($stripe_account_id: ID!, $invoiceitem_id: ID!) {
-  update_invoiceitem(stripe_account_id: $stripe_account_id, invoiceitem_id: $invoiceitem_id) {
+mutation UpdateInvoiceItem(
+  $stripe_account_id: ID!
+  $invoiceitem_id: ID!
+  $amount: Int
+  $description: String
+  $period: PeriodInput
+  $price: ID
+  $discountable: Boolean
+  $quantity: Int
+  $unit_amount: Int
+  $unit_amount_decimal: String
+) {
+  update_invoiceitem(
+    stripe_account_id: $stripe_account_id
+    invoiceitem_id: $invoiceitem_id
+    amount: $amount
+    description: $description
+    period: $period
+    price: $price
+    discountable: $discountable
+    quantity: $quantity
+    unit_amount: $unit_amount
+    unit_amount_decimal: $unit_amount_decimal
+  ) {
     success
     message
     invoiceitem {
