@@ -275,8 +275,6 @@ export const Customer: GqlTypeDefinition<Resources['customer']> = {
               customer.stripe_account_id
             );
 
-            const stripe_env = stripe_account.livemode ? 'live' : 'test';
-
             // delete customer from stripe
             await stripe.get(stripe_account).customers.del(customer.default_stripe_id_ext);
 

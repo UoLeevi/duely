@@ -55,10 +55,23 @@ export const StripeAccount: GqlTypeDefinition<
       invoices(
         customer_id: ID
         status: String
+        subscription: ID
+        collection_method: String
+        due_date: DateTime
+        created: DateTime
         starting_after_id: String
         ending_before_id: String
         limit: Int
       ): [Invoice!]!
+      invoiceitems(
+        customer_id: ID
+        invoice: ID
+        pending: Boolean
+        created: DateTime
+        starting_after_id: String
+        ending_before_id: String
+        limit: Int
+      ): [InvoiceItem!]!
       business_profile: BusinessProfile!
       business_type: String
       capabilities: StripeCapabilities!
@@ -351,6 +364,39 @@ export const StripeAccount: GqlTypeDefinition<
   
           // see: https://stripe.com/docs/api/invoices/list
           const list = await stripe.get(source).invoices.list(args);
+          return withStripeAccountProperty(list.data, source);
+        } catch (error: any) {
+          throw new Error(error.message);
+        }
+      },
+      async invoiceitems(source, { starting_after_id, ending_before_id, customer_id, ...args }, context, info) {
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+
+        try {
+          const access = await queryResourceAccess(context, source.id);
+
+          if (access !== 'owner') {
+            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+          }
+
+          if (customer_id) {
+            args.customer = customer_id;
+          }
+
+          if (starting_after_id) {
+            args.starting_after = starting_after_id;
+          }
+
+          if (ending_before_id) {
+            args.ending_before = ending_before_id;
+          }
+
+          // see: https://stripe.com/docs/api/invoiceitems/list
+          const list = await stripe.get(source).invoiceItems.list({
+            ...args
+          });
+
           return withStripeAccountProperty(list.data, source);
         } catch (error: any) {
           throw new Error(error.message);
