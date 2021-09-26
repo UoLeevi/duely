@@ -272,6 +272,11 @@ query InvoiceItem($stripe_account_id: ID!, $invoiceitem_id: ID!) {
 query AgencyStripeAccountInvoices(
   $agency_id: ID!
   $customer_id: ID
+  $status: String
+  $subscription: ID
+  $collection_method: String
+  $due_date: DateTime
+  $created: DateTime
   $starting_after_id: String
   $ending_before_id: String
   $limit: Int
@@ -282,11 +287,45 @@ query AgencyStripeAccountInvoices(
       id
       invoices(
         customer_id: $customer_id
+        status: $status
+        subscription: $subscription
+        collection_method: $collection_method
+        due_date: $due_date
+        created: $created
         starting_after_id: $starting_after_id
         ending_before_id: $ending_before_id
         limit: $limit
       ) {
         ...invoice
+      }
+    }
+  }
+}
+
+query AgencyStripeAccountInvoiceItems(
+  $agency_id: ID!
+  $customer_id: ID
+  $invoice: ID
+  $pending: Boolean
+  $created: DateTime
+  $starting_after_id: String
+  $ending_before_id: String
+  $limit: Int
+) {
+  agency(id: $agency_id) {
+    id
+    stripe_account {
+      id
+      invoiceitems(
+        customer_id: $customer_id
+        invoice: $invoice
+        pending: $pending
+        created: $created
+        starting_after_id: $starting_after_id
+        ending_before_id: $ending_before_id
+        limit: $limit
+      ) {
+        ...invoiceitem
       }
     }
   }

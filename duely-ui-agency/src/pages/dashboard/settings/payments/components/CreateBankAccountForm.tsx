@@ -1,4 +1,4 @@
-import { FormButton, FormInfoMessage, FormField, useForm, Form, LinkButton } from '@duely/react';
+import { useForm, Form, LinkButton } from '@duely/react';
 import {
   useMutation,
   useQuery,
@@ -100,7 +100,7 @@ export function CreateBankAccountForm() {
     <>
       <h2 className="mb-3 text-xl font-medium">Create a bank account</h2>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        <FormField
+        <Form.Field
           label="Account number"
           className="max-w-lg"
           name="account_number"
@@ -108,14 +108,14 @@ export function CreateBankAccountForm() {
           registerOptions={{ required: true }}
           hint="The account number for the bank account. Must be a checking account."
         />
-        <FormField
+        <Form.Field
           label="Account holder name"
           className="max-w-md"
           name="account_holder_name"
           type="text"
           hint="The name of the person or business that owns the bank account."
         />
-        <FormField
+        <Form.Field
           label="Account holder type"
           className="max-w-md"
           name="account_holder_type"
@@ -135,7 +135,7 @@ export function CreateBankAccountForm() {
             }
           ]}
         />
-        <FormField
+        <Form.Field
           defaultValue={stripe_account?.country ?? undefined}
           label="Country"
           name="country"
@@ -146,7 +146,7 @@ export function CreateBankAccountForm() {
           registerOptions={{ required: true }}
           hint="The country the bank account is located in."
         />
-        <FormField
+        <Form.Field
           defaultValue={stripe_account?.default_currency ?? undefined}
           name="currency"
           label="Currency"
@@ -157,7 +157,7 @@ export function CreateBankAccountForm() {
           hint="The currency paid out to the bank account."
           registerOptions={{ required: true }}
         />
-        <FormField
+        <Form.Field
           label="Routing number"
           className="max-w-md"
           name="routing_number"
@@ -182,8 +182,8 @@ export function CreateBankAccountForm() {
           }
         />
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <FormButton>Create bank account</FormButton>
-          <FormInfoMessage error={state.error} />
+          <Form.Button>Create bank account</Form.Button>
+          <Form.InfoMessage error={state.error} />
         </div>
       </Form>
     </>

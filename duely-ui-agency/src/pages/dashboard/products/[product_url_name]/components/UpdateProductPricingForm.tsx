@@ -14,16 +14,7 @@ import {
   pick,
   minorCurrencyAmountToNumber
 } from '@duely/util';
-import {
-  Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
-  useFormMessages,
-  useForm,
-  InputFilters,
-  ValidationRules
-} from '@duely/react';
+import { Form, useFormMessages, useForm, InputFilters, ValidationRules } from '@duely/react';
 
 type ProductProps = {
   product_id?: string;
@@ -157,7 +148,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
   return (
     <>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        <FormField
+        <Form.Field
           className="max-w-2xl"
           name="payment_type"
           defaultValue={default_price?.type ?? 'one_time'}
@@ -181,7 +172,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
 
         <div className="flex flex-col -m-2 sm:flex-row">
           <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-            <FormField
+            <Form.Field
               label={payment_type === 'one_time' ? 'Price of product' : 'Amount'}
               name="unit_amount_major"
               defaultValue={unit_amount_major}
@@ -198,7 +189,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
           </div>
           {payment_type === 'recurring' && (
             <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-              <FormField
+              <Form.Field
                 defaultValue={frequency}
                 label="Frequency"
                 name="frequency"
@@ -218,11 +209,11 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
         </div>
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton dense>Save</FormButton>
-          <FormButton type="reset" dense>
+          <Form.Button dense>Save</Form.Button>
+          <Form.Button type="reset" dense>
             Cancel
-          </FormButton>
-          <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
+          </Form.Button>
+          <Form.InfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
         </div>
       </Form>
     </>

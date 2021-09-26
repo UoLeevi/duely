@@ -63,7 +63,8 @@ import {
   ThemeDocument,
   ThemesDocument,
   AgencyStripeAccountInvoicesDocument,
-  InvoiceDocument
+  InvoiceDocument,
+  AgencyStripeAccountInvoiceItemsDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -435,6 +436,12 @@ export const agency_stripe_account_invoices_Q = {
   query: AgencyStripeAccountInvoicesDocument,
   result: (d: ResultOf<typeof AgencyStripeAccountInvoicesDocument>) =>
     d?.agency?.stripe_account?.invoices
+};
+
+export const agency_stripe_account_invoiceitems_Q = {
+  query: AgencyStripeAccountInvoiceItemsDocument,
+  result: (d: ResultOf<typeof AgencyStripeAccountInvoiceItemsDocument>) =>
+    d?.agency?.stripe_account?.invoiceitems
 };
 
 export const invoice_Q = {

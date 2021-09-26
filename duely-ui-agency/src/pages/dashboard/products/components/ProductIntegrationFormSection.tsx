@@ -4,7 +4,7 @@ import {
   integration_type_Q,
   useQuery
 } from '@duely/client';
-import { FormField, UseFormReturn, DynamicFormFields } from '@duely/react';
+import { UseFormReturn, DynamicFormFields, Form } from '@duely/react';
 
 type ProductIntegrationFormSectionFields = {
   integration_config_name: string;
@@ -40,7 +40,7 @@ export function ProductIntegrationFormSection<
 
   return (
     <>
-      <FormField
+      <Form.Field
         name="integration_config_name"
         defaultValue={''}
         label="Integration type"

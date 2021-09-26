@@ -1,5 +1,5 @@
 import { order_Q, useQuery } from '@duely/client';
-import { Card, FormSection } from '@duely/react';
+import { Card, Form } from '@duely/react';
 import { useParams } from 'react-router-dom';
 import { DashboardSection } from '../../components';
 
@@ -13,11 +13,11 @@ export default function DashboardOrdersEditOrder() {
     <>
       <DashboardSection title={`Order: ${order?.id!}`} loading={orderLoading}>
         <Card>
-          <FormSection
+          <Form.Section
             title="Basic information"
             description="Name and email address for the order."
           >
-          </FormSection>
+          </Form.Section>
         </Card>
       </DashboardSection>
     </>

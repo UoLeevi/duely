@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, start_sign_up_M } from '@duely/client';
-import {
-  Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
-  useForm,
-  useFormMessages
-} from '../../forms';
+import { Form, useForm, useFormMessages } from '../../forms';
 import { Button } from '../../buttons';
 import { Util } from '../../../util';
 import { useClassName } from '../../../hooks';
@@ -93,14 +86,14 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>
       <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Sign up</h2>
-      <FormField label="Name" name="name" type="text" registerOptions={{ required: true }} />
-      <FormField
+      <Form.Field label="Name" name="name" type="text" registerOptions={{ required: true }} />
+      <Form.Field
         label="Email address"
         name="email_address"
         type="email"
         registerOptions={{ required: true }}
       />
-      <FormField
+      <Form.Field
         label="Password"
         name="password"
         type="password"
@@ -115,7 +108,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
         </label>
       </div>
       <div className="flex flex-col items-center pt-4">
-        <FormButton disabled={startSignUpLoading}>Sign up</FormButton>
+        <Form.Button disabled={startSignUpLoading}>Sign up</Form.Button>
       </div>
       <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
         <span>Already have an account?</span>
@@ -127,7 +120,7 @@ export function SignUpForm({ className, redirectUrl }: SignUpFormProps) {
         </Link>
       </div>
       <div className="flex flex-col items-center h-24 pt-4">
-        <FormInfoMessage info={infoMessage} error={errorMessage} />
+        <Form.InfoMessage info={infoMessage} error={errorMessage} />
       </div>
     </Form>
   );

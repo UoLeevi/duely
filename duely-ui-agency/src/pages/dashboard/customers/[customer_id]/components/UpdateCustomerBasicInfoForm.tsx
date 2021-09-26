@@ -1,12 +1,5 @@
 import { customer_Q, update_customer_M, useMutation, useQuery } from '@duely/client';
-import {
-  Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
-  useFormMessages,
-  useForm
-} from '@duely/react';
+import { Form, useFormMessages, useForm } from '@duely/react';
 import { diff, pick } from '@duely/util';
 
 type CustomerProps = {
@@ -59,7 +52,7 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
   return (
     <>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        <FormField
+        <Form.Field
           defaultValue={customer?.name}
           label="Customer name"
           className="max-w-xl"
@@ -67,7 +60,7 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
           type="text"
           registerOptions={{ required: true }}
         />
-        <FormField
+        <Form.Field
           defaultValue={customer?.email_address}
           label="Email address"
           className="max-w-xl"
@@ -77,11 +70,11 @@ export function UpdateCustomerBasicInfoForm({ customer_id }: CustomerProps) {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton dense>Save</FormButton>
-          <FormButton type="reset" dense>
+          <Form.Button dense>Save</Form.Button>
+          <Form.Button type="reset" dense>
             Cancel
-          </FormButton>
-          <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
+          </Form.Button>
+          <Form.InfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
         </div>
       </Form>
     </>

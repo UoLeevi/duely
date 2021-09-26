@@ -7,14 +7,7 @@ import {
   useMutation,
   useQuery
 } from '@duely/client';
-import {
-  Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
-  useFormMessages,
-  useForm
-} from '@duely/react';
+import { Form, useFormMessages, useForm } from '@duely/react';
 
 type ProductProps = {
   product_id?: string;
@@ -103,8 +96,10 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
   return (
     <>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        <FormField
-          defaultValue={product_settings?.checkout_success_url?.replace('https://', '') ?? undefined}
+        <Form.Field
+          defaultValue={
+            product_settings?.checkout_success_url?.replace('https://', '') ?? undefined
+          }
           name="checkout_success_url"
           className="max-w-xl"
           label="Thank you page URL"
@@ -119,7 +114,7 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
           }
         />
 
-        <FormField
+        <Form.Field
           defaultValue={product_settings?.checkout_cancel_url?.replace('https://', '') ?? undefined}
           name="checkout_cancel_url"
           className="max-w-xl"
@@ -131,11 +126,11 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton dense>Save</FormButton>
-          <FormButton type="reset" dense>
+          <Form.Button dense>Save</Form.Button>
+          <Form.Button type="reset" dense>
             Cancel
-          </FormButton>
-          <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
+          </Form.Button>
+          <Form.InfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
         </div>
       </Form>
     </>

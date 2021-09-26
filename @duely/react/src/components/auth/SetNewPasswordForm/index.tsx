@@ -3,9 +3,9 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { useMutation, verify_password_reset_M } from '@duely/client';
 import {
   Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
+  
+  
+  
   useForm,
   useFormMessages
 } from '../../forms';
@@ -47,17 +47,17 @@ export function SetNewPasswordForm({ className, redirectTo }: SetNewPasswordForm
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>
       <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Set new password</h2>
-      <FormField
+      <Form.Field
         label="New password"
         name="password"
         type="password"
         registerOptions={{ required: true }}
       />
       <div className="flex flex-col items-center pt-4">
-        <FormButton>Reset password</FormButton>
+        <Form.Button>Reset password</Form.Button>
       </div>
       <div className="flex flex-col items-center h-24 pt-4">
-        <FormInfoMessage error={errorMessage} />
+        <Form.InfoMessage error={errorMessage} />
       </div>
     </Form>
   );

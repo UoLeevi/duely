@@ -11,9 +11,6 @@ import {
 import {
   useForm,
   Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
   useFormMessages,
   ValidationRules,
   useImageInputFromFileList,
@@ -103,7 +100,7 @@ export function SettingsBrandingSettingsForm() {
 
   return (
     <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-      <FormField
+      <Form.Field
         label="Logo image"
         className="max-w-xl"
         name="image_logo_file_list"
@@ -119,11 +116,11 @@ export function SettingsBrandingSettingsForm() {
       />
 
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton dense>Save</FormButton>
-        <FormButton type="reset" dense>
+        <Form.Button dense>Save</Form.Button>
+        <Form.Button type="reset" dense>
           Cancel
-        </FormButton>
-        <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
+        </Form.Button>
+        <Form.InfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
       </div>
     </Form>
   );

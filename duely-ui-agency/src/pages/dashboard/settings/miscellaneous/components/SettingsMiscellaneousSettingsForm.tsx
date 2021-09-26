@@ -1,5 +1,5 @@
 import { update_agency_M, useMutation, useQuery, current_agency_extended_Q } from '@duely/client';
-import { useForm, Form, FormButton, FormField, FormInfoMessage, useFormMessages } from '@duely/react';
+import { useForm, Form, useFormMessages } from '@duely/react';
 
 type SettingsMiscellaneousSettingsFormValues = { default_pricing_currency: string };
 
@@ -43,7 +43,7 @@ export function SettingsMiscellaneousSettingsForm() {
 
   return (
     <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-      <FormField
+      <Form.Field
         defaultValue={current_agency?.default_pricing_currency ?? undefined}
         name="default_pricing_currency"
         label="Pricing currency"
@@ -55,13 +55,11 @@ export function SettingsMiscellaneousSettingsForm() {
       />
 
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton dense>
-          Save
-        </FormButton>
-        <FormButton type="reset" dense>
+        <Form.Button dense>Save</Form.Button>
+        <Form.Button type="reset" dense>
           Cancel
-        </FormButton>
-        <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
+        </Form.Button>
+        <Form.InfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
       </div>
     </Form>
   );

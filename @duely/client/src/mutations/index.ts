@@ -51,6 +51,7 @@ import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-documen
 import {
   agency_stripe_account_bank_accounts_Q,
   agency_stripe_account_coupons_Q,
+  agency_stripe_account_invoiceitems_Q,
   agency_stripe_account_invoices_Q,
   count_customers_Q,
   count_products_Q,
@@ -340,7 +341,7 @@ export const create_invoiceitem_M = {
   ) {
     if (!result?.success || !result.invoiceitem) return;
 
-    // evictQuery(cache, agency_stripe_account_invoiceitems_Q.query);
+    evictQuery(cache, agency_stripe_account_invoiceitems_Q.query);
 
     cache.gc();
   }
@@ -364,7 +365,7 @@ export const delete_invoiceitem_M = {
     const id = cache.identify(result.invoiceitem);
     cache.evict({ id });
 
-    // evictQuery(cache, agency_stripe_account_invoiceitems_Q.query);
+    evictQuery(cache, agency_stripe_account_invoiceitems_Q.query);
 
     cache.gc();
   }

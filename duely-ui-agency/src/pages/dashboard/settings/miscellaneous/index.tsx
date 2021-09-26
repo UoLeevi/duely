@@ -1,4 +1,4 @@
-import { Card, FormSection } from '@duely/react';
+import { Card, Form } from '@duely/react';
 import { DashboardSection } from '../../components';
 import { SettingsMiscellaneousSettingsForm } from './components/SettingsMiscellaneousSettingsForm';
 
@@ -7,7 +7,7 @@ export default function DashboardSettingsMiscellaneous() {
     <>
       <DashboardSection title="Settings">
         <Card>
-          <FormSection
+          <Form.Section
             title="Miscellaneous"
             description={
               <span>
@@ -17,7 +17,7 @@ export default function DashboardSettingsMiscellaneous() {
             }
           >
             <SettingsMiscellaneousSettingsForm />
-          </FormSection>
+          </Form.Section>
         </Card>
       </DashboardSection>
     </>

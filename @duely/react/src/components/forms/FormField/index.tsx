@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { FormFieldRegisterOptions } from '@duely/react-form';
-import { Util } from '../../../util';
 import { LoadingBar } from '../../LoadingBar';
 import { useFormContext } from '../Form';
 import {
@@ -20,6 +19,7 @@ import {
   FormFieldTextAreaElementProps
 } from './elements';
 import { createClassName } from '@duely/util';
+import { FormLabel } from '../FormLabel';
 
 type FormFieldPropsPartial<
   TName extends string & keyof TFormFields,
@@ -241,9 +241,9 @@ export function FormField<
     <div className={className}>
       <div className="flex justify-between whitespace-nowrap">
         {label && (
-          <label className="pb-1 pl-px text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor={name}>
+          <FormLabel className="pb-1 text-sm" htmlFor={name}>
             {label}
-          </label>
+          </FormLabel>
         )}
 
         {shortErrorMessage ? (

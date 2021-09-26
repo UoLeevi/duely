@@ -1,27 +1,29 @@
 import {
-  FormButton,
-  FormField,
   useForm,
   Form,
   ValidationRules,
   Button,
   Table,
   InputFilters,
-  FieldArrayItem
+  FieldArrayItem,
+  LinkButton
 } from '@duely/react';
 import {
   useQuery,
-  // create_invoice_M,
+  useMutation,
   current_agency_Q,
   agency_stripe_account_Q,
-  customers_Q
+  customers_Q,
+  create_invoice_M,
+  agency_stripe_account_invoiceitems_Q
 } from '@duely/client';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 type CreateInvoiceFormFields = {
   customer_email_address: string;
+  customer_name: string;
   message?: string;
-  lines: {
+  items: {
     description: string;
     unit_amount: number;
     quantity: number;
@@ -30,7 +32,7 @@ type CreateInvoiceFormFields = {
 
 export function CreateInvoiceForm() {
   const form = useForm<CreateInvoiceFormFields>();
-  // const [createInvoice, stateInvoice] = useMutation(create_invoice_M);
+  const [createInvoice, stateInvoice] = useMutation(create_invoice_M);
   const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
     agency_stripe_account_Q,
@@ -89,13 +91,29 @@ export function CreateInvoiceForm() {
     }));
   }, [customer_email_address, customers]);
 
+  let customer = customer_email_address
+    ? customers?.find(
+        (customer) => customer.email_address.toLowerCase() === customer_email_address.toLowerCase()
+      )
+    : undefined;
+
+  useEffect(() => {
+    form.setValue('customer_name', customer?.name ?? '');
+  }, [customer?.id]);
+
   const state = {
-    // loading: stateInvoice.loading || agencyLoading || stripe_accountLoading,
-    // error: stateInvoice.error,
-    // success: stateInvoice.data?.success
+    loading: stateInvoice.loading || agencyLoading || stripe_accountLoading,
+    error: stateInvoice.error,
+    success: stateInvoice.data?.success
   };
 
-  async function onSubmit({ ...value }: CreateInvoiceFormFields) {
+  async function onSubmit({ customer_email_address, ...value }: CreateInvoiceFormFields) {
+    console.log('customer:', customer?.default_stripe_customer.id);
+
+    if (!customer) {
+      console.log('validate');
+    }
+
     console.log(value);
 
     // const res_invoice = await createInvoice({
@@ -106,68 +124,93 @@ export function CreateInvoiceForm() {
     // if (!res_invoice?.success) return;
   }
 
-  // if (state.success) {
-  //   const { invoice } = stateInvoice.data!;
-  //   return (
-  //     <div className="flex flex-col items-center space-y-4 text-center">
-  //       <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
-  //         <svg
-  //           xmlns="http://www.w3.org/2000/svg"
-  //           className="text-3xl text-green-600 h-[1em] w-[1em]"
-  //           fill="none"
-  //           viewBox="0 0 24 24"
-  //           stroke="currentColor"
-  //         >
-  //           <path
-  //             strokeLinecap="round"
-  //             strokeLinejoin="round"
-  //             strokeWidth={1.5}
-  //             d="M5 13l4 4L19 7"
-  //           />
-  //         </svg>
-  //       </div>
-  //       <h3 className="text-2xl font-semibold">
-  //         <span className="whitespace-nowrap">Invoice</span>{' '}
-  //         <span className="whitespace-nowrap">{invoice!.name}</span>{' '}
-  //         <span className="whitespace-nowrap">created succesfully</span>
-  //       </h3>
-  //       <LinkButton color="indigo" to="/dashboard/invoices">
-  //         Go to invoices
-  //       </LinkButton>
-  //     </div>
-  //   );
-  // }
+  if (state.success) {
+    const { invoice } = stateInvoice.data!;
+    return (
+      <div className="flex flex-col items-center space-y-4 text-center">
+        <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-3xl text-green-600 h-[1em] w-[1em]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-semibold">
+          <span className="whitespace-nowrap">Invoice</span>{' '}
+          <span className="whitespace-nowrap">{invoice!.number}</span>{' '}
+          <span className="whitespace-nowrap">created succesfully</span>
+        </h3>
+        <LinkButton color="indigo" to="/dashboard/payments/invoices">
+          Go to invoices
+        </LinkButton>
+      </div>
+    );
+  }
 
-  const customer = customer_email_address
-    ? customers?.find(
-        (customer) => customer.email_address.toLowerCase() === customer_email_address.toLowerCase()
-      )
-    : undefined;
-
-  const { fields, addItem, removeItem } = form.useFieldArray('lines');
+  const { fields, addItem, removeItem } = form.useFieldArray('items');
 
   return (
     <>
       <h2 className="mb-3 text-xl font-medium">Create an invoice</h2>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        <FormField
-          label="Customer"
-          className="max-w-xl"
-          name="customer_email_address"
-          suggestions={customerSuggestions}
-          suffix={customer?.name}
-          registerOptions={{ required: true }}
+        <div className="pb-2">
+          <Form.Label>Customer</Form.Label>
+          <div className="flex flex-col -m-2 sm:flex-row">
+            <div className="flex-1 p-2">
+              <Form.Field
+                label="Email address"
+                className="max-w-xl"
+                name="customer_email_address"
+                suggestions={customerSuggestions}
+                registerOptions={{
+                  required: true,
+                  rules: [ValidationRules.isEmailAddress]
+                }}
+              />
+            </div>
+
+            <div className="flex-1 p-2">
+              <Form.Field
+                label="Name"
+                className="max-w-xl"
+                name="customer_name"
+                readOnly={!!customer}
+              />
+            </div>
+          </div>
+        </div>
+
+        <Form.Field
+          label="Days until due"
+          className="w-24"
+          name="days_until_due"
+          suffix="days"
+          defaultValue="30"
+          registerOptions={{
+            required: true,
+            rules: [ValidationRules.isPositiveInteger],
+            inputFilter: InputFilters.integer
+          }}
         />
 
         <div className="pb-2">
-          <span className="font-medium text-gray-700">Items</span>
+          <Form.Label>Items</Form.Label>
           <div className="flex flex-col pb-3 border-b">
             <Table items={fields} keyField="key">
               <Table.Column header="Description" span={6}>
                 {(field: FieldArrayItem | null, i) => {
                   if (!field) return null;
                   return (
-                    <FormField
+                    <Form.Field
                       type="text"
                       name={field.getName('description')}
                       placeholder={`Item ${i + 1}`}
@@ -181,7 +224,7 @@ export function CreateInvoiceForm() {
                 {(field: FieldArrayItem | null, i) => {
                   if (!field) return null;
                   return (
-                    <FormField
+                    <Form.Field
                       name={field.getName('unit_amount')}
                       type="text"
                       inputMode="numeric"
@@ -200,7 +243,7 @@ export function CreateInvoiceForm() {
                 {(field: FieldArrayItem | null, i) => {
                   if (!field) return null;
                   return (
-                    <FormField
+                    <Form.Field
                       name={field.getName('quantity')}
                       type="text"
                       inputMode="numeric"
@@ -241,11 +284,11 @@ export function CreateInvoiceForm() {
           </div>
         </div>
 
-        <FormField label="Message to customer" name="message" type="textarea" rows={6} />
+        <Form.Field label="Message to customer" name="message" type="textarea" rows={6} />
 
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <FormButton>Create invoice</FormButton>
-          {/* <FormInfoMessage error={state.error} /> */}
+          <Form.Button>Create invoice</Form.Button>
+          {/* <Form.InfoMessage error={state.error} /> */}
         </div>
       </Form>
     </>

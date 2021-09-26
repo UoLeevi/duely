@@ -1,5 +1,5 @@
 import { customer_Q, useQuery } from '@duely/client';
-import { Card, FormSection } from '@duely/react';
+import { Card, Form } from '@duely/react';
 import { useParams } from 'react-router-dom';
 import { DashboardSection } from '../../components';
 import { UpdateCustomerBasicInfoForm } from './components';
@@ -14,12 +14,12 @@ export default function DashboardCustomersEditCustomer() {
     <>
       <DashboardSection title={customer?.name!} loading={customerLoading}>
         <Card>
-          <FormSection
+          <Form.Section
             title="Basic information"
             description="Name and email address for the customer."
           >
             <UpdateCustomerBasicInfoForm customer_id={customer_id} />
-          </FormSection>
+          </Form.Section>
         </Card>
       </DashboardSection>
     </>

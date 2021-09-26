@@ -1,10 +1,6 @@
 import {
-  FormButton,
-  FormInfoMessage,
   useImageInputFromFileList,
-  Util,
   useForm,
-  FormField,
   useDynamicNavigation,
   Form,
   AnchorButton,
@@ -14,6 +10,7 @@ import {
 import { useEffect, useMemo } from 'react';
 import ServicesAgreement from '~/components/ServicesAgreement';
 import { useQuery, countries_Q, useMutation, create_agency_M } from '@duely/client';
+import { createClassName } from '@duely/util';
 
 type CreateBrandFormFields = {
   name: string;
@@ -122,13 +119,13 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
         Create your brand
       </h2>
       <Form form={form} onSubmit={onSubmit} className={className}>
-        <FormField
+        <Form.Field
           label="Brand name"
           name="name"
           type="text"
           registerOptions={{ required: true }}
         />
-        <FormField
+        <Form.Field
           label="Subdomain URL"
           name="subdomain_name"
           prefix="https://"
@@ -137,7 +134,7 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           type="text"
           registerOptions={{ required: true }}
         />
-        <FormField
+        <Form.Field
           label="Country"
           name="country_code"
           type="select"
@@ -145,7 +142,7 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           options={countries}
           registerOptions={{ required: true }}
         />
-        <FormField
+        <Form.Field
           label="Logo image"
           name="image_logo_file_list"
           type="image"
@@ -175,10 +172,10 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
           </p>
         </div>
         <div className="flex flex-col items-center pt-4">
-          <FormButton>Create a brand</FormButton>
+          <Form.Button>Create a brand</Form.Button>
         </div>
         <div className="flex flex-col items-center h-24 pt-4">
-          <FormInfoMessage error={state.error} />
+          <Form.InfoMessage error={state.error} />
         </div>
       </Form>
 

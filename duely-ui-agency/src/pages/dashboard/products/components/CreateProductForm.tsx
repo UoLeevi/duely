@@ -1,12 +1,4 @@
-import {
-  FormButton,
-  FormInfoMessage,
-  FormField,
-  useImageInputFromFileList,
-  useForm,
-  Form,
-  LinkButton
-} from '@duely/react';
+import { useImageInputFromFileList, useForm, Form, LinkButton } from '@duely/react';
 import {
   useMutation,
   useQuery,
@@ -101,10 +93,7 @@ export function CreateProductForm() {
     const { product } = res_product;
     const { unit_amount_major, payment_type, frequency } = data;
     const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency ?? 'usd'; // TODO: have an input or use default currency
-    const unit_amount = numberToMinorCurrencyAmount(
-      +unit_amount_major,
-      currency as Currency
-    );
+    const unit_amount = numberToMinorCurrencyAmount(+unit_amount_major, currency as Currency);
 
     const recurring: {
       recurring_interval_count?: number;
@@ -193,7 +182,7 @@ export function CreateProductForm() {
         <h3 className="pt-6 pb-2 text-lg font-medium">Integration</h3>
         <ProductIntegrationFormSection form={form} />
         <h3 className="pt-6 pb-2 text-lg font-medium">Status</h3>
-        <FormField
+        <Form.Field
           name="status"
           type="radio-toggle"
           options={[
@@ -202,8 +191,8 @@ export function CreateProductForm() {
           ]}
         />
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <FormButton>Create product</FormButton>
-          <FormInfoMessage error={state.error} />
+          <Form.Button>Create product</Form.Button>
+          <Form.InfoMessage error={state.error} />
         </div>
       </Form>
     </>

@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { useMutation, start_password_reset_M } from '@duely/client';
 import {
   Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
+  
+  
+  
   useForm,
   useFormMessages
 } from '../../forms';
@@ -84,14 +84,14 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>
       <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Password reset</h2>
-      <FormField
+      <Form.Field
         label="Email address"
         name="email_address"
         type="email"
         registerOptions={{ required: true }}
       />
       <div className="flex flex-col items-center pt-4">
-        <FormButton disabled={startPasswordResetLoading}>Send a verification link</FormButton>
+        <Form.Button disabled={startPasswordResetLoading}>Send a verification link</Form.Button>
       </div>
       <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
         <span>Don't have an account?</span>
@@ -103,7 +103,7 @@ export function StartPasswordResetForm({ className, redirectUrl }: StartPassword
         </Link>
       </div>
       <div className="flex flex-col items-center h-24 pt-4">
-        <FormInfoMessage error={errorMessage} />
+        <Form.InfoMessage error={errorMessage} />
       </div>
     </Form>
   );

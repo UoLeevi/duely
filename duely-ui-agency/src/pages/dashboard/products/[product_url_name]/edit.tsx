@@ -2,11 +2,10 @@ import {
   current_subdomain_Q,
   integrations_Q,
   integration_config_Q,
-  integration_type_Q,
   product_and_agency_from_url_parts_Q,
   useQuery
 } from '@duely/client';
-import { Card, FormSection } from '@duely/react';
+import { Card, Form } from '@duely/react';
 import { Link, useParams } from 'react-router-dom';
 import { DashboardSection } from '../../components';
 import { UpdateProductBasicInfoForm } from './components';
@@ -52,36 +51,36 @@ export default function DashboardProductsEditProduct() {
     <>
       <DashboardSection title={product?.name} loading={productLoading}>
         <Card>
-          <FormSection
+          <Form.Section
             title="Basic information"
             description="Name, description, image and URL name for the product."
           >
             <UpdateProductBasicInfoForm product_id={product?.id} />
-          </FormSection>
+          </Form.Section>
         </Card>
 
         <Card>
-          <FormSection
+          <Form.Section
             title="Pricing"
             description="Product pricing can be set to either a one-time payment or a subscription."
           >
             <UpdateProductPricingForm product_id={product?.id} />
-          </FormSection>
+          </Form.Section>
         </Card>
 
         {integration_config && (
           <Card>
-            <FormSection
+            <Form.Section
               title={`Integration - ${integration_config.name}`}
               description="Configure settings for integration with external service."
             >
               <UpdateProductIntegrationForm product_id={product?.id} />
-            </FormSection>
+            </Form.Section>
           </Card>
         )}
 
         <Card>
-          <FormSection
+          <Form.Section
             title="Checkout"
             description={
               <span>
@@ -103,11 +102,11 @@ export default function DashboardProductsEditProduct() {
             }
           >
             <UpdateProductCheckoutSettingsForm product_id={product?.id} />
-          </FormSection>
+          </Form.Section>
         </Card>
 
         <Card>
-          <FormSection
+          <Form.Section
             title="Status"
             description={
               <span>
@@ -118,7 +117,7 @@ export default function DashboardProductsEditProduct() {
             }
           >
             <UpdateProductStatusForm product_id={product?.id} />
-          </FormSection>
+          </Form.Section>
         </Card>
       </DashboardSection>
     </>

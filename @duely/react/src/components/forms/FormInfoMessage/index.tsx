@@ -1,6 +1,5 @@
 import { createClassName, hasProperty } from '@duely/util';
 import React from 'react';
-import { Util } from '../../../util';
 
 type FormInfoMessageProps = React.DetailedHTMLProps<
   React.HTMLAttributes<HTMLDivElement>,

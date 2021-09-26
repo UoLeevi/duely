@@ -11,8 +11,6 @@ import {
   Card,
   ErrorScreen,
   Form,
-  FormButton,
-  FormInfoMessage,
   LoadingScreen,
   useFormMessages,
   useForm,
@@ -152,13 +150,11 @@ function PageEditorEditBlockForm() {
     <Form form={form} onSubmit={onSubmit} className="space-y-3">
       <DynamicFormFields fields={definition.fields ?? []} defaultValues={data} />
       <div className="flex flex-row items-center pt-3 space-x-4">
-        <FormButton dense>
-          Save
-        </FormButton>
-        <FormButton type="reset" dense>
+        <Form.Button dense>Save</Form.Button>
+        <Form.Button type="reset" dense>
           Cancel
-        </FormButton>
-        <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
+        </Form.Button>
+        <Form.InfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
       </div>
     </Form>
   );
@@ -197,7 +193,9 @@ function PageEditorSidebar() {
             />
           </svg>
         </button>
-        <h3 className="font-medium text-gray-800 dark:text-gray-300">{selectedBlock.definition.name}</h3>
+        <h3 className="font-medium text-gray-800 dark:text-gray-300">
+          {selectedBlock.definition.name}
+        </h3>
       </div>
       <PageEditorEditBlockForm />
     </>

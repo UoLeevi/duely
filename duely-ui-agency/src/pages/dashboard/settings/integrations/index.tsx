@@ -1,4 +1,4 @@
-import { Card, FormSection } from '@duely/react';
+import { Card, Form } from '@duely/react';
 import { DashboardSection } from '../../components';
 import { SettingsIntegrationsSettingsForm } from './components/SettingsIntegrationsSettingsForm';
 
@@ -7,16 +7,14 @@ export default function DashboardSettingsIntegrations() {
     <>
       <DashboardSection title="Integrations">
         <Card>
-          <FormSection
+          <Form.Section
             title="Integrations"
             description={
-              <span>
-                Enable and configure integrations with external services and APIs.
-              </span>
+              <span>Enable and configure integrations with external services and APIs.</span>
             }
           >
             <SettingsIntegrationsSettingsForm />
-          </FormSection>
+          </Form.Section>
         </Card>
       </DashboardSection>
     </>

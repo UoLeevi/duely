@@ -1,4 +1,4 @@
-import { FormField, useImageInputFromFileList, UseFormReturn } from '@duely/react';
+import { useImageInputFromFileList, UseFormReturn, Form } from '@duely/react';
 import { useEffect } from 'react';
 
 type ProductBasicInfoFormSectionFields = {
@@ -15,7 +15,6 @@ type ProductBasicInfoFormSectionProps<TFieldValues extends ProductBasicInfoFormS
 export function ProductBasicInfoFormSection<
   TFieldValues extends ProductBasicInfoFormSectionFields
 >({ form }: ProductBasicInfoFormSectionProps<TFieldValues>) {
-
   // image logo
   const image_logo_file_list = form.useFormFieldValue('image_logo_file_list');
   const { image: imageLogo, loading: imageLogoLoading } =
@@ -39,14 +38,14 @@ export function ProductBasicInfoFormSection<
 
   return (
     <>
-      <FormField
+      <Form.Field
         label="Product name"
         className="max-w-xl"
         name="name"
         type="text"
         registerOptions={{ required: true }}
       />
-      <FormField
+      <Form.Field
         label="URL friendly name"
         className="max-w-xl"
         name="url_name"
@@ -55,7 +54,7 @@ export function ProductBasicInfoFormSection<
         hint="How would you like the product name to appear in URLs"
         registerOptions={{ required: true }}
       />
-      <FormField
+      <Form.Field
         label="Description"
         className="max-w-xl"
         name="description"
@@ -63,7 +62,7 @@ export function ProductBasicInfoFormSection<
         rows={5}
         registerOptions={{ required: true }}
       />
-      <FormField
+      <Form.Field
         label="Logo image"
         className="max-w-xl"
         name="image_logo_file_list"

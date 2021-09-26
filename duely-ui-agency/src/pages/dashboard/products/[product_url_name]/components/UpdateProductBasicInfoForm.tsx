@@ -1,9 +1,6 @@
 import { image_Q, product_Q, update_product_M, useMutation, useQuery } from '@duely/client';
 import {
   Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
   useImageInputFromFileList,
   useFormMessages,
   useForm,
@@ -82,7 +79,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
   return (
     <>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        <FormField
+        <Form.Field
           defaultValue={product?.name}
           label="Product name"
           className="max-w-xl"
@@ -91,7 +88,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
           registerOptions={{ required: true }}
           loading={state.loading}
         />
-        <FormField
+        <Form.Field
           defaultValue={product?.url_name}
           label="URL friendly name"
           className="max-w-xl"
@@ -122,7 +119,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
           registerOptions={{ required: true }}
           loading={state.loading}
         />
-        <FormField
+        <Form.Field
           defaultValue={product?.description}
           label="Description"
           className="max-w-xl"
@@ -132,7 +129,7 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
           registerOptions={{ required: true }}
           loading={state.loading}
         />
-        <FormField
+        <Form.Field
           label="Logo image"
           className="max-w-xl"
           name="image_logo_file_list"
@@ -147,11 +144,11 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
         />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
-          <FormButton dense>Save</FormButton>
-          <FormButton type="reset" dense>
+          <Form.Button dense>Save</Form.Button>
+          <Form.Button type="reset" dense>
             Cancel
-          </FormButton>
-          <FormInfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
+          </Form.Button>
+          <Form.InfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
         </div>
       </Form>
     </>

@@ -3,9 +3,9 @@ import { Link, useHistory } from 'react-router-dom';
 import { useQuery, current_user_Q, useMutation, log_in_M } from '@duely/client';
 import {
   Form,
-  FormButton,
-  FormField,
-  FormInfoMessage,
+  
+  
+  
   useForm,
   useFormMessages
 } from '../../forms';
@@ -53,13 +53,13 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
   return (
     <Form form={form} onSubmit={onSubmit} className={className}>
       <h2 className="self-center mb-1 text-xl font-semibold text-gray-700">Log in</h2>
-      <FormField
+      <Form.Field
         label="Email address"
         name="email_address"
         type="email"
         registerOptions={{ required: true }}
       />
-      <FormField
+      <Form.Field
         label="Password"
         name="password"
         type="password"
@@ -75,7 +75,7 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
         }
       />
       <div className="flex flex-col items-center pt-4">
-        <FormButton>Log in</FormButton>
+        <Form.Button>Log in</Form.Button>
       </div>
       <div className="flex flex-row justify-center pt-4 space-x-4 text-sm">
         <span>Don&apos;t have an account?</span>
@@ -87,7 +87,7 @@ export function LogInForm({ className, redirectTo }: LogInFormProps) {
         </Link>
       </div>
       <div className="flex flex-col items-center h-24 pt-4">
-        <FormInfoMessage error={errorMessage} />
+        <Form.InfoMessage error={errorMessage} />
       </div>
     </Form>
   );

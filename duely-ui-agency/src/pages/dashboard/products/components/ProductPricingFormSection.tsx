@@ -1,5 +1,5 @@
 import { agency_stripe_account_Q, current_agency_Q, useQuery } from '@duely/client';
-import { FormField, InputFilters, UseFormReturn, ValidationRules } from '@duely/react';
+import { Form, InputFilters, UseFormReturn, ValidationRules } from '@duely/react';
 
 type ProductPricingFormSectionFields = {
   unit_amount_major: string;
@@ -29,7 +29,7 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
 
   return (
     <>
-      <FormField
+      <Form.Field
         className="max-w-2xl"
         name="payment_type"
         type="radio-blocks"
@@ -50,7 +50,7 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
 
       <div className="flex flex-col -m-2 sm:flex-row">
         <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-          <FormField
+          <Form.Field
             label={payment_type === 'one_time' ? 'Price of product' : 'Amount'}
             name="unit_amount_major"
             type="text"
@@ -66,7 +66,7 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
         </div>
         {payment_type === 'recurring' && (
           <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
-            <FormField
+            <Form.Field
               label="Frequency"
               name="frequency"
               type="select"

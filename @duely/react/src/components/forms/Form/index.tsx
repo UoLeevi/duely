@@ -1,7 +1,20 @@
 import React, { useCallback, createContext, useContext } from 'react';
+import { FormButton } from '../FormButton';
+import { FormField } from '../FormField';
+import { FormInfoMessage } from '../FormInfoMessage';
+import { FormLabel } from '../FormLabel';
+import { FormSection } from '../FormSection';
 import { useForm, UseFormReturn } from '../hooks';
 
 const FormContext = createContext<ReturnType<typeof useForm>>(undefined as any);
+
+export const Form = Object.assign(FormRoot, {
+  Field: FormField,
+  Button: FormButton,
+  InfoMessage: FormInfoMessage,
+  Section: FormSection,
+  Label: FormLabel
+});
 
 export function useFormContext() {
   return useContext(FormContext);
@@ -15,13 +28,12 @@ type FormProps<TFormFields extends Record<string, any> = Record<string, any>> = 
   'onSubmit'
 >;
 
-export function Form<TFormFields extends Record<string, any> = Record<string, any>>({
+function FormRoot<TFormFields extends Record<string, any> = Record<string, any>>({
   form,
   onSubmit,
   children,
   ...props
 }: FormProps<TFormFields>) {
-  
   const onReset = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     form.reset();
