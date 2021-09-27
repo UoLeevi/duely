@@ -6,7 +6,8 @@ import {
   Table,
   InputFilters,
   FieldArrayItem,
-  LinkButton
+  LinkButton,
+  useFormMessages
 } from '@duely/react';
 import {
   useQuery,
@@ -15,7 +16,7 @@ import {
   agency_stripe_account_Q,
   customers_Q,
   create_invoice_M,
-  agency_stripe_account_invoiceitems_Q
+  create_customer_M
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
 
@@ -32,6 +33,15 @@ type CreateInvoiceFormFields = {
 
 export function CreateInvoiceForm() {
   const form = useForm<CreateInvoiceFormFields>();
+  const {
+    infoMessage,
+    setInfoMessage,
+    successMessage,
+    setSuccessMessage,
+    errorMessage,
+    setErrorMessage
+  } = useFormMessages();
+  const [createCustomer, stateCustomer] = useMutation(create_customer_M);
   const [createInvoice, stateInvoice] = useMutation(create_invoice_M);
   const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
@@ -107,11 +117,22 @@ export function CreateInvoiceForm() {
     success: stateInvoice.data?.success
   };
 
-  async function onSubmit({ customer_email_address, ...value }: CreateInvoiceFormFields) {
+  async function onSubmit({ customer_email_address, customer_name, ...value }: CreateInvoiceFormFields) {
     console.log('customer:', customer?.default_stripe_customer.id);
 
     if (!customer) {
-      console.log('validate');
+      const res = await createCustomer({
+        stripe_account_id: stripe_account!.id,
+        email_address: customer_email_address,
+        name: customer_name
+      });
+
+      if (!res?.success) {
+        setErrorMessage('Error while creating customer:' + res?.message);
+        return;
+      }
+
+      customer = res.customer!;
     }
 
     console.log(value);
@@ -160,10 +181,10 @@ export function CreateInvoiceForm() {
 
   return (
     <>
-      <h2 className="mb-3 text-xl font-medium">Create an invoice</h2>
+      <h2 className="mb-4 text-xl font-medium">Create an invoice</h2>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
         <div className="pb-2">
-          <Form.Label>Customer</Form.Label>
+          <Form.Label className="inline-block pb-1">Customer</Form.Label>
           <div className="flex flex-col -m-2 sm:flex-row">
             <div className="flex-1 p-2">
               <Form.Field
@@ -288,7 +309,7 @@ export function CreateInvoiceForm() {
 
         <div className="flex flex-row items-center pt-3 space-x-8">
           <Form.Button>Create invoice</Form.Button>
-          {/* <Form.InfoMessage error={state.error} /> */}
+          <Form.InfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
         </div>
       </Form>
     </>

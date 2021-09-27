@@ -1066,6 +1066,10 @@ body, #root {
   margin-bottom: 0.75rem;
 }
 
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
 .mb-auto {
   margin-bottom: auto;
 }
