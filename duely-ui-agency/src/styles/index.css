@@ -2,6 +2,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+[list]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
 :root {
   --color-primary: #667eea;
   --color-secondary: #34d399;
@@ -1066,8 +1070,8 @@ body, #root {
   margin-bottom: 0.75rem;
 }
 
-.mb-6 {
-  margin-bottom: 1.5rem;
+.mb-4 {
+  margin-bottom: 1rem;
 }
 
 .mb-auto {
@@ -1104,10 +1108,6 @@ body, #root {
 
 .mt-1 {
   margin-top: 0.25rem;
-}
-
-.mb-4 {
-  margin-bottom: 1rem;
 }
 
 .box-border {

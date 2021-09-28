@@ -90,15 +90,7 @@ export function CreateInvoiceForm() {
       return [];
     }
 
-    return customerSuggestions.map((customer) => ({
-      element: (
-        <span>
-          <span>{customer.email_address}</span>
-          {customer.name && <span className="text-gray-500"> - {customer.name}</span>}
-        </span>
-      ),
-      value: customer.email_address
-    }));
+    return customerSuggestions.map((customer) => customer.email_address);
   }, [customer_email_address, customers]);
 
   let customer = customer_email_address
@@ -117,23 +109,30 @@ export function CreateInvoiceForm() {
     success: stateInvoice.data?.success
   };
 
-  async function onSubmit({ customer_email_address, customer_name, ...value }: CreateInvoiceFormFields) {
-    console.log('customer:', customer?.default_stripe_customer.id);
-
-    if (!customer) {
-      const res = await createCustomer({
-        stripe_account_id: stripe_account!.id,
-        email_address: customer_email_address,
-        name: customer_name
-      });
-
-      if (!res?.success) {
-        setErrorMessage('Error while creating customer:' + res?.message);
-        return;
-      }
-
-      customer = res.customer!;
+  async function onSubmit({
+    customer_email_address,
+    customer_name,
+    ...value
+  }: CreateInvoiceFormFields) {
+    if (!value.items?.length) {
+      setErrorMessage('Items are required.');
+      return;
     }
+
+    // if (!customer) {
+    //   const res = await createCustomer({
+    //     stripe_account_id: stripe_account!.id,
+    //     email_address: customer_email_address,
+    //     name: customer_name
+    //   });
+
+    //   if (!res?.success) {
+    //     setErrorMessage('Error while creating customer:' + res?.message);
+    //     return;
+    //   }
+
+    //   customer = res.customer!;
+    // }
 
     console.log(value);
 

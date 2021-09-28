@@ -1,7 +1,5 @@
 import type { Override } from '@duely/util';
-import React, { useRef } from 'react';
-import { useFocus } from '../../../..';
-import { DropMenu } from '../../../DropMenu';
+import React from 'react';
 import { useFormContext } from '../../Form';
 import { FormFieldElementProps } from './FormFieldElementProps';
 
@@ -17,8 +15,7 @@ export type FormFieldDefaultElementProps<
       | string
       | {
           value: string;
-          element?: React.ReactNode;
-          className?: string;
+          element?: string;
         }
     )[];
   }
@@ -38,15 +35,14 @@ export function FormFieldDefaultElement<
   ...props
 }: FormFieldDefaultElementProps<TName, TFormFields>) {
   const form = useFormContext();
-  const ref = useRef<HTMLDivElement>(null);
-  const { focused } = useFocus(ref);
+
+  if (suggestions) {
+    props.list = `${name}--suggestions`;
+  }
 
   return (
     <>
-      <div
-        ref={ref}
-        className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5"
-      >
+      <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
         {prefix && <span className="pl-3 text-gray-500 whitespace-nowrap">{prefix}</span>}
         <input
           id={name}
@@ -62,7 +58,7 @@ export function FormFieldDefaultElement<
       </div>
 
       {suggestions && suggestions.length > 0 && (
-        <DropMenu no-button open={focused}>
+        <datalist id={`${name}--suggestions`}>
           {suggestions.map((suggestion) => {
             suggestion =
               typeof suggestion === 'object'
@@ -72,12 +68,12 @@ export function FormFieldDefaultElement<
             const value = suggestion.value;
 
             return (
-              <DropMenu.Item key={suggestion.value} onClick={() => form.setValue(name, value)}>
+              <option key={suggestion.value} onClick={() => form.setValue(name, value)}>
                 {suggestion.element ?? suggestion.value}
-              </DropMenu.Item>
+              </option>
             );
           })}
-        </DropMenu>
+        </datalist>
       )}
     </>
   );

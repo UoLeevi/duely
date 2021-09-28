@@ -2,6 +2,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+[list]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
 :root {
   --color-primary: #667eea;
   --color-secondary: #34d399;
