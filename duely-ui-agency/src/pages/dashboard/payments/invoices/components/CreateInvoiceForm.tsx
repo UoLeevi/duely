@@ -16,13 +16,16 @@ import {
   agency_stripe_account_Q,
   customers_Q,
   create_invoice_M,
-  create_customer_M
+  create_customer_M,
+  create_invoiceitem_M
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
+import { Currency, numberToMinorCurrencyAmount } from '@duely/util';
 
 type CreateInvoiceFormFields = {
   customer_email_address: string;
   customer_name: string;
+  days_until_due: string;
   message?: string;
   items: {
     description: string;
@@ -43,6 +46,7 @@ export function CreateInvoiceForm() {
   } = useFormMessages();
   const [createCustomer, stateCustomer] = useMutation(create_customer_M);
   const [createInvoice, stateInvoice] = useMutation(create_invoice_M);
+  const [createInvoiceItem, stateInvoiceItem] = useMutation(create_invoiceitem_M);
   const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
     agency_stripe_account_Q,
@@ -119,29 +123,54 @@ export function CreateInvoiceForm() {
       return;
     }
 
-    // if (!customer) {
-    //   const res = await createCustomer({
-    //     stripe_account_id: stripe_account!.id,
-    //     email_address: customer_email_address,
-    //     name: customer_name
-    //   });
+    if (!customer) {
+      const res_customer = await createCustomer({
+        stripe_account_id: stripe_account!.id,
+        email_address: customer_email_address,
+        name: customer_name
+      });
 
-    //   if (!res?.success) {
-    //     setErrorMessage('Error while creating customer:' + res?.message);
-    //     return;
-    //   }
+      if (!res_customer?.success) {
+        setErrorMessage('Error while creating customer:' + res_customer?.message);
+        return;
+      }
 
-    //   customer = res.customer!;
-    // }
+      customer = res_customer.customer!;
+    }
 
     console.log(value);
 
-    // const res_invoice = await createInvoice({
-    //   stripe_account_id: stripe_account!.id,
-    //   name,
-    //   email_address
-    // });
-    // if (!res_invoice?.success) return;
+    const res_invoice = await createInvoice({
+      stripe_account_id: stripe_account!.id,
+      customer: customer!.default_stripe_customer.id,
+      auto_advance: false,
+      collection_method: 'send_invoice',
+      days_until_due: +value.days_until_due
+    });
+
+    if (!res_invoice?.success) {
+      setErrorMessage('Error while creating invoice:' + res_invoice?.message);
+      return;
+    }
+
+    for (const item of value.items) {
+      const res_item = await createInvoiceItem({
+        stripe_account_id: stripe_account!.id,
+        customer: customer!.default_stripe_customer.id,
+        invoice: res_invoice.invoice!.id,
+        unit_amount: numberToMinorCurrencyAmount(+item.unit_amount, currency as Currency),
+        quantity: +item.quantity,
+        description: item.description,
+        currency
+      });
+
+      if (!res_item?.success) {
+        setErrorMessage('Error while creating invoice item:' + res_item?.message);
+        return;
+      }
+    }
+
+    setSuccessMessage(`Invoice created successfully`);
   }
 
   if (state.success) {
