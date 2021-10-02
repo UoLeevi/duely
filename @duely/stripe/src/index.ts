@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import fs from 'fs';
 import { ResourceId, Resources } from '@duely/db';
-import { SplitString, Awaited, FilterKeys, PathValue, get } from '@duely/util';
+import { SplitString, FilterKeys, PathValue, get } from '@duely/util';
 
 const STRIPE_API_VERSION = '2020-08-27';
 
@@ -170,6 +170,17 @@ export function getStripeResourceForObjectType<
 > {
   const endpoint = stripeResourceEndpointByType[objectType];
   return get(stripe, endpoint) as any;
+}
+
+export function deleteStripeObjects<
+  T extends readonly { id: string; object: StripeDeletableObjectType }[]
+>(stripe: Stripe, objects: T) {
+  objects
+    .slice()
+    .reverse()
+    .forEach(async (obj) => {
+      await getStripeResourceForObjectType(stripe, obj.object).del(obj.id);
+    });
 }
 
 export default stripe;
