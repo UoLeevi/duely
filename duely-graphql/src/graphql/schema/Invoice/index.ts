@@ -5,7 +5,7 @@ import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
-import stripe from '@duely/stripe';
+import stripe, { deleteStripeObjects, StripeDeletableObjectType } from '@duely/stripe';
 import { withStripeAccountProperty } from '../../util';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import { dateToTimestamp, timestampToDate } from '@duely/util';
@@ -109,6 +109,17 @@ export const Invoice: GqlTypeDefinition<
       value: String
     }
 
+    input InvoiceItemInput {
+      amount: Int
+      description: String
+      period: PeriodInput
+      price: ID
+      discountable: Boolean
+      quantity: Int
+      unit_amount: Int
+      unit_amount_decimal: String
+    }
+
     extend type Query {
       invoice(stripe_account_id: ID!, invoice_id: ID!): Invoice
     }
@@ -126,6 +137,8 @@ export const Invoice: GqlTypeDefinition<
         default_payment_method: ID
         default_source: ID
         due_date: Int
+        currency: String
+        items: [InvoiceItemInput!]
       ): InvoiceMutationResult!
       update_invoice(
         stripe_account_id: ID!
@@ -234,7 +247,27 @@ export const Invoice: GqlTypeDefinition<
     Mutation: {
       async create_invoice(
         obj,
-        { stripe_account_id, ...args }: { stripe_account_id: string } & Stripe.InvoiceCreateParams,
+        {
+          stripe_account_id,
+          currency,
+          items,
+          ...args
+        }: { stripe_account_id: string } & {
+          currency?: string;
+          items: {
+            amount?: number;
+            description: string;
+            period?: {
+              start: number;
+              end: number;
+            };
+            price?: string;
+            discountable?: boolean;
+            quantity?: number;
+            unit_amount?: number;
+            unit_amount_decimal?: string;
+          }[];
+        } & Stripe.InvoiceCreateParams,
         context,
         info
       ) {
@@ -251,6 +284,44 @@ export const Invoice: GqlTypeDefinition<
             }
 
             const invoice = await stripe.get(stripe_account).invoices.create(args);
+
+            if (items && items.length > 0) {
+              const rollbackObjects: {
+                id: string;
+                object: StripeDeletableObjectType;
+              }[] = [invoice];
+
+              try {
+                if (!currency) {
+                  const agency = await queryResource('agency', stripe_account.agency_id);
+                  currency = agency.default_pricing_currency;
+                }
+
+                if (!currency) {
+                  const account = await stripe.get(stripe_account).accounts.retrieve();
+                  currency = account.default_currency;
+                }
+
+                for (const item of items) {
+                  const invoiceitem = await stripe.get(stripe_account).invoiceItems.create({
+                    invoice: invoice.id,
+                    customer: args.customer,
+                    currency,
+                    ...item
+                  });
+
+                  rollbackObjects.push(invoiceitem);
+                }
+              } catch (error: any) {
+                await deleteStripeObjects(stripe.get(stripe_account), rollbackObjects);
+                return {
+                  // error
+                  success: false,
+                  message: error.message,
+                  type: 'InvoiceMutationResult'
+                };
+              }
+            }
 
             // success
             return {

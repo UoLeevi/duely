@@ -2,7 +2,7 @@ import type { GraphQLResolveInfo } from 'graphql';
 import { countResource, queryResource, queryResourceAll, withSession } from '@duely/db';
 import { DuelyQqlContext } from './context';
 import { Resources } from '@duely/db';
-import { FilterKeys, hasProperty, Awaited } from '@duely/util';
+import { FilterKeys, hasProperty } from '@duely/util';
 import { DuelyGraphQLError } from './errors';
 import stripe from '@duely/stripe';
 import Stripe from 'stripe';
