@@ -101,28 +101,19 @@ export function diff(fromObject: object, omitObject: object) {
 export function get<T, TPath extends string | readonly string[]>(
   obj: T,
   path: TPath
-): (
-  TPath extends readonly string[]
-    ? PathValue<T, TPath>
-    : TPath extends string
-    ? PathValue<T, SplitString<TPath, '.'>>
-    : never
-) {
-  const parts: readonly string[] =
-    typeof path === 'string'
-      ? path
-          .replace(/\[(\w+)\]/g, '.$1')
-          .replace(/^\./, '')
-          .split('.')
-      : path;
-
+): TPath extends readonly string[]
+  ? PathValue<T, TPath>
+  : TPath extends string
+  ? PathValue<T, SplitString<TPath, '.'>>
+  : never {
+  const parts: readonly string[] = typeof path === 'string' ? path.split('.') : path;
   return parts.reduce((prev, key) => prev?.[key], obj as any);
 }
 
 export function template(template: string, variables: Record<string, any>) {
   return template.replace(
     /{(.*?)}/g,
-    (_, placeholder) => get(variables, placeholder)?.toString() ?? placeholder
+    (_, placeholder: string) => get(variables, placeholder.trim())?.toString() ?? placeholder
   );
 }
 
@@ -183,10 +174,10 @@ export function identity<T = any>(arg: T): T {
   return arg;
 }
 
-export function partial<R, TParams extends unknown[]>(
+export function partial<R, TParams extends readonly unknown[]>(
   func: GenericFunction<R, TParams>,
   ...partials: LeadingTypes<TParams>
-): GenericFunction<R, PartialApplication<Parameters<typeof func>, typeof partials>> {
+): GenericFunction<R, PartialApplication<TParams, typeof partials>> {
   return (...rest) => {
     // TODO: unable to make the typing work so let's use help of `any`.
     const args: TParams = [...partials, ...rest] as any;

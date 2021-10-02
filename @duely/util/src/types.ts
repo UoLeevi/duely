@@ -8,7 +8,6 @@ export type ResolvableValue<R = any, TArgs extends readonly any[] = any[]> =
   | GenericFunction<R | PromiseLike<R>, TArgs>;
 
 export type ResolvedType<T> = T extends ResolvableValue<infer U, unknown[]> ? U : never;
-export type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T;
 export type ElementType<T extends readonly unknown[]> = T extends readonly (infer U)[] ? U : never;
 
 export type Head<T extends readonly unknown[]> = T extends []
