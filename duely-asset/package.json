@@ -25,7 +25,7 @@
     "../@duely/util"
   ],
   "dependencies": {
-    "@duely/db": "0.4.20",
+    "@duely/db": "^0.4.23",
     "@duely/util": "^0.4.7",
     "cors": "^2.8.5",
     "express": "^4.16.4"

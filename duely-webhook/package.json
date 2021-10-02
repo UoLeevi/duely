@@ -27,9 +27,9 @@
   ],
   "dependencies": {
     "@duely/core": "^0.4.34",
-    "@duely/db": "0.4.20",
+    "@duely/db": "^0.4.23",
     "@duely/lambda": "0.4.1",
-    "@duely/stripe": "0.4.5",
+    "@duely/stripe": "^0.4.10",
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "validator": "^13.5.2"

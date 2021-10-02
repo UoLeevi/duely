@@ -28,10 +28,10 @@
   ],
   "dependencies": {
     "@duely/core": "^0.4.34",
-    "@duely/db": "0.4.20",
+    "@duely/db": "^0.4.23",
     "@duely/email": "0.4.9",
     "@duely/lambda": "0.4.1",
-    "@duely/stripe": "0.4.5",
+    "@duely/stripe": "^0.4.10",
     "@duely/util": "^0.4.7",
     "axios": "^0.21.1",
     "cors": "^2.8.5",
