@@ -334,6 +334,8 @@ mutation CreateInvoice(
   $default_payment_method: ID
   $default_source: ID
   $due_date: Int
+  $currency: String
+  $items: [InvoiceItemInput!]
 ) {
   create_invoice(
     stripe_account_id: $stripe_account_id
@@ -347,6 +349,8 @@ mutation CreateInvoice(
     default_payment_method: $default_payment_method
     default_source: $default_source
     due_date: $due_date
+    currency: $currency
+    items: $items
   ) {
     success
     message
