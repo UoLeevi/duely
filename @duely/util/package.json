@@ -20,7 +20,7 @@
   ],
   "dependencies": {},
   "devDependencies": {
-    "@duely/build": "^0.4.6",
+    "@duely/build": "^0.4.7",
     "@types/jest": "^27.0.1",
     "cross-env": "^7.0.3",
     "jest": "^27.0.6",

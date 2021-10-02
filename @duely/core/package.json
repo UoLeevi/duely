@@ -20,11 +20,11 @@
     "../util"
   ],
   "dependencies": {
-    "@duely/util": "^0.4.0",
+    "@duely/util": "^0.4.7",
     "graphql": "^15.5.0"
   },
   "devDependencies": {
-    "@duely/build": "^0.4.6",
+    "@duely/build": "^0.4.7",
     "@graphql-codegen/cli": "^2.2.0",
     "@graphql-codegen/typed-document-node": "^2.1.4",
     "@graphql-codegen/typescript": "^2.2.2",

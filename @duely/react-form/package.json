@@ -18,10 +18,10 @@
     "../util"
   ],
   "dependencies": {
-    "@duely/util": "^0.4.0"
+    "@duely/util": "^0.4.7"
   },
   "devDependencies": {
-    "@duely/build": "^0.4.6",
+    "@duely/build": "^0.4.7",
     "@types/jest": "^26.0.23",
     "@types/react": "^17.0.5",
     "cross-env": "^7.0.3",

@@ -19,8 +19,8 @@
     "watch": "webpack --watch"
   },
   "dependencies": {
-    "@duely/build": "^0.4.6",
-    "@duely/util": "^0.4.0",
+    "@duely/build": "^0.4.7",
+    "@duely/util": "^0.4.7",
     "pg": "^8.6.0"
   },
   "devDependencies": {
