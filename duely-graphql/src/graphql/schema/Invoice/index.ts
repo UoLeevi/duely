@@ -20,7 +20,7 @@ export const Invoice: GqlTypeDefinition<
       id_ext: ID!
       account_country: String
       account_name: String
-      account_tax_ids: [String!]!
+      account_tax_ids: [String!]
       amount_due: Int!
       amount_paid: Int!
       amount_remaining: Int!
@@ -279,55 +279,66 @@ export const Invoice: GqlTypeDefinition<
             const stripe_account = await queryResource('stripe account', stripe_account_id);
             const access = await queryResourceAccess(stripe_account.id);
 
+            if (access !== 'owner') {
+              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+            }
+
             const rollbackObjects: {
               id: string;
               object: StripeDeletableObjectType;
             }[] = [];
 
-            if (access !== 'owner') {
-              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+            try {
+              let application_fee_amount = 0;
+              const agency = await queryResource('agency', stripe_account.agency_id);
+
+              if (items && items.length > 0) {
+                if (!currency) {
+                  currency = agency.default_pricing_currency;
+                }
+
+                if (!currency) {
+                  const account = await stripe.get(stripe_account).accounts.retrieve();
+                  currency = account.default_currency;
+                }
+
+                for (const item of items) {
+                  const invoiceitem = await stripe.get(stripe_account).invoiceItems.create({
+                    customer: args.customer,
+                    currency,
+                    ...item
+                  });
+
+                  application_fee_amount += await calculateTransactionFee(
+                    agency.subscription_plan_id,
+                    invoiceitem.amount,
+                    currency
+                  );
+
+                  rollbackObjects.push(invoiceitem);
+                }
+              }
+
+              const invoice = await stripe
+                .get(stripe_account)
+                .invoices.create({ ...args, application_fee_amount });
+
+              // success
+              return {
+                success: true,
+                invoice,
+                type: 'InvoiceMutationResult'
+              };
+            } catch (error: any) {
+              deleteStripeObjects(stripe.get(stripe_account), rollbackObjects);
+
+              return {
+                // error
+                success: false,
+                message: error.message,
+                type: 'InvoiceMutationResult'
+              };
             }
-
-            let application_fee_amount = 0;
-            const agency = await queryResource('agency', stripe_account.agency_id);
-
-            if (items && items.length > 0) {
-              if (!currency) {
-                currency = agency.default_pricing_currency;
-              }
-
-              if (!currency) {
-                const account = await stripe.get(stripe_account).accounts.retrieve();
-                currency = account.default_currency;
-              }
-
-              for (const item of items) {
-                const invoiceitem = await stripe.get(stripe_account).invoiceItems.create({
-                  customer: args.customer,
-                  currency,
-                  ...item
-                });
-
-                application_fee_amount += await calculateTransactionFee(
-                  agency.subscription_plan_id,
-                  invoiceitem.amount,
-                  currency
-                );
-
-                rollbackObjects.push(invoiceitem);
-              }
-            }
-
-            const invoice = await stripe
-              .get(stripe_account)
-              .invoices.create({ ...args, application_fee_amount });
-
-            // success
-            return {
-              success: true,
-              invoice,
-              type: 'InvoiceMutationResult'
-            };
           });
         } catch (error: any) {
           return {
