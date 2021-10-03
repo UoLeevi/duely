@@ -70,20 +70,20 @@ export const Invoice: GqlTypeDefinition<
       pre_payment_credit_notes_amount: Int!
       # quote: string | Stripe.Quote | null;
       receipt_number: String
-      starting_balance: Int!
+      starting_balance: Int
       statement_descriptor: String
       status: String
       status_transitions: InvoiceStatusTransitions
       # subscription: string | Stripe.Subscription | null;
       subscription_proration_date: DateTime
       subtotal: Int!
-      tax: Int!
+      tax: Int
       # threshold_reason?: Invoice.ThresholdReason;
       total: Int!
       # total_discount_amounts: Array<Invoice.TotalDiscountAmount> | null;
       # total_tax_amounts: Array<Invoice.TotalTaxAmount>;
       # transfer_data: Invoice.TransferData | null;
-      webhooks_delivered_at: DateTime!
+      webhooks_delivered_at: DateTime
     }
 
     type InvoiceAutomaticTax {
