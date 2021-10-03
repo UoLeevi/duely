@@ -279,49 +279,48 @@ export const Invoice: GqlTypeDefinition<
             const stripe_account = await queryResource('stripe account', stripe_account_id);
             const access = await queryResourceAccess(stripe_account.id);
 
+            const rollbackObjects: {
+              id: string;
+              object: StripeDeletableObjectType;
+            }[] = [];
+
             if (access !== 'owner') {
               throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
             }
 
-            const invoice = await stripe.get(stripe_account).invoices.create(args);
+            let application_fee_amount = 0;
+            const agency = await queryResource('agency', stripe_account.agency_id);
 
             if (items && items.length > 0) {
-              const rollbackObjects: {
-                id: string;
-                object: StripeDeletableObjectType;
-              }[] = [invoice];
+              if (!currency) {
+                currency = agency.default_pricing_currency;
+              }
 
-              try {
-                if (!currency) {
-                  const agency = await queryResource('agency', stripe_account.agency_id);
-                  currency = agency.default_pricing_currency;
-                }
+              if (!currency) {
+                const account = await stripe.get(stripe_account).accounts.retrieve();
+                currency = account.default_currency;
+              }
 
-                if (!currency) {
-                  const account = await stripe.get(stripe_account).accounts.retrieve();
-                  currency = account.default_currency;
-                }
+              for (const item of items) {
+                const invoiceitem = await stripe.get(stripe_account).invoiceItems.create({
+                  customer: args.customer,
+                  currency,
+                  ...item
+                });
 
-                for (const item of items) {
-                  const invoiceitem = await stripe.get(stripe_account).invoiceItems.create({
-                    invoice: invoice.id,
-                    customer: args.customer,
-                    currency,
-                    ...item
-                  });
+                application_fee_amount += await calculateTransactionFee(
+                  agency.subscription_plan_id,
+                  invoiceitem.amount,
+                  currency
+                );
 
-                  rollbackObjects.push(invoiceitem);
-                }
-              } catch (error: any) {
-                await deleteStripeObjects(stripe.get(stripe_account), rollbackObjects);
-                return {
-                  // error
-                  success: false,
-                  message: error.message,
-                  type: 'InvoiceMutationResult'
-                };
+                rollbackObjects.push(invoiceitem);
               }
             }
+
+            const invoice = await stripe
+              .get(stripe_account)
+              .invoices.create({ ...args, application_fee_amount });
 
             // success
             return {
