@@ -24,7 +24,7 @@ export const Invoice: GqlTypeDefinition<
       amount_due: Int!
       amount_paid: Int!
       amount_remaining: Int!
-      application_fee_amount: Int!
+      application_fee_amount: Int
       attempt_count: Int!
       attempted: Boolean!
       auto_advance: Boolean
@@ -50,7 +50,7 @@ export const Invoice: GqlTypeDefinition<
       discount: Discount
       discounts: [Discount!]
       due_date: DateTime
-      ending_balance: Int!
+      ending_balance: Int
       footer: String
       hosted_invoice_url: String
       invoice_pdf: String
