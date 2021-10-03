@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@duely/build": "^0.4.7",
-    "@duely/util": "^0.4.7",
+    "@duely/util": "^0.4.9",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.9",
     "@types/node": "^14.14.37",

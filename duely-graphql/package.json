@@ -30,7 +30,7 @@
     "@duely/db": "^0.4.23",
     "@duely/email": "^0.4.9",
     "@duely/stripe": "^0.4.10",
-    "@duely/util": "^0.4.7",
+    "@duely/util": "^0.4.9",
     "@graphql-tools/schema": "^7.1.3",
     "axios": "^0.21.1",
     "cors": "^2.8.5",

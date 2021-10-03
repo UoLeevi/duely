@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@duely/build": "^0.4.7",
-    "@duely/util": "^0.4.7",
+    "@duely/util": "^0.4.9",
     "stripe": "^8.167.0"
   },
   "devDependencies": {
