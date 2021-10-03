@@ -35,7 +35,13 @@ const shortMonthNames = [
   'Dec'
 ];
 
-export function formatDate(d: Date) {
+export function formatDate(d: Date | number) {
+  if (typeof d === 'number') {
+    if (d === 0) throw Error('Invalid timestamp');
+    if (d < 1e12) d *= 1000;
+    d = new Date(d);
+  }
+
   return `${d.getUTCDate()} ${
     shortMonthNames[d.getUTCMonth()]
   } ${d.getUTCFullYear()} ${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;

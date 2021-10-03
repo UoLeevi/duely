@@ -26,7 +26,7 @@ type CreateInvoiceFormFields = {
   customer_email_address: string;
   customer_name: string;
   days_until_due: string;
-  message?: string;
+  description?: string;
   items: {
     description: string;
     unit_amount: number;
@@ -46,7 +46,6 @@ export function CreateInvoiceForm() {
   } = useFormMessages();
   const [createCustomer, stateCustomer] = useMutation(create_customer_M);
   const [createInvoice, stateInvoice] = useMutation(create_invoice_M);
-  const [createInvoiceItem, stateInvoiceItem] = useMutation(create_invoiceitem_M);
   const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
     agency_stripe_account_Q,
@@ -140,34 +139,25 @@ export function CreateInvoiceForm() {
 
     console.log(value);
 
+    const items = value.items.map(item => ({
+      unit_amount: numberToMinorCurrencyAmount(+item.unit_amount, currency as Currency),
+      quantity: +item.quantity,
+      description: item.description
+    }));
+
     const res_invoice = await createInvoice({
       stripe_account_id: stripe_account!.id,
       customer: customer!.default_stripe_customer.id,
       auto_advance: false,
       collection_method: 'send_invoice',
-      days_until_due: +value.days_until_due
+      days_until_due: +value.days_until_due,
+      currency,
+      items
     });
 
     if (!res_invoice?.success) {
       setErrorMessage('Error while creating invoice:' + res_invoice?.message);
       return;
-    }
-
-    for (const item of value.items) {
-      const res_item = await createInvoiceItem({
-        stripe_account_id: stripe_account!.id,
-        customer: customer!.default_stripe_customer.id,
-        invoice: res_invoice.invoice!.id,
-        unit_amount: numberToMinorCurrencyAmount(+item.unit_amount, currency as Currency),
-        quantity: +item.quantity,
-        description: item.description,
-        currency
-      });
-
-      if (!res_item?.success) {
-        setErrorMessage('Error while creating invoice item:' + res_item?.message);
-        return;
-      }
     }
 
     setSuccessMessage(`Invoice created successfully`);
@@ -333,7 +323,7 @@ export function CreateInvoiceForm() {
           </div>
         </div>
 
-        <Form.Field label="Message to customer" name="message" type="textarea" rows={6} />
+        <Form.Field label="Message to customer" name="description" type="textarea" rows={6} />
 
         <div className="flex flex-row items-center pt-3 space-x-8">
           <Form.Button>Create invoice</Form.Button>

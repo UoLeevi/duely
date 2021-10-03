@@ -11,7 +11,7 @@ import {
   update_credential_M
 } from '@duely/client';
 import { useForm, Form, useFormMessages, DynamicFormFields } from '@duely/react';
-import { Awaited, pick } from '@duely/util';
+import { pick } from '@duely/util';
 import { useMemo } from 'react';
 
 type SettingsIntegrationsSettingsFormFields = { integration_type_name: string } & Record<

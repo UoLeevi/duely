@@ -15,6 +15,8 @@ export default function DashboardPaymentsInvoices() {
 
   type TInvoice = NonNullable<typeof invoices> extends readonly (infer T)[] ? T : never;
 
+  console.log(invoices)
+
   return (
     <>
       <DashboardSection
@@ -51,7 +53,7 @@ export default function DashboardPaymentsInvoices() {
                 ) : (
                   <div className="flex flex-col space-y-2">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {invoice.number}
+                      {invoice.number ?? '(draft)'}
                     </span>
                   </div>
                 )
