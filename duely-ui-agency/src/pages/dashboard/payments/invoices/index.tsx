@@ -1,6 +1,6 @@
 import { Card, DropMenu, icons, LinkButton } from '@duely/react';
 import { DashboardSection } from '../../components';
-import { Currency, formatDate } from '@duely/util';
+import { Currency, formatCurrency, formatDate } from '@duely/util';
 import { Util, Table, SkeletonText, ColoredChip } from '@duely/react';
 import { useQuery, agency_stripe_account_invoices_Q, current_agency_Q } from '@duely/client';
 import { ConfirmInvoiceDeletionModal } from './components';
@@ -15,7 +15,7 @@ export default function DashboardPaymentsInvoices() {
 
   type TInvoice = NonNullable<typeof invoices> extends readonly (infer T)[] ? T : never;
 
-  console.log(invoices)
+  console.log(invoices);
 
   return (
     <>
@@ -69,11 +69,11 @@ export default function DashboardPaymentsInvoices() {
                 ) : (
                   <div className="flex flex-col space-y-2">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {formatDate(invoice.status_transitions?.finalized_at ?? invoice.created)}
+                      {formatDate(invoice.status_transitions?.finalized_at ?? invoice.created, 'mmm d, yyyy')}
                     </span>
                     {invoice.due_date && (
                       <span className="text-xs font-medium text-gray-800 dark:text-gray-300">
-                        Due date {formatDate(invoice.due_date)}
+                        Due {formatDate(invoice.due_date, 'mmm d, yyyy')}
                       </span>
                     )}
                   </div>
@@ -95,6 +95,22 @@ export default function DashboardPaymentsInvoices() {
                     </span>
                     <span className="text-xs font-medium text-gray-800 dark:text-gray-300">
                       {invoice.customer_email}
+                    </span>
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Amount" span={{ md: 2 }}>
+              {(invoice: TInvoice | null) =>
+                !invoice ? (
+                  <div className="flex flex-col space-y-2">
+                    <SkeletonText className="text-sm" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {formatCurrency(invoice.amount_due, invoice.currency as Currency)}
                     </span>
                   </div>
                 )

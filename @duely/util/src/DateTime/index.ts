@@ -35,14 +35,34 @@ const shortMonthNames = [
   'Dec'
 ];
 
-export function formatDate(d: Date | number) {
-  if (typeof d === 'number') {
-    if (d === 0) throw Error('Invalid timestamp');
-    if (d < 1e12) d *= 1000;
-    d = new Date(d);
+type DateFormat = 'mmm d, yyyy hh:nn UTC' | 'mmm d, yyyy';
+
+export function formatDate(date: Date | number, format?: DateFormat) {
+  if (typeof date === 'number') {
+    if (date === 0) throw Error('Invalid timestamp');
+    if (date < 1e12) date *= 1000;
+    date = new Date(date);
   }
 
-  return `${d.getUTCDate()} ${
-    shortMonthNames[d.getUTCMonth()]
-  } ${d.getUTCFullYear()} ${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`;
+  const d = date.getUTCDate();
+  const dd = String(d).padStart(2, '0');
+  const m = date.getUTCMonth();
+  const mm = String(m).padStart(2, '0');
+  const mmm = shortMonthNames[m];
+  const y = date.getUTCFullYear();
+  const yyyy = String(y);
+  const h = date.getUTCHours();
+  const hh = String(h).padStart(2, '0');
+  const n = date.getUTCMinutes();
+  const nn = String(n).padStart(2, '0');
+
+  format ??= 'mmm d, yyyy hh:nn UTC';
+
+  switch (format) {
+    case 'mmm d, yyyy hh:nn UTC':
+      return `${mmm} ${d}, ${yyyy} ${hh}:${nn} UTC`;
+
+    case 'mmm d, yyyy':
+      return `${mmm} ${d}, ${yyyy}`;
+  }
 }
