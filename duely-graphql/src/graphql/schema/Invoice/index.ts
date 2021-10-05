@@ -153,6 +153,9 @@ export const Invoice: GqlTypeDefinition<
         default_source: ID
         due_date: Int
       ): InvoiceMutationResult!
+      finalize_invoice(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
+      void_invoice(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
+      mark_invoice_uncollectible(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
       delete_invoice(stripe_account_id: ID!, invoice_id: ID!): InvoiceMutationResult!
     }
 
@@ -363,6 +366,99 @@ export const Invoice: GqlTypeDefinition<
             }
 
             const invoice = await stripe.get(stripe_account).invoices.update(invoice_id, args);
+
+            // success
+            return {
+              success: true,
+              invoice,
+              type: 'InvoiceMutationResult'
+            };
+          });
+        } catch (error: any) {
+          return {
+            // error
+            success: false,
+            message: error.message,
+            type: 'InvoiceMutationResult'
+          };
+        }
+      },
+      async finalize_invoice(obj, { stripe_account_id, invoice_id }, context, info) {
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+
+        try {
+          return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
+            const stripe_account = await queryResource('stripe account', stripe_account_id);
+            const access = await queryResourceAccess(stripe_account.id);
+
+            if (access !== 'owner') {
+              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+            }
+
+            const invoice = await stripe.get(stripe_account).invoices.finalizeInvoice(invoice_id);
+
+            // success
+            return {
+              success: true,
+              invoice,
+              type: 'InvoiceMutationResult'
+            };
+          });
+        } catch (error: any) {
+          return {
+            // error
+            success: false,
+            message: error.message,
+            type: 'InvoiceMutationResult'
+          };
+        }
+      },
+      async void_invoice(obj, { stripe_account_id, invoice_id }, context, info) {
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+
+        try {
+          return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
+            const stripe_account = await queryResource('stripe account', stripe_account_id);
+            const access = await queryResourceAccess(stripe_account.id);
+
+            if (access !== 'owner') {
+              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+            }
+
+            const invoice = await stripe.get(stripe_account).invoices.voidInvoice(invoice_id);
+
+            // success
+            return {
+              success: true,
+              invoice,
+              type: 'InvoiceMutationResult'
+            };
+          });
+        } catch (error: any) {
+          return {
+            // error
+            success: false,
+            message: error.message,
+            type: 'InvoiceMutationResult'
+          };
+        }
+      },
+      async mark_invoice_uncollectible(obj, { stripe_account_id, invoice_id }, context, info) {
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+
+        try {
+          return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
+            const stripe_account = await queryResource('stripe account', stripe_account_id);
+            const access = await queryResourceAccess(stripe_account.id);
+
+            if (access !== 'owner') {
+              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+            }
+
+            const invoice = await stripe.get(stripe_account).invoices.markUncollectible(invoice_id);
 
             // success
             return {
