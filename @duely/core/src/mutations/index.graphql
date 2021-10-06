@@ -404,6 +404,36 @@ mutation DeleteInvoice($stripe_account_id: ID!, $invoice_id: ID!) {
   }
 }
 
+mutation VoidInvoice($stripe_account_id: ID!, $invoice_id: ID!) {
+  void_invoice(stripe_account_id: $stripe_account_id, invoice_id: $invoice_id) {
+    success
+    message
+    invoice {
+      id
+    }
+  }
+}
+
+mutation FinalizeInvoice($stripe_account_id: ID!, $invoice_id: ID!) {
+  finalize_invoice(stripe_account_id: $stripe_account_id, invoice_id: $invoice_id) {
+    success
+    message
+    invoice {
+      id
+    }
+  }
+}
+
+mutation MarkInvoiceUncollectible($stripe_account_id: ID!, $invoice_id: ID!) {
+  mark_invoice_uncollectible(stripe_account_id: $stripe_account_id, invoice_id: $invoice_id) {
+    success
+    message
+    invoice {
+      id
+    }
+  }
+}
+
 mutation CreateInvoiceItem(
   $stripe_account_id: ID!
   $customer: ID!

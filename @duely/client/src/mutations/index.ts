@@ -21,8 +21,10 @@ import {
   DeleteInvoiceItemDocument,
   DeletePageBlockDocument,
   DeleteProductDocument,
+  FinalizeInvoiceDocument,
   LogInDocument,
   LogOutDocument,
+  MarkInvoiceUncollectibleDocument,
   Page_BlockFragmentDoc,
   ProductFragmentDoc,
   StartPasswordResetDocument,
@@ -44,7 +46,8 @@ import {
   UpdateProductSettingsDocument,
   UpdateThemeDocument,
   VerifyPasswordResetDocument,
-  VerifySignUpDocument
+  VerifySignUpDocument,
+  VoidInvoiceDocument
 } from '@duely/core';
 import { client } from '../apollo/client';
 import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-document-node/core';
@@ -329,6 +332,24 @@ export const delete_invoice_M = {
 
     cache.gc();
   }
+};
+
+const void_invoice_R = (d: ResultOf<typeof VoidInvoiceDocument>) => d?.void_invoice;
+export const void_invoice_M = {
+  mutation: VoidInvoiceDocument,
+  result: void_invoice_R
+};
+
+const finalize_invoice_R = (d: ResultOf<typeof FinalizeInvoiceDocument>) => d?.finalize_invoice;
+export const finalize_invoice_M = {
+  mutation: FinalizeInvoiceDocument,
+  result: finalize_invoice_R
+};
+
+const mark_invoice_uncollectible_R = (d: ResultOf<typeof MarkInvoiceUncollectibleDocument>) => d?.mark_invoice_uncollectible;
+export const mark_invoice_uncollectible_M = {
+  mutation: FinalizeInvoiceDocument,
+  result: mark_invoice_uncollectible_R
 };
 
 const create_invoiceitem_R = (d: ResultOf<typeof CreateInvoiceItemDocument>) => d?.create_invoiceitem;
