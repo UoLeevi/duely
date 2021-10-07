@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect } from 'react';
-import { useQuery, useMutation, invoice_Q } from '@duely/client';
+import {
+  useQuery,
+  useMutation,
+  invoice_Q,
+  delete_invoice_M,
+  current_agency_Q,
+  agency_stripe_account_Q
+} from '@duely/client';
 import { ConfirmationModal, useModal, usePrevious } from '@duely/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import produce from 'immer';
@@ -10,6 +17,14 @@ export function ConfirmInvoiceDeletionModal() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   let invoice_id = searchParams.get('delete_invoice');
+
+  const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
+  const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
+    agency_stripe_account_Q,
+    { agency_id: agency!.id },
+    { skip: !agency }
+  );
+
   const show = invoice_id != null;
   const prev = usePrevious(invoice_id);
   invoice_id = invoice_id ?? prev;
@@ -23,12 +38,12 @@ export function ConfirmInvoiceDeletionModal() {
     }
   }, [show, modal]);
 
-  // const { data: invoice, loading: loadingInvoice } = useQuery(
-  //   invoice_Q,
-  //   { invoice_id: invoice_id! },
-  //   { skip: !invoice_id }
-  // );
-  // const [deleteInvoice] = useMutation(delete_invoice_M);
+  const { data: invoice, loading: loadingInvoice } = useQuery(
+    invoice_Q,
+    { stripe_account_id: stripe_account!.id, invoice_id: invoice_id! },
+    { skip: !invoice_id || !stripe_account }
+  );
+  const [deleteInvoice] = useMutation(delete_invoice_M);
 
   const close = useCallback(() => {
     const searchParams = new URLSearchParams(history.location.search);
@@ -44,8 +59,11 @@ export function ConfirmInvoiceDeletionModal() {
 
   async function confirmDeletion(e: React.MouseEvent) {
     e.preventDefault();
-    // const res = await deleteInvoice({ invoice_id: invoice_id! });
-    // if (res?.success) close();
+    const res = await deleteInvoice({
+      stripe_account_id: stripe_account!.id,
+      invoice_id: invoice_id!
+    });
+    if (res?.success) close();
   }
 
   return (
@@ -75,9 +93,7 @@ export function ConfirmInvoiceDeletionModal() {
       // loading={loadingInvoice}
     >
       <p className="text-sm text-gray-600">
-        Are you sure you want to delete invoice{' '}
-        {/* <span className="font-semibold">{invoice?.number}</span>? The */}
-        invoice will be permanently removed. This action cannot be undone.
+        Are you sure you want to delete the draft invoice? This action cannot be undone.
       </p>
     </ConfirmationModal>
   );
