@@ -15,10 +15,11 @@ import {
   current_agency_Q,
   agency_stripe_account_Q,
   invoice_Q,
-  update_invoice_M
+  update_invoice_M,
+  agency_stripe_account_invoiceitems_Q
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
-import { pick, diff } from '@duely/util';
+import { pick, diff, hasOwnProperty, ElementType } from '@duely/util';
 type InvoiceProps = {
   invoice_id: string;
 };
@@ -47,6 +48,11 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
     invoice_Q,
     { stripe_account_id: stripe_account?.id!, invoice_id },
     { skip: !stripe_account }
+  );
+  const { data: invoiceitems, loading: invoiceitemsLoading } = useQuery(
+    agency_stripe_account_invoiceitems_Q,
+    { agency_id: agency?.id!, customer_id: invoice?.customer?.id!, invoice: invoice_id },
+    { skip: !agency || !invoice }
   );
 
   const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency;
@@ -78,7 +84,11 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
       return;
     }
 
-    const res = await updateInvoice({ stripe_account_id: stripe_account?.id!, invoice_id, ...update });
+    const res = await updateInvoice({
+      stripe_account_id: stripe_account?.id!,
+      invoice_id,
+      ...update
+    });
 
     if (res?.success) {
       setSuccessMessage('Saved');
@@ -90,6 +100,9 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
 
   const { fields, addItem, removeItem } = form.useFieldArray('items');
 
+  const items = [...(invoiceitems ?? []), ...fields];
+  type InvoiceItem = ElementType<NonNullable<typeof invoiceitems>>;
+
   return (
     <>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
@@ -98,18 +111,20 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
           <div className="flex flex-col -m-2 sm:flex-row">
             <div className="flex-1 p-2">
               <Form.Field
+                defaultValue={invoice?.customer_email}
                 label="Email address"
                 className="max-w-xl"
-                name="invoice_email_address"
+                name="customer_email_address"
                 readOnly
               />
             </div>
 
             <div className="flex-1 p-2">
               <Form.Field
+                defaultValue={invoice?.customer_name}
                 label="Name"
                 className="max-w-xl"
-                name="invoice_name"
+                name="customer_name"
                 readOnly
               />
             </div>
@@ -117,11 +132,11 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
         </div>
 
         <Form.Field
-          label="Days until due"
+          label="Due Date"
           className="w-24"
-          name="days_until_due"
-          suffix="days"
-          defaultValue="30"
+          name="due_date"
+          type="date"
+          defaultValue={invoice?.due_date}
           registerOptions={{
             required: true,
             rules: [ValidationRules.isPositiveInteger],
@@ -132,9 +147,12 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
         <div className="pb-2">
           <Form.Label>Items</Form.Label>
           <div className="flex flex-col pb-3 border-b">
-            <Table items={fields} keyField="key">
+            <Table
+              items={items}
+              keyField={(item) => (hasOwnProperty(item, 'id') ? item.id : item.key)}
+            >
               <Table.Column header="Description" span={6}>
-                {(field: FieldArrayItem | null, i) => {
+                {(field: InvoiceItem | FieldArrayItem | null, i) => {
                   if (!field) return null;
                   return (
                     <Form.Field
@@ -148,7 +166,7 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
               </Table.Column>
 
               <Table.Column header="Unit amount" span={3}>
-                {(field: FieldArrayItem | null, i) => {
+                {(field: InvoiceItem | FieldArrayItem | null, i) => {
                   if (!field) return null;
                   return (
                     <Form.Field
@@ -167,7 +185,7 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
               </Table.Column>
 
               <Table.Column header="Quantity" span={3}>
-                {(field: FieldArrayItem | null, i) => {
+                {(field: InvoiceItem | FieldArrayItem | null, i) => {
                   if (!field) return null;
                   return (
                     <Form.Field
@@ -187,7 +205,7 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
               </Table.Column>
 
               <Table.Column header="" span={2}>
-                {(field: FieldArrayItem | null, i) => {
+                {(field: InvoiceItem | FieldArrayItem | null, i) => {
                   if (!field) return null;
                   return (
                     <Button

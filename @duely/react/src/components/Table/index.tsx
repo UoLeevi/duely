@@ -1,5 +1,5 @@
 import React, { Fragment, Key } from 'react';
-import { createClassName, hasProperty } from '@duely/util';
+import { createClassName, hasProperty, isFunction } from '@duely/util';
 import { useBreakpoints } from '../../hooks';
 import { UsePaginationReturn } from './usePagination';
 import { PaginationControls } from '..';
@@ -23,7 +23,7 @@ type TableProps<TItem extends Record<TKeyField, Key>, TKeyField extends keyof TI
   children:
     | React.ReactElement<ColumnProps<TItem>, typeof Column>
     | React.ReactElement<ColumnProps<TItem>, typeof Column>[];
-  keyField?: TKeyField;
+  keyField?: TKeyField | ((item: TItem) => string);
   dense?: boolean;
   wrap?: number | Partial<Record<keyof ReturnType<typeof useBreakpoints> | 'xs', number>>;
   loading?: boolean;
@@ -221,7 +221,9 @@ function TableRoot<TItem extends Record<TKeyField, Key>, TKeyField extends keyof
     rows = items.map((item, i) => {
       return (
         <TableRow
-          key={keyField ? item[keyField] : i}
+          key={
+            typeof keyField === 'function' ? keyField(item) : keyField != null ? item[keyField] : i
+          }
           item={item}
           row={i}
           columns={columns}
