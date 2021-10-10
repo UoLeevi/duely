@@ -27,10 +27,19 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
     isDirty: boolean;
     isSubmitting: boolean;
   };
-  useFieldArray<TName extends string & keyof TFormFields>(
-    name: TName
+  useFieldArray<
+    TName extends string & keyof TFormFields,
+    TItem,
+    TKeyField extends string & keyof TItem
+  >(
+    name: TName,
+    bind?: {
+      keyField: TKeyField | ((item: TItem) => string);
+      items: TItem[];
+      loading?: boolean;
+    }
   ): {
-    fields: FieldArrayItem[];
+    fields: FieldArrayItem<TItem>[];
     addItem: () => void;
     removeItem: (item: number | string) => void;
   };
@@ -61,7 +70,7 @@ export function useForm<TFormFields extends Record<string, any> = Record<string,
       useFormFieldValue: control.useFormFieldValue.bind(control),
       useFormValue: control.useFormValue.bind(control),
       useFormState: control.useFormState.bind(control),
-      useFieldArray: control.useFieldArray.bind(control),
+      useFieldArray: control.useFieldArray.bind(control) as any,
       reset: control.reset.bind(control),
       handleSubmit: control.handleSubmit.bind(control),
       setValue: control.setValue.bind(control),

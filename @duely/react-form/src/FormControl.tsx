@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRerender } from './hooks/useRerender';
 import { FormFieldControl, FormFieldRegisterOptions } from './FormFieldControl';
-import { isString, push, randomKey, remove, removeAt } from '@duely/util';
+import { ElementType, isString, push, randomKey, remove, removeAt } from '@duely/util';
 
-export type FieldArrayItem = {
+export type FieldArrayItem<TItem> = {
   key: string;
+  item: TItem | undefined;
   getName: (name: string) => string;
-}
+};
 
 export class FormControl<TFormFields extends Record<string, any> = Record<string, any>> {
   #isSubmitting = false;
@@ -17,17 +18,13 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
   #stateChangedListeners: (() => void)[] = [];
   #updateCounter = 0;
   #defaultValues: Partial<TFormFields>;
-  #fields: Partial<
-    {
-      [TName in keyof TFormFields]: FormFieldControl<TFormFields[TName]>;
-    }
-  > = {};
+  #fields: Partial<{
+    [TName in keyof TFormFields]: FormFieldControl<TFormFields[TName]>;
+  }> = {};
 
-  #arrayFields: Partial<
-    {
-      [TName in keyof TFormFields]: string[];
-    }
-  > = {};
+  #arrayFields: Partial<{
+    [TName in keyof TFormFields]: string[];
+  }> = {};
 
   constructor(options?: { defaultValues?: Partial<TFormFields> }) {
     this.#defaultValues = options?.defaultValues ?? {};
@@ -209,8 +206,42 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     return this.value;
   }
 
-  useFieldArray<TName extends string & keyof TFormFields>(name: TName) {
-    const [items, setItems] = useState<string[]>([]);
+  useFieldArray<
+    TName extends string & keyof TFormFields,
+    TItem,
+    TKeyField extends string & keyof TItem
+  >(
+    name: TName,
+    bind?: {
+      keyField: TKeyField | ((item: TItem) => string);
+      items: TItem[] | undefined;
+      loading?: boolean;
+    }
+  ) {
+    const bindItems = bind?.items ?? [];
+    const bindKeys: string[] = bindItems.map((item) =>
+      typeof bind!.keyField === 'function'
+        ? bind!.keyField(item)
+        : (item[bind!.keyField] as unknown as string)
+    );
+
+    const bindItemsByKeys: Record<string, TItem> = {};
+
+    for (let i = 0; i < bindItems.length; ++i) {
+      bindItemsByKeys[bindKeys[i]] = bindItems[i];
+    }
+
+    const [items, setItems] = useState<string[]>(bindKeys);
+
+    useEffect(() => {
+      if (bind && !bind.loading) {
+        setItems((items) => [
+          ...bindKeys,
+          ...items.filter((key) => bindItemsByKeys[key] === undefined)
+        ]);
+      }
+    }, [bind?.loading]);
+
     const addItem = useCallback(() => setItems((items) => push(items, randomKey())), [name]);
     const removeItem = useCallback(
       (item: number | string) =>
@@ -233,6 +264,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
         () =>
           items.map((key) => ({
             key,
+            item: bindItemsByKeys[key] as TItem | undefined,
             getName: (name: string) => `${arrayName}[${key}].${name}`
           })),
         [items]

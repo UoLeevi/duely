@@ -98,9 +98,12 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
     }
   }
 
-  const { fields, addItem, removeItem } = form.useFieldArray('items');
+  const { fields, addItem, removeItem } = form.useFieldArray('items', {
+    items: invoiceitems,
+    loading: invoiceitemsLoading,
+    keyField: 'id'
+  });
 
-  const items = [...(invoiceitems ?? []), ...fields];
   type InvoiceItem = ElementType<NonNullable<typeof invoiceitems>>;
 
   return (
@@ -147,12 +150,9 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
         <div className="pb-2">
           <Form.Label>Items</Form.Label>
           <div className="flex flex-col pb-3 border-b">
-            <Table
-              items={items}
-              keyField={(item) => (hasOwnProperty(item, 'id') ? item.id : item.key)}
-            >
+            <Table items={fields} keyField="key">
               <Table.Column header="Description" span={6}>
-                {(field: InvoiceItem | FieldArrayItem | null, i) => {
+                {(field: FieldArrayItem<InvoiceItem> | null, i) => {
                   if (!field) return null;
                   return (
                     <Form.Field
@@ -166,7 +166,7 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
               </Table.Column>
 
               <Table.Column header="Unit amount" span={3}>
-                {(field: InvoiceItem | FieldArrayItem | null, i) => {
+                {(field: FieldArrayItem<InvoiceItem> | null, i) => {
                   if (!field) return null;
                   return (
                     <Form.Field
@@ -185,7 +185,7 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
               </Table.Column>
 
               <Table.Column header="Quantity" span={3}>
-                {(field: InvoiceItem | FieldArrayItem | null, i) => {
+                {(field: FieldArrayItem<InvoiceItem> | null, i) => {
                   if (!field) return null;
                   return (
                     <Form.Field
@@ -205,7 +205,7 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
               </Table.Column>
 
               <Table.Column header="" span={2}>
-                {(field: InvoiceItem | FieldArrayItem | null, i) => {
+                {(field: FieldArrayItem<InvoiceItem> | null, i) => {
                   if (!field) return null;
                   return (
                     <Button
