@@ -35,7 +35,7 @@ const shortMonthNames = [
   'Dec'
 ];
 
-type DateFormat = 'mmm d, yyyy hh:nn UTC' | 'mmm d, yyyy';
+type DateFormat = 'mmm d, yyyy hh:nn UTC' | 'mmm d, yyyy' | 'yyyy-mm-dd';
 
 export function formatDate(date: Date | number, format?: DateFormat) {
   if (typeof date === 'number') {
@@ -64,5 +64,8 @@ export function formatDate(date: Date | number, format?: DateFormat) {
 
     case 'mmm d, yyyy':
       return `${mmm} ${d}, ${yyyy}`;
+
+    case 'yyyy-mm-dd':
+      return `${yyyy}-${mm}-${dd}`;
   }
 }

@@ -3,7 +3,7 @@ import { useRerender } from './hooks/useRerender';
 import { FormFieldControl, FormFieldRegisterOptions } from './FormFieldControl';
 import { ElementType, isString, push, randomKey, remove, removeAt } from '@duely/util';
 
-export type FieldArrayItem<TItem> = {
+export type FieldArrayItem<TItem = undefined> = {
   key: string;
   item: TItem | undefined;
   getName: (name: string) => string;

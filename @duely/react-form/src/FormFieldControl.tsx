@@ -1,3 +1,4 @@
+import { formatDate } from '@duely/util';
 import { FormControl } from './FormControl';
 
 const globalOptions = {
@@ -63,6 +64,13 @@ export const formFieldInfo: Record<
   date: {
     props: {
       type: 'date'
+    },
+    getElementValue: (element: HTMLInputElement) => element.value,
+    setElementValue: (element: HTMLInputElement, value: Date | undefined) => {
+      if (!value) value = undefined;
+      if (element.value as any === value) return false;
+      element.value = formatDate(value as any, 'yyyy-mm-dd');
+      return true;
     }
   },
   'datetime-local': {

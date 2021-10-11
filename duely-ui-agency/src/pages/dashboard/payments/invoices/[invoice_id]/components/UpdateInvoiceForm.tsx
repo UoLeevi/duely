@@ -19,7 +19,15 @@ import {
   agency_stripe_account_invoiceitems_Q
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
-import { pick, diff, hasOwnProperty, ElementType } from '@duely/util';
+import {
+  pick,
+  diff,
+  hasOwnProperty,
+  ElementType,
+  minorCurrencyAmountToNumber,
+  Currency,
+  timestampToDate
+} from '@duely/util';
 type InvoiceProps = {
   invoice_id: string;
 };
@@ -51,7 +59,7 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
   );
   const { data: invoiceitems, loading: invoiceitemsLoading } = useQuery(
     agency_stripe_account_invoiceitems_Q,
-    { agency_id: agency?.id!, customer_id: invoice?.customer?.id!, invoice: invoice_id },
+    { agency_id: agency?.id!, invoice: invoice_id },
     { skip: !agency || !invoice }
   );
 
@@ -136,14 +144,12 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
 
         <Form.Field
           label="Due Date"
-          className="w-24"
+          className="w-48"
           name="due_date"
           type="date"
           defaultValue={invoice?.due_date}
           registerOptions={{
-            required: true,
-            rules: [ValidationRules.isPositiveInteger],
-            inputFilter: InputFilters.integer
+            required: true
           }}
         />
 
@@ -156,6 +162,7 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
                   if (!field) return null;
                   return (
                     <Form.Field
+                      defaultValue={field.item?.description}
                       type="text"
                       name={field.getName('description')}
                       placeholder={`Item ${i + 1}`}
@@ -170,6 +177,10 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
                   if (!field) return null;
                   return (
                     <Form.Field
+                      defaultValue={minorCurrencyAmountToNumber(
+                        field.item?.unit_amount ?? 0,
+                        currency as Currency
+                      )}
                       name={field.getName('unit_amount')}
                       type="text"
                       inputMode="numeric"
@@ -193,7 +204,7 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
                       type="text"
                       inputMode="numeric"
                       prefix={<span className="pr-1">x</span>}
-                      defaultValue={1}
+                      defaultValue={field.item?.quantity}
                       registerOptions={{
                         required: true,
                         rules: [ValidationRules.isPositiveNumber],

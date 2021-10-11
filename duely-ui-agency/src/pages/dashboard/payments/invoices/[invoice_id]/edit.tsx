@@ -19,7 +19,7 @@ export default function DashboardPaymentsEditInvoice() {
   );
   return (
     <>
-      <DashboardSection title={`Invoice ${invoice?.number}`} loading={invoiceLoading}>
+      <DashboardSection title={`Invoice ${invoice?.status === 'draft' ? '(draft)' : invoice?.number}`} loading={invoiceLoading}>
         <Card>
           <Form.Section
             title="Basic information"
