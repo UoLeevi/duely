@@ -82,28 +82,30 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
   };
 
   async function onSubmit({ ...data }: UpdateInvoiceFormFields) {
-    const update = {
+    const updateInvoiceArgs = {
       ...diff(pick(data, invoice!), invoice!)
     };
 
-    if (Object.keys(update).length === 0) {
+    console.log(updateInvoiceArgs);
+
+    if (Object.keys(updateInvoiceArgs).length === 0) {
       setInfoMessage('No changes to be saved');
       form.reset();
       return;
     }
 
-    const res = await updateInvoice({
-      stripe_account_id: stripe_account?.id!,
-      invoice_id,
-      ...update
-    });
+    // const res = await updateInvoice({
+    //   stripe_account_id: stripe_account?.id!,
+    //   invoice_id,
+    //   ...updateInvoiceArgs
+    // });
 
-    if (res?.success) {
-      setSuccessMessage('Saved');
-      return;
-    } else {
-      setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
-    }
+    // if (res?.success) {
+    //   setSuccessMessage('Saved');
+    //   return;
+    // } else {
+    //   setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
+    // }
   }
 
   const { fields, addItem, removeItem } = form.useFieldArray('items', {
