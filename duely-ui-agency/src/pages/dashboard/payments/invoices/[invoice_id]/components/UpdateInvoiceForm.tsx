@@ -26,7 +26,8 @@ import {
   ElementType,
   minorCurrencyAmountToNumber,
   Currency,
-  timestampToDate
+  timestampToDate,
+  omitUndefined
 } from '@duely/util';
 type InvoiceProps = {
   invoice_id: string;
@@ -82,9 +83,9 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
   };
 
   async function onSubmit({ ...data }: UpdateInvoiceFormFields) {
-    const updateInvoiceArgs = {
+    const updateInvoiceArgs = omitUndefined({
       ...diff(pick(data, invoice!), invoice!)
-    };
+    });
 
     console.log(updateInvoiceArgs);
 

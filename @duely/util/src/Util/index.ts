@@ -128,8 +128,12 @@ export function isPrivateIp(hostname: string) {
   );
 }
 
-export function removeUndefined<T extends object>(obj: T) {
-  return Object.fromEntries(Object.entries(obj).filter((entry) => entry[1] !== undefined));
+export function omitUndefined<T extends object>(
+  obj: T
+): {
+  [K in keyof T]: T[K] extends undefined ? never : T[K];
+} {
+  return Object.fromEntries(Object.entries(obj).filter((entry) => entry[1] !== undefined)) as any;
 }
 
 export function hasOwnProperty<T, TKey extends PropertyKey>(
