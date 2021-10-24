@@ -27,7 +27,9 @@ import {
   minorCurrencyAmountToNumber,
   Currency,
   timestampToDate,
-  omitUndefined
+  omitUndefined,
+  dateToTimestamp,
+  formatDate
 } from '@duely/util';
 type InvoiceProps = {
   invoice_id: string;
@@ -83,9 +85,15 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
   };
 
   async function onSubmit({ ...data }: UpdateInvoiceFormFields) {
+    // TODO: update items
+
     const updateInvoiceArgs = omitUndefined({
       ...diff(pick(data, invoice!), invoice!)
     });
+
+    if (updateInvoiceArgs.due_date) {
+      updateInvoiceArgs.due_date = dateToTimestamp(updateInvoiceArgs.due_date);
+    }
 
     console.log(updateInvoiceArgs);
 
@@ -95,18 +103,18 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
       return;
     }
 
-    // const res = await updateInvoice({
-    //   stripe_account_id: stripe_account?.id!,
-    //   invoice_id,
-    //   ...updateInvoiceArgs
-    // });
+    const res = await updateInvoice({
+      stripe_account_id: stripe_account?.id!,
+      invoice_id,
+      ...updateInvoiceArgs
+    });
 
-    // if (res?.success) {
-    //   setSuccessMessage('Saved');
-    //   return;
-    // } else {
-    //   setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
-    // }
+    if (res?.success) {
+      setSuccessMessage('Saved');
+      return;
+    } else {
+      setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
+    }
   }
 
   const { fields, addItem, removeItem } = form.useFieldArray('items', {

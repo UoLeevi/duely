@@ -38,6 +38,14 @@ const shortMonthNames = [
 type DateFormat = 'mmm d, yyyy hh:nn UTC' | 'mmm d, yyyy' | 'yyyy-mm-dd';
 
 export function formatDate(date: Date | number, format?: DateFormat) {
+  if (date == null) {
+    return date;
+  }
+
+  if (typeof date === 'string') {
+    return date;
+  }
+
   if (typeof date === 'number') {
     if (date === 0) throw Error('Invalid timestamp');
     if (date < 1e12) date *= 1000;
@@ -46,7 +54,7 @@ export function formatDate(date: Date | number, format?: DateFormat) {
 
   const d = date.getUTCDate();
   const dd = String(d).padStart(2, '0');
-  const m = date.getUTCMonth();
+  const m = date.getUTCMonth() + 1;
   const mm = String(m).padStart(2, '0');
   const mmm = shortMonthNames[m];
   const y = date.getUTCFullYear();
@@ -67,5 +75,21 @@ export function formatDate(date: Date | number, format?: DateFormat) {
 
     case 'yyyy-mm-dd':
       return `${yyyy}-${mm}-${dd}`;
+
+    default:
+      const formatString = format as string;
+      let result;
+      result = formatString.replace('yyyy', yyyy);
+      result = formatString.replace('nn', nn);
+      result = formatString.replace('n', n.toString());
+      result = formatString.replace('hh', hh);
+      result = formatString.replace('h', h.toString());
+      result = formatString.replace('dd', dd);
+      result = formatString.replace('d', d.toString());
+      result = formatString.replace('mmm', '§'); // temporary placeholder
+      result = formatString.replace('mm', mm);
+      result = formatString.replace('m', m.toString());
+      result = formatString.replace('§', mmm);
+      return result;
   }
 }

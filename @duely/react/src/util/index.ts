@@ -1,5 +1,5 @@
 import type { ImageInput } from '@duely/core';
-import { isPrivateIp, removeUndefined } from '@duely/util';
+import { isPrivateIp, omitUndefined } from '@duely/util';
 import { DocumentNode, print as printGqlQuery } from 'graphql';
 
 export const Util = {
@@ -32,7 +32,7 @@ function createGraphQLPlaygroundUrl(
       // tab query
       query: query && printGqlQuery(query)
     }
-  ].map(removeUndefined);
+  ].map(omitUndefined);
 
   // create tabsQueryParam
   const tabsQueryParam = new URLSearchParams({
