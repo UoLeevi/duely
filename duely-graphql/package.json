@@ -27,7 +27,7 @@
     "../@duely/util"
   ],
   "dependencies": {
-    "@duely/db": "^0.4.23",
+    "@duely/db": "^0.4.24",
     "@duely/email": "^0.4.9",
     "@duely/stripe": "^0.4.10",
     "@duely/util": "^0.4.10",

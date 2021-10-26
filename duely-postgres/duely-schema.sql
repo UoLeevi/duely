@@ -3304,7 +3304,7 @@ CREATE FUNCTION policy_.agent_can_query_price_(_resource_definition security_.re
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
+    RETURN '{uuid_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, recurring_iterations_, status_, active_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4595,7 +4595,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
+    RETURN '{product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, recurring_iterations_, status_, active_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -6540,6 +6540,7 @@ CREATE TABLE application_.price_ (
     stripe_price_id_ext_live_ text,
     stripe_price_id_ext_test_ text,
     active_ boolean DEFAULT true NOT NULL,
+    recurring_iterations_ integer,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6902,6 +6903,7 @@ CREATE TABLE application__audit_.price_ (
     stripe_price_id_ext_live_ text,
     stripe_price_id_ext_test_ text,
     active_ boolean,
+    recurring_iterations_ integer,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL

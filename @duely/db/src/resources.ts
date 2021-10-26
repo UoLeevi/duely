@@ -261,6 +261,7 @@ export type PriceResource = {
   currency: string;
   recurring_interal?: string | null;
   recurring_inteval_count?: number | null;
+  recurring_iterations?: number | null;
   stripe_price_id_ext_live?: string | null;
   stripe_price_id_ext_test?: string | null;
   status: string;

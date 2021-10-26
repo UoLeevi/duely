@@ -63,6 +63,7 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
         currency: String!
         recurring_interval: String
         recurring_interval_count: Int
+        recurring_iterations: Int
         status: String
       ): PriceMutationResult!
       update_price(price_id: ID!, status: String!): PriceMutationResult!
@@ -99,7 +100,20 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
       ...createDefaultQueryResolversForResource(resource)
     },
     Mutation: {
-      async create_price(obj, args, context, info) {
+      async create_price(
+        obj,
+        args: {
+          product_id: string;
+          unit_amount: number;
+          currency: string;
+          recurring_interval?: 'day' | 'week' | 'month' | 'year';
+          recurring_interval_count?: number;
+          recurring_iterations?: number;
+          status?: string;
+        },
+        context,
+        info
+      ) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
@@ -114,7 +128,7 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
               }
 
               // create price resource
-              let price = await createResource('price', args);
+              let price = await createResource('price', args as any);
 
               const agency = await queryResource('agency', product.agency_id);
 
@@ -122,7 +136,8 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
                 unit_amount,
                 currency,
                 recurring_interval: interval,
-                recurring_interval_count: interval_count
+                recurring_interval_count: interval_count,
+                recurring_iterations: iterations
               } = args;
 
               const stripe_price_args: Stripe.PriceCreateParams = {
