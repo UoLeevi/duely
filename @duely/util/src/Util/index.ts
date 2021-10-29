@@ -90,12 +90,17 @@ export function mimeTypeFromDataUrl(dataUrl: string) {
   return dataUrl.slice(5, dataUrl.indexOf(';'));
 }
 
-export function diff(fromObject: object, omitObject: object) {
+export function diff<T1, T2>(
+  fromObject: T1,
+  omitObject: T2
+): {
+  [K in keyof T1]: K extends keyof T2 ? (T1[K] extends T2[K] ? never : T1[K]) : T1[K];
+} {
   return Object.fromEntries(
     Object.entries(fromObject).filter(
       ([key, value]) => omitObject?.[key as keyof typeof omitObject] !== value
     )
-  );
+  ) as any;
 }
 
 export function get<T, TPath extends string | readonly string[]>(
@@ -134,6 +139,13 @@ export function omitUndefined<T extends object>(
   [K in keyof T]: T[K] extends undefined ? never : T[K];
 } {
   return Object.fromEntries(Object.entries(obj).filter((entry) => entry[1] !== undefined)) as any;
+}
+
+export function createUpdateArgs<T extends Record<string, unknown>>(
+  original: T,
+  changed: Partial<T>
+) {
+  return omitUndefined(diff(pick(changed, original), original));
 }
 
 export function hasOwnProperty<T, TKey extends PropertyKey>(
