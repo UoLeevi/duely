@@ -47,6 +47,7 @@ const sidebarLinks: SidebarProps['links'] = [
   },
   {
     text: 'Products',
+    name: 'products',
     icon: ({ ...props }: React.SVGProps<SVGSVGElement>) => (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -64,7 +65,13 @@ const sidebarLinks: SidebarProps['links'] = [
         />
       </svg>
     ),
-    to: '/dashboard/products'
+    to: '/dashboard/products',
+    items: [
+      {
+        text: 'Coupons',
+        to: '/dashboard/products/coupons'
+      }
+    ]
   },
   {
     text: 'Customers',

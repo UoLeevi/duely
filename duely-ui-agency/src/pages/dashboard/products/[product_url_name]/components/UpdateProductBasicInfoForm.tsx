@@ -7,7 +7,7 @@ import {
   ValidationRules
 } from '@duely/react';
 
-import { pick, diff } from '@duely/util';
+import { createUpdateArgs } from '@duely/util';
 
 type ProductProps = {
   product_id?: string;
@@ -52,12 +52,10 @@ export function UpdateProductBasicInfoForm({ product_id }: ProductProps) {
     useImageInputFromFileList(image_logo_file_list);
 
   async function onSubmit({ image_logo_file_list, ...data }: UpdateProductBasicInfoFormFields) {
-    const update = {
-      ...diff(pick(data, product!), product!)
-    };
+    const update = createUpdateArgs(product!, data);
 
     if (image_logo && image_logo?.data !== current_image_logo?.data) {
-      update.image_logo = image_logo;
+      update.image_logo = image_logo as any;
     }
 
     if (Object.keys(update).length === 0) {

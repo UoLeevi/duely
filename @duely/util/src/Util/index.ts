@@ -90,11 +90,17 @@ export function mimeTypeFromDataUrl(dataUrl: string) {
   return dataUrl.slice(5, dataUrl.indexOf(';'));
 }
 
-export function diff<T1, T2>(
-  fromObject: T1,
-  omitObject: T2
+export function diff<TFrom, TOmit>(
+  fromObject: TFrom,
+  omitObject: TOmit
 ): {
-  [K in keyof T1]: K extends keyof T2 ? (T1[K] extends T2[K] ? never : T1[K]) : T1[K];
+  [K in keyof TFrom]: K extends keyof TOmit
+    ? TFrom[K] extends TOmit[K]
+      ? TOmit[K] extends TFrom[K]
+        ? never
+        : TFrom[K]
+      : TFrom[K]
+    : TFrom[K];
 } {
   return Object.fromEntries(
     Object.entries(fromObject).filter(

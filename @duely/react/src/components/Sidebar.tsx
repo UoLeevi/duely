@@ -153,6 +153,7 @@ type SidebarLinkWithItemsProps = React.DetailedHTMLProps<
 > & {
   text: string;
   name: string;
+  to?: string;
   isToggled: boolean;
   toggle: () => void;
   icon: React.ComponentType<{ className: string }>;
@@ -166,6 +167,7 @@ type SidebarLinkWithItemsProps = React.DetailedHTMLProps<
 function SidebarLinkWithItems({
   text,
   name,
+  to,
   icon,
   items,
   className,
@@ -184,7 +186,7 @@ function SidebarLinkWithItems({
 
   return (
     <div className="flex flex-col">
-      <Link className={className} to={{ hash }} onClick={toggle}>
+      <Link className={className} to={{ pathname: to, hash }} onClick={toggle}>
         <Icon className="text-lg sm:text-xl md:text-2xl h-[1.05em] w-[1.05em]" />
         <span>{text}</span>
 

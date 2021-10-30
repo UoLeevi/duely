@@ -29,7 +29,8 @@ import {
   timestampToDate,
   omitUndefined,
   dateToTimestamp,
-  formatDate
+  formatDate,
+  createUpdateArgs
 } from '@duely/util';
 type InvoiceProps = {
   invoice_id: string;
@@ -87,12 +88,10 @@ export function UpdateInvoiceForm({ invoice_id }: InvoiceProps) {
   async function onSubmit({ ...data }: UpdateInvoiceFormFields) {
     // TODO: update items
 
-    const updateInvoiceArgs = omitUndefined({
-      ...diff(pick(data, invoice!), invoice!)
-    });
+    const updateInvoiceArgs = createUpdateArgs(invoice!, data);
 
     if (updateInvoiceArgs.due_date) {
-      updateInvoiceArgs.due_date = dateToTimestamp(updateInvoiceArgs.due_date);
+      updateInvoiceArgs.due_date = dateToTimestamp(updateInvoiceArgs.due_date) as any;
     }
 
     console.log(updateInvoiceArgs);
