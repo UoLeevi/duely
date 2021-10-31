@@ -13,20 +13,17 @@ import {
   agency_stripe_account_Q,
   customers_Q,
   create_coupon_M,
-  create_customer_M
+  create_customer_M,
+  products_Q
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
-import {
-  Currency,
-  formatCurrency,
-  minorCurrencyAmountToNumber,
-  numberToMinorCurrencyAmount
-} from '@duely/util';
+import { Currency, formatCurrency, numberToMinorCurrencyAmount } from '@duely/util';
 
 type CreateCouponFormFields = {
   name: string;
   coupon_type: 'amount_off' | 'percentage_off';
   amount_or_percentage_off: string;
+  applies_to_product: string;
 };
 
 export function CreateCouponForm() {
@@ -39,7 +36,6 @@ export function CreateCouponForm() {
     errorMessage,
     setErrorMessage
   } = useFormMessages();
-  const [createCustomer, stateCustomer] = useMutation(create_customer_M);
   const [createCoupon, stateCoupon] = useMutation(create_coupon_M);
   const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
@@ -48,7 +44,20 @@ export function CreateCouponForm() {
     { skip: !agency }
   );
 
-  const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency;
+  const { data: products, loading: productsLoading } = useQuery(
+    products_Q,
+    {
+      filter: {
+        agency_id: agency?.id!,
+        active: true
+      }
+    },
+    { skip: !agency }
+  );
+
+  const currency =
+    (agency?.default_pricing_currency as Currency) ??
+    (stripe_account?.default_currency as Currency);
 
   const currencyPrefix: React.ReactChild = <span className="pr-1">{currency?.toUpperCase()}</span>;
   const percengatePrefix: React.ReactChild = <span className="pr-1">%</span>;
@@ -62,23 +71,24 @@ export function CreateCouponForm() {
   const name_field = form.useFormFieldState('name');
   const coupon_type = form.useFormFieldValue('coupon_type');
   const amount_or_percentage_off = form.useFormFieldValue('amount_or_percentage_off');
-  const name = form.useFormFieldValue('name');
 
   useEffect(() => {
+    const number = +(amount_or_percentage_off ?? 0);
     if (!name_field.isDirty) {
       if (coupon_type == 'amount_off') {
-        const amount = +amount_or_percentage_off!;
-        form.setValue('name', `${formatCurrency(amount, currency as Currency)} off`);
+        const minorAmount = numberToMinorCurrencyAmount(number, currency);
+        form.setValue('name', `${formatCurrency(minorAmount, currency)} off`);
       } else {
-        const percentage = +amount_or_percentage_off! / 100;
-        form.setValue('name', `${percentage} % off`);
+        form.setValue('name', `${number} % off`);
       }
     }
-  }, [name_field.isDirty, name]);
+  }, [name_field.isDirty, coupon_type, amount_or_percentage_off]);
 
   async function onSubmit({
     coupon_type,
+    name,
     amount_or_percentage_off,
+    applies_to_product,
     ...value
   }: CreateCouponFormFields) {
     console.log(value);
@@ -87,7 +97,7 @@ export function CreateCouponForm() {
 
     if (coupon_type === 'amount_off') {
       args = {
-        amount_off: minorCurrencyAmountToNumber(+amount_or_percentage_off, currency as Currency)
+        amount_off: numberToMinorCurrencyAmount(+amount_or_percentage_off, currency)
       };
     } else {
       args = {
@@ -99,7 +109,10 @@ export function CreateCouponForm() {
       stripe_account_id: stripe_account!.id,
       currency,
       name,
-      ...args
+      ...args,
+      applies_to: {
+        products: [applies_to_product]
+      }
     });
 
     if (!res_coupon?.success) {
@@ -146,6 +159,7 @@ export function CreateCouponForm() {
     <>
       <h2 className="mb-4 text-xl font-medium">Create a coupon</h2>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
+        <Form.Label className="text-sm">Coupon Type</Form.Label>
         <Form.Field
           className="max-w-2xl"
           name="coupon_type"
@@ -169,6 +183,7 @@ export function CreateCouponForm() {
           label={coupon_type === 'amount_off' ? 'Amount off' : 'Percentage off'}
           name="amount_or_percentage_off"
           type="text"
+          className="w-36"
           inputMode="numeric"
           prefix={coupon_type === 'amount_off' ? currencyPrefix : percengatePrefix}
           registerOptions={{
@@ -180,12 +195,32 @@ export function CreateCouponForm() {
         />
 
         <Form.Field
+          label="Expiry date"
+          className="w-48"
+          name="redeem_by"
+          type="date"
+          hint="Last time at which the coupon can be redeemed."
+        />
+
+        <Form.Field
           label="Coupon name"
-          className="max-w-xl"
+          className="max-w-lg"
           name="name"
           type="text"
           registerOptions={{ required: true }}
         />
+
+        <Form.Field
+          label="Product"
+          className="max-w-lg"
+          name="applies_to_product"
+          type="select"
+          options={(products ?? []).map((p) => ({ element: p.name, value: p.id }))}
+          hint="Product that the coupon applies to."
+          registerOptions={{ required: true }}
+          loading={productsLoading}
+        />
+
         <div className="flex flex-row items-center pt-3 space-x-8">
           <Form.Button>Create coupon</Form.Button>
           <Form.InfoMessage error={errorMessage} info={infoMessage} success={successMessage} />

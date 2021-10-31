@@ -1332,6 +1332,10 @@ body, #root {
   width: 24rem;
 }
 
+.w-36 {
+  width: 9rem;
+}
+
 .min-w-min {
   min-width: -webkit-min-content;
   min-width: -moz-min-content;
