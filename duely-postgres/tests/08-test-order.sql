@@ -54,6 +54,7 @@ BEGIN
   ASSERT _result_1 ?& '{ id, stripe_id_ext, agency_id, livemode }';
 
   _data := '{
+    "id": "prod_123_test",
     "name": "test product",
     "url_name": "test-product",
     "stripe_prod_id_ext_test": "prod_123_test"
@@ -62,6 +63,7 @@ BEGIN
   SELECT * INTO _result_2 FROM operation_.create_resource_('product', _data);
   --RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
   ASSERT _result_2 ?& '{ id, agency_id }';
+  ASSERT _result_2->>'id' = _data->>'id';
 
   _data := '{
     "unit_amount": 123,
