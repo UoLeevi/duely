@@ -644,7 +644,7 @@ CREATE FUNCTION internal_.convert_to_internal_format_(_data jsonb) RETURNS jsonb
     _id_fields AS (
       SELECT k, LEFT(k, length(k) - 2) || 'uuid' f, r.uuid_
       FROM jsonb_object_keys(_data) k
-      LEFT JOIN application_.resource_ r ON r.id_ = _data->>k
+      JOIN application_.resource_ r ON r.id_ = _data->>k
       WHERE k LIKE '%id'
     )
   SELECT jsonb_object_agg(COALESCE(i.f, d.key) || '_', COALESCE(to_jsonb(i.uuid_), d.value)) data_
@@ -1431,7 +1431,7 @@ DECLARE
   _owner_resource_definition security_.resource_definition_;
   _owner_resource_table_name name;
   _uuid uuid;
-  _owner_uuid uuid;
+  _owner_uuid uuid;	
   _select_list text;
   _search jsonb DEFAULT '{}'::jsonb;
   _id_len int := 6;
@@ -1471,16 +1471,22 @@ BEGIN
     USING _record;
   END IF;
 
-  LOOP
-    BEGIN
-      INSERT INTO application_.resource_ (uuid_, search_, owner_uuid_, definition_uuid_, id_)
-      SELECT (_record->>'uuid_')::uuid, _search, _owner_uuid, _resource_definition.uuid_, _resource_definition.id_prefix_ || '_' || substring(replace(_record->>'uuid_', '-', '' ) FOR _id_len)
-      RETURNING * INTO _resource;
-      EXIT;
-    EXCEPTION WHEN unique_violation THEN
-      _id_len := _id_len + 2;
-    END;
-  END LOOP;
+  IF _record ? 'id_' THEN
+    INSERT INTO application_.resource_ (uuid_, search_, owner_uuid_, definition_uuid_, id_)
+    SELECT (_record->>'uuid_')::uuid, _search, _owner_uuid, _resource_definition.uuid_, _record->>'id_'
+    RETURNING * INTO _resource;
+  ELSE
+    LOOP
+        BEGIN
+            INSERT INTO application_.resource_ (uuid_, search_, owner_uuid_, definition_uuid_, id_)
+            SELECT (_record->>'uuid_')::uuid, _search, _owner_uuid, _resource_definition.uuid_, _resource_definition.id_prefix_ || '_' || substring(replace(_record->>'uuid_', '-', '' ) FOR _id_len)
+            RETURNING * INTO _resource;
+            EXIT;
+        EXCEPTION WHEN unique_violation THEN
+            _id_len := _id_len + 2;
+        END;
+    END LOOP;
+  END IF;
 
   RETURN _resource;
 END
@@ -3304,7 +3310,7 @@ CREATE FUNCTION policy_.agent_can_query_price_(_resource_definition security_.re
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, recurring_iterations_, status_, active_}'::text[];
+    RETURN '{uuid_, id_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, recurring_iterations_, status_, active_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3323,7 +3329,7 @@ CREATE FUNCTION policy_.agent_can_query_product_(_resource_definition security_.
     AS $$
 BEGIN
   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
-    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, id_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3514,7 +3520,7 @@ BEGIN
       AND status_ = 'live'
       AND active_ = 't'
   ) THEN
-    RETURN '{uuid_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
+    RETURN '{uuid_, id_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -3539,7 +3545,7 @@ BEGIN
       AND status_ = 'live'
       AND active_ = 't'
   ) THEN
-    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, id_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4595,7 +4601,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, recurring_iterations_, status_, active_}'::text[];
+    RETURN '{product_uuid_, id_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, recurring_iterations_, status_, active_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -4617,7 +4623,7 @@ BEGIN
     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
     FROM internal_.query_owner_resource_(_resource_definition, _data)
   ) THEN
-    RETURN '{agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{agency_uuid_, id_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -5259,7 +5265,7 @@ CREATE FUNCTION policy_.serviceaccount_can_query_product_(_resource_definition s
     AS $$
 BEGIN
   IF internal_.check_current_user_is_serviceaccount_() THEN
-    RETURN '{uuid_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
+    RETURN '{uuid_, id_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
   ELSE
     RETURN '{}'::text[];
   END IF;
@@ -6541,6 +6547,7 @@ CREATE TABLE application_.price_ (
     stripe_price_id_ext_test_ text,
     active_ boolean DEFAULT true NOT NULL,
     recurring_iterations_ integer,
+    id_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6567,6 +6574,7 @@ CREATE TABLE application_.product_ (
     stripe_prod_id_ext_live_ text,
     stripe_prod_id_ext_test_ text,
     active_ boolean DEFAULT true NOT NULL,
+    id_ text NOT NULL,
     audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
 );
@@ -6904,6 +6912,7 @@ CREATE TABLE application__audit_.price_ (
     stripe_price_id_ext_test_ text,
     active_ boolean,
     recurring_iterations_ integer,
+    id_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -6931,6 +6940,7 @@ CREATE TABLE application__audit_.product_ (
     stripe_prod_id_ext_live_ text,
     stripe_prod_id_ext_test_ text,
     active_ boolean,
+    id_ text,
     audit_at_ timestamp with time zone,
     audit_session_uuid_ uuid,
     audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
@@ -8514,6 +8524,14 @@ ALTER TABLE ONLY application_.page_block_
 
 
 --
+-- Name: price_ price__id__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.price_
+    ADD CONSTRAINT price__id__key UNIQUE (id_);
+
+
+--
 -- Name: price_ price__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -8535,6 +8553,14 @@ ALTER TABLE ONLY application_.product_
 
 ALTER TABLE ONLY application_.product_
     ADD CONSTRAINT product__agency_uuid__url_name__key UNIQUE (agency_uuid_, url_name_);
+
+
+--
+-- Name: product_ product__id__key; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.product_
+    ADD CONSTRAINT product__id__key UNIQUE (id_);
 
 
 --
@@ -11253,6 +11279,14 @@ ALTER TABLE ONLY application_.page_block_
 
 
 --
+-- Name: price_ price__id__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.price_
+    ADD CONSTRAINT price__id__fkey FOREIGN KEY (id_) REFERENCES application_.resource_(id_) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: price_ price__product_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
 --
 
@@ -11274,6 +11308,14 @@ ALTER TABLE ONLY application_.product_
 
 ALTER TABLE ONLY application_.product_
     ADD CONSTRAINT product__default_price_uuid__fkey FOREIGN KEY (default_price_uuid_) REFERENCES application_.price_(uuid_) ON DELETE SET NULL;
+
+
+--
+-- Name: product_ product__id__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.product_
+    ADD CONSTRAINT product__id__fkey FOREIGN KEY (id_) REFERENCES application_.resource_(id_) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

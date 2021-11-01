@@ -62,9 +62,7 @@ async function main() {
           throw new Error('Line item did not have price associated with it.');
         }
 
-        const price = await queryResource('price', {
-          [`stripe_price_id_ext_${stripe_env}`]: lineItem.price.id
-        });
+        const price = await queryResource('price', lineItem.price.id);
 
         await createResource('order item', {
           order_id: order.id,

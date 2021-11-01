@@ -56,8 +56,7 @@ BEGIN
   _data := '{
     "id": "prod_123_test",
     "name": "test product",
-    "url_name": "test-product",
-    "stripe_prod_id_ext_test": "prod_123_test"
+    "url_name": "test-product"
   }';
   _data := jsonb_set(_data, '{agency_id}', _result_1->'agency_id');
   SELECT * INTO _result_2 FROM operation_.create_resource_('product', _data);
@@ -68,7 +67,6 @@ BEGIN
   _data := '{
     "unit_amount": 123,
     "currency": "eur",
-    "stripe_price_id_ext_test": "price_123_test",
     "id": "price_123_test"
   }';
   _data := jsonb_set(_data, '{product_id}', _result_2->'id');

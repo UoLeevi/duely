@@ -1,4 +1,10 @@
-import { withSession, PriceResource, ProductResource, Resources } from '@duely/db';
+import {
+  withSession,
+  PriceResource,
+  ProductResource,
+  Resources,
+  queryResourceAccess
+} from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource
@@ -34,8 +40,6 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
 
     input PriceFilter {
       product_id: ID
-      stripe_price_id_ext_live: String
-      stripe_price_id_ext_test: String
       type: String
       status: String
       active: Boolean
@@ -127,10 +131,17 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
                 throw Error('Product not found');
               }
 
-              // create price resource
-              let price = await createResource('price', args as any);
-
               const agency = await queryResource('agency', product.agency_id);
+              const stripe_account = await queryResource('stripe account', {
+                livemode: agency.livemode,
+                agency_id: agency.id
+              });
+
+              const access = await queryResourceAccess(context, stripe_account.id);
+
+              if (access !== 'owner') {
+                throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+              }
 
               const {
                 unit_amount,
@@ -141,6 +152,7 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
               } = args;
 
               const stripe_price_args: Stripe.PriceCreateParams = {
+                product: product.id,
                 unit_amount,
                 currency
               };
@@ -152,39 +164,13 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
                 };
               }
 
-              const stripe_price: Record<'test' | 'live', Stripe.Price | undefined> = {
-                test: undefined,
-                live: undefined
-              };
+              // create price object at stripe
+              const stripe_price = await stripe
+                .get(stripe_account)
+                .prices.create(stripe_price_args);
 
-              const stripe_envs = agency.livemode
-                ? (['test', 'live'] as const)
-                : (['test'] as const);
-
-              for (const stripe_env of stripe_envs) {
-                const stripe_account = await queryResource('stripe account', {
-                  agency_id: agency.id,
-                  livemode: stripe_env === 'live'
-                });
-
-                stripe_price_args.product =
-                  product[
-                    `stripe_prod_id_ext_${stripe_env}` as
-                      | 'stripe_prod_id_ext_live'
-                      | 'stripe_prod_id_ext_test'
-                  ] ?? undefined;
-
-                // create price object at stripe
-                stripe_price[stripe_env] = await stripe
-                  .get(stripe_account)
-                  .prices.create(stripe_price_args);
-              }
-
-              // update price resource
-              price = await updateResource('price', price.id, {
-                stripe_price_id_ext_live: stripe_price.live?.id,
-                stripe_price_id_ext_test: stripe_price.test?.id
-              });
+              // create price resource
+              let price = await createResource('price', { id: stripe_price.id, ...(args as any) });
 
               // success
               return {
@@ -247,32 +233,23 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
 
             const product = await queryResource('product', price.product_id);
             const agency = await queryResource('agency', product.agency_id);
+            const stripe_account = await queryResource('stripe account', {
+              livemode: agency.livemode,
+              agency_id: agency.id
+            });
 
-            const stripe_envs = agency.livemode ? (['test', 'live'] as const) : (['test'] as const);
+            const access = await queryResourceAccess(context, stripe_account.id);
 
-            for (const stripe_env of stripe_envs) {
-              const stripe_account = await queryResource('stripe account', {
-                agency_id: agency.id,
-                livemode: stripe_env === 'live'
-              });
+            if (access !== 'owner') {
+              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+            }
 
-              try {
-                // try deactivate price at stripe
-                await stripe
-                  .get(stripe_account)
-                  .prices.update(
-                    price[`stripe_price_id_ext_${stripe_env}` as keyof PriceResource] as string,
-                    { active: false }
-                  );
-              } catch (err: any) {
-                // ignore error
-                console.log(
-                  `Unable to deactivate price ${
-                    price[`stripe_price_id_ext_${stripe_env}` as keyof PriceResource] as string
-                  } at Stripe (${stripe_env})`,
-                  err.message
-                );
-              }
+            try {
+              // try deactivate price at stripe
+              await stripe.get(stripe_account).prices.update(price.id, { active: false });
+            } catch (err: any) {
+              // ignore error
+              console.log(`Unable to deactivate price ${price.id} at Stripe`, err.message);
             }
 
             // success
@@ -367,9 +344,7 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
               payment_method_types: ['card'],
               line_items: [
                 {
-                  price: price[
-                    `stripe_price_id_ext_${stripe_env}` as keyof PriceResource
-                  ] as string,
+                  price: price.id,
                   quantity: 1
                 }
               ],

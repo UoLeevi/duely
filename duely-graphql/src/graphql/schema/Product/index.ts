@@ -1,4 +1,4 @@
-import { withSession, ProductResource, Resources } from '@duely/db';
+import { withSession, ProductResource, Resources, queryResourceAccess } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
@@ -166,6 +166,16 @@ export const Product: GqlTypeDefinition<Resources['product']> = {
             async ({ queryResource, createResource, updateResource }) => {
               const agency = await queryResource('agency', args.agency_id);
               const subdomain = await queryResource('subdomain', agency.subdomain_id);
+              const stripe_account = await queryResource('stripe account', {
+                livemode: agency.livemode,
+                agency_id: agency.id
+              });
+
+              const access = await queryResourceAccess(context, stripe_account.id);
+
+              if (access !== 'owner') {
+                throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+              }
 
               const { status, name, description } = args;
               const stripe_product_args: Stripe.ProductCreateParams = {
@@ -219,35 +229,15 @@ export const Product: GqlTypeDefinition<Resources['product']> = {
                 args.image_hero_id = image.id;
               }
 
+              // create product at stripe
+              const stripe_product = await stripe
+                .get(stripe_account)
+                .products.create(stripe_product_args);
+
+              args.id = stripe_product.id;
+
               // create product resource
-              let product = await createResource('product', args);
-
-              const stripe_envs = agency.livemode
-                ? (['test', 'live'] as const)
-                : (['test'] as const);
-
-              const stripe_product: Record<'test' | 'live', Stripe.Product | undefined> = {
-                test: undefined,
-                live: undefined
-              };
-
-              for (const stripe_env of stripe_envs) {
-                const stripe_account = await queryResource('stripe account', {
-                  livemode: stripe_env === 'live',
-                  agency_id: agency.id
-                });
-
-                // create product at stripe
-                stripe_product[stripe_env] = await stripe
-                  .get(stripe_account)
-                  .products.create(stripe_product_args);
-              }
-
-              // update product resource
-              product = await updateResource('product', product.id, {
-                stripe_prod_id_ext_live: stripe_product.live?.id,
-                stripe_prod_id_ext_test: stripe_product.test?.id
-              });
+              const product = await createResource('product', args);
 
               // success
               return {
@@ -284,6 +274,17 @@ export const Product: GqlTypeDefinition<Resources['product']> = {
               const { agency_id } = await queryResource('product', product_id);
               const agency = await queryResource('agency', agency_id);
               const subdomain = await queryResource('subdomain', agency.subdomain_id);
+              const stripe_account = await queryResource('stripe account', {
+                livemode: agency.livemode,
+                agency_id: agency.id
+              });
+
+              const access = await queryResourceAccess(context, stripe_account.id);
+
+              if (access !== 'owner') {
+                throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+              }
+
               const stripe_product_args: Stripe.ProductUpdateParams = {};
 
               if (image_logo) {
@@ -339,28 +340,8 @@ export const Product: GqlTypeDefinition<Resources['product']> = {
               stripe_product_args.description = description ?? undefined;
               stripe_product_args.active = status === 'live';
 
-              const stripe_envs = agency.livemode
-                ? (['test', 'live'] as const)
-                : (['test'] as const);
-
-              for (const stripe_env of stripe_envs) {
-                const stripe_account = await queryResource('stripe account', {
-                  livemode: stripe_env === 'live',
-                  agency_id
-                });
-
-                // update product at stripe
-                await stripe
-                  .get(stripe_account)
-                  .products.update(
-                    product[
-                      `stripe_prod_id_ext_${stripe_env}` as
-                        | 'stripe_prod_id_ext_live'
-                        | 'stripe_prod_id_ext_test'
-                    ]!,
-                    stripe_product_args
-                  );
-              }
+              // update product at stripe
+              await stripe.get(stripe_account).products.update(product.id, stripe_product_args);
 
               // success
               return {
@@ -397,23 +378,19 @@ export const Product: GqlTypeDefinition<Resources['product']> = {
             }
 
             const agency = await queryResource('agency', product.agency_id);
+            const stripe_account = await queryResource('stripe account', {
+              livemode: agency.livemode,
+              agency_id: agency.id
+            });
 
-            const stripe_envs = agency.livemode ? (['test', 'live'] as const) : (['test'] as const);
+            const access = await queryResourceAccess(context, stripe_account.id);
 
-            for (const stripe_env of stripe_envs) {
-              const stripe_account = await queryResource('stripe account', {
-                livemode: stripe_env === 'live',
-                agency_id: product.agency_id
-              });
-
-              // deactivate product from stripe
-              await stripe
-                .get(stripe_account)
-                .products.update(
-                  product[`stripe_prod_id_ext_${stripe_env}` as keyof ProductResource] as string,
-                  { active: false }
-                );
+            if (access !== 'owner') {
+              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
             }
+
+            // deactivate product from stripe
+            await stripe.get(stripe_account).products.update(product.id, { active: false });
 
             // success
             return {

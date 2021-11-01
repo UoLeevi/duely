@@ -1,6 +1,6 @@
 {
   "name": "@duely/db",
-  "version": "0.4.24",
+  "version": "0.4.25",
   "description": "Client for querying duely-postgres database.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@duely/build": "^0.4.7",
-    "@duely/util": "^0.4.9",
+    "@duely/util": "^0.4.11",
     "pg": "^8.6.0"
   },
   "devDependencies": {

@@ -26,9 +26,9 @@
   ],
   "dependencies": {
     "@duely/core": "^0.4.34",
-    "@duely/db": "^0.4.24",
+    "@duely/db": "^0.4.25",
     "@duely/lambda": "0.4.1",
-    "@duely/util": "^0.4.9",
+    "@duely/util": "^0.4.11",
     "@types/validator": "^13.1.3",
     "axios": "^0.21.1",
     "base64url": "^3.0.1",

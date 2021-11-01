@@ -19,7 +19,7 @@
     "../util"
   ],
   "dependencies": {
-    "@duely/util": "^0.4.9",
+    "@duely/util": "^0.4.11",
     "graphql": "^15.5.0",
     "subscriptions-transport-ws": "^0.9.18"
   },

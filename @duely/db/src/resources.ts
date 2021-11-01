@@ -104,8 +104,6 @@ export type ProductResource = {
   image_hero_id?: ResourceId<'image'> | null;
   default_price_id?: ResourceId<'price'> | null;
   markdown_description_id?: ResourceId<'markdown'> | null;
-  stripe_prod_id_ext_live?: string | null;
-  stripe_prod_id_ext_test?: string | null;
 };
 
 export type MarkdownResource = {
@@ -262,8 +260,6 @@ export type PriceResource = {
   recurring_interal?: string | null;
   recurring_inteval_count?: number | null;
   recurring_iterations?: number | null;
-  stripe_price_id_ext_live?: string | null;
-  stripe_price_id_ext_test?: string | null;
   status: string;
   active: boolean;
 };
