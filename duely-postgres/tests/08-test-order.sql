@@ -66,12 +66,14 @@ BEGIN
   _data := '{
     "unit_amount": 123,
     "currency": "eur",
-    "stripe_price_id_ext_test": "price_123_test"
+    "stripe_price_id_ext_test": "price_123_test",
+    "id": "price_123_test"
   }';
   _data := jsonb_set(_data, '{product_id}', _result_2->'id');
   SELECT * INTO _result_3 FROM operation_.create_resource_('price', _data);
   --RAISE NOTICE E'create_resource_(text, jsonb):\n%', _result_1;
   ASSERT _result_3 ?& '{ id, product_id }';
+  ASSERT _result_3->>'id' = _data->>'id';
 
   _data := '{
   }';
