@@ -935,6 +935,7 @@ export type MutationCreate_PriceArgs = {
   product_id: Scalars['ID'];
   recurring_interval?: Maybe<Scalars['String']>;
   recurring_interval_count?: Maybe<Scalars['Int']>;
+  recurring_iterations?: Maybe<Scalars['Int']>;
   status?: Maybe<Scalars['String']>;
   unit_amount: Scalars['Int'];
 };
@@ -1462,8 +1463,6 @@ export type PriceFilter = {
   active?: Maybe<Scalars['Boolean']>;
   product_id?: Maybe<Scalars['ID']>;
   status?: Maybe<Scalars['String']>;
-  stripe_price_id_ext_live?: Maybe<Scalars['String']>;
-  stripe_price_id_ext_test?: Maybe<Scalars['String']>;
   type?: Maybe<Scalars['String']>;
 };
 
