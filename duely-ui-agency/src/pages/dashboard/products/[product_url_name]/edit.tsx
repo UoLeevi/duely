@@ -9,6 +9,7 @@ import { Card, Form } from '@duely/react';
 import { Link, useParams } from 'react-router-dom';
 import { DashboardSection } from '../../components';
 import { UpdateProductBasicInfoForm } from './components';
+import { CreateProductIntegrationForm } from './components/CreateProductIntegrationForm';
 import { UpdateProductCheckoutSettingsForm } from './components/UpdateProductCheckoutSettingsForm';
 import { UpdateProductIntegrationForm } from './components/UpdateProductIntegrationForm';
 import { UpdateProductPricingForm } from './components/UpdateProductPricingForm';
@@ -76,6 +77,28 @@ export default function DashboardProductsEditProduct() {
             >
               <UpdateProductIntegrationForm product_id={product?.id} />
             </Form.Section>
+          </Card>
+        )}
+
+        {!integration_configLoading && (
+          <Card>
+            {integration_config && (
+              <Form.Section
+                title={`Integration - ${integration_config.name}`}
+                description="Configure settings for integration with external service."
+              >
+                <UpdateProductIntegrationForm product_id={product?.id} />
+              </Form.Section>
+            )}
+
+            {!integration_config && (
+              <Form.Section
+                title={`Integration`}
+                description="Configure settings for integration with external service."
+              >
+                <CreateProductIntegrationForm product_id={product?.id} />
+              </Form.Section>
+            )}
           </Card>
         )}
 
