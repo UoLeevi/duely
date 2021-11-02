@@ -69,17 +69,6 @@ export default function DashboardProductsEditProduct() {
           </Form.Section>
         </Card>
 
-        {integration_config && (
-          <Card>
-            <Form.Section
-              title={`Integration - ${integration_config.name}`}
-              description="Configure settings for integration with external service."
-            >
-              <UpdateProductIntegrationForm product_id={product?.id} />
-            </Form.Section>
-          </Card>
-        )}
-
         {!integration_configLoading && (
           <Card>
             {integration_config && (
