@@ -17,13 +17,19 @@ import {
   products_Q
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
-import { Currency, formatCurrency, numberToMinorCurrencyAmount } from '@duely/util';
+import {
+  Currency,
+  dateToTimestamp,
+  formatCurrency,
+  numberToMinorCurrencyAmount
+} from '@duely/util';
 
 type CreateCouponFormFields = {
   name: string;
-  coupon_type: 'amount_off' | 'percentage_off';
-  amount_or_percentage_off: string;
+  coupon_type: 'amount_off' | 'percent_off';
+  amount_or_percent_off: string;
   applies_to_product: string;
+  redeem_by_date: any;
 };
 
 export function CreateCouponForm() {
@@ -70,10 +76,10 @@ export function CreateCouponForm() {
 
   const name_field = form.useFormFieldState('name');
   const coupon_type = form.useFormFieldValue('coupon_type');
-  const amount_or_percentage_off = form.useFormFieldValue('amount_or_percentage_off');
+  const amount_or_percent_off = form.useFormFieldValue('amount_or_percent_off');
 
   useEffect(() => {
-    const number = +(amount_or_percentage_off ?? 0);
+    const number = +(amount_or_percent_off ?? 0);
     if (!name_field.isDirty) {
       if (coupon_type == 'amount_off') {
         const minorAmount = numberToMinorCurrencyAmount(number, currency);
@@ -82,37 +88,37 @@ export function CreateCouponForm() {
         form.setValue('name', `${number} % off`);
       }
     }
-  }, [name_field.isDirty, coupon_type, amount_or_percentage_off]);
+  }, [name_field.isDirty, coupon_type, amount_or_percent_off]);
 
   async function onSubmit({
     coupon_type,
     name,
-    amount_or_percentage_off,
+    amount_or_percent_off,
     applies_to_product,
-    ...value
+    redeem_by_date,
+    ...rest
   }: CreateCouponFormFields) {
-    console.log(value);
-
-    let args;
+    let args: any = {
+      name,
+      currency,
+      applies_to: {
+        products: [applies_to_product]
+      }
+    };
 
     if (coupon_type === 'amount_off') {
-      args = {
-        amount_off: numberToMinorCurrencyAmount(+amount_or_percentage_off, currency)
-      };
+      args.amount_off = numberToMinorCurrencyAmount(+amount_or_percent_off, currency);
     } else {
-      args = {
-        percentage_off: +amount_or_percentage_off
-      };
+      args.percent_off = +amount_or_percent_off;
+    }
+
+    if (redeem_by_date) {
+      args.redeem_by = dateToTimestamp(redeem_by_date);
     }
 
     const res_coupon = await createCoupon({
       stripe_account_id: stripe_account!.id,
-      currency,
-      name,
-      ...args,
-      applies_to: {
-        products: [applies_to_product]
-      }
+      ...args
     });
 
     if (!res_coupon?.success) {
@@ -171,17 +177,17 @@ export function CreateCouponForm() {
               description: 'Fixed amount discount'
             },
             {
-              value: 'percentage_off',
-              element: 'Percentage off',
-              description: 'Percentage discount'
+              value: 'percent_off',
+              element: 'Percent off',
+              description: 'Percent discount'
             }
           ]}
           registerOptions={{ required: true, defaultValue: 'amount_off' }}
         />
 
         <Form.Field
-          label={coupon_type === 'amount_off' ? 'Amount off' : 'Percentage off'}
-          name="amount_or_percentage_off"
+          label={coupon_type === 'amount_off' ? 'Amount off' : 'Percent off'}
+          name="amount_or_percent_off"
           type="text"
           className="w-36"
           inputMode="numeric"
@@ -197,7 +203,7 @@ export function CreateCouponForm() {
         <Form.Field
           label="Expiry date"
           className="w-48"
-          name="redeem_by"
+          name="redeem_by_date"
           type="date"
           hint="Last time at which the coupon can be redeemed."
         />

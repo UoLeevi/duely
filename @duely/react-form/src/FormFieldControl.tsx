@@ -65,10 +65,11 @@ export const formFieldInfo: Record<
     props: {
       type: 'date'
     },
-    getElementValue: (element: HTMLInputElement) => element.value && new Date(element.value),
+    getElementValue: (element: HTMLInputElement) =>
+      element.value ? new Date(element.value) : null,
     setElementValue: (element: HTMLInputElement, value: Date | undefined) => {
       if (!value) value = undefined;
-      if (element.value as any === value) return false;
+      if ((element.value as any) === value) return false;
       element.value = formatDate(value as any, 'yyyy-mm-dd');
       return true;
     }
