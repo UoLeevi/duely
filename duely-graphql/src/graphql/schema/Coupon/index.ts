@@ -98,6 +98,8 @@ export const Coupon: GqlTypeDefinition<
               throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
             }
 
+            console.log('DEBUG - create_coupon - args: ', JSON.stringify(args));
+
             const coupon = await stripe.get(stripe_account).coupons.create(args);
 
             // success

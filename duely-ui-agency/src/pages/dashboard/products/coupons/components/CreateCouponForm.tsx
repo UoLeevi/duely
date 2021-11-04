@@ -154,7 +154,7 @@ export function CreateCouponForm() {
           <span className="whitespace-nowrap">{coupon!.name}</span>{' '}
           <span className="whitespace-nowrap">created succesfully</span>
         </h3>
-        <LinkButton color="indigo" to="/dashboard/payments/coupons">
+        <LinkButton color="indigo" to="/dashboard/products/coupons">
           Go to coupons
         </LinkButton>
       </div>
