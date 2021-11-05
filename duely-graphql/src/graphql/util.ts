@@ -138,6 +138,7 @@ type CreateStripeRetrieveQueryResolverArgs<
 > = {
   name: TResolverName;
   endpoint: TStripeResourceEndpoint;
+  expand?: string[]
 };
 
 export function createStripeRetrieveQueryResolver<
@@ -148,7 +149,8 @@ export function createStripeRetrieveQueryResolver<
   TContext extends DuelyQqlContext
 >({
   name,
-  endpoint
+  endpoint,
+  expand
 }: CreateStripeRetrieveQueryResolverArgs<TResolverName, TStripeResourceEndpoint>): IResolvers<
   unknown,
   DuelyQqlContext,
@@ -180,7 +182,7 @@ export function createStripeRetrieveQueryResolver<
 
           const resource = await stripe
             .get(stripe_account)
-            [endpoint].retrieve(id as unknown as string, params, undefined);
+            [endpoint].retrieve(id as unknown as string, { expand, ...params });
           return withStripeAccountProperty(resource, stripe_account);
         });
       } catch (error: any) {

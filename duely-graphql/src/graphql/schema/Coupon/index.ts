@@ -76,7 +76,8 @@ export const Coupon: GqlTypeDefinition<
     Query: {
       ...createStripeRetrieveQueryResolver({
         name: 'coupon',
-        endpoint: 'coupons'
+        endpoint: 'coupons',
+        expand: ['applies_to']
       })
     },
     Mutation: {
@@ -97,8 +98,6 @@ export const Coupon: GqlTypeDefinition<
             if (access !== 'owner') {
               throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
             }
-
-            console.log('DEBUG - create_coupon - args: ', JSON.stringify(args));
 
             const coupon = await stripe.get(stripe_account).coupons.create(args);
 
