@@ -52,6 +52,7 @@ import { Invoice, InvoiceStatusTransitions } from './Invoice';
 import { Discount } from './Discount';
 import { InvoiceLineItem, InvoiceLineItemDiscountAmount } from './InvoiceLineItem';
 import { InvoiceItem } from './InvoiceItem';
+import { PromotionCode } from './PromotionCode';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -114,6 +115,7 @@ const types: GqlTypeDefinition[] = [
   IntegrationType,
   BankAccount,
   Coupon,
+  PromotionCode,
   Discount,
   DateTime,
   Json
