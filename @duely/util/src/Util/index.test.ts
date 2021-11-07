@@ -1,4 +1,4 @@
-import { get, lazy, memo } from '.';
+import { getPathValue, lazy, memo } from '.';
 
 test('memo', () => {
   const createObject = memo((...args: any[]) => new Object());
@@ -39,7 +39,7 @@ test('lazy', async () => {
   expect(await fetchObject).toBe(obj);
 });
 
-test('get', () => {
+test('getPathValue', () => {
   const obj = {
     a: 1,
     b: {
@@ -53,15 +53,15 @@ test('get', () => {
     }
   } as const;
 
-  const a = get(obj, 'a');
+  const a = getPathValue(obj, 'a');
   expect(a).toBe(obj['a']);
 
-  const ba = get(obj, 'b.ba');
+  const ba = getPathValue(obj, 'b.ba');
   expect(ba).toBe(obj['b']['ba']);
 
-  const bb = get(obj, 'b.bb');
+  const bb = getPathValue(obj, 'b.bb');
   expect(bb).toBe(obj['b']['bb']);
 
-  const caa = get(obj, 'c.ca.caa');
+  const caa = getPathValue(obj, 'c.ca.caa');
   expect(caa).toBe(obj['c']['ca']['caa']);
 });

@@ -1,7 +1,14 @@
 import Stripe from 'stripe';
 import fs from 'fs';
 import { ResourceId, Resources } from '@duely/db';
-import { SplitString, FilterKeys, PathValue, get } from '@duely/util';
+import {
+  SplitString,
+  FilterKeys,
+  PathValue,
+  getPathValue,
+  GenericFunction,
+  ParameterOverloads
+} from '@duely/util';
 
 const STRIPE_API_VERSION = '2020-08-27';
 
@@ -69,11 +76,18 @@ type StripeResourceEndpointPathL2 = FilterKeys<
 type StripeResourceEndpointPath = StripeResourceEndpointPathL1 | StripeResourceEndpointPathL2;
 
 export type StripeResourceEndpoint = {
-  [Path in StripeResourceEndpointPath]: PathValue<Stripe, SplitString<Path, '.'>>;
+  [Path in StripeResourceEndpointPath]: PathValue<Stripe, Path>;
 };
 
 type ExtractObjectFromStripeResponse<T extends Stripe.Response<unknown>> =
   T extends Stripe.Response<infer O> ? O : never;
+
+export type StripeResourceEndpointWithOperation<TOperation extends string> = {
+  [Path in FilterKeys<
+    StripeResourceEndpoint,
+    Record<TOperation, (...args: any) => any>
+  >]: StripeResourceEndpoint[Path];
+};
 
 export type StripeResourceEndpointResponseObject = {
   [Path in keyof StripeResourceEndpoint]: ExtractObjectFromStripeResponse<
@@ -81,12 +95,7 @@ export type StripeResourceEndpointResponseObject = {
   >;
 };
 
-export type StripeDeletableResourceEndpoint = {
-  [Path in FilterKeys<
-    StripeResourceEndpoint,
-    Record<'del', (...args: any) => any>
-  >]: StripeResourceEndpoint[Path];
-};
+export type StripeDeletableResourceEndpoint = StripeResourceEndpointWithOperation<'del'>;
 
 export type StripeObjectType =
   StripeResourceEndpointResponseObject[keyof StripeResourceEndpoint]['object'];
@@ -169,7 +178,7 @@ export function getStripeResourceForObjectType<
   SplitString<FilterKeys<StripeResourceEndpointResponseObject, Record<'object', ObjectType>>, '.'>
 > {
   const endpoint = stripeResourceEndpointByType[objectType];
-  return get(stripe, endpoint) as any;
+  return getPathValue(stripe, endpoint) as any;
 }
 
 export function deleteStripeObjects<
@@ -182,5 +191,19 @@ export function deleteStripeObjects<
       await getStripeResourceForObjectType(stripe, obj.object).del(obj.id);
     });
 }
+
+export type StripeRetrieveParams<
+  TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'retrieve'>
+> = Exclude<
+  ParameterOverloads<PathValue<Stripe, TStripeResourceEndpoint>['retrieve']>[1],
+  Stripe.RequestOptions
+>;
+
+export type StripeListParams<
+  TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'list'>
+> = Exclude<
+  ParameterOverloads<PathValue<Stripe, TStripeResourceEndpoint>['list']>[0],
+  Stripe.RequestOptions
+>;
 
 export default stripe;

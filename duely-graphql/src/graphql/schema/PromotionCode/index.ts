@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
-import { createStripeRetrieveQueryResolver, withStripeAccountProperty } from '../../util';
+import { createStripeListQueryResolver, createStripeRetrieveQueryResolver, withStripeAccountProperty } from '../../util';
 import { timestampToDate } from '@duely/util';
 
 export const PromotionCode: GqlTypeDefinition<
@@ -43,6 +43,15 @@ export const PromotionCode: GqlTypeDefinition<
 
     extend type Query {
       promotion_code(stripe_account_id: ID!, promotion_code_id: ID!): PromotionCode
+      promotion_codes(
+        stripe_account_id: ID!
+        active: Boolean
+        code: String
+        coupon: String
+        customer: String): [PromotionCode!]!
+        starting_after: String
+        ending_before: String
+        limit: Int
     }
 
     extend type Mutation {
@@ -73,6 +82,10 @@ export const PromotionCode: GqlTypeDefinition<
     Query: {
       ...createStripeRetrieveQueryResolver({
         name: 'promotion_code',
+        endpoint: 'promotionCodes'
+      }),
+      ...createStripeListQueryResolver({
+        name: 'promotion_codes',
         endpoint: 'promotionCodes'
       })
     },

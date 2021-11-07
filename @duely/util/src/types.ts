@@ -8,7 +8,8 @@ export type ResolvableValue<R = any, TArgs extends readonly any[] = any[]> =
   | GenericFunction<R | PromiseLike<R>, TArgs>;
 
 export type ResolvedType<T> = T extends ResolvableValue<infer U, unknown[]> ? U : never;
-export type ElementType<T extends readonly unknown[]> = T extends readonly (infer U)[] ? U : never;
+export type ElementType<T extends null | undefined | unknown[] | readonly unknown[]> =
+  NonNullable<T> extends (infer U)[] ? U : never;
 
 export type Head<T extends readonly unknown[]> = T extends []
   ? []
@@ -107,12 +108,16 @@ export type PartialApplication<
     : never
   : never;
 
-export type PathValue<T, TPath extends readonly string[]> = TPath extends []
-  ? T
-  : Head<TPath> extends keyof T
-  ? Tail<TPath> extends readonly string[]
-    ? PathValue<T[Head<TPath>], Tail<TPath>>
+export type PathValue<T, TPath extends string | readonly string[]> = TPath extends readonly string[]
+  ? TPath extends []
+    ? T
+    : Head<TPath> extends keyof T
+    ? Tail<TPath> extends readonly string[]
+      ? PathValue<T[Head<TPath>], Tail<TPath>>
+      : never
     : never
+  : TPath extends string
+  ? PathValue<T, SplitString<TPath, '.'>>
   : never;
 
 export type SplitString<
@@ -121,3 +126,52 @@ export type SplitString<
 > = TString extends `${infer THead}${TSep}${infer TTail}`
   ? [THead, ...SplitString<TTail, TSep>]
   : [TString];
+
+export type ParameterOverloads<T> = T extends {
+  (...args: infer U): unknown;
+  (...args: infer U2): unknown;
+  (...args: infer U3): unknown;
+  (...args: infer U4): unknown;
+  (...args: infer U5): unknown;
+  (...args: infer U6): unknown;
+  (...args: infer U7): unknown;
+}
+  ? U | U2 | U3 | U4 | U5 | U6 | U7
+  : T extends {
+      (...args: infer U): unknown;
+      (...args: infer U2): unknown;
+      (...args: infer U3): unknown;
+      (...args: infer U4): unknown;
+      (...args: infer U5): unknown;
+      (...args: infer U6): unknown;
+    }
+  ? U | U2 | U3 | U4 | U5 | U6
+  : T extends {
+      (...args: infer U): unknown;
+      (...args: infer U2): unknown;
+      (...args: infer U3): unknown;
+      (...args: infer U4): unknown;
+      (...args: infer U5): unknown;
+    }
+  ? U | U2 | U3 | U4 | U5
+  : T extends {
+      (...args: infer U): unknown;
+      (...args: infer U2): unknown;
+      (...args: infer U3): unknown;
+      (...args: infer U4): unknown;
+    }
+  ? U | U2 | U3 | U4
+  : T extends {
+      (...args: infer U): unknown;
+      (...args: infer U2): unknown;
+      (...args: infer U3): unknown;
+    }
+  ? U | U2 | U3
+  : T extends {
+      (...args: infer U): unknown;
+      (...args: infer U2): unknown;
+    }
+  ? U | U2
+  : T extends { (...args: infer U): unknown }
+  ? U
+  : never;

@@ -109,14 +109,10 @@ export function diff<TFrom, TOmit>(
   ) as any;
 }
 
-export function get<T, TPath extends string | readonly string[]>(
+export function getPathValue<T, TPath extends string | readonly string[]>(
   obj: T,
   path: TPath
-): TPath extends readonly string[]
-  ? PathValue<T, TPath>
-  : TPath extends string
-  ? PathValue<T, SplitString<TPath, '.'>>
-  : never {
+): PathValue<T, TPath> {
   const parts: readonly string[] = typeof path === 'string' ? path.split('.') : path;
   return parts.reduce((prev, key) => prev?.[key], obj as any);
 }
@@ -124,7 +120,7 @@ export function get<T, TPath extends string | readonly string[]>(
 export function template(template: string, variables: Record<string, any>) {
   return template.replace(
     /{(.*?)}/g,
-    (_, placeholder: string) => get(variables, placeholder.trim())?.toString() ?? placeholder
+    (_, placeholder: string) => getPathValue(variables, placeholder.trim())?.toString() ?? placeholder
   );
 }
 
