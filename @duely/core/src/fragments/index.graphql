@@ -169,7 +169,9 @@ fragment promotion_code on PromotionCode {
   id
   active
   code
-  coupon
+  coupon {
+    ...coupon
+  }
   created
   customer {
     id
