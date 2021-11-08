@@ -6,7 +6,11 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
-import { createStripeListQueryResolver, createStripeRetrieveQueryResolver, withStripeAccountProperty } from '../../util';
+import {
+  createStripeListQueryResolver,
+  createStripeRetrieveQueryResolver,
+  withStripeAccountProperty
+} from '../../util';
 import { timestampToDate } from '@duely/util';
 
 export const PromotionCode: GqlTypeDefinition<
@@ -48,10 +52,11 @@ export const PromotionCode: GqlTypeDefinition<
         active: Boolean
         code: String
         coupon: String
-        customer: String): [PromotionCode!]!
+        customer: String
         starting_after: String
         ending_before: String
         limit: Int
+      ): [PromotionCode!]!
     }
 
     extend type Mutation {
@@ -65,7 +70,11 @@ export const PromotionCode: GqlTypeDefinition<
         max_redemptions: Int
         restrictions: PromotionCodeRestrictionsInput
       ): PromotionCodeMutationResult!
-      update_promotion_code(stripe_account_id: ID!, promotion_code_id: ID!, name: String): PromotionCodeMutationResult!
+      update_promotion_code(
+        stripe_account_id: ID!
+        promotion_code_id: ID!
+        active: Boolean
+      ): PromotionCodeMutationResult!
     }
 
     type PromotionCodeMutationResult implements MutationResult {

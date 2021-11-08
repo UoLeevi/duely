@@ -165,6 +165,26 @@ fragment coupon on Coupon {
   valid
 }
 
+fragment promotion_code on PromotionCode {
+  id
+  active
+  code
+  coupon
+  created
+  customer {
+    id
+  }
+  expires_at
+  livemode
+  max_redemptions
+  restrictions {
+    first_time_transaction
+    minimum_amount
+    minimum_amount_currency
+  }
+  times_redeemed
+}
+
 fragment charge on Charge {
   id
   id_ext

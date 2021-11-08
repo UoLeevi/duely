@@ -322,6 +322,48 @@ mutation DeleteCoupon($stripe_account_id: ID!, $coupon_id: ID!) {
   }
 }
 
+mutation CreatePromotionCode(
+  $stripe_account_id: ID!
+  $coupon: String!
+  $active: Boolean
+  $code: String
+  $customer: String
+  $expires_at: Int
+  $max_redemptions: Int
+  $restrictions: PromotionCodeRestrictionsInput
+) {
+  create_promotion_code(
+    stripe_account_id: $stripe_account_id
+    coupon: $coupon
+    active: $active
+    code: $code
+    customer: $customer
+    expires_at: $expires_at
+    max_redemptions: $max_redemptions
+    restrictions: $restrictions
+  ) {
+    success
+    message
+    promotion_code {
+      ...promotion_code
+    }
+  }
+}
+
+mutation UpdatePromotionCode($stripe_account_id: ID!, $promotion_code_id: ID!, $active: Boolean) {
+  update_promotion_code(
+    stripe_account_id: $stripe_account_id
+    promotion_code_id: $promotion_code_id
+    active: $active
+  ) {
+    success
+    message
+    promotion_code {
+      ...promotion_code
+    }
+  }
+}
+
 mutation CreateInvoice(
   $stripe_account_id: ID!
   $customer: ID!
