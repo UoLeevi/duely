@@ -13,6 +13,7 @@ import {
   CreatePageBlockDocument,
   CreatePriceDocument,
   CreateProductDocument,
+  CreatePromotionCodeDocument,
   CustomerFragmentDoc,
   DeleteBankAccountDocument,
   DeleteCouponDocument,
@@ -44,6 +45,7 @@ import {
   UpdatePageDocument,
   UpdateProductDocument,
   UpdateProductSettingsDocument,
+  UpdatePromotionCodeDocument,
   UpdateThemeDocument,
   VerifyPasswordResetDocument,
   VerifySignUpDocument,
@@ -59,7 +61,8 @@ import {
   count_customers_Q,
   count_products_Q,
   customers_Q,
-  products_Q
+  products_Q,
+  promotion_codes_Q
 } from '../queries';
 // import produce from 'immer';
 // import { query } from './queries';
@@ -294,6 +297,28 @@ export const delete_coupon_M = {
   }
 };
 
+const create_promotion_code_R = (d: ResultOf<typeof CreatePromotionCodeDocument>) =>
+  d?.create_promotion_code;
+export const create_promotion_code_M = {
+  mutation: CreatePromotionCodeDocument,
+  result: create_promotion_code_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof create_promotion_code_R> | null
+  ) {
+    if (!result?.success || !result.promotion_code) return;
+
+    evictQuery(cache, promotion_codes_Q.query);
+
+    cache.gc();
+  }
+};
+
+export const update_promotion_code_M = {
+  mutation: UpdatePromotionCodeDocument,
+  result: (d: ResultOf<typeof UpdatePromotionCodeDocument>) => d?.update_promotion_code
+};
+
 const create_invoice_R = (d: ResultOf<typeof CreateInvoiceDocument>) => d?.create_invoice;
 export const create_invoice_M = {
   mutation: CreateInvoiceDocument,
@@ -346,13 +371,15 @@ export const finalize_invoice_M = {
   result: finalize_invoice_R
 };
 
-const mark_invoice_uncollectible_R = (d: ResultOf<typeof MarkInvoiceUncollectibleDocument>) => d?.mark_invoice_uncollectible;
+const mark_invoice_uncollectible_R = (d: ResultOf<typeof MarkInvoiceUncollectibleDocument>) =>
+  d?.mark_invoice_uncollectible;
 export const mark_invoice_uncollectible_M = {
   mutation: FinalizeInvoiceDocument,
   result: mark_invoice_uncollectible_R
 };
 
-const create_invoiceitem_R = (d: ResultOf<typeof CreateInvoiceItemDocument>) => d?.create_invoiceitem;
+const create_invoiceitem_R = (d: ResultOf<typeof CreateInvoiceItemDocument>) =>
+  d?.create_invoiceitem;
 export const create_invoiceitem_M = {
   mutation: CreateInvoiceItemDocument,
   result: create_invoiceitem_R,
@@ -373,7 +400,8 @@ export const update_invoiceitem_M = {
   result: (d: ResultOf<typeof UpdateInvoiceItemDocument>) => d?.update_invoiceitem
 };
 
-const delete_invoiceitem_R = (d: ResultOf<typeof DeleteInvoiceItemDocument>) => d?.delete_invoiceitem;
+const delete_invoiceitem_R = (d: ResultOf<typeof DeleteInvoiceItemDocument>) =>
+  d?.delete_invoiceitem;
 export const delete_invoiceitem_M = {
   mutation: DeleteInvoiceItemDocument,
   result: delete_invoiceitem_R,

@@ -64,7 +64,9 @@ import {
   ThemesDocument,
   AgencyStripeAccountInvoicesDocument,
   InvoiceDocument,
-  AgencyStripeAccountInvoiceItemsDocument
+  AgencyStripeAccountInvoiceItemsDocument,
+  PromotionCodeDocument,
+  PromotionCodesDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -458,6 +460,16 @@ export const agency_stripe_account_coupons_Q = {
 export const coupon_Q = {
   query: CouponDocument,
   result: (d: ResultOf<typeof CouponDocument>) => d?.coupon
+};
+
+export const promotion_code_Q = {
+  query: PromotionCodeDocument,
+  result: (d: ResultOf<typeof PromotionCodeDocument>) => d?.promotion_code
+};
+
+export const promotion_codes_Q = {
+  query: PromotionCodesDocument,
+  result: (d: ResultOf<typeof PromotionCodesDocument>) => d?.promotion_codes
 };
 
 export const page_Q = {
