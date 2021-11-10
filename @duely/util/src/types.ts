@@ -9,7 +9,7 @@ export type ResolvableValue<R = any, TArgs extends readonly any[] = any[]> =
 
 export type ResolvedType<T> = T extends ResolvableValue<infer U, unknown[]> ? U : never;
 export type ElementType<T extends null | undefined | unknown[] | readonly unknown[]> =
-  NonNullable<T> extends (infer U)[] ? U : never;
+  NonNullable<T> extends readonly (infer U)[] ? U : NonNullable<T> extends (infer U)[] ? U : never;
 
 export type Head<T extends readonly unknown[]> = T extends []
   ? []
