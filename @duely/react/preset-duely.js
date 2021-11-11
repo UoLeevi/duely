@@ -58,7 +58,7 @@ module.exports = {
     extend: {
       animation: {
         progress: 'progress 1800ms cubic-bezier(.02,.25,1,.61) infinite',
-        'stroke-draw': 'stroke-draw 400ms ease-in 300ms',
+        'stroke-draw': 'stroke-draw 400ms ease-in 300ms'
       },
       colors: {
         gray: {
@@ -75,7 +75,7 @@ module.exports = {
         'stroke-draw': {
           from: { strokeDashoffset: '1', strokeDasharray: '1' },
           to: { strokeDashoffset: '0', strokeDasharray: '1' }
-        },
+        }
       },
       typography: (theme) => ({
         DEFAULT: {
@@ -88,10 +88,10 @@ module.exports = {
               fontWeight: '800'
             },
             'h1:first-child': {
-              marginTop: '0',
+              marginTop: '0'
             },
             'h1:last-child': {
-              marginBottom: '0',
+              marginBottom: '0'
             },
             h2: {
               color: theme('colors.gray.900'),
@@ -101,10 +101,10 @@ module.exports = {
               fontWeight: '800'
             },
             'h2:first-child': {
-              marginTop: '0',
+              marginTop: '0'
             },
             'h2:last-child': {
-              marginBottom: '0',
+              marginBottom: '0'
             },
             h3: {
               color: theme('colors.gray.900'),
@@ -114,10 +114,10 @@ module.exports = {
               fontWeight: '700'
             },
             'h3:first-child': {
-              marginTop: '0',
+              marginTop: '0'
             },
             'h3:last-child': {
-              marginBottom: '0',
+              marginBottom: '0'
             },
             h4: {
               color: theme('colors.gray.900'),
@@ -127,10 +127,10 @@ module.exports = {
               fontWeight: '700'
             },
             'h4:first-child': {
-              marginTop: '0',
+              marginTop: '0'
             },
             'h4:last-child': {
-              marginBottom: '0',
+              marginBottom: '0'
             }
           }
         }

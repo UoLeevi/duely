@@ -1,4 +1,4 @@
-import { Button, PageLayout, useMessage } from '@duely/react';
+import { Button, Form, PageLayout, useForm, useMessage } from '@duely/react';
 import Markdown from 'markdown-to-jsx';
 
 const markdown = `## Services Agreement
@@ -7,11 +7,30 @@ Payment processing services for agencies on Duely are provided by Stripe and are
 `;
 
 export default function Workspace() {
-  const { showMessage } = useMessage();
+  const { showMessage, message } = useMessage();
+  const form = useForm();
   return (
     <PageLayout className="prose prose-indigo">
-      <Markdown>{markdown}</Markdown>
-      <Button onClick={() => showMessage('Text copied to clipboard')}>Copy</Button>
+      <Form
+        form={form}
+        onSubmit={(d) => {
+          console.log(d);
+          showMessage('Form submitted');
+        }}
+      >
+        <Form.Field
+          label="Enable"
+          className="max-w-lg"
+          name="name"
+          type="checkbox"
+          registerOptions={{ required: true }}
+        />
+
+        <div className="flex flex-row items-center pt-3 space-x-8">
+          <Form.Button>Create coupon</Form.Button>
+          <Form.InfoMessage info={message} />
+        </div>
+      </Form>
     </PageLayout>
   );
 }

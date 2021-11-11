@@ -3,6 +3,8 @@ import { FormFieldRegisterOptions } from '@duely/react-form';
 import { LoadingBar } from '../../LoadingBar';
 import { useFormContext } from '../Form';
 import {
+  FormFieldCheckboxElement,
+  FormFieldCheckboxElementProps,
   FormFieldDefaultElement,
   FormFieldDefaultElementProps,
   FormFieldFileElement,
@@ -164,6 +166,45 @@ export function FormField<
         />
       );
       break;
+    }
+
+    case 'checkbox': {
+      element = (
+        <FormFieldCheckboxElement
+          {...({
+            name,
+            loading,
+            ...props
+          } as FormFieldCheckboxElementProps<TName, TFormFields>)}
+        />
+      );
+
+      className = createClassName('flex flex-col relative', className);
+
+      return (
+        <div className={className}>
+          <div className="flex items-center">
+            {element}
+            {label && (
+              <FormLabel className="!pl-2.5 text-sm" htmlFor={name}>
+                {label}
+              </FormLabel>
+            )}
+          </div>
+
+          <LoadingBar className="h-px px-1" loading={!!loading} />
+
+          {errorMessage ? (
+            <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">
+              {errorMessage}
+            </p>
+          ) : (
+            <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
+              {hintRef.current}
+            </p>
+          )}
+        </div>
+      );
     }
 
     case 'select': {

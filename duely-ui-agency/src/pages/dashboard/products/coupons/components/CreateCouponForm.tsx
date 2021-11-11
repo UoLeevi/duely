@@ -66,7 +66,7 @@ export function CreateCouponForm() {
     (stripe_account?.default_currency as Currency);
 
   const currencyPrefix: React.ReactChild = <span className="pr-1">{currency?.toUpperCase()}</span>;
-  const percengatePrefix: React.ReactChild = <span className="pr-1">%</span>;
+  const percentPrefix: React.ReactChild = <span className="pr-1">%</span>;
 
   const state = {
     loading: stateCoupon.loading || agencyLoading || stripe_accountLoading,
@@ -191,7 +191,7 @@ export function CreateCouponForm() {
           type="text"
           className="w-36"
           inputMode="numeric"
-          prefix={coupon_type === 'amount_off' ? currencyPrefix : percengatePrefix}
+          prefix={coupon_type === 'amount_off' ? currencyPrefix : percentPrefix}
           registerOptions={{
             required: true,
             rules: [ValidationRules.isPositiveNumber],

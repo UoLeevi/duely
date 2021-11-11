@@ -5,3 +5,4 @@ export * from './FormFieldImageElement';
 export * from './FormFieldFileElement';
 export * from './FormFieldTextAreaElement';
 export * from './FormFieldDefaultElement';
+export * from './FormFieldCheckboxElement';
