@@ -53,6 +53,6 @@
   "dependencies": {
     "@duely/react-form": "^0.4.13",
     "@duely/util": "^0.4.11",
-    "immer": "^9.0.2"
+    "immer": "^9.0.6"
   }
 }
