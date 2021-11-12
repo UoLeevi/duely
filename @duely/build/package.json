@@ -1,6 +1,6 @@
 {
   "name": "@duely/build",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Common config files used for building duely.app projects",
   "repository": "github:uoleevi/duely",
   "license": "MIT",

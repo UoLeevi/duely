@@ -669,6 +669,15 @@ body, #root {
   visibility: hidden;
 }
 
+.form-tick:checked {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293z'/%3e%3c/svg%3e");
+  border-color: transparent;
+  background-color: currentColor;
+  background-size: 100% 100%;
+  background-position: 50%;
+  background-repeat: no-repeat;
+}
+
 .container {
   width: 100%;
 }
@@ -2080,6 +2089,10 @@ body, #root {
   padding: 1rem;
 }
 
+.p-3 {
+  padding: 0.75rem;
+}
+
 .p-6 {
   padding: 1.5rem;
 }
@@ -2249,6 +2262,10 @@ body, #root {
   padding-right: 2.5rem;
 }
 
+.\!pl-2\.5 {
+  padding-left: 0.625rem !important;
+}
+
 .pt-1 {
   padding-top: 0.25rem;
 }
@@ -2263,6 +2280,10 @@ body, #root {
 
 .pl-1 {
   padding-left: 0.25rem;
+}
+
+.\!pl-2 {
+  padding-left: 0.5rem !important;
 }
 
 .text-left {
@@ -2651,6 +2672,15 @@ body, #root {
 
 .last\:pr-3:last-child {
   padding-right: 0.75rem;
+}
+
+.checked\:border-transparent:checked {
+  border-color: transparent;
+}
+
+.checked\:bg-blue-600:checked {
+  --tw-bg-opacity: 1;
+  background-color: rgba(37, 99, 235, var(--tw-bg-opacity));
 }
 
 .focus-within\:ring:focus-within {

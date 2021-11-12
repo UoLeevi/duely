@@ -1,3 +1,2 @@
 grecaptcha-show
 grecaptcha-badge
-form-tick

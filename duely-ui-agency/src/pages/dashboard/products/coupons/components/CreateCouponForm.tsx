@@ -14,7 +14,8 @@ import {
   customers_Q,
   create_coupon_M,
   create_customer_M,
-  products_Q
+  products_Q,
+  create_promotion_code_M
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
 import {
@@ -29,7 +30,10 @@ type CreateCouponFormFields = {
   coupon_type: 'amount_off' | 'percent_off';
   amount_or_percent_off: string;
   applies_to_product: string;
-  redeem_by_date: any;
+  has_expiry: boolean;
+  redeem_by_date: Date;
+  has_promotion_code: boolean;
+  promotion_code: string;
 };
 
 export function CreateCouponForm() {
@@ -43,6 +47,7 @@ export function CreateCouponForm() {
     setErrorMessage
   } = useFormMessages();
   const [createCoupon, stateCoupon] = useMutation(create_coupon_M);
+  const [createPromotionCode, statePromotionCode] = useMutation(create_promotion_code_M);
   const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
     agency_stripe_account_Q,
@@ -68,27 +73,35 @@ export function CreateCouponForm() {
   const currencyPrefix: React.ReactChild = <span className="pr-1">{currency?.toUpperCase()}</span>;
   const percentPrefix: React.ReactChild = <span className="pr-1">%</span>;
 
-  const state = {
-    loading: stateCoupon.loading || agencyLoading || stripe_accountLoading,
-    error: stateCoupon.error,
-    success: stateCoupon.data?.success
-  };
-
   const name_field = form.useFormFieldState('name');
   const coupon_type = form.useFormFieldValue('coupon_type');
+  const has_expiry = form.useFormFieldValue('has_expiry');
+  const has_promotion_code = form.useFormFieldValue('has_promotion_code');
   const amount_or_percent_off = form.useFormFieldValue('amount_or_percent_off');
+  const applies_to_product = form.useFormFieldValue('applies_to_product');
+
+  const productName = products?.find((p) => p.id === applies_to_product)?.name ?? '';
+
+  const state = {
+    loading:
+      stateCoupon.loading || agencyLoading || stripe_accountLoading || statePromotionCode.loading,
+    error: stateCoupon.error || statePromotionCode.error,
+    success: has_promotion_code
+      ? stateCoupon.data?.success && statePromotionCode.data?.success
+      : stateCoupon.data?.success
+  };
 
   useEffect(() => {
     const number = +(amount_or_percent_off ?? 0);
     if (!name_field.isDirty) {
       if (coupon_type == 'amount_off') {
         const minorAmount = numberToMinorCurrencyAmount(number, currency);
-        form.setValue('name', `${formatCurrency(minorAmount, currency)} off`);
+        form.setValue('name', `${productName} ${formatCurrency(minorAmount, currency)} off`.trim());
       } else {
-        form.setValue('name', `${number} % off`);
+        form.setValue('name', `${productName} ${number} % off`.trim());
       }
     }
-  }, [name_field.isDirty, coupon_type, amount_or_percent_off]);
+  }, [name_field.isDirty, coupon_type, amount_or_percent_off, productName]);
 
   async function onSubmit({
     coupon_type,
@@ -96,9 +109,13 @@ export function CreateCouponForm() {
     amount_or_percent_off,
     applies_to_product,
     redeem_by_date,
+    has_expiry,
+    has_promotion_code,
+    promotion_code,
     ...rest
   }: CreateCouponFormFields) {
-    let args: any = {
+    let args: Parameters<typeof createCoupon>[0] = {
+      stripe_account_id: stripe_account!.id,
       name,
       currency,
       applies_to: {
@@ -112,18 +129,34 @@ export function CreateCouponForm() {
       args.percent_off = +amount_or_percent_off;
     }
 
-    if (redeem_by_date) {
+    if (has_expiry && redeem_by_date) {
       args.redeem_by = dateToTimestamp(redeem_by_date);
     }
 
-    const res_coupon = await createCoupon({
-      stripe_account_id: stripe_account!.id,
-      ...args
-    });
+    const res_coupon = await createCoupon(args);
 
     if (!res_coupon?.success) {
       setErrorMessage('Error while creating coupon:' + res_coupon?.message);
       return;
+    }
+
+    if (has_promotion_code) {
+      const args: Parameters<typeof createPromotionCode>[0] = {
+        stripe_account_id: stripe_account!.id,
+        coupon: res_coupon.coupon!.id,
+        code: promotion_code,
+      };
+
+      if (has_expiry && redeem_by_date) {
+        args.expires_at = dateToTimestamp(redeem_by_date);
+      }
+
+      const res_promotion_code = await createPromotionCode(args);
+
+      if (!res_promotion_code?.success) {
+        setErrorMessage('Coupon created but error while creating promotion code:' + res_promotion_code?.message);
+        return;
+      }
     }
 
     setSuccessMessage(`Coupon created successfully`);
@@ -201,11 +234,14 @@ export function CreateCouponForm() {
         />
 
         <Form.Field
-          label="Expiry date"
-          className="w-48"
-          name="redeem_by_date"
-          type="date"
-          hint="Last time at which the coupon can be redeemed."
+          label="Product"
+          className="max-w-lg"
+          name="applies_to_product"
+          type="select"
+          options={(products ?? []).map((p) => ({ element: p.name, value: p.id }))}
+          hint="Product that the coupon applies to."
+          registerOptions={{ required: true }}
+          loading={productsLoading}
         />
 
         <Form.Field
@@ -216,16 +252,56 @@ export function CreateCouponForm() {
           registerOptions={{ required: true }}
         />
 
-        <Form.Field
-          label="Product"
-          className="max-w-lg"
-          name="applies_to_product"
-          type="select"
-          options={(products ?? []).map((p) => ({ element: p.name, value: p.id }))}
-          hint="Product that the coupon applies to."
-          registerOptions={{ required: true }}
-          loading={productsLoading}
-        />
+        <div className="flex flex-col -m-2 sm:flex-row">
+          <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
+            <Form.Field
+              label="Promotion code"
+              className="w-48"
+              name="has_promotion_code"
+              type="checkbox"
+              hint="Does coupon have a promotion code."
+            />
+          </div>
+          <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
+            {has_promotion_code && (
+              <Form.Field
+                label="Promotion code"
+                className="w-48"
+                name="promotion_code"
+                hint="Promotion code text to use at checkout."
+                registerOptions={{
+                  required: true
+                }}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col -m-2 sm:flex-row">
+          <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
+            <Form.Field
+              label="Expires"
+              className="w-48"
+              name="has_expiry"
+              type="checkbox"
+              hint="Does coupon have an expiry date."
+            />
+          </div>
+          <div className="max-w-xs p-2 sm:w-1/2 lg:w-1/3">
+            {has_expiry && (
+              <Form.Field
+                label="Expiry date"
+                className="w-48"
+                name="redeem_by_date"
+                type="date"
+                hint="Last time at which the coupon can be redeemed."
+                registerOptions={{
+                  required: true
+                }}
+              />
+            )}
+          </div>
+        </div>
 
         <div className="flex flex-row items-center pt-3 space-x-8">
           <Form.Button>Create coupon</Form.Button>
