@@ -75,6 +75,9 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
       create_stripe_checkout_session(
         price_id: ID!
         livemode: Boolean!
+        allow_promotion_codes: Boolean
+        coupon_id: ID
+        promotion_code_id: ID
         success_url: String
         cancel_url: String
       ): CreateStripeCheckoutSessionResult!
@@ -270,14 +273,20 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
       },
       async create_stripe_checkout_session(
         obj,
-        { price_id, livemode, success_url, cancel_url },
+        {
+          price_id,
+          livemode,
+          success_url,
+          cancel_url,
+          allow_promotion_codes,
+          promotion_code_id,
+          coupon_id
+        },
         context,
         info
       ) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        const stripe_env = livemode ? 'live' : 'test';
 
         try {
           return await withSession(context, async ({ queryResource }) => {
@@ -348,6 +357,7 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
                   quantity: 1
                 }
               ],
+              allow_promotion_codes,
               success_url,
               cancel_url
             };
@@ -360,6 +370,20 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
               stripe_checkout_session_args.payment_intent_data = {
                 application_fee_amount
               };
+            }
+
+            if (coupon_id) {
+              stripe_checkout_session_args.discounts = [
+                {
+                  coupon: coupon_id
+                }
+              ];
+            } else if (promotion_code_id) {
+              stripe_checkout_session_args.discounts = [
+                {
+                  promotion_code: promotion_code_id
+                }
+              ];
             }
 
             const checkout_session = await stripe
