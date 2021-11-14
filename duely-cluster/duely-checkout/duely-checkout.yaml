@@ -32,7 +32,7 @@ spec:
           secretName: duely-checkout-secret
       containers:
       - name: duely-checkout
-        image: uoleevi/duely-checkout:v0.3.4
+        image: uoleevi/duely-checkout:v0.3.5
         resources:
           requests:
             memory: 64Mi
