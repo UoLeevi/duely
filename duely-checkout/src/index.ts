@@ -1,38 +1,24 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { GraphQLClient, gql } from 'graphql-request';
-import { getServiceAccountContext } from '@duely/db';
-
-const gql_subdomain = gql`
-  query ($subdomain_name: String!, $livemode: Boolean) {
-    subdomains(filter: { name: $subdomain_name }) {
-      id
-      agency {
-        id
-        stripe_account(livemode: $livemode) {
-          id
-          id_ext
-          livemode
-        }
-      }
-    }
-  }
-`;
-
-const gql_product = gql`
-  query ($agency_id: ID!, $product_url_name: String!) {
-    products(filter: { url_name: $product_url_name, agency_id: $agency_id }) {
-      id
-      default_price {
-        id
-      }
-    }
-  }
-`;
+import { getServiceAccountContext, withSession } from '@duely/db';
+import stripe from '@duely/stripe';
 
 const gql_create_stripe_checkout_session = gql`
-  mutation ($price_id: ID!, $livemode: Boolean!) {
-    create_stripe_checkout_session(livemode: $livemode, price_id: $price_id) {
+  mutation (
+    $price_id: ID!
+    $livemode: Boolean!
+    $coupon_id: ID
+    $promomotion_code_id: ID
+    $allow_promotion_codes: Boolean
+  ) {
+    create_stripe_checkout_session(
+      livemode: $livemode
+      price_id: $price_id
+      coupon_id: $coupon_id
+      promomotion_code_id: $promomotion_code_id
+      allow_promotion_codes: $allow_promotion_codes
+    ) {
       success
       message
       checkout_session_id
@@ -86,71 +72,111 @@ async function get_checkout(req: Request, res: Response) {
     subdomain_name = req.hostname.split('.duely.app')[0];
   }
 
-  let agency_id: string;
-  let livemode: boolean;
-  const preview = req.query?.preview || req.query.preview === '';
+  // TODO: implement checkout preview somehow
+  const preview = req.query?.preview || req.query.preview === '' ? true : false;
 
   try {
-    const { subdomains } = await client.request(gql_subdomain, {
-      subdomain_name,
-      livemode: preview ? false : null
+    return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
+      const subdomain = await queryResource('subdomain', { name: subdomain_name });
+
+      if (!subdomain) {
+        res.sendStatus(404);
+        return;
+      }
+
+      const agency = await queryResource('agency', { subdomain_id: subdomain.id });
+
+      if (!agency) {
+        res.sendStatus(404);
+        return;
+      }
+
+      const stripe_account = await queryResource('stripe account', {
+        agency_id: agency.id,
+        livemode: agency.livemode
+      });
+
+      if (!stripe_account) {
+        res.sendStatus(404);
+        return;
+      }
+
+      const product = await queryResource('product', {
+        url_name: req.params.product_url_name,
+        status: 'live'
+      });
+
+      if (!product || !product.default_price_id) {
+        res.sendStatus(404);
+        return;
+      }
+
+      const price = await queryResource('price', product.default_price_id);
+
+      if (!price) {
+        res.sendStatus(404);
+        return;
+      }
+
+      const allow_promotion_codes = req.query?.promo || req.query.promo === '' ? true : false;
+      let promotion_code_id: string | undefined =
+        typeof req.query.promotion_code_id === 'string' ? req.query.promotion_code_id : undefined;
+      const coupon_id: string | undefined =
+        typeof req.query.coupon_id === 'string' ? req.query.coupon_id : undefined;
+
+      if (!promotion_code_id && typeof req.query.code === 'string') {
+        const promotionCodes = await stripe
+          .get(stripe_account)
+          .promotionCodes.list({ code: req.query.code, active: true });
+
+        if (promotionCodes.data.length > 0) {
+          promotion_code_id = promotionCodes.data[0].id;
+        }
+      }
+
+      const requestArgs: [
+        string,
+        {
+          price_id: string;
+          livemode: boolean;
+          allow_promotion_codes: boolean;
+          coupon_id: string | undefined;
+          promotion_code_id: string | undefined;
+        },
+        { authorization: string }?
+      ] = [
+        gql_create_stripe_checkout_session,
+        {
+          price_id: price.id,
+          livemode: agency.livemode,
+          allow_promotion_codes,
+          coupon_id,
+          promotion_code_id
+        }
+      ];
+
+      const access_token: string | undefined =
+        typeof req.query.access_token === 'string' ? req.query.access_token : undefined;
+
+      if (access_token) {
+        requestArgs.push({
+          authorization: `Bearer ${access_token}`
+        });
+      }
+
+      const { create_stripe_checkout_session: result } = await client.request(...requestArgs);
+
+      if (!result.success || !result.checkout_session_url) {
+        console.error(result.message);
+        res.sendStatus(404);
+        return;
+      }
+
+      res.redirect(303, result.checkout_session_url);
     });
-
-    if (subdomains.length != 1) {
-      res.sendStatus(404);
-      return;
-    }
-
-    const { agency } = subdomains[0];
-    agency_id = agency.id;
-    livemode = agency.stripe_account.livemode;
   } catch (error: any) {
     console.error(error);
-    res.sendStatus(404);
-    return;
-  }
-
-  let price_id;
-  const product_url_name = req.params.product_url_name;
-
-  try {
-    const { products } = await client.request(gql_product, { agency_id, product_url_name });
-    if (products.length != 1) {
-      res.sendStatus(404);
-      return;
-    }
-
-    price_id = products[0].default_price?.id;
-  } catch (error: any) {
-    console.error(error);
-    res.sendStatus(404);
-    return;
-  }
-
-  const requestArgs: [string, { price_id: string; livemode: boolean }, { authorization: string }?] =
-    [gql_create_stripe_checkout_session, { price_id, livemode }];
-
-  const { access_token } = req.query ?? {};
-
-  if (access_token) {
-    requestArgs.push({
-      authorization: `Bearer ${access_token}`
-    });
-  }
-
-  try {
-    const { create_stripe_checkout_session: result } = await client.request(...requestArgs);
-
-    if (!result.success || !result.checkout_session_url) {
-      console.error(result.message);
-      res.sendStatus(404);
-      return;
-    }
-
-    res.redirect(303, result.checkout_session_url);
-  } catch (error: any) {
-    console.error(error);
-    res.sendStatus(404);
+    res.sendStatus(500);
     return;
   }
 }

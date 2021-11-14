@@ -1,6 +1,6 @@
 {
   "name": "duely-checkout",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Web server handling HTTP and javascript redirects for duely related to checkout.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -27,6 +27,7 @@
   "dependencies": {
     "@duely/core": "^0.4.34",
     "@duely/db": "^0.4.25",
+    "@duely/stripe": "^0.4.10",
     "@duely/util": "^0.4.11",
     "cors": "^2.8.5",
     "express": "^4.16.4",

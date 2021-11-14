@@ -30,7 +30,7 @@
     "@duely/core": "^0.4.34",
     "@duely/db": "^0.4.25",
     "@duely/email": "^0.4.12",
-    "@duely/lambda": "0.4.1",
+    "@duely/lambda": "^0.4.1",
     "@duely/stripe": "^0.4.10",
     "@duely/util": "^0.4.11",
     "axios": "^0.21.1",
