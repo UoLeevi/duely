@@ -9,14 +9,14 @@ const gql_create_stripe_checkout_session = gql`
     $price_id: ID!
     $livemode: Boolean!
     $coupon_id: ID
-    $promomotion_code_id: ID
+    $promotion_code_id: ID
     $allow_promotion_codes: Boolean
   ) {
     create_stripe_checkout_session(
       livemode: $livemode
       price_id: $price_id
       coupon_id: $coupon_id
-      promomotion_code_id: $promomotion_code_id
+      promotion_code_id: $promotion_code_id
       allow_promotion_codes: $allow_promotion_codes
     ) {
       success
