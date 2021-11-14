@@ -357,7 +357,6 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
                   quantity: 1
                 }
               ],
-              allow_promotion_codes,
               success_url,
               cancel_url
             };
@@ -384,6 +383,8 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
                   promotion_code: promotion_code_id
                 }
               ];
+            } else if (allow_promotion_codes) {
+              stripe_checkout_session_args.allow_promotion_codes = true;
             }
 
             const checkout_session = await stripe

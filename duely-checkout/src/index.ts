@@ -87,6 +87,7 @@ async function get_checkout(req: Request, res: Response) {
       const agency = await queryResource('agency', { subdomain_id: subdomain.id });
 
       if (!agency) {
+        console.error(`Agency for subdomain_id ${subdomain.id} was not found.`);
         res.sendStatus(404);
         return;
       }
@@ -97,6 +98,7 @@ async function get_checkout(req: Request, res: Response) {
       });
 
       if (!stripe_account) {
+        console.error(`Stripe account for agency_id ${agency.id} was not found.`);
         res.sendStatus(404);
         return;
       }
@@ -106,7 +108,14 @@ async function get_checkout(req: Request, res: Response) {
         status: 'live'
       });
 
-      if (!product || !product.default_price_id) {
+      if (!product) {
+        console.error(`Product with url_name ${req.params.product_url_name} was not found.`);
+        res.sendStatus(404);
+        return;
+      }
+
+      if (!product.default_price_id) {
+        console.error(`Default price is not set for product_id ${product.id}.`);
         res.sendStatus(404);
         return;
       }
@@ -114,6 +123,7 @@ async function get_checkout(req: Request, res: Response) {
       const price = await queryResource('price', product.default_price_id);
 
       if (!price) {
+        console.error(`Price with id ${product.default_price_id} was not found.`);
         res.sendStatus(404);
         return;
       }
