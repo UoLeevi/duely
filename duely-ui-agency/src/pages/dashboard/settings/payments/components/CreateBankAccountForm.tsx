@@ -14,6 +14,7 @@ type CreateBankAccountFormFields = {
   currency: string;
   account_number: string;
   account_holder_name: string;
+  default_for_currency: boolean;
   routing_number: string;
 };
 
@@ -53,7 +54,7 @@ export function CreateBankAccountForm() {
 
   async function onSubmit(data: CreateBankAccountFormFields) {
     data = Object.fromEntries(
-      Object.entries(data).filter((entry) => ![undefined, null, ''].includes(entry[1]))
+      Object.entries(data).filter((entry) => ![undefined, null, ''].includes(entry[1] as any))
     ) as CreateBankAccountFormFields;
 
     const res_bank_account = await createBankAccount({
@@ -156,6 +157,14 @@ export function CreateBankAccountForm() {
           loading={stripe_accountLoading || agencyLoading}
           hint="The currency paid out to the bank account."
           registerOptions={{ required: true }}
+        />
+        <Form.Field
+          label="Default for currency"
+          className="max-w-md"
+          defaultValue={true}
+          name="default_for_currency"
+          type="checkbox"
+          hint="Whether this bank account should become the default for its currency."
         />
         <Form.Field
           label="Routing number"
