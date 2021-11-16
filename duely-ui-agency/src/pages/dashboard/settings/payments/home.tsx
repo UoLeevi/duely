@@ -12,6 +12,7 @@ import {
 } from '@duely/react';
 import { ConfirmBankAccountDeletionModal } from './components';
 import { DashboardSection } from '../../components';
+import { CountryCode, countryFromCode } from '@duely/util';
 
 export default function DashboardSettingsPaymentsHome() {
   const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
@@ -66,12 +67,61 @@ export default function DashboardSettingsPaymentsHome() {
       >
         <Card className="max-w-screen-lg">
           <Table
-            wrap={{ xs: 2 }}
+            wrap={{ xs: 2, sm: 4, md: 4 }}
             loading={loading}
             error={error}
             items={bank_accounts}
             keyField="id"
           >
+            <Table.Column header="Account holder" span={{ xs: 2 }}>
+              {(bank_account: TBankAccount | null) =>
+                !bank_account ? (
+                  <div className="flex space-x-2">
+                    <SkeletonText className="text-sm" />
+                  </div>
+                ) : (
+                  <div className="flex space-x-2">
+                    <span
+                      className="text-sm text-gray-500"
+                      title={bank_account.account_holder_type ?? ''}
+                    >
+                      {
+                        icons[
+                          bank_account.account_holder_type === 'company'
+                            ? 'office-building.solid'
+                            : 'user.solid'
+                        ]
+                      }
+                    </span>
+
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {bank_account.account_holder_name}
+                    </span>
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Bank" span={{ xs: 2 }}>
+              {(bank_account: TBankAccount | null) =>
+                !bank_account ? (
+                  <div className="flex space-x-2">
+                    <SkeletonText className="text-sm" />
+                    <SkeletonText className="text-sm" ch={2} />
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {bank_account.bank_name}
+                    </span>
+                    <span className="font-mono text-sm font-medium text-gray-800 dark:text-gray-300" title={countryFromCode(bank_account.country as CountryCode).name}>
+                      {countryFromCode(bank_account.country as CountryCode).flag}
+                    </span>
+                  </div>
+                )
+              }
+            </Table.Column>
+
             <Table.Column header="Bank account" span={{ xs: 2 }}>
               {(bank_account: TBankAccount | null) =>
                 !bank_account ? (
