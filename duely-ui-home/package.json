@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-home",
-  "version": "0.10.30",
+  "version": "0.10.31",
   "private": true,
   "scripts": {
     "start": "webpack serve",
