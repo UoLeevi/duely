@@ -9,8 +9,11 @@ import {
   Table,
   LoadingScreen,
   ErrorScreen,
-  SkeletonText
+  SkeletonText,
+  DropMenu,
+  icons
 } from '@duely/react';
+import { ElementType } from '@duely/util';
 
 type AgencyColumnProps = {
   agency:
@@ -18,13 +21,6 @@ type AgencyColumnProps = {
         ? T
         : never)
     | null;
-};
-
-const wrap = {
-  sm: {
-    columns: 1,
-    spans: [1, 1, 1]
-  }
 };
 
 function BrandColumn({ agency }: AgencyColumnProps) {
@@ -207,17 +203,39 @@ function StatusColumn({ agency }: AgencyColumnProps) {
   );
 }
 
+function ActionsColumn({ agency }: AgencyColumnProps) {
+  const navigateToStripeAccountUpdate = useDynamicNavigation({
+    resolveUrl: async () => {
+      const url = await query(agency_stripe_account_update_url_Q, { agency_id: agency!.id });
+      if (!url) throw new Error('Unable to get account update URL');
+      return url;
+    }
+  });
+
+    if (!agency) {
+      return <SkeletonText ch={5} />;
+    }
+
+    return (
+      <DropMenu>
+        <DropMenu.Item icon={icons.identification} href="https://connect.stripe.com/setup/c/xxxxxxxxxxxx" onClick={navigateToStripeAccountUpdate}>
+          Update
+        </DropMenu.Item>
+      </DropMenu>
+    );
+}
+
 export function ProfileBrandTable() {
   const { data: agencies, loading, error } = useQuery(current_user_agencies_Q);
 
   if (loading) return <LoadingScreen />;
   if (error) return <ErrorScreen />;
 
-  type TAgency = NonNullable<typeof agencies> extends readonly (infer T)[] ? T : never;
+  type TAgency = ElementType<typeof agencies>;
 
   return (
-    <Table items={agencies} wrap={wrap}>
-      <Table.Column header="Brand">
+    <Table items={agencies as any} wrap={{ md: 2 }}>
+      <Table.Column header="Brand" span={2}>
         {(agency: TAgency | null) => <BrandColumn agency={agency} />}
       </Table.Column>
 
@@ -225,8 +243,12 @@ export function ProfileBrandTable() {
         {(agency: TAgency | null) => <PlanColumn agency={agency} />}
       </Table.Column>
 
-      <Table.Column header="Action required">
+      <Table.Column header="Status">
         {(agency: TAgency | null) => <StatusColumn agency={agency} />}
+      </Table.Column>
+
+      <Table.Column header="Action">
+        {(agency: TAgency | null) => <ActionsColumn agency={agency} />}
       </Table.Column>
     </Table>
   );

@@ -2,6 +2,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+[list]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
 :root {
   --color-primary: #667eea;
   --color-secondary: #34d399;
@@ -14,7 +18,7 @@
 
 /* purgecss start ignore */
 
-/* ! tailwindcss v2.2.7 | MIT License | https://tailwindcss.com */
+/* ! tailwindcss v2.2.19 | MIT License | https://tailwindcss.com */
 
 /*! modern-normalize v1.1.0 | MIT License | https://github.com/sindresorhus/modern-normalize */
 
@@ -491,6 +495,18 @@ button,
   cursor: pointer;
 }
 
+/**
+ * Override legacy focus reset from Normalize with modern Firefox focus styles.
+ *
+ * This is actually an improvement over the new defaults in Firefox in our testing,
+ * as it triggers the better focus styles even for links, which still use a dotted
+ * outline in Firefox by default.
+ */
+
+:-moz-focusring {
+  outline: auto;
+}
+
 table {
   border-collapse: collapse;
 }
@@ -651,6 +667,15 @@ body, #root {
 
 .grecaptcha-badge {
   visibility: hidden;
+}
+
+.form-tick:checked {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M5.707 7.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414L7 8.586 5.707 7.293z'/%3e%3c/svg%3e");
+  border-color: transparent;
+  background-color: currentColor;
+  background-size: 100% 100%;
+  background-position: 50%;
+  background-repeat: no-repeat;
 }
 
 .container {
@@ -1504,6 +1529,7 @@ body, #root {
 }
 
 .sticky {
+  position: -webkit-sticky;
   position: sticky;
 }
 
@@ -1618,6 +1644,10 @@ body, #root {
 
 .m-2\.5 {
   margin: 0.625rem;
+}
+
+.m-1 {
+  margin: 0.25rem;
 }
 
 .my-0\.5 {
@@ -1890,18 +1920,18 @@ body, #root {
   min-width: max-content;
 }
 
+.min-w-min {
+  min-width: -webkit-min-content;
+  min-width: -moz-min-content;
+  min-width: min-content;
+}
+
 .min-w-\[10ch\] {
   min-width: 10ch;
 }
 
 .min-w-\[12ch\] {
   min-width: 12ch;
-}
-
-.min-w-min {
-  min-width: -webkit-min-content;
-  min-width: -moz-min-content;
-  min-width: min-content;
 }
 
 .max-w-screen-lg {
@@ -2707,12 +2737,16 @@ body, #root {
   padding-right: 2.5rem;
 }
 
-.pb-1 {
-  padding-bottom: 0.25rem;
+.\!pl-2\.5 {
+  padding-left: 0.625rem !important;
 }
 
 .pl-px {
   padding-left: 1px;
+}
+
+.pb-1 {
+  padding-bottom: 0.25rem;
 }
 
 .pb-5 {
@@ -2721,6 +2755,10 @@ body, #root {
 
 .pl-1 {
   padding-left: 0.25rem;
+}
+
+.\!pl-2 {
+  padding-left: 0.5rem !important;
 }
 
 .text-left {
@@ -2821,9 +2859,9 @@ body, #root {
   color: rgba(255, 255, 255, var(--tw-text-opacity));
 }
 
-.text-indigo-300 {
+.text-gray-800 {
   --tw-text-opacity: 1;
-  color: rgba(163, 191, 250, var(--tw-text-opacity));
+  color: rgba(30, 41, 59, var(--tw-text-opacity));
 }
 
 .text-green-600 {
@@ -2866,59 +2904,14 @@ body, #root {
   color: rgba(100, 116, 139, var(--tw-text-opacity));
 }
 
-.text-green-800 {
+.text-red-600 {
   --tw-text-opacity: 1;
-  color: rgba(6, 95, 70, var(--tw-text-opacity));
+  color: rgba(225, 29, 72, var(--tw-text-opacity));
 }
 
-.text-orange-800 {
+.text-blue-600 {
   --tw-text-opacity: 1;
-  color: rgba(154, 52, 18, var(--tw-text-opacity));
-}
-
-.text-red-800 {
-  --tw-text-opacity: 1;
-  color: rgba(159, 18, 57, var(--tw-text-opacity));
-}
-
-.text-indigo-800 {
-  --tw-text-opacity: 1;
-  color: rgba(67, 65, 144, var(--tw-text-opacity));
-}
-
-.text-blue-800 {
-  --tw-text-opacity: 1;
-  color: rgba(30, 64, 175, var(--tw-text-opacity));
-}
-
-.text-green-700 {
-  --tw-text-opacity: 1;
-  color: rgba(4, 120, 87, var(--tw-text-opacity));
-}
-
-.text-orange-700 {
-  --tw-text-opacity: 1;
-  color: rgba(194, 65, 12, var(--tw-text-opacity));
-}
-
-.text-red-700 {
-  --tw-text-opacity: 1;
-  color: rgba(190, 18, 60, var(--tw-text-opacity));
-}
-
-.text-indigo-700 {
-  --tw-text-opacity: 1;
-  color: rgba(76, 81, 191, var(--tw-text-opacity));
-}
-
-.text-blue-700 {
-  --tw-text-opacity: 1;
-  color: rgba(29, 78, 216, var(--tw-text-opacity));
-}
-
-.text-gray-800 {
-  --tw-text-opacity: 1;
-  color: rgba(30, 41, 59, var(--tw-text-opacity));
+  color: rgba(37, 99, 235, var(--tw-text-opacity));
 }
 
 .text-red-500 {
@@ -2940,14 +2933,9 @@ body, #root {
   color: rgba(251, 113, 133, var(--tw-text-opacity));
 }
 
-.text-indigo-900 {
+.text-red-700 {
   --tw-text-opacity: 1;
-  color: rgba(60, 54, 107, var(--tw-text-opacity));
-}
-
-.text-indigo-200 {
-  --tw-text-opacity: 1;
-  color: rgba(195, 218, 254, var(--tw-text-opacity));
+  color: rgba(190, 18, 60, var(--tw-text-opacity));
 }
 
 .opacity-100 {
@@ -3029,6 +3017,12 @@ body, #root {
   transition-duration: 150ms;
 }
 
+.transition-colors {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
 .transition-opacity {
   transition-property: opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -3037,12 +3031,6 @@ body, #root {
 
 .transition-transform {
   transition-property: transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-.transition-colors {
-  transition-property: background-color, border-color, color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
@@ -3125,6 +3113,15 @@ body, #root {
   padding-right: 0.75rem;
 }
 
+.checked\:border-transparent:checked {
+  border-color: transparent;
+}
+
+.checked\:bg-blue-600:checked {
+  --tw-bg-opacity: 1;
+  background-color: rgba(37, 99, 235, var(--tw-bg-opacity));
+}
+
 .focus-within\:ring:focus-within {
   --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
   --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color);
@@ -3156,14 +3153,14 @@ body, #root {
   background-color: rgba(248, 250, 252, var(--tw-bg-opacity));
 }
 
-.hover\:text-gray-500:hover {
-  --tw-text-opacity: 1;
-  color: rgba(100, 116, 139, var(--tw-text-opacity));
-}
-
 .hover\:text-gray-700:hover {
   --tw-text-opacity: 1;
   color: rgba(51, 65, 85, var(--tw-text-opacity));
+}
+
+.hover\:text-gray-500:hover {
+  --tw-text-opacity: 1;
+  color: rgba(100, 116, 139, var(--tw-text-opacity));
 }
 
 .hover\:text-indigo-500:hover {
@@ -3174,16 +3171,6 @@ body, #root {
 .hover\:text-gray-100:hover {
   --tw-text-opacity: 1;
   color: rgba(241, 245, 249, var(--tw-text-opacity));
-}
-
-.hover\:text-gray-600:hover {
-  --tw-text-opacity: 1;
-  color: rgba(71, 85, 105, var(--tw-text-opacity));
-}
-
-.hover\:text-indigo-600:hover {
-  --tw-text-opacity: 1;
-  color: rgba(90, 103, 216, var(--tw-text-opacity));
 }
 
 .focus\:border-blue-300:focus {

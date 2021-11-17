@@ -1,6 +1,7 @@
 import { Util, useClassName, Sidebar } from '@duely/react';
 import { useQuery, current_user_Q } from '@duely/client';
 import { Link } from 'react-router-dom';
+import { createClassName, getNameInitials } from '@duely/util';
 // import TopBar from '~/components/TopBar';
 
 type ProfileUserInfoProps = {

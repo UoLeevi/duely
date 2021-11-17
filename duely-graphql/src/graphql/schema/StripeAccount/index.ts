@@ -175,7 +175,7 @@ export const StripeAccount: GqlTypeDefinition<
 
           // create stripe account verification url
           // see: https://stripe.com/docs/api/account_links/create
-          return await stripe.get(source).accountLinks.create({
+          return await stripe[stripe_env].accountLinks.create({
             account: source.stripe_id_ext,
             refresh_url: return_url,
             return_url,
