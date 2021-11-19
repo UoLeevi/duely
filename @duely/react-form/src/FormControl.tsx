@@ -23,7 +23,12 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
   }> = {};
 
   #arrayFields: Partial<{
-    [TName in keyof TFormFields]: string[];
+    [TName in keyof TFormFields]: {
+      options: {
+        returnTrueValues?: boolean;
+      };
+      items: string[];
+    };
   }> = {};
 
   constructor(options?: { defaultValues?: Partial<TFormFields> }) {
@@ -42,7 +47,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
       }
 
       const arrayName = name.slice(0, leftBracketIndex);
-      const keys = this.#arrayFields[arrayName];
+      const keys = this.#arrayFields[arrayName]?.items;
 
       if (!keys) {
         value[name] = field.value;
@@ -62,19 +67,34 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
       if (fieldSet.has(itemName)) continue;
 
       fieldSet.add(itemName);
-
       let arrayField = value[arrayName];
 
-      if (!arrayField) {
-        arrayField = keys.map((_) => ({}));
-        value[arrayName] = arrayField;
-      }
+      if (this.#arrayFields[arrayName]?.options.returnTrueValues) {
+        if (!arrayField) {
+          arrayField = [];
+          value[arrayName] = arrayField;
+        }
 
-      for (let i = 0; i < keys.length; ++i) {
-        const key = keys[i];
-        const field = this.#fields[`${arrayName}[${key}].${itemName}`];
-        if (field !== undefined) {
-          arrayField[i][itemName] = field.value;
+        for (let i = 0; i < keys.length; ++i) {
+          const key = keys[i];
+          const field = this.#fields[`${arrayName}[${key}].${itemName}`];
+          if (field !== undefined && field.value === true) {
+            arrayField.push(itemName);
+            break;
+          }
+        }
+      } else {
+        if (!arrayField) {
+          arrayField = keys.map((_) => ({}));
+          value[arrayName] = arrayField;
+        }
+
+        for (let i = 0; i < keys.length; ++i) {
+          const key = keys[i];
+          const field = this.#fields[`${arrayName}[${key}].${itemName}`];
+          if (field !== undefined) {
+            arrayField[i][itemName] = field.value;
+          }
         }
       }
     }
@@ -216,6 +236,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
       keyField: TKeyField | ((item: TItem) => string);
       items: TItem[] | undefined;
       loading?: boolean;
+      returnTrueValues?: boolean;
     }
   ) {
     const bindItems = bind?.items ?? [];
@@ -256,7 +277,10 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     if (items.length === 0) {
       delete this.#arrayFields[name];
     } else {
-      this.#arrayFields[name] = items;
+      this.#arrayFields[name] = {
+        items,
+        options: { returnTrueValues: bind?.returnTrueValues }
+      };
     }
 
     return {

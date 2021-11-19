@@ -37,6 +37,7 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
       keyField: TKeyField | ((item: TItem) => string);
       items: TItem[] | undefined;
       loading?: boolean;
+      returnTrueValues?: boolean;
     }
   ): {
     fields: FieldArrayItem<TItem>[];

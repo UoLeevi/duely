@@ -10,7 +10,7 @@ export default function Workspace() {
   const { showMessage, message } = useMessage();
   const form = useForm();
   return (
-    <PageLayout className="prose prose-indigo">
+    <PageLayout>
       <Form
         form={form}
         onSubmit={(d) => {
@@ -22,7 +22,15 @@ export default function Workspace() {
           label="Enable"
           className="max-w-lg"
           name="name"
-          type="checkbox"
+          type="select"
+          multiple
+          options={[
+            'Option 1',
+            'Option 2',
+            'Option 3',
+            'Option 4',
+            'Option 5'
+          ]}
           registerOptions={{ required: true }}
         />
 

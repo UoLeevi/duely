@@ -1,15 +1,16 @@
 import type { Override } from '@duely/util';
 import React from 'react';
+import { FormField } from '..';
 import { useFormContext } from '../../Form';
 import { FormFieldElementProps } from './FormFieldElementProps';
 
-export type FormFieldSelectElementProps<
+export type FormFieldMultiSelectElementProps<
   TName extends string,
   TFormFields extends Record<TName, string> = Record<TName, string>
 > = Override<
   React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>,
   FormFieldElementProps<TName, TFormFields> & {
-    multiple?: false;
+    multiple: true;
     options:
       | (
           | string
@@ -21,9 +22,10 @@ export type FormFieldSelectElementProps<
             }
         )[]
       | undefined;
-  }>;
+  }
+>;
 
-export function FormFieldSelectElement<
+export function FormFieldMultiSelectElement<
   TName extends string & keyof TFormFields,
   TFormFields extends Record<string, any> = Record<string, any>
 >({
@@ -32,31 +34,33 @@ export function FormFieldSelectElement<
   options,
   loading,
   ...props
-}: FormFieldSelectElementProps<TName, TFormFields>) {
+}: FormFieldMultiSelectElementProps<TName, TFormFields>) {
   const form = useFormContext();
-  const children =
-    ['', ...(options ?? [])].map((option) => {
-      const { value, element } =
-        typeof option === 'object' ? option : { value: option, element: undefined };
-      return (
-        <option key={value} value={value} className="dark:bg-gray-800">
-          {element ?? value}
-        </option>
-      );
-    }) ?? [];
+
+  const { fields } = form.useFieldArray(name, {
+    items:
+      options?.map((option) =>
+        typeof option === 'object' ? option : { value: option, element: undefined }
+      ) ?? [],
+    loading: loading,
+    keyField: 'value',
+    returnTrueValues: true
+  });
+
+  console.log(fields);
 
   return (
     <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
-      <select
-        id={name}
-        {...form.register(name, registerOptions)}
-        className="w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md outline-none appearance-none"
-        spellCheck="false"
-        autoComplete="off"
-        {...props}
-      >
-        {children}
-      </select>
+      <div className="w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md">
+        {fields.map((field) => (
+          <FormField
+            key={field.key}
+            type="checkbox"
+            name={field.getName(field.item!.value)}
+            label={field.item!.value}
+          />
+        ))}
+      </div>
 
       <svg
         xmlns="http://www.w3.org/2000/svg"

@@ -11,6 +11,8 @@ import {
   FormFieldFileElementProps,
   FormFieldImageElement,
   FormFieldImageElementProps,
+  FormFieldMultiSelectElement,
+  FormFieldMultiSelectElementProps,
   FormFieldRadioBlocksElement,
   FormFieldRadioBlocksElementProps,
   FormFieldRadioToggleElement,
@@ -62,6 +64,14 @@ type FormFieldSelectProps<
     type: 'select';
   };
 
+type FormFieldMultiSelectProps<
+  TName extends string & keyof TFormFields,
+  TFormFields extends Record<string, any> = Record<string, any>
+> = FormFieldPropsPartial<TName, TFormFields> &
+  FormFieldMultiSelectElementProps<TName, TFormFields> & {
+    type: 'select';
+  };
+
 type FormFieldImageProps<
   TName extends string & keyof TFormFields,
   TFormFields extends Record<string, any> = Record<string, any>
@@ -109,6 +119,7 @@ type FormFieldProps<
   | Omit<FormFieldRadioToggleProps<TName, TFormFields>, 'hintRef'>
   | Omit<FormFieldRadioBlocksProps<TName, TFormFields>, 'hintRef'>
   | Omit<FormFieldSelectProps<TName, TFormFields>, 'hintRef'>
+  | Omit<FormFieldMultiSelectProps<TName, TFormFields>, 'hintRef'>
   | Omit<FormFieldDefaultProps<TName, TFormFields, TType>, 'hintRef'>;
 
 export function FormField<
@@ -208,16 +219,29 @@ export function FormField<
     }
 
     case 'select': {
-      element = (
-        <FormFieldSelectElement
-          {...({
-            name,
-            loading,
-            ...props
-          } as FormFieldSelectElementProps<TName, TFormFields>)}
-        />
-      );
-      break;
+      if ((props as any).multiple) {
+        element = (
+          <FormFieldMultiSelectElement
+            {...({
+              name,
+              loading,
+              ...props
+            } as FormFieldMultiSelectElementProps<TName, TFormFields>)}
+          />
+        );
+        break;
+      } else {
+        element = (
+          <FormFieldSelectElement
+            {...({
+              name,
+              loading,
+              ...props
+            } as FormFieldSelectElementProps<TName, TFormFields>)}
+          />
+        );
+        break;
+      }
     }
 
     case 'image': {
