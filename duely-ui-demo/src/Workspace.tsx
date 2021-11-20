@@ -19,9 +19,23 @@ export default function Workspace() {
         }}
       >
         <Form.Field
-          label="Enable"
+          label="Single select"
           className="max-w-lg"
-          name="name"
+          name="single"
+          type="select"
+          options={[
+            'Option 1',
+            'Option 2',
+            'Option 3',
+            'Option 4',
+            'Option 5'
+          ]}
+          registerOptions={{ required: true }}
+        />
+        <Form.Field
+          label="Multi select"
+          className="max-w-lg"
+          name="multiple"
           type="select"
           multiple
           options={[

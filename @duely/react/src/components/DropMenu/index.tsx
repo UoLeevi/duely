@@ -96,9 +96,11 @@ type DropMenuProps = React.DetailedHTMLProps<
 > & {
   'no-button'?: boolean;
   open?: boolean;
+  unmount?: boolean;
+  'full-width'?: boolean;
 };
 
-export function DropMenuRoot({ children, ...props }: DropMenuProps) {
+export function DropMenuRoot({ children, unmount, ...props }: DropMenuProps) {
   const childrenArray = React.Children.toArray(children);
   const menuRef = useRef<HTMLDivElement>(null);
   const itemsClassNamesRef = useRef<string>('-bottom-2 left-0 origin-top-left translate-y-full');
@@ -136,6 +138,8 @@ export function DropMenuRoot({ children, ...props }: DropMenuProps) {
   );
 
   useIntersectionObserver(menuRef, intersectionObserverCallback);
+  unmount ??= true;
+
 
   return (
     <Menu as="div" className="relative inline-block">
@@ -153,8 +157,9 @@ export function DropMenuRoot({ children, ...props }: DropMenuProps) {
 
             <Transition
               show={open}
+              unmount={unmount}
               as={React.Fragment}
-              enter="transition ease-out duration-100"
+              enter="transition ease-out duration-75"
               enterFrom="opacity-0 scale-95"
               enterTo="opacity-100 scale-100"
               leave="transition ease-in duration-75"
@@ -163,7 +168,11 @@ export function DropMenuRoot({ children, ...props }: DropMenuProps) {
             >
               <Menu.Items
                 static
-                className={`transform absolute z-20 flex flex-col w-56 min-w-min bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${itemsClassNamesRef.current}`}
+                className={`${
+                  props['full-width'] ? 'w-full' : 'w-56'
+                } transform absolute z-20 flex flex-col min-w-min bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${
+                  itemsClassNamesRef.current
+                }`}
               >
                 {items}
               </Menu.Items>

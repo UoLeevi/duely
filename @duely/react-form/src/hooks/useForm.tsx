@@ -14,12 +14,17 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
   unregister<TName extends string & keyof TFormFields>(name: TName): void;
   useFormFieldState<TName extends string & keyof TFormFields>(
     name: TName
-  ): {
-    isDirty: boolean;
-    isTouched: boolean;
-    error: string | null;
-  };
+  ):
+    | {
+        isDirty: boolean;
+        isTouched: boolean;
+        error: string | null;
+      }
+    | undefined;
   useFormFieldValue<TName extends string & keyof TFormFields>(
+    name: TName
+  ): TFormFields[TName] | undefined;
+  useFieldArrayValue<TName extends string & keyof TFormFields>(
     name: TName
   ): TFormFields[TName] | undefined;
   useFormValue(): Partial<TFormFields>;
@@ -69,6 +74,7 @@ export function useForm<TFormFields extends Record<string, any> = Record<string,
       unregister: control.unregister.bind(control),
       useFormFieldState: control.useFormFieldState.bind(control),
       useFormFieldValue: control.useFormFieldValue.bind(control),
+      useFieldArrayValue: control.useFieldArrayValue.bind(control),
       useFormValue: control.useFormValue.bind(control),
       useFormState: control.useFormState.bind(control),
       useFieldArray: control.useFieldArray.bind(control) as any,

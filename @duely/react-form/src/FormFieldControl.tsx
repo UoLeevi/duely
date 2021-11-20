@@ -77,6 +77,15 @@ export const formFieldInfo: Record<
   'datetime-local': {
     props: {
       type: 'datetime-local'
+    },
+    getElementValue: (element: HTMLInputElement) =>
+      element.value ? new Date(element.value) : null,
+    setElementValue: (element: HTMLInputElement, value: Date | undefined) => {
+      if (!value) value = undefined;
+      if ((element.value as any) === value) return false;
+      var date = value && new Date(value);
+      element.value = date?.toISOString() ?? '';
+      return true;
     }
   },
   email: {

@@ -25,7 +25,7 @@ export function ProductBasicInfoFormSection<
   const name = form.useFormFieldValue('name');
 
   useEffect(() => {
-    if (!url_name_field.isDirty) {
+    if (!url_name_field?.isDirty) {
       const defaultCheckoutUrl =
         name
           ?.trim()
@@ -34,7 +34,7 @@ export function ProductBasicInfoFormSection<
 
       form.setValue('url_name', defaultCheckoutUrl);
     }
-  }, [url_name_field.isDirty, name]);
+  }, [url_name_field?.isDirty, name]);
 
   return (
     <>

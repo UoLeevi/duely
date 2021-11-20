@@ -22,8 +22,8 @@ export function useRerender() {
     }
   });
 
-  return useCallback(() => {
-    if (state.isRendering) {
+  return useCallback((defer?: boolean) => {
+    if (state.isRendering || defer) {
       state.rerenderingPending = true;
     } else {
       state.rerenderingPending = false;

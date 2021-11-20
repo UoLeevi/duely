@@ -13,6 +13,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
   #isSubmitting = false;
   #isDirty = false;
   #valueChanged = false;
+  #registerListeners = new Map<string & keyof TFormFields, (() => void)[]>();
   #valueChangedListeners: (() => void)[] = [];
   #stateChanged = false;
   #stateChangedListeners: (() => void)[] = [];
@@ -155,6 +156,17 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
         this.#valueChanged = true;
         this.endUpdate();
       });
+
+      const callbacks = this.#registerListeners.get(name);
+      callbacks?.forEach((callback) => callback());
+
+      const leftBracketIndex = name.indexOf('[');
+
+      if (leftBracketIndex !== -1) {
+        const arrayName = name.slice(0, leftBracketIndex);
+        const callbacks = this.#registerListeners.get(arrayName);
+        callbacks?.forEach((callback) => callback());
+      }
     }
 
     if (options) {
@@ -208,16 +220,56 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
 
   useFormFieldState<TName extends string & keyof TFormFields>(name: TName) {
     const rerender = useRerender();
-    const field = this.#getOrAddField(name);
-    useEffect(() => field.subscribeToStateChanged(rerender), []);
+    const field = this.#fields[name];
+    useEffect(() => {
+      if (field) {
+        return field.subscribeToStateChanged(rerender);
+      } else {
+        let callbacks = this.#registerListeners.get(name);
+        if (!callbacks) {
+          callbacks = [];
+          this.#registerListeners.set(name, callbacks);
+        }
+        callbacks.push(rerender.bind(null, true));
+      }
+    }, [field]);
     return field;
   }
 
   useFormFieldValue<TName extends string & keyof TFormFields>(name: TName) {
     const rerender = useRerender();
-    const field = this.#getOrAddField(name);
-    useEffect(() => field.subscribeToValueChanged(rerender), []);
-    return field.value;
+    const field = this.#fields[name];
+    useEffect(() => {
+      if (field) {
+        return field.subscribeToValueChanged(rerender);
+      } else {
+        let callbacks = this.#registerListeners.get(name);
+        if (!callbacks) {
+          callbacks = [];
+          this.#registerListeners.set(name, callbacks);
+        }
+        callbacks.push(rerender.bind(null, true));
+      }
+    }, [field]);
+    return field?.value;
+  }
+
+  useFieldArrayValue<TName extends string & keyof TFormFields>(name: TName) {
+    const [subscribtions] = useState(() => new Map<string, () => void>());
+    const rerender = useRerender();
+
+    useEffect(() => {
+      Object.entries(this.#fields)
+        .filter(([fieldName]) => !subscribtions.has(fieldName) && fieldName.startsWith(`${name}[`))
+        .forEach(([fieldName, field]) =>
+          subscribtions.set(fieldName, field.subscribeToValueChanged(rerender))
+        );
+    });
+
+    // unsubsribe on unmount
+    useEffect(() => () => subscribtions.forEach((unsubscribe) => unsubscribe()), []);
+
+    return this.value[name];
   }
 
   useFormValue() {

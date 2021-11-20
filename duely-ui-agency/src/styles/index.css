@@ -1810,6 +1810,10 @@ body, #root {
   white-space: nowrap;
 }
 
+.overflow-ellipsis {
+  text-overflow: ellipsis;
+}
+
 .whitespace-nowrap {
   white-space: nowrap;
 }
@@ -2087,6 +2091,10 @@ body, #root {
 
 .p-4 {
   padding: 1rem;
+}
+
+.p-2\.5 {
+  padding: 0.625rem;
 }
 
 .p-3 {
@@ -2661,6 +2669,10 @@ body, #root {
   border-top-right-radius: 0.375rem;
 }
 
+.first\:pt-3:first-child {
+  padding-top: 0.75rem;
+}
+
 .first\:pl-3:first-child {
   padding-left: 0.75rem;
 }
@@ -2668,6 +2680,10 @@ body, #root {
 .last\:rounded-b-md:last-child {
   border-bottom-right-radius: 0.375rem;
   border-bottom-left-radius: 0.375rem;
+}
+
+.last\:pb-3:last-child {
+  padding-bottom: 0.75rem;
 }
 
 .last\:pr-3:last-child {
@@ -2681,6 +2697,10 @@ body, #root {
 .checked\:bg-blue-600:checked {
   --tw-bg-opacity: 1;
   background-color: rgba(37, 99, 235, var(--tw-bg-opacity));
+}
+
+.empty\:before\:content-\[attr\(data-content\)\]:empty::before {
+  content: attr(data-content);
 }
 
 .focus-within\:ring:focus-within {

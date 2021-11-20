@@ -8,7 +8,9 @@ export type FormFieldCheckboxElementProps<
   TFormFields extends Record<TName, string> = Record<TName, string>
 > = Override<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
-  FormFieldElementProps<TName, TFormFields>
+  FormFieldElementProps<TName, TFormFields> & {
+    dense?: boolean;
+  }
 >;
 
 export function FormFieldCheckboxElement<
@@ -19,6 +21,7 @@ export function FormFieldCheckboxElement<
   registerOptions,
   loading,
   type,
+  dense,
   ...props
 }: FormFieldCheckboxElementProps<TName, TFormFields>) {
   const form = useFormContext();
@@ -28,7 +31,9 @@ export function FormFieldCheckboxElement<
       id={name}
       {...form.register(name, registerOptions)}
       type="checkbox"
-      className="p-3 bg-transparent border border-gray-300 rounded-md shadow-sm outline-none appearance-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5 checked:bg-blue-600 checked:border-transparent form-tick"
+      className={`${
+        dense ? 'p-2.5' : 'p-3'
+      } bg-transparent border border-gray-300 rounded-md shadow-sm outline-none appearance-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5 checked:bg-blue-600 checked:border-transparent form-tick`}
       disabled={loading}
       {...props}
     />

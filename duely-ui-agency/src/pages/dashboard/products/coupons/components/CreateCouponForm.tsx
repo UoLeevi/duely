@@ -29,7 +29,7 @@ type CreateCouponFormFields = {
   name: string;
   coupon_type: 'amount_off' | 'percent_off';
   amount_or_percent_off: string;
-  applies_to_product: string;
+  applies_to_products: string[];
   has_expiry: boolean;
   redeem_by_date: Date;
   has_promotion_code: boolean;
@@ -78,9 +78,12 @@ export function CreateCouponForm() {
   const has_expiry = form.useFormFieldValue('has_expiry');
   const has_promotion_code = form.useFormFieldValue('has_promotion_code');
   const amount_or_percent_off = form.useFormFieldValue('amount_or_percent_off');
-  const applies_to_product = form.useFormFieldValue('applies_to_product');
+  const applies_to_products = form.useFieldArrayValue('applies_to_products');
 
-  const productName = products?.find((p) => p.id === applies_to_product)?.name ?? '';
+  const productName =
+    applies_to_products?.length === 1
+      ? products?.find((p) => p.id === applies_to_products[0])?.name ?? ''
+      : '';
 
   const state = {
     loading:
@@ -93,7 +96,7 @@ export function CreateCouponForm() {
 
   useEffect(() => {
     const number = +(amount_or_percent_off ?? 0);
-    if (!name_field.isDirty) {
+    if (!name_field?.isDirty) {
       if (coupon_type == 'amount_off') {
         const minorAmount = numberToMinorCurrencyAmount(number, currency);
         form.setValue('name', `${productName} ${formatCurrency(minorAmount, currency)} off`.trim());
@@ -101,13 +104,13 @@ export function CreateCouponForm() {
         form.setValue('name', `${productName} ${number} % off`.trim());
       }
     }
-  }, [name_field.isDirty, coupon_type, amount_or_percent_off, productName]);
+  }, [name_field?.isDirty, coupon_type, amount_or_percent_off, productName]);
 
   async function onSubmit({
     coupon_type,
     name,
     amount_or_percent_off,
-    applies_to_product,
+    applies_to_products,
     redeem_by_date,
     has_expiry,
     has_promotion_code,
@@ -119,7 +122,7 @@ export function CreateCouponForm() {
       name,
       currency,
       applies_to: {
-        products: [applies_to_product]
+        products: applies_to_products
       }
     };
 
@@ -144,7 +147,7 @@ export function CreateCouponForm() {
       const args: Parameters<typeof createPromotionCode>[0] = {
         stripe_account_id: stripe_account!.id,
         coupon: res_coupon.coupon!.id,
-        code: promotion_code,
+        code: promotion_code
       };
 
       if (has_expiry && redeem_by_date) {
@@ -154,7 +157,9 @@ export function CreateCouponForm() {
       const res_promotion_code = await createPromotionCode(args);
 
       if (!res_promotion_code?.success) {
-        setErrorMessage('Coupon created but error while creating promotion code:' + res_promotion_code?.message);
+        setErrorMessage(
+          'Coupon created but error while creating promotion code:' + res_promotion_code?.message
+        );
         return;
       }
     }
@@ -222,7 +227,7 @@ export function CreateCouponForm() {
           label={coupon_type === 'amount_off' ? 'Amount off' : 'Percent off'}
           name="amount_or_percent_off"
           type="text"
-          className="w-36"
+          className="w-48"
           inputMode="numeric"
           prefix={coupon_type === 'amount_off' ? currencyPrefix : percentPrefix}
           registerOptions={{
@@ -236,8 +241,9 @@ export function CreateCouponForm() {
         <Form.Field
           label="Product"
           className="max-w-lg"
-          name="applies_to_product"
+          name="applies_to_products"
           type="select"
+          multiple
           options={(products ?? []).map((p) => ({ element: p.name, value: p.id }))}
           hint="Product that the coupon applies to."
           registerOptions={{ required: true }}
@@ -291,9 +297,9 @@ export function CreateCouponForm() {
             {has_expiry && (
               <Form.Field
                 label="Expiry date"
-                className="w-48"
+                className="w-64"
                 name="redeem_by_date"
-                type="date"
+                type="datetime-local"
                 hint="Last time at which the coupon can be redeemed."
                 registerOptions={{
                   required: true

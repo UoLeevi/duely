@@ -38,6 +38,7 @@ type FormFieldPropsPartial<
   hint?: React.ReactNode;
   actions?: React.ReactNode;
   loading?: boolean;
+  dense?: boolean;
 };
 
 type FormFieldRadioToggleProps<
@@ -135,11 +136,12 @@ export function FormField<
   actions,
   loading,
   className,
+  dense,
   ...props
 }: FormFieldProps<TName, TFormFields, TType>) {
   const form = useFormContext();
   const fieldState = form.useFormFieldState(name);
-  let errorMessage = fieldState.error;
+  let errorMessage = fieldState?.error;
 
   const [longErrorMessage, shortErrorMessage] =
     errorMessage?.length! > 20 ? [errorMessage, null] : [null, errorMessage];
@@ -185,6 +187,7 @@ export function FormField<
           {...({
             name,
             loading,
+            dense,
             ...props
           } as FormFieldCheckboxElementProps<TName, TFormFields>)}
         />
@@ -210,9 +213,11 @@ export function FormField<
               {errorMessage}
             </p>
           ) : (
-            <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
-              {hintRef.current}
-            </p>
+            (hintRef.current || !dense) && (
+              <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
+                {hintRef.current}
+              </p>
+            )
           )}
         </div>
       );
@@ -327,9 +332,11 @@ export function FormField<
           {longErrorMessage}
         </p>
       ) : (
-        <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
-          {hintRef.current}
-        </p>
+        (hintRef.current || !dense) && (
+          <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
+            {hintRef.current}
+          </p>
+        )
       )}
     </div>
   );
