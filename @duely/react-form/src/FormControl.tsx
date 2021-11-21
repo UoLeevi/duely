@@ -13,7 +13,14 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
   #isSubmitting = false;
   #isDirty = false;
   #valueChanged = false;
-  #registerListeners = new Map<string & keyof TFormFields, (() => void)[]>();
+  #registerListeners = new Map<
+    string & keyof TFormFields,
+    {
+      callback: (defer?: boolean) => void;
+      unsubscribe?: () => void;
+      type: 'valueChanged' | 'stateChanged';
+    }[]
+  >();
   #valueChangedListeners: (() => void)[] = [];
   #stateChanged = false;
   #stateChangedListeners: (() => void)[] = [];
@@ -158,14 +165,30 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
       });
 
       const callbacks = this.#registerListeners.get(name);
-      callbacks?.forEach((callback) => callback());
+      callbacks?.forEach((subscription) => {
+        if (subscription.type === 'valueChanged') {
+          subscription.unsubscribe = field?.subscribeToValueChanged(subscription.callback);
+        } else {
+          subscription.unsubscribe = field?.subscribeToStateChanged(subscription.callback);
+        }
+
+        subscription.callback(true);
+      });
 
       const leftBracketIndex = name.indexOf('[');
 
       if (leftBracketIndex !== -1) {
         const arrayName = name.slice(0, leftBracketIndex);
         const callbacks = this.#registerListeners.get(arrayName);
-        callbacks?.forEach((callback) => callback());
+        callbacks?.forEach((subscription) => {
+          if (subscription.type === 'valueChanged') {
+            subscription.unsubscribe = field?.subscribeToValueChanged(subscription.callback);
+          } else {
+            subscription.unsubscribe = field?.subscribeToStateChanged(subscription.callback);
+          }
+
+          subscription.callback(true);
+        });
       }
     }
 
@@ -219,38 +242,59 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
   }
 
   useFormFieldState<TName extends string & keyof TFormFields>(name: TName) {
+    const subscriptionRef = useRef<() => void>();
     const rerender = useRerender();
     const field = this.#fields[name];
-    useEffect(() => {
+
+    if (!subscriptionRef.current) {
       if (field) {
-        return field.subscribeToStateChanged(rerender);
+        subscriptionRef.current = field.subscribeToValueChanged(rerender);
       } else {
         let callbacks = this.#registerListeners.get(name);
         if (!callbacks) {
           callbacks = [];
           this.#registerListeners.set(name, callbacks);
         }
-        callbacks.push(rerender.bind(null, true));
+        const subscription: ElementType<typeof callbacks> = {
+          callback: rerender,
+          type: 'stateChanged'
+        };
+        callbacks.push(subscription);
+        subscriptionRef.current = () => subscription.unsubscribe?.();
       }
-    }, [field]);
+    }
+
+    // unsubsribe on unmount
+    useEffect(() => () => subscriptionRef.current?.(), []);
     return field;
   }
 
   useFormFieldValue<TName extends string & keyof TFormFields>(name: TName) {
+    const subscriptionRef = useRef<() => void>();
     const rerender = useRerender();
     const field = this.#fields[name];
-    useEffect(() => {
+
+    if (!subscriptionRef.current) {
       if (field) {
-        return field.subscribeToValueChanged(rerender);
+        subscriptionRef.current = field.subscribeToValueChanged(rerender);
       } else {
         let callbacks = this.#registerListeners.get(name);
         if (!callbacks) {
           callbacks = [];
           this.#registerListeners.set(name, callbacks);
         }
-        callbacks.push(rerender.bind(null, true));
+        const subscription: ElementType<typeof callbacks> = {
+          callback: rerender,
+          type: 'valueChanged'
+        };
+        callbacks.push(subscription);
+        subscriptionRef.current = () => subscription.unsubscribe?.();
       }
-    }, [field]);
+    }
+
+    // unsubsribe on unmount
+    useEffect(() => () => subscriptionRef.current?.(), []);
+
     return field?.value;
   }
 
@@ -258,13 +302,11 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     const [subscribtions] = useState(() => new Map<string, () => void>());
     const rerender = useRerender();
 
-    useEffect(() => {
-      Object.entries(this.#fields)
-        .filter(([fieldName]) => !subscribtions.has(fieldName) && fieldName.startsWith(`${name}[`))
-        .forEach(([fieldName, field]) =>
-          subscribtions.set(fieldName, field.subscribeToValueChanged(rerender))
-        );
-    });
+    Object.entries(this.#fields)
+      .filter(([fieldName]) => !subscribtions.has(fieldName) && fieldName.startsWith(`${name}[`))
+      .forEach(([fieldName, field]) =>
+        subscribtions.set(fieldName, field.subscribeToValueChanged(rerender))
+      );
 
     // unsubsribe on unmount
     useEffect(() => () => subscribtions.forEach((unsubscribe) => unsubscribe()), []);

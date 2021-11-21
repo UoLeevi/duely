@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-agency",
-  "version": "0.8.67",
+  "version": "0.8.68",
   "private": true,
   "scripts": {
     "start": "webpack serve",
