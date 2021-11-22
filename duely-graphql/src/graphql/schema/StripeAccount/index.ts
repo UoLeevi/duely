@@ -316,36 +316,41 @@ export const StripeAccount: GqlTypeDefinition<
       async coupons(source, { starting_after_id, ending_before_id, ...args }, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-  
+
         try {
           const access = await queryResourceAccess(context, source.id);
-  
+
           if (access !== 'owner') {
             throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
           }
-  
+
           if (starting_after_id) {
             args.starting_after = starting_after_id;
           }
-  
+
           if (ending_before_id) {
             args.ending_before = ending_before_id;
           }
-  
+
           // see: https://stripe.com/docs/api/coupons/list
-          const list = await stripe.get(source).coupons.list(args);
+          const list = await stripe.get(source).coupons.list({ expand: ['applies_to'], ...args });
           return withStripeAccountProperty(list.data, source);
         } catch (error: any) {
           throw new Error(error.message);
         }
       },
-      async invoices(source, { starting_after_id, ending_before_id, customer_id, ...args }, context, info) {
+      async invoices(
+        source,
+        { starting_after_id, ending_before_id, customer_id, ...args },
+        context,
+        info
+      ) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-  
+
         try {
           const access = await queryResourceAccess(context, source.id);
-  
+
           if (access !== 'owner') {
             throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
           }
@@ -353,15 +358,15 @@ export const StripeAccount: GqlTypeDefinition<
           if (customer_id) {
             args.customer = customer_id;
           }
-  
+
           if (starting_after_id) {
             args.starting_after = starting_after_id;
           }
-  
+
           if (ending_before_id) {
             args.ending_before = ending_before_id;
           }
-  
+
           // see: https://stripe.com/docs/api/invoices/list
           const list = await stripe.get(source).invoices.list(args);
           return withStripeAccountProperty(list.data, source);
@@ -369,7 +374,12 @@ export const StripeAccount: GqlTypeDefinition<
           throw new Error(error.message);
         }
       },
-      async invoiceitems(source, { starting_after_id, ending_before_id, customer_id, ...args }, context, info) {
+      async invoiceitems(
+        source,
+        { starting_after_id, ending_before_id, customer_id, ...args },
+        context,
+        info
+      ) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 

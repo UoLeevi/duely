@@ -32,11 +32,11 @@ export const Coupon: GqlTypeDefinition<
     }
 
     type CouponAppliesTo {
-      products: [String!]
+      products: [String!]!
     }
 
     input CouponAppliesToInput {
-      products: [String!]
+      products: [String!]!
     }
 
     extend type Query {

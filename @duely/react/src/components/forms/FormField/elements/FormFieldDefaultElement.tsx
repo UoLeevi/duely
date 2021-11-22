@@ -48,7 +48,7 @@ export function FormFieldDefaultElement<
           id={name}
           {...form.register(name, registerOptions)}
           type={type}
-          className="w-full py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
+          className="w-full min-h-[1em] py-2 bg-transparent border-none rounded-md outline-none appearance-none first:pl-3 last:pr-3"
           spellCheck="false"
           autoComplete={props.autoComplete ?? 'off'}
           disabled={loading}
