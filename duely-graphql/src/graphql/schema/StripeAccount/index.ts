@@ -333,7 +333,7 @@ export const StripeAccount: GqlTypeDefinition<
           }
 
           // see: https://stripe.com/docs/api/coupons/list
-          const list = await stripe.get(source).coupons.list({ expand: ['applies_to'], ...args });
+          const list = await stripe.get(source).coupons.list({ expand: ['data.applies_to'], ...args });
           return withStripeAccountProperty(list.data, source);
         } catch (error: any) {
           throw new Error(error.message);
