@@ -1240,12 +1240,12 @@ body, #root {
   height: 1.5em;
 }
 
-.min-h-\[1rem\] {
-  min-height: 1rem;
-}
-
 .min-h-\[1em\] {
   min-height: 1em;
+}
+
+.min-h-\[1rem\] {
+  min-height: 1rem;
 }
 
 .w-full {

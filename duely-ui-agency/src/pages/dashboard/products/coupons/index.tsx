@@ -1,6 +1,6 @@
 import { Card, DropMenu, icons, LinkButton } from '@duely/react';
 import { DashboardSection } from '../../components';
-import { Currency, formatCurrency, formatDate } from '@duely/util';
+import { Currency, ElementType, formatCurrency, formatDate } from '@duely/util';
 import { Util, Table, SkeletonText, ColoredChip } from '@duely/react';
 import { useQuery, agency_stripe_account_coupons_Q, current_agency_Q } from '@duely/client';
 // import { ConfirmCouponDeletionModal } from './components';
@@ -13,7 +13,7 @@ export default function DashboardProductsCoupons() {
     error
   } = useQuery(agency_stripe_account_coupons_Q, { agency_id: agency!.id });
 
-  type TCoupon = NonNullable<typeof coupons> extends readonly (infer T)[] ? T : never;
+  type TCoupon = ElementType<typeof coupons>;
 
   console.log(coupons);
 
@@ -44,7 +44,7 @@ export default function DashboardProductsCoupons() {
             error={error}
             keyField="id"
           >
-            <Table.Column header="Number">
+            <Table.Column header="Name">
               {(coupon: TCoupon | null) =>
                 !coupon ? (
                   <div className="flex flex-col space-y-2">
@@ -101,19 +101,25 @@ export default function DashboardProductsCoupons() {
               }
             </Table.Column> */}
 
-            {/* <Table.Column header="Amount" span={{ md: 2 }}>
+            <Table.Column header="Amount or percent" span={{ md: 2 }}>
               {(coupon: TCoupon | null) =>
                 !coupon ? (
                   <div className="flex flex-col space-y-2">
                     <SkeletonText className="text-sm" />
                   </div>
-                ) : (
+                ) : coupon.amount_off ? (
                   <div className="flex flex-col space-y-2">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {formatCurrency(coupon.amount_due, coupon.currency as Currency)}
+                      {formatCurrency(coupon.amount_off, coupon.currency as Currency)}
                     </span>
                   </div>
-                )
+                ) : coupon.percent_off ? (
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {`${coupon.percent_off} %`.trim()}
+                    </span>
+                  </div>
+                ) : null
               }
             </Table.Column>
 
@@ -126,20 +132,16 @@ export default function DashboardProductsCoupons() {
                 ) : (
                   <div className="flex flex-col items-center">
                     <ColoredChip
-                      text={coupon.status ?? '-'}
+                      text={coupon.valid ? 'valid' : 'inactive'}
                       color={{
-                        deleted: 'gray',
-                        draft: 'orange',
-                        open: 'blue',
-                        paid: 'green',
-                        uncollectible: 'gray',
-                        void: 'gray'
+                        valid: 'green',
+                        inactive: 'gray'
                       }}
                     />
                   </div>
                 )
               }
-            </Table.Column> */}
+            </Table.Column>
 
             <Table.Column header="Action">
               {(coupon: TCoupon | null) => {
