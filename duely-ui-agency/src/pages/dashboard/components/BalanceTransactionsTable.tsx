@@ -7,13 +7,6 @@ import {
   current_agency_Q
 } from '@duely/client';
 
-const wrap = {
-  md: {
-    columns: 2,
-    spans: [1, 1, 2, 1, 1]
-  }
-};
-
 export function BalanceTransactionsTable() {
   const { data: agency } = useQuery(current_agency_Q);
   const {
@@ -73,20 +66,6 @@ export function BalanceTransactionsTable() {
         }
       </Table.Column>
 
-      <Table.Column header="Description" span={{ md: 2 }}>
-        {(txn: TBalanceTransaction | null) =>
-          !txn ? (
-            <div className="flex flex-col space-y-2">
-              <SkeletonText className="text-sm" />
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              <div className="text-sm">{txn.description}</div>
-            </div>
-          )
-        }
-      </Table.Column>
-
       <Table.Column header="Amount">
         {(txn: TBalanceTransaction | null) =>
           !txn ? (
@@ -100,6 +79,20 @@ export function BalanceTransactionsTable() {
               <div className="text-xs text-gray-500">
                 net {formatCurrency(txn.net, txn.currency as Currency)}
               </div>
+            </div>
+          )
+        }
+      </Table.Column>
+
+      <Table.Column header="Description" span={{ md: 2 }}>
+        {(txn: TBalanceTransaction | null) =>
+          !txn ? (
+            <div className="flex flex-col space-y-2">
+              <SkeletonText className="text-sm" />
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              <div className="text-sm">{txn.description}</div>
             </div>
           )
         }
