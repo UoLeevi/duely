@@ -260,7 +260,7 @@ export function createStripeListQueryResolver<
           ) => ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['list']>;
 
           const response = await list({
-            expand,
+            expand: expand?.map((path) => (path.startsWith('data.') ? path : `data.${path}`)),
             ...(params as unknown as StripeListParams<TStripeResourceEndpoint>)
           });
 
