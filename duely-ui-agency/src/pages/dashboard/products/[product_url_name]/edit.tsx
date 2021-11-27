@@ -5,7 +5,7 @@ import {
   product_and_agency_from_url_parts_Q,
   useQuery
 } from '@duely/client';
-import { Card, Form } from '@duely/react';
+import { Button, Card, Form } from '@duely/react';
 import { Link, useParams } from 'react-router-dom';
 import { DashboardSection } from '../../components';
 import { UpdateProductBasicInfoForm } from './components';
@@ -51,7 +51,7 @@ export default function DashboardProductsEditProduct() {
   return (
     <>
       <DashboardSection title={product?.name} loading={productLoading}>
-        <Card>
+        <Card className='max-w-5xl'>
           <Form.Section
             title="Basic information"
             description="Name, description, image and URL name for the product."
@@ -60,17 +60,22 @@ export default function DashboardProductsEditProduct() {
           </Form.Section>
         </Card>
 
-        <Card>
+        <Card className='max-w-5xl'>
           <Form.Section
             title="Pricing"
             description="Product pricing can be set to either a one-time payment or a subscription."
+            // actions={
+            //   <Button icon="plus.solid" className="text-xs" dense>
+            //     Add Pricing Option
+            //   </Button>
+            // }
           >
             <UpdateProductPricingForm product_id={product?.id} />
           </Form.Section>
         </Card>
 
         {!integration_configLoading && (
-          <Card>
+          <Card className='max-w-5xl'>
             {integration_config && (
               <Form.Section
                 title={`Integration - ${integration_config.name}`}
@@ -91,7 +96,7 @@ export default function DashboardProductsEditProduct() {
           </Card>
         )}
 
-        <Card>
+        <Card className='max-w-5xl'>
           <Form.Section
             title="Checkout"
             description={
@@ -117,7 +122,7 @@ export default function DashboardProductsEditProduct() {
           </Form.Section>
         </Card>
 
-        <Card>
+        <Card className='max-w-5xl'>
           <Form.Section
             title="Status"
             description={
