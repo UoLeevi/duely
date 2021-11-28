@@ -1,5 +1,6 @@
 import React from 'react';
-import { itemsPerPageOptions, usePagination } from './usePagination';
+import { Button } from '..';
+import { itemsPerPageOptions, usePagination, usePagination2 } from './usePagination';
 
 export type PaginationControlsProps = {
   pagination: ReturnType<typeof usePagination>;
@@ -130,6 +131,28 @@ export function PaginationControls({ pagination }: PaginationControlsProps) {
             </div>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+export type PaginationControlsProps2 = {
+  pagination: ReturnType<typeof usePagination2>;
+};
+
+export function PaginationControls2({ pagination }: PaginationControlsProps2) {
+  return (
+    <div className="flex items-center justify-between w-full space-x-2 text-xs font-semibold sm:space-x-3">
+      <div className="flex items-center mx-auto">
+        <Button
+          className="text-xs"
+          icon="arrow-sm-down.solid"
+          dense
+          onClick={pagination.loadMore}
+          loading={pagination.loading}
+        >
+          Load more
+        </Button>
       </div>
     </div>
   );

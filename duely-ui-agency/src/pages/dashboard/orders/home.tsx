@@ -38,7 +38,7 @@ export default function DashboardOrdersHome() {
     ? T
     : never;
 
-  const pagination = usePagination<TOrder>({
+  const pagination = usePagination<TOrder, 'id'>({
     getTotalNumberOfItems: () => {
       const {
         data: count_orders,
@@ -95,7 +95,6 @@ export default function DashboardOrdersHome() {
               md: 2
             }}
             pagination={pagination}
-            footerPaginationControls
             keyField="id"
           >
             <Table.Column header="Order">

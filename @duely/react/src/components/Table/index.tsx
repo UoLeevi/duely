@@ -1,8 +1,8 @@
-import React, { Fragment, Key } from 'react';
+import React, { Fragment, useCallback } from 'react';
 import { createClassName, hasProperty, isFunction } from '@duely/util';
 import { useBreakpoints } from '../../hooks';
-import { UsePaginationReturn } from './usePagination';
-import { PaginationControls } from '..';
+import { isCursorPagination, UsePaginationReturn, UsePaginationReturn2 } from './usePagination';
+import { PaginationControls, PaginationControls2 } from '..';
 
 export * from './usePagination';
 export * from './PaginationControls';
@@ -19,7 +19,7 @@ function Column<TItem>(props: ColumnProps<TItem>) {
   return null;
 }
 
-type TableProps<TItem extends Record<TKeyField, Key>, TKeyField extends keyof TItem> = {
+type TableProps<TItem extends Record<TKeyField, string>, TKeyField extends keyof TItem> = {
   children:
     | React.ReactElement<ColumnProps<TItem>, typeof Column>
     | React.ReactElement<ColumnProps<TItem>, typeof Column>[];
@@ -30,13 +30,10 @@ type TableProps<TItem extends Record<TKeyField, Key>, TKeyField extends keyof TI
   error?: boolean | string | Error | { message: string };
 } & (
   | ({
-      pagination: UsePaginationReturn<TItem>;
+      pagination: UsePaginationReturn<TItem, TKeyField> | UsePaginationReturn2<TItem, TKeyField>;
     } & (
       | {
           footer?: React.ReactNode;
-        }
-      | {
-          footerPaginationControls?: boolean;
         }
     ))
   | {
@@ -46,7 +43,7 @@ type TableProps<TItem extends Record<TKeyField, Key>, TKeyField extends keyof TI
 ) &
   React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
-function TableRoot<TItem extends Record<TKeyField, Key>, TKeyField extends keyof TItem>({
+function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends keyof TItem>({
   children,
   keyField,
   className,
@@ -203,7 +200,9 @@ function TableRoot<TItem extends Record<TKeyField, Key>, TKeyField extends keyof
     );
   } else if (loading) {
     rowCount = pagination
-      ? pagination.loadingTotalNumberOfItems
+      ? isCursorPagination(pagination)
+        ? pagination.items.length ?? pagination.itemsPerPage
+        : pagination.loadingTotalNumberOfItems
         ? pagination.itemsPerPage
         : pagination.lastIndex - pagination.firstIndex + 1
       : skeletonRowCountFallback;
@@ -264,13 +263,16 @@ function TableRoot<TItem extends Record<TKeyField, Key>, TKeyField extends keyof
 
   if (hasProperty(rest, 'footer')) {
     footer = rest.footer as React.ReactNode;
-  } else if (
-    hasProperty(rest, 'footerPaginationControls') &&
-    rest.footerPaginationControls &&
-    pagination &&
-    (pagination.loadingTotalNumberOfItems || pagination.totalNumberOfItems > 0)
-  ) {
-    footer = <PaginationControls pagination={pagination} />;
+  } else if (pagination) {
+    if (isCursorPagination(pagination)) {
+      if (pagination.loading || pagination.items.length > 0) {
+        footer = <PaginationControls2 pagination={pagination} />;
+      }
+    } else {
+      if (pagination.loadingTotalNumberOfItems || pagination.totalNumberOfItems > 0) {
+        footer = <PaginationControls pagination={pagination} />;
+      }
+    }
   }
 
   return (

@@ -37,7 +37,7 @@ export default function DashboardCustomersHome() {
     ? T
     : never;
 
-  const pagination = usePagination<TCustomer>({
+  const pagination = usePagination<TCustomer, 'id'>({
     getTotalNumberOfItems: () => {
       const {
         data: count_customers,
@@ -106,7 +106,6 @@ export default function DashboardCustomersHome() {
             loading={loading}
             error={error}
             pagination={pagination}
-            footerPaginationControls
             keyField="id"
           >
             <Table.Column header="Customer">

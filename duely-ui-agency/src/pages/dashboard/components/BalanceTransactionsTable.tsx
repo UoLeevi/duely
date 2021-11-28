@@ -1,6 +1,6 @@
 import React from 'react';
-import { Currency, formatCurrency, formatDate, sentenceCase } from '@duely/util';
-import { Util, Table, SkeletonText, ColoredChip } from '@duely/react';
+import { Currency, ElementType, formatCurrency, formatDate, sentenceCase } from '@duely/util';
+import { Util, Table, SkeletonText, ColoredChip, usePagination2 } from '@duely/react';
 import {
   useQuery,
   agency_stripe_account_balance_transactions_Q,
@@ -15,14 +15,30 @@ export function BalanceTransactionsTable() {
     error
   } = useQuery(agency_stripe_account_balance_transactions_Q, { agency_id: agency!.id });
 
-  type TBalanceTransaction = NonNullable<typeof balance_transactions> extends readonly (infer T)[]
-    ? T
-    : never;
+  type TBalanceTransaction = any
+
+  const pagination = usePagination2<TBalanceTransaction, 'id'>({
+    getItems: ({ limit, starting_after }) => {
+      const { data, loading, error } = useQuery(
+        agency_stripe_account_balance_transactions_Q,
+        {
+          agency_id: agency?.id!,
+          limit,
+          starting_after_id: starting_after
+        },
+        { skip: !agency }
+      );
+
+      return { items: data ?? [], loading, error };
+    },
+    itemsPerPage: 5,
+    keyField: 'id'
+  });
+
 
   return (
     <Table
-      items={balance_transactions}
-      keyField="id"
+      pagination={pagination}
       dense={true}
       wrap={{ md: 3 }}
       loading={loading}

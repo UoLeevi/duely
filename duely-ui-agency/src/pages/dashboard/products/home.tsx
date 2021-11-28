@@ -34,7 +34,7 @@ export default function DashboardProductsHome() {
     ? T
     : never;
 
-  const pagination = usePagination<TProduct>({
+  const pagination = usePagination<TProduct, 'id'>({
     getTotalNumberOfItems: () => {
       const {
         data: count_products,
@@ -110,7 +110,6 @@ export default function DashboardProductsHome() {
             loading={loading}
             error={error}
             pagination={pagination}
-            footerPaginationControls
             keyField="id"
           >
             <Table.Column header="Product" span={8}>
