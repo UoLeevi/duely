@@ -60,37 +60,66 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
 
   icon = getIconElement(icon);
 
-  return (
-    <Component disabled={disabled} className={className} {...props}>
-      <LoadingSpinner
-        loading={loading}
-        className={`!text-current absolute left-0 ${dense ? 'w-5 h-5 ml-2' : 'w-6 h-6 ml-3'}`}
-      />
+  if (icon) {
+    return (
+      <Component disabled={disabled} className={className} {...props}>
+        <span className="flex items-center space-x-2">
+          {loading ? (
+            <LoadingSpinner loading={loading} className="!text-current w-[1.25em] h-[1.25em]" />
+          ) : (
+            icon
+          )}
+          {children && <span>{children}</span>}
+        </span>
 
-      <span
-        className={createClassName(
-          'transform transition-transform',
-          loading && 'translate-x-4',
-          icon && 'flex items-center space-x-2'
+        {loading && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              borderRadius: 'inherit',
+              backgroundColor: 'inherit',
+              maskImage:
+                'linear-gradient(to left, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0) 0.25rem, rgba(0, 0, 0, 0.0) 1.25rem, rgba(0, 0, 0, 0.0))',
+              WebkitMaskImage:
+                'linear-gradient(to left, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0) 0.25rem, rgba(0, 0, 0, 0.0) 1.25rem, rgba(0, 0, 0, 0.0))'
+            }}
+          ></div>
         )}
-      >
-        {icon}
-        {children && <span>{children}</span>}
-      </span>
+      </Component>
+    );
+  } else {
+    return (
+      <Component disabled={disabled} className={className} {...props}>
+        <LoadingSpinner
+          loading={loading}
+          className={`!text-current absolute w-[1.25em] h-[1.25em] left-0 ${
+            dense ? 'ml-2' : 'ml-3'
+          }`}
+        />
 
-      {loading && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            borderRadius: 'inherit',
-            backgroundColor: 'inherit',
-            maskImage:
-              'linear-gradient(to left, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0) 0.25rem, rgba(0, 0, 0, 0.0) 1.25rem, rgba(0, 0, 0, 0.0))',
-            WebkitMaskImage:
-              'linear-gradient(to left, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0) 0.25rem, rgba(0, 0, 0, 0.0) 1.25rem, rgba(0, 0, 0, 0.0))'
-          }}
-        ></div>
-      )}
-    </Component>
-  );
+        <span
+          className={createClassName(
+            'transform transition-transform flex items-center',
+            loading && 'translate-x-4'
+          )}
+        >
+          {children && <span>{children}</span>}
+        </span>
+
+        {loading && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              borderRadius: 'inherit',
+              backgroundColor: 'inherit',
+              maskImage:
+                'linear-gradient(to left, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0) 0.25rem, rgba(0, 0, 0, 0.0) 1.25rem, rgba(0, 0, 0, 0.0))',
+              WebkitMaskImage:
+                'linear-gradient(to left, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0) 0.25rem, rgba(0, 0, 0, 0.0) 1.25rem, rgba(0, 0, 0, 0.0))'
+            }}
+          ></div>
+        )}
+      </Component>
+    );
+  }
 }

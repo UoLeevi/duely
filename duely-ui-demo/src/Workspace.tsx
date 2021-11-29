@@ -15,41 +15,26 @@ export default function Workspace() {
         form={form}
         onSubmit={(d) => {
           console.log(d);
-          showMessage('Form submitted');
+          return new Promise((resolve) =>
+            setTimeout(() => {
+              showMessage('Form submitted');
+              resolve(d);
+            }, 3000)
+          );
         }}
       >
-        <Form.Field
-          label="Single select"
-          className="max-w-lg"
-          name="single"
-          type="select"
-          options={[
-            'Option 1',
-            'Option 2',
-            'Option 3',
-            'Option 4',
-            'Option 5'
-          ]}
-          registerOptions={{ required: true }}
-        />
         <Form.Field
           label="Multi select"
           className="max-w-lg"
           name="multiple"
           type="select"
           multiple
-          options={[
-            'Option 1',
-            'Option 2',
-            'Option 3',
-            'Option 4',
-            'Option 5'
-          ]}
+          options={['Option 1', 'Option 2', 'Option 3', 'Option 4', 'Option 5']}
           registerOptions={{ required: true }}
         />
 
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <Form.Button>Create coupon</Form.Button>
+          <Form.Button icon="plus.solid">Create coupon</Form.Button>
           <Form.InfoMessage info={message} />
         </div>
       </Form>

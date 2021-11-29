@@ -1134,12 +1134,12 @@ body, #root {
   height: 1.5em;
 }
 
-.min-h-\[1rem\] {
-  min-height: 1rem;
-}
-
 .min-h-\[1em\] {
   min-height: 1em;
+}
+
+.min-h-\[1rem\] {
+  min-height: 1rem;
 }
 
 .w-full {
@@ -1753,20 +1753,20 @@ body, #root {
   padding: 1rem;
 }
 
-.p-3 {
-  padding: 0.75rem;
+.p-2\.5 {
+  padding: 0.625rem;
 }
 
-.p-6 {
-  padding: 1.5rem;
+.p-3 {
+  padding: 0.75rem;
 }
 
 .p-2 {
   padding: 0.5rem;
 }
 
-.p-2\.5 {
-  padding: 0.625rem;
+.p-6 {
+  padding: 1.5rem;
 }
 
 .px-2 {
@@ -2175,12 +2175,12 @@ body, #root {
   transition-delay: 100ms;
 }
 
-.duration-100 {
-  transition-duration: 100ms;
-}
-
 .duration-75 {
   transition-duration: 75ms;
+}
+
+.duration-100 {
+  transition-duration: 100ms;
 }
 
 .duration-150 {
@@ -2240,14 +2240,6 @@ body, #root {
   padding-left: 0.75rem;
 }
 
-.first\:pt-4:first-child {
-  padding-top: 1rem;
-}
-
-.first\:pt-2:first-child {
-  padding-top: 0.5rem;
-}
-
 .first\:pt-3:first-child {
   padding-top: 0.75rem;
 }
@@ -2272,30 +2264,6 @@ body, #root {
 .checked\:bg-blue-600:checked {
   --tw-bg-opacity: 1;
   background-color: rgba(37, 99, 235, var(--tw-bg-opacity));
-}
-
-.empty\:before\:content-\[\'asfd\'\]:empty::before {
-  content: 'asfd';
-}
-
-.empty\:before\:content-\[\'\\\\a0\'\]:empty::before {
-  content: '\\a0';
-}
-
-.empty\:before\:content-\[\'0xa0\'\]:empty::before {
-  content: '0xa0';
-}
-
-.empty\:before\:content-\[\'\\\\00a0\'\]:empty::before {
-  content: '\\00a0';
-}
-
-.empty\:before\:content-\[\'asdf\\\\a0\'\]:empty::before {
-  content: 'asdf\\a0';
-}
-
-.empty\:before\:content-\[\'a0\'\]:empty::before {
-  content: 'a0';
 }
 
 .empty\:before\:content-\[attr\(data-content\)\]:empty::before {
