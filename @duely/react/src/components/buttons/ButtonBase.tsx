@@ -71,20 +71,6 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
           )}
           {children && <span>{children}</span>}
         </span>
-
-        {loading && (
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              borderRadius: 'inherit',
-              backgroundColor: 'inherit',
-              maskImage:
-                'linear-gradient(to left, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0) 0.25rem, rgba(0, 0, 0, 0.0) 1.25rem, rgba(0, 0, 0, 0.0))',
-              WebkitMaskImage:
-                'linear-gradient(to left, rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 1.0) 0.25rem, rgba(0, 0, 0, 0.0) 1.25rem, rgba(0, 0, 0, 0.0))'
-            }}
-          ></div>
-        )}
       </Component>
     );
   } else {
