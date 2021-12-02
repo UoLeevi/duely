@@ -2,6 +2,7 @@ import React from 'react';
 import { createClassName } from '@duely/util';
 import { getIconElement, IconProp, icons } from '../icons';
 import { LoadingSpinner } from '../LoadingSpinner';
+import { Animation } from '..';
 
 export type ButtonBaseProps = {
   loading?: boolean;
@@ -64,11 +65,13 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
     return (
       <Component disabled={disabled} className={className} {...props}>
         <span className="flex items-center space-x-2">
-          {loading ? (
-            <LoadingSpinner loading={loading} className="!text-current w-[1.25em] h-[1.25em]" />
-          ) : (
-            icon
-          )}
+          <Animation.Fade>
+            {loading ? (
+              <LoadingSpinner loading={loading} className="!text-current w-[1.25em] h-[1.25em]" />
+            ) : (
+              icon
+            )}
+          </Animation.Fade>
           {children && <span>{children}</span>}
         </span>
       </Component>

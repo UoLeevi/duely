@@ -127,6 +127,10 @@
     );
   }
 
+  .grid-stack > * {
+    grid-area: 1 / 1 / -1 / -1;
+  }
+
   .grid-cols-fill-200 {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
