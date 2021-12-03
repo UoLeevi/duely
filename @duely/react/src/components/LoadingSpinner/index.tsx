@@ -32,8 +32,8 @@ export function LoadingSpinner({ className, loading }: LoadingSpinnerProps) {
       return;
     }
 
-    const timeoutID = setTimeout(() => setPlayAnimation(loading!), 110);
-    return () => clearTimeout(timeoutID);
+    const timeoutID = window.setTimeout(() => setPlayAnimation(loading!), 110);
+    return () => window.clearTimeout(timeoutID);
   }, [loading, playAnimation]);
 
   return (

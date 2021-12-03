@@ -4,7 +4,7 @@ const defaultOptions = { skip: false, retain: false, returnTuple: false };
 
 export function usePrevious<T>(
   value: T,
-  options: {
+  options?: {
     skip?: boolean | ((previous?: T, value?: T) => boolean);
     retain?: boolean;
     returnTuple?: false;
@@ -12,7 +12,7 @@ export function usePrevious<T>(
 ): T;
 export function usePrevious<T>(
   value: T,
-  options: {
+  options?: {
     skip?: boolean | ((previous?: T, value?: T) => boolean);
     retain?: boolean;
     returnTuple: true;
