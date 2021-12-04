@@ -24,6 +24,7 @@ export type UsePaginationReturn<
   lastIndex: number;
   lastPageNumber: number;
   loading: boolean;
+  loadingInitial: boolean;
   error: any;
   loadingTotalNumberOfItems: boolean;
   totalNumberOfItems: number;
@@ -54,6 +55,8 @@ export function usePagination<
     error: errorTotalNumberOfItems
   } = options.getTotalNumberOfItems();
 
+  const initializedRef = useRef(false);
+
   const initialItemsPerPage = options.itemsPerPage ?? defaultItemsPerPage;
   const initialLastPageNumber = Math.max(
     1,
@@ -76,6 +79,7 @@ export function usePagination<
   });
 
   const { items, loading, error } = options.getPageItems(state);
+  initializedRef.current ||= !loading;
 
   useEffect(() => {
     setState((state) => ({
@@ -173,6 +177,7 @@ export function usePagination<
   return {
     ...state,
     ...functions,
+    loadingInitial: initializedRef.current,
     loading:
       loading || loadingTotalNumberOfItems || state.lastIndex - state.firstIndex + 1 > items.length,
     error: error || errorTotalNumberOfItems,
@@ -187,6 +192,7 @@ export type UsePaginationReturn2<
   TKeyField extends keyof TItem
 > = {
   loading: boolean;
+  loadingInitial: boolean;
   error: any;
   items: TItem[];
   loadMore(): void;
@@ -204,7 +210,7 @@ export function usePagination2<
   }) => { items: TItem[]; loading: boolean; error: any };
   itemsPerPage?: ElementType<typeof itemsPerPageOptions>;
 }): UsePaginationReturn2<TItem, TKeyField> {
-  const pagesRef = useRef<TItem[][]>([])
+  const [pages] = useState<TItem[][]>([]);
 
   const getKey =
     typeof options.keyField === 'function'
@@ -213,21 +219,19 @@ export function usePagination2<
 
   const initialItemsPerPage = options.itemsPerPage ?? defaultItemsPerPage;
 
-  const [state, setState] = useState<Parameters<typeof options.getItems>[0]>(
-    {
-      limit: initialItemsPerPage,
-      starting_after: undefined
-    }
-  );
+  const [state, setState] = useState<Parameters<typeof options.getItems>[0]>({
+    limit: initialItemsPerPage,
+    starting_after: undefined
+  });
 
   let { items: currentPage, loading, error } = options.getItems(state);
 
-  const lastPage = pagesRef.current[pagesRef.current.length - 1];
+  const lastPage = pages[pages.length - 1];
   const lastItem = lastPage && lastPage[lastPage.length - 1];
   const currentPageLastItem = currentPage && currentPage[currentPage.length - 1];
 
   if (currentPageLastItem && getKey(currentPageLastItem) !== getKey(lastItem)) {
-    pagesRef.current.push(currentPage);
+    pages.push(currentPage);
   }
 
   const functions = useMemo(
@@ -236,7 +240,7 @@ export function usePagination2<
         setState((state) =>
           produce(state, (state) => {
             if (state.limit === 0) return;
-            const lastPage = pagesRef.current[pagesRef.current.length - 1];
+            const lastPage = pages[pages.length - 1];
             const lastItem = lastPage && lastPage[lastPage.length - 1];
             state.starting_after = getKey(lastItem as any);
           })
@@ -246,11 +250,12 @@ export function usePagination2<
     []
   );
 
-  const items = useMemo(() => pagesRef.current.flatMap((x) => x), [getKey(currentPageLastItem)]);
+  const items = useMemo(() => pages.flatMap((x) => x), [getKey(currentPageLastItem)]);
 
   return {
     itemsPerPage: state.limit,
     ...functions,
+    loadingInitial: loading && pages.length === 0,
     loading,
     error,
     items

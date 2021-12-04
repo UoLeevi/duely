@@ -31,11 +31,9 @@ type TableProps<TItem extends Record<TKeyField, string>, TKeyField extends keyof
 } & (
   | ({
       pagination: UsePaginationReturn<TItem, TKeyField> | UsePaginationReturn2<TItem, TKeyField>;
-    } & (
-      | {
-          footer?: React.ReactNode;
-        }
-    ))
+    } & {
+      footer?: React.ReactNode;
+    })
   | {
       items: TItem[] | undefined | null;
       footer?: React.ReactNode;
@@ -43,41 +41,25 @@ type TableProps<TItem extends Record<TKeyField, string>, TKeyField extends keyof
 ) &
   React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
-function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends keyof TItem>({
-  children,
-  keyField,
-  className,
-  dense,
-  wrap: wrapOptions,
-  loading,
-  error,
-  ...rest
-}: TableProps<TItem, TKeyField>) {
-  const skeletonRowCountFallback = 5;
-
-  const columnDefinitions =
-    React.Children.map(
-      children,
-      (child: React.ReactElement<ColumnProps<TItem>, typeof Column>) => ({
-        header: child!.props.header,
-        span: child!.props.span,
-        render: child!.props.children
-      })
-    ) ?? [];
-
+function useWrapOptions(
+  options: number | Partial<Record<'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'xs', number>> | undefined,
+  colSpanOptions: (
+    | number
+    | Partial<Record<'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'xs', number>>
+    | undefined
+  )[]
+) {
   const breakpoints = useBreakpoints();
-  const columns = columnDefinitions.map((c) => c.render);
-  let headers = columnDefinitions.map((c) => c.header);
-  const wrapColSpans = columnDefinitions.map((c) => {
-    if (!c.span) return 1;
-    if (typeof c.span === 'number') return c.span;
+  const wrapColSpans = colSpanOptions.map((colSpanOption) => {
+    if (!colSpanOption) return 1;
+    if (typeof colSpanOption === 'number') return colSpanOption;
 
-    const span_2xl = c.span['2xl'] ?? 1;
-    const span_xl = c.span['xl'] ?? span_2xl;
-    const span_lg = c.span['lg'] ?? span_xl;
-    const span_md = c.span['md'] ?? span_lg;
-    const span_sm = c.span['sm'] ?? span_md;
-    const span_xs = c.span['xs'] ?? span_sm;
+    const span_2xl = colSpanOption['2xl'] ?? 1;
+    const span_xl = colSpanOption['xl'] ?? span_2xl;
+    const span_lg = colSpanOption['lg'] ?? span_xl;
+    const span_md = colSpanOption['md'] ?? span_lg;
+    const span_sm = colSpanOption['sm'] ?? span_md;
+    const span_xs = colSpanOption['xs'] ?? span_sm;
 
     if (breakpoints['2xl']) {
       return span_2xl;
@@ -98,17 +80,17 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
   const wrapColSpansTotal = wrapColSpans.reduce((a, b) => a + b, 0);
   let wrapColCount: number;
 
-  if (!wrapOptions) {
+  if (!options) {
     wrapColCount = wrapColSpansTotal;
-  } else if (typeof wrapOptions === 'number') {
-    wrapColCount = Math.max(wrapOptions, wrapColSpansMax);
+  } else if (typeof options === 'number') {
+    wrapColCount = Math.max(options, wrapColSpansMax);
   } else {
-    const wrapOption_2xl = wrapOptions?.['2xl'] ?? wrapColSpansTotal;
-    const wrapOption_xl = wrapOptions?.['xl'] ?? wrapOption_2xl;
-    const wrapOption_lg = wrapOptions?.['lg'] ?? wrapOption_xl;
-    const wrapOption_md = wrapOptions?.['md'] ?? wrapOption_lg;
-    const wrapOption_sm = wrapOptions?.['sm'] ?? wrapOption_md;
-    const wrapOption_xs = wrapOptions?.['xs'] ?? wrapOption_sm;
+    const wrapOption_2xl = options?.['2xl'] ?? wrapColSpansTotal;
+    const wrapOption_xl = options?.['xl'] ?? wrapOption_2xl;
+    const wrapOption_lg = options?.['lg'] ?? wrapOption_xl;
+    const wrapOption_md = options?.['md'] ?? wrapOption_lg;
+    const wrapOption_sm = options?.['sm'] ?? wrapOption_md;
+    const wrapOption_xs = options?.['xs'] ?? wrapOption_sm;
 
     if (breakpoints['2xl']) {
       wrapColCount = Math.max(wrapOption_2xl, wrapColSpansMax);
@@ -146,6 +128,43 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
   });
 
   const wrapRowCount = rowOffset + 1;
+
+  return {
+    wrapColCount,
+    wrapRowCount,
+    wrapCells
+  };
+}
+
+function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends keyof TItem>({
+  children,
+  keyField,
+  className,
+  dense,
+  wrap: wrapOptions,
+  loading,
+  error,
+  ...rest
+}: TableProps<TItem, TKeyField>) {
+  const skeletonRowCountFallback = 5;
+
+  const columnDefinitions =
+    React.Children.map(
+      children,
+      (child: React.ReactElement<ColumnProps<TItem>, typeof Column>) => ({
+        header: child!.props.header,
+        span: child!.props.span,
+        render: child!.props.children
+      })
+    ) ?? [];
+
+  const columns = columnDefinitions.map((c) => c.render);
+  let headers = columnDefinitions.map((c) => c.header);
+  const { wrapColCount, wrapRowCount, wrapCells } = useWrapOptions(
+    wrapOptions,
+    columnDefinitions.map((c) => c.span)
+  );
+
   const gridTemplateColumns = `repeat(${wrapColCount}, 1fr)`;
   const hasHeaderRow = wrapRowCount === 1;
 
@@ -164,7 +183,7 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
   if (hasHeaderRow) {
     let headerColumn = 1;
     headers = headers.map((header, j) => {
-      const span = wrapColSpans[j];
+      const span = wrapCells[j].span;
       const element = (
         <TableHeader
           key={j}
@@ -198,11 +217,21 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
         hasHeaderRow={hasHeaderRow}
       />
     );
-  } else if (loading) {
+  } else if (!loading && items.length === 0) {
+    rowCount = 1;
+
+    rows = (
+      <TableInfoRow
+        message="No entries to show"
+        row={hasHeaderRow ? 2 : 1}
+        wrapColCount={wrapColCount}
+        wrapRowCount={wrapRowCount}
+        hasHeaderRow={hasHeaderRow}
+      />
+    );
+  } else if (loading && !(pagination && isCursorPagination(pagination))) {
     rowCount = pagination
-      ? isCursorPagination(pagination)
-        ? pagination.items.length ?? pagination.itemsPerPage
-        : pagination.loadingTotalNumberOfItems
+      ? pagination.loadingTotalNumberOfItems
         ? pagination.itemsPerPage
         : pagination.lastIndex - pagination.firstIndex + 1
       : skeletonRowCountFallback;
@@ -224,18 +253,6 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
         />
       );
     });
-  } else if (items.length === 0) {
-    rowCount = 1;
-
-    rows = (
-      <TableInfoRow
-        message="No entries to show"
-        row={hasHeaderRow ? 2 : 1}
-        wrapColCount={wrapColCount}
-        wrapRowCount={wrapRowCount}
-        hasHeaderRow={hasHeaderRow}
-      />
-    );
   } else {
     rowCount = items.length;
     rows = items.map((item, i) => {
