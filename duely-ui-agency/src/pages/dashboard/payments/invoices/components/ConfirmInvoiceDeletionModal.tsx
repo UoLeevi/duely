@@ -40,7 +40,7 @@ export function ConfirmInvoiceDeletionModal() {
 
   const { data: invoice, loading: loadingInvoice } = useQuery(
     invoice_Q,
-    { stripe_account_id: stripe_account!.id, invoice_id: invoice_id! },
+    { stripe_account_id: stripe_account?.id!, invoice_id: invoice_id! },
     { skip: !invoice_id || !stripe_account }
   );
   const [deleteInvoice] = useMutation(delete_invoice_M);

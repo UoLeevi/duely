@@ -175,6 +175,19 @@ export const Invoice: GqlTypeDefinition<
       period_end: (source) => timestampToDate(source.period_end),
       subscription_proration_date: (source) => timestampToDate(source.subscription_proration_date),
       webhooks_delivered_at: (source) => timestampToDate(source.webhooks_delivered_at),
+      async charge(source, args, context, info) {
+        if (source.charge == null) return null;
+        if (typeof source.charge === 'object') return source.charge;
+
+        const resolveTree = parseResolveInfo(info) as ResolveTree;
+        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
+        if (fields.length === 1 && fields[0] === 'id') return { id: source.charge };
+
+        const charge = await stripe
+          .get(source.stripe_account)
+          .charges.retrieve(source.charge);
+        return withStripeAccountProperty(charge, source.stripe_account);
+      },
       async customer(source, args, context, info) {
         if (source.customer == null) return null;
         if (typeof source.customer === 'object') return source.customer;
