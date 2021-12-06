@@ -39,7 +39,7 @@ export default function DashboardPaymentsInvoices() {
           <Table
             items={invoices}
             dense={true}
-            wrap={{ md: 3 }}
+            wrap={{ md: 4 }}
             loading={loading}
             error={error}
             keyField="id"
@@ -81,27 +81,7 @@ export default function DashboardPaymentsInvoices() {
               }
             </Table.Column>
 
-            <Table.Column header="Customer" span={{ md: 2 }}>
-              {(invoice: TInvoice | null) =>
-                !invoice ? (
-                  <div className="flex flex-col space-y-2">
-                    <SkeletonText className="text-sm" />
-                    <SkeletonText className="text-xs" />
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-2">
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {invoice.customer_name ?? invoice.customer_email?.split('@')[0]}
-                    </span>
-                    <span className="text-xs font-medium text-gray-800 dark:text-gray-300">
-                      {invoice.customer_email}
-                    </span>
-                  </div>
-                )
-              }
-            </Table.Column>
-
-            <Table.Column header="Amount" span={{ md: 2 }}>
+            <Table.Column header="Amount">
               {(invoice: TInvoice | null) =>
                 !invoice ? (
                   <div className="flex flex-col space-y-2">
@@ -111,6 +91,26 @@ export default function DashboardPaymentsInvoices() {
                   <div className="flex flex-col space-y-2">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
                       {formatCurrency(invoice.amount_due, invoice.currency as Currency)}
+                    </span>
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Customer" span={{ md: 2 }}>
+              {(invoice: TInvoice | null) =>
+                !invoice ? (
+                  <div className="flex flex-col space-y-1">
+                    <SkeletonText className="text-sm" />
+                    <SkeletonText className="text-xs" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {invoice.customer_name ?? invoice.customer_email?.split('@')[0]}
+                    </span>
+                    <span className="text-xs font-medium text-gray-800 dark:text-gray-300">
+                      {invoice.customer_email}
                     </span>
                   </div>
                 )

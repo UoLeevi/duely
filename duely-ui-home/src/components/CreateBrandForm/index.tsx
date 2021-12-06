@@ -50,14 +50,14 @@ export default function CreateBrandForm({ className }: CreateBrandFormProps) {
 
   // subdomain name
   useEffect(() => {
-    if (!subdomain_name_field.isDirty) {
+    if (!subdomain_name_field?.isDirty) {
       const defaultSubdomainName = name
         ?.trim()
         .toLowerCase()
         .replace(/[^\w\d]+/g, '');
       form.setValue('subdomain_name', defaultSubdomainName ?? '');
     }
-  }, [subdomain_name_field.isDirty, name]);
+  }, [subdomain_name_field?.isDirty, name]);
 
   async function onSubmit({ image_logo_file_list, ...data }: CreateBrandFormFields) {
     await createAgency({

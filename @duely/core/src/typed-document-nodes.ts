@@ -1,5 +1,6 @@
 import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
+export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
@@ -52,35 +53,35 @@ export type Agency = Node & {
 
 
 export type AgencyPagesArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<PageFilter>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<PageFilter>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type AgencyProductsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<ProductFilter>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<ProductFilter>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type AgencyStripe_AccountArgs = {
-  livemode?: Maybe<Scalars['Boolean']>;
+  livemode?: InputMaybe<Scalars['Boolean']>;
 };
 
 export type AgencyFilter = {
-  name?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type AgencyMutationResult = MutationResult & {
@@ -98,7 +99,7 @@ export type AgencySettings = {
 };
 
 export type AgencySettingsFilter = {
-  agency_id?: Maybe<Scalars['ID']>;
+  agency_id?: InputMaybe<Scalars['ID']>;
 };
 
 export type AgencySettingsMutationResult = MutationResult & {
@@ -275,11 +276,11 @@ export type Coupon = {
 
 export type CouponAppliesTo = {
   __typename?: 'CouponAppliesTo';
-  products?: Maybe<Array<Scalars['String']>>;
+  products: Array<Scalars['String']>;
 };
 
 export type CouponAppliesToInput = {
-  products?: Maybe<Array<Scalars['String']>>;
+  products: Array<Scalars['String']>;
 };
 
 export type CouponMutationResult = MutationResult & {
@@ -315,9 +316,9 @@ export type Credential = Node & {
 };
 
 export type CredentialFilter = {
-  agency_id?: Maybe<Scalars['ID']>;
-  credential_type_id?: Maybe<Scalars['ID']>;
-  name?: Maybe<Scalars['String']>;
+  agency_id?: InputMaybe<Scalars['ID']>;
+  credential_type_id?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type CredentialMutationResult = MutationResult & {
@@ -335,8 +336,8 @@ export type CredentialType = Node & {
 };
 
 export type CredentialTypeFilter = {
-  form_id?: Maybe<Scalars['ID']>;
-  name?: Maybe<Scalars['String']>;
+  form_id?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type Customer = {
@@ -352,16 +353,16 @@ export type Customer = {
 
 
 export type CustomerStripe_CustomersArgs = {
-  created?: Maybe<Scalars['DateTime']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  starting_after_id?: Maybe<Scalars['String']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
 };
 
 export type CustomerFilter = {
-  default_stripe_customer_id_ext?: Maybe<Scalars['ID']>;
-  email_address?: Maybe<Scalars['String']>;
-  stripe_account_id?: Maybe<Scalars['ID']>;
+  default_stripe_customer_id_ext?: InputMaybe<Scalars['ID']>;
+  email_address?: InputMaybe<Scalars['String']>;
+  stripe_account_id?: InputMaybe<Scalars['ID']>;
 };
 
 export type CustomerMutationResult = MutationResult & {
@@ -413,7 +414,7 @@ export type FormField = Node & {
 };
 
 export type FormFieldFilter = {
-  form_id?: Maybe<Scalars['ID']>;
+  form_id?: InputMaybe<Scalars['ID']>;
 };
 
 export type FraudDetails = {
@@ -433,8 +434,8 @@ export type Image = Node & {
 };
 
 export type ImageFilter = {
-  agency_id?: Maybe<Scalars['ID']>;
-  name?: Maybe<Scalars['String']>;
+  agency_id?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type ImageInput = {
@@ -472,9 +473,9 @@ export type IntegrationConfig = Node & {
 };
 
 export type IntegrationConfigFilter = {
-  agency_id?: Maybe<Scalars['ID']>;
-  integration_type_id?: Maybe<Scalars['ID']>;
-  name?: Maybe<Scalars['String']>;
+  agency_id?: InputMaybe<Scalars['ID']>;
+  integration_type_id?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type IntegrationConfigMutationResult = MutationResult & {
@@ -485,10 +486,10 @@ export type IntegrationConfigMutationResult = MutationResult & {
 };
 
 export type IntegrationFilter = {
-  agency_id?: Maybe<Scalars['ID']>;
-  integration_config_id?: Maybe<Scalars['ID']>;
-  integration_type_id?: Maybe<Scalars['ID']>;
-  product_id?: Maybe<Scalars['ID']>;
+  agency_id?: InputMaybe<Scalars['ID']>;
+  integration_config_id?: InputMaybe<Scalars['ID']>;
+  integration_type_id?: InputMaybe<Scalars['ID']>;
+  product_id?: InputMaybe<Scalars['ID']>;
 };
 
 export type IntegrationMutationResult = MutationResult & {
@@ -511,11 +512,11 @@ export type IntegrationType = Node & {
 };
 
 export type IntegrationTypeFilter = {
-  config_form_id?: Maybe<Scalars['ID']>;
-  form_id?: Maybe<Scalars['ID']>;
-  name?: Maybe<Scalars['String']>;
-  status?: Maybe<Scalars['String']>;
-  title?: Maybe<Scalars['String']>;
+  config_form_id?: InputMaybe<Scalars['ID']>;
+  form_id?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
+  status?: InputMaybe<Scalars['String']>;
+  title?: InputMaybe<Scalars['String']>;
 };
 
 export type Invoice = {
@@ -580,9 +581,9 @@ export type Invoice = {
 
 
 export type InvoiceLinesArgs = {
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  starting_after_id?: Maybe<Scalars['String']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
 };
 
 export type InvoiceAutomaticTax = {
@@ -627,14 +628,14 @@ export type InvoiceItem = {
 };
 
 export type InvoiceItemInput = {
-  amount?: Maybe<Scalars['Int']>;
-  description?: Maybe<Scalars['String']>;
-  discountable?: Maybe<Scalars['Boolean']>;
-  period?: Maybe<PeriodInput>;
-  price?: Maybe<Scalars['ID']>;
-  quantity?: Maybe<Scalars['Int']>;
-  unit_amount?: Maybe<Scalars['Int']>;
-  unit_amount_decimal?: Maybe<Scalars['String']>;
+  amount?: InputMaybe<Scalars['Int']>;
+  description?: InputMaybe<Scalars['String']>;
+  discountable?: InputMaybe<Scalars['Boolean']>;
+  period?: InputMaybe<PeriodInput>;
+  price?: InputMaybe<Scalars['ID']>;
+  quantity?: InputMaybe<Scalars['Int']>;
+  unit_amount?: InputMaybe<Scalars['Int']>;
+  unit_amount_decimal?: InputMaybe<Scalars['String']>;
 };
 
 export type InvoiceItemMutationResult = MutationResult & {
@@ -712,8 +713,8 @@ export type Markdown = Node & {
 };
 
 export type MarkdownFilter = {
-  agency_id?: Maybe<Scalars['ID']>;
-  name?: Maybe<Scalars['String']>;
+  agency_id?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type MarkdownMutationResult = MutationResult & {
@@ -733,9 +734,9 @@ export type Membership = Node & {
 };
 
 export type MembershipFilter = {
-  access?: Maybe<AccessLevel>;
-  subdomain_id?: Maybe<Scalars['ID']>;
-  user_id?: Maybe<Scalars['ID']>;
+  access?: InputMaybe<AccessLevel>;
+  subdomain_id?: InputMaybe<Scalars['ID']>;
+  user_id?: InputMaybe<Scalars['ID']>;
 };
 
 export type Mutation = {
@@ -802,8 +803,8 @@ export type Mutation = {
 
 export type MutationCreate_AgencyArgs = {
   country_code: Scalars['String'];
-  default_currency?: Maybe<Scalars['String']>;
-  default_pricing_currency?: Maybe<Scalars['String']>;
+  default_currency?: InputMaybe<Scalars['String']>;
+  default_pricing_currency?: InputMaybe<Scalars['String']>;
   image_logo: ImageInput;
   livemode: Scalars['Boolean'];
   name: Scalars['String'];
@@ -813,34 +814,34 @@ export type MutationCreate_AgencyArgs = {
 
 
 export type MutationCreate_Bank_AccountArgs = {
-  account_holder_name?: Maybe<Scalars['String']>;
-  account_holder_type?: Maybe<Scalars['String']>;
+  account_holder_name?: InputMaybe<Scalars['String']>;
+  account_holder_type?: InputMaybe<Scalars['String']>;
   account_number: Scalars['String'];
   country: Scalars['String'];
   currency: Scalars['String'];
-  default_for_currency?: Maybe<Scalars['Boolean']>;
-  routing_number?: Maybe<Scalars['String']>;
+  default_for_currency?: InputMaybe<Scalars['Boolean']>;
+  routing_number?: InputMaybe<Scalars['String']>;
   stripe_account_id: Scalars['ID'];
 };
 
 
 export type MutationCreate_CouponArgs = {
-  amount_off?: Maybe<Scalars['Int']>;
-  applies_to?: Maybe<CouponAppliesToInput>;
-  currency?: Maybe<Scalars['String']>;
-  duration?: Maybe<Scalars['String']>;
-  duration_in_months?: Maybe<Scalars['Int']>;
-  id?: Maybe<Scalars['String']>;
-  max_redemptions?: Maybe<Scalars['Int']>;
-  name?: Maybe<Scalars['String']>;
-  percent_off?: Maybe<Scalars['Int']>;
-  redeem_by?: Maybe<Scalars['Int']>;
+  amount_off?: InputMaybe<Scalars['Int']>;
+  applies_to?: InputMaybe<CouponAppliesToInput>;
+  currency?: InputMaybe<Scalars['String']>;
+  duration?: InputMaybe<Scalars['String']>;
+  duration_in_months?: InputMaybe<Scalars['Int']>;
+  id?: InputMaybe<Scalars['String']>;
+  max_redemptions?: InputMaybe<Scalars['Int']>;
+  name?: InputMaybe<Scalars['String']>;
+  percent_off?: InputMaybe<Scalars['Int']>;
+  redeem_by?: InputMaybe<Scalars['Int']>;
   stripe_account_id: Scalars['ID'];
 };
 
 
 export type MutationCreate_CredentialArgs = {
-  agency_id?: Maybe<Scalars['ID']>;
+  agency_id?: InputMaybe<Scalars['ID']>;
   credential_type_id: Scalars['ID'];
   data: Scalars['Json'];
   name: Scalars['String'];
@@ -849,14 +850,14 @@ export type MutationCreate_CredentialArgs = {
 
 export type MutationCreate_CustomerArgs = {
   email_address: Scalars['String'];
-  name?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
   stripe_account_id: Scalars['ID'];
 };
 
 
 export type MutationCreate_ImageArgs = {
-  access?: Maybe<AccessLevel>;
-  agency_id?: Maybe<Scalars['ID']>;
+  access?: InputMaybe<AccessLevel>;
+  agency_id?: InputMaybe<Scalars['ID']>;
   color: Scalars['String'];
   data: Scalars['String'];
   name: Scalars['String'];
@@ -865,17 +866,17 @@ export type MutationCreate_ImageArgs = {
 
 export type MutationCreate_IntegrationArgs = {
   agency_id: Scalars['ID'];
-  credential_id?: Maybe<Scalars['ID']>;
+  credential_id?: InputMaybe<Scalars['ID']>;
   data: Scalars['Json'];
-  integration_config_id?: Maybe<Scalars['ID']>;
+  integration_config_id?: InputMaybe<Scalars['ID']>;
   integration_type_id: Scalars['ID'];
-  product_id?: Maybe<Scalars['ID']>;
+  product_id?: InputMaybe<Scalars['ID']>;
 };
 
 
 export type MutationCreate_Integration_ConfigArgs = {
   agency_id: Scalars['ID'];
-  credential_id?: Maybe<Scalars['ID']>;
+  credential_id?: InputMaybe<Scalars['ID']>;
   data: Scalars['Json'];
   integration_type_id: Scalars['ID'];
   name: Scalars['String'];
@@ -883,49 +884,49 @@ export type MutationCreate_Integration_ConfigArgs = {
 
 
 export type MutationCreate_InvoiceArgs = {
-  auto_advance?: Maybe<Scalars['Boolean']>;
-  collection_method?: Maybe<Scalars['String']>;
-  currency?: Maybe<Scalars['String']>;
+  auto_advance?: InputMaybe<Scalars['Boolean']>;
+  collection_method?: InputMaybe<Scalars['String']>;
+  currency?: InputMaybe<Scalars['String']>;
   customer: Scalars['ID'];
-  days_until_due?: Maybe<Scalars['Int']>;
-  default_payment_method?: Maybe<Scalars['ID']>;
-  default_source?: Maybe<Scalars['ID']>;
-  description?: Maybe<Scalars['String']>;
-  due_date?: Maybe<Scalars['Int']>;
-  footer?: Maybe<Scalars['String']>;
-  items?: Maybe<Array<InvoiceItemInput>>;
+  days_until_due?: InputMaybe<Scalars['Int']>;
+  default_payment_method?: InputMaybe<Scalars['ID']>;
+  default_source?: InputMaybe<Scalars['ID']>;
+  description?: InputMaybe<Scalars['String']>;
+  due_date?: InputMaybe<Scalars['Int']>;
+  footer?: InputMaybe<Scalars['String']>;
+  items?: InputMaybe<Array<InvoiceItemInput>>;
   stripe_account_id: Scalars['ID'];
-  subscription?: Maybe<Scalars['ID']>;
+  subscription?: InputMaybe<Scalars['ID']>;
 };
 
 
 export type MutationCreate_InvoiceitemArgs = {
-  amount?: Maybe<Scalars['Int']>;
-  currency?: Maybe<Scalars['String']>;
+  amount?: InputMaybe<Scalars['Int']>;
+  currency?: InputMaybe<Scalars['String']>;
   customer: Scalars['ID'];
-  description?: Maybe<Scalars['String']>;
-  discountable?: Maybe<Scalars['Boolean']>;
-  invoice?: Maybe<Scalars['ID']>;
-  period?: Maybe<PeriodInput>;
-  price?: Maybe<Scalars['ID']>;
-  quantity?: Maybe<Scalars['Int']>;
+  description?: InputMaybe<Scalars['String']>;
+  discountable?: InputMaybe<Scalars['Boolean']>;
+  invoice?: InputMaybe<Scalars['ID']>;
+  period?: InputMaybe<PeriodInput>;
+  price?: InputMaybe<Scalars['ID']>;
+  quantity?: InputMaybe<Scalars['Int']>;
   stripe_account_id: Scalars['ID'];
-  unit_amount?: Maybe<Scalars['Int']>;
-  unit_amount_decimal?: Maybe<Scalars['String']>;
+  unit_amount?: InputMaybe<Scalars['Int']>;
+  unit_amount_decimal?: InputMaybe<Scalars['String']>;
 };
 
 
 export type MutationCreate_MarkdownArgs = {
-  access?: Maybe<AccessLevel>;
-  agency_id?: Maybe<Scalars['ID']>;
+  access?: InputMaybe<AccessLevel>;
+  agency_id?: InputMaybe<Scalars['ID']>;
   data: Scalars['String'];
   name: Scalars['String'];
 };
 
 
 export type MutationCreate_Page_BlockArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
   data: Scalars['Json'];
   page_block_definition_id: Scalars['ID'];
   page_id: Scalars['ID'];
@@ -935,45 +936,48 @@ export type MutationCreate_Page_BlockArgs = {
 export type MutationCreate_PriceArgs = {
   currency: Scalars['String'];
   product_id: Scalars['ID'];
-  recurring_interval?: Maybe<Scalars['String']>;
-  recurring_interval_count?: Maybe<Scalars['Int']>;
-  recurring_iterations?: Maybe<Scalars['Int']>;
-  status?: Maybe<Scalars['String']>;
+  recurring_interval?: InputMaybe<Scalars['String']>;
+  recurring_interval_count?: InputMaybe<Scalars['Int']>;
+  recurring_iterations?: InputMaybe<Scalars['Int']>;
+  status?: InputMaybe<Scalars['String']>;
   unit_amount: Scalars['Int'];
 };
 
 
 export type MutationCreate_ProductArgs = {
   agency_id: Scalars['ID'];
-  description?: Maybe<Scalars['String']>;
-  duration?: Maybe<Scalars['String']>;
-  image_hero?: Maybe<ImageInput>;
-  image_logo?: Maybe<ImageInput>;
-  image_logo_id?: Maybe<Scalars['ID']>;
-  markdown_description_id?: Maybe<Scalars['ID']>;
+  description?: InputMaybe<Scalars['String']>;
+  duration?: InputMaybe<Scalars['String']>;
+  image_hero?: InputMaybe<ImageInput>;
+  image_logo?: InputMaybe<ImageInput>;
+  image_logo_id?: InputMaybe<Scalars['ID']>;
+  markdown_description_id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
-  status?: Maybe<Scalars['String']>;
+  status?: InputMaybe<Scalars['String']>;
   url_name: Scalars['String'];
 };
 
 
 export type MutationCreate_Promotion_CodeArgs = {
-  active?: Maybe<Scalars['Boolean']>;
-  code?: Maybe<Scalars['String']>;
+  active?: InputMaybe<Scalars['Boolean']>;
+  code?: InputMaybe<Scalars['String']>;
   coupon: Scalars['String'];
-  customer?: Maybe<Scalars['String']>;
-  expires_at?: Maybe<Scalars['Int']>;
-  max_redemptions?: Maybe<Scalars['Int']>;
-  restrictions?: Maybe<PromotionCodeRestrictionsInput>;
+  customer?: InputMaybe<Scalars['String']>;
+  expires_at?: InputMaybe<Scalars['Int']>;
+  max_redemptions?: InputMaybe<Scalars['Int']>;
+  restrictions?: InputMaybe<PromotionCodeRestrictionsInput>;
   stripe_account_id: Scalars['ID'];
 };
 
 
 export type MutationCreate_Stripe_Checkout_SessionArgs = {
-  cancel_url?: Maybe<Scalars['String']>;
+  allow_promotion_codes?: InputMaybe<Scalars['Boolean']>;
+  cancel_url?: InputMaybe<Scalars['String']>;
+  coupon_id?: InputMaybe<Scalars['ID']>;
   livemode: Scalars['Boolean'];
   price_id: Scalars['ID'];
-  success_url?: Maybe<Scalars['String']>;
+  promotion_code_id?: InputMaybe<Scalars['ID']>;
+  success_url?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1035,7 +1039,7 @@ export type MutationFinalize_InvoiceArgs = {
 export type MutationLog_InArgs = {
   email_address: Scalars['String'];
   password: Scalars['String'];
-  recaptcha_token?: Maybe<Scalars['String']>;
+  recaptcha_token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1047,7 +1051,7 @@ export type MutationMark_Invoice_UncollectibleArgs = {
 
 export type MutationStart_Password_ResetArgs = {
   email_address: Scalars['String'];
-  redirect_url?: Maybe<Scalars['String']>;
+  redirect_url?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1055,37 +1059,37 @@ export type MutationStart_Sign_UpArgs = {
   email_address: Scalars['String'];
   name: Scalars['String'];
   password: Scalars['String'];
-  recaptcha_token?: Maybe<Scalars['String']>;
-  redirect_url?: Maybe<Scalars['String']>;
+  recaptcha_token?: InputMaybe<Scalars['String']>;
+  redirect_url?: InputMaybe<Scalars['String']>;
 };
 
 
 export type MutationUpdate_AgencyArgs = {
   agency_id: Scalars['ID'];
-  default_currency?: Maybe<Scalars['String']>;
-  default_pricing_currency?: Maybe<Scalars['String']>;
+  default_currency?: InputMaybe<Scalars['String']>;
+  default_pricing_currency?: InputMaybe<Scalars['String']>;
 };
 
 
 export type MutationUpdate_Agency_SettingsArgs = {
-  checkout_cancel_url?: Maybe<Scalars['String']>;
-  checkout_success_url?: Maybe<Scalars['String']>;
+  checkout_cancel_url?: InputMaybe<Scalars['String']>;
+  checkout_success_url?: InputMaybe<Scalars['String']>;
   setting_id: Scalars['ID'];
 };
 
 
 export type MutationUpdate_Bank_AccountArgs = {
-  account_holder_name?: Maybe<Scalars['String']>;
-  account_holder_type?: Maybe<Scalars['String']>;
+  account_holder_name?: InputMaybe<Scalars['String']>;
+  account_holder_type?: InputMaybe<Scalars['String']>;
   bank_account_id: Scalars['ID'];
-  default_for_currency?: Maybe<Scalars['Boolean']>;
+  default_for_currency?: InputMaybe<Scalars['Boolean']>;
   stripe_account_id: Scalars['ID'];
 };
 
 
 export type MutationUpdate_CouponArgs = {
   coupon_id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
   stripe_account_id: Scalars['ID'];
 };
 
@@ -1098,96 +1102,96 @@ export type MutationUpdate_CredentialArgs = {
 
 export type MutationUpdate_CustomerArgs = {
   customer_id: Scalars['ID'];
-  email_address?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
+  email_address?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 
 export type MutationUpdate_ImageArgs = {
-  access?: Maybe<AccessLevel>;
-  color?: Maybe<Scalars['String']>;
-  data?: Maybe<Scalars['String']>;
+  access?: InputMaybe<AccessLevel>;
+  color?: InputMaybe<Scalars['String']>;
+  data?: InputMaybe<Scalars['String']>;
   image_id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 
 export type MutationUpdate_IntegrationArgs = {
-  credential_id?: Maybe<Scalars['ID']>;
-  data?: Maybe<Scalars['Json']>;
+  credential_id?: InputMaybe<Scalars['ID']>;
+  data?: InputMaybe<Scalars['Json']>;
   integration_id: Scalars['ID'];
 };
 
 
 export type MutationUpdate_Integration_ConfigArgs = {
-  credential_id?: Maybe<Scalars['ID']>;
-  data?: Maybe<Scalars['Json']>;
+  credential_id?: InputMaybe<Scalars['ID']>;
+  data?: InputMaybe<Scalars['Json']>;
   integration_config_id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 
 export type MutationUpdate_InvoiceArgs = {
-  auto_advance?: Maybe<Scalars['Boolean']>;
-  collection_method?: Maybe<Scalars['String']>;
-  days_until_due?: Maybe<Scalars['Int']>;
-  default_payment_method?: Maybe<Scalars['ID']>;
-  default_source?: Maybe<Scalars['ID']>;
-  description?: Maybe<Scalars['String']>;
-  due_date?: Maybe<Scalars['Int']>;
-  footer?: Maybe<Scalars['String']>;
+  auto_advance?: InputMaybe<Scalars['Boolean']>;
+  collection_method?: InputMaybe<Scalars['String']>;
+  days_until_due?: InputMaybe<Scalars['Int']>;
+  default_payment_method?: InputMaybe<Scalars['ID']>;
+  default_source?: InputMaybe<Scalars['ID']>;
+  description?: InputMaybe<Scalars['String']>;
+  due_date?: InputMaybe<Scalars['Int']>;
+  footer?: InputMaybe<Scalars['String']>;
   invoice_id: Scalars['ID'];
   stripe_account_id: Scalars['ID'];
-  subscription?: Maybe<Scalars['ID']>;
+  subscription?: InputMaybe<Scalars['ID']>;
 };
 
 
 export type MutationUpdate_InvoiceitemArgs = {
-  amount?: Maybe<Scalars['Int']>;
-  description?: Maybe<Scalars['String']>;
-  discountable?: Maybe<Scalars['Boolean']>;
+  amount?: InputMaybe<Scalars['Int']>;
+  description?: InputMaybe<Scalars['String']>;
+  discountable?: InputMaybe<Scalars['Boolean']>;
   invoiceitem_id: Scalars['ID'];
-  period?: Maybe<PeriodInput>;
-  price?: Maybe<Scalars['ID']>;
-  quantity?: Maybe<Scalars['Int']>;
+  period?: InputMaybe<PeriodInput>;
+  price?: InputMaybe<Scalars['ID']>;
+  quantity?: InputMaybe<Scalars['Int']>;
   stripe_account_id: Scalars['ID'];
-  unit_amount?: Maybe<Scalars['Int']>;
-  unit_amount_decimal?: Maybe<Scalars['String']>;
+  unit_amount?: InputMaybe<Scalars['Int']>;
+  unit_amount_decimal?: InputMaybe<Scalars['String']>;
 };
 
 
 export type MutationUpdate_MarkdownArgs = {
-  access?: Maybe<AccessLevel>;
-  data?: Maybe<Scalars['String']>;
+  access?: InputMaybe<AccessLevel>;
+  data?: InputMaybe<Scalars['String']>;
   markdown_id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 
 export type MutationUpdate_OrderArgs = {
   order_id: Scalars['ID'];
-  processed_at?: Maybe<Scalars['DateTime']>;
-  state?: Maybe<Scalars['String']>;
+  processed_at?: InputMaybe<Scalars['DateTime']>;
+  state?: InputMaybe<Scalars['String']>;
 };
 
 
 export type MutationUpdate_Order_ItemArgs = {
   order_item_id: Scalars['ID'];
-  processed_at?: Maybe<Scalars['DateTime']>;
-  state?: Maybe<Scalars['String']>;
+  processed_at?: InputMaybe<Scalars['DateTime']>;
+  state?: InputMaybe<Scalars['String']>;
 };
 
 
 export type MutationUpdate_PageArgs = {
-  access?: Maybe<AccessLevel>;
+  access?: InputMaybe<AccessLevel>;
   page_id: Scalars['ID'];
 };
 
 
 export type MutationUpdate_Page_BlockArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  data?: Maybe<Scalars['Json']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  data?: InputMaybe<Scalars['Json']>;
   page_block_id: Scalars['ID'];
 };
 
@@ -1199,44 +1203,44 @@ export type MutationUpdate_PriceArgs = {
 
 
 export type MutationUpdate_ProductArgs = {
-  default_price_id?: Maybe<Scalars['ID']>;
-  description?: Maybe<Scalars['String']>;
-  duration?: Maybe<Scalars['String']>;
-  image_hero?: Maybe<ImageInput>;
-  image_logo?: Maybe<ImageInput>;
-  image_logo_id?: Maybe<Scalars['ID']>;
-  markdown_description_id?: Maybe<Scalars['ID']>;
-  name?: Maybe<Scalars['String']>;
+  default_price_id?: InputMaybe<Scalars['ID']>;
+  description?: InputMaybe<Scalars['String']>;
+  duration?: InputMaybe<Scalars['String']>;
+  image_hero?: InputMaybe<ImageInput>;
+  image_logo?: InputMaybe<ImageInput>;
+  image_logo_id?: InputMaybe<Scalars['ID']>;
+  markdown_description_id?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
   product_id: Scalars['ID'];
-  status?: Maybe<Scalars['String']>;
-  url_name?: Maybe<Scalars['String']>;
+  status?: InputMaybe<Scalars['String']>;
+  url_name?: InputMaybe<Scalars['String']>;
 };
 
 
 export type MutationUpdate_Product_SettingsArgs = {
-  checkout_cancel_url?: Maybe<Scalars['String']>;
-  checkout_success_url?: Maybe<Scalars['String']>;
+  checkout_cancel_url?: InputMaybe<Scalars['String']>;
+  checkout_success_url?: InputMaybe<Scalars['String']>;
   setting_id: Scalars['ID'];
 };
 
 
 export type MutationUpdate_Promotion_CodeArgs = {
-  active?: Maybe<Scalars['Boolean']>;
+  active?: InputMaybe<Scalars['Boolean']>;
   promotion_code_id: Scalars['ID'];
   stripe_account_id: Scalars['ID'];
 };
 
 
 export type MutationUpdate_ThemeArgs = {
-  color_accent?: Maybe<Scalars['String']>;
-  color_background?: Maybe<Scalars['String']>;
-  color_error?: Maybe<Scalars['String']>;
-  color_primary?: Maybe<Scalars['String']>;
-  color_secondary?: Maybe<Scalars['String']>;
-  color_success?: Maybe<Scalars['String']>;
-  color_surface?: Maybe<Scalars['String']>;
-  image_hero_id?: Maybe<Scalars['ID']>;
-  image_logo_id?: Maybe<Scalars['ID']>;
+  color_accent?: InputMaybe<Scalars['String']>;
+  color_background?: InputMaybe<Scalars['String']>;
+  color_error?: InputMaybe<Scalars['String']>;
+  color_primary?: InputMaybe<Scalars['String']>;
+  color_secondary?: InputMaybe<Scalars['String']>;
+  color_success?: InputMaybe<Scalars['String']>;
+  color_surface?: InputMaybe<Scalars['String']>;
+  image_hero_id?: InputMaybe<Scalars['ID']>;
+  image_logo_id?: InputMaybe<Scalars['ID']>;
   theme_id: Scalars['ID'];
 };
 
@@ -1281,30 +1285,30 @@ export type Order = {
 
 
 export type OrderCustomerArgs = {
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type OrderItemsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<OrderItemFilter>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<OrderItemFilter>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type OrderStripe_Checkout_SessionArgs = {
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 export type OrderFilter = {
-  customer_id?: Maybe<Scalars['ID']>;
-  stripe_account_id?: Maybe<Scalars['ID']>;
-  stripe_checkout_session_id_ext?: Maybe<Scalars['ID']>;
+  customer_id?: InputMaybe<Scalars['ID']>;
+  stripe_account_id?: InputMaybe<Scalars['ID']>;
+  stripe_checkout_session_id_ext?: InputMaybe<Scalars['ID']>;
 };
 
 export type OrderItem = {
@@ -1320,12 +1324,12 @@ export type OrderItem = {
 
 
 export type OrderItemOrderArgs = {
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 export type OrderItemFilter = {
-  order_id?: Maybe<Scalars['ID']>;
-  stripe_line_item_id_ext?: Maybe<Scalars['ID']>;
+  order_id?: InputMaybe<Scalars['ID']>;
+  stripe_line_item_id_ext?: InputMaybe<Scalars['ID']>;
 };
 
 export type OrderItemMutationResult = MutationResult & {
@@ -1388,13 +1392,13 @@ export type PageBlockDefinition = Node & {
 };
 
 export type PageBlockDefinitionFilter = {
-  name?: Maybe<Scalars['String']>;
-  page_definition_id?: Maybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
+  page_definition_id?: InputMaybe<Scalars['ID']>;
 };
 
 export type PageBlockFilter = {
-  page_block_definition_id?: Maybe<Scalars['ID']>;
-  page_id?: Maybe<Scalars['ID']>;
+  page_block_definition_id?: InputMaybe<Scalars['ID']>;
+  page_id?: InputMaybe<Scalars['ID']>;
 };
 
 export type PageBlockMutationResult = MutationResult & {
@@ -1413,15 +1417,15 @@ export type PageDefinition = Node & {
 };
 
 export type PageDefinitionFilter = {
-  name?: Maybe<Scalars['String']>;
-  url_path?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  url_path?: InputMaybe<Scalars['String']>;
 };
 
 export type PageFilter = {
-  agency_id?: Maybe<Scalars['ID']>;
-  page_definition_id?: Maybe<Scalars['ID']>;
-  product_id?: Maybe<Scalars['ID']>;
-  url_path?: Maybe<Scalars['String']>;
+  agency_id?: InputMaybe<Scalars['ID']>;
+  page_definition_id?: InputMaybe<Scalars['ID']>;
+  product_id?: InputMaybe<Scalars['ID']>;
+  url_path?: InputMaybe<Scalars['String']>;
 };
 
 export type PageMutationResult = MutationResult & {
@@ -1481,10 +1485,10 @@ export type Price = Node & {
 };
 
 export type PriceFilter = {
-  active?: Maybe<Scalars['Boolean']>;
-  product_id?: Maybe<Scalars['ID']>;
-  status?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
+  active?: InputMaybe<Scalars['Boolean']>;
+  product_id?: InputMaybe<Scalars['ID']>;
+  status?: InputMaybe<Scalars['String']>;
+  type?: InputMaybe<Scalars['String']>;
 };
 
 export type PriceMutationResult = MutationResult & {
@@ -1516,34 +1520,34 @@ export type Product = Node & {
 
 
 export type ProductPagesArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<PageFilter>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<PageFilter>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type ProductPricesArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<PriceFilter>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<PriceFilter>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 export type ProductFilter = {
-  active?: Maybe<Scalars['Boolean']>;
-  agency_id?: Maybe<Scalars['ID']>;
-  name?: Maybe<Scalars['String']>;
-  status?: Maybe<Scalars['String']>;
-  url_name?: Maybe<Scalars['String']>;
+  active?: InputMaybe<Scalars['Boolean']>;
+  agency_id?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
+  status?: InputMaybe<Scalars['String']>;
+  url_name?: InputMaybe<Scalars['String']>;
 };
 
 export type ProductMutationResult = MutationResult & {
@@ -1561,7 +1565,7 @@ export type ProductSettings = {
 };
 
 export type ProductSettingsFilter = {
-  product_id?: Maybe<Scalars['ID']>;
+  product_id?: InputMaybe<Scalars['ID']>;
 };
 
 export type ProductSettingsMutationResult = MutationResult & {
@@ -1602,8 +1606,8 @@ export type PromotionCodeRestrictions = {
 
 export type PromotionCodeRestrictionsInput = {
   first_time_transaction: Scalars['Boolean'];
-  minimum_amount?: Maybe<Scalars['Int']>;
-  minimum_amount_currency?: Maybe<Scalars['String']>;
+  minimum_amount?: InputMaybe<Scalars['Int']>;
+  minimum_amount_currency?: InputMaybe<Scalars['String']>;
 };
 
 export type Query = {
@@ -1701,26 +1705,26 @@ export type Query = {
 
 
 export type QueryAgenciesArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: AgencyFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryAgencies_SettingsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: AgencySettingsFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1736,151 +1740,151 @@ export type QueryAgency_SettingsArgs = {
 
 export type QueryCount_AgenciesArgs = {
   filter: AgencyFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Agencies_SettingsArgs = {
   filter: AgencySettingsFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Credential_TypesArgs = {
   filter: CredentialTypeFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_CredentialsArgs = {
   filter: CredentialFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_CustomersArgs = {
   filter: CustomerFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Form_FieldsArgs = {
   filter: FormFieldFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_ImagesArgs = {
   filter: ImageFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Integration_ConfigsArgs = {
   filter: IntegrationConfigFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Integration_TypesArgs = {
   filter: IntegrationTypeFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_IntegrationsArgs = {
   filter: IntegrationFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_MembershipsArgs = {
   filter: MembershipFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Order_ItemsArgs = {
   filter: OrderItemFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_OrdersArgs = {
   filter: OrderFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Page_Block_DefinitionsArgs = {
   filter: PageBlockDefinitionFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Page_BlocksArgs = {
   filter: PageBlockFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Page_DefinitionsArgs = {
   filter: PageDefinitionFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_PagesArgs = {
   filter: PageFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_PricesArgs = {
   filter: PriceFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_ProductsArgs = {
   filter: ProductFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Products_SettingsArgs = {
   filter: ProductSettingsFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_SubdomainsArgs = {
   filter: SubdomainFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Subscription_PlansArgs = {
   filter: SubscriptionPlanFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_ThemesArgs = {
   filter: ThemeFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_Transaction_FeesArgs = {
   filter: TransactionFeeFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCount_UsersArgs = {
   filter: UserFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1906,44 +1910,44 @@ export type QueryCredential_TypeArgs = {
 
 
 export type QueryCredential_TypesArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: CredentialTypeFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCredentialsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: CredentialFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCustomerArgs = {
   id: Scalars['ID'];
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryCustomersArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: CustomerFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1958,14 +1962,14 @@ export type QueryForm_FieldArgs = {
 
 
 export type QueryForm_FieldsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: FormFieldFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1975,14 +1979,14 @@ export type QueryImageArgs = {
 
 
 export type QueryImagesArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: ImageFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1997,14 +2001,14 @@ export type QueryIntegration_ConfigArgs = {
 
 
 export type QueryIntegration_ConfigsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: IntegrationConfigFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2014,26 +2018,26 @@ export type QueryIntegration_TypeArgs = {
 
 
 export type QueryIntegration_TypesArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: IntegrationTypeFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryIntegrationsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: IntegrationFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2055,14 +2059,14 @@ export type QueryMarkdownArgs = {
 
 
 export type QueryMarkdownsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: MarkdownFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2072,50 +2076,50 @@ export type QueryMembershipArgs = {
 
 
 export type QueryMembershipsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: MembershipFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryOrderArgs = {
   id: Scalars['ID'];
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryOrder_ItemArgs = {
   id: Scalars['ID'];
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryOrder_ItemsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: OrderItemFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryOrdersArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: OrderFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2135,26 +2139,26 @@ export type QueryPage_Block_DefinitionArgs = {
 
 
 export type QueryPage_Block_DefinitionsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: PageBlockDefinitionFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryPage_BlocksArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: PageBlockFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2174,26 +2178,26 @@ export type QueryPage_Definition_By_Url_PathArgs = {
 
 
 export type QueryPage_DefinitionsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: PageDefinitionFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryPagesArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: PageFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2203,14 +2207,14 @@ export type QueryPriceArgs = {
 
 
 export type QueryPricesArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: PriceFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2225,26 +2229,26 @@ export type QueryProduct_SettingsArgs = {
 
 
 export type QueryProductsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: ProductFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type QueryProducts_SettingsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: ProductSettingsFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2255,13 +2259,13 @@ export type QueryPromotion_CodeArgs = {
 
 
 export type QueryPromotion_CodesArgs = {
-  active?: Maybe<Scalars['Boolean']>;
-  code?: Maybe<Scalars['String']>;
-  coupon?: Maybe<Scalars['String']>;
-  customer?: Maybe<Scalars['String']>;
-  ending_before?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  starting_after?: Maybe<Scalars['String']>;
+  active?: InputMaybe<Scalars['Boolean']>;
+  code?: InputMaybe<Scalars['String']>;
+  coupon?: InputMaybe<Scalars['String']>;
+  customer?: InputMaybe<Scalars['String']>;
+  ending_before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  starting_after?: InputMaybe<Scalars['String']>;
   stripe_account_id: Scalars['ID'];
 };
 
@@ -2277,14 +2281,14 @@ export type QuerySubdomainArgs = {
 
 
 export type QuerySubdomainsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: SubdomainFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2294,14 +2298,14 @@ export type QuerySubscription_PlanArgs = {
 
 
 export type QuerySubscription_PlansArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: SubscriptionPlanFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2311,14 +2315,14 @@ export type QueryThemeArgs = {
 
 
 export type QueryThemesArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: ThemeFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2328,14 +2332,14 @@ export type QueryTransaction_FeeArgs = {
 
 
 export type QueryTransaction_FeesArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: TransactionFeeFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2345,14 +2349,14 @@ export type QueryUserArgs = {
 
 
 export type QueryUsersArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
   filter: UserFilter;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 export type Shipping = {
@@ -2400,74 +2404,74 @@ export type StripeAccount = {
 
 
 export type StripeAccountBalance_TransactionsArgs = {
-  available_on?: Maybe<Scalars['DateTime']>;
-  created?: Maybe<Scalars['DateTime']>;
-  currency?: Maybe<Scalars['String']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  payout_id?: Maybe<Scalars['ID']>;
-  starting_after_id?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
+  available_on?: InputMaybe<Scalars['DateTime']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  currency?: InputMaybe<Scalars['String']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  payout_id?: InputMaybe<Scalars['ID']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
+  type?: InputMaybe<Scalars['String']>;
 };
 
 
 export type StripeAccountBank_AccountsArgs = {
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  starting_after_id?: Maybe<Scalars['String']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
 };
 
 
 export type StripeAccountCouponsArgs = {
-  created?: Maybe<Scalars['DateTime']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  starting_after_id?: Maybe<Scalars['String']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
 };
 
 
 export type StripeAccountCustomersArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<CustomerFilter>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<CustomerFilter>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 
 export type StripeAccountInvoiceitemsArgs = {
-  created?: Maybe<Scalars['DateTime']>;
-  customer_id?: Maybe<Scalars['ID']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  invoice?: Maybe<Scalars['ID']>;
-  limit?: Maybe<Scalars['Int']>;
-  pending?: Maybe<Scalars['Boolean']>;
-  starting_after_id?: Maybe<Scalars['String']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  customer_id?: InputMaybe<Scalars['ID']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  invoice?: InputMaybe<Scalars['ID']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  pending?: InputMaybe<Scalars['Boolean']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
 };
 
 
 export type StripeAccountInvoicesArgs = {
-  collection_method?: Maybe<Scalars['String']>;
-  created?: Maybe<Scalars['DateTime']>;
-  customer_id?: Maybe<Scalars['ID']>;
-  due_date?: Maybe<Scalars['DateTime']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  starting_after_id?: Maybe<Scalars['String']>;
-  status?: Maybe<Scalars['String']>;
-  subscription?: Maybe<Scalars['ID']>;
+  collection_method?: InputMaybe<Scalars['String']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  customer_id?: InputMaybe<Scalars['ID']>;
+  due_date?: InputMaybe<Scalars['DateTime']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
+  status?: InputMaybe<Scalars['String']>;
+  subscription?: InputMaybe<Scalars['ID']>;
 };
 
 
 export type StripeAccountPayment_IntentsArgs = {
-  created?: Maybe<Scalars['DateTime']>;
-  customer_id?: Maybe<Scalars['ID']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  starting_after_id?: Maybe<Scalars['String']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  customer_id?: InputMaybe<Scalars['ID']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
 };
 
 export type StripeAccountLink = {
@@ -2533,9 +2537,9 @@ export type StripeCheckoutSession = {
 
 
 export type StripeCheckoutSessionLine_ItemsArgs = {
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  starting_after_id?: Maybe<Scalars['String']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
 };
 
 export type StripeCurrencyBalance = {
@@ -2568,24 +2572,24 @@ export type StripeCustomer = {
 
 
 export type StripeCustomerInvoiceitemsArgs = {
-  created?: Maybe<Scalars['DateTime']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  invoice?: Maybe<Scalars['ID']>;
-  limit?: Maybe<Scalars['Int']>;
-  pending?: Maybe<Scalars['Boolean']>;
-  starting_after_id?: Maybe<Scalars['String']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  invoice?: InputMaybe<Scalars['ID']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  pending?: InputMaybe<Scalars['Boolean']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
 };
 
 
 export type StripeCustomerInvoicesArgs = {
-  collection_method?: Maybe<Scalars['String']>;
-  created?: Maybe<Scalars['DateTime']>;
-  due_date?: Maybe<Scalars['DateTime']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  starting_after_id?: Maybe<Scalars['String']>;
-  status?: Maybe<Scalars['String']>;
-  subscription?: Maybe<Scalars['ID']>;
+  collection_method?: InputMaybe<Scalars['String']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  due_date?: InputMaybe<Scalars['DateTime']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
+  status?: InputMaybe<Scalars['String']>;
+  subscription?: InputMaybe<Scalars['ID']>;
 };
 
 export type StripePrice = {
@@ -2659,18 +2663,18 @@ export type Subdomain = Node & {
 
 
 export type SubdomainMembershipsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<MembershipFilter>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MembershipFilter>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 export type SubdomainFilter = {
-  name?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type SubscriptionPlan = {
@@ -2688,7 +2692,7 @@ export type SubscriptionPlanCalculate_FeeArgs = {
 };
 
 export type SubscriptionPlanFilter = {
-  name?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type Theme = Node & {
@@ -2708,8 +2712,8 @@ export type Theme = Node & {
 };
 
 export type ThemeFilter = {
-  agency_id?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
+  agency_id?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type TransactionFee = {
@@ -2724,7 +2728,7 @@ export type TransactionFee = {
 };
 
 export type TransactionFeeFilter = {
-  subscription_plan_id?: Maybe<Scalars['ID']>;
+  subscription_plan_id?: InputMaybe<Scalars['ID']>;
 };
 
 export type UpdateThemeResult = MutationResult & {
@@ -2744,19 +2748,19 @@ export type User = Node & {
 
 
 export type UserMembershipsArgs = {
-  after_id?: Maybe<Scalars['ID']>;
-  before_id?: Maybe<Scalars['ID']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<MembershipFilter>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Scalars['String']>;
-  token?: Maybe<Scalars['String']>;
+  after_id?: InputMaybe<Scalars['ID']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  filter?: InputMaybe<MembershipFilter>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 };
 
 export type UserFilter = {
-  email_address?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
+  email_address?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type Stripe_AccountFragment = { __typename?: 'StripeAccount', id: string, id_ext: string, business_type?: string | null | undefined, charges_enabled: boolean, country: string, created: any, default_currency?: string | null | undefined, details_submitted: boolean, email?: string | null | undefined, payouts_enabled: boolean, business_profile: { __typename?: 'BusinessProfile', mcc?: string | null | undefined, name?: string | null | undefined, product_description?: string | null | undefined, support_address?: string | null | undefined, support_email?: string | null | undefined, support_phone?: string | null | undefined, support_url?: string | null | undefined, url?: string | null | undefined }, capabilities: { __typename?: 'StripeCapabilities', card_payments?: string | null | undefined, transfers?: string | null | undefined }, requirements: { __typename?: 'StripeRequirements', current_deadline?: string | null | undefined, disabled_reason?: string | null | undefined, currently_due: Array<string | null | undefined>, eventually_due: Array<string | null | undefined>, past_due: Array<string | null | undefined>, pending_verification: Array<string | null | undefined> }, settings: { __typename?: 'StripeSettings', branding?: { __typename?: 'StripeBranding', icon?: string | null | undefined, logo?: string | null | undefined, primary_color?: string | null | undefined, secondary_color?: string | null | undefined } | null | undefined } };
@@ -2777,9 +2781,9 @@ export type Balance_TransactionFragment = { __typename?: 'BalanceTransaction', i
 
 export type Stripe_CustomerFragment = { __typename?: 'StripeCustomer', id: string, id_ext: string, balance?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, delinquent?: boolean | null | undefined, description?: string | null | undefined, email?: string | null | undefined, invoice_prefix?: string | null | undefined, name?: string | null | undefined, next_invoice_sequence?: number | null | undefined, phone?: string | null | undefined, preferred_locales?: Array<string | null | undefined> | null | undefined, address?: { __typename?: 'Address', city?: string | null | undefined, country?: string | null | undefined, line1?: string | null | undefined, line2?: string | null | undefined, postal_code?: string | null | undefined, state?: string | null | undefined } | null | undefined, customer?: { __typename?: 'Customer', id: string } | null | undefined };
 
-export type CouponFragment = { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products?: Array<string> | null | undefined } | null | undefined };
+export type CouponFragment = { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products: Array<string> } | null | undefined };
 
-export type Promotion_CodeFragment = { __typename?: 'PromotionCode', id: string, active: boolean, code: string, created: any, expires_at?: any | null | undefined, livemode: boolean, max_redemptions?: number | null | undefined, times_redeemed: number, coupon: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products?: Array<string> | null | undefined } | null | undefined }, customer?: { __typename?: 'StripeCustomer', id: string } | null | undefined, restrictions?: { __typename?: 'PromotionCodeRestrictions', first_time_transaction: boolean, minimum_amount?: number | null | undefined, minimum_amount_currency?: string | null | undefined } | null | undefined };
+export type Promotion_CodeFragment = { __typename?: 'PromotionCode', id: string, active: boolean, code: string, created: any, expires_at?: any | null | undefined, livemode: boolean, max_redemptions?: number | null | undefined, times_redeemed: number, coupon: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products: Array<string> } | null | undefined }, customer?: { __typename?: 'StripeCustomer', id: string } | null | undefined, restrictions?: { __typename?: 'PromotionCodeRestrictions', first_time_transaction: boolean, minimum_amount?: number | null | undefined, minimum_amount_currency?: string | null | undefined } | null | undefined };
 
 export type ChargeFragment = { __typename?: 'Charge', id: string, id_ext: string, amount: number, amount_capturable?: number | null | undefined, amount_received?: number | null | undefined, application_fee_amount?: number | null | undefined, authorization_code?: string | null | undefined, calculated_statement_descriptor?: string | null | undefined, captured?: boolean | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, description?: string | null | undefined, disputed?: boolean | null | undefined, failure_code?: string | null | undefined, failure_message?: string | null | undefined, invoice?: string | null | undefined, order?: string | null | undefined, paid?: boolean | null | undefined, payment_method?: string | null | undefined, receipt_email?: string | null | undefined, receipt_number?: string | null | undefined, receipt_url?: string | null | undefined, refunded?: boolean | null | undefined, source_transfer?: string | null | undefined, statement_descriptor?: string | null | undefined, statement_descriptor_suffix?: string | null | undefined, status?: string | null | undefined, transfer?: string | null | undefined, transfer_group?: string | null | undefined, balance_transaction?: { __typename?: 'BalanceTransaction', id: string, id_ext: string, amount: number, available_on: any, created: any, exchange_rate?: number | null | undefined, currency: string, description?: string | null | undefined, fee: number, net: number, status: string, reporting_category: string, type: string, source: string, fee_details?: Array<{ __typename?: 'BalanceTransactionFeeDetails', amount: number, application?: string | null | undefined, currency: string, description?: string | null | undefined, type: string }> | null | undefined } | null | undefined, billing_details?: { __typename?: 'BillingDetails', email?: string | null | undefined, name?: string | null | undefined, phone?: string | null | undefined, address?: { __typename?: 'Address', city?: string | null | undefined, country?: string | null | undefined, line1?: string | null | undefined, line2?: string | null | undefined, postal_code?: string | null | undefined, state?: string | null | undefined } | null | undefined } | null | undefined, customer?: { __typename?: 'StripeCustomer', id: string } | null | undefined, fraud_details?: { __typename?: 'FraudDetails', stripe_report?: string | null | undefined, user_report?: string | null | undefined } | null | undefined, outcome?: { __typename?: 'Outcome', network_status?: string | null | undefined, reason?: string | null | undefined, risk_level?: string | null | undefined, risk_score?: number | null | undefined, seller_message?: string | null | undefined, type?: string | null | undefined, rule?: { __typename?: 'OutcomeRule', action?: string | null | undefined, id?: string | null | undefined, predicate?: string | null | undefined } | null | undefined } | null | undefined, payment_intent?: { __typename?: 'PaymentIntent', id: string } | null | undefined };
 
@@ -2856,7 +2860,7 @@ export type EndVisitMutation = { __typename?: 'Mutation', end_visit: { __typenam
 export type LogInMutationVariables = Exact<{
   email_address: Scalars['String'];
   password: Scalars['String'];
-  recaptcha_token?: Maybe<Scalars['String']>;
+  recaptcha_token?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -2884,7 +2888,7 @@ export type VerifySignUpMutation = { __typename?: 'Mutation', verify_sign_up: { 
 
 export type StartPasswordResetMutationVariables = Exact<{
   email_address: Scalars['String'];
-  redirect_url?: Maybe<Scalars['String']>;
+  redirect_url?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -2894,8 +2898,8 @@ export type StartSignUpMutationVariables = Exact<{
   email_address: Scalars['String'];
   password: Scalars['String'];
   name: Scalars['String'];
-  redirect_url?: Maybe<Scalars['String']>;
-  recaptcha_token?: Maybe<Scalars['String']>;
+  redirect_url?: InputMaybe<Scalars['String']>;
+  recaptcha_token?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -2915,7 +2919,7 @@ export type CreateAgencyMutation = { __typename?: 'Mutation', create_agency: { _
 
 export type UpdateAgencyMutationVariables = Exact<{
   agency_id: Scalars['ID'];
-  default_pricing_currency?: Maybe<Scalars['String']>;
+  default_pricing_currency?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -2923,26 +2927,26 @@ export type UpdateAgencyMutation = { __typename?: 'Mutation', update_agency: { _
 
 export type UpdateThemeMutationVariables = Exact<{
   theme_id: Scalars['ID'];
-  image_logo_id?: Maybe<Scalars['ID']>;
-  image_hero_id?: Maybe<Scalars['ID']>;
-  color_primary?: Maybe<Scalars['String']>;
-  color_secondary?: Maybe<Scalars['String']>;
-  color_accent?: Maybe<Scalars['String']>;
-  color_background?: Maybe<Scalars['String']>;
-  color_surface?: Maybe<Scalars['String']>;
-  color_error?: Maybe<Scalars['String']>;
-  color_success?: Maybe<Scalars['String']>;
+  image_logo_id?: InputMaybe<Scalars['ID']>;
+  image_hero_id?: InputMaybe<Scalars['ID']>;
+  color_primary?: InputMaybe<Scalars['String']>;
+  color_secondary?: InputMaybe<Scalars['String']>;
+  color_accent?: InputMaybe<Scalars['String']>;
+  color_background?: InputMaybe<Scalars['String']>;
+  color_surface?: InputMaybe<Scalars['String']>;
+  color_error?: InputMaybe<Scalars['String']>;
+  color_success?: InputMaybe<Scalars['String']>;
 }>;
 
 
 export type UpdateThemeMutation = { __typename?: 'Mutation', update_theme: { __typename?: 'UpdateThemeResult', message?: string | null | undefined, success: boolean, theme?: { __typename?: 'Theme', id: string, color_primary?: string | null | undefined, color_secondary?: string | null | undefined, color_accent?: string | null | undefined, color_background?: string | null | undefined, color_surface?: string | null | undefined, color_error?: string | null | undefined, color_success?: string | null | undefined, image_logo?: { __typename?: 'Image', id: string, name: string, color: string, data: string, access: AccessLevel } | null | undefined, image_hero?: { __typename?: 'Image', id: string, name: string, color: string, data: string, access: AccessLevel } | null | undefined } | null | undefined } };
 
 export type CreateImageMutationVariables = Exact<{
-  agency_id?: Maybe<Scalars['ID']>;
+  agency_id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   data: Scalars['String'];
   color: Scalars['String'];
-  access?: Maybe<AccessLevel>;
+  access?: InputMaybe<AccessLevel>;
 }>;
 
 
@@ -2950,10 +2954,10 @@ export type CreateImageMutation = { __typename?: 'Mutation', create_image: { __t
 
 export type UpdateImageMutationVariables = Exact<{
   image_id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
-  data?: Maybe<Scalars['String']>;
-  color?: Maybe<Scalars['String']>;
-  access?: Maybe<AccessLevel>;
+  name?: InputMaybe<Scalars['String']>;
+  data?: InputMaybe<Scalars['String']>;
+  color?: InputMaybe<Scalars['String']>;
+  access?: InputMaybe<AccessLevel>;
 }>;
 
 
@@ -2964,10 +2968,10 @@ export type CreateProductMutationVariables = Exact<{
   name: Scalars['String'];
   description: Scalars['String'];
   url_name: Scalars['String'];
-  duration?: Maybe<Scalars['String']>;
-  image_logo?: Maybe<ImageInput>;
-  image_hero?: Maybe<ImageInput>;
-  status?: Maybe<Scalars['String']>;
+  duration?: InputMaybe<Scalars['String']>;
+  image_logo?: InputMaybe<ImageInput>;
+  image_hero?: InputMaybe<ImageInput>;
+  status?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -2975,14 +2979,14 @@ export type CreateProductMutation = { __typename?: 'Mutation', create_product: {
 
 export type UpdateProductMutationVariables = Exact<{
   product_id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
-  description?: Maybe<Scalars['String']>;
-  url_name?: Maybe<Scalars['String']>;
-  duration?: Maybe<Scalars['String']>;
-  default_price_id?: Maybe<Scalars['ID']>;
-  image_logo?: Maybe<ImageInput>;
-  image_hero?: Maybe<ImageInput>;
-  status?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']>;
+  url_name?: InputMaybe<Scalars['String']>;
+  duration?: InputMaybe<Scalars['String']>;
+  default_price_id?: InputMaybe<Scalars['ID']>;
+  image_logo?: InputMaybe<ImageInput>;
+  image_hero?: InputMaybe<ImageInput>;
+  status?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -2999,9 +3003,9 @@ export type CreatePriceMutationVariables = Exact<{
   product_id: Scalars['ID'];
   unit_amount: Scalars['Int'];
   currency: Scalars['String'];
-  recurring_interval?: Maybe<Scalars['String']>;
-  recurring_interval_count?: Maybe<Scalars['Int']>;
-  status?: Maybe<Scalars['String']>;
+  recurring_interval?: InputMaybe<Scalars['String']>;
+  recurring_interval_count?: InputMaybe<Scalars['Int']>;
+  status?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3009,29 +3013,29 @@ export type CreatePriceMutation = { __typename?: 'Mutation', create_price: { __t
 
 export type CreateCouponMutationVariables = Exact<{
   stripe_account_id: Scalars['ID'];
-  amount_off?: Maybe<Scalars['Int']>;
-  currency?: Maybe<Scalars['String']>;
-  percent_off?: Maybe<Scalars['Int']>;
-  duration?: Maybe<Scalars['String']>;
-  duration_in_months?: Maybe<Scalars['Int']>;
-  name?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['String']>;
-  applies_to?: Maybe<CouponAppliesToInput>;
-  max_redemptions?: Maybe<Scalars['Int']>;
-  redeem_by?: Maybe<Scalars['Int']>;
+  amount_off?: InputMaybe<Scalars['Int']>;
+  currency?: InputMaybe<Scalars['String']>;
+  percent_off?: InputMaybe<Scalars['Int']>;
+  duration?: InputMaybe<Scalars['String']>;
+  duration_in_months?: InputMaybe<Scalars['Int']>;
+  name?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars['String']>;
+  applies_to?: InputMaybe<CouponAppliesToInput>;
+  max_redemptions?: InputMaybe<Scalars['Int']>;
+  redeem_by?: InputMaybe<Scalars['Int']>;
 }>;
 
 
-export type CreateCouponMutation = { __typename?: 'Mutation', create_coupon: { __typename?: 'CouponMutationResult', success: boolean, message?: string | null | undefined, coupon?: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products?: Array<string> | null | undefined } | null | undefined } | null | undefined } };
+export type CreateCouponMutation = { __typename?: 'Mutation', create_coupon: { __typename?: 'CouponMutationResult', success: boolean, message?: string | null | undefined, coupon?: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products: Array<string> } | null | undefined } | null | undefined } };
 
 export type UpdateCouponMutationVariables = Exact<{
   stripe_account_id: Scalars['ID'];
   coupon_id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
 }>;
 
 
-export type UpdateCouponMutation = { __typename?: 'Mutation', update_coupon: { __typename?: 'CouponMutationResult', success: boolean, message?: string | null | undefined, coupon?: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products?: Array<string> | null | undefined } | null | undefined } | null | undefined } };
+export type UpdateCouponMutation = { __typename?: 'Mutation', update_coupon: { __typename?: 'CouponMutationResult', success: boolean, message?: string | null | undefined, coupon?: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products: Array<string> } | null | undefined } | null | undefined } };
 
 export type DeleteCouponMutationVariables = Exact<{
   stripe_account_id: Scalars['ID'];
@@ -3044,40 +3048,40 @@ export type DeleteCouponMutation = { __typename?: 'Mutation', delete_coupon: { _
 export type CreatePromotionCodeMutationVariables = Exact<{
   stripe_account_id: Scalars['ID'];
   coupon: Scalars['String'];
-  active?: Maybe<Scalars['Boolean']>;
-  code?: Maybe<Scalars['String']>;
-  customer?: Maybe<Scalars['String']>;
-  expires_at?: Maybe<Scalars['Int']>;
-  max_redemptions?: Maybe<Scalars['Int']>;
-  restrictions?: Maybe<PromotionCodeRestrictionsInput>;
+  active?: InputMaybe<Scalars['Boolean']>;
+  code?: InputMaybe<Scalars['String']>;
+  customer?: InputMaybe<Scalars['String']>;
+  expires_at?: InputMaybe<Scalars['Int']>;
+  max_redemptions?: InputMaybe<Scalars['Int']>;
+  restrictions?: InputMaybe<PromotionCodeRestrictionsInput>;
 }>;
 
 
-export type CreatePromotionCodeMutation = { __typename?: 'Mutation', create_promotion_code: { __typename?: 'PromotionCodeMutationResult', success: boolean, message?: string | null | undefined, promotion_code?: { __typename?: 'PromotionCode', id: string, active: boolean, code: string, created: any, expires_at?: any | null | undefined, livemode: boolean, max_redemptions?: number | null | undefined, times_redeemed: number, coupon: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products?: Array<string> | null | undefined } | null | undefined }, customer?: { __typename?: 'StripeCustomer', id: string } | null | undefined, restrictions?: { __typename?: 'PromotionCodeRestrictions', first_time_transaction: boolean, minimum_amount?: number | null | undefined, minimum_amount_currency?: string | null | undefined } | null | undefined } | null | undefined } };
+export type CreatePromotionCodeMutation = { __typename?: 'Mutation', create_promotion_code: { __typename?: 'PromotionCodeMutationResult', success: boolean, message?: string | null | undefined, promotion_code?: { __typename?: 'PromotionCode', id: string, active: boolean, code: string, created: any, expires_at?: any | null | undefined, livemode: boolean, max_redemptions?: number | null | undefined, times_redeemed: number, coupon: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products: Array<string> } | null | undefined }, customer?: { __typename?: 'StripeCustomer', id: string } | null | undefined, restrictions?: { __typename?: 'PromotionCodeRestrictions', first_time_transaction: boolean, minimum_amount?: number | null | undefined, minimum_amount_currency?: string | null | undefined } | null | undefined } | null | undefined } };
 
 export type UpdatePromotionCodeMutationVariables = Exact<{
   stripe_account_id: Scalars['ID'];
   promotion_code_id: Scalars['ID'];
-  active?: Maybe<Scalars['Boolean']>;
+  active?: InputMaybe<Scalars['Boolean']>;
 }>;
 
 
-export type UpdatePromotionCodeMutation = { __typename?: 'Mutation', update_promotion_code: { __typename?: 'PromotionCodeMutationResult', success: boolean, message?: string | null | undefined, promotion_code?: { __typename?: 'PromotionCode', id: string, active: boolean, code: string, created: any, expires_at?: any | null | undefined, livemode: boolean, max_redemptions?: number | null | undefined, times_redeemed: number, coupon: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products?: Array<string> | null | undefined } | null | undefined }, customer?: { __typename?: 'StripeCustomer', id: string } | null | undefined, restrictions?: { __typename?: 'PromotionCodeRestrictions', first_time_transaction: boolean, minimum_amount?: number | null | undefined, minimum_amount_currency?: string | null | undefined } | null | undefined } | null | undefined } };
+export type UpdatePromotionCodeMutation = { __typename?: 'Mutation', update_promotion_code: { __typename?: 'PromotionCodeMutationResult', success: boolean, message?: string | null | undefined, promotion_code?: { __typename?: 'PromotionCode', id: string, active: boolean, code: string, created: any, expires_at?: any | null | undefined, livemode: boolean, max_redemptions?: number | null | undefined, times_redeemed: number, coupon: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products: Array<string> } | null | undefined }, customer?: { __typename?: 'StripeCustomer', id: string } | null | undefined, restrictions?: { __typename?: 'PromotionCodeRestrictions', first_time_transaction: boolean, minimum_amount?: number | null | undefined, minimum_amount_currency?: string | null | undefined } | null | undefined } | null | undefined } };
 
 export type CreateInvoiceMutationVariables = Exact<{
   stripe_account_id: Scalars['ID'];
   customer: Scalars['ID'];
-  auto_advance?: Maybe<Scalars['Boolean']>;
-  collection_method?: Maybe<Scalars['String']>;
-  description?: Maybe<Scalars['String']>;
-  footer?: Maybe<Scalars['String']>;
-  subscription?: Maybe<Scalars['ID']>;
-  days_until_due?: Maybe<Scalars['Int']>;
-  default_payment_method?: Maybe<Scalars['ID']>;
-  default_source?: Maybe<Scalars['ID']>;
-  due_date?: Maybe<Scalars['Int']>;
-  currency?: Maybe<Scalars['String']>;
-  items?: Maybe<Array<InvoiceItemInput> | InvoiceItemInput>;
+  auto_advance?: InputMaybe<Scalars['Boolean']>;
+  collection_method?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']>;
+  footer?: InputMaybe<Scalars['String']>;
+  subscription?: InputMaybe<Scalars['ID']>;
+  days_until_due?: InputMaybe<Scalars['Int']>;
+  default_payment_method?: InputMaybe<Scalars['ID']>;
+  default_source?: InputMaybe<Scalars['ID']>;
+  due_date?: InputMaybe<Scalars['Int']>;
+  currency?: InputMaybe<Scalars['String']>;
+  items?: InputMaybe<Array<InvoiceItemInput> | InvoiceItemInput>;
 }>;
 
 
@@ -3086,15 +3090,15 @@ export type CreateInvoiceMutation = { __typename?: 'Mutation', create_invoice: {
 export type UpdateInvoiceMutationVariables = Exact<{
   stripe_account_id: Scalars['ID'];
   invoice_id: Scalars['ID'];
-  auto_advance?: Maybe<Scalars['Boolean']>;
-  collection_method?: Maybe<Scalars['String']>;
-  description?: Maybe<Scalars['String']>;
-  footer?: Maybe<Scalars['String']>;
-  subscription?: Maybe<Scalars['ID']>;
-  days_until_due?: Maybe<Scalars['Int']>;
-  default_payment_method?: Maybe<Scalars['ID']>;
-  default_source?: Maybe<Scalars['ID']>;
-  due_date?: Maybe<Scalars['Int']>;
+  auto_advance?: InputMaybe<Scalars['Boolean']>;
+  collection_method?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']>;
+  footer?: InputMaybe<Scalars['String']>;
+  subscription?: InputMaybe<Scalars['ID']>;
+  days_until_due?: InputMaybe<Scalars['Int']>;
+  default_payment_method?: InputMaybe<Scalars['ID']>;
+  default_source?: InputMaybe<Scalars['ID']>;
+  due_date?: InputMaybe<Scalars['Int']>;
 }>;
 
 
@@ -3135,16 +3139,16 @@ export type MarkInvoiceUncollectibleMutation = { __typename?: 'Mutation', mark_i
 export type CreateInvoiceItemMutationVariables = Exact<{
   stripe_account_id: Scalars['ID'];
   customer: Scalars['ID'];
-  invoice?: Maybe<Scalars['ID']>;
-  amount?: Maybe<Scalars['Int']>;
-  currency?: Maybe<Scalars['String']>;
-  description?: Maybe<Scalars['String']>;
-  period?: Maybe<PeriodInput>;
-  price?: Maybe<Scalars['ID']>;
-  discountable?: Maybe<Scalars['Boolean']>;
-  quantity?: Maybe<Scalars['Int']>;
-  unit_amount?: Maybe<Scalars['Int']>;
-  unit_amount_decimal?: Maybe<Scalars['String']>;
+  invoice?: InputMaybe<Scalars['ID']>;
+  amount?: InputMaybe<Scalars['Int']>;
+  currency?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']>;
+  period?: InputMaybe<PeriodInput>;
+  price?: InputMaybe<Scalars['ID']>;
+  discountable?: InputMaybe<Scalars['Boolean']>;
+  quantity?: InputMaybe<Scalars['Int']>;
+  unit_amount?: InputMaybe<Scalars['Int']>;
+  unit_amount_decimal?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3153,14 +3157,14 @@ export type CreateInvoiceItemMutation = { __typename?: 'Mutation', create_invoic
 export type UpdateInvoiceItemMutationVariables = Exact<{
   stripe_account_id: Scalars['ID'];
   invoiceitem_id: Scalars['ID'];
-  amount?: Maybe<Scalars['Int']>;
-  description?: Maybe<Scalars['String']>;
-  period?: Maybe<PeriodInput>;
-  price?: Maybe<Scalars['ID']>;
-  discountable?: Maybe<Scalars['Boolean']>;
-  quantity?: Maybe<Scalars['Int']>;
-  unit_amount?: Maybe<Scalars['Int']>;
-  unit_amount_decimal?: Maybe<Scalars['String']>;
+  amount?: InputMaybe<Scalars['Int']>;
+  description?: InputMaybe<Scalars['String']>;
+  period?: InputMaybe<PeriodInput>;
+  price?: InputMaybe<Scalars['ID']>;
+  discountable?: InputMaybe<Scalars['Boolean']>;
+  quantity?: InputMaybe<Scalars['Int']>;
+  unit_amount?: InputMaybe<Scalars['Int']>;
+  unit_amount_decimal?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3185,8 +3189,8 @@ export type CreateCustomerMutation = { __typename?: 'Mutation', create_customer:
 
 export type UpdateCustomerMutationVariables = Exact<{
   customer_id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
-  email_address?: Maybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  email_address?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3204,10 +3208,10 @@ export type CreateBankAccountMutationVariables = Exact<{
   country: Scalars['String'];
   currency: Scalars['String'];
   account_number: Scalars['String'];
-  account_holder_name?: Maybe<Scalars['String']>;
-  account_holder_type?: Maybe<Scalars['String']>;
-  routing_number?: Maybe<Scalars['String']>;
-  default_for_currency?: Maybe<Scalars['Boolean']>;
+  account_holder_name?: InputMaybe<Scalars['String']>;
+  account_holder_type?: InputMaybe<Scalars['String']>;
+  routing_number?: InputMaybe<Scalars['String']>;
+  default_for_currency?: InputMaybe<Scalars['Boolean']>;
 }>;
 
 
@@ -3216,9 +3220,9 @@ export type CreateBankAccountMutation = { __typename?: 'Mutation', create_bank_a
 export type UpdateBankAccountMutationVariables = Exact<{
   stripe_account_id: Scalars['ID'];
   bank_account_id: Scalars['ID'];
-  account_holder_name?: Maybe<Scalars['String']>;
-  account_holder_type?: Maybe<Scalars['String']>;
-  default_for_currency?: Maybe<Scalars['Boolean']>;
+  account_holder_name?: InputMaybe<Scalars['String']>;
+  account_holder_type?: InputMaybe<Scalars['String']>;
+  default_for_currency?: InputMaybe<Scalars['Boolean']>;
 }>;
 
 
@@ -3234,8 +3238,8 @@ export type DeleteBankAccountMutation = { __typename?: 'Mutation', delete_bank_a
 
 export type UpdateAgencySettingsMutationVariables = Exact<{
   setting_id: Scalars['ID'];
-  checkout_success_url?: Maybe<Scalars['String']>;
-  checkout_cancel_url?: Maybe<Scalars['String']>;
+  checkout_success_url?: InputMaybe<Scalars['String']>;
+  checkout_cancel_url?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3243,8 +3247,8 @@ export type UpdateAgencySettingsMutation = { __typename?: 'Mutation', update_age
 
 export type UpdateProductSettingsMutationVariables = Exact<{
   setting_id: Scalars['ID'];
-  checkout_success_url?: Maybe<Scalars['String']>;
-  checkout_cancel_url?: Maybe<Scalars['String']>;
+  checkout_success_url?: InputMaybe<Scalars['String']>;
+  checkout_cancel_url?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3252,7 +3256,7 @@ export type UpdateProductSettingsMutation = { __typename?: 'Mutation', update_pr
 
 export type UpdatePageMutationVariables = Exact<{
   page_id: Scalars['ID'];
-  access?: Maybe<AccessLevel>;
+  access?: InputMaybe<AccessLevel>;
 }>;
 
 
@@ -3262,7 +3266,7 @@ export type CreatePageBlockMutationVariables = Exact<{
   page_id: Scalars['ID'];
   page_block_definition_id: Scalars['ID'];
   data: Scalars['Json'];
-  after_id?: Maybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3271,7 +3275,7 @@ export type CreatePageBlockMutation = { __typename?: 'Mutation', create_page_blo
 export type UpdatePageBlockMutationVariables = Exact<{
   page_block_id: Scalars['ID'];
   data: Scalars['Json'];
-  after_id?: Maybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3305,9 +3309,9 @@ export type UpdateCredentialMutation = { __typename?: 'Mutation', update_credent
 export type CreateIntegrationMutationVariables = Exact<{
   agency_id: Scalars['ID'];
   integration_type_id: Scalars['ID'];
-  credential_id?: Maybe<Scalars['ID']>;
-  product_id?: Maybe<Scalars['ID']>;
-  integration_config_id?: Maybe<Scalars['ID']>;
+  credential_id?: InputMaybe<Scalars['ID']>;
+  product_id?: InputMaybe<Scalars['ID']>;
+  integration_config_id?: InputMaybe<Scalars['ID']>;
   data: Scalars['Json'];
 }>;
 
@@ -3316,7 +3320,7 @@ export type CreateIntegrationMutation = { __typename?: 'Mutation', create_integr
 
 export type UpdateIntegrationMutationVariables = Exact<{
   integration_id: Scalars['ID'];
-  credential_id?: Maybe<Scalars['ID']>;
+  credential_id?: InputMaybe<Scalars['ID']>;
   data: Scalars['Json'];
 }>;
 
@@ -3326,7 +3330,7 @@ export type UpdateIntegrationMutation = { __typename?: 'Mutation', update_integr
 export type CreateIntegrationConfigMutationVariables = Exact<{
   agency_id: Scalars['ID'];
   integration_type_id: Scalars['ID'];
-  credential_id?: Maybe<Scalars['ID']>;
+  credential_id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   data: Scalars['Json'];
 }>;
@@ -3336,8 +3340,8 @@ export type CreateIntegrationConfigMutation = { __typename?: 'Mutation', create_
 
 export type UpdateIntegrationConfigMutationVariables = Exact<{
   integration_config_id: Scalars['ID'];
-  name?: Maybe<Scalars['String']>;
-  credential_id?: Maybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
+  credential_id?: InputMaybe<Scalars['ID']>;
   data: Scalars['Json'];
 }>;
 
@@ -3370,13 +3374,13 @@ export type ThemeQuery = { __typename?: 'Query', theme?: { __typename?: 'Theme',
 
 export type ThemesQueryVariables = Exact<{
   filter: ThemeFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3391,13 +3395,13 @@ export type MarkdownQuery = { __typename?: 'Query', markdown?: { __typename?: 'M
 
 export type MarkdownsQueryVariables = Exact<{
   filter: MarkdownFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3412,13 +3416,13 @@ export type ImageQuery = { __typename?: 'Query', image?: { __typename?: 'Image',
 
 export type ImagesQueryVariables = Exact<{
   filter: ImageFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3447,10 +3451,10 @@ export type AgencyStripeAccountBalanceQuery = { __typename?: 'Query', agency?: {
 
 export type AgencyStripeAccountBalanceTransactionsQueryVariables = Exact<{
   agency_id: Scalars['ID'];
-  created?: Maybe<Scalars['DateTime']>;
-  starting_after_id?: Maybe<Scalars['String']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
 }>;
 
 
@@ -3458,10 +3462,10 @@ export type AgencyStripeAccountBalanceTransactionsQuery = { __typename?: 'Query'
 
 export type AgencyStripeAccountPaymentIntentsQueryVariables = Exact<{
   agency_id: Scalars['ID'];
-  created?: Maybe<Scalars['DateTime']>;
-  starting_after_id?: Maybe<Scalars['String']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
 }>;
 
 
@@ -3469,9 +3473,9 @@ export type AgencyStripeAccountPaymentIntentsQuery = { __typename?: 'Query', age
 
 export type AgencyStripeAccountBankAccountsQueryVariables = Exact<{
   agency_id: Scalars['ID'];
-  starting_after_id?: Maybe<Scalars['String']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
 }>;
 
 
@@ -3479,13 +3483,13 @@ export type AgencyStripeAccountBankAccountsQuery = { __typename?: 'Query', agenc
 
 export type AgencyStripeAccountCouponsQueryVariables = Exact<{
   agency_id: Scalars['ID'];
-  starting_after_id?: Maybe<Scalars['String']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
 }>;
 
 
-export type AgencyStripeAccountCouponsQuery = { __typename?: 'Query', agency?: { __typename?: 'Agency', id: string, stripe_account: { __typename?: 'StripeAccount', id: string, coupons: Array<{ __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products?: Array<string> | null | undefined } | null | undefined }> } } | null | undefined };
+export type AgencyStripeAccountCouponsQuery = { __typename?: 'Query', agency?: { __typename?: 'Agency', id: string, stripe_account: { __typename?: 'StripeAccount', id: string, coupons: Array<{ __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products: Array<string> } | null | undefined }> } } | null | undefined };
 
 export type CouponQueryVariables = Exact<{
   stripe_account_id: Scalars['ID'];
@@ -3493,7 +3497,7 @@ export type CouponQueryVariables = Exact<{
 }>;
 
 
-export type CouponQuery = { __typename?: 'Query', coupon?: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products?: Array<string> | null | undefined } | null | undefined } | null | undefined };
+export type CouponQuery = { __typename?: 'Query', coupon?: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products: Array<string> } | null | undefined } | null | undefined };
 
 export type PromotionCodeQueryVariables = Exact<{
   stripe_account_id: Scalars['ID'];
@@ -3501,21 +3505,21 @@ export type PromotionCodeQueryVariables = Exact<{
 }>;
 
 
-export type PromotionCodeQuery = { __typename?: 'Query', promotion_code?: { __typename?: 'PromotionCode', id: string, active: boolean, code: string, created: any, expires_at?: any | null | undefined, livemode: boolean, max_redemptions?: number | null | undefined, times_redeemed: number, coupon: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products?: Array<string> | null | undefined } | null | undefined }, customer?: { __typename?: 'StripeCustomer', id: string } | null | undefined, restrictions?: { __typename?: 'PromotionCodeRestrictions', first_time_transaction: boolean, minimum_amount?: number | null | undefined, minimum_amount_currency?: string | null | undefined } | null | undefined } | null | undefined };
+export type PromotionCodeQuery = { __typename?: 'Query', promotion_code?: { __typename?: 'PromotionCode', id: string, active: boolean, code: string, created: any, expires_at?: any | null | undefined, livemode: boolean, max_redemptions?: number | null | undefined, times_redeemed: number, coupon: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products: Array<string> } | null | undefined }, customer?: { __typename?: 'StripeCustomer', id: string } | null | undefined, restrictions?: { __typename?: 'PromotionCodeRestrictions', first_time_transaction: boolean, minimum_amount?: number | null | undefined, minimum_amount_currency?: string | null | undefined } | null | undefined } | null | undefined };
 
 export type PromotionCodesQueryVariables = Exact<{
   stripe_account_id: Scalars['ID'];
-  active?: Maybe<Scalars['Boolean']>;
-  code?: Maybe<Scalars['String']>;
-  coupon?: Maybe<Scalars['String']>;
-  customer?: Maybe<Scalars['String']>;
-  starting_after?: Maybe<Scalars['String']>;
-  ending_before?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
+  active?: InputMaybe<Scalars['Boolean']>;
+  code?: InputMaybe<Scalars['String']>;
+  coupon?: InputMaybe<Scalars['String']>;
+  customer?: InputMaybe<Scalars['String']>;
+  starting_after?: InputMaybe<Scalars['String']>;
+  ending_before?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
 }>;
 
 
-export type PromotionCodesQuery = { __typename?: 'Query', promotion_codes: Array<{ __typename?: 'PromotionCode', id: string, active: boolean, code: string, created: any, expires_at?: any | null | undefined, livemode: boolean, max_redemptions?: number | null | undefined, times_redeemed: number, coupon: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products?: Array<string> | null | undefined } | null | undefined }, customer?: { __typename?: 'StripeCustomer', id: string } | null | undefined, restrictions?: { __typename?: 'PromotionCodeRestrictions', first_time_transaction: boolean, minimum_amount?: number | null | undefined, minimum_amount_currency?: string | null | undefined } | null | undefined }> };
+export type PromotionCodesQuery = { __typename?: 'Query', promotion_codes: Array<{ __typename?: 'PromotionCode', id: string, active: boolean, code: string, created: any, expires_at?: any | null | undefined, livemode: boolean, max_redemptions?: number | null | undefined, times_redeemed: number, coupon: { __typename?: 'Coupon', id: string, id_ext: string, amount_off?: number | null | undefined, created?: any | null | undefined, currency?: string | null | undefined, duration?: string | null | undefined, duration_in_months?: number | null | undefined, livemode?: boolean | null | undefined, max_redemptions?: number | null | undefined, name?: string | null | undefined, percent_off?: number | null | undefined, redeem_by?: any | null | undefined, times_redeemed?: number | null | undefined, valid?: boolean | null | undefined, applies_to?: { __typename?: 'CouponAppliesTo', products: Array<string> } | null | undefined }, customer?: { __typename?: 'StripeCustomer', id: string } | null | undefined, restrictions?: { __typename?: 'PromotionCodeRestrictions', first_time_transaction: boolean, minimum_amount?: number | null | undefined, minimum_amount_currency?: string | null | undefined } | null | undefined }> };
 
 export type InvoiceItemQueryVariables = Exact<{
   stripe_account_id: Scalars['ID'];
@@ -3527,15 +3531,15 @@ export type InvoiceItemQuery = { __typename?: 'Query', invoiceitem?: { __typenam
 
 export type AgencyStripeAccountInvoicesQueryVariables = Exact<{
   agency_id: Scalars['ID'];
-  customer_id?: Maybe<Scalars['ID']>;
-  status?: Maybe<Scalars['String']>;
-  subscription?: Maybe<Scalars['ID']>;
-  collection_method?: Maybe<Scalars['String']>;
-  due_date?: Maybe<Scalars['DateTime']>;
-  created?: Maybe<Scalars['DateTime']>;
-  starting_after_id?: Maybe<Scalars['String']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
+  customer_id?: InputMaybe<Scalars['ID']>;
+  status?: InputMaybe<Scalars['String']>;
+  subscription?: InputMaybe<Scalars['ID']>;
+  collection_method?: InputMaybe<Scalars['String']>;
+  due_date?: InputMaybe<Scalars['DateTime']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
 }>;
 
 
@@ -3543,13 +3547,13 @@ export type AgencyStripeAccountInvoicesQuery = { __typename?: 'Query', agency?: 
 
 export type AgencyStripeAccountInvoiceItemsQueryVariables = Exact<{
   agency_id: Scalars['ID'];
-  customer_id?: Maybe<Scalars['ID']>;
-  invoice?: Maybe<Scalars['ID']>;
-  pending?: Maybe<Scalars['Boolean']>;
-  created?: Maybe<Scalars['DateTime']>;
-  starting_after_id?: Maybe<Scalars['String']>;
-  ending_before_id?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
+  customer_id?: InputMaybe<Scalars['ID']>;
+  invoice?: InputMaybe<Scalars['ID']>;
+  pending?: InputMaybe<Scalars['Boolean']>;
+  created?: InputMaybe<Scalars['DateTime']>;
+  starting_after_id?: InputMaybe<Scalars['String']>;
+  ending_before_id?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
 }>;
 
 
@@ -3572,14 +3576,14 @@ export type CustomerQuery = { __typename?: 'Query', customer?: { __typename?: 'C
 
 export type AgencyCustomersQueryVariables = Exact<{
   agency_id: Scalars['ID'];
-  filter?: Maybe<CustomerFilter>;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  filter?: InputMaybe<CustomerFilter>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3587,13 +3591,13 @@ export type AgencyCustomersQuery = { __typename?: 'Query', agency?: { __typename
 
 export type CustomersQueryVariables = Exact<{
   filter: CustomerFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3601,7 +3605,7 @@ export type CustomersQuery = { __typename?: 'Query', customers?: Array<{ __typen
 
 export type CountCustomersQueryVariables = Exact<{
   filter: CustomerFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3623,13 +3627,13 @@ export type AgencyQuery = { __typename?: 'Query', agency?: { __typename?: 'Agenc
 
 export type AgenciesQueryVariables = Exact<{
   filter: AgencyFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3656,13 +3660,13 @@ export type ProductQuery = { __typename?: 'Query', product?: { __typename?: 'Pro
 
 export type ProductsQueryVariables = Exact<{
   filter: ProductFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3670,7 +3674,7 @@ export type ProductsQuery = { __typename?: 'Query', products?: Array<{ __typenam
 
 export type CountProductsQueryVariables = Exact<{
   filter: ProductFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3678,7 +3682,7 @@ export type CountProductsQuery = { __typename?: 'Query', count_products: number 
 
 export type OrderDetailsQueryVariables = Exact<{
   order_id: Scalars['ID'];
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3686,7 +3690,7 @@ export type OrderDetailsQuery = { __typename?: 'Query', order?: { __typename?: '
 
 export type OrderQueryVariables = Exact<{
   order_id: Scalars['ID'];
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3694,13 +3698,13 @@ export type OrderQuery = { __typename?: 'Query', order?: { __typename?: 'Order',
 
 export type OrdersQueryVariables = Exact<{
   filter: OrderFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3708,7 +3712,7 @@ export type OrdersQuery = { __typename?: 'Query', orders?: Array<{ __typename?: 
 
 export type CountOrdersQueryVariables = Exact<{
   filter: OrderFilter;
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3716,7 +3720,7 @@ export type CountOrdersQuery = { __typename?: 'Query', count_orders: number };
 
 export type OrderItemQueryVariables = Exact<{
   order_item_id: Scalars['ID'];
-  token?: Maybe<Scalars['String']>;
+  token?: InputMaybe<Scalars['String']>;
 }>;
 
 
@@ -3724,13 +3728,13 @@ export type OrderItemQuery = { __typename?: 'Query', order_item?: { __typename?:
 
 export type OrderItemsQueryVariables = Exact<{
   filter: OrderItemFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3781,7 +3785,7 @@ export type ProductSettingsQuery = { __typename?: 'Query', product?: { __typenam
 
 export type AgencyPagesQueryVariables = Exact<{
   agency_id: Scalars['ID'];
-  page_definition_id?: Maybe<Scalars['ID']>;
+  page_definition_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3789,7 +3793,7 @@ export type AgencyPagesQuery = { __typename?: 'Query', pages?: Array<{ __typenam
 
 export type ProductPagesQueryVariables = Exact<{
   product_id: Scalars['ID'];
-  page_definition_id?: Maybe<Scalars['ID']>;
+  page_definition_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3869,13 +3873,13 @@ export type FormFieldQuery = { __typename?: 'Query', form_field?: { __typename?:
 
 export type FormFieldsQueryVariables = Exact<{
   filter: FormFieldFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3890,13 +3894,13 @@ export type CredentialQuery = { __typename?: 'Query', credential?: { __typename?
 
 export type CredentialsQueryVariables = Exact<{
   filter: CredentialFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3911,13 +3915,13 @@ export type CredentialTypeQuery = { __typename?: 'Query', credential_type?: { __
 
 export type CredentialTypesQueryVariables = Exact<{
   filter: CredentialTypeFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3932,13 +3936,13 @@ export type IntegrationQuery = { __typename?: 'Query', integration?: { __typenam
 
 export type IntegrationsQueryVariables = Exact<{
   filter: IntegrationFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3953,13 +3957,13 @@ export type IntegrationConfigQuery = { __typename?: 'Query', integration_config?
 
 export type IntegrationConfigsQueryVariables = Exact<{
   filter: IntegrationConfigFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 
@@ -3974,13 +3978,13 @@ export type IntegrationTypeQuery = { __typename?: 'Query', integration_type?: { 
 
 export type IntegrationTypesQueryVariables = Exact<{
   filter: IntegrationTypeFilter;
-  token?: Maybe<Scalars['String']>;
-  desc?: Maybe<Scalars['Boolean']>;
-  order_by?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  before_id?: Maybe<Scalars['ID']>;
-  after_id?: Maybe<Scalars['ID']>;
+  token?: InputMaybe<Scalars['String']>;
+  desc?: InputMaybe<Scalars['Boolean']>;
+  order_by?: InputMaybe<Scalars['String']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+  before_id?: InputMaybe<Scalars['ID']>;
+  after_id?: InputMaybe<Scalars['ID']>;
 }>;
 
 

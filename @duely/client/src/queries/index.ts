@@ -73,7 +73,7 @@ import { client } from '../apollo/client';
 import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-document-node/core';
 import { CountryCode, countryFromCode } from '@duely/util';
 
-export interface TypedQueryOptions<TDocumentNode extends TypedDocumentNode<unknown, unknown>>
+export interface TypedQueryOptions<TDocumentNode extends TypedDocumentNode<any, any>>
   extends QueryOptions<VariablesOf<TDocumentNode>, ResultOf<TDocumentNode>> {
   readonly query: TDocumentNode;
 }
@@ -102,7 +102,7 @@ export async function query<
   const { result, variables: defaultVariables, ...defaultOptions } = queryDef;
   const mergedVariables = { ...defaultVariables, ...variables };
   const { data } = await client.query({
-    variables: mergedVariables,
+    variables: mergedVariables as any,
     ...defaultOptions,
     ...options
   });

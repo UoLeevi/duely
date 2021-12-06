@@ -67,7 +67,7 @@ import {
 // import produce from 'immer';
 // import { query } from './queries';
 
-export interface TypedMutationOptions<TDocumentNode extends TypedDocumentNode<unknown, unknown>>
+export interface TypedMutationOptions<TDocumentNode extends TypedDocumentNode<any, any>>
   extends MutationOptions<ResultOf<TDocumentNode>, VariablesOf<TDocumentNode>> {
   mutation: TDocumentNode;
 }
@@ -122,7 +122,10 @@ export async function mutate<
   return res;
 }
 
-function evictQuery(cache: ApolloCache<NormalizedCacheObject>, query: TypedDocumentNode) {
+function evictQuery<TData, TVariables>(
+  cache: ApolloCache<NormalizedCacheObject>,
+  query: TypedDocumentNode<TData, TVariables>
+) {
   query.definitions.forEach((definition) => {
     if (definition.kind === 'OperationDefinition') {
       definition.selectionSet.selections.forEach((selection) => {

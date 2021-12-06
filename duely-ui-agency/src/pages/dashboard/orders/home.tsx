@@ -100,12 +100,12 @@ export default function DashboardOrdersHome() {
             <Table.Column header="Order">
               {(order: TOrder | null) =>
                 !order ? (
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex flex-col space-y-1">
                     <SkeletonText className="text-sm" />
                     <SkeletonText className="text-sm" />
                   </div>
                 ) : (
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex flex-col space-y-1">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
                       {truncate(order.items.map((item) => item.price.product.name).join(', '), 50)}
                     </span>
@@ -123,12 +123,12 @@ export default function DashboardOrdersHome() {
             <Table.Column header="Customer">
               {(order: TOrder | null) =>
                 !order ? (
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex flex-col space-y-1">
                     <SkeletonText className="text-sm" />
                     <SkeletonText className="text-xs" />
                   </div>
                 ) : (
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex flex-col space-y-1">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
                       {order.customer.name ?? order.customer.email_address.split('@')[0]}
                     </span>
