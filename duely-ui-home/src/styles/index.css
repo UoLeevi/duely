@@ -1838,12 +1838,24 @@ body, #root {
   height: 1.5em;
 }
 
+.h-\[800px\] {
+  height: 800px;
+}
+
 .min-h-\[1em\] {
   min-height: 1em;
 }
 
 .min-h-\[1rem\] {
   min-height: 1rem;
+}
+
+.min-h-full {
+  min-height: 100%;
+}
+
+.min-h-screen {
+  min-height: 100vh;
 }
 
 .w-6 {
@@ -2507,6 +2519,11 @@ body, #root {
   background-color: rgba(71, 85, 105, var(--tw-bg-opacity));
 }
 
+.bg-gray-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgba(148, 163, 184, var(--tw-bg-opacity));
+}
+
 .bg-opacity-75 {
   --tw-bg-opacity: 0.75;
 }
@@ -2669,6 +2686,16 @@ body, #root {
   padding-bottom: 1rem;
 }
 
+.py-24 {
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+}
+
+.py-10 {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
 .pt-4 {
   padding-top: 1rem;
 }
@@ -2771,6 +2798,14 @@ body, #root {
 
 .pb-5 {
   padding-bottom: 1.25rem;
+}
+
+.pt-24 {
+  padding-top: 6rem;
+}
+
+.pt-48 {
+  padding-top: 12rem;
 }
 
 .text-left {

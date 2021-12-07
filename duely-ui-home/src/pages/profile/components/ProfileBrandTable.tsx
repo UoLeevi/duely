@@ -234,8 +234,8 @@ export function ProfileBrandTable() {
   type TAgency = ElementType<typeof agencies>;
 
   return (
-    <Table items={agencies as any} wrap={{ md: 2 }}>
-      <Table.Column header="Brand" span={2}>
+    <Table items={agencies as any} wrap={{ md: 4 }}>
+      <Table.Column header="Brand" span={4}>
         {(agency: TAgency | null) => <BrandColumn agency={agency} />}
       </Table.Column>
 
@@ -243,7 +243,7 @@ export function ProfileBrandTable() {
         {(agency: TAgency | null) => <PlanColumn agency={agency} />}
       </Table.Column>
 
-      <Table.Column header="Status">
+      <Table.Column header="Status" span={2}>
         {(agency: TAgency | null) => <StatusColumn agency={agency} />}
       </Table.Column>
 
