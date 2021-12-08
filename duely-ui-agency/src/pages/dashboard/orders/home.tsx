@@ -92,7 +92,7 @@ export default function DashboardOrdersHome() {
             error={error}
             wrap={{
               sm: 4,
-              md: 2
+              md: 3
             }}
             pagination={pagination}
             keyField="id"
