@@ -67,13 +67,13 @@ export default function DashboardSettingsPaymentsHome() {
       >
         <Card className="max-w-screen-lg">
           <Table
-            wrap={{ xs: 2, sm: 4, md: 4 }}
+            wrap={{ md: 4 }}
             loading={loading}
             error={error}
             items={bank_accounts}
             keyField="id"
           >
-            <Table.Column header="Account holder" span={{ xs: 2 }}>
+            <Table.Column header="Account holder" span={{ md: 2 }}>
               {(bank_account: TBankAccount | null) =>
                 !bank_account ? (
                   <div className="flex space-x-2">
@@ -102,7 +102,7 @@ export default function DashboardSettingsPaymentsHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Bank" span={{ xs: 2 }}>
+            <Table.Column header="Bank" span={{ md: 2 }}>
               {(bank_account: TBankAccount | null) =>
                 !bank_account ? (
                   <div className="flex space-x-2">
@@ -122,7 +122,7 @@ export default function DashboardSettingsPaymentsHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Bank account" span={{ xs: 2 }}>
+            <Table.Column header="Bank account" span={{ md: 2 }}>
               {(bank_account: TBankAccount | null) =>
                 !bank_account ? (
                   <div className="flex items-center h-8 space-x-4 min-h-min">
