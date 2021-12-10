@@ -28,7 +28,7 @@ module.exports = {
       black: '#000000',
       white: '#ffffff',
 
-      gray: colors.blueGray,
+      gray: colors.slate,
       red: colors.rose,
       orange: colors.orange,
       yellow: colors.amber,
@@ -137,5 +137,5 @@ module.exports = {
       })
     }
   },
-  plugins: [requireLocal('@tailwindcss/typography'), requireLocal('@tailwindcss/aspect-ratio')]
+  plugins: [requireLocal('@tailwindcss/typography')]
 };
