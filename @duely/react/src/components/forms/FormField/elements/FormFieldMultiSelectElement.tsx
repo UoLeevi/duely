@@ -62,7 +62,7 @@ export function FormFieldMultiSelectElement<
           <div className="w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md">
             <span
               data-content="&nbsp;"
-              className="empty:before:content-[attr(data-content)] overflow-ellipsis"
+              className="empty:before:content-[attr(data-content)] text-ellipsis"
             >
               {elements?.join(', ')}
             </span>

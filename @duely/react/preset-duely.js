@@ -20,7 +20,6 @@ const requireLocal = (module) => {
 const colors = requireLocal('tailwindcss/colors');
 
 module.exports = {
-  darkMode: 'media',
   theme: {
     colors: {
       transparent: 'transparent',

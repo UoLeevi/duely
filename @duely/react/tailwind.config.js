@@ -20,7 +20,6 @@ const requireLocal = (module) => {
 const plugin = requireLocal('tailwindcss/plugin');
 
 module.exports = {
-  mode: 'jit',
   plugins: [
     plugin(function ({ addVariant, e }) {
       addVariant('router-link-active', ({ modifySelectors, separator }) => {
@@ -31,7 +30,7 @@ module.exports = {
     })
   ],
   presets: [requireLocal('@duely/react/preset-duely')],
-  purge: [
+  content: [
     './safelist.txt',
     './public/*.html',
     './src/**/*.js',
