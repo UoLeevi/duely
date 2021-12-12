@@ -44,7 +44,7 @@ export default function DashboardProductsCoupons() {
             error={error}
             keyField="id"
           >
-            <Table.Column header="Name">
+            <Table.Column header="Name" span={2}>
               {(coupon: TCoupon | null) =>
                 !coupon ? (
                   <div className="flex flex-col space-y-2">
@@ -101,7 +101,7 @@ export default function DashboardProductsCoupons() {
               }
             </Table.Column> */}
 
-            <Table.Column header="Amount or percent" span={{ md: 2 }}>
+            <Table.Column header="Amount or percent">
               {(coupon: TCoupon | null) =>
                 !coupon ? (
                   <div className="flex flex-col space-y-2">
