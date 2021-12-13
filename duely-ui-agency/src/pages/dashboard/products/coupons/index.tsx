@@ -3,7 +3,7 @@ import { DashboardSection } from '../../components';
 import { Currency, ElementType, formatCurrency, formatDate } from '@duely/util';
 import { Util, Table, SkeletonText, ColoredChip } from '@duely/react';
 import { useQuery, agency_stripe_account_coupons_Q, current_agency_Q } from '@duely/client';
-// import { ConfirmCouponDeletionModal } from './components';
+import { ConfirmCouponDeletionModal } from './components';
 
 export default function DashboardProductsCoupons() {
   const { data: agency } = useQuery(current_agency_Q);
@@ -166,7 +166,7 @@ export default function DashboardProductsCoupons() {
         </Card>
       </DashboardSection>
 
-      {/* <ConfirmCouponDeletionModal /> */}
+      <ConfirmCouponDeletionModal />
     </>
   );
 }

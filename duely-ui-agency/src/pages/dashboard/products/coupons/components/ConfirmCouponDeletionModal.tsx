@@ -21,7 +21,7 @@ export function ConfirmCouponDeletionModal() {
   const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
     agency_stripe_account_Q,
-    { agency_id: agency!.id },
+    { agency_id: agency?.id! },
     { skip: !agency }
   );
 
@@ -40,7 +40,7 @@ export function ConfirmCouponDeletionModal() {
 
   const { data: coupon, loading: loadingCoupon } = useQuery(
     coupon_Q,
-    { stripe_account_id: stripe_account!.id, coupon_id: coupon_id! },
+    { stripe_account_id: stripe_account?.id!, coupon_id: coupon_id! },
     { skip: !coupon_id || !stripe_account }
   );
   const [deleteCoupon] = useMutation(delete_coupon_M);
