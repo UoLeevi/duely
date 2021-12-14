@@ -23,25 +23,32 @@ const routes: RouteProps[] = [
   }
 ];
 
-const roles = ['agent', 'manager', 'owner'].map(r => r.toUpperCase());
+const roles = ['agent', 'manager', 'owner'].map((r) => r.toUpperCase());
 
 export default function Dashboard() {
-  const { data: current_user } = useQuery(current_user_Q);
-  const { data: current_agency, loading, error } = useQuery(current_agency_Q);
+  const { data: user, loading: userLoading, error: userError } = useQuery(current_user_Q);
+  const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
 
-  if (loading) return <LoadingScreen />
-  if (error) return <ErrorScreen />
+  const loading = userLoading || agencyLoading;
+  const error = userError || agencyError;
 
-  const authorized = current_user?.memberships
-    .filter(m => roles.includes(m.access))
-    .some(m => m.subdomain.agency.id === current_agency?.id);
+  if (loading) return <LoadingScreen />;
+  if (error) return <ErrorScreen />;
+
+  const authorized = user?.memberships
+    .filter((m) => roles.includes(m.access))
+    .some((m) => m.subdomain.agency.id === agency?.id);
 
   if (!authorized) {
     return (
       <div className="flex flex-col items-center justify-center flex-1">
         <div className="flex flex-col items-center m-3 space-y-1">
-          <span className="font-medium text-gray-700 text">Seems like you are not allowed to access this page</span>
-          <Link className="text-lg font-medium text-indigo-600" to="/">Go to home page</Link>
+          <span className="font-medium text-gray-700 text">
+            Seems like you are not allowed to access this page
+          </span>
+          <Link className="text-lg font-medium text-indigo-600" to="/">
+            Go to home page
+          </Link>
         </div>
       </div>
     );
@@ -50,7 +57,9 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <Switch>
-        {routes.map((route, i) => <Route key={i} {...route} />)}
+        {routes.map((route, i) => (
+          <Route key={i} {...route} />
+        ))}
       </Switch>
     </DashboardLayout>
   );

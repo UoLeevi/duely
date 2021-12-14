@@ -1211,6 +1211,10 @@ body, #root {
   flex-shrink: 1;
 }
 
+.\!shrink {
+  flex-shrink: 1 !important;
+}
+
 .flex-grow {
   flex-grow: 1;
 }
@@ -1608,6 +1612,10 @@ body, #root {
 }
 
 .overflow-ellipsis {
+  text-overflow: ellipsis;
+}
+
+.text-ellipsis {
   text-overflow: ellipsis;
 }
 
