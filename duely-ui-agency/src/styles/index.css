@@ -821,14 +821,14 @@ body, #root {
   margin-bottom: 0.125rem;
 }
 
-.my-auto {
-  margin-top: auto;
-  margin-bottom: auto;
-}
-
 .my-0 {
   margin-top: 0px;
   margin-bottom: 0px;
+}
+
+.my-auto {
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 .mt-10 {
@@ -1558,16 +1558,16 @@ body, #root {
   margin-left: calc(0.125rem * calc(1 - var(--tw-space-x-reverse)));
 }
 
-.space-x-5 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 0;
-  margin-right: calc(1.25rem * var(--tw-space-x-reverse));
-  margin-left: calc(1.25rem * calc(1 - var(--tw-space-x-reverse)));
-}
-
 .space-x-0 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 0;
   margin-right: calc(0px * var(--tw-space-x-reverse));
   margin-left: calc(0px * calc(1 - var(--tw-space-x-reverse)));
+}
+
+.space-x-5 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 0;
+  margin-right: calc(1.25rem * var(--tw-space-x-reverse));
+  margin-left: calc(1.25rem * calc(1 - var(--tw-space-x-reverse)));
 }
 
 .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
@@ -1609,10 +1609,6 @@ body, #root {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.overflow-ellipsis {
-  text-overflow: ellipsis;
 }
 
 .text-ellipsis {
@@ -1719,6 +1715,11 @@ body, #root {
   border-color: rgb(5 150 105 / var(--tw-border-opacity));
 }
 
+.border-indigo-400 {
+  --tw-border-opacity: 1;
+  border-color: rgb(127 156 245 / var(--tw-border-opacity));
+}
+
 .border-gray-400 {
   --tw-border-opacity: 1;
   border-color: rgb(148 163 184 / var(--tw-border-opacity));
@@ -1727,11 +1728,6 @@ body, #root {
 .border-blue-400 {
   --tw-border-opacity: 1;
   border-color: rgb(96 165 250 / var(--tw-border-opacity));
-}
-
-.border-indigo-400 {
-  --tw-border-opacity: 1;
-  border-color: rgb(127 156 245 / var(--tw-border-opacity));
 }
 
 .bg-white {
@@ -1985,14 +1981,14 @@ body, #root {
   padding-bottom: 0.125rem;
 }
 
-.px-7 {
-  padding-left: 1.75rem;
-  padding-right: 1.75rem;
-}
-
 .py-0 {
   padding-top: 0px;
   padding-bottom: 0px;
+}
+
+.px-7 {
+  padding-left: 1.75rem;
+  padding-right: 1.75rem;
 }
 
 .pb-8 {
@@ -2051,6 +2047,10 @@ body, #root {
   padding-right: 1.25rem;
 }
 
+.pl-1 {
+  padding-left: 0.25rem;
+}
+
 .pl-4 {
   padding-left: 1rem;
 }
@@ -2067,6 +2067,10 @@ body, #root {
   padding-top: 0.375rem;
 }
 
+.pt-1 {
+  padding-top: 0.25rem;
+}
+
 .pb-4 {
   padding-bottom: 1rem;
 }
@@ -2079,8 +2083,8 @@ body, #root {
   padding-left: 0.625rem !important;
 }
 
-.pt-1 {
-  padding-top: 0.25rem;
+.\!pl-2 {
+  padding-left: 0.5rem !important;
 }
 
 .pl-px {
@@ -2089,14 +2093,6 @@ body, #root {
 
 .pb-5 {
   padding-bottom: 1.25rem;
-}
-
-.pl-1 {
-  padding-left: 0.25rem;
-}
-
-.\!pl-2 {
-  padding-left: 0.5rem !important;
 }
 
 .text-left {
@@ -2487,12 +2483,12 @@ body, #root {
   border-top-right-radius: 0.375rem;
 }
 
-.first\:pt-3:first-child {
-  padding-top: 0.75rem;
-}
-
 .first\:pl-3:first-child {
   padding-left: 0.75rem;
+}
+
+.first\:pt-3:first-child {
+  padding-top: 0.75rem;
 }
 
 .last\:rounded-b-md:last-child {
@@ -2500,12 +2496,12 @@ body, #root {
   border-bottom-left-radius: 0.375rem;
 }
 
-.last\:pb-3:last-child {
-  padding-bottom: 0.75rem;
-}
-
 .last\:pr-3:last-child {
   padding-right: 0.75rem;
+}
+
+.last\:pb-3:last-child {
+  padding-bottom: 0.75rem;
 }
 
 .checked\:border-transparent:checked {

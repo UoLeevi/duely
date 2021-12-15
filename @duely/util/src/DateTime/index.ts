@@ -56,7 +56,7 @@ export function formatDate(date: Date | number, format?: DateFormat) {
   const dd = String(d).padStart(2, '0');
   const m = date.getUTCMonth() + 1;
   const mm = String(m).padStart(2, '0');
-  const mmm = shortMonthNames[m];
+  const mmm = shortMonthNames[m - 1];
   const y = date.getUTCFullYear();
   const yyyy = String(y);
   const h = date.getUTCHours();

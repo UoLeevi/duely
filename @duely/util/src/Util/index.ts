@@ -120,7 +120,8 @@ export function getPathValue<T, TPath extends string | readonly string[]>(
 export function template(template: string, variables: Record<string, any>) {
   return template.replace(
     /{(.*?)}/g,
-    (_, placeholder: string) => getPathValue(variables, placeholder.trim())?.toString() ?? placeholder
+    (_, placeholder: string) =>
+      getPathValue(variables, placeholder.trim())?.toString() ?? placeholder
   );
 }
 
@@ -223,7 +224,16 @@ export function memo<R, TParams extends unknown[]>(func: GenericFunction<R, TPar
   const cache = new Map();
   return (...args) => {
     let node = cache;
-    const last = args.length - 1;
+
+    // Let's ignore trailing arguments with undefined value
+
+    let last = args.length - 1;
+
+    while (last >= 0 && args[last] === undefined) {
+      --last;
+    }
+
+    // If there are no arguments, let's return cached value if it exists
 
     if (last === -1) {
       if (node.has(last)) {
@@ -235,6 +245,8 @@ export function memo<R, TParams extends unknown[]>(func: GenericFunction<R, TPar
       }
     }
 
+    // Separate cache Map objects are used when function is called with different number of arguments
+
     let nextNode = node.get(last);
 
     if (nextNode === undefined) {
@@ -243,6 +255,8 @@ export function memo<R, TParams extends unknown[]>(func: GenericFunction<R, TPar
     }
 
     node = nextNode;
+
+    // For each positional argument except last, get or create nested cache Map object based on value
 
     for (let i = 0; i < last; ++i) {
       const arg = args[i];
@@ -255,6 +269,8 @@ export function memo<R, TParams extends unknown[]>(func: GenericFunction<R, TPar
 
       node = nextNode;
     }
+
+    // For last argument value, get cached return value or call the function once and cache the value
 
     const arg = args[last];
 

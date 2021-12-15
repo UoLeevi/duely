@@ -7,9 +7,10 @@ test('memo', () => {
   expect(createObject(1, 2)).toBe(createObject(1, 2));
   expect(createObject(1, 2, 3)).toBe(createObject(1, 2, 3));
   expect(createObject('test', 'asdf')).toBe(createObject('test', 'asdf'));
+  expect(createObject('test', 'asdf')).toBe(createObject('test', 'asdf', undefined));
 
-  expect(createObject()).not.toBe(createObject(undefined));
-  expect(createObject(undefined, undefined)).not.toBe(createObject(undefined));
+  expect(createObject()).toBe(createObject(undefined));
+  expect(createObject(undefined, undefined)).toBe(createObject(undefined));
   expect(createObject('test', 'asdf')).not.toBe(createObject('test', 'qwer'));
 
   const arg0 = new Object();
