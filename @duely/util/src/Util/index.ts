@@ -220,9 +220,11 @@ export function pick<TFrom extends object, TKeys extends string, T extends Recor
   return obj as any;
 }
 
-export function memo<R, TParams extends unknown[]>(func: GenericFunction<R, TParams>): typeof func {
-  const cache = new Map();
-  return (...args) => {
+export function memo<R, TParams extends unknown[]>(
+  func: GenericFunction<R, TParams>
+): typeof func & { invalidate: () => void } {
+  let cache = new Map();
+  const memoizedFunc: typeof func & { invalidate: () => void } = (...args) => {
     let node = cache;
 
     // Let's ignore trailing arguments with undefined value
@@ -282,6 +284,12 @@ export function memo<R, TParams extends unknown[]>(func: GenericFunction<R, TPar
       return result;
     }
   };
+
+  memoizedFunc.invalidate = () => {
+    cache = new Map();
+  };
+
+  return memoizedFunc;
 }
 
 export function lazy<R extends object, TParams extends unknown[]>(

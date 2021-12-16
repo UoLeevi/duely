@@ -9,6 +9,13 @@ test('memo', () => {
   expect(createObject('test', 'asdf')).toBe(createObject('test', 'asdf'));
   expect(createObject('test', 'asdf')).toBe(createObject('test', 'asdf', undefined));
 
+  const ret1 = createObject('test', memo);
+  const ret2 = createObject('test', memo, undefined);
+  expect(ret1).toBe(ret2);
+  createObject.invalidate();
+  const ret3 = createObject('test', memo);
+  expect(ret1).not.toBe(ret3);
+
   expect(createObject()).toBe(createObject(undefined));
   expect(createObject(undefined, undefined)).toBe(createObject(undefined));
   expect(createObject('test', 'asdf')).not.toBe(createObject('test', 'qwer'));
