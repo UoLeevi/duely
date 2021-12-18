@@ -1,5 +1,5 @@
-// NOTE: Use "db" as the host name to connect to the database and update the 
-// VARIANT arg in docker-compose.yml to pick a Node.js version: 10, 12, 14 
+// NOTE: Use "db" as the host name to connect to the database and update the
+// VARIANT arg in docker-compose.yml to pick a Node.js version: 10, 12, 14
 {
   "name": "Node.js & PostgreSQL",
   "dockerComposeFile": "docker-compose.yml",
@@ -10,15 +10,15 @@
     "terminal.integrated.shell.linux": "/bin/bash"
   },
   // Add the IDs of extensions you want installed when the container is created.
-  "extensions": [
-    "dbaeumer.vscode-eslint"
-  ],
+  "extensions": ["dbaeumer.vscode-eslint"],
   // Uncomment the line below if you want to keep your containers running after VS Code shuts down.
   // "shutdownAction": "none",
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [3000, 8080, 9229],
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
+  "postCreateCommand": [
+    "test -d /workspace/duely-secret && chmod 600 /workspace/duely-secret/.pgpass"
+  ]
   // Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
   // "remoteUser": "node"
 }

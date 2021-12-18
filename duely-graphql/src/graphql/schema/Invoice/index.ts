@@ -177,7 +177,7 @@ export const Invoice: GqlTypeDefinition<
       webhooks_delivered_at: (source) => timestampToDate(source.webhooks_delivered_at),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'charge',
-        object: 'payment_intent'
+        object: 'charge'
       }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',

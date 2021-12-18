@@ -1,11 +1,19 @@
 // see: https://stripe.com/docs/api/subscriptions/object
 
-import { Resources } from '@duely/db';
+import { queryResourceAccess, Resources } from '@duely/db';
+import stripe from '@duely/stripe';
 import { timestampToDate } from '@duely/util';
 import gql from 'graphql-tag';
 import Stripe from 'stripe';
+import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
-import { createStripeListQueryResolver, createStripeRetrieveQueryResolver, createStripeRetrieveResolverForReferencedResource } from '../../util';
+import {
+  createStripeListQueryResolver,
+  createStripeListResolverForReferencedResource,
+  createStripeRetrieveQueryResolver,
+  createStripeRetrieveResolverForReferencedResource,
+  withStripeAccountProperty
+} from '../../util';
 
 export const StripeSubscription: GqlTypeDefinition<
   Stripe.Subscription & { stripe_account: Resources['stripe account'] }
@@ -31,7 +39,7 @@ export const StripeSubscription: GqlTypeDefinition<
       # default_tax_rates: Array<Stripe.TaxRate> | null;
       discount: Discount
       ended_at: DateTime
-      # items: ApiList<Stripe.SubscriptionItem>;
+      items(starting_after: String, ending_before: String, limit: Int): [SubscriptionItem!]!
       latest_invoice: Invoice
       livemode: Boolean!
       # metadata: Stripe.Metadata;
@@ -94,7 +102,7 @@ export const StripeSubscription: GqlTypeDefinition<
     type SubscriptionPendingUpdate {
       billing_cycle_anchor: Int
       expires_at: Int!
-      # subscription_items: [Stripe.SubscriptionItem]
+      subscription_items: [SubscriptionItem!]!
       trial_end: Int
       trial_from_plan: Boolean
     }
@@ -131,7 +139,8 @@ export const StripeSubscription: GqlTypeDefinition<
       current_period_end: (source) => timestampToDate(source.current_period_end),
       current_period_start: (source) => timestampToDate(source.current_period_start),
       ended_at: (source) => timestampToDate(source.ended_at),
-      next_pending_invoice_item_invoice: (source) => timestampToDate(source.next_pending_invoice_item_invoice),
+      next_pending_invoice_item_invoice: (source) =>
+        timestampToDate(source.next_pending_invoice_item_invoice),
       start_date: (source) => timestampToDate(source.start_date),
       trial_end: (source) => timestampToDate(source.trial_end),
       trial_start: (source) => timestampToDate(source.trial_start),
@@ -143,36 +152,11 @@ export const StripeSubscription: GqlTypeDefinition<
         name: 'latest_invoice',
         object: 'invoice'
       }),
-      // async invoiceitems(source, { starting_after_id, ending_before_id, ...args }, context, info) {
-      //   if (!context.jwt)
-      //     throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-      //   try {
-      //     const access = await queryResourceAccess(context, source.stripe_account.id);
-
-      //     if (access !== 'owner') {
-      //       throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
-      //     }
-
-      //     if (starting_after_id) {
-      //       args.starting_after = starting_after_id;
-      //     }
-
-      //     if (ending_before_id) {
-      //       args.ending_before = ending_before_id;
-      //     }
-
-      //     // see: https://stripe.com/docs/api/invoiceitems/list
-      //     const list = await stripe.get(source.stripe_account).invoiceItems.list({
-      //       customer: source.id,
-      //       ...args
-      //     });
-
-      //     return withStripeAccountProperty(list.data, source.stripe_account);
-      //   } catch (error: any) {
-      //     throw new Error(error.message);
-      //   }
-      // }
+      ...createStripeListResolverForReferencedResource({
+        name: 'items',
+        param: 'subscription',
+        object: 'subscription_item'
+      })
     },
     Query: {
       ...createStripeRetrieveQueryResolver({

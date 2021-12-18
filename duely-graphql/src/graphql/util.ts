@@ -139,7 +139,7 @@ export function createDefaultQueryResolversForResource<
   };
 }
 
-type CreateStripeRetrieveResolverForReferecnedResourceArgs<
+type CreateStripeRetrieveResolverForReferencedResourceArgs<
   TResolverName extends string,
   TStripeObjectType extends keyof StripeObjectTypeResources<'retrieve'>
 > = {
@@ -160,7 +160,7 @@ export function createStripeRetrieveResolverForReferencedResource<
   name,
   object,
   expand
-}: CreateStripeRetrieveResolverForReferecnedResourceArgs<
+}: CreateStripeRetrieveResolverForReferencedResourceArgs<
   TResolverName,
   TStripeObjectType
 >): IResolvers<
@@ -195,6 +195,59 @@ export function createStripeRetrieveResolverForReferencedResource<
       });
 
       return withStripeAccountProperty(response, source.stripe_account);
+    }
+  };
+}
+
+type CreateStripeListResolverForReferencedResourceArgs<
+  TResolverName extends string,
+  TStripeObjectType extends keyof StripeObjectTypeResources<'list'>
+> = {
+  name: TResolverName;
+  param: keyof StripeListParams<StripeObjectTypeResources<'list'>[TStripeObjectType]>;
+  object: TStripeObjectType;
+  expand?: string[];
+};
+
+export function createStripeListResolverForReferencedResource<
+  TSource extends { id: string; stripe_account: Resources['stripe account'] } & Record<
+    TResolverName,
+    null | undefined | object | string
+  >,
+  TResolverName extends string & keyof TSource,
+  TStripeObjectType extends keyof StripeObjectTypeResources<'list'>,
+  TContext extends DuelyQqlContext
+>({
+  name,
+  param,
+  object,
+  expand
+}: CreateStripeListResolverForReferencedResourceArgs<TResolverName, TStripeObjectType>): IResolvers<
+  TSource,
+  DuelyQqlContext,
+  StripeListParams<StripeObjectTypeResources<'list'>[TStripeObjectType]>,
+  Promise<
+    StripeResourceEndpointResponseObject<'list'>[StripeObjectTypeResources<'list'>[TStripeObjectType]]
+  > & {
+    stripe_account: Resources['stripe account'];
+  }
+> {
+  return {
+    async [name](
+      source: TSource,
+      args: StripeListParams<StripeObjectTypeResources<'list'>[TStripeObjectType]>,
+      context: TContext,
+      info: GraphQLResolveInfo
+    ) {
+      const response = await stripe.list(stripe.get(source.stripe_account), object, {
+        expand: expand?.map((path) => (path.startsWith('data.') ? path : `data.${path}`)),
+        ...(args as unknown as StripeListParams<
+          StripeObjectTypeResources<'list'>[TStripeObjectType]
+        >),
+        [param]: source.id
+      });
+
+      return withStripeAccountProperty(response.data, source.stripe_account);
     }
   };
 }

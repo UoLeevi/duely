@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
-import { createStripeRetrieveQueryResolver, withStripeAccountProperty } from '../../util';
+import { createStripeRetrieveQueryResolver, createStripeRetrieveResolverForReferencedResource, withStripeAccountProperty } from '../../util';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import { timestampToDate } from '@duely/util';
 
@@ -89,32 +89,14 @@ export const InvoiceItem: GqlTypeDefinition<
     InvoiceItem: {
       id_ext: (source) => source.id,
       date: (source) => timestampToDate(source.date),
-      async customer(source, args, context, info) {
-        if (source.customer == null) return null;
-        if (typeof source.customer === 'object') return source.customer;
-
-        const resolveTree = parseResolveInfo(info) as ResolveTree;
-        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
-        if (fields.length === 1 && fields[0] === 'id') return { id: source.customer };
-
-        const customer = await stripe
-          .get(source.stripe_account)
-          .customers.retrieve(source.customer);
-        return withStripeAccountProperty(customer, source.stripe_account);
-      },
-      async invoice(source, args, context, info) {
-        if (source.invoice == null) return null;
-        if (typeof source.invoice === 'object') return source.invoice;
-
-        const resolveTree = parseResolveInfo(info) as ResolveTree;
-        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
-        if (fields.length === 1 && fields[0] === 'id') return { id: source.invoice };
-
-        const invoice = await stripe
-          .get(source.stripe_account)
-          .paymentIntents.retrieve(source.invoice);
-        return withStripeAccountProperty(invoice, source.stripe_account);
-      }
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'customer',
+        object: 'customer'
+      }),
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'invoice',
+        object: 'invoice'
+      })
     },
     Query: {
       ...createStripeRetrieveQueryResolver({
