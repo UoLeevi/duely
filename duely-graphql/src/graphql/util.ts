@@ -187,7 +187,8 @@ export function createStripeRetrieveResolverForReferencedResource<
       const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
       if (fields.length === 1 && fields[0] === 'id') return { id: field };
 
-      const retrieve = getPathValue(stripe.get(source.stripe_account), endpoint).retrieve as (
+      const resource = getPathValue(stripe.get(source.stripe_account), endpoint);
+      const retrieve = resource.retrieve.bind(resource) as (
         id: string,
         params: StripeRetrieveParams<TStripeResourceEndpoint>
       ) => ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['retrieve']>;
@@ -254,7 +255,8 @@ export function createStripeRetrieveQueryResolver<
             throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
           }
 
-          const retrieve = getPathValue(stripe.get(stripe_account), endpoint).retrieve as (
+          const resource = getPathValue(stripe.get(stripe_account), endpoint);
+          const retrieve = resource.retrieve.bind(resource) as (
             id: string,
             params: StripeRetrieveParams<TStripeResourceEndpoint>
           ) => ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['retrieve']>;
@@ -321,7 +323,8 @@ export function createStripeListQueryResolver<
             throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
           }
 
-          const list = getPathValue(stripe.get(stripe_account), endpoint).list as (
+          const resource = getPathValue(stripe.get(stripe_account), endpoint);
+          const list = resource.list.bind(resource) as (
             params: StripeListParams<TStripeResourceEndpoint>
           ) => ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['list']>;
 
