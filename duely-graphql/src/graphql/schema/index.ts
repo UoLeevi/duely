@@ -53,6 +53,7 @@ import { Discount } from './Discount';
 import { InvoiceLineItem, InvoiceLineItemDiscountAmount } from './InvoiceLineItem';
 import { InvoiceItem } from './InvoiceItem';
 import { PromotionCode } from './PromotionCode';
+import { StripeSubscription } from './StripeSubscription';
 
 const types: GqlTypeDefinition[] = [
   {
@@ -93,6 +94,7 @@ const types: GqlTypeDefinition[] = [
   StripeAccountLink,
   StripeCustomer,
   StripeCheckoutSession,
+  StripeSubscription,
   Invoice,
   InvoiceStatusTransitions,
   InvoiceItem,

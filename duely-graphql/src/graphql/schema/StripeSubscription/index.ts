@@ -1,14 +1,11 @@
 // see: https://stripe.com/docs/api/subscriptions/object
 
-import { queryResourceAccess, Resources } from '@duely/db';
-import stripe from '@duely/stripe';
+import { Resources } from '@duely/db';
 import { timestampToDate } from '@duely/util';
-import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import gql from 'graphql-tag';
 import Stripe from 'stripe';
-import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
-import { createResolverForReferencedResource, withStripeAccountProperty } from '../../util';
+import { createStripeListQueryResolver, createStripeRetrieveQueryResolver, createStripeRetrieveResolverForReferencedResource } from '../../util';
 
 export const StripeSubscription: GqlTypeDefinition<
   Stripe.Subscription & { stripe_account: Resources['stripe account'] }
@@ -18,38 +15,38 @@ export const StripeSubscription: GqlTypeDefinition<
       id: ID!
       application_fee_percent: Int
       automatic_tax: SubscriptionAutomaticTax!
-      billing_cycle_anchor: Int!
+      billing_cycle_anchor: DateTime!
       billing_thresholds: SubscriptionBillingThresholds
-      cancel_at: Int
+      cancel_at: DateTime
       cancel_at_period_end: Boolean!
-      canceled_at: Int
+      canceled_at: DateTime
       collection_method: String!
-      created: Int!
-      current_period_end: Int!
-      current_period_start: Int!
+      created: DateTime!
+      current_period_end: DateTime!
+      current_period_start: DateTime!
       customer: StripeCustomer
       days_until_due: Int
       # default_payment_method: string | Stripe.PaymentMethod | null;
       # default_source: string | Stripe.CustomerSource | null;
       # default_tax_rates: Array<Stripe.TaxRate> | null;
       discount: Discount
-      ended_at: Int
+      ended_at: DateTime
       # items: ApiList<Stripe.SubscriptionItem>;
       latest_invoice: Invoice
       livemode: Boolean!
       # metadata: Stripe.Metadata;
-      next_pending_invoice_item_invoice: Int
+      next_pending_invoice_item_invoice: DateTime
       pause_collection: SubscriptionPauseCollection
       payment_settings: SubscriptionPaymentSettings
       pending_invoice_item_interval: String
       # pending_setup_intent: string | Stripe.SetupIntent | null;
       pending_update: SubscriptionPendingUpdate
       # schedule: string | Stripe.SubscriptionSchedule | null;
-      start_date: Int!
+      start_date: DateTime!
       status: String!
       # transfer_data: Subscription.TransferData | null;
-      trial_end: Int
-      trial_start: Int
+      trial_end: DateTime
+      trial_start: DateTime
     }
 
     type SubscriptionAutomaticTax {
@@ -94,46 +91,58 @@ export const StripeSubscription: GqlTypeDefinition<
       request_three_d_secure: String
     }
 
-    type PendingUpdate {
+    type SubscriptionPendingUpdate {
       billing_cycle_anchor: Int
       expires_at: Int!
       # subscription_items: [Stripe.SubscriptionItem]
       trial_end: Int
       trial_from_plan: Boolean
     }
+
+    extend type Query {
+      subscription(stripe_account_id: ID!, subscription_id: ID!): StripeSubscription
+      subscriptions(
+        stripe_account_id: ID!
+        customer: ID
+        price: ID
+        status: String
+        collection_method: String
+        created: Int
+        current_period_start: TimeStampFilter
+        current_period_end: TimeStampFilter
+        starting_after: String
+        ending_before: String
+        limit: Int
+      ): [StripeSubscription!]!
+    }
+
+    input TimeStampFilter {
+      gt: Int
+      gte: Int
+      lt: Int
+      lte: Int
+    }
   `,
   resolvers: {
     StripeSubscription: {
-      id_ext: (source) => source.id,
+      cancel_at: (source) => timestampToDate(source.cancel_at),
+      canceled_at: (source) => timestampToDate(source.canceled_at),
       created: (source) => timestampToDate(source.created),
-      async customer(source, args, context, info) {
-        if (source.customer == null) return null;
-        if (typeof source.customer === 'object') return source.customer;
-
-        const resolveTree = parseResolveInfo(info) as ResolveTree;
-        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
-        if (fields.length === 1 && fields[0] === 'id') return { id: source.customer };
-
-        const customer = await stripe
-          .get(source.stripe_account)
-          .customers.retrieve(source.customer);
-
-        return withStripeAccountProperty(customer, source.stripe_account);
-      },
-      async latest_invoice(source, args, context, info) {
-        if (source.latest_invoice == null) return null;
-        if (typeof source.latest_invoice === 'object') return source.latest_invoice;
-
-        const resolveTree = parseResolveInfo(info) as ResolveTree;
-        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
-        if (fields.length === 1 && fields[0] === 'id') return { id: source.latest_invoice };
-
-        const invoice = await stripe
-          .get(source.stripe_account)
-          .invoices.retrieve(source.latest_invoice);
-
-        return withStripeAccountProperty(invoice, source.stripe_account);
-      },
+      current_period_end: (source) => timestampToDate(source.current_period_end),
+      current_period_start: (source) => timestampToDate(source.current_period_start),
+      ended_at: (source) => timestampToDate(source.ended_at),
+      next_pending_invoice_item_invoice: (source) => timestampToDate(source.next_pending_invoice_item_invoice),
+      start_date: (source) => timestampToDate(source.start_date),
+      trial_end: (source) => timestampToDate(source.trial_end),
+      trial_start: (source) => timestampToDate(source.trial_start),
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'customer',
+        endpoint: 'customers'
+      }),
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'latest_invoice',
+        endpoint: 'invoices'
+      }),
       // async invoiceitems(source, { starting_after_id, ending_before_id, ...args }, context, info) {
       //   if (!context.jwt)
       //     throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
@@ -164,6 +173,16 @@ export const StripeSubscription: GqlTypeDefinition<
       //     throw new Error(error.message);
       //   }
       // }
+    },
+    Query: {
+      ...createStripeRetrieveQueryResolver({
+        name: 'subscription',
+        endpoint: 'subscriptions'
+      }),
+      ...createStripeListQueryResolver({
+        name: 'subscriptions',
+        endpoint: 'subscriptions'
+      })
     }
   }
 };

@@ -3,7 +3,7 @@
 import stripe from '@duely/stripe';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import { timestampToDate } from '@duely/util';
-import { withStripeAccountProperty } from '../../util';
+import { createStripeRetrieveResolverForReferencedResource, withStripeAccountProperty } from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
@@ -83,44 +83,18 @@ export const Charge: GqlTypeDefinition<
     Charge: {
       id_ext: (source) => source.id,
       created: (source) => timestampToDate(source.created),
-      async balance_transaction(source, args, context, info) {
-        if (source.balance_transaction == null) return null;
-        if (typeof source.balance_transaction === 'object') return source.balance_transaction;
-
-        const parsedResolveInfoFragment = parseResolveInfo(info);
-        console.log(parsedResolveInfoFragment);
-
-        const balance_transaction = await stripe
-          .get(source.stripe_account)
-          .balanceTransactions.retrieve(source.balance_transaction);
-        return withStripeAccountProperty(balance_transaction, source.stripe_account);
-      },
-      async payment_intent(source, args, context, info) {
-        if (source.payment_intent == null) return null;
-        if (typeof source.payment_intent === 'object') return source.payment_intent;
-
-        const resolveTree = parseResolveInfo(info) as ResolveTree;
-        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
-        if (fields.length === 1 && fields[0] === 'id') return { id: source.payment_intent };
-
-        const payment_intent = await stripe
-          .get(source.stripe_account)
-          .paymentIntents.retrieve(source.payment_intent);
-        return withStripeAccountProperty(payment_intent, source.stripe_account);
-      },
-      async customer(source, args, context, info) {
-        if (source.customer == null) return null;
-        if (typeof source.customer === 'object') return source.customer;
-
-        const resolveTree = parseResolveInfo(info) as ResolveTree;
-        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
-        if (fields.length === 1 && fields[0] === 'id') return { id: source.customer };
-
-        const customer = await stripe
-          .get(source.stripe_account)
-          .customers.retrieve(source.customer);
-        return withStripeAccountProperty(customer, source.stripe_account);
-      }
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'balance_transaction',
+        endpoint: 'balanceTransactions'
+      }),
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'payment_intent',
+        endpoint: 'paymentIntents'
+      }),
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'customer',
+        endpoint: 'customers'
+      })
     }
   }
 };

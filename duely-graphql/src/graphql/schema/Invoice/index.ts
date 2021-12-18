@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe, { deleteStripeObjects, StripeDeletableObjectType } from '@duely/stripe';
-import { withStripeAccountProperty } from '../../util';
+import { createStripeRetrieveQueryResolver, createStripeRetrieveResolverForReferencedResource, withStripeAccountProperty } from '../../util';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import { dateToTimestamp, timestampToDate } from '@duely/util';
 import { calculateTransactionFee } from '../SubscriptionPlan';
@@ -175,45 +175,18 @@ export const Invoice: GqlTypeDefinition<
       period_end: (source) => timestampToDate(source.period_end),
       subscription_proration_date: (source) => timestampToDate(source.subscription_proration_date),
       webhooks_delivered_at: (source) => timestampToDate(source.webhooks_delivered_at),
-      async charge(source, args, context, info) {
-        if (source.charge == null) return null;
-        if (typeof source.charge === 'object') return source.charge;
-
-        const resolveTree = parseResolveInfo(info) as ResolveTree;
-        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
-        if (fields.length === 1 && fields[0] === 'id') return { id: source.charge };
-
-        const charge = await stripe
-          .get(source.stripe_account)
-          .charges.retrieve(source.charge);
-        return withStripeAccountProperty(charge, source.stripe_account);
-      },
-      async customer(source, args, context, info) {
-        if (source.customer == null) return null;
-        if (typeof source.customer === 'object') return source.customer;
-
-        const resolveTree = parseResolveInfo(info) as ResolveTree;
-        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
-        if (fields.length === 1 && fields[0] === 'id') return { id: source.customer };
-
-        const customer = await stripe
-          .get(source.stripe_account)
-          .customers.retrieve(source.customer);
-        return withStripeAccountProperty(customer, source.stripe_account);
-      },
-      async payment_intent(source, args, context, info) {
-        if (source.payment_intent == null) return null;
-        if (typeof source.payment_intent === 'object') return source.payment_intent;
-
-        const resolveTree = parseResolveInfo(info) as ResolveTree;
-        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
-        if (fields.length === 1 && fields[0] === 'id') return { id: source.payment_intent };
-
-        const payment_intent = await stripe
-          .get(source.stripe_account)
-          .paymentIntents.retrieve(source.payment_intent);
-        return withStripeAccountProperty(payment_intent, source.stripe_account);
-      },
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'charge',
+        endpoint: 'charges'
+      }),
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'customer',
+        endpoint: 'customers'
+      }),
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'payment_intent',
+        endpoint: 'paymentIntents'
+      }),
       async lines(source, { starting_after_id, ending_before_id, ...args }, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
@@ -239,26 +212,10 @@ export const Invoice: GqlTypeDefinition<
       }
     },
     Query: {
-      async invoice(source, { stripe_account_id, invoice_id }, context, info) {
-        if (!context.jwt)
-          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        try {
-          return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
-            const stripe_account = await queryResource('stripe account', stripe_account_id);
-            const access = await queryResourceAccess(stripe_account.id);
-
-            if (access !== 'owner') {
-              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
-            }
-
-            const invoice = await stripe.get(stripe_account).invoices.retrieve(invoice_id);
-            return withStripeAccountProperty(invoice, stripe_account);
-          });
-        } catch (error: any) {
-          throw new Error(error.message);
-        }
-      }
+      ...createStripeRetrieveQueryResolver({
+        name: 'invoice',
+        endpoint: 'invoices'
+      })
     },
     Mutation: {
       async create_invoice(

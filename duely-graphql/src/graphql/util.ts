@@ -11,6 +11,7 @@ import stripe, {
 } from '@duely/stripe';
 import Stripe from 'stripe';
 import { IResolvers } from '@graphql-tools/utils';
+import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 
 // Not yet used
 export async function withCache<TKey, TValue>(
@@ -132,6 +133,71 @@ export function createDefaultQueryResolversForResource<
       }
 
       return await countResource(context, name, args.filter, args.token);
+    }
+  };
+}
+
+type CreateStripeRetrieveResolverForReferecnedResourceArgs<
+  TResolverName extends string,
+  TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'retrieve'>
+> = {
+  name: TResolverName;
+  endpoint: TStripeResourceEndpoint;
+  expand?: string[];
+};
+
+export function createStripeRetrieveResolverForReferencedResource<
+  TSource extends { stripe_account: Resources['stripe account'] } & Record<
+    TResolverName,
+    null | undefined | object | string
+  >,
+  TResolverName extends string & keyof TSource,
+  TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'retrieve'>,
+  TContext extends DuelyQqlContext
+>({
+  name,
+  endpoint,
+  expand
+}: CreateStripeRetrieveResolverForReferecnedResourceArgs<
+  TResolverName,
+  TStripeResourceEndpoint
+>): IResolvers<
+  TSource,
+  DuelyQqlContext,
+  StripeRetrieveParams<TStripeResourceEndpoint>,
+  Promise<
+    Awaited<ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['retrieve']>> & {
+      stripe_account: Resources['stripe account'];
+    }
+  >
+> {
+  return {
+    async [name](
+      source: TSource,
+      args: StripeRetrieveParams<TStripeResourceEndpoint>,
+      context: TContext,
+      info: GraphQLResolveInfo
+    ) {
+      const field = source[name];
+
+      if (field == null) return null;
+      if (typeof field === 'object') return field;
+
+      const resolveTree = parseResolveInfo(info) as ResolveTree;
+      const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
+      if (fields.length === 1 && fields[0] === 'id') return { id: field };
+
+      const retrieve = getPathValue(stripe.get(source.stripe_account), endpoint).retrieve as (
+        id: string,
+        params: StripeRetrieveParams<TStripeResourceEndpoint>
+      ) => ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['retrieve']>;
+
+      const object = await retrieve(field, {
+        expand,
+        ...args
+      });
+
+      return withStripeAccountProperty(object, source.stripe_account);
     }
   };
 }

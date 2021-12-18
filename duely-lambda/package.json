@@ -33,7 +33,7 @@
     "@duely/lambda": "^0.4.1",
     "@duely/stripe": "^0.4.10",
     "@duely/util": "^0.4.11",
-    "axios": "^0.21.1",
+    "axios": "^0.24.0",
     "cors": "^2.8.5",
     "express": "^4.16.4"
   },

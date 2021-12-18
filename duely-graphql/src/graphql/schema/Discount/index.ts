@@ -4,10 +4,8 @@ import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
 import { Resources } from '@duely/db';
-import stripe from '@duely/stripe';
 import { timestampToDate } from '@duely/util';
-import { withStripeAccountProperty } from '../../util';
-import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
+import { createStripeRetrieveResolverForReferencedResource } from '../../util';
 
 export const Discount: GqlTypeDefinition<
   Stripe.Discount & { stripe_account: Resources['stripe account'] }
@@ -32,19 +30,10 @@ export const Discount: GqlTypeDefinition<
       id_ext: (source) => source.id,
       end: (source) => timestampToDate(source.end),
       start: (source) => timestampToDate(source.start),
-      async customer(source, args, context, info) {
-        if (source.customer == null) return null;
-        if (typeof source.customer === 'object') return source.customer;
-
-        const resolveTree = parseResolveInfo(info) as ResolveTree;
-        const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
-        if (fields.length === 1 && fields[0] === 'id') return { id: source.customer };
-
-        const customer = await stripe
-          .get(source.stripe_account)
-          .customers.retrieve(source.customer);
-        return withStripeAccountProperty(customer, source.stripe_account);
-      }
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'customer',
+        endpoint: 'customers'
+      })
     }
   }
 };
