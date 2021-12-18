@@ -119,7 +119,7 @@ export const InvoiceItem: GqlTypeDefinition<
     Query: {
       ...createStripeRetrieveQueryResolver({
         name: 'invoiceitem',
-        endpoint: 'invoiceItems'
+        object: 'invoiceitem'
       })
     },
     Mutation: {

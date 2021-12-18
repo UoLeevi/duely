@@ -32,7 +32,7 @@ export const Discount: GqlTypeDefinition<
       start: (source) => timestampToDate(source.start),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
-        endpoint: 'customers'
+        object: 'customer'
       })
     }
   }

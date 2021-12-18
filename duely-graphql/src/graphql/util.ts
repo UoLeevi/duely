@@ -6,6 +6,8 @@ import { ElementType, FilterKeys, getPathValue, hasProperty, PathValue } from '@
 import { DuelyGraphQLError } from './errors';
 import stripe, {
   StripeListParams,
+  StripeObjectTypeResources,
+  StripeResourceEndpointResponseObject,
   StripeResourceEndpointWithOperation,
   StripeRetrieveParams
 } from '@duely/stripe';
@@ -139,10 +141,10 @@ export function createDefaultQueryResolversForResource<
 
 type CreateStripeRetrieveResolverForReferecnedResourceArgs<
   TResolverName extends string,
-  TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'retrieve'>
+  TStripeObjectType extends keyof StripeObjectTypeResources<'retrieve'>
 > = {
   name: TResolverName;
-  endpoint: TStripeResourceEndpoint;
+  object: TStripeObjectType;
   expand?: string[];
 };
 
@@ -152,21 +154,21 @@ export function createStripeRetrieveResolverForReferencedResource<
     null | undefined | object | string
   >,
   TResolverName extends string & keyof TSource,
-  TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'retrieve'>,
+  TStripeObjectType extends keyof StripeObjectTypeResources<'retrieve'>,
   TContext extends DuelyQqlContext
 >({
   name,
-  endpoint,
+  object,
   expand
 }: CreateStripeRetrieveResolverForReferecnedResourceArgs<
   TResolverName,
-  TStripeResourceEndpoint
+  TStripeObjectType
 >): IResolvers<
   TSource,
   DuelyQqlContext,
-  StripeRetrieveParams<TStripeResourceEndpoint>,
+  StripeRetrieveParams<StripeObjectTypeResources<'retrieve'>[TStripeObjectType]>,
   Promise<
-    Awaited<ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['retrieve']>> & {
+    Awaited<ReturnType<PathValue<Stripe, TStripeObjectType>['retrieve']>> & {
       stripe_account: Resources['stripe account'];
     }
   >
@@ -174,59 +176,53 @@ export function createStripeRetrieveResolverForReferencedResource<
   return {
     async [name](
       source: TSource,
-      args: StripeRetrieveParams<TStripeResourceEndpoint>,
+      args: StripeRetrieveParams<StripeObjectTypeResources<'retrieve'>[TStripeObjectType]>,
       context: TContext,
       info: GraphQLResolveInfo
     ) {
-      const field = source[name];
+      const value = source[name];
 
-      if (field == null) return null;
-      if (typeof field === 'object') return field;
+      if (value == null) return null;
+      if (typeof value === 'object') return value;
 
       const resolveTree = parseResolveInfo(info) as ResolveTree;
       const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
-      if (fields.length === 1 && fields[0] === 'id') return { id: field };
+      if (fields.length === 1 && fields[0] === 'id') return { id: value };
 
-      const resource = getPathValue(stripe.get(source.stripe_account), endpoint);
-      const retrieve = resource.retrieve.bind(resource) as (
-        id: string,
-        params: StripeRetrieveParams<TStripeResourceEndpoint>
-      ) => ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['retrieve']>;
-
-      const object = await retrieve(field, {
+      const response = await stripe.retrieve(stripe.get(source.stripe_account), object, value, {
         expand,
         ...args
       });
 
-      return withStripeAccountProperty(object, source.stripe_account);
+      return withStripeAccountProperty(response, source.stripe_account);
     }
   };
 }
 
 type CreateStripeRetrieveQueryResolverArgs<
   TResolverName extends string,
-  TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'retrieve'>
+  TStripeObjectType extends keyof StripeObjectTypeResources<'retrieve'>
 > = {
   name: TResolverName;
-  endpoint: TStripeResourceEndpoint;
+  object: TStripeObjectType;
   expand?: string[];
 };
 
 export function createStripeRetrieveQueryResolver<
   TResolverName extends string,
-  TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'retrieve'>,
+  TStripeObjectType extends keyof StripeObjectTypeResources<'retrieve'>,
   TContext extends DuelyQqlContext
 >({
   name,
-  endpoint,
+  object,
   expand
-}: CreateStripeRetrieveQueryResolverArgs<TResolverName, TStripeResourceEndpoint>): IResolvers<
+}: CreateStripeRetrieveQueryResolverArgs<TResolverName, TStripeObjectType>): IResolvers<
   unknown,
   DuelyQqlContext,
   { stripe_account_id: string } & Record<`${TResolverName}_id`, string> &
-    StripeRetrieveParams<TStripeResourceEndpoint>,
+    StripeRetrieveParams<StripeObjectTypeResources<'retrieve'>[TStripeObjectType]>,
   Promise<
-    Awaited<ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['retrieve']>> & {
+    Awaited<ReturnType<PathValue<Stripe, TStripeObjectType>['retrieve']>> & {
       stripe_account: Resources['stripe account'];
     }
   >
@@ -239,7 +235,7 @@ export function createStripeRetrieveQueryResolver<
         [`${name}_id` as const]: id,
         ...params
       }: { stripe_account_id: string } & Record<`${TResolverName}_id`, string> &
-        StripeRetrieveParams<TStripeResourceEndpoint>,
+        StripeRetrieveParams<StripeObjectTypeResources<'retrieve'>[TStripeObjectType]>,
       context: TContext,
       info: GraphQLResolveInfo
     ) {
@@ -255,18 +251,19 @@ export function createStripeRetrieveQueryResolver<
             throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
           }
 
-          const resource = getPathValue(stripe.get(stripe_account), endpoint);
-          const retrieve = resource.retrieve.bind(resource) as (
-            id: string,
-            params: StripeRetrieveParams<TStripeResourceEndpoint>
-          ) => ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['retrieve']>;
+          const response = await stripe.retrieve(
+            stripe.get(stripe_account),
+            object,
+            id as unknown as string,
+            {
+              expand,
+              ...(params as unknown as StripeRetrieveParams<
+                StripeObjectTypeResources<'retrieve'>[TStripeObjectType]
+              >)
+            }
+          );
 
-          const object = await retrieve(id as unknown as string, {
-            expand,
-            ...(params as unknown as StripeRetrieveParams<TStripeResourceEndpoint>)
-          });
-
-          return withStripeAccountProperty(object, stripe_account);
+          return withStripeAccountProperty(response, stripe_account);
         });
       } catch (error: any) {
         throw new Error(error.message);
@@ -277,26 +274,26 @@ export function createStripeRetrieveQueryResolver<
 
 type CreateStripeListQueryResolverArgs<
   TResolverName extends string,
-  TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'retrieve'>
+  TStripeObjectType extends keyof StripeObjectTypeResources<'list'>
 > = {
   name: TResolverName;
-  endpoint: TStripeResourceEndpoint;
+  object: TStripeObjectType;
   expand?: string[];
 };
 
 export function createStripeListQueryResolver<
   TResolverName extends string,
-  TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'list'>,
+  TStripeObjectType extends keyof StripeObjectTypeResources<'list'>,
   TContext extends DuelyQqlContext
 >({
   name,
-  endpoint,
+  object,
   expand
-}: CreateStripeListQueryResolverArgs<TResolverName, TStripeResourceEndpoint>): IResolvers<
+}: CreateStripeListQueryResolverArgs<TResolverName, TStripeObjectType>): IResolvers<
   unknown,
   DuelyQqlContext,
   Promise<
-    ElementType<Awaited<ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['list']>>['data']>
+    StripeResourceEndpointResponseObject<'list'>[StripeObjectTypeResources<'list'>[TStripeObjectType]]
   > & {
     stripe_account: Resources['stripe account'];
   }
@@ -307,7 +304,9 @@ export function createStripeListQueryResolver<
       {
         stripe_account_id,
         ...params
-      }: { stripe_account_id: string } & StripeListParams<TStripeResourceEndpoint>,
+      }: { stripe_account_id: string } & StripeListParams<
+        StripeObjectTypeResources<'list'>[TStripeObjectType]
+      >,
       context: TContext,
       info: GraphQLResolveInfo
     ) {
@@ -323,14 +322,11 @@ export function createStripeListQueryResolver<
             throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
           }
 
-          const resource = getPathValue(stripe.get(stripe_account), endpoint);
-          const list = resource.list.bind(resource) as (
-            params: StripeListParams<TStripeResourceEndpoint>
-          ) => ReturnType<PathValue<Stripe, TStripeResourceEndpoint>['list']>;
-
-          const response = await list({
+          const response = await stripe.list(stripe.get(stripe_account), object, {
             expand: expand?.map((path) => (path.startsWith('data.') ? path : `data.${path}`)),
-            ...(params as unknown as StripeListParams<TStripeResourceEndpoint>)
+            ...(params as unknown as StripeListParams<
+              StripeObjectTypeResources<'list'>[TStripeObjectType]
+            >)
           });
 
           return withStripeAccountProperty(response.data, stripe_account);

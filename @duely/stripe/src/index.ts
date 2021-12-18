@@ -56,6 +56,32 @@ const stripe = {
     }
 
     return stripe;
+  },
+  retrieve<TStripeObjectType extends keyof StripeObjectTypeResources<'retrieve'>>(
+    stripe: Stripe,
+    object: TStripeObjectType,
+    id: string,
+    params: StripeRetrieveParams<StripeObjectTypeResources<'retrieve'>[TStripeObjectType]>
+  ): ReturnType<PathValue<Stripe, StripeObjectTypeResources<'retrieve'>[TStripeObjectType]>['retrieve']> {
+    const resource = getStripeResourceForObjectType(stripe, object);
+    const retrieve = resource.retrieve.bind(resource) as (
+      id: string,
+      params: StripeRetrieveParams<StripeObjectTypeResources<'retrieve'>[TStripeObjectType]>
+    ) => ReturnType<
+      PathValue<Stripe, StripeObjectTypeResources<'retrieve'>[TStripeObjectType]>['retrieve']
+    >;
+    return retrieve(id, params);
+  },
+  list<TStripeObjectType extends keyof StripeObjectTypeResources<'list'>>(
+    stripe: Stripe,
+    object: TStripeObjectType,
+    params: StripeListParams<StripeObjectTypeResources<'list'>[TStripeObjectType]>
+  ): ReturnType<PathValue<Stripe, StripeObjectTypeResources<'list'>[TStripeObjectType]>['list']> {
+    const resource = getStripeResourceForObjectType<TStripeObjectType, 'list'>(stripe, object);
+    const list = resource.list.bind(resource) as (
+      params: StripeListParams<StripeObjectTypeResources<'list'>[TStripeObjectType]>
+    ) => ReturnType<PathValue<Stripe, StripeObjectTypeResources<'list'>[TStripeObjectType]>['list']>;
+    return list(params);
   }
 };
 
@@ -89,9 +115,11 @@ export type StripeResourceEndpointWithOperation<TOperation extends string> = {
   >]: StripeResourceEndpoint[Path];
 };
 
-export type StripeResourceEndpointResponseObject = {
-  [Path in keyof StripeResourceEndpoint]: ExtractObjectFromStripeResponse<
-    Awaited<ReturnType<StripeResourceEndpoint[Path]['retrieve']>>
+export type StripeResourceEndpointResponseObject<
+  TOperationType extends 'retrieve' | 'list' | 'del' = 'retrieve'
+> = {
+  [Path in keyof StripeResourceEndpointWithOperation<TOperationType>]: ExtractObjectFromStripeResponse<
+    Awaited<ReturnType<StripeResourceEndpointWithOperation<TOperationType>[Path]['retrieve']>>
   >;
 };
 
@@ -104,9 +132,9 @@ export type StripeDeletableObjectType =
   StripeResourceEndpointResponseObject[keyof StripeDeletableResourceEndpoint]['object'];
 
 const stripeResourceEndpointByType: {
-  [ObjectType in StripeObjectType]: FilterKeys<
+  [TStripeObjectType in StripeObjectType]: FilterKeys<
     StripeResourceEndpointResponseObject,
-    Record<'object', ObjectType>
+    Record<'object', TStripeObjectType>
   >;
 } = {
   product: 'products',
@@ -141,6 +169,7 @@ const stripeResourceEndpointByType: {
   refund: 'refunds',
   review: 'reviews',
   setup_intent: 'setupIntents',
+  shipping_rate: 'shippingRates',
   sku: 'skus',
   source: 'sources',
   subscription: 'subscriptions',
@@ -165,19 +194,32 @@ const stripeResourceEndpointByType: {
   'radar.value_list_item': 'radar.valueListItems',
   'reporting.report_run': 'reporting.reportRuns',
   'reporting.report_type': 'reporting.reportTypes',
-  scheduled_query_run: 'sigma.scheduledQueryRuns'
+  scheduled_query_run: 'sigma.scheduledQueryRuns',
+} as const;
+
+export type StripeObjectTypeResources<
+  TOperationType extends 'retrieve' | 'list' | 'del' = 'retrieve'
+> = {
+  [TStripeObjectType in StripeObjectType]: FilterKeys<
+    StripeResourceEndpointResponseObject<TOperationType>,
+    Record<'object', TStripeObjectType>
+  >;
 };
 
 export function getStripeResourceForObjectType<
-  ObjectType extends keyof typeof stripeResourceEndpointByType
+  TStripeObjectType extends StripeObjectType,
+  TOperationType extends 'retrieve' | 'list' | 'del' = 'retrieve'
 >(
   stripe: Stripe,
-  objectType: ObjectType
+  object: TStripeObjectType
 ): PathValue<
   Stripe,
-  SplitString<FilterKeys<StripeResourceEndpointResponseObject, Record<'object', ObjectType>>, '.'>
+  SplitString<
+    FilterKeys<StripeResourceEndpointResponseObject<TOperationType>, Record<'object', TStripeObjectType>>,
+    '.'
+  >
 > {
-  const endpoint = stripeResourceEndpointByType[objectType];
+  const endpoint = stripeResourceEndpointByType[object];
   return getPathValue(stripe, endpoint) as any;
 }
 

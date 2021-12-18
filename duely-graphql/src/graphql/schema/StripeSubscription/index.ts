@@ -137,11 +137,11 @@ export const StripeSubscription: GqlTypeDefinition<
       trial_start: (source) => timestampToDate(source.trial_start),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
-        endpoint: 'customers'
+        object: 'customer'
       }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'latest_invoice',
-        endpoint: 'invoices'
+        object: 'invoice'
       }),
       // async invoiceitems(source, { starting_after_id, ending_before_id, ...args }, context, info) {
       //   if (!context.jwt)
@@ -177,11 +177,11 @@ export const StripeSubscription: GqlTypeDefinition<
     Query: {
       ...createStripeRetrieveQueryResolver({
         name: 'subscription',
-        endpoint: 'subscriptions'
+        object: 'subscription'
       }),
       ...createStripeListQueryResolver({
         name: 'subscriptions',
-        endpoint: 'subscriptions'
+        object: 'subscription'
       })
     }
   }

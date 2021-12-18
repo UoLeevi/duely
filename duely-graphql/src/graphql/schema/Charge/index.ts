@@ -3,7 +3,10 @@
 import stripe from '@duely/stripe';
 import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import { timestampToDate } from '@duely/util';
-import { createStripeRetrieveResolverForReferencedResource, withStripeAccountProperty } from '../../util';
+import {
+  createStripeRetrieveResolverForReferencedResource,
+  withStripeAccountProperty
+} from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
@@ -85,15 +88,15 @@ export const Charge: GqlTypeDefinition<
       created: (source) => timestampToDate(source.created),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'balance_transaction',
-        endpoint: 'balanceTransactions'
+        object: 'balance_transaction'
       }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'payment_intent',
-        endpoint: 'paymentIntents'
+        object: 'payment_intent'
       }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
-        endpoint: 'customers'
+        object: 'customer'
       })
     }
   }

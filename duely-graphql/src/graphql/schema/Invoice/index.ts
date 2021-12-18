@@ -177,15 +177,15 @@ export const Invoice: GqlTypeDefinition<
       webhooks_delivered_at: (source) => timestampToDate(source.webhooks_delivered_at),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'charge',
-        endpoint: 'charges'
+        object: 'payment_intent'
       }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
-        endpoint: 'customers'
+        object: 'customer'
       }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'payment_intent',
-        endpoint: 'paymentIntents'
+        object: 'payment_intent'
       }),
       async lines(source, { starting_after_id, ending_before_id, ...args }, context, info) {
         if (!context.jwt)
@@ -214,7 +214,7 @@ export const Invoice: GqlTypeDefinition<
     Query: {
       ...createStripeRetrieveQueryResolver({
         name: 'invoice',
-        endpoint: 'invoices'
+        object: 'invoice'
       })
     },
     Mutation: {

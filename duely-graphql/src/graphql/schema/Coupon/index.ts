@@ -76,7 +76,7 @@ export const Coupon: GqlTypeDefinition<
     Query: {
       ...createStripeRetrieveQueryResolver({
         name: 'coupon',
-        endpoint: 'coupons',
+        object: 'coupon',
         expand: ['applies_to']
       })
     },

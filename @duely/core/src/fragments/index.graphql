@@ -145,6 +145,70 @@ fragment stripe_customer on StripeCustomer {
   }
 }
 
+fragment subscription on StripeSubscription {
+  id
+  application_fee_percent
+  automatic_tax {
+    enabled
+  }
+  billing_cycle_anchor
+  billing_thresholds {
+    amount_gte
+    reset_billing_cycle_anchor
+  }
+  cancel_at
+  cancel_at_period_end
+  canceled_at
+  collection_method
+  created
+  current_period_end
+  current_period_start
+  customer {
+    id
+  }
+  days_until_due
+  discount {
+    id
+  }
+  ended_at
+  latest_invoice {
+    id
+  }
+  livemode
+  next_pending_invoice_item_invoice
+  pause_collection {
+    behavior
+  }
+  payment_settings {
+    payment_method_options {
+      acss_debit {
+        mandate_options {
+          transaction_type
+        }
+        verification_method
+      }
+      card {
+        request_three_d_secure
+      }
+      bancontact {
+        preferred_language
+      }
+    }
+    payment_method_types
+  }
+  pending_invoice_item_interval
+  pending_update {
+    billing_cycle_anchor
+    trial_end
+    expires_at
+    trial_from_plan
+  }
+  start_date
+  status
+  trial_end
+  trial_start
+}
+
 fragment coupon on Coupon {
   id
   id_ext

@@ -91,11 +91,11 @@ export const PromotionCode: GqlTypeDefinition<
     Query: {
       ...createStripeRetrieveQueryResolver({
         name: 'promotion_code',
-        endpoint: 'promotionCodes'
+        object: 'promotion_code'
       }),
       ...createStripeListQueryResolver({
         name: 'promotion_codes',
-        endpoint: 'promotionCodes'
+        object: 'promotion_code'
       })
     },
     Mutation: {
