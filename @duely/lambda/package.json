@@ -23,7 +23,7 @@
     "axios": "^0.24.0"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.20",
+    "@types/jest": "^27.0.3",
     "@types/pg": "^7.14.11",
     "cross-env": "^7.0.3",
     "jest": "^27.0.6",

@@ -1,6 +1,6 @@
 {
   "name": "duely-ui-agency",
-  "version": "0.8.74",
+  "version": "0.8.75",
   "private": true,
   "scripts": {
     "start": "webpack serve",
@@ -39,7 +39,7 @@
   "devDependencies": {
     "@duely/build": "^0.4.7",
     "@tailwindcss/typography": "^0.5.0",
-    "@types/react": "^17.0.5",
+    "@types/react": "^17.0.37",
     "@types/react-router-dom": "^5.1.7",
     "autoprefixer": "^10.2.6",
     "cross-env": "^7.0.3",

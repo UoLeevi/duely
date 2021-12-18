@@ -1,6 +1,6 @@
 {
   "name": "@duely/react",
-  "version": "0.4.96",
+  "version": "0.4.97",
   "description": "UI components used in duely.app",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -29,8 +29,8 @@
   "devDependencies": {
     "@duely/build": "^0.4.7",
     "@tailwindcss/typography": "^0.5.0",
-    "@types/jest": "^26.0.23",
-    "@types/react": "^17.0.5",
+    "@types/jest": "^27.0.3",
+    "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.3",
     "@types/react-router-dom": "^5.1.7",
     "cross-env": "^7.0.3",
