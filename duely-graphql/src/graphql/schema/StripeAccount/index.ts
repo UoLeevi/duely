@@ -3,7 +3,12 @@ import { queryResource, queryResourceAccess, Resources } from '@duely/db';
 import stripe from '@duely/stripe';
 import { GqlTypeDefinition } from '../../types';
 import { timestampToDate } from '@duely/util';
-import { createResolverForReferencedResourceAll, createStripeListResolverForReferencedResource, createStripeRetrieveResolverForReferencedResource, withStripeAccountProperty } from '../../util';
+import {
+  createResolverForReferencedResourceAll,
+  createStripeListResolverForReferencedResource,
+  createStripeRetrieveResolverForReferencedResource,
+  withStripeAccountProperty
+} from '../../util';
 import { DuelyGraphQLError } from '../../errors';
 import Stripe from 'stripe';
 
@@ -47,12 +52,7 @@ export const StripeAccount: GqlTypeDefinition<
         before_id: ID
         after_id: ID
       ): [Customer!]!
-      coupons(
-        created: Int
-        starting_after: String
-        ending_before: String
-        limit: Int
-      ): [Coupon!]!
+      coupons(created: Int, starting_after: String, ending_before: String, limit: Int): [Coupon!]!
       invoices(
         customer: ID
         status: String
@@ -97,11 +97,7 @@ export const StripeAccount: GqlTypeDefinition<
       details_submitted: Boolean!
       email: String
       payouts_enabled: Boolean!
-      bank_accounts(
-        starting_after: String
-        ending_before: String
-        limit: Int
-      ): [BankAccount!]!
+      bank_accounts(starting_after: String, ending_before: String, limit: Int): [BankAccount!]!
     }
 
     extend type Query {
@@ -202,11 +198,20 @@ export const StripeAccount: GqlTypeDefinition<
           throw new Error(error.message);
         }
       },
-      ...createStripeRetrieveResolverForReferencedResource({
-        name: 'balance',
-        object: 'balance',
-        role: 'owner'
-      }),
+      async balance(source, args, context, info) {
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+
+        const access = await queryResourceAccess(context, source.id);
+
+        if (access !== 'owner') {
+          throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+        }
+
+        // see: https://stripe.com/docs/api/balance
+        const balance = await stripe.get(source).balance.retrieve();
+        return withStripeAccountProperty(balance, source);
+      },
       ...createStripeListResolverForReferencedResource({
         name: 'balance_transactions',
         object: 'balance_transaction',
