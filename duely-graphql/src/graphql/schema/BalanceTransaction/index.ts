@@ -13,7 +13,6 @@ export const BalanceTransaction: GqlTypeDefinition<
   typeDef: gql`
     type BalanceTransaction {
       id: ID!
-      id_ext: ID!
       amount: Int!
       available_on: DateTime!
       created: DateTime!
@@ -39,7 +38,6 @@ export const BalanceTransaction: GqlTypeDefinition<
   `,
   resolvers: {
     BalanceTransaction: {
-      id_ext: (source) => source.id,
       created: (source) => timestampToDate(source.created),
       available_on: (source) => timestampToDate(source.created)
     }

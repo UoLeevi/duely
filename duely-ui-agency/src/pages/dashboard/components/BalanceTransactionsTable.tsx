@@ -24,7 +24,7 @@ export function BalanceTransactionsTable() {
         {
           agency_id: agency?.id!,
           limit,
-          starting_after_id: starting_after
+          starting_after: starting_after
         },
         { skip: !agency }
       );

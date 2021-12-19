@@ -62,7 +62,9 @@ const stripe = {
     object: TStripeObjectType,
     id: string,
     params: StripeRetrieveParams<StripeObjectTypeResources<'retrieve'>[TStripeObjectType]>
-  ): ReturnType<PathValue<Stripe, StripeObjectTypeResources<'retrieve'>[TStripeObjectType]>['retrieve']> {
+  ): ReturnType<
+    PathValue<Stripe, StripeObjectTypeResources<'retrieve'>[TStripeObjectType]>['retrieve']
+  > {
     const resource = getStripeResourceForObjectType(stripe, object);
     const retrieve = resource.retrieve.bind(resource) as (
       id: string,
@@ -80,7 +82,9 @@ const stripe = {
     const resource = getStripeResourceForObjectType<TStripeObjectType, 'list'>(stripe, object);
     const list = resource.list.bind(resource) as (
       params: StripeListParams<StripeObjectTypeResources<'list'>[TStripeObjectType]>
-    ) => ReturnType<PathValue<Stripe, StripeObjectTypeResources<'list'>[TStripeObjectType]>['list']>;
+    ) => ReturnType<
+      PathValue<Stripe, StripeObjectTypeResources<'list'>[TStripeObjectType]>['list']
+    >;
     return list(params);
   }
 };
@@ -194,7 +198,7 @@ const stripeResourceEndpointByType: {
   'radar.value_list_item': 'radar.valueListItems',
   'reporting.report_run': 'reporting.reportRuns',
   'reporting.report_type': 'reporting.reportTypes',
-  scheduled_query_run: 'sigma.scheduledQueryRuns',
+  scheduled_query_run: 'sigma.scheduledQueryRuns'
 } as const;
 
 export type StripeObjectTypeResources<
@@ -215,7 +219,10 @@ export function getStripeResourceForObjectType<
 ): PathValue<
   Stripe,
   SplitString<
-    FilterKeys<StripeResourceEndpointResponseObject<TOperationType>, Record<'object', TStripeObjectType>>,
+    FilterKeys<
+      StripeResourceEndpointResponseObject<TOperationType>,
+      Record<'object', TStripeObjectType>
+    >,
     '.'
   >
 > {
@@ -236,16 +243,20 @@ export function deleteStripeObjects<
 
 export type StripeRetrieveParams<
   TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'retrieve'>
-> = Exclude<
-  ParameterOverloads<PathValue<Stripe, TStripeResourceEndpoint>['retrieve']>[1],
-  Stripe.RequestOptions
+> = NonNullable<
+  Exclude<
+    ParameterOverloads<PathValue<Stripe, TStripeResourceEndpoint>['retrieve']>[1],
+    Stripe.RequestOptions
+  >
 >;
 
 export type StripeListParams<
   TStripeResourceEndpoint extends keyof StripeResourceEndpointWithOperation<'list'>
-> = Exclude<
-  ParameterOverloads<PathValue<Stripe, TStripeResourceEndpoint>['list']>[0],
-  Stripe.RequestOptions
+> = NonNullable<
+  Exclude<
+    ParameterOverloads<PathValue<Stripe, TStripeResourceEndpoint>['list']>[0],
+    Stripe.RequestOptions
+  >
 >;
 
 export default stripe;

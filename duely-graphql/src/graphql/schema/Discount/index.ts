@@ -13,7 +13,6 @@ export const Discount: GqlTypeDefinition<
   typeDef: gql`
     type Discount {
       id: ID!
-      id_ext: ID!
       checkout_session: String
       coupon: Coupon
       customer: StripeCustomer
@@ -27,12 +26,12 @@ export const Discount: GqlTypeDefinition<
   `,
   resolvers: {
     Discount: {
-      id_ext: (source) => source.id,
       end: (source) => timestampToDate(source.end),
       start: (source) => timestampToDate(source.start),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
-        object: 'customer'
+        object: 'customer',
+        role: 'owner'
       })
     }
   }

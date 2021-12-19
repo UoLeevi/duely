@@ -209,6 +209,21 @@ fragment subscription on StripeSubscription {
   trial_start
 }
 
+fragment subscription_item on SubscriptionItem {
+  id
+  billing_thresholds {
+    usage_gte
+  }
+  created
+  price {
+    id
+  }
+  quantity
+  subscription {
+    id
+  }
+}
+
 fragment coupon on Coupon {
   id
   id_ext

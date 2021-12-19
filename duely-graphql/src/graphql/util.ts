@@ -1,14 +1,20 @@
 import type { GraphQLResolveInfo } from 'graphql';
-import { countResource, queryResource, queryResourceAll, withSession } from '@duely/db';
+import {
+  AccessLevel,
+  countResource,
+  queryResource,
+  queryResourceAccess,
+  queryResourceAll,
+  withSession
+} from '@duely/db';
 import { DuelyQqlContext } from './context';
 import { Resources } from '@duely/db';
-import { ElementType, FilterKeys, getPathValue, hasProperty, PathValue } from '@duely/util';
+import { hasProperty, PathValue } from '@duely/util';
 import { DuelyGraphQLError } from './errors';
 import stripe, {
   StripeListParams,
   StripeObjectTypeResources,
   StripeResourceEndpointResponseObject,
-  StripeResourceEndpointWithOperation,
   StripeRetrieveParams
 } from '@duely/stripe';
 import Stripe from 'stripe';
@@ -146,6 +152,7 @@ type CreateStripeRetrieveResolverForReferencedResourceArgs<
   name: TResolverName;
   object: TStripeObjectType;
   expand?: string[];
+  role?: AccessLevel;
 };
 
 export function createStripeRetrieveResolverForReferencedResource<
@@ -159,7 +166,8 @@ export function createStripeRetrieveResolverForReferencedResource<
 >({
   name,
   object,
-  expand
+  expand,
+  role
 }: CreateStripeRetrieveResolverForReferencedResourceArgs<
   TResolverName,
   TStripeObjectType
@@ -180,6 +188,14 @@ export function createStripeRetrieveResolverForReferencedResource<
       context: TContext,
       info: GraphQLResolveInfo
     ) {
+      if (role) {
+        const access = await queryResourceAccess(context, source.stripe_account.id);
+
+        if (access !== role) {
+          throw new DuelyGraphQLError('FORBIDDEN', `Only ${role} can access this information`);
+        }
+      }
+
       const value = source[name];
 
       if (value == null) return null;
@@ -204,9 +220,10 @@ type CreateStripeListResolverForReferencedResourceArgs<
   TStripeObjectType extends keyof StripeObjectTypeResources<'list'>
 > = {
   name: TResolverName;
-  param: keyof StripeListParams<StripeObjectTypeResources<'list'>[TStripeObjectType]>;
+  param?: keyof StripeListParams<StripeObjectTypeResources<'list'>[TStripeObjectType]>;
   object: TStripeObjectType;
   expand?: string[];
+  role?: AccessLevel;
 };
 
 export function createStripeListResolverForReferencedResource<
@@ -221,7 +238,8 @@ export function createStripeListResolverForReferencedResource<
   name,
   param,
   object,
-  expand
+  expand,
+  role
 }: CreateStripeListResolverForReferencedResourceArgs<TResolverName, TStripeObjectType>): IResolvers<
   TSource,
   DuelyQqlContext,
@@ -239,14 +257,24 @@ export function createStripeListResolverForReferencedResource<
       context: TContext,
       info: GraphQLResolveInfo
     ) {
-      const response = await stripe.list(stripe.get(source.stripe_account), object, {
-        expand: expand?.map((path) => (path.startsWith('data.') ? path : `data.${path}`)),
-        ...(args as unknown as StripeListParams<
-          StripeObjectTypeResources<'list'>[TStripeObjectType]
-        >),
-        [param]: source.id
-      });
+      if (role) {
+        const access = await queryResourceAccess(context, source.stripe_account.id);
 
+        if (access !== role) {
+          throw new DuelyGraphQLError('FORBIDDEN', `Only ${role} can access this information`);
+        }
+      }
+
+      const params: StripeListParams<StripeObjectTypeResources<'list'>[TStripeObjectType]> = {
+        expand: expand?.map((path) => (path.startsWith('data.') ? path : `data.${path}`)),
+        ...args
+      };
+
+      if (param) {
+        (params as any)[param] = source.id;
+      }
+
+      const response = await stripe.list(stripe.get(source.stripe_account), object, params);
       return withStripeAccountProperty(response.data, source.stripe_account);
     }
   };
@@ -259,6 +287,7 @@ type CreateStripeRetrieveQueryResolverArgs<
   name: TResolverName;
   object: TStripeObjectType;
   expand?: string[];
+  role?: AccessLevel;
 };
 
 export function createStripeRetrieveQueryResolver<
@@ -268,7 +297,8 @@ export function createStripeRetrieveQueryResolver<
 >({
   name,
   object,
-  expand
+  expand,
+  role
 }: CreateStripeRetrieveQueryResolverArgs<TResolverName, TStripeObjectType>): IResolvers<
   unknown,
   DuelyQqlContext,
@@ -298,10 +328,13 @@ export function createStripeRetrieveQueryResolver<
       try {
         return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
           const stripe_account = await queryResource('stripe account', stripe_account_id);
-          const access = await queryResourceAccess(stripe_account.id);
 
-          if (access !== 'owner') {
-            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+          if (role) {
+            const access = await queryResourceAccess(stripe_account.id);
+
+            if (access !== role) {
+              throw new DuelyGraphQLError('FORBIDDEN', `Only ${role} can access this information`);
+            }
           }
 
           const response = await stripe.retrieve(
@@ -332,6 +365,7 @@ type CreateStripeListQueryResolverArgs<
   name: TResolverName;
   object: TStripeObjectType;
   expand?: string[];
+  role?: AccessLevel;
 };
 
 export function createStripeListQueryResolver<
@@ -341,7 +375,8 @@ export function createStripeListQueryResolver<
 >({
   name,
   object,
-  expand
+  expand,
+  role
 }: CreateStripeListQueryResolverArgs<TResolverName, TStripeObjectType>): IResolvers<
   unknown,
   DuelyQqlContext,
@@ -369,10 +404,13 @@ export function createStripeListQueryResolver<
       try {
         return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
           const stripe_account = await queryResource('stripe account', stripe_account_id);
-          const access = await queryResourceAccess(stripe_account.id);
 
-          if (access !== 'owner') {
-            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+          if (role) {
+            const access = await queryResourceAccess(stripe_account.id);
+
+            if (access !== role) {
+              throw new DuelyGraphQLError('FORBIDDEN', `Only ${role} can access this information`);
+            }
           }
 
           const response = await stripe.list(stripe.get(stripe_account), object, {

@@ -172,8 +172,8 @@ query AgencyStripeAccountBalance($agency_id: ID!) {
 query AgencyStripeAccountBalanceTransactions(
   $agency_id: ID!
   $created: DateTime
-  $starting_after_id: String
-  $ending_before_id: String
+  $starting_after: String
+  $ending_before: String
   $limit: Int
 ) {
   agency(id: $agency_id) {
@@ -182,8 +182,8 @@ query AgencyStripeAccountBalanceTransactions(
       id
       balance_transactions(
         created: $created
-        starting_after_id: $starting_after_id
-        ending_before_id: $ending_before_id
+        starting_after: $starting_after
+        ending_before: $ending_before
         limit: $limit
       ) {
         ...balance_transaction
@@ -195,8 +195,8 @@ query AgencyStripeAccountBalanceTransactions(
 query AgencyStripeAccountPaymentIntents(
   $agency_id: ID!
   $created: DateTime
-  $starting_after_id: String
-  $ending_before_id: String
+  $starting_after: String
+  $ending_before: String
   $limit: Int
 ) {
   agency(id: $agency_id) {
@@ -205,8 +205,8 @@ query AgencyStripeAccountPaymentIntents(
       id
       payment_intents(
         created: $created
-        starting_after_id: $starting_after_id
-        ending_before_id: $ending_before_id
+        starting_after: $starting_after
+        ending_before: $ending_before
         limit: $limit
       ) {
         ...payment_intent
@@ -217,8 +217,8 @@ query AgencyStripeAccountPaymentIntents(
 
 query AgencyStripeAccountBankAccounts(
   $agency_id: ID!
-  $starting_after_id: String
-  $ending_before_id: String
+  $starting_after: String
+  $ending_before: String
   $limit: Int
 ) {
   agency(id: $agency_id) {
@@ -226,8 +226,8 @@ query AgencyStripeAccountBankAccounts(
     stripe_account {
       id
       bank_accounts(
-        starting_after_id: $starting_after_id
-        ending_before_id: $ending_before_id
+        starting_after: $starting_after
+        ending_before: $ending_before
         limit: $limit
       ) {
         ...bank_account
@@ -238,8 +238,8 @@ query AgencyStripeAccountBankAccounts(
 
 query AgencyStripeAccountCoupons(
   $agency_id: ID!
-  $starting_after_id: String
-  $ending_before_id: String
+  $starting_after: String
+  $ending_before: String
   $limit: Int
 ) {
   agency(id: $agency_id) {
@@ -247,8 +247,8 @@ query AgencyStripeAccountCoupons(
     stripe_account {
       id
       coupons(
-        starting_after_id: $starting_after_id
-        ending_before_id: $ending_before_id
+        starting_after: $starting_after
+        ending_before: $ending_before
         limit: $limit
       ) {
         ...coupon
@@ -293,6 +293,33 @@ query PromotionCodes(
   }
 }
 
+query AgencyStripeAccountSubscriptions(
+  $agency_id: ID!
+  $starting_after: String
+  $ending_before: String
+  $limit: Int
+) {
+  agency(id: $agency_id) {
+    id
+    stripe_account {
+      id
+      subscriptions(
+        starting_after: $starting_after
+        ending_before: $ending_before
+        limit: $limit
+      ) {
+        ...subscription
+      }
+    }
+  }
+}
+
+query Subscription($stripe_account_id: ID!, $subscription_id: ID!) {
+  subscription(stripe_account_id: $stripe_account_id, subscription_id: $subscription_id) {
+    ...subscription
+  }
+}
+
 query InvoiceItem($stripe_account_id: ID!, $invoiceitem_id: ID!) {
   invoiceitem(stripe_account_id: $stripe_account_id, invoiceitem_id: $invoiceitem_id) {
     ...invoiceitem
@@ -301,14 +328,14 @@ query InvoiceItem($stripe_account_id: ID!, $invoiceitem_id: ID!) {
 
 query AgencyStripeAccountInvoices(
   $agency_id: ID!
-  $customer_id: ID
+  $customer: ID
   $status: String
   $subscription: ID
   $collection_method: String
   $due_date: DateTime
   $created: DateTime
-  $starting_after_id: String
-  $ending_before_id: String
+  $starting_after: String
+  $ending_before: String
   $limit: Int
 ) {
   agency(id: $agency_id) {
@@ -316,14 +343,14 @@ query AgencyStripeAccountInvoices(
     stripe_account {
       id
       invoices(
-        customer_id: $customer_id
+        customer: $customer
         status: $status
         subscription: $subscription
         collection_method: $collection_method
         due_date: $due_date
         created: $created
-        starting_after_id: $starting_after_id
-        ending_before_id: $ending_before_id
+        starting_after: $starting_after
+        ending_before: $ending_before
         limit: $limit
       ) {
         ...invoice
@@ -334,12 +361,12 @@ query AgencyStripeAccountInvoices(
 
 query AgencyStripeAccountInvoiceItems(
   $agency_id: ID!
-  $customer_id: ID
+  $customer: ID
   $invoice: ID
   $pending: Boolean
   $created: DateTime
-  $starting_after_id: String
-  $ending_before_id: String
+  $starting_after: String
+  $ending_before: String
   $limit: Int
 ) {
   agency(id: $agency_id) {
@@ -347,12 +374,12 @@ query AgencyStripeAccountInvoiceItems(
     stripe_account {
       id
       invoiceitems(
-        customer_id: $customer_id
+        customer: $customer
         invoice: $invoice
         pending: $pending
         created: $created
-        starting_after_id: $starting_after_id
-        ending_before_id: $ending_before_id
+        starting_after: $starting_after
+        ending_before: $ending_before
         limit: $limit
       ) {
         ...invoiceitem

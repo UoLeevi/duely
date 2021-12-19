@@ -47,9 +47,10 @@ export const SubscriptionItem: GqlTypeDefinition<
       price: (source) => withStripeAccountProperty(source.price, source.stripe_account),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'subscription',
-        object: 'subscription'
+        object: 'subscription',
+        role: 'owner'
       })
-      // async invoiceitems(source, { starting_after_id, ending_before_id, ...args }, context, info) {
+      // async invoiceitems(source, { starting_after, ending_before, ...args }, context, info) {
       //   if (!context.jwt)
       //     throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
@@ -60,12 +61,12 @@ export const SubscriptionItem: GqlTypeDefinition<
       //       throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
       //     }
 
-      //     if (starting_after_id) {
-      //       args.starting_after = starting_after_id;
+      //     if (starting_after) {
+      //       args.starting_after = starting_after;
       //     }
 
-      //     if (ending_before_id) {
-      //       args.ending_before = ending_before_id;
+      //     if (ending_before) {
+      //       args.ending_before = ending_before;
       //     }
 
       //     // see: https://stripe.com/docs/api/invoiceitems/list
@@ -83,7 +84,8 @@ export const SubscriptionItem: GqlTypeDefinition<
     Query: {
       ...createStripeRetrieveQueryResolver({
         name: 'subscription',
-        object: 'subscription'
+        object: 'subscription',
+        role: 'owner'
       })
     }
   }

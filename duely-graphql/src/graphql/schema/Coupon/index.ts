@@ -15,7 +15,6 @@ export const Coupon: GqlTypeDefinition<
   typeDef: gql`
     type Coupon {
       id: ID!
-      id_ext: ID!
       amount_off: Int
       applies_to: CouponAppliesTo
       created: DateTime
@@ -69,7 +68,6 @@ export const Coupon: GqlTypeDefinition<
   `,
   resolvers: {
     Coupon: {
-      id_ext: (source) => source.id,
       created: (source) => timestampToDate(source.created),
       redeem_by: (source) => timestampToDate(source.redeem_by)
     },
@@ -77,7 +75,8 @@ export const Coupon: GqlTypeDefinition<
       ...createStripeRetrieveQueryResolver({
         name: 'coupon',
         object: 'coupon',
-        expand: ['applies_to']
+        expand: ['applies_to'],
+        role: 'owner'
       })
     },
     Mutation: {

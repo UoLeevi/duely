@@ -99,7 +99,6 @@ export const BankAccount: GqlTypeDefinition<
   typeDef: gql`
     type BankAccount implements Node {
       id: ID!
-      id_ext: ID!
       account_holder_name: String
       account_holder_type: String
       available_payout_methods: [String!]
@@ -141,9 +140,7 @@ export const BankAccount: GqlTypeDefinition<
     }
   `,
   resolvers: {
-    BankAccount: {
-      id_ext: (source) => source.id
-    },
+    BankAccount: {},
     Mutation: {
       async create_bank_account(obj, { stripe_account_id, ...args }, context, info) {
         if (!context.jwt)

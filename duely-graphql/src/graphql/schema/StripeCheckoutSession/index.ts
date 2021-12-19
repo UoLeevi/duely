@@ -1,6 +1,5 @@
 // see: https://stripe.com/docs/api/checkout/sessions/object
 
-import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
 import gql from 'graphql-tag';
 import stripe from '@duely/stripe';
 import { DuelyGraphQLError } from '../../errors';
@@ -16,7 +15,6 @@ export const StripeCheckoutSession: GqlTypeDefinition<
   typeDef: gql`
     type StripeCheckoutSession {
       id: ID!
-      id_ext: ID!
       url: String
       allow_promotion_codes: Boolean
       amount_subtotal: Int
@@ -27,7 +25,7 @@ export const StripeCheckoutSession: GqlTypeDefinition<
       currency: String
       customer: StripeCustomer
       customer_email: String
-      line_items(starting_after_id: String, ending_before_id: String, limit: Int): [LineItem!]!
+      line_items(starting_after: String, ending_before: String, limit: Int): [LineItem!]!
       livemode: Boolean
       locale: String
       mode: String
@@ -92,28 +90,21 @@ export const StripeCheckoutSession: GqlTypeDefinition<
   `,
   resolvers: {
     StripeCheckoutSession: {
-      id_ext: (source) => source.id,
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
-        object: 'customer'
+        object: 'customer',
+        role: 'owner'
       }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'payment_intent',
-        object: 'payment_intent'
+        object: 'payment_intent',
+        role: 'owner'
       }),
-      async line_items(source, { starting_after_id, ending_before_id, ...args }, context, info) {
+      async line_items(source, args, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
-          if (starting_after_id) {
-            args.starting_after = starting_after_id;
-          }
-
-          if (ending_before_id) {
-            args.ending_before = ending_before_id;
-          }
-
           // see: https://stripe.com/docs/api/checkout/sessions/line_items
           const list = await stripe
             .get(source.stripe_account)

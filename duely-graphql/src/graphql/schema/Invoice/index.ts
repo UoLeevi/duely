@@ -6,9 +6,12 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe, { deleteStripeObjects, StripeDeletableObjectType } from '@duely/stripe';
-import { createStripeRetrieveQueryResolver, createStripeRetrieveResolverForReferencedResource, withStripeAccountProperty } from '../../util';
-import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
-import { dateToTimestamp, timestampToDate } from '@duely/util';
+import {
+  createStripeRetrieveQueryResolver,
+  createStripeRetrieveResolverForReferencedResource,
+  withStripeAccountProperty
+} from '../../util';
+import { timestampToDate } from '@duely/util';
 import { calculateTransactionFee } from '../SubscriptionPlan';
 
 export const Invoice: GqlTypeDefinition<
@@ -17,7 +20,6 @@ export const Invoice: GqlTypeDefinition<
   typeDef: gql`
     type Invoice {
       id: ID!
-      id_ext: ID!
       account_country: String
       account_name: String
       account_tax_ids: [String!]
@@ -55,7 +57,7 @@ export const Invoice: GqlTypeDefinition<
       hosted_invoice_url: String
       invoice_pdf: String
       # last_finalization_error: Invoice.LastFinalizationError | null;
-      lines(starting_after_id: String, ending_before_id: String, limit: Int): [InvoiceLineItem!]!
+      lines(starting_after: String, ending_before: String, limit: Int): [InvoiceLineItem!]!
       livemode: Boolean!
       # metadata: Stripe.Metadata | null;
       next_payment_attempt: DateTime
@@ -167,7 +169,6 @@ export const Invoice: GqlTypeDefinition<
   `,
   resolvers: {
     Invoice: {
-      id_ext: (source) => source.id,
       created: (source) => timestampToDate(source.created),
       due_date: (source) => timestampToDate(source.due_date),
       next_payment_attempt: (source) => timestampToDate(source.next_payment_attempt),
@@ -177,29 +178,24 @@ export const Invoice: GqlTypeDefinition<
       webhooks_delivered_at: (source) => timestampToDate(source.webhooks_delivered_at),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'charge',
-        object: 'charge'
+        object: 'charge',
+        role: 'owner'
       }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
-        object: 'customer'
+        object: 'customer',
+        role: 'owner'
       }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'payment_intent',
-        object: 'payment_intent'
+        object: 'payment_intent',
+        role: 'owner'
       }),
-      async lines(source, { starting_after_id, ending_before_id, ...args }, context, info) {
+      async lines(source, args, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         try {
-          if (starting_after_id) {
-            args.starting_after = starting_after_id;
-          }
-
-          if (ending_before_id) {
-            args.ending_before = ending_before_id;
-          }
-
           // see: https://stripe.com/docs/api/invoices/invoice_lines
           const list = await stripe
             .get(source.stripe_account)
@@ -214,7 +210,8 @@ export const Invoice: GqlTypeDefinition<
     Query: {
       ...createStripeRetrieveQueryResolver({
         name: 'invoice',
-        object: 'invoice'
+        object: 'invoice',
+        role: 'owner'
       })
     },
     Mutation: {

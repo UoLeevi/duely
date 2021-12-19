@@ -1,18 +1,15 @@
 // see: https://stripe.com/docs/api/subscriptions/object
 
-import { queryResourceAccess, Resources } from '@duely/db';
-import stripe from '@duely/stripe';
+import { Resources } from '@duely/db';
 import { timestampToDate } from '@duely/util';
 import gql from 'graphql-tag';
 import Stripe from 'stripe';
-import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
 import {
   createStripeListQueryResolver,
   createStripeListResolverForReferencedResource,
   createStripeRetrieveQueryResolver,
-  createStripeRetrieveResolverForReferencedResource,
-  withStripeAccountProperty
+  createStripeRetrieveResolverForReferencedResource
 } from '../../util';
 
 export const StripeSubscription: GqlTypeDefinition<
@@ -146,26 +143,31 @@ export const StripeSubscription: GqlTypeDefinition<
       trial_start: (source) => timestampToDate(source.trial_start),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
-        object: 'customer'
+        object: 'customer',
+        role: 'owner'
       }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'latest_invoice',
-        object: 'invoice'
+        object: 'invoice',
+        role: 'owner'
       }),
       ...createStripeListResolverForReferencedResource({
         name: 'items',
         param: 'subscription',
-        object: 'subscription_item'
+        object: 'subscription_item',
+        role: 'owner'
       })
     },
     Query: {
       ...createStripeRetrieveQueryResolver({
         name: 'subscription',
-        object: 'subscription'
+        object: 'subscription',
+        role: 'owner'
       }),
       ...createStripeListQueryResolver({
         name: 'subscriptions',
-        object: 'subscription'
+        object: 'subscription',
+        role: 'owner'
       })
     }
   }

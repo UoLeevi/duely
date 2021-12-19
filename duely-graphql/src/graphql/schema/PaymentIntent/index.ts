@@ -13,7 +13,6 @@ export const PaymentIntent: GqlTypeDefinition<
   typeDef: gql`
     type PaymentIntent {
       id: ID!
-      id_ext: ID!
       amount: Int!
       amount_capturable: Int
       amount_received: Int
@@ -50,13 +49,13 @@ export const PaymentIntent: GqlTypeDefinition<
   `,
   resolvers: {
     PaymentIntent: {
-      id_ext: (source) => source.id,
       created: (source) => timestampToDate(source.created),
       canceled_at: (source) => timestampToDate(source.created),
       charges: (source) => withStripeAccountProperty(source.charges?.data, source.stripe_account),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
-        object: 'customer'
+        object: 'customer',
+        role: 'owner'
       })
     }
   }

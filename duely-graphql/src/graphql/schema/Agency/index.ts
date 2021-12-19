@@ -1,5 +1,6 @@
 import { queryResource, Resources, withSession } from '@duely/db';
 import {
+  withStripeAccountProperty,
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
   createResolverForReferencedResourceAll
@@ -111,7 +112,6 @@ export const Agency: GqlTypeDefinition<Resources['agency']> = {
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
         livemode = livemode ?? source.livemode;
-        const stripe_env = livemode ? 'live' : 'test';
 
         try {
           const stripe_account = await queryResource(context, 'stripe account', {
@@ -121,7 +121,10 @@ export const Agency: GqlTypeDefinition<Resources['agency']> = {
           const { id, object, ...stripe_account_ext } = await stripe
             .get(stripe_account)
             .accounts.retrieve();
-          return { ...stripe_account, ...stripe_account_ext };
+          return withStripeAccountProperty(
+            { ...stripe_account, ...stripe_account_ext },
+            stripe_account
+          );
         } catch (error: any) {
           throw new Error(error.message);
         }

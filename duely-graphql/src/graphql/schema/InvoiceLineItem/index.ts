@@ -3,11 +3,7 @@
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
-import { Resources, withSession } from '@duely/db';
-import { DuelyGraphQLError } from '../../errors';
-import stripe from '@duely/stripe';
-import { withStripeAccountProperty } from '../../util';
-import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
+import { Resources } from '@duely/db';
 
 export const InvoiceLineItem: GqlTypeDefinition<
   Stripe.InvoiceLineItem & { stripe_account: Resources['stripe account'] }
@@ -15,7 +11,6 @@ export const InvoiceLineItem: GqlTypeDefinition<
   typeDef: gql`
     type InvoiceLineItem {
       id: ID!
-      id_ext: ID!
       amount: Int!
       currency: String!
       description: String
@@ -38,9 +33,7 @@ export const InvoiceLineItem: GqlTypeDefinition<
     }
   `,
   resolvers: {
-    InvoiceLineItem: {
-      id_ext: (source) => source.id
-    }
+    InvoiceLineItem: {}
   }
 };
 
@@ -54,9 +47,6 @@ export const InvoiceLineItemDiscountAmount: GqlTypeDefinition<
     }
   `,
   resolvers: {
-    InvoiceLineItemDiscountAmount: {
-
-      
-    }
+    InvoiceLineItemDiscountAmount: {}
   }
 };

@@ -3,14 +3,15 @@ import { queryResource, queryResourceAccess, Resources } from '@duely/db';
 import stripe from '@duely/stripe';
 import { GqlTypeDefinition } from '../../types';
 import { timestampToDate } from '@duely/util';
-import { createResolverForReferencedResourceAll, withStripeAccountProperty } from '../../util';
+import { createResolverForReferencedResourceAll, createStripeListResolverForReferencedResource, createStripeRetrieveResolverForReferencedResource, withStripeAccountProperty } from '../../util';
 import { DuelyGraphQLError } from '../../errors';
 import Stripe from 'stripe';
 
 // see: https://stripe.com/docs/api/accounts/object
 
 export const StripeAccount: GqlTypeDefinition<
-  Resources['stripe account'] & Omit<Stripe.Account, 'id' | 'object'>
+  Resources['stripe account'] &
+    Omit<Stripe.Account, 'id' | 'object'> & { stripe_account: Resources['stripe account'] }
 > = {
   typeDef: gql`
     type StripeAccount {
@@ -22,18 +23,18 @@ export const StripeAccount: GqlTypeDefinition<
       balance_transactions(
         payout_id: ID
         type: String
-        available_on: DateTime
-        created: DateTime
+        available_on: Int
+        created: Int
         currency: String
-        starting_after_id: String
-        ending_before_id: String
+        starting_after: String
+        ending_before: String
         limit: Int
       ): [BalanceTransaction!]!
       payment_intents(
-        customer_id: ID
-        created: DateTime
-        starting_after_id: String
-        ending_before_id: String
+        customer: ID
+        created: Int
+        starting_after: String
+        ending_before: String
         limit: Int
       ): [PaymentIntent!]!
       customers(
@@ -47,29 +48,29 @@ export const StripeAccount: GqlTypeDefinition<
         after_id: ID
       ): [Customer!]!
       coupons(
-        created: DateTime
-        starting_after_id: String
-        ending_before_id: String
+        created: Int
+        starting_after: String
+        ending_before: String
         limit: Int
       ): [Coupon!]!
       invoices(
-        customer_id: ID
+        customer: ID
         status: String
         subscription: ID
         collection_method: String
-        due_date: DateTime
-        created: DateTime
-        starting_after_id: String
-        ending_before_id: String
+        due_date: Int
+        created: Int
+        starting_after: String
+        ending_before: String
         limit: Int
       ): [Invoice!]!
       invoiceitems(
-        customer_id: ID
+        customer: ID
         invoice: ID
         pending: Boolean
-        created: DateTime
-        starting_after_id: String
-        ending_before_id: String
+        created: Int
+        starting_after: String
+        ending_before: String
         limit: Int
       ): [InvoiceItem!]!
       business_profile: BusinessProfile!
@@ -85,8 +86,8 @@ export const StripeAccount: GqlTypeDefinition<
       email: String
       payouts_enabled: Boolean!
       bank_accounts(
-        starting_after_id: String
-        ending_before_id: String
+        starting_after: String
+        ending_before: String
         limit: Int
       ): [BankAccount!]!
     }
@@ -189,7 +190,22 @@ export const StripeAccount: GqlTypeDefinition<
           throw new Error(error.message);
         }
       },
-      async balance(source, args, context, info) {
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'balance',
+        object: 'balance',
+        role: 'owner'
+      }),
+      ...createStripeListResolverForReferencedResource({
+        name: 'balance_transactions',
+        object: 'balance_transaction',
+        role: 'owner'
+      }),
+      ...createStripeListResolverForReferencedResource({
+        name: 'payment_intents',
+        object: 'payment_intent',
+        role: 'owner'
+      }),
+      async bank_accounts(source, args, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
@@ -198,107 +214,6 @@ export const StripeAccount: GqlTypeDefinition<
 
           if (access !== 'owner') {
             throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
-          }
-
-          // retrive connected account balance
-          // see: https://stripe.com/docs/api/balance/balance_retrieve
-          const balance = await stripe.get(source).balance.retrieve();
-          return withStripeAccountProperty(balance, source);
-        } catch (error: any) {
-          throw new Error(error.message);
-        }
-      },
-      async balance_transactions(
-        source,
-        { payout_id, starting_after_id, ending_before_id, ...args },
-        context,
-        info
-      ) {
-        if (!context.jwt)
-          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        const stripe_env = source.livemode ? 'live' : 'test';
-
-        try {
-          const access = await queryResourceAccess(context, source.id);
-
-          if (access !== 'owner') {
-            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
-          }
-
-          if (payout_id) {
-            args.payout = payout_id;
-          }
-
-          if (starting_after_id) {
-            args.starting_after = starting_after_id;
-          }
-
-          if (ending_before_id) {
-            args.ending_before = ending_before_id;
-          }
-
-          // see: https://stripe.com/docs/api/balance_transactions/list
-          const list = await stripe.get(source).balanceTransactions.list(args);
-          return withStripeAccountProperty(list.data, source);
-        } catch (error: any) {
-          throw new Error(error.message);
-        }
-      },
-      async payment_intents(
-        source,
-        { customer_id, starting_after_id, ending_before_id, ...args },
-        context,
-        info
-      ) {
-        if (!context.jwt)
-          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        const stripe_env = source.livemode ? 'live' : 'test';
-
-        try {
-          const access = await queryResourceAccess(context, source.id);
-
-          if (access !== 'owner') {
-            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
-          }
-
-          if (customer_id) {
-            args.customer = customer_id;
-          }
-
-          if (starting_after_id) {
-            args.starting_after = starting_after_id;
-          }
-
-          if (ending_before_id) {
-            args.ending_before = ending_before_id;
-          }
-
-          // see: https://stripe.com/docs/api/payment_intents/list
-          const list = await stripe.get(source).paymentIntents.list(args);
-          return withStripeAccountProperty(list.data, source);
-        } catch (error: any) {
-          throw new Error(error.message);
-        }
-      },
-      async bank_accounts(source, { starting_after_id, ending_before_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        try {
-          const access = await queryResourceAccess(context, source.id);
-
-          if (access !== 'owner') {
-            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
-          }
-
-          if (starting_after_id) {
-            args.starting_after = starting_after_id;
-          }
-
-          if (ending_before_id) {
-            args.ending_before = ending_before_id;
           }
 
           // see: https://stripe.com/docs/api/external_account_bank_accounts/list
@@ -313,105 +228,22 @@ export const StripeAccount: GqlTypeDefinition<
           throw new Error(error.message);
         }
       },
-      async coupons(source, { starting_after_id, ending_before_id, ...args }, context, info) {
-        if (!context.jwt)
-          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        try {
-          const access = await queryResourceAccess(context, source.id);
-
-          if (access !== 'owner') {
-            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
-          }
-
-          if (starting_after_id) {
-            args.starting_after = starting_after_id;
-          }
-
-          if (ending_before_id) {
-            args.ending_before = ending_before_id;
-          }
-
-          // see: https://stripe.com/docs/api/coupons/list
-          const list = await stripe.get(source).coupons.list({ expand: ['data.applies_to'], ...args });
-          return withStripeAccountProperty(list.data, source);
-        } catch (error: any) {
-          throw new Error(error.message);
-        }
-      },
-      async invoices(
-        source,
-        { starting_after_id, ending_before_id, customer_id, ...args },
-        context,
-        info
-      ) {
-        if (!context.jwt)
-          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        try {
-          const access = await queryResourceAccess(context, source.id);
-
-          if (access !== 'owner') {
-            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
-          }
-
-          if (customer_id) {
-            args.customer = customer_id;
-          }
-
-          if (starting_after_id) {
-            args.starting_after = starting_after_id;
-          }
-
-          if (ending_before_id) {
-            args.ending_before = ending_before_id;
-          }
-
-          // see: https://stripe.com/docs/api/invoices/list
-          const list = await stripe.get(source).invoices.list(args);
-          return withStripeAccountProperty(list.data, source);
-        } catch (error: any) {
-          throw new Error(error.message);
-        }
-      },
-      async invoiceitems(
-        source,
-        { starting_after_id, ending_before_id, customer_id, ...args },
-        context,
-        info
-      ) {
-        if (!context.jwt)
-          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
-
-        try {
-          const access = await queryResourceAccess(context, source.id);
-
-          if (access !== 'owner') {
-            throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
-          }
-
-          if (customer_id) {
-            args.customer = customer_id;
-          }
-
-          if (starting_after_id) {
-            args.starting_after = starting_after_id;
-          }
-
-          if (ending_before_id) {
-            args.ending_before = ending_before_id;
-          }
-
-          // see: https://stripe.com/docs/api/invoiceitems/list
-          const list = await stripe.get(source).invoiceItems.list({
-            ...args
-          });
-
-          return withStripeAccountProperty(list.data, source);
-        } catch (error: any) {
-          throw new Error(error.message);
-        }
-      }
+      ...createStripeListResolverForReferencedResource({
+        name: 'coupons',
+        object: 'coupon',
+        expand: ['applies_to'],
+        role: 'owner'
+      }),
+      ...createStripeListResolverForReferencedResource({
+        name: 'invoices',
+        object: 'invoice',
+        role: 'owner'
+      }),
+      ...createStripeListResolverForReferencedResource({
+        name: 'invoiceitems',
+        object: 'invoiceitem',
+        role: 'owner'
+      })
     },
     Query: {
       async stripe_account(source, args, context, info) {
@@ -423,7 +255,10 @@ export const StripeAccount: GqlTypeDefinition<
           const { id, object, ...stripe_account_ext } = await stripe
             .get(stripe_account)
             .accounts.retrieve();
-          return { ...stripe_account, ...stripe_account_ext };
+          return withStripeAccountProperty(
+            { ...stripe_account, ...stripe_account_ext },
+            stripe_account
+          );
         } catch (error: any) {
           throw new Error(error.message);
         }

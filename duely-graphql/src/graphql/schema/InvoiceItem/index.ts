@@ -6,8 +6,7 @@ import Stripe from 'stripe';
 import { Resources, withSession } from '@duely/db';
 import { DuelyGraphQLError } from '../../errors';
 import stripe from '@duely/stripe';
-import { createStripeRetrieveQueryResolver, createStripeRetrieveResolverForReferencedResource, withStripeAccountProperty } from '../../util';
-import { parseResolveInfo, ResolveTree } from 'graphql-parse-resolve-info';
+import { createStripeRetrieveQueryResolver, createStripeRetrieveResolverForReferencedResource } from '../../util';
 import { timestampToDate } from '@duely/util';
 
 export const InvoiceItem: GqlTypeDefinition<
@@ -16,7 +15,6 @@ export const InvoiceItem: GqlTypeDefinition<
   typeDef: gql`
     type InvoiceItem {
       id: ID!
-      id_ext: ID!
       amount: Int!
       currency: String!
       customer: StripeCustomer
@@ -87,21 +85,23 @@ export const InvoiceItem: GqlTypeDefinition<
   `,
   resolvers: {
     InvoiceItem: {
-      id_ext: (source) => source.id,
       date: (source) => timestampToDate(source.date),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
-        object: 'customer'
+        object: 'customer',
+        role: 'owner'
       }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'invoice',
-        object: 'invoice'
+        object: 'invoice',
+        role: 'owner'
       })
     },
     Query: {
       ...createStripeRetrieveQueryResolver({
         name: 'invoiceitem',
-        object: 'invoiceitem'
+        object: 'invoiceitem',
+        role: 'owner'
       })
     },
     Mutation: {

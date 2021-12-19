@@ -24,8 +24,8 @@ export const Customer: GqlTypeDefinition<Resources['customer']> = {
       default_stripe_customer: StripeCustomer!
       stripe_customers(
         created: DateTime
-        starting_after_id: String
-        ending_before_id: String
+        starting_after: String
+        ending_before: String
         limit: Int
       ): [StripeCustomer!]!
       user: User
@@ -103,12 +103,7 @@ export const Customer: GqlTypeDefinition<Resources['customer']> = {
           throw new Error(error.message);
         }
       },
-      async stripe_customers(
-        source,
-        { starting_after_id, ending_before_id, ...args },
-        context,
-        info
-      ) {
+      async stripe_customers(source, args, context, info) {
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
@@ -120,14 +115,6 @@ export const Customer: GqlTypeDefinition<Resources['customer']> = {
           );
 
           args.email = source.email_address;
-
-          if (starting_after_id) {
-            args.starting_after = starting_after_id;
-          }
-
-          if (ending_before_id) {
-            args.ending_before = ending_before_id;
-          }
 
           // see: https://stripe.com/docs/api/customers/list
           const list = await stripe.get(stripe_account).customers.list(args);
