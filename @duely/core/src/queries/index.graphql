@@ -171,7 +171,7 @@ query AgencyStripeAccountBalance($agency_id: ID!) {
 
 query AgencyStripeAccountBalanceTransactions(
   $agency_id: ID!
-  $created: DateTime
+  $created: Int
   $starting_after: String
   $ending_before: String
   $limit: Int
@@ -194,7 +194,7 @@ query AgencyStripeAccountBalanceTransactions(
 
 query AgencyStripeAccountPaymentIntents(
   $agency_id: ID!
-  $created: DateTime
+  $created: Int
   $starting_after: String
   $ending_before: String
   $limit: Int
@@ -332,8 +332,8 @@ query AgencyStripeAccountInvoices(
   $status: String
   $subscription: ID
   $collection_method: String
-  $due_date: DateTime
-  $created: DateTime
+  $due_date: Int
+  $created: Int
   $starting_after: String
   $ending_before: String
   $limit: Int
@@ -364,7 +364,7 @@ query AgencyStripeAccountInvoiceItems(
   $customer: ID
   $invoice: ID
   $pending: Boolean
-  $created: DateTime
+  $created: Int
   $starting_after: String
   $ending_before: String
   $limit: Int
@@ -608,7 +608,6 @@ query Order($order_id: ID!, $token: String) {
     }
     stripe_checkout_session {
       id
-      id_ext
       amount_subtotal
       amount_total
       currency
@@ -648,7 +647,6 @@ query Orders(
     }
     stripe_checkout_session(token: $token) {
       id
-      id_ext
       amount_subtotal
       amount_total
       currency

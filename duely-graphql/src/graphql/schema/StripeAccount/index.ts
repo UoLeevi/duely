@@ -73,6 +73,18 @@ export const StripeAccount: GqlTypeDefinition<
         ending_before: String
         limit: Int
       ): [InvoiceItem!]!
+      subscriptions(
+        customer: ID
+        price: ID
+        status: String
+        collection_method: String
+        created: Int
+        current_period_start: TimeStampFilter
+        current_period_end: TimeStampFilter
+        starting_after: String
+        ending_before: String
+        limit: Int
+      ): [StripeSubscription!]!
       business_profile: BusinessProfile!
       business_type: String
       capabilities: StripeCapabilities!
@@ -243,6 +255,11 @@ export const StripeAccount: GqlTypeDefinition<
         name: 'invoiceitems',
         object: 'invoiceitem',
         role: 'owner'
+      }),
+      ...createStripeListResolverForReferencedResource({
+        name: 'subscriptions',
+        object: 'subscription',
+        role: 'owner'
       })
     },
     Query: {
@@ -272,8 +289,8 @@ export const StripeAccountLink: GqlTypeDefinition<Stripe.AccountLink> = {
     type StripeAccountLink {
       type: String!
       url: String!
-      created: DateTime!
-      expires_at: DateTime!
+      created: Int!
+      expires_at: Int!
     }
   `,
   resolvers: {

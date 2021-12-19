@@ -23,7 +23,7 @@ export const Customer: GqlTypeDefinition<Resources['customer']> = {
       email_address: String!
       default_stripe_customer: StripeCustomer!
       stripe_customers(
-        created: DateTime
+        created: Int
         starting_after: String
         ending_before: String
         limit: Int

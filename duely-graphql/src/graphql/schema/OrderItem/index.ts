@@ -48,7 +48,7 @@ export const OrderItem: GqlTypeDefinition<Resources['order item']> = {
       update_order_item(
         order_item_id: ID!
         state: String
-        processed_at: DateTime
+        processed_at: Int
       ): OrderItemMutationResult!
     }
 

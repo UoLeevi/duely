@@ -30,8 +30,8 @@ export const StripeCustomer: GqlTypeDefinition<
         status: String
         subscription: ID
         collection_method: String
-        due_date: DateTime
-        created: DateTime
+        due_date: Int
+        created: Int
         starting_after: String
         ending_before: String
         limit: Int
@@ -39,7 +39,7 @@ export const StripeCustomer: GqlTypeDefinition<
       invoiceitems(
         invoice: ID
         pending: Boolean
-        created: DateTime
+        created: Int
         starting_after: String
         ending_before: String
         limit: Int

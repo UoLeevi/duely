@@ -59,7 +59,7 @@ export const Order: GqlTypeDefinition<Resources['order']> = {
     }
 
     extend type Mutation {
-      update_order(order_id: ID!, state: String, processed_at: DateTime): OrderMutationResult!
+      update_order(order_id: ID!, state: String, processed_at: Int): OrderMutationResult!
     }
 
     type OrderMutationResult implements MutationResult {
