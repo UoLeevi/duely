@@ -66,7 +66,9 @@ import {
   InvoiceDocument,
   AgencyStripeAccountInvoiceItemsDocument,
   PromotionCodeDocument,
-  PromotionCodesDocument
+  PromotionCodesDocument,
+  SubscriptionDocument,
+  AgencyStripeAccountSubscriptionsDocument
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -185,6 +187,16 @@ export const agency_stripe_account_payment_intents_Q = {
   query: AgencyStripeAccountPaymentIntentsDocument,
   result: (d: ResultOf<typeof AgencyStripeAccountPaymentIntentsDocument>) =>
     d?.agency?.stripe_account?.payment_intents
+};
+
+export const agency_subscriptions_Q = {
+  query: AgencyStripeAccountSubscriptionsDocument,
+  result: (d: ResultOf<typeof AgencyStripeAccountSubscriptionsDocument>) => d?.agency?.stripe_account?.subscriptions
+};
+
+export const subscription_Q = {
+  query: SubscriptionDocument,
+  result: (d: ResultOf<typeof SubscriptionDocument>) => d?.subscription
 };
 
 export const agency_customers_Q = {
