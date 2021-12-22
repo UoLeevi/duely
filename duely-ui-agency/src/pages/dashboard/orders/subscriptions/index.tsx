@@ -46,7 +46,7 @@ export default function DashboardOrdersSubscriptions() {
               }
             </Table.Column>
 
-            <Table.Column header="Date">
+            <Table.Column header="Start date">
               {(subscription: TSubscription | null) =>
                 !subscription ? (
                   <div className="flex flex-col space-y-2">
@@ -55,7 +55,7 @@ export default function DashboardOrdersSubscriptions() {
                 ) : (
                   <div className="flex flex-col space-y-2">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {/* {formatDate(subscription.status_transitions?.finalized_at ?? subscription.created, 'mmm d, yyyy')} */}
+                      {formatDate(subscription.start_date, 'mmm d, yyyy')}
                     </span>
                   </div>
                 )
