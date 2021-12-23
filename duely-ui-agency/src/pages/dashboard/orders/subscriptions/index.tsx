@@ -18,9 +18,7 @@ export default function DashboardOrdersSubscriptions() {
 
   return (
     <>
-      <DashboardSection
-        title="Subscriptions"
-      >
+      <DashboardSection title="Subscriptions">
         <Card className="max-w-screen-lg">
           <Table
             items={subscriptions}
@@ -88,10 +86,10 @@ export default function DashboardOrdersSubscriptions() {
                 ) : (
                   <div className="flex flex-col space-y-1">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {/* {subscription.customer_name ?? subscription.customer_email?.split('@')[0]} */}
+                      {subscription.customer?.name ?? subscription.customer?.email?.split('@')[0]}
                     </span>
                     <span className="text-xs font-medium text-gray-800 dark:text-gray-300">
-                      {/* {subscription.customer_email} */}
+                      {subscription.customer?.email}
                     </span>
                   </div>
                 )
@@ -134,7 +132,10 @@ export default function DashboardOrdersSubscriptions() {
                       Edit
                     </DropMenu.Item>
 
-                    <DropMenu.Item icon={icons.trash} to={'?delete_subscription=' + subscription.id}>
+                    <DropMenu.Item
+                      icon={icons.trash}
+                      to={'?delete_subscription=' + subscription.id}
+                    >
                       Delete
                     </DropMenu.Item>
                   </DropMenu>

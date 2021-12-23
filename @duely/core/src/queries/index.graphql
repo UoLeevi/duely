@@ -309,6 +309,9 @@ query AgencyStripeAccountSubscriptions(
         limit: $limit
       ) {
         ...subscription
+        customer {
+          ...stripe_customer
+        }
       }
     }
   }
