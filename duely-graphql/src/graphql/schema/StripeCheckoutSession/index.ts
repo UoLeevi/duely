@@ -5,7 +5,10 @@ import stripe from '@duely/stripe';
 import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
 import { timestampToDate } from '@duely/util';
-import { createStripeRetrieveResolverForReferencedResource, withStripeAccountProperty } from '../../util';
+import {
+  createStripeRetrieveResolverForReferencedResource,
+  withStripeAccountProperty
+} from '../../util';
 import Stripe from 'stripe';
 import { Resources } from '@duely/db';
 
@@ -15,25 +18,42 @@ export const StripeCheckoutSession: GqlTypeDefinition<
   typeDef: gql`
     type StripeCheckoutSession {
       id: ID!
-      url: String
+      # after_expiration: Session.AfterExpiration | null;
       allow_promotion_codes: Boolean
       amount_subtotal: Int
       amount_total: Int
+      # automatic_tax: Session.AutomaticTax;
       billing_address_collection: String
       cancel_url: String
       client_reference_id: String
+      # consent: Session.Consent | null;
+      # consent_collection: Session.ConsentCollection | null;
       currency: String
       customer: StripeCustomer
+      # customer_details: Session.CustomerDetails | null;
       customer_email: String
+      expires_at: DateTime
       line_items(starting_after: String, ending_before: String, limit: Int): [LineItem!]!
       livemode: Boolean
       locale: String
+      # metadata: Stripe.Metadata | null;
       mode: String
+      payment_intent: PaymentIntent
       payment_method_types: [String]
       payment_status: String
-      payment_intent: PaymentIntent
+      # phone_number_collection?: Session.PhoneNumberCollection;
+      # setup_intent: string | Stripe.SetupIntent | null;
+      # shipping: Session.Shipping | null;
+      # shipping_address_collection: Session.ShippingAddressCollection | null;
+      # shipping_options: Array<Session.ShippingOption>;
+      # shipping_rate: string | Stripe.ShippingRate | null;
+      status: String
       submit_type: String
-      success_url: String
+      subscription: StripeSubscription
+      success_url: String!
+      # tax_id_collection?: Session.TaxIdCollection;
+      # total_details: Session.TotalDetails | null;
+      url: String
     }
 
     type LineItem {
@@ -90,6 +110,7 @@ export const StripeCheckoutSession: GqlTypeDefinition<
   `,
   resolvers: {
     StripeCheckoutSession: {
+      expires_at: (source) => timestampToDate(source.expires_at),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
         object: 'customer',
@@ -98,6 +119,11 @@ export const StripeCheckoutSession: GqlTypeDefinition<
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'payment_intent',
         object: 'payment_intent',
+        role: 'owner'
+      }),
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'subscription',
+        object: 'subscription',
         role: 'owner'
       }),
       async line_items(source, args, context, info) {
@@ -118,7 +144,7 @@ export const StripeCheckoutSession: GqlTypeDefinition<
     },
     StripePrice: {
       id_ext: (source) => source.id,
-      created: (source: Stripe.Price) => timestampToDate(source.created),
+      created: (source: Stripe.Price) => timestampToDate(source.created)
     }
   }
 };

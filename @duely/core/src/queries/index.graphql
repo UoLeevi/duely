@@ -312,6 +312,9 @@ query AgencyStripeAccountSubscriptions(
         customer {
           ...stripe_customer
         }
+        latest_invoice {
+          ...invoice
+        }
       }
     }
   }
