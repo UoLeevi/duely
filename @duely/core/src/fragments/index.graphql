@@ -666,28 +666,95 @@ fragment stripe_price on StripePrice {
 
 fragment stripe_checkout_session on StripeCheckoutSession {
   id
+  after_expiration {
+    recovery {
+      allow_promotion_codes
+      expires_at
+      url
+    }
+  }
   allow_promotion_codes
   amount_subtotal
   amount_total
+  automatic_tax {
+    enabled
+    status
+  }
   billing_address_collection
   cancel_url
   client_reference_id
+  consent {
+    promotions
+  }
+  consent_collection {
+    promotions
+  }
   currency
   customer {
     id
   }
+  customer_details {
+    email
+    phone
+    tax_exempt
+    tax_ids {
+      type
+      value
+    }
+  }
   customer_email
+  expires_at
   line_items {
     ...line_item
   }
   livemode
   locale
   mode
+  payment_intent {
+    ...payment_intent
+  }
   payment_method_types
   payment_status
+  phone_number_collection {
+    enabled
+  }
+  shipping {
+    address {
+      ...address
+    }
+    carrier
+    name
+    phone
+    tracking_number
+  }
+  shipping_address_collection {
+    allowed_countries
+  }
+  shipping_options {
+    shipping_amount
+  }
+  status
   submit_type
+  subscription {
+    ...subscription
+  }
   success_url
-  cancel_url
+  tax_id_collection {
+    enabled
+  }
+  total_details {
+    amount_discount
+    amount_shipping
+    amount_tax
+    breakdown {
+      discounts {
+        amount
+      }
+      taxes {
+        amount
+      }
+    }
+  }
   url
 }
 
