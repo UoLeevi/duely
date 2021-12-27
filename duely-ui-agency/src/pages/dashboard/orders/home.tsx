@@ -140,6 +140,28 @@ export default function DashboardOrdersHome() {
               }
             </Table.Column>
 
+            <Table.Column header="Type">
+              {(order: TOrder | null) =>
+                !order ? (
+                  <div className="flex flex-col space-y-1">
+                    <ColoredChip color={{}} />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      <ColoredChip
+                        color={{
+                          subscription: 'blue',
+                          payment: 'green'
+                        }}
+                        text={order.stripe_checkout_session.mode!}
+                      />
+                    </span>
+                  </div>
+                )
+              }
+            </Table.Column>
+
             <Table.Column header="Amount">
               {(order: TOrder | null) =>
                 !order ? (

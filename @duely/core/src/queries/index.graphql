@@ -613,11 +613,7 @@ query Order($order_id: ID!, $token: String) {
       email_address
     }
     stripe_checkout_session {
-      id
-      amount_subtotal
-      amount_total
-      currency
-      payment_status
+      ...stripe_checkout_session
     }
   }
 }
@@ -652,11 +648,7 @@ query Orders(
       email_address
     }
     stripe_checkout_session(token: $token) {
-      id
-      amount_subtotal
-      amount_total
-      currency
-      payment_status
+      ...stripe_checkout_session
     }
   }
 }
