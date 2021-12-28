@@ -249,8 +249,13 @@ function OrderActionsViewReceiptDropMenuItem({
     order_id
   });
 
+  console.log(order);
+
   const receipt_url =
-    order?.stripe_checkout_session.payment_intent?.charges?.[0]?.receipt_url ?? undefined;
+    order?.stripe_checkout_session.mode === 'payment'
+      ? order?.stripe_checkout_session.payment_intent?.charges?.[0]?.receipt_url ?? undefined
+      : order?.stripe_checkout_session.subscription?.latest_invoice?.hosted_invoice_url ??
+        undefined;
 
   return (
     <DropMenu.Item icon={icons['receipt-tax']} href={receipt_url} loading={orderLoading}>

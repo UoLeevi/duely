@@ -225,11 +225,7 @@ query AgencyStripeAccountBankAccounts(
     id
     stripe_account {
       id
-      bank_accounts(
-        starting_after: $starting_after
-        ending_before: $ending_before
-        limit: $limit
-      ) {
+      bank_accounts(starting_after: $starting_after, ending_before: $ending_before, limit: $limit) {
         ...bank_account
       }
     }
@@ -246,11 +242,7 @@ query AgencyStripeAccountCoupons(
     id
     stripe_account {
       id
-      coupons(
-        starting_after: $starting_after
-        ending_before: $ending_before
-        limit: $limit
-      ) {
+      coupons(starting_after: $starting_after, ending_before: $ending_before, limit: $limit) {
         ...coupon
       }
     }
@@ -303,11 +295,7 @@ query AgencyStripeAccountSubscriptions(
     id
     stripe_account {
       id
-      subscriptions(
-        starting_after: $starting_after
-        ending_before: $ending_before
-        limit: $limit
-      ) {
+      subscriptions(starting_after: $starting_after, ending_before: $ending_before, limit: $limit) {
         ...subscription
         customer {
           ...stripe_customer
@@ -596,6 +584,12 @@ query OrderDetails($order_id: ID!, $token: String) {
       ...stripe_checkout_session
       payment_intent {
         ...payment_intent
+      }
+      subscription {
+        ...subscription
+        latest_invoice {
+          ...invoice
+        }
       }
     }
   }
