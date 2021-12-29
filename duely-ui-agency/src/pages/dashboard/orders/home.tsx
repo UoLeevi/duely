@@ -1,17 +1,9 @@
-import {
-  useQuery,
-  current_agency_Q,
-  orders_Q,
-  count_orders_Q,
-  agency_stripe_account_Q,
-  order_details_Q
-} from '@duely/client';
+import { useQuery, orders_Q, count_orders_Q, order_details_Q } from '@duely/client';
 import {
   useBreakpoints,
   Table,
   DropMenu,
   Card,
-  Util,
   usePagination,
   SkeletonText,
   ColoredChip,
@@ -19,20 +11,10 @@ import {
 } from '@duely/react';
 import { DashboardSection } from '../components';
 import { Currency, formatCurrency, formatDate, truncate } from '@duely/util';
+import { useAgency } from '../hooks/useAgency';
 
 export default function DashboardOrdersHome() {
-  const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
-  const {
-    data: stripe_account,
-    loading: stripe_accountLoading,
-    error: stripe_accountError
-  } = useQuery(
-    agency_stripe_account_Q,
-    {
-      agency_id: agency!.id
-    },
-    { skip: !agency }
-  );
+  const { agency, stripe_account, loading: agencyLoading, error: agencyError } = useAgency();
 
   type TOrder = NonNullable<ReturnType<typeof orders_Q.result>> extends readonly (infer T)[]
     ? T
@@ -56,7 +38,7 @@ export default function DashboardOrdersHome() {
 
       return {
         count: count_orders ?? -1,
-        loading: agencyLoading || stripe_accountLoading || count_ordersLoading,
+        loading: agencyLoading || count_ordersLoading,
         error
       };
     },
@@ -80,8 +62,8 @@ export default function DashboardOrdersHome() {
 
   const { sm } = useBreakpoints();
 
-  const loading = agencyLoading || stripe_accountLoading || pagination.loading;
-  const error = agencyError ?? stripe_accountError ?? pagination.error;
+  const loading = agencyLoading || pagination.loading;
+  const error = agencyError ?? pagination.error;
 
   return (
     <>

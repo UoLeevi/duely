@@ -18,20 +18,10 @@ import {
 } from '@duely/react';
 import { ConfirmCustomerDeletionModal } from './components';
 import { DashboardSection } from '../components';
+import { useAgency } from '../hooks/useAgency';
 
 export default function DashboardCustomersHome() {
-  const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
-  const {
-    data: stripe_account,
-    loading: stripe_accountLoading,
-    error: stripe_accountError
-  } = useQuery(
-    agency_stripe_account_Q,
-    {
-      agency_id: agency!.id
-    },
-    { skip: !agency }
-  );
+  const { agency, stripe_account, loading: agencyLoading, error: agencyError } = useAgency();
 
   type TCustomer = NonNullable<ReturnType<typeof customers_Q.result>> extends readonly (infer T)[]
     ? T
@@ -55,7 +45,7 @@ export default function DashboardCustomersHome() {
 
       return {
         count: count_customers ?? -1,
-        loading: agencyLoading || stripe_accountLoading || count_customersLoading,
+        loading: agencyLoading || count_customersLoading,
         error
       };
     },
@@ -79,8 +69,8 @@ export default function DashboardCustomersHome() {
 
   const { sm } = useBreakpoints();
 
-  const loading = agencyLoading || stripe_accountLoading || pagination.loading;
-  const error = agencyError ?? stripe_accountError ?? pagination.error;
+  const loading = agencyLoading || pagination.loading;
+  const error = agencyError ?? pagination.error;
 
   return (
     <>

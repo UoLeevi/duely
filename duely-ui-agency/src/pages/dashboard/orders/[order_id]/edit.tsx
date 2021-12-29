@@ -15,7 +15,6 @@ export default function DashboardOrdersEditOrder() {
         <Card>
           <Form.Section
             title="Basic information"
-            description="Name and email address for the order."
           >
           </Form.Section>
         </Card>

@@ -1,17 +1,13 @@
-import { agency_stripe_account_Q, current_agency_Q, invoice_Q, useQuery } from '@duely/client';
+import { invoice_Q, useQuery } from '@duely/client';
 import { Card, Form } from '@duely/react';
 import { useParams } from 'react-router-dom';
+import { useAgency } from '~/pages/dashboard/hooks/useAgency';
 import { DashboardSection } from '../../../components';
 import { UpdateInvoiceForm } from './components';
 
 export default function DashboardPaymentsEditInvoice() {
   const { invoice_id } = useParams<{ invoice_id: string }>();
-  const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
-  const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
-    agency_stripe_account_Q,
-    { agency_id: agency!.id },
-    { skip: !agency }
-  );
+  const { agency, stripe_account, loading: agencyLoading, error: agencyError } = useAgency();
   const { data: invoice, loading: invoiceLoading } = useQuery(
     invoice_Q,
     { stripe_account_id: stripe_account?.id!, invoice_id },
@@ -19,7 +15,10 @@ export default function DashboardPaymentsEditInvoice() {
   );
   return (
     <>
-      <DashboardSection title={`Invoice ${invoice?.status === 'draft' ? '(draft)' : invoice?.number}`} loading={invoiceLoading}>
+      <DashboardSection
+        title={`Invoice ${invoice?.status === 'draft' ? '(draft)' : invoice?.number}`}
+        loading={invoiceLoading}
+      >
         <Card>
           <Form.Section
             title="Basic information"

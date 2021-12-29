@@ -1,11 +1,12 @@
-import { Card, DropMenu, icons, LinkButton } from '@duely/react';
+import { Card, DropMenu, icons } from '@duely/react';
 import { DashboardSection } from '../../components';
 import { Currency, formatCurrency, formatDate } from '@duely/util';
-import { Util, Table, SkeletonText, ColoredChip } from '@duely/react';
-import { useQuery, agency_subscriptions_Q, current_agency_Q } from '@duely/client';
+import { Table, SkeletonText, ColoredChip } from '@duely/react';
+import { useQuery, agency_subscriptions_Q } from '@duely/client';
+import { useAgency } from '../../hooks/useAgency';
 
 export default function DashboardOrdersSubscriptions() {
-  const { data: agency } = useQuery(current_agency_Q);
+  const { agency, stripe_account, loading: agencyLoading, error: agencyError } = useAgency();
   const {
     data: subscriptions,
     loading,
@@ -69,7 +70,10 @@ export default function DashboardOrdersSubscriptions() {
                 ) : (
                   <div className="flex flex-col space-y-2">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {/* {formatCurrency(subscription.amount_due, subscription.currency as Currency)} */}
+                      {formatCurrency(
+                        subscription?.latest_invoice?.total!,
+                        subscription?.latest_invoice?.currency as Currency
+                      )}
                     </span>
                   </div>
                 )
