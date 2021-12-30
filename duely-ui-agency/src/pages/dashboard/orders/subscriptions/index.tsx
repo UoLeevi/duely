@@ -24,63 +24,12 @@ export default function DashboardOrdersSubscriptions() {
           <Table
             items={subscriptions}
             dense={true}
-            wrap={{ md: 4 }}
+            wrap={{ md: 6 }}
             loading={loading}
             error={error}
             keyField="id"
           >
-            <Table.Column header="Number">
-              {(subscription: TSubscription | null) =>
-                !subscription ? (
-                  <div className="flex flex-col space-y-2">
-                    <SkeletonText className="text-sm" />
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-2">
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {/* {subscription.number ?? '(draft)'} */}
-                    </span>
-                  </div>
-                )
-              }
-            </Table.Column>
-
-            <Table.Column header="Start date">
-              {(subscription: TSubscription | null) =>
-                !subscription ? (
-                  <div className="flex flex-col space-y-2">
-                    <SkeletonText className="text-sm" />
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-2">
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {formatDate(subscription.start_date, 'mmm d, yyyy')}
-                    </span>
-                  </div>
-                )
-              }
-            </Table.Column>
-
-            <Table.Column header="Amount">
-              {(subscription: TSubscription | null) =>
-                !subscription ? (
-                  <div className="flex flex-col space-y-2">
-                    <SkeletonText className="text-sm" />
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-2">
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {formatCurrency(
-                        subscription?.latest_invoice?.total!,
-                        subscription?.latest_invoice?.currency as Currency
-                      )}
-                    </span>
-                  </div>
-                )
-              }
-            </Table.Column>
-
-            <Table.Column header="Customer" span={{ md: 2 }}>
+            <Table.Column header="Customer" span={3}>
               {(subscription: TSubscription | null) =>
                 !subscription ? (
                   <div className="flex flex-col space-y-1">
@@ -111,14 +60,70 @@ export default function DashboardOrdersSubscriptions() {
                     <ColoredChip
                       text={subscription.status ?? '-'}
                       color={{
-                        deleted: 'gray',
-                        draft: 'orange',
-                        open: 'blue',
-                        paid: 'green',
-                        uncollectible: 'gray',
-                        void: 'gray'
+                        incomplete: 'gray',
+                        incomplete_expired: 'gray',
+                        trialing: 'blue',
+                        active: 'green',
+                        past_due: 'orange',
+                        canceled: 'gray',
+                        unpaid: 'orange'
                       }}
                     />
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Product" span={2}>
+              {(subscription: TSubscription | null) =>
+                !subscription ? (
+                  <div className="flex flex-col space-y-1">
+                    <SkeletonText className="text-sm" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {subscription.items[0].price?.product?.name}
+                    </span>
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Price" span={2}>
+              {(subscription: TSubscription | null) =>
+                !subscription ? (
+                  <div className="flex flex-col space-y-2">
+                    <SkeletonText className="text-sm" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {formatCurrency(
+                        subscription.items[0].price?.unit_amount!,
+                        subscription.items[0].price?.currency as Currency
+                      )}{' '}
+                      /{' '}
+                      {subscription.items[0].price?.recurring?.interval_count === 1
+                        ? subscription.items[0].price?.recurring?.interval
+                        : `${subscription.items[0].price?.recurring?.interval_count} ${subscription.items[0].price?.recurring?.interval}s`}
+                    </span>
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Created">
+              {(subscription: TSubscription | null) =>
+                !subscription ? (
+                  <div className="flex flex-col space-y-2">
+                    <SkeletonText className="text-sm" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {formatDate(subscription.created, 'mmm d, yyyy')}
+                    </span>
                   </div>
                 )
               }

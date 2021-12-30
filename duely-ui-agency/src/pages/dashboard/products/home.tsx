@@ -160,6 +160,11 @@ export default function DashboardProductsHome() {
                               product.default_price.unit_amount,
                               product.default_price.currency as Currency
                             )}
+                            {product.default_price.type === 'recurring' &&
+                              ' / ' +
+                                (product.default_price.recurring_interval_count === 1
+                                  ? product.default_price.recurring_interval
+                                  : `${product.default_price.recurring_interval_count} ${product.default_price.recurring_interval}s`)}
                           </span>
                         )}
 

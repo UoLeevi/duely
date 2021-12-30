@@ -33,11 +33,7 @@ export const StripeCheckoutSession: GqlTypeDefinition<
       customer_details: SessionCustomerDetails
       customer_email: String
       expires_at: DateTime
-      line_items(
-        starting_after: String
-        ending_before: String
-        limit: Int
-      ): [LineItem!]!
+      line_items(starting_after: String, ending_before: String, limit: Int): [LineItem!]!
       livemode: Boolean
       locale: String
       # metadata: Stripe.Metadata | null;
@@ -174,16 +170,12 @@ export const StripeCheckoutSession: GqlTypeDefinition<
         if (!context.jwt)
           throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
 
-        try {
-          // see: https://stripe.com/docs/api/checkout/sessions/line_items
-          const list = await stripe
-            .get(source.stripe_account)
-            .checkout.sessions.listLineItems(source.id, args);
+        // see: https://stripe.com/docs/api/checkout/sessions/line_items
+        const list = await stripe
+          .get(source.stripe_account)
+          .checkout.sessions.listLineItems(source.id, args);
 
-          return withStripeAccountProperty(list.data, source.stripe_account);
-        } catch (error: any) {
-          throw new Error(error.message);
-        }
+        return withStripeAccountProperty(list.data, source.stripe_account);
       }
     },
     SessionAfterExpirationRecovery: {
@@ -194,6 +186,7 @@ export const StripeCheckoutSession: GqlTypeDefinition<
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'price',
         object: 'price',
+        expand: ['product'],
         role: 'owner'
       })
     }

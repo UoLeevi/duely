@@ -4,6 +4,7 @@ import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
 import { Resources } from '@duely/db';
+import { createStripeRetrieveResolverForReferencedResource } from '../../util';
 
 export const InvoiceLineItem: GqlTypeDefinition<
   Stripe.InvoiceLineItem & { stripe_account: Resources['stripe account'] }
@@ -33,7 +34,14 @@ export const InvoiceLineItem: GqlTypeDefinition<
     }
   `,
   resolvers: {
-    InvoiceLineItem: {}
+    InvoiceLineItem: {
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'price',
+        object: 'price',
+        expand: ['product'],
+        role: 'owner'
+      })
+    }
   }
 };
 

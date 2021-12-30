@@ -44,7 +44,12 @@ export const SubscriptionItem: GqlTypeDefinition<
   resolvers: {
     SubscriptionItem: {
       created: (source) => timestampToDate(source.created),
-      price: (source) => withStripeAccountProperty(source.price, source.stripe_account),
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'price',
+        object: 'price',
+        expand: ['product'],
+        role: 'owner'
+      }),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'subscription',
         object: 'subscription',

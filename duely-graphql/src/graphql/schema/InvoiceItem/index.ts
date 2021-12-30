@@ -95,6 +95,12 @@ export const InvoiceItem: GqlTypeDefinition<
         name: 'invoice',
         object: 'invoice',
         role: 'owner'
+      }),
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'price',
+        object: 'price',
+        expand: ['product'],
+        role: 'owner'
       })
     },
     Query: {

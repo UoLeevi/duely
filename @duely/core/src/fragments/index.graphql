@@ -169,6 +169,9 @@ fragment subscription on StripeSubscription {
     id
   }
   ended_at
+  items {
+    ...subscription_item
+  }
   latest_invoice {
     id
   }
@@ -214,7 +217,10 @@ fragment subscription_item on SubscriptionItem {
   }
   created
   price {
-    id
+    ...stripe_price
+    product {
+      ...stripe_product
+    }
   }
   quantity
   subscription {
@@ -638,7 +644,9 @@ fragment stripe_price on StripePrice {
   livemode
   lookup_key
   nickname
-  product
+  product {
+    ...stripe_product
+  }
   recurring {
     aggregate_usage
     interval
@@ -662,6 +670,32 @@ fragment stripe_price on StripePrice {
   type
   unit_amount
   unit_amount_decimal
+}
+
+fragment stripe_product on StripeProduct {
+  id
+  active
+  attributes
+  caption
+  created
+  deactivate_on
+  description
+  images
+  livemode
+  name
+  package_dimensions {
+    height
+    length
+    weight
+    width
+  }
+  shippable
+  statement_descriptor
+  tax_code
+  type
+  unit_label
+  updated
+  url
 }
 
 fragment stripe_checkout_session on StripeCheckoutSession {
