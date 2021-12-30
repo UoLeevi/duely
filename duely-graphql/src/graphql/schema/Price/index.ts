@@ -7,13 +7,14 @@ import {
 } from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
-  createResolverForReferencedResource
+  createResolverForReferencedResource,
+  createStripeRetrieveResolverForReferencedResource
 } from '../../util';
 import stripe from '@duely/stripe';
 import { calculateTransactionFee } from '../SubscriptionPlan';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
-import { Currency, formatCurrency } from '@duely/util';
+import { Currency, formatCurrency, timestampToDate } from '@duely/util';
 import Stripe from 'stripe';
 import { URL } from 'url';
 import { DuelyGraphQLError } from '../../errors';
@@ -95,6 +96,47 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
       checkout_session_id: String
       checkout_session_url: String
     }
+
+    type StripePrice {
+      id: String!
+      active: Boolean!
+      billing_scheme: String!
+      created: DateTime
+      currency: String!
+      livemode: Boolean!
+      lookup_key: String
+      nickname: String
+      product: StripeProduct
+      recurring: StripePriceRecurring
+      tax_behavior: String
+      tiers: [StripePriceTier!]
+      tiers_mode: String
+      transform_quantity: StripePriceTransformQuantity
+      type: String!
+      unit_amount: Int
+      unit_amount_decimal: String
+    }
+
+    type StripePriceRecurring {
+      aggregate_usage: String
+      interval: String!
+      interval_count: Int!
+      trial_period_days: Int
+      usage_type: String
+    }
+
+    type StripePriceTier {
+      flat_amount: Int
+      flat_amount_decimal: String
+      unit_amount: Int
+      unit_amount_decimal: String
+      up_to: Int
+    }
+
+    type StripePriceTransformQuantity {
+      divide_by: Int
+      round: String
+    }
   `,
   resolvers: {
     Price: {
@@ -102,6 +144,14 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
         return formatCurrency(price.unit_amount, price.currency as Currency);
       },
       ...createResolverForReferencedResource({ name: 'product' })
+    },
+    StripePrice: {
+      created: (source: Stripe.Price) => timestampToDate(source.created),
+      ...createStripeRetrieveResolverForReferencedResource({
+        object: 'product',
+        name: 'product',
+        role: 'owner'
+      })
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

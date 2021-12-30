@@ -11,6 +11,7 @@ import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
 import { DuelyGraphQLError } from '../../errors';
+import { timestampToDate } from '@duely/util';
 
 const resource = {
   name: 'product'
@@ -112,6 +113,35 @@ export const Product: GqlTypeDefinition<Resources['product']> = {
       message: String
       product: Product
     }
+
+    type StripeProduct {
+      id: ID!
+      active: Boolean!
+      attributes: [String!]
+      caption: String
+      created: DateTime!
+      deactivate_on: [String!]
+      description: String
+      images: [String!]!
+      livemode: Boolean!
+      # metadata: Stripe.Metadata;
+      name: String!
+      package_dimensions: StripeProductPackageDimensions
+      shippable: Boolean
+      statement_descriptor: String
+      tax_code: String
+      type: String!
+      unit_label: String
+      updated: DateTime!
+      url: String
+    }
+
+    type StripeProductPackageDimensions {
+      height: Int!
+      length: Int!
+      weight: Int!
+      width: Int!
+    }
   `,
   resolvers: {
     Product: {
@@ -144,6 +174,10 @@ export const Product: GqlTypeDefinition<Resources['product']> = {
         reverse: true,
         column_name: 'product_id'
       })
+    },
+    StripeProduct: {
+      created: (source: Stripe.Product) => timestampToDate(source.created),
+      updated: (source: Stripe.Product) => timestampToDate(source.updated)
     },
     Query: {
       ...createDefaultQueryResolversForResource(resource)

@@ -147,48 +147,6 @@ export const StripeCheckoutSession: GqlTypeDefinition<
       price: StripePrice
       quantity: Int
     }
-
-    type StripePrice {
-      id: String!
-      id_ext: String!
-      active: Boolean!
-      billing_scheme: String!
-      created: DateTime
-      currency: String!
-      livemode: Boolean!
-      lookup_key: String
-      nickname: String
-      product: String
-      recurring: StripePriceRecurring
-      tax_behavior: String
-      tiers: [StripePriceTier!]
-      tiers_mode: String
-      transform_quantity: StripePriceTransformQuantity
-      type: String!
-      unit_amount: Int
-      unit_amount_decimal: String
-    }
-
-    type StripePriceRecurring {
-      aggregate_usage: String
-      interval: String!
-      interval_count: Int!
-      trial_period_days: Int
-      usage_type: String
-    }
-
-    type StripePriceTier {
-      flat_amount: Int
-      flat_amount_decimal: String
-      unit_amount: Int
-      unit_amount_decimal: String
-      up_to: Int
-    }
-
-    type StripePriceTransformQuantity {
-      divide_by: Int
-      round: String
-    }
   `,
   resolvers: {
     StripeCheckoutSession: {
@@ -227,10 +185,6 @@ export const StripeCheckoutSession: GqlTypeDefinition<
     SessionAfterExpirationRecovery: {
       expires_at: (source: Stripe.Checkout.Session.AfterExpiration.Recovery) =>
         timestampToDate(source.expires_at)
-    },
-    StripePrice: {
-      id_ext: (source) => source.id,
-      created: (source: Stripe.Price) => timestampToDate(source.created)
     }
   }
 };
