@@ -199,7 +199,7 @@ export function createStripeRetrieveResolverForReferencedResource<
       const value = source[name];
 
       if (value == null) return null;
-      if (typeof value === 'object') return value;
+      if (typeof value === 'object') return withStripeAccountProperty(value, source.stripe_account);
 
       const resolveTree = parseResolveInfo(info) as ResolveTree;
       const fields = Object.keys(Object.values(resolveTree.fieldsByTypeName)[0]);
