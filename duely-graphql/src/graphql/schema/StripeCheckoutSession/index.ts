@@ -33,7 +33,11 @@ export const StripeCheckoutSession: GqlTypeDefinition<
       customer_details: SessionCustomerDetails
       customer_email: String
       expires_at: DateTime
-      line_items(starting_after: String, ending_before: String, limit: Int): [LineItem!]!
+      line_items(
+        starting_after: String
+        ending_before: String
+        limit: Int
+      ): [LineItem!]!
       livemode: Boolean
       locale: String
       # metadata: Stripe.Metadata | null;
@@ -185,6 +189,13 @@ export const StripeCheckoutSession: GqlTypeDefinition<
     SessionAfterExpirationRecovery: {
       expires_at: (source: Stripe.Checkout.Session.AfterExpiration.Recovery) =>
         timestampToDate(source.expires_at)
+    },
+    LineItem: {
+      ...createStripeRetrieveResolverForReferencedResource({
+        name: 'price',
+        object: 'price',
+        role: 'owner'
+      })
     }
   }
 };
