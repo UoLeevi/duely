@@ -29,7 +29,7 @@ export default function DashboardOrdersSubscriptions() {
             error={error}
             keyField="id"
           >
-            <Table.Column header="Customer" span={3}>
+            <Table.Column header="Customer" span={2}>
               {(subscription: TSubscription | null) =>
                 !subscription ? (
                   <div className="flex flex-col space-y-1">
@@ -58,7 +58,7 @@ export default function DashboardOrdersSubscriptions() {
                 ) : (
                   <div className="flex flex-col items-center">
                     <ColoredChip
-                      text={subscription.status ?? '-'}
+                      text={subscription.status}
                       color={{
                         incomplete: 'gray',
                         incomplete_expired: 'gray',
@@ -67,6 +67,30 @@ export default function DashboardOrdersSubscriptions() {
                         past_due: 'orange',
                         canceled: 'gray',
                         unpaid: 'orange'
+                      }}
+                    />
+                  </div>
+                )
+              }
+            </Table.Column>
+
+            <Table.Column header="Billing">
+              {(subscription: TSubscription | null) =>
+                !subscription ? (
+                  <div className="flex flex-col items-center">
+                    <ColoredChip color="gray" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <ColoredChip
+                      text={
+                        subscription.collection_method === 'charge_automatically'
+                          ? 'auto'
+                          : 'manual'
+                      }
+                      color={{
+                        auto: 'gray',
+                        manual: 'blue'
                       }}
                     />
                   </div>
@@ -113,7 +137,7 @@ export default function DashboardOrdersSubscriptions() {
               }
             </Table.Column>
 
-            <Table.Column header="Created">
+            <Table.Column header="Created" span={2}>
               {(subscription: TSubscription | null) =>
                 !subscription ? (
                   <div className="flex flex-col space-y-2">
@@ -122,7 +146,7 @@ export default function DashboardOrdersSubscriptions() {
                 ) : (
                   <div className="flex flex-col space-y-2">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {formatDate(subscription.created, 'mmm d, yyyy')}
+                      {formatDate(subscription.created, 'mmm d, yyyy, hh:nn', { tz: 'local' })}
                     </span>
                   </div>
                 )

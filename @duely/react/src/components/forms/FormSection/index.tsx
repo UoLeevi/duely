@@ -1,5 +1,6 @@
 import { createClassName } from '@duely/util';
 import React from 'react';
+import { Heading } from '../..';
 import { useHashScrolling } from '../../../hooks';
 
 type FormSectionProps = {
@@ -22,12 +23,7 @@ export function FormSection({
 
   return (
     <section className={className} {...props}>
-      <div className="flex items-center space-x-2 group">
-        <h3 ref={linkRef} className="font-bold tracking-wide text-gray-700 dark:text-gray-300">
-          {title}
-          {hashLink}
-        </h3>
-      </div>
+      <Heading>{title}</Heading>
       <div className="flex flex-col -m-2 xl:-m-4 xl:flex-row">
         <div className="flex flex-col items-start pt-1 m-2 xl:m-4 xl:w-1/3 2xl:w-1/4">
           <p className="text-sm text-gray-500">{description}</p>

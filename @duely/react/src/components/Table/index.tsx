@@ -7,22 +7,22 @@ import { PaginationControls, PaginationControls2 } from '..';
 export * from './usePagination';
 export * from './PaginationControls';
 
-export const Table = Object.assign(TableRoot, { Column });
+export const Table = Object.assign(TableRoot, { Column: TableColumn });
 
-type ColumnProps<TItem> = {
+type TableColumnProps<TItem> = {
   header: React.ReactNode;
   children: (item: TItem | null, row: number, column: number) => React.ReactNode;
   span?: number | Partial<Record<keyof ReturnType<typeof useBreakpoints> | 'xs', number>>;
 };
 
-function Column<TItem>(props: ColumnProps<TItem>) {
+function TableColumn<TItem>(props: TableColumnProps<TItem>) {
   return null;
 }
 
 type TableProps<TItem extends Record<TKeyField, string>, TKeyField extends keyof TItem> = {
   children:
-    | React.ReactElement<ColumnProps<TItem>, typeof Column>
-    | React.ReactElement<ColumnProps<TItem>, typeof Column>[];
+    | React.ReactElement<TableColumnProps<TItem>, typeof TableColumn>
+    | React.ReactElement<TableColumnProps<TItem>, typeof TableColumn>[];
   keyField?: TKeyField | ((item: TItem) => string);
   dense?: boolean;
   wrap?: number | Partial<Record<keyof ReturnType<typeof useBreakpoints> | 'xs', number>>;
@@ -151,7 +151,7 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
   const columnDefinitions =
     React.Children.map(
       children,
-      (child: React.ReactElement<ColumnProps<TItem>, typeof Column>) => ({
+      (child: React.ReactElement<TableColumnProps<TItem>, typeof TableColumn>) => ({
         header: child!.props.header,
         span: child!.props.span,
         render: child!.props.children

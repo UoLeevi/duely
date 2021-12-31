@@ -17,5 +17,7 @@ export * from './modals';
 export * from './buttons';
 export * from './icons';
 export * from './PageLayout';
+export * from './PropertyList';
+export * from './Heading';
 export * from './DuelyLogo';
 export * from './Animation';

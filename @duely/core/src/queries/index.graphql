@@ -311,6 +311,12 @@ query AgencyStripeAccountSubscriptions(
 query Subscription($stripe_account_id: ID!, $subscription_id: ID!) {
   subscription(stripe_account_id: $stripe_account_id, subscription_id: $subscription_id) {
     ...subscription
+    customer {
+      ...stripe_customer
+    }
+    latest_invoice {
+      ...invoice
+    }
   }
 }
 

@@ -9,14 +9,14 @@ function HashLink({ hash }: HashLinkProps) {
   return (
     <Link
       to={hash}
-      className="absolute inset-y-0 right-0 flex items-center my-auto text-transparent transition-colors focus:outline-none group-hover:text-indigo-600 focus-visible:text-indigo-500"
+      className="absolute inset-y-0 right-0 flex items-end my-auto text-transparent transition-colors focus:outline-none group-hover:text-indigo-600 focus-visible:text-indigo-500"
       style={{
         marginRight: '-1.5em'
       }}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        style={{ height: '1em', width: '1em' }}
+        style={{ height: '1em', width: '1em', transform: 'translateY(-0.1em)' }}
         viewBox="0 0 20 20"
         fill="currentColor"
         transform="scale(-1 1)"

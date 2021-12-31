@@ -35,9 +35,17 @@ const shortMonthNames = [
   'Dec'
 ];
 
-type DateFormat = 'mmm d, yyyy hh:nn UTC' | 'mmm d, yyyy' | 'yyyy-mm-dd';
+type DateFormat = 'mmm d, yyyy hh:nn UTC' | 'mmm d, yyyy' | 'yyyy-mm-dd' | string;
 
-export function formatDate(date: Date | number, format?: DateFormat) {
+type FormatDateOptions = {
+  tz: 'UTC' | 'local';
+};
+
+const defaultFormatDateOptions: FormatDateOptions = {
+  tz: 'UTC'
+};
+
+export function formatDate(date: Date | number, format?: DateFormat, options?: FormatDateOptions) {
   if (date == null) {
     return date;
   }
@@ -52,16 +60,18 @@ export function formatDate(date: Date | number, format?: DateFormat) {
     date = new Date(date);
   }
 
-  const d = date.getUTCDate();
+  options ??= defaultFormatDateOptions;
+
+  const d = options.tz === 'UTC' ? date.getUTCDate() : date.getDate();
   const dd = String(d).padStart(2, '0');
-  const m = date.getUTCMonth() + 1;
+  const m = options.tz === 'UTC' ? date.getUTCMonth() + 1 : date.getMonth() + 1;
   const mm = String(m).padStart(2, '0');
   const mmm = shortMonthNames[m - 1];
-  const y = date.getUTCFullYear();
+  const y = options.tz === 'UTC' ? date.getUTCFullYear() : date.getFullYear();
   const yyyy = String(y);
-  const h = date.getUTCHours();
+  const h = options.tz === 'UTC' ? date.getUTCHours() : date.getHours();
   const hh = String(h).padStart(2, '0');
-  const n = date.getUTCMinutes();
+  const n = options.tz === 'UTC' ? date.getUTCMinutes() : date.getMinutes();
   const nn = String(n).padStart(2, '0');
 
   format ??= 'mmm d, yyyy hh:nn UTC';
@@ -77,19 +87,18 @@ export function formatDate(date: Date | number, format?: DateFormat) {
       return `${yyyy}-${mm}-${dd}`;
 
     default:
-      const formatString = format as string;
-      let result;
-      result = formatString.replace('yyyy', yyyy);
-      result = formatString.replace('nn', nn);
-      result = formatString.replace('n', n.toString());
-      result = formatString.replace('hh', hh);
-      result = formatString.replace('h', h.toString());
-      result = formatString.replace('dd', dd);
-      result = formatString.replace('d', d.toString());
-      result = formatString.replace('mmm', '§'); // temporary placeholder
-      result = formatString.replace('mm', mm);
-      result = formatString.replace('m', m.toString());
-      result = formatString.replace('§', mmm);
+      let result = format as string;
+      result = result.replace('yyyy', yyyy);
+      result = result.replace('nn', nn);
+      result = result.replace('n', n.toString());
+      result = result.replace('hh', hh);
+      result = result.replace('h', h.toString());
+      result = result.replace('dd', dd);
+      result = result.replace('d', d.toString());
+      result = result.replace('mmm', '§'); // temporary placeholder
+      result = result.replace('mm', mm);
+      result = result.replace('m', m.toString());
+      result = result.replace('§', mmm);
       return result;
   }
 }

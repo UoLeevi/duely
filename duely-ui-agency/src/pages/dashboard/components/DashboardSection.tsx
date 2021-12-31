@@ -3,10 +3,10 @@ import { createClassName } from '@duely/util';
 import React from 'react';
 
 type DashboardSectionProps = {
-  title?: string;
+  title?: React.ReactNode;
   actions?: React.ReactNode;
   loading?: boolean;
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+} & Omit<React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>, 'title'>;
 
 export function DashboardSection({
   title,
@@ -27,13 +27,13 @@ export function DashboardSection({
       {hasTitle && (
         <div className="flex flex-row items-center justify-between h-8 space-x-2">
           {loading && (
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-400">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-400">
               <SkeletonText />
             </h2>
           )}
 
           {!loading && title && (
-            <h2 ref={linkRef} className="text-xl font-semibold text-gray-900 dark:text-gray-400">
+            <h2 ref={linkRef} className="text-2xl font-bold text-gray-900 dark:text-gray-400">
               {title}
               {hashLink}
             </h2>

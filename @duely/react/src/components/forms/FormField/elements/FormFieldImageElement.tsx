@@ -51,7 +51,7 @@ export function FormFieldImageElement<
     !loading && 'border-gray-300 dark:border-gray-500',
     image && 'border m-px border-gray-300 dark:border-gray-500 shadow-sm',
     !image && 'border-2 border-dashed',
-    'relative aspect-w-3 aspect-h-2 transition-colors flex justify-center rounded-md'
+    'relative aspect-[3/2] transition-colors flex justify-center rounded-md'
   );
 
   return (
