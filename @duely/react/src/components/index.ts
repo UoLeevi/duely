@@ -20,4 +20,5 @@ export * from './PageLayout';
 export * from './PropertyList';
 export * from './Heading';
 export * from './DuelyLogo';
+export * from './Tooltip';
 export * from './Animation';

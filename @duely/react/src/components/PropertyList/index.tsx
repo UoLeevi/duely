@@ -45,7 +45,7 @@ function PropertyListRoot({ children, vertical, horizontal }: PropertyListProps)
       {itemDefinitions.map((item, i) => (
         <Fragment key={i}>
           <div className="text-sm font-normal text-gray-550">{item.label}</div>
-          <div className="text-sm font-medium text-gray-800 dark:text-gray-300">
+          <div className="text-sm font-normal text-gray-700 dark:text-gray-300">
             {item.children}
           </div>
         </Fragment>

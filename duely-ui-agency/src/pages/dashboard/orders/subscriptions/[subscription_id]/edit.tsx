@@ -1,5 +1,12 @@
 import { subscription_Q, useQuery } from '@duely/client';
-import { Card, ColoredChip, Form, PropertyList } from '@duely/react';
+import {
+  Card,
+  ColoredChip,
+  Form,
+  PropertyList,
+  TimeConversionTooltip,
+  Tooltip
+} from '@duely/react';
 import { formatDate } from '@duely/util';
 import { useParams } from 'react-router-dom';
 import { useAgency } from '~/pages/dashboard/hooks/useAgency';
@@ -55,7 +62,13 @@ export default function DashboardOrdersEditSubscription() {
           <div className="m-4">
             <PropertyList>
               <PropertyList.Item label="Started">
-                {formatDate(subscription?.start_date, 'mmm d, yyyy, hh:nn', { tz: 'local' })}
+                <span
+                  data-tooltip="started-tooltip"
+                  className="underline underline-offset-2 hover:bg-black/5"
+                >
+                  {formatDate(subscription?.start_date, 'mmm d, yyyy', { tz: 'local' })}
+                </span>
+                <TimeConversionTooltip id="started-tooltip" date={subscription?.start_date} />
               </PropertyList.Item>
             </PropertyList>
           </div>
@@ -70,13 +83,27 @@ export default function DashboardOrdersEditSubscription() {
               </PropertyList.Item>
               <PropertyList.Item label="ID">{subscription?.id}</PropertyList.Item>
               <PropertyList.Item label="Current period">
-                <span>
+                <span
+                  data-tooltip="current_period_start-tooltip"
+                  className="underline underline-offset-2 hover:bg-black/5"
+                >
                   {formatDate(subscription?.current_period_start, 'mmm d', { tz: 'local' })}
                 </span>
+                <TimeConversionTooltip
+                  id="current_period_start-tooltip"
+                  date={subscription?.current_period_start}
+                />
                 <span> to </span>
-                <span>
+                <span
+                  data-tooltip="current_period_end-tooltip"
+                  className="underline underline-offset-2 hover:bg-black/5"
+                >
                   {formatDate(subscription?.current_period_end, 'mmm d, yyyy', { tz: 'local' })}
                 </span>
+                <TimeConversionTooltip
+                  id="current_period_end-tooltip"
+                  date={subscription?.current_period_end}
+                />
               </PropertyList.Item>
             </PropertyList>
           </Form.Section>
