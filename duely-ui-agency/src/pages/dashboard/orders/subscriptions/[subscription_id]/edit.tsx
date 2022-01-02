@@ -1,37 +1,26 @@
-import { subscription_Q, useQuery } from '@duely/client';
-import {
-  Card,
-  ColoredChip,
-  Form,
-  PropertyList,
-  TimeConversionTooltip,
-  Tooltip
-} from '@duely/react';
-import { formatDate } from '@duely/util';
+import { agency_stripe_account_Q, subscription_Q, useQuery } from '@duely/client';
+import { Box, ColoredChip, PropertyList, PropertyValue, Query, useQueryState } from '@duely/react';
 import { useParams } from 'react-router-dom';
-import { useAgency } from '~/pages/dashboard/hooks/useAgency';
-import { DashboardSection } from '../../../components';
 
 export default function DashboardOrdersEditSubscription() {
   const { subscription_id } = useParams<{ subscription_id: string }>();
-  const { agency, stripe_account, loading: agencyLoading, error: agencyError } = useAgency();
-  const { data: subscription, loading: subscriptionLoading } = useQuery(
+  const stripeAccountControl = useQueryState(agency_stripe_account_Q);
+  const { data: subscription, control } = useQuery(
     subscription_Q,
-    {
+    (stripe_account) => ({
       stripe_account_id: stripe_account?.id!,
       subscription_id
-    },
+    }),
     {
-      skip: !stripe_account
+      deps: [stripeAccountControl]
     }
   );
 
   return (
     <>
-      <DashboardSection
-        title={
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-gray-500">Subscription</span>
+      <Query control={control}>
+        <Box>
+          <Box.Heading subheading="Subscription" as="h2" dynamic>
             <div className="flex items-baseline space-x-3">
               <span>
                 <span>{subscription?.customer?.name ?? subscription?.customer?.email}</span>
@@ -54,61 +43,39 @@ export default function DashboardOrdersEditSubscription() {
                 }}
               />
             </div>
-          </div>
-        }
-        loading={subscriptionLoading}
-      >
-        <Card>
-          <div className="m-4">
-            <PropertyList>
-              <PropertyList.Item label="Started">
-                <span
-                  data-tooltip="started-tooltip"
-                  className="underline underline-offset-2 hover:bg-black/5"
-                >
-                  {formatDate(subscription?.start_date, 'mmm d, yyyy', { tz: 'local' })}
-                </span>
-                <TimeConversionTooltip id="started-tooltip" date={subscription?.start_date} />
-              </PropertyList.Item>
-            </PropertyList>
-          </div>
+          </Box.Heading>
 
-          <Form.Section title="Subscription details">
-            <PropertyList>
-              <PropertyList.Item label="Customer">
+          <PropertyList>
+            <PropertyList.Item label="Started">
+              <PropertyValue.Date date={subscription?.start_date} />
+            </PropertyList.Item>
+          </PropertyList>
+        </Box>
+
+        <Box>
+          <Box.Heading as="h3">Subscription details</Box.Heading>
+
+          <PropertyList>
+            <PropertyList.Item label="Customer">
+              <PropertyValue>
                 {subscription?.customer?.name ?? subscription?.customer?.email}
-              </PropertyList.Item>
-              <PropertyList.Item label="Product">
-                {subscription?.items[0].price?.product?.name}
-              </PropertyList.Item>
-              <PropertyList.Item label="ID">{subscription?.id}</PropertyList.Item>
-              <PropertyList.Item label="Current period">
-                <span
-                  data-tooltip="current_period_start-tooltip"
-                  className="underline underline-offset-2 hover:bg-black/5"
-                >
-                  {formatDate(subscription?.current_period_start, 'mmm d', { tz: 'local' })}
-                </span>
-                <TimeConversionTooltip
-                  id="current_period_start-tooltip"
-                  date={subscription?.current_period_start}
-                />
-                <span> to </span>
-                <span
-                  data-tooltip="current_period_end-tooltip"
-                  className="underline underline-offset-2 hover:bg-black/5"
-                >
-                  {formatDate(subscription?.current_period_end, 'mmm d, yyyy', { tz: 'local' })}
-                </span>
-                <TimeConversionTooltip
-                  id="current_period_end-tooltip"
-                  date={subscription?.current_period_end}
-                />
-              </PropertyList.Item>
-            </PropertyList>
-          </Form.Section>
-        </Card>
-      </DashboardSection>
+              </PropertyValue>
+            </PropertyList.Item>
+            <PropertyList.Item label="Product">
+              <PropertyValue>{subscription?.items[0].price?.product?.name}</PropertyValue>
+            </PropertyList.Item>
+            <PropertyList.Item label="ID">
+              <PropertyValue.Id>{subscription?.id}</PropertyValue.Id>
+            </PropertyList.Item>
+            <PropertyList.Item label="Current period">
+              <PropertyValue.DateRange
+                from={subscription?.current_period_start}
+                to={subscription?.current_period_end}
+              />
+            </PropertyList.Item>
+          </PropertyList>
+        </Box>
+      </Query>
     </>
   );
 }

@@ -1,4 +1,11 @@
-import { useQuery, orders_Q, count_orders_Q, order_details_Q } from '@duely/client';
+import {
+  useQuery,
+  orders_Q,
+  count_orders_Q,
+  order_details_Q,
+  agency_stripe_account_Q,
+  current_agency_Q
+} from '@duely/client';
 import {
   useBreakpoints,
   Table,
@@ -7,14 +14,20 @@ import {
   usePagination,
   SkeletonText,
   ColoredChip,
-  icons
+  icons,
+  useQueryState
 } from '@duely/react';
 import { DashboardSection } from '../components';
 import { Currency, formatCurrency, formatDate, truncate } from '@duely/util';
-import { useAgency } from '../hooks/useAgency';
 
 export default function DashboardOrdersHome() {
-  const { agency, stripe_account, loading: agencyLoading, error: agencyError } = useAgency();
+  const { data: agency, control: agencyControl } = useQueryState(current_agency_Q);
+  const {
+    data: stripe_account,
+    loading: agencyLoading,
+    error: agencyError,
+    control: stripeAccountControl
+  } = useQueryState(agency_stripe_account_Q);
 
   type TOrder = NonNullable<ReturnType<typeof orders_Q.result>> extends readonly (infer T)[]
     ? T

@@ -45,7 +45,7 @@ export function MessageContextProvider({ children }: Props) {
           leaveTo="transform translate-y-12 opacity-0 scale-95"
           className="grid w-full h-full origin-bottom place-items-center"
         >
-          <div className="box-border fixed bottom-0 z-40 flex items-center justify-center py-3 pl-4 pr-10 mb-4 text-sm font-medium tracking-wide text-white transform translate-x-1/2 bg-gray-600 rounded-md shadow-lg pointer-events-auto ring-1 ring-black ring-opacity-5 right-1/2">
+          <div className="box-border fixed bottom-0 z-40 flex items-center justify-center py-3 pl-4 pr-10 mb-4 text-sm font-medium tracking-wide text-white translate-x-1/2 bg-gray-600 rounded-md shadow-lg pointer-events-auto ring-1 ring-black/5 right-1/2">
             {dismissable && (
               <button
                 type="button"

@@ -1,15 +1,14 @@
 import { formatDate } from '@duely/util';
-import React from 'react';
+import React, { RefObject } from 'react';
 import { Tooltip } from '.';
 
 export type TimeConversionTooltipProps = {
-  id: string;
   date: Date;
-};
+} & ({ id: string; elementRef?: undefined } | { id?: undefined; elementRef: RefObject<HTMLElement> });
 
-export function TimeConversionTooltip({ id, date }: TimeConversionTooltipProps) {
+export function TimeConversionTooltip({ date, ...props }: TimeConversionTooltipProps) {
   return (
-    <Tooltip id={id} position="bottom center">
+    <Tooltip {...props} position="bottom center">
       <div className="grid grid-flow-row grid-cols-[auto_auto] text-xs">
         <div className="col-span-2 px-2 py-1 bg-gray-100">Time conversion</div>
         <div className="py-1 pl-2 pr-1 font-medium border-t border-black/5">UTC</div>

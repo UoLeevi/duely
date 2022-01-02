@@ -1,33 +1,38 @@
-import { invoice_Q, useQuery } from '@duely/client';
-import { Card, Form } from '@duely/react';
+import { agency_stripe_account_Q, invoice_Q, useQuery } from '@duely/client';
+import { Card, Form, Query, useQueryState } from '@duely/react';
 import { useParams } from 'react-router-dom';
-import { useAgency } from '~/pages/dashboard/hooks/useAgency';
 import { DashboardSection } from '../../../components';
 import { UpdateInvoiceForm } from './components';
 
 export default function DashboardPaymentsEditInvoice() {
   const { invoice_id } = useParams<{ invoice_id: string }>();
-  const { agency, stripe_account, loading: agencyLoading, error: agencyError } = useAgency();
-  const { data: invoice, loading: invoiceLoading } = useQuery(
+  const stripeAccountControl = useQueryState(agency_stripe_account_Q);
+  const {
+    data: invoice,
+    loading: invoiceLoading,
+    control: invoiceControl
+  } = useQuery(
     invoice_Q,
-    { stripe_account_id: stripe_account?.id!, invoice_id },
-    { skip: !stripe_account }
+    (stripe_account) => ({ stripe_account_id: stripe_account?.id!, invoice_id }),
+    { deps: [stripeAccountControl] }
   );
   return (
     <>
-      <DashboardSection
-        title={`Invoice ${invoice?.status === 'draft' ? '(draft)' : invoice?.number}`}
-        loading={invoiceLoading}
-      >
-        <Card>
-          <Form.Section
-            title="Basic information"
-            description="Name and email address for the invoice."
-          >
-            <UpdateInvoiceForm invoice_id={invoice_id} />
-          </Form.Section>
-        </Card>
-      </DashboardSection>
+      <Query control={invoiceControl}>
+        <DashboardSection
+          title={`Invoice ${invoice?.status === 'draft' ? '(draft)' : invoice?.number}`}
+          loading={invoiceLoading}
+        >
+          <Card>
+            <Form.Section
+              title="Basic information"
+              description="Name and email address for the invoice."
+            >
+              <UpdateInvoiceForm invoice_id={invoice_id} />
+            </Form.Section>
+          </Card>
+        </DashboardSection>
+      </Query>
     </>
   );
 }

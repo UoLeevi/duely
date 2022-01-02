@@ -1,17 +1,18 @@
-import { Card, DropMenu, icons } from '@duely/react';
+import { Card, DropMenu, icons, useQueryState } from '@duely/react';
 import { DashboardSection } from '../../components';
 import { Currency, formatCurrency, formatDate } from '@duely/util';
 import { Table, SkeletonText, ColoredChip } from '@duely/react';
-import { useQuery, agency_subscriptions_Q } from '@duely/client';
-import { useAgency } from '../../hooks/useAgency';
+import { useQuery, agency_subscriptions_Q, current_agency_Q } from '@duely/client';
 
 export default function DashboardOrdersSubscriptions() {
-  const { agency, stripe_account, loading: agencyLoading, error: agencyError } = useAgency();
+  const agencyControl = useQueryState(current_agency_Q);
   const {
     data: subscriptions,
     loading,
     error
-  } = useQuery(agency_subscriptions_Q, { agency_id: agency!.id });
+  } = useQuery(agency_subscriptions_Q, (agency) => ({ agency_id: agency!.id }), {
+    deps: [agencyControl]
+  });
 
   type TSubscription = NonNullable<typeof subscriptions> extends readonly (infer T)[] ? T : never;
 

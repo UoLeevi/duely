@@ -1,6 +1,6 @@
 import { Link, Route, RouteProps, Switch } from 'react-router-dom';
-import { useQuery, current_agency_Q, current_user_Q } from '@duely/client';
-import { LoadingScreen, ErrorScreen } from '@duely/react';
+import { useQuery, current_agency_Q, current_user_Q, agency_stripe_account_Q } from '@duely/client';
+import { LoadingScreen, ErrorScreen, Query } from '@duely/react';
 import { DashboardLayout } from './components';
 import { routes as customerRoutes } from './customers';
 import { routes as siteRoutes } from './site';
@@ -27,7 +27,17 @@ const roles = ['agent', 'manager', 'owner'].map((r) => r.toUpperCase());
 
 export default function Dashboard() {
   const { data: user, loading: userLoading, error: userError } = useQuery(current_user_Q);
-  const { data: agency, loading: agencyLoading, error: agencyError } = useQuery(current_agency_Q);
+  const {
+    data: agency,
+    loading: agencyLoading,
+    error: agencyError,
+    control: agencyControl
+  } = useQuery(current_agency_Q);
+  const { control: stripeAccountControl } = useQuery(
+    agency_stripe_account_Q,
+    (agency) => ({ agency_id: agency!.id }),
+    { deps: [agencyControl] }
+  );
 
   const loading = userLoading || agencyLoading;
   const error = userError || agencyError;
@@ -55,12 +65,16 @@ export default function Dashboard() {
   }
 
   return (
-    <DashboardLayout>
-      <Switch>
-        {routes.map((route, i) => (
-          <Route key={i} {...route} />
-        ))}
-      </Switch>
-    </DashboardLayout>
+    <Query control={agencyControl}>
+      <Query control={stripeAccountControl}>
+        <DashboardLayout>
+          <Switch>
+            {routes.map((route, i) => (
+              <Route key={i} {...route} />
+            ))}
+          </Switch>
+        </DashboardLayout>
+      </Query>
+    </Query>
   );
 }

@@ -14,14 +14,20 @@ import {
   SkeletonText,
   usePagination,
   LinkButton,
-  icons
+  icons,
+  useQueryState
 } from '@duely/react';
 import { ConfirmCustomerDeletionModal } from './components';
 import { DashboardSection } from '../components';
-import { useAgency } from '../hooks/useAgency';
 
 export default function DashboardCustomersHome() {
-  const { agency, stripe_account, loading: agencyLoading, error: agencyError } = useAgency();
+  const { data: agency, control: agencyControl } = useQueryState(current_agency_Q);
+  const {
+    data: stripe_account,
+    loading: agencyLoading,
+    error: agencyError,
+    control: stripeAccountControl
+  } = useQueryState(agency_stripe_account_Q);
 
   type TCustomer = NonNullable<ReturnType<typeof customers_Q.result>> extends readonly (infer T)[]
     ? T

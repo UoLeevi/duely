@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { RefObject, useCallback, useContext, useEffect, useState } from 'react';
 import { createClassName } from '@duely/util';
 import { Transition } from '@headlessui/react';
 import { useRerender } from '..';
@@ -11,7 +11,6 @@ export * from './TimeConversionTooltip';
 export type TooltipProps = {
   children: React.ReactNode;
   className?: string;
-  id: string;
   position?:
     | 'top left'
     | 'top center'
@@ -22,9 +21,14 @@ export type TooltipProps = {
     | 'bottom left'
     | 'bottom center'
     | 'bottom right';
-};
+} & (
+  | { id: string; elementRef?: undefined }
+  | { id?: undefined; elementRef: RefObject<HTMLElement> }
+);
 
-export function Tooltip({ children, className, id, position }: TooltipProps) {
+export function Tooltip({ children, className, id, elementRef, position }: TooltipProps) {
+  position ??= 'top center';
+
   const rerender = useRerender();
   const [state] = useState<{ node: HTMLElement | null }>({ node: null });
 
@@ -64,8 +68,10 @@ export function Tooltip({ children, className, id, position }: TooltipProps) {
   );
 
   useEffect(() => {
+    if (!id && !elementRef) return;
+
     document.addEventListener('click', outsideClick);
-    const nodes = document.querySelectorAll(`[data-tooltip="${id}"]`);
+    const nodes = id ? document.querySelectorAll(`[data-tooltip="${id}"]`) : [elementRef?.current!];
     nodes.forEach((node) => {
       node.addEventListener('click', click);
       node.addEventListener('mouseenter', mouseenter);
@@ -79,7 +85,7 @@ export function Tooltip({ children, className, id, position }: TooltipProps) {
         node.removeEventListener('mouseleave', mouseleave);
       });
     };
-  }, [mouseenter, mouseleave]);
+  }, [mouseenter, mouseleave, elementRef]);
 
   const { top, left } =
     usePrevious(state.node && getPositionRelativeToDocument(state.node, position), {
@@ -89,10 +95,10 @@ export function Tooltip({ children, className, id, position }: TooltipProps) {
   className = createClassName(
     'absolute rounded ring-1 ring-black/5 shadow-md z-50 bg-white text-sm',
     position?.includes('center') && '-translate-x-1/2 origin-center',
-    position?.includes('bottom') && 'mt-1',
-    position?.includes('top') && 'mb-1',
-    position?.includes('left') && 'mr-1',
-    position?.includes('right') && 'ml-1',
+    position?.includes('bottom') && 'translate-y-1',
+    position?.includes('top') && '-translate-y-[calc(100%+0.25rem)]',
+    position?.includes('left') && 'mr-2',
+    position?.includes('right') && 'ml-2',
     className
   );
 

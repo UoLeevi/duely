@@ -234,7 +234,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         bottomContent={<ApiLink />}
       />
       <div className="box-border flex flex-col flex-1 w-full pb-20 md:pb-0 md:pl-48 xl:pl-64">
-        <div className="flex flex-col flex-1 px-2 py-4 space-y-8 sm:px-4">{children}</div>
+        <div className="flex flex-col flex-1 px-2 py-4 sm:px-4">{children}</div>
       </div>
     </div>
   );

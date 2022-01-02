@@ -1,0 +1,60 @@
+import React, { useRef } from 'react';
+import { icons, SkeletonText, Tooltip, useQueryState } from '..';
+import { useMessage } from '../../hooks';
+
+export type IdPropertyValueProps = {
+  children: React.ReactNode;
+};
+
+export function IdPropertyValue({ children }: IdPropertyValueProps) {
+  const ref = useRef<HTMLElement>(null);
+  const { showMessage } = useMessage();
+
+  const { loading } = useQueryState();
+
+  if (loading) {
+    return <SkeletonText ch={32} />;
+  }
+
+  return (
+    <div className="flex group">
+      <span className="font-mono">{children}</span>
+      {children && (
+        <>
+          <span
+            className="text-[0.8125rem] ml-2 transition-opacity opacity-0 pointer-events-none group-hover:opacity-60 group-hover:cursor-pointer group-hover:hover:opacity-100 group-hover:pointer-events-auto"
+            ref={ref}
+            onClick={async () => {
+              const id = children?.toString();
+              if (!id) return;
+
+              if (navigator.clipboard) {
+                await navigator.clipboard.writeText(id);
+                showMessage(
+                  <div className="flex items-center space-x-3">
+                    {icons['clipboard-check.solid']}
+                    <span>Copied!</span>
+                  </div>
+                );
+              } else {
+                showMessage(
+                  <div className="flex items-center space-x-3">
+                    {icons['exclamation.solid']}
+                    <span>Clipboard is not accessible!</span>
+                  </div>
+                );
+              }
+            }}
+          >
+            {icons['duplicate']}
+          </span>
+          <Tooltip elementRef={ref}>
+            <span className="px-2 py-1 font-medium tracking-wide text-white bg-gray-600 rounded">
+              Copy ID
+            </span>
+          </Tooltip>
+        </>
+      )}
+    </div>
+  );
+}
