@@ -6,6 +6,7 @@ export const PropertyList = Object.assign(PropertyListRoot, { Item: PropertyList
 type PropertyListItemProps = {
   label: React.ReactNode;
   children: React.ReactNode;
+  bold?: boolean;
 };
 
 function PropertyListItem(props: PropertyListItemProps) {
@@ -13,39 +14,42 @@ function PropertyListItem(props: PropertyListItemProps) {
 }
 
 type PropertyListProps = {
-  vertical?: boolean;
-  horizontal?: boolean;
+  row?: boolean;
+  col?: boolean;
   children:
     | React.ReactElement<PropertyListItemProps, typeof PropertyListItem>
     | React.ReactElement<PropertyListItemProps, typeof PropertyListItem>[];
 };
 
-function PropertyListRoot({ children, vertical, horizontal }: PropertyListProps) {
-  vertical ??= !horizontal;
-  horizontal ??= !vertical;
+function PropertyListRoot({ children, row, col }: PropertyListProps) {
+  row ??= !col;
+  col ??= !row;
 
   const itemDefinitions =
     React.Children.map(
       children,
-      (child: React.ReactElement<PropertyListItemProps, typeof PropertyListItem>) => ({
-        label: child!.props.label,
-        children: child!.props.children
-      })
+      (child: React.ReactElement<PropertyListItemProps, typeof PropertyListItem>) => child.props
     ) ?? [];
 
   const className = createClassName(
-    'grid gap-2',
-    vertical
-      ? 'grid-flow-row auto-rows-auto grid-cols-[minmax(160px,_auto)_1fr]'
-      : 'grid-flow-col auto-cols-auto grid-rows-2'
+    'grid gap-x-6 gap-y-2',
+    row
+      ? 'grid-flow-row auto-rows-auto grid-cols-[minmax(144px,_auto)_1fr]'
+      : 'grid-flow-col auto-cols-[minmax(175px,_max-content)] grid-rows-2'
   );
 
   return (
     <div className={className}>
       {itemDefinitions.map((item, i) => (
         <Fragment key={i}>
-          <div className="text-sm font-normal text-gray-550">{item.label}</div>
-          <div className="text-sm font-normal text-gray-700 dark:text-gray-300">
+          <div className={`text-sm text-gray-550 ${item.bold ? 'font-medium' : 'font-normal'}`}>
+            {item.label}
+          </div>
+          <div
+            className={`text-sm text-gray-700 dark:text-gray-300 ${
+              item.bold ? 'font-medium' : 'font-normal'
+            }`}
+          >
             {item.children}
           </div>
         </Fragment>

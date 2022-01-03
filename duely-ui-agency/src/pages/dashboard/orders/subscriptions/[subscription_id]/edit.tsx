@@ -45,9 +45,9 @@ export default function DashboardOrdersEditSubscription() {
             </div>
           </Box.Heading>
 
-          <PropertyList>
+          <PropertyList col>
             <PropertyList.Item label="Started">
-              <PropertyValue.Date date={subscription?.start_date} />
+              <PropertyValue.Date>{subscription?.start_date}</PropertyValue.Date>
             </PropertyList.Item>
           </PropertyList>
         </Box>

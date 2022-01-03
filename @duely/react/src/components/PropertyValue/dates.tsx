@@ -5,11 +5,11 @@ import { SkeletonText } from '..';
 import { useQueryState } from '../Query';
 
 export type DatePropertyValueProps = {
-  date: Date;
+  children: Date;
   format?: string;
 };
 
-export function DatePropertyValue({ date, format }: DatePropertyValueProps) {
+export function DatePropertyValue({ children, format }: DatePropertyValueProps) {
   const ref = useRef<HTMLElement>(null);
   const { loading } = useQueryState();
 
@@ -21,9 +21,9 @@ export function DatePropertyValue({ date, format }: DatePropertyValueProps) {
   return (
     <>
       <span ref={ref} className="underline underline-offset-2 hover:bg-black/5">
-        {formatDate(date, format, { tz: 'local' })}
+        {formatDate(children, format, { tz: 'local' })}
       </span>
-      <TimeConversionTooltip elementRef={ref} date={date} />
+      <TimeConversionTooltip elementRef={ref} date={children} />
     </>
   );
 }
