@@ -29,6 +29,7 @@ export default function DashboardOrdersSubscriptions() {
             loading={loading}
             error={error}
             keyField="id"
+            rowLink={(subscription: TSubscription) => ({ to: `subscriptions/${subscription.id}` })}
           >
             <Table.Column header="Customer" span={2}>
               {(subscription: TSubscription | null) =>

@@ -3,6 +3,7 @@ import { createClassName, hasProperty, isFunction } from '@duely/util';
 import { useBreakpoints } from '../../hooks';
 import { isCursorPagination, UsePaginationReturn, UsePaginationReturn2 } from './usePagination';
 import { PaginationControls, PaginationControls2 } from '..';
+import { Link, LinkProps } from 'react-router-dom';
 
 export * from './usePagination';
 export * from './PaginationControls';
@@ -28,6 +29,7 @@ type TableProps<TItem extends Record<TKeyField, string>, TKeyField extends keyof
   wrap?: number | Partial<Record<keyof ReturnType<typeof useBreakpoints> | 'xs', number>>;
   loading?: boolean;
   error?: boolean | string | Error | { message: string };
+  rowLink?: (item: TItem, row: number) => LinkProps;
 } & (
   | ({
       pagination: UsePaginationReturn<TItem, TKeyField> | UsePaginationReturn2<TItem, TKeyField>;
@@ -144,6 +146,7 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
   wrap: wrapOptions,
   loading,
   error,
+  rowLink,
   ...rest
 }: TableProps<TItem, TKeyField>) {
   const skeletonRowCountFallback = 5;
@@ -269,6 +272,7 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
           wrapCells={wrapCells}
           wrapRowCount={wrapRowCount}
           hasHeaderRow={hasHeaderRow}
+          rowLink={rowLink}
           first={i === 0}
           last={i === items!.length - 1}
         />
@@ -373,9 +377,11 @@ function TableCell({
   const gridArea = `${row} / ${column} / ${row + 1} / ${column + span}`;
 
   if (hasHeaderRow) {
-    let className = 'relative grid items-center py-2 sm:py-3 ';
-    if (firstCol) className += dense ? 'pl-3 sm:pl-4 ' : 'pl-4 sm:pl-6 ';
-    if (lastCol) className += dense ? 'pr-3 sm:pr-4 ' : 'pr-4 sm:pr-6 ';
+    const className = createClassName(
+      'relative grid items-center py-2 sm:py-3 ',
+      firstCol && (dense ? 'pl-3 sm:pl-4' : 'pl-4 sm:pl-6'),
+      lastCol && (dense ? 'pr-3 sm:pr-4' : 'pr-4 sm:pr-6')
+    );
 
     return (
       <div className={className} style={{ gridArea }}>
@@ -384,23 +390,24 @@ function TableCell({
     );
   }
 
-  let className = 'flex flex-col space-y-2 ';
-
-  className += dense ? 'px-3 sm:px-4 ' : 'px-4 sm:px-6 ';
-  className += dense
-    ? firstRow
-      ? 'pt-3 sm:pt-4 '
-      : 'pt-1.5 sm:pt-2 '
-    : firstRow
-    ? 'pt-4 sm:pt-6 '
-    : 'pt-2 sm:pt-3 ';
-  className += dense
-    ? lastRow
-      ? 'pb-3 sm:pb-4 '
-      : 'pb-1.5 sm:pb-2 '
-    : lastRow
-    ? 'pb-4 sm:pb-6 '
-    : 'pb-2 sm:pb-3 ';
+  const className = createClassName(
+    'flex flex-col space-y-2 ',
+    dense ? 'px-3 sm:px-4 ' : 'px-4 sm:px-6',
+    dense
+      ? firstRow
+        ? 'pt-3 sm:pt-4'
+        : 'pt-1.5 sm:pt-2'
+      : firstRow
+      ? 'pt-4 sm:pt-6'
+      : 'pt-2 sm:pt-3',
+    dense
+      ? lastRow
+        ? 'pb-3 sm:pb-4'
+        : 'pb-1.5 sm:pb-2'
+      : lastRow
+      ? 'pb-4 sm:pb-6'
+      : 'pb-2 sm:pb-3'
+  );
 
   return (
     <div className={className} style={{ gridArea }}>
@@ -427,6 +434,7 @@ type TableRowProps<TItem> = {
   last: boolean;
   wrapRowCount: number;
   hasHeaderRow: boolean;
+  rowLink?: (item: TItem, row: number) => LinkProps;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
 function TableRow<TItem>({
@@ -439,9 +447,16 @@ function TableRow<TItem>({
   wrapRowCount,
   first,
   last,
-  hasHeaderRow
+  hasHeaderRow,
+  rowLink
 }: TableRowProps<TItem>) {
-  let className = 'border-gray-200 dark:border-gray-700' + (last ? '' : ' border-b');
+  const linkProps = rowLink && rowLink(item, row);
+  let className = createClassName(
+    'border-gray-200 dark:border-gray-700',
+    last && 'border-b',
+    linkProps && 'hover:bg-gray-50'
+  );
+
   const cells = columns.map((column, j) => column(item, row, j));
 
   row += hasHeaderRow ? 1 : 0;
@@ -452,7 +467,11 @@ function TableRow<TItem>({
 
   return (
     <Fragment>
-      <div className={className} style={{ gridArea }}></div>
+      {linkProps ? (
+        <Link {...linkProps} className={className} style={{ gridArea }} />
+      ) : (
+        <div className={className} style={{ gridArea }}></div>
+      )}
 
       {cells.map((cell, j) => {
         const { rowOffset, ...cellProps } = wrapCells[j];
