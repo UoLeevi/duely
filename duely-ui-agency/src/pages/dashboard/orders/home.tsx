@@ -91,6 +91,7 @@ export default function DashboardOrdersHome() {
             }}
             pagination={pagination}
             keyField="id"
+            rowLink={(order: TOrder) => ({ to: `orders/${order.id}` })}
           >
             <Table.Column header="Order">
               {(order: TOrder | null) =>

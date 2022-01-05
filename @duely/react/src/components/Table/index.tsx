@@ -359,6 +359,7 @@ type TableCellProps = {
   firstRow: boolean;
   lastRow: boolean;
   hasHeaderRow: boolean;
+  linkProps?: LinkProps;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
 function TableCell({
@@ -372,7 +373,8 @@ function TableCell({
   lastCol,
   firstRow,
   lastRow,
-  hasHeaderRow
+  hasHeaderRow,
+  linkProps
 }: TableCellProps) {
   const gridArea = `${row} / ${column} / ${row + 1} / ${column + span}`;
 
@@ -409,7 +411,12 @@ function TableCell({
       : 'pb-2 sm:pb-3'
   );
 
-  return (
+  return linkProps ? (
+    <Link {...linkProps} className={className} style={{ gridArea }}>
+      <div className="grid text-xs tracking-wide text-gray-500">{header}</div>
+      <div className="relative grid items-center flex-1">{children}</div>
+    </Link>
+  ) : (
     <div className={className} style={{ gridArea }}>
       <div className="grid text-xs tracking-wide text-gray-500">{header}</div>
       <div className="relative grid items-center flex-1">{children}</div>
@@ -453,8 +460,8 @@ function TableRow<TItem>({
   const linkProps = rowLink && rowLink(item, row);
   let className = createClassName(
     'border-gray-200 dark:border-gray-700',
-    last && 'border-b',
-    linkProps && 'hover:bg-gray-50'
+    !last && 'border-b',
+    linkProps && 'group-hover:bg-black/[.02] transition-colors duration-75'
   );
 
   const cells = columns.map((column, j) => column(item, row, j));
@@ -466,7 +473,7 @@ function TableRow<TItem>({
   const gridArea = `${row} / 1 / ${row + wrapRowCount} / -1`;
 
   return (
-    <Fragment>
+    <div className="contents group">
       {linkProps ? (
         <Link {...linkProps} className={className} style={{ gridArea }} />
       ) : (
@@ -486,12 +493,13 @@ function TableRow<TItem>({
             {...cellProps}
             firstRow={rowOffset === 0}
             lastRow={rowOffset + 1 === wrapRowCount}
+            linkProps={linkProps}
           >
             {cell}
           </TableCell>
         );
       })}
-    </Fragment>
+    </div>
   );
 }
 

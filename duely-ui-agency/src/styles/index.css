@@ -931,6 +931,10 @@ body, #root {
   display: grid;
 }
 
+.contents {
+  display: contents;
+}
+
 .hidden {
   display: none;
 }
@@ -2795,6 +2799,18 @@ body, #root {
 
 .group:hover .group-hover\:cursor-pointer {
   cursor: pointer;
+}
+
+.group:hover .group-hover\:bg-black\/5 {
+  background-color: rgb(0 0 0 / 0.05);
+}
+
+.group:hover .group-hover\:bg-black\/\[\.025\] {
+  background-color: rgb(0 0 0 / .025);
+}
+
+.group:hover .group-hover\:bg-black\/\[\.02\] {
+  background-color: rgb(0 0 0 / .02);
 }
 
 .group:hover .group-hover\:text-gray-700 {
