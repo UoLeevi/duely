@@ -2,7 +2,7 @@ import React, { useCallback, useLayoutEffect, useRef } from 'react';
 import { Transition, Menu } from '@headlessui/react';
 import { createClassName } from '@duely/util';
 import { ElementType } from 'react';
-import { IconProp } from '../icons';
+import { IconProp, icons } from '../icons';
 import { Link } from 'react-router-dom';
 import { useIntersectionObserver } from '../../hooks';
 import { SkeletonText } from '../skeletons';
@@ -15,22 +15,7 @@ type ButtonProps = {
 function DropMenuButton({ children, as }: ButtonProps) {
   return (
     <Menu.Button as={as}>
-      {children ?? (
-        <svg
-          className="h-6 text-gray-500"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-          />
-        </svg>
-      )}
+      {children ?? <div className="px-2 text-gray-600">{icons['dots-vertical']}</div>}
     </Menu.Button>
   );
 }
@@ -140,9 +125,8 @@ export function DropMenuRoot({ children, unmount, ...props }: DropMenuProps) {
   useIntersectionObserver(menuRef, intersectionObserverCallback);
   unmount ??= true;
 
-
   return (
-    <Menu as="div" className="relative inline-block">
+    <Menu as="div" className="relative inline-flex items-center">
       {({ open }) => {
         open = props.open ?? open;
 

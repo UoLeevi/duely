@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback } from 'react';
+import React, { createContext, Fragment, useCallback, useContext } from 'react';
 import { createClassName, hasProperty, isFunction } from '@duely/util';
 import { useBreakpoints } from '../../hooks';
 import { isCursorPagination, UsePaginationReturn, UsePaginationReturn2 } from './usePagination';
@@ -8,12 +8,41 @@ import { Link, LinkProps } from 'react-router-dom';
 export * from './usePagination';
 export * from './PaginationControls';
 
+type TableContextValue<TItem> = {
+  columnDefinitions: {
+    header: React.ReactNode;
+    span: number | Partial<Record<'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'xs', number>> | undefined;
+    render: (item: TItem | null, row: number, column: number) => React.ReactNode;
+    shrink: boolean | undefined;
+    'no-link': boolean | undefined;
+  }[];
+  wrapColCount: number;
+  wrapRowCount: number;
+  wrapCells: {
+    rowOffset: number;
+    span: number;
+    column: number;
+    firstCol: boolean;
+    lastCol: boolean;
+  }[];
+  hasHeaderRow: boolean;
+  items: TItem[];
+  dense?: boolean;
+  columns: ((item: TItem | null, row: number, column: number) => React.ReactNode)[];
+  headers: React.ReactNode[];
+  rowLink?: (item: TItem, row: number) => LinkProps;
+};
+
+const TableContext = createContext<TableContextValue<any>>(undefined as any);
+
 export const Table = Object.assign(TableRoot, { Column: TableColumn });
 
 type TableColumnProps<TItem> = {
-  header: React.ReactNode;
+  header?: React.ReactNode;
   children: (item: TItem | null, row: number, column: number) => React.ReactNode;
   span?: number | Partial<Record<keyof ReturnType<typeof useBreakpoints> | 'xs', number>>;
+  shrink?: boolean;
+  'no-link'?: boolean;
 };
 
 function TableColumn<TItem>(props: TableColumnProps<TItem>) {
@@ -157,7 +186,9 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
       (child: React.ReactElement<TableColumnProps<TItem>, typeof TableColumn>) => ({
         header: child!.props.header,
         span: child!.props.span,
-        render: child!.props.children
+        render: child!.props.children,
+        shrink: child!.props.shrink,
+        'no-link': child!.props['no-link']
       })
     ) ?? [];
 
@@ -168,7 +199,14 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
     columnDefinitions.map((c) => c.span)
   );
 
-  const gridTemplateColumns = `repeat(${wrapColCount}, 1fr)`;
+  const gridTemplateColumns =
+    wrapRowCount === 1
+      ? columnDefinitions
+          ?.map((c, i) => (c.shrink ? 'auto ' : '1fr ').repeat(wrapCells[i].span))
+          .join('')
+          .trimEnd()
+      : `repeat(${wrapColCount}, 1fr)`;
+
   const hasHeaderRow = wrapRowCount === 1;
 
   className = createClassName(
@@ -211,27 +249,11 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
       typeof error === 'object' ? error?.message : error;
     message = message === 'string' ? message : null;
     rowCount = 1;
-    rows = (
-      <TableErrorRow
-        message={message as string | null}
-        row={hasHeaderRow ? 2 : 1}
-        wrapColCount={wrapColCount}
-        wrapRowCount={wrapRowCount}
-        hasHeaderRow={hasHeaderRow}
-      />
-    );
+    rows = <TableErrorRow message={message as string | null} row={hasHeaderRow ? 2 : 1} />;
   } else if (!loading && items.length === 0) {
     rowCount = 1;
 
-    rows = (
-      <TableInfoRow
-        message="No entries to show"
-        row={hasHeaderRow ? 2 : 1}
-        wrapColCount={wrapColCount}
-        wrapRowCount={wrapRowCount}
-        hasHeaderRow={hasHeaderRow}
-      />
-    );
+    rows = <TableInfoRow message="No entries to show" row={hasHeaderRow ? 2 : 1} />;
   } else if (loading && !(pagination && isCursorPagination(pagination))) {
     rowCount = pagination
       ? pagination.loadingTotalNumberOfItems
@@ -240,21 +262,7 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
       : skeletonRowCountFallback;
 
     rows = Array.from(new Array(rowCount), (_, i) => {
-      return (
-        <TableRow
-          key={i}
-          item={null}
-          row={i}
-          columns={columns}
-          headers={headers}
-          dense={dense}
-          wrapCells={wrapCells}
-          wrapRowCount={wrapRowCount}
-          hasHeaderRow={hasHeaderRow}
-          first={i === 0}
-          last={i === rowCount - 1}
-        />
-      );
+      return <TableRow key={i} item={null} row={i} first={i === 0} last={i === rowCount - 1} />;
     });
   } else {
     rowCount = items.length;
@@ -266,13 +274,6 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
           }
           item={item}
           row={i}
-          columns={columns}
-          headers={headers}
-          dense={dense}
-          wrapCells={wrapCells}
-          wrapRowCount={wrapRowCount}
-          hasHeaderRow={hasHeaderRow}
-          rowLink={rowLink}
           first={i === 0}
           last={i === items!.length - 1}
         />
@@ -297,43 +298,50 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
   }
 
   return (
-    <div className={className} style={{ gridTemplateColumns }}>
-      {hasHeaderRow && (
-        <Fragment>
-          <div
-            className="border-b border-gray-200 dark:border-gray-700"
-            style={{ gridArea: `1 / 1 / 2 / -1` }}
-          ></div>
-          {headers}
-        </Fragment>
-      )}
+    <TableContext.Provider
+      value={{
+        columnDefinitions,
+        wrapColCount,
+        wrapRowCount,
+        wrapCells,
+        hasHeaderRow,
+        items,
+        dense,
+        columns,
+        headers,
+        rowLink
+      }}
+    >
+      <div className={className} style={{ gridTemplateColumns }}>
+        {hasHeaderRow && (
+          <Fragment>
+            <div
+              className="border-b border-gray-200 dark:border-gray-700"
+              style={{ gridArea: `1 / 1 / 2 / -1` }}
+            ></div>
+            {headers}
+          </Fragment>
+        )}
 
-      {rows}
+        {rows}
 
-      {footer && (
-        <TableFooterRow
-          row={rowCount + (hasHeaderRow ? 2 : 1)}
-          wrapColCount={wrapColCount}
-          wrapRowCount={wrapRowCount}
-          hasHeaderRow={hasHeaderRow}
-          dense={dense}
-        >
-          {footer}
-        </TableFooterRow>
-      )}
-    </div>
+        {footer && (
+          <TableFooterRow row={rowCount + (hasHeaderRow ? 2 : 1)}>{footer}</TableFooterRow>
+        )}
+      </div>
+    </TableContext.Provider>
   );
 }
 
 type TableHeaderProps = {
   column: number;
   span: number;
-  dense?: boolean;
   firstCol: boolean;
   lastCol: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
-function TableHeader({ children, column, span, dense, firstCol, lastCol }: TableHeaderProps) {
+function TableHeader({ children, column, span, firstCol, lastCol }: TableHeaderProps) {
+  const { dense } = useContext(TableContext);
   const gridArea = `1 / ${column} / 2 / ${column + span}`;
 
   let className = 'grid text-xs tracking-wide text-gray-500 ';
@@ -349,43 +357,49 @@ function TableHeader({ children, column, span, dense, firstCol, lastCol }: Table
 }
 
 type TableCellProps = {
-  row: number;
+  index: { i: number; j: number };
   header: React.ReactNode;
-  dense?: boolean;
+  row: number;
   column: number;
   span: number;
   firstCol: boolean;
   lastCol: boolean;
   firstRow: boolean;
   lastRow: boolean;
-  hasHeaderRow: boolean;
   linkProps?: LinkProps;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
 function TableCell({
+  index,
   children,
   row,
   column,
   span,
   header,
-  dense,
   firstCol,
   lastCol,
   firstRow,
   lastRow,
-  hasHeaderRow,
   linkProps
 }: TableCellProps) {
+  const { dense, hasHeaderRow, columnDefinitions } = useContext(TableContext);
   const gridArea = `${row} / ${column} / ${row + 1} / ${column + span}`;
+
+  const renderLink = !columnDefinitions[index.j]['no-link'] && linkProps;
 
   if (hasHeaderRow) {
     const className = createClassName(
       'relative grid items-center py-2 sm:py-3 ',
       firstCol && (dense ? 'pl-3 sm:pl-4' : 'pl-4 sm:pl-6'),
-      lastCol && (dense ? 'pr-3 sm:pr-4' : 'pr-4 sm:pr-6')
+      lastCol && (dense ? 'pr-3 sm:pr-4' : 'pr-4 sm:pr-6'),
+      linkProps && 'cursor-pointer'
     );
 
-    return (
+    return renderLink ? (
+      <Link {...linkProps} className={className} style={{ gridArea }}>
+        {children}
+      </Link>
+    ) : (
       <div className={className} style={{ gridArea }}>
         {children}
       </div>
@@ -408,10 +422,11 @@ function TableCell({
         : 'pb-1.5 sm:pb-2'
       : lastRow
       ? 'pb-4 sm:pb-6'
-      : 'pb-2 sm:pb-3'
+      : 'pb-2 sm:pb-3',
+    linkProps && 'cursor-pointer'
   );
 
-  return linkProps ? (
+  return renderLink ? (
     <Link {...linkProps} className={className} style={{ gridArea }}>
       <div className="grid text-xs tracking-wide text-gray-500">{header}</div>
       <div className="relative grid items-center flex-1">{children}</div>
@@ -427,37 +442,15 @@ function TableCell({
 type TableRowProps<TItem> = {
   item: TItem;
   row: number;
-  columns: ((item: TItem, row: number, column: number) => React.ReactNode)[];
-  headers: React.ReactNode[];
-  dense?: boolean;
-  wrapCells: {
-    rowOffset: number;
-    span: number;
-    column: number;
-    firstCol: boolean;
-    lastCol: boolean;
-  }[];
   first: boolean;
   last: boolean;
-  wrapRowCount: number;
-  hasHeaderRow: boolean;
   rowLink?: (item: TItem, row: number) => LinkProps;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
-function TableRow<TItem>({
-  item,
-  row,
-  columns,
-  headers,
-  dense,
-  wrapCells,
-  wrapRowCount,
-  first,
-  last,
-  hasHeaderRow,
-  rowLink
-}: TableRowProps<TItem>) {
-  const linkProps = rowLink && rowLink(item, row);
+function TableRow<TItem>({ item, row, last }: TableRowProps<TItem>) {
+  const { columns, headers, wrapCells, wrapRowCount, hasHeaderRow, rowLink } =
+    useContext(TableContext);
+  const linkProps = item && rowLink && rowLink(item, row);
   let className = createClassName(
     'border-gray-200 dark:border-gray-700',
     !last && 'border-b',
@@ -465,7 +458,7 @@ function TableRow<TItem>({
   );
 
   const cells = columns.map((column, j) => column(item, row, j));
-
+  const i = row;
   row += hasHeaderRow ? 1 : 0;
   row *= wrapRowCount;
   row += 1;
@@ -486,10 +479,9 @@ function TableRow<TItem>({
         return (
           <TableCell
             key={j}
+            index={{ i, j }}
             row={row + rowOffset}
             header={headers[j]}
-            dense={dense}
-            hasHeaderRow={hasHeaderRow}
             {...cellProps}
             firstRow={rowOffset === 0}
             lastRow={rowOffset + 1 === wrapRowCount}
@@ -505,20 +497,10 @@ function TableRow<TItem>({
 
 type TableFooterRowProps = {
   row: number;
-  wrapColCount: number;
-  wrapRowCount: number;
-  hasHeaderRow: boolean;
-  dense?: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
-function TableFooterRow({
-  row,
-  wrapColCount,
-  wrapRowCount,
-  hasHeaderRow,
-  dense,
-  children
-}: TableFooterRowProps) {
+function TableFooterRow({ row, children }: TableFooterRowProps) {
+  const { wrapColCount, wrapRowCount, hasHeaderRow, dense } = useContext(TableContext);
   let className =
     'grid text-gray-400 border-t border-gray-200 dark:border-gray-700 place-items-center ';
   className += dense ? 'py-1.5 sm:py-2 ' : 'py-2 sm:py-3 ';
@@ -541,18 +523,10 @@ function TableFooterRow({
 type TableErrorRowProps = {
   row: number;
   message: string | null;
-  wrapColCount: number;
-  wrapRowCount: number;
-  hasHeaderRow: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
-function TableErrorRow({
-  row,
-  message,
-  wrapColCount,
-  wrapRowCount,
-  hasHeaderRow
-}: TableErrorRowProps) {
+function TableErrorRow({ row, message }: TableErrorRowProps) {
+  const { wrapColCount, wrapRowCount, hasHeaderRow } = useContext(TableContext);
   let className = 'grid p-4 border-gray-200 dark:border-gray-700 place-items-center';
   let gridArea = `${row} / 1 / ${row + 1} / -1`;
 
@@ -591,18 +565,11 @@ function TableErrorRow({
 type TableInfoRowProps = {
   row: number;
   message: string | null;
-  wrapColCount: number;
-  wrapRowCount: number;
-  hasHeaderRow: boolean;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 
-function TableInfoRow({
-  row,
-  message,
-  wrapColCount,
-  wrapRowCount,
-  hasHeaderRow
-}: TableInfoRowProps) {
+function TableInfoRow({ row, message }: TableInfoRowProps) {
+  const { wrapColCount, wrapRowCount, hasHeaderRow } = useContext(TableContext);
+
   let className = 'grid p-4 border-gray-200 dark:border-gray-700 place-items-center';
   let gridArea = `${row} / 1 / ${row + 1} / -1`;
 

@@ -247,7 +247,7 @@ export function ProfileBrandTable() {
         {(agency: TAgency | null) => <StatusColumn agency={agency} />}
       </Table.Column>
 
-      <Table.Column header="Action">
+      <Table.Column no-link shrink>
         {(agency: TAgency | null) => <ActionsColumn agency={agency} />}
       </Table.Column>
     </Table>
