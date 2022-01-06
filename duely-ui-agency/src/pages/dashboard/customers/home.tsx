@@ -127,7 +127,7 @@ export default function DashboardCustomersHome() {
             <Table.Column no-link shrink>
               {(customer: TCustomer | null) => {
                 if (!customer) {
-                  return <div className="px-2 text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
+                  return <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
                 }
 
                 return (

@@ -1,3 +1,4 @@
+import { createClassName } from '@duely/util';
 import React, { useRef } from 'react';
 import { icons, SkeletonText, Tooltip, useQueryState } from '..';
 import { useMessage } from '../../hooks';
@@ -12,13 +13,15 @@ export function IdPropertyValue({ children }: IdPropertyValueProps) {
 
   const { loading } = useQueryState();
 
+  const className = 'text-sm text-gray-700 dark:text-gray-300';
+
   if (loading) {
-    return <SkeletonText ch={32} />;
+    return <SkeletonText ch={32} className={className} />;
   }
 
   return (
     <div className="flex group">
-      <span className="font-mono">{children}</span>
+      <span className={createClassName(className, 'font-mono')}>{children}</span>
       {children && (
         <>
           <span

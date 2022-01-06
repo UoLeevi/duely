@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { formatDate } from '@duely/util';
+import { createClassName, formatDate } from '@duely/util';
 import { TimeConversionTooltip } from '../Tooltip';
 import { SkeletonText } from '..';
 import { useQueryState } from '../Query';
@@ -12,15 +12,20 @@ export type DatePropertyValueProps = {
 export function DatePropertyValue({ children, format }: DatePropertyValueProps) {
   const ref = useRef<HTMLElement>(null);
   const { loading } = useQueryState();
-
-  if (loading) {
-    return <SkeletonText ch={10} />;
-  }
+  const className = 'text-sm text-gray-700 dark:text-gray-300';
 
   format ??= 'mmm d, yyyy';
+
+  if (loading) {
+    return <SkeletonText className={className} ch={format.length} />;
+  }
+
   return (
     <>
-      <span ref={ref} className="underline underline-offset-2 hover:bg-black/5">
+      <span
+        ref={ref}
+        className={createClassName(className, 'underline underline-offset-2 hover:bg-black/5')}
+      >
         {formatDate(children, format, { tz: 'local' })}
       </span>
       <TimeConversionTooltip elementRef={ref} date={children} />
@@ -38,12 +43,14 @@ export function DateRangePropertyValue({ from, to }: DateRangePropertyValueProps
   const toRef = useRef<HTMLElement>(null);
   const { loading } = useQueryState();
 
+  const className = 'text-sm text-gray-700 dark:text-gray-300';
+
   if (loading) {
-    return <SkeletonText ch={20} />;
+    return <SkeletonText className={className} ch={20} />;
   }
 
   return (
-    <>
+    <span className={className}>
       <span ref={fromRef} className="underline underline-offset-2 hover:bg-black/5">
         {formatDate(from, 'mmm d', { tz: 'local' })}
       </span>
@@ -53,6 +60,6 @@ export function DateRangePropertyValue({ from, to }: DateRangePropertyValueProps
         {formatDate(to, 'mmm d, yyyy', { tz: 'local' })}
       </span>
       <TimeConversionTooltip elementRef={toRef} date={to} />
-    </>
+    </span>
   );
 }

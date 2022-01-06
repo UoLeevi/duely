@@ -17,9 +17,11 @@ export type TextPropertyValueProps = {
 export function PropertyValueRoot({ children }: TextPropertyValueProps) {
   const { loading } = useQueryState();
 
+  const className = "text-sm text-gray-700 dark:text-gray-300";
+
   if (loading) {
-    return <SkeletonText />;
+    return <SkeletonText className={className} />;
   }
 
-  return <span>{children}</span>;
+  return <span className={className}>{children}</span>;
 }

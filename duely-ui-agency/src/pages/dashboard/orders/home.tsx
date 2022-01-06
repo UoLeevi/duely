@@ -15,7 +15,8 @@ import {
   SkeletonText,
   ColoredChip,
   icons,
-  useQueryState
+  useQueryState,
+  PropertyValue
 } from '@duely/react';
 import { DashboardSection } from '../components';
 import { Currency, formatCurrency, formatDate, truncate } from '@duely/util';
@@ -86,14 +87,13 @@ export default function DashboardOrdersHome() {
             loading={loading}
             error={error}
             wrap={{
-              sm: 4,
-              md: 3
+              md: 8
             }}
             pagination={pagination}
             keyField="id"
             rowLink={(order: TOrder) => ({ to: `orders/${order.id}` })}
           >
-            <Table.Column header="Order">
+            <Table.Column header="Order" span={3}>
               {(order: TOrder | null) =>
                 !order ? (
                   <div className="flex flex-col space-y-1">
@@ -116,7 +116,7 @@ export default function DashboardOrdersHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Customer">
+            <Table.Column header="Customer" span={3}>
               {(order: TOrder | null) =>
                 !order ? (
                   <div className="flex flex-col space-y-1">
@@ -136,7 +136,7 @@ export default function DashboardOrdersHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Type">
+            <Table.Column header="Type" span={2}>
               {(order: TOrder | null) =>
                 !order ? (
                   <div className="flex flex-col space-y-1">
@@ -158,7 +158,7 @@ export default function DashboardOrdersHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Amount">
+            <Table.Column header="Amount" span={3}>
               {(order: TOrder | null) =>
                 !order ? (
                   <div className="flex items-center space-x-4">
@@ -191,27 +191,23 @@ export default function DashboardOrdersHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Order date">
+            <Table.Column header="Order date" span={2}>
               {(order: TOrder | null) =>
                 !order ? (
                   <div className="flex flex-col space-y-2">
                     <SkeletonText className="text-xs" />
                   </div>
                 ) : (
-                  <div className="flex flex-col space-y-2">
-                    <span className="text-xs text-gray-800 dark:text-gray-300">
-                      {formatDate(new Date(order.ordered_at))}
-                    </span>
-                  </div>
+                  <PropertyValue.Date>{order.ordered_at}</PropertyValue.Date>
                 )
               }
             </Table.Column>
 
-            <Table.Column shrink no-link>
+            <Table.Column shrink no-link justify="right">
               {(order: TOrder | null) => {
                 if (!order) {
                   return (
-                    <div className="px-2 text-gray-300 animate-pulse">{icons['dots-vertical']}</div>
+                    <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>
                   );
                 }
 

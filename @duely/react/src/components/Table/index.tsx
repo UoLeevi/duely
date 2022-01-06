@@ -13,8 +13,9 @@ type TableContextValue<TItem> = {
     header: React.ReactNode;
     span: number | Partial<Record<'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'xs', number>> | undefined;
     render: (item: TItem | null, row: number, column: number) => React.ReactNode;
-    shrink: boolean | undefined;
-    'no-link': boolean | undefined;
+    shrink?: boolean;
+    'no-link'?: boolean;
+    justify?: 'left' | 'center' | 'right';
   }[];
   wrapColCount: number;
   wrapRowCount: number;
@@ -43,6 +44,7 @@ type TableColumnProps<TItem> = {
   span?: number | Partial<Record<keyof ReturnType<typeof useBreakpoints> | 'xs', number>>;
   shrink?: boolean;
   'no-link'?: boolean;
+  justify?: 'left' | 'center' | 'right';
 };
 
 function TableColumn<TItem>(props: TableColumnProps<TItem>) {
@@ -140,7 +142,7 @@ function useWrapOptions(
 
   let rowOffset = 0;
   let column = 1;
-  const wrapCells = wrapColSpans.map((span) => {
+  const wrapCells = wrapColSpans.map((span, j) => {
     if (column + span - 1 > wrapColCount) {
       ++rowOffset;
       column = 1;
@@ -151,7 +153,8 @@ function useWrapOptions(
       span,
       column,
       firstCol: column === 1,
-      lastCol: column + span === wrapColCount
+      lastCol:
+        j === wrapColSpans.length - 1 || column + span + wrapColSpans[j + 1] - 1 > wrapColCount
     };
 
     column += span;
@@ -184,11 +187,12 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
     React.Children.map(
       children,
       (child: React.ReactElement<TableColumnProps<TItem>, typeof TableColumn>) => ({
-        header: child!.props.header,
-        span: child!.props.span,
-        render: child!.props.children,
-        shrink: child!.props.shrink,
-        'no-link': child!.props['no-link']
+        header: child.props.header,
+        span: child.props.span,
+        render: child.props.children,
+        shrink: child.props.shrink,
+        'no-link': child.props['no-link'],
+        justify: child.props.justify
       })
     ) ?? [];
 
@@ -342,7 +346,7 @@ type TableHeaderProps = {
 
 function TableHeader({ children, column, span, firstCol, lastCol }: TableHeaderProps) {
   const { dense } = useContext(TableContext);
-  const gridArea = `1 / ${column} / 2 / ${column + span}`;
+  const gridArea = `1 / ${column} / 2 / ${lastCol ? '-1' : column + span}`;
 
   let className = 'grid text-xs tracking-wide text-gray-500 ';
   className += dense ? 'py-2 sm:py-3 ' : 'py-3 sm:py-4 ';
@@ -383,13 +387,21 @@ function TableCell({
   linkProps
 }: TableCellProps) {
   const { dense, hasHeaderRow, columnDefinitions } = useContext(TableContext);
-  const gridArea = `${row} / ${column} / ${row + 1} / ${column + span}`;
+  const columnDefinition = columnDefinitions[index.j];
+  const gridArea = `${row} / ${column} / ${row + 1} / ${lastCol ? '-1' : column + span}`;
 
-  const renderLink = !columnDefinitions[index.j]['no-link'] && linkProps;
+  const renderLink = !columnDefinition['no-link'] && linkProps;
+  const justify =
+    columnDefinition.justify === 'center'
+      ? 'justify-center'
+      : columnDefinition.justify === 'right'
+      ? 'justify-end'
+      : 'justify-start';
 
   if (hasHeaderRow) {
     const className = createClassName(
       'relative grid items-center py-2 sm:py-3 ',
+      justify,
       firstCol && (dense ? 'pl-3 sm:pl-4' : 'pl-4 sm:pl-6'),
       lastCol && (dense ? 'pr-3 sm:pr-4' : 'pr-4 sm:pr-6'),
       linkProps && 'cursor-pointer'
@@ -429,12 +441,12 @@ function TableCell({
   return renderLink ? (
     <Link {...linkProps} className={className} style={{ gridArea }}>
       <div className="grid text-xs tracking-wide text-gray-500">{header}</div>
-      <div className="relative grid items-center flex-1">{children}</div>
+      <div className={`relative grid items-center flex-1 ${justify}`}>{children}</div>
     </Link>
   ) : (
     <div className={className} style={{ gridArea }}>
       <div className="grid text-xs tracking-wide text-gray-500">{header}</div>
-      <div className="relative grid items-center flex-1">{children}</div>
+      <div className={`relative grid items-center flex-1 ${justify}`}>{children}</div>
     </div>
   );
 }

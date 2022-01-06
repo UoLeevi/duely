@@ -106,7 +106,7 @@ export default function DashboardSitePagesHome() {
             <Table.Column no-link shrink span={{ lg: 3 }}>
               {(page: TItem | null) => {
                 if (!page) {
-                  return <div className="px-2 text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
+                  return <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
                 }
 
                 return (

@@ -66,11 +66,20 @@ export function Tooltip({ children, className, id, elementRef, position }: Toolt
     },
     [rerender]
   );
+  const scroll = useCallback(
+    (e: Event) => {
+      if (state.node === null) return;
+      state.node = null;
+      rerender();
+    },
+    [rerender]
+  );
 
   useEffect(() => {
     if (!id && !elementRef) return;
 
     document.addEventListener('click', outsideClick);
+    document.addEventListener('scroll', scroll);
     const nodes = id ? document.querySelectorAll(`[data-tooltip="${id}"]`) : [elementRef?.current!];
     nodes.forEach((node) => {
       node.addEventListener('click', click);
@@ -79,6 +88,7 @@ export function Tooltip({ children, className, id, elementRef, position }: Toolt
     });
     return () => {
       document.removeEventListener('click', outsideClick);
+      document.removeEventListener('scroll', scroll);
       nodes.forEach((node) => {
         node.removeEventListener('click', click);
         node.removeEventListener('mouseenter', mouseenter);
@@ -143,56 +153,56 @@ function getPositionRelativeToDocument(
   switch (position) {
     case 'top left':
       return {
-        left: left + window.pageXOffset,
-        top: top + window.pageYOffset
+        left: left,
+        top: top
       };
 
     case 'top center':
       return {
-        left: left + width / 2 + window.pageXOffset,
-        top: top + window.pageYOffset
+        left: left + width / 2,
+        top: top
       };
 
     case 'top right':
       return {
-        left: left + width + window.pageXOffset,
-        top: top + window.pageYOffset
+        left: left + width,
+        top: top
       };
 
     case 'center left':
       return {
-        left: left + window.pageXOffset,
-        top: top + height / 2 + window.pageYOffset
+        left: left,
+        top: top + height / 2
       };
 
     case 'center':
       return {
-        left: left + width / 2 + window.pageXOffset,
-        top: top + height / 2 + window.pageYOffset
+        left: left + width / 2,
+        top: top + height / 2
       };
 
     case 'center right':
       return {
-        left: left + width + window.pageXOffset,
-        top: top + height / 2 + window.pageYOffset
+        left: left + width,
+        top: top + height / 2
       };
 
     case 'bottom left':
       return {
-        left: left + window.pageXOffset,
-        top: top + height + window.pageYOffset
+        left: left,
+        top: top + height
       };
 
     case 'bottom center':
       return {
-        left: left + width / 2 + window.pageXOffset,
-        top: top + height + window.pageYOffset
+        left: left + width / 2,
+        top: top + height
       };
 
     case 'bottom right':
       return {
-        left: left + width + window.pageXOffset,
-        top: top + height + window.pageYOffset
+        left: left + width,
+        top: top + height
       };
   }
 }

@@ -159,7 +159,7 @@ export default function DashboardOrdersSubscriptions() {
               {(subscription: TSubscription | null) => {
                 if (!subscription) {
                   return (
-                    <div className="px-2 text-gray-300 animate-pulse">{icons['dots-vertical']}</div>
+                    <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>
                   );
                 }
 

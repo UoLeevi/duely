@@ -15,7 +15,7 @@ type ButtonProps = {
 function DropMenuButton({ children, as }: ButtonProps) {
   return (
     <Menu.Button as={as}>
-      {children ?? <div className="px-2 text-gray-600">{icons['dots-vertical']}</div>}
+      {children ?? <div className="text-gray-600">{icons['dots-vertical']}</div>}
     </Menu.Button>
   );
 }

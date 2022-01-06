@@ -144,7 +144,7 @@ export default function DashboardPaymentsInvoices() {
             <Table.Column no-link shrink>
               {(invoice: TInvoice | null) => {
                 if (!invoice) {
-                  return <div className="px-2 text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
+                  return <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
                 }
 
                 return (

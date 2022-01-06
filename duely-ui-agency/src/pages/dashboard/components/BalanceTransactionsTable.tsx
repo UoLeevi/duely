@@ -1,6 +1,13 @@
 import React from 'react';
 import { Currency, ElementType, formatCurrency, formatDate, sentenceCase } from '@duely/util';
-import { Util, Table, SkeletonText, ColoredChip, usePagination2 } from '@duely/react';
+import {
+  Util,
+  Table,
+  SkeletonText,
+  ColoredChip,
+  usePagination2,
+  PropertyValue
+} from '@duely/react';
 import {
   useQuery,
   agency_stripe_account_balance_transactions_Q,
@@ -15,7 +22,7 @@ export function BalanceTransactionsTable() {
     error
   } = useQuery(agency_stripe_account_balance_transactions_Q, { agency_id: agency!.id });
 
-  type TBalanceTransaction = any
+  type TBalanceTransaction = any;
 
   const pagination = usePagination2<TBalanceTransaction, 'id'>({
     getItems: ({ limit, starting_after }) => {
@@ -35,15 +42,8 @@ export function BalanceTransactionsTable() {
     keyField: 'id'
   });
 
-
   return (
-    <Table
-      pagination={pagination}
-      dense={true}
-      wrap={{ md: 3 }}
-      loading={loading}
-      error={error}
-    >
+    <Table pagination={pagination} dense={true} wrap={{ sm: 3 }} loading={loading} error={error}>
       <Table.Column header="Type">
         {(txn: TBalanceTransaction | null) =>
           !txn ? (
@@ -70,8 +70,8 @@ export function BalanceTransactionsTable() {
               <SkeletonText className="text-xs" />
             </div>
           ) : (
-            <div className="flex flex-col">
-              <div className="text-xs">{formatDate(new Date(txn.created))}</div>
+            <div className="flex flex-col items-start">
+              <PropertyValue.Date>{txn.created}</PropertyValue.Date>
               {txn.status === 'pending' && txn.available_on !== txn.created && (
                 <div className="text-xs text-gray-500">
                   available on {formatDate(new Date(txn.available_on))}
@@ -92,9 +92,11 @@ export function BalanceTransactionsTable() {
           ) : (
             <div className="flex flex-col">
               <div className="text-sm">{formatCurrency(txn.amount, txn.currency as Currency)}</div>
-              <div className="text-xs text-gray-500">
-                net {formatCurrency(txn.net, txn.currency as Currency)}
-              </div>
+              {txn.net !== txn.amount && (
+                <div className="text-xs text-gray-500">
+                  net {formatCurrency(txn.net, txn.currency as Currency)}
+                </div>
+              )}
             </div>
           )
         }
@@ -114,7 +116,7 @@ export function BalanceTransactionsTable() {
         }
       </Table.Column>
 
-      <Table.Column header="Status">
+      <Table.Column header="Status" shrink>
         {(txn: TBalanceTransaction | null) =>
           !txn ? (
             <div className="flex flex-col items-center">
