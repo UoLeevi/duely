@@ -207,10 +207,12 @@ export default function DashboardOrdersHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Action">
+            <Table.Column shrink no-link>
               {(order: TOrder | null) => {
                 if (!order) {
-                  return <SkeletonText />;
+                  return (
+                    <div className="px-2 text-gray-300 animate-pulse">{icons['dots-vertical']}</div>
+                  );
                 }
 
                 return (

@@ -103,10 +103,10 @@ export default function DashboardSitePagesHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Action" span={{ lg: 3 }}>
+            <Table.Column no-link shrink span={{ lg: 3 }}>
               {(page: TItem | null) => {
                 if (!page) {
-                  return <SkeletonText />;
+                  return <div className="px-2 text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
                 }
 
                 return (

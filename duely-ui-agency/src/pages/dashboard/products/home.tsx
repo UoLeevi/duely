@@ -193,10 +193,10 @@ export default function DashboardProductsHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Action" span={2}>
+            <Table.Column no-link shrink span={2}>
               {(product: TProduct | null) => {
                 if (!product) {
-                  return <SkeletonText ch={5} />;
+                  return <div className="px-2 text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
                 }
 
                 return (

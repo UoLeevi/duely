@@ -124,10 +124,10 @@ export default function DashboardCustomersHome() {
               }
             </Table.Column>
 
-            <Table.Column header="Action">
+            <Table.Column no-link shrink>
               {(customer: TCustomer | null) => {
                 if (!customer) {
-                  return <SkeletonText />;
+                  return <div className="px-2 text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
                 }
 
                 return (

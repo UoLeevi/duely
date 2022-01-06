@@ -2801,14 +2801,6 @@ body, #root {
   cursor: pointer;
 }
 
-.group:hover .group-hover\:bg-black\/5 {
-  background-color: rgb(0 0 0 / 0.05);
-}
-
-.group:hover .group-hover\:bg-black\/\[\.025\] {
-  background-color: rgb(0 0 0 / .025);
-}
-
 .group:hover .group-hover\:bg-black\/\[\.02\] {
   background-color: rgb(0 0 0 / .02);
 }
