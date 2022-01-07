@@ -16,8 +16,14 @@ export function FormFieldTextAreaElement<
   TFormFields extends Record<string, any> = Record<string, any>
 >({ name, registerOptions, loading, ...props }: FormFieldTextAreaElementProps<TName, TFormFields>) {
   const form = useFormContext();
+  const fieldState = form.useFormFieldState(name);
+  const hasError = !!fieldState?.error;
   return (
-    <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
+    <div
+      className={`flex items-center border rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5 ${
+        hasError ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-500'
+      }`}
+    >
       <textarea
         id={name}
         {...form.register(name, registerOptions)}

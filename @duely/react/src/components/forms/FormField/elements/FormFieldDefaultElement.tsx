@@ -35,6 +35,8 @@ export function FormFieldDefaultElement<
   ...props
 }: FormFieldDefaultElementProps<TName, TFormFields>) {
   const form = useFormContext();
+  const fieldState = form.useFormFieldState(name);
+  const hasError = !!fieldState?.error;
 
   if (suggestions) {
     props.list = `${name}--suggestions`;
@@ -42,7 +44,11 @@ export function FormFieldDefaultElement<
 
   return (
     <>
-      <div className="flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
+      <div
+        className={`flex items-center border rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5 ${
+          hasError ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-500'
+        }`}
+      >
         {prefix && <span className="pl-3 text-gray-500 whitespace-nowrap">{prefix}</span>}
         <input
           id={name}

@@ -36,6 +36,8 @@ export function FormFieldImageElement<
 }: FormFieldImageElementProps<TName, TFormFields>) {
   const form = useFormContext();
   const fileList = form.useFormFieldValue(name) as FileList | null;
+  const fieldState = form.useFormFieldState(name);
+  const hasError = !!fieldState?.error;
   const hasFile = (fileList?.length ?? 0) > 0;
   hintRef.current = hasFile
     ? Array.from(fileList!)
@@ -49,7 +51,9 @@ export function FormFieldImageElement<
   const className = createClassName(
     loading && 'animate-pulse border-indigo-400',
     !loading && 'border-gray-300 dark:border-gray-500',
-    image && 'border m-px border-gray-300 dark:border-gray-500 shadow-sm',
+    image && 'border m-px shadow-sm',
+    image && !hasError && 'border-gray-300 dark:border-gray-500',
+    image && hasError && 'border-red-400 dark:border-red-600',
     !image && 'border-2 border-dashed',
     'relative aspect-[3/2] transition-colors flex justify-center rounded-md'
   );
@@ -58,9 +62,7 @@ export function FormFieldImageElement<
     <label htmlFor={name} className={className}>
       {image && (
         <img
-          className={`flex-1 rounded-md ${
-            contain ? 'object-contain' : 'object-cover'
-          }`}
+          className={`flex-1 rounded-md ${contain ? 'object-contain' : 'object-cover'}`}
           src={image.data}
           alt={typeof label === 'string' ? label : ''}
         />

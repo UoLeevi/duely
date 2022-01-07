@@ -1,4 +1,11 @@
-import React, { RefObject, useCallback, useContext, useEffect, useState } from 'react';
+import React, {
+  RefObject,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useState
+} from 'react';
 import { createClassName } from '@duely/util';
 import { Transition } from '@headlessui/react';
 import { useRerender } from '..';
@@ -32,6 +39,29 @@ export function Tooltip({ children, className, id, elementRef, position }: Toolt
   const rerender = useRerender();
   const [state] = useState<{ node: HTMLElement | null }>({ node: null });
 
+  useLayoutEffect(() => {
+    if (state.node !== null) return;
+    if (!elementRef?.current?.matches(':focus-within')) return;
+    state.node = elementRef.current;
+    rerender();
+  }, [state]);
+
+  const focusin = useCallback(
+    (e: Event) => {
+      if (state.node !== null) return;
+      state.node = e.currentTarget as HTMLElement;
+      rerender();
+    },
+    [rerender]
+  );
+  const focusout = useCallback(
+    (e: Event) => {
+      if (state.node !== (e.currentTarget as HTMLElement)) return;
+      state.node = null;
+      rerender();
+    },
+    [rerender]
+  );
   const mouseenter = useCallback(
     (e: Event) => {
       if (state.node !== null) return;
@@ -43,6 +73,7 @@ export function Tooltip({ children, className, id, elementRef, position }: Toolt
   const mouseleave = useCallback(
     (e: Event) => {
       if (state.node !== (e.currentTarget as HTMLElement)) return;
+      if (state.node.matches(':focus-within')) return;
       state.node = null;
       rerender();
     },
@@ -83,6 +114,8 @@ export function Tooltip({ children, className, id, elementRef, position }: Toolt
     const nodes = id ? document.querySelectorAll(`[data-tooltip="${id}"]`) : [elementRef?.current!];
     nodes.forEach((node) => {
       node.addEventListener('click', click);
+      node.addEventListener('focusin', focusin);
+      node.addEventListener('focusout', focusout);
       node.addEventListener('mouseenter', mouseenter);
       node.addEventListener('mouseleave', mouseleave);
     });
@@ -91,11 +124,13 @@ export function Tooltip({ children, className, id, elementRef, position }: Toolt
       document.removeEventListener('scroll', scroll);
       nodes.forEach((node) => {
         node.removeEventListener('click', click);
+        node.removeEventListener('focusin', focusin);
+        node.removeEventListener('focusout', focusout);
         node.removeEventListener('mouseenter', mouseenter);
         node.removeEventListener('mouseleave', mouseleave);
       });
     };
-  }, [mouseenter, mouseleave, elementRef]);
+  }, [outsideClick, scroll, click, focusin, focusout, mouseenter, mouseleave, elementRef]);
 
   const { top, left } =
     usePrevious(state.node && getPositionRelativeToDocument(state.node, position), {

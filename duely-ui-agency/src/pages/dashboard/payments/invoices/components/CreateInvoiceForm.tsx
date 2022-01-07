@@ -139,7 +139,7 @@ export function CreateInvoiceForm() {
 
     console.log(value);
 
-    const items = value.items.map(item => ({
+    const items = value.items.map((item) => ({
       unit_amount: numberToMinorCurrencyAmount(+item.unit_amount, currency as Currency),
       quantity: +item.quantity,
       description: item.description
@@ -244,12 +244,14 @@ export function CreateInvoiceForm() {
         <div className="pb-2">
           <Form.Label>Items</Form.Label>
           <div className="flex flex-col pb-3 border-b">
-            <Table items={fields} keyField="key">
-              <Table.Column header="Description" span={6}>
+            <Table items={fields} keyField="key" dense>
+              <Table.Column header="Description" span={6} justify="stretch">
                 {(field: FieldArrayItem | null, i) => {
                   if (!field) return null;
                   return (
                     <Form.Field
+                      dense
+                      tooltip
                       type="text"
                       name={field.getName('description')}
                       placeholder={`Item ${i + 1}`}
@@ -264,6 +266,8 @@ export function CreateInvoiceForm() {
                   if (!field) return null;
                   return (
                     <Form.Field
+                      dense
+                      tooltip
                       name={field.getName('unit_amount')}
                       type="text"
                       inputMode="numeric"
@@ -283,6 +287,8 @@ export function CreateInvoiceForm() {
                   if (!field) return null;
                   return (
                     <Form.Field
+                      dense
+                      tooltip
                       name={field.getName('quantity')}
                       type="text"
                       inputMode="numeric"
@@ -315,7 +321,7 @@ export function CreateInvoiceForm() {
               </Table.Column>
             </Table>
 
-            <div className="flex">
+            <div className="flex mt-1">
               <Button type="button" className="text-sm" dense icon="plus.solid" onClick={addItem}>
                 Add item
               </Button>

@@ -24,6 +24,7 @@ import {
 } from './elements';
 import { createClassName } from '@duely/util';
 import { FormLabel } from '../FormLabel';
+import { icons, Tooltip } from '../..';
 
 type FormFieldPropsPartial<
   TName extends string & keyof TFormFields,
@@ -39,6 +40,7 @@ type FormFieldPropsPartial<
   actions?: React.ReactNode;
   loading?: boolean;
   dense?: boolean;
+  tooltip?: boolean;
 };
 
 type FormFieldRadioToggleProps<
@@ -137,6 +139,7 @@ export function FormField<
   loading,
   className,
   dense,
+  tooltip,
   ...props
 }: FormFieldProps<TName, TFormFields, TType>) {
   const form = useFormContext();
@@ -148,6 +151,7 @@ export function FormField<
 
   let element;
   let hintRef = useRef(hint);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (defaultValue === undefined) return;
@@ -308,7 +312,7 @@ export function FormField<
   className = createClassName('flex flex-col relative', className);
 
   return (
-    <div className={className}>
+    <div ref={tooltipRef} className={className}>
       <div className="flex justify-between whitespace-nowrap">
         {label && (
           <FormLabel className="pb-1 text-sm" htmlFor={name}>
@@ -316,7 +320,7 @@ export function FormField<
           </FormLabel>
         )}
 
-        {shortErrorMessage ? (
+        {!tooltip && shortErrorMessage ? (
           <p className="text-xs font-medium leading-5 text-red-500">{shortErrorMessage}</p>
         ) : (
           actions
@@ -327,16 +331,29 @@ export function FormField<
 
       <LoadingBar className="h-px px-1" loading={!!loading} />
 
-      {longErrorMessage ? (
-        <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">
-          {longErrorMessage}
-        </p>
-      ) : (
-        (hintRef.current || !dense) && (
-          <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
-            {hintRef.current}
+      {!tooltip &&
+        (longErrorMessage ? (
+          <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">
+            {longErrorMessage}
           </p>
-        )
+        ) : (
+          (hintRef.current || !dense) && (
+            <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
+              {hintRef.current}
+            </p>
+          )
+        ))}
+
+      {tooltip && (errorMessage ?? hintRef.current) && (
+        <Tooltip elementRef={tooltipRef} className="px-2 py-1.5 text-sm flex">
+          {errorMessage && (
+            <>
+              <span className="mr-1.5 text-red-400">{icons['exclamation-circle']}</span>
+              {errorMessage}
+            </>
+          )}
+          {!errorMessage && hintRef.current}
+        </Tooltip>
       )}
     </div>
   );

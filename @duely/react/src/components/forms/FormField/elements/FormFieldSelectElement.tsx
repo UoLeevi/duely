@@ -34,6 +34,8 @@ export function FormFieldSelectElement<
   ...props
 }: FormFieldSelectElementProps<TName, TFormFields>) {
   const form = useFormContext();
+  const fieldState = form.useFormFieldState(name);
+  const hasError = !!fieldState?.error;
   const children =
     ['', ...(options ?? [])].map((option) => {
       const { value, element } =
@@ -46,7 +48,9 @@ export function FormFieldSelectElement<
     }) ?? [];
 
   return (
-    <div className="relative flex items-center border border-gray-300 rounded-md shadow-sm outline-none dark:border-gray-500 focus-within:ring sm:text-sm sm:leading-5">
+    <div className={`relative flex items-center border rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5 ${
+      hasError ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-500'
+    }`}>
       <select
         id={name}
         {...form.register(name, registerOptions)}

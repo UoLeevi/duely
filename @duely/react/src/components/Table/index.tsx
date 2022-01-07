@@ -15,7 +15,7 @@ type TableContextValue<TItem> = {
     render: (item: TItem | null, row: number, column: number) => React.ReactNode;
     shrink?: boolean;
     'no-link'?: boolean;
-    justify?: 'left' | 'center' | 'right';
+    justify?: 'left' | 'center' | 'stretch' | 'right';
   }[];
   wrapColCount: number;
   wrapRowCount: number;
@@ -44,7 +44,7 @@ type TableColumnProps<TItem> = {
   span?: number | Partial<Record<keyof ReturnType<typeof useBreakpoints> | 'xs', number>>;
   shrink?: boolean;
   'no-link'?: boolean;
-  justify?: 'left' | 'center' | 'right';
+  justify?: 'left' | 'center' | 'stretch' | 'right';
 };
 
 function TableColumn<TItem>(props: TableColumnProps<TItem>) {
@@ -213,12 +213,6 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
 
   const hasHeaderRow = wrapRowCount === 1;
 
-  className = createClassName(
-    className,
-    'grid auto-rows-auto',
-    dense ? 'gap-x-3 sm:gap-x-4' : 'gap-x-5 sm:gap-x-6'
-  );
-
   const pagination = hasProperty(rest, 'pagination') ? rest.pagination : undefined;
 
   loading = !!pagination?.loading || !!loading;
@@ -300,6 +294,12 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
       }
     }
   }
+
+  className = createClassName(
+    className,
+    'grid auto-rows-auto min-h-[104px] content-start',
+    dense ? 'gap-x-3 sm:gap-x-4' : 'gap-x-5 sm:gap-x-6'
+  );
 
   return (
     <TableContext.Provider
@@ -393,7 +393,9 @@ function TableCell({
   const renderLink = !columnDefinition['no-link'] && linkProps;
   const justify =
     columnDefinition.justify === 'center'
-      ? 'justify-center'
+      ? 'justify-center' :
+      columnDefinition.justify === 'stretch'
+      ? 'justify-stretch'
       : columnDefinition.justify === 'right'
       ? 'justify-end'
       : 'justify-start';

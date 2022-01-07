@@ -28,6 +28,8 @@ export function FormFieldFileElement<
 }: FormFieldFileElementProps<TName, TFormFields>) {
   const form = useFormContext();
   const fileList = form.useFormFieldValue(name) as FileList | null;
+  const fieldState = form.useFormFieldState(name);
+  const hasError = !!fieldState?.error;
   const hasFile = (fileList?.length ?? 0) > 0;
   const filenames = hasFile
     ? Array.from(fileList!)
@@ -43,7 +45,9 @@ export function FormFieldFileElement<
 
   return (
     <label
-      className="grid px-3 border border-gray-300 rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5"
+      className={`grid px-3 border rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5 ${
+        hasError ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-500'
+      }`}
       htmlFor={name}
     >
       {filenames ? (

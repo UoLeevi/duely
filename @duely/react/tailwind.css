@@ -127,6 +127,10 @@
     );
   }
 
+  .justify-stretch {
+    justify-content: stretch;
+  }
+
   .grid-stack > * {
     grid-area: 1 / 1 / -1 / -1;
   }
