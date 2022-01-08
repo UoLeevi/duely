@@ -26,7 +26,24 @@
 @layer base {
   html {
     min-height: stretch;
-    @apply flex flex-col;
+    @apply flex flex-col overflow-y-scroll;
+  }
+
+  body {
+    scrollbar-width: thin;
+    scrollbar-color: darkgrey rgba(0, 0, 0, 0.3);
+  }
+
+  body::-webkit-scrollbar {
+    width: 0.6rem;
+  }
+   
+  body::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  }
+   
+  body::-webkit-scrollbar-thumb {
+    background-color: darkgrey;
   }
 
   body,

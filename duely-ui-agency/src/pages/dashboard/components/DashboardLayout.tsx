@@ -1,5 +1,5 @@
 import { useQuery, current_subdomain_Q } from '@duely/client';
-import { useClassName, Sidebar, SidebarProps } from '@duely/react';
+import { useClassName, Sidebar, SidebarProps, TopBar2, icons, Search } from '@duely/react';
 import { Link } from 'react-router-dom';
 import { ApiLink } from './ApiLink';
 
@@ -221,16 +221,22 @@ type DashboardLayoutProps = {
 };
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  useClassName(document.documentElement, 'bg-gray-25 dark:bg-gray-900 dark:text-gray-300');
+  useClassName(document.documentElement, 'dark:bg-gray-900 dark:text-gray-300');
   const { data: current_subdomain } = useQuery(current_subdomain_Q);
   const logoSrc = current_subdomain?.agency.theme.image_logo!.data;
 
   return (
     <div className="relative flex flex-col flex-1 w-full">
+      <TopBar2>
+        <AgencyLogo src={logoSrc} />
+        <span className="md:hidden"></span>
+        <Search />
+
+        <span></span>
+      </TopBar2>
       <Sidebar
-        className="fixed inset-x-0 bottom-0"
+        className="fixed inset-x-0 bottom-0 md:pt-16"
         links={sidebarLinks}
-        topContent={logoSrc && <AgencyLogo src={logoSrc} />}
         bottomContent={<ApiLink />}
       />
       <div className="box-border flex flex-col flex-1 w-full pb-20 md:pb-0 md:pl-48 xl:pl-64">

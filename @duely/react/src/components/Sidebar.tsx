@@ -35,7 +35,7 @@ export function Sidebar({ className, links, topContent, bottomContent, ...props 
   const [toggledLinkWithItems, setToggledLinkWithItems] = useState(() =>
     (links.filter((link) => hasProperty(link, 'items')) as SidebarLinkWithItemsProps[]).find(
       (link) => {
-        const hash = `#${encodeURIComponent(link.name)}`;
+        const hash = `#nav-${encodeURIComponent(link.name)}`;
         return (
           location.hash === hash ||
           link.items.some((item) =>
@@ -48,14 +48,14 @@ export function Sidebar({ className, links, topContent, bottomContent, ...props 
 
   className = createClassName(
     className,
-    'z-20 w-full h-16 bg-white dark:bg-gray-800 border-t dark:border-gray-700 md:bg-gray-25 dark:md:bg-gray-900 md:border-none border-box md:w-48 xl:w-64 md:h-full md:p-2'
+    'z-20 w-full h-16 bg-white dark:bg-gray-800 border-t dark:border-gray-700 dark:md:bg-gray-900 md:border-none border-box md:w-48 xl:w-64 md:h-full md:p-2'
   );
 
   return (
     <aside className={className} {...props}>
       <div className="flex w-full pb-2 overflow-x-auto md:h-full md:flex-col md:justify-between md:space-y-4 max-w-screen md:pb-0">
         {md && topContent}
-        <nav className="flex flex-row justify-center flex-1 p-1 space-x-1 md:flex-col md:justify-start md:space-y-2 md:space-x-0">
+        <nav className="flex flex-row justify-center flex-1 p-1 space-x-1 md:flex-col md:justify-start md:space-y-1.5 md:space-x-0">
           {md &&
             links.map((link) =>
               hasProperty(link, 'items') ? (
@@ -134,10 +134,8 @@ function SidebarLink({ text, icon, to, exact, className }: SidebarLinkProps) {
   const Icon = icon;
   className = createClassName(
     className,
-    match
-      ? 'md:bg-white dark:md:bg-gray-800 md:shadow-sm dark:border-gray-700 text-gray-700 md:text-gray-500'
-      : 'focus-visible:text-gray-700 hover:text-gray-700 border-transparent text-gray-500',
-    'flex flex-col md:flex-row items-center focus:outline-none md:border space-y-1 md:space-y-0 md:space-x-3 rounded-md text-xs shadow-gray-500 md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white dark:focus-visible:bg-gray-800'
+    match ? 'text-indigo-600' : 'focus-visible:text-gray-800 hover:text-gray-800 text-gray-600',
+    'flex flex-col md:flex-row items-center focus:outline-none space-y-1 md:space-y-0 md:space-x-3 text-xs md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white dark:focus-visible:bg-gray-800'
   );
   return (
     <Link to={to} className={className}>
@@ -174,13 +172,18 @@ function SidebarLinkWithItems({
   isToggled,
   toggle
 }: SidebarLinkWithItemsProps) {
-  const hash = `#${encodeURIComponent(name)}`;
+  const match = useRouteMatch({ path: to, exact: true });
+  const hash = `#nav-${encodeURIComponent(name)}`;
   const { md } = useBreakpoints();
 
   const Icon = icon;
   className = createClassName(
     className,
-    isToggled ? 'text-gray-700 md:text-gray-500' : 'focus-visible:text-gray-700 hover:text-gray-700 text-gray-500',
+    match
+      ? 'text-indigo-600'
+      : isToggled
+      ? 'text-gray-800 md:text-gray-600'
+      : 'focus-visible:text-gray-800 hover:text-gray-800 text-gray-600',
     'flex flex-col md:flex-1 group md:flex-row items-center focus:outline-none md:border-transparent space-y-1 md:space-y-0 md:space-x-3 rounded-md text-xs shadow-gray-500 md:text-sm font-semibold px-2 md:px-3 py-2 focus-visible:bg-white dark:focus-visible:bg-gray-800'
   );
 
@@ -208,7 +211,13 @@ function SidebarLinkWithItems({
         )}
       </Link>
 
-      {isToggled && md && items.map((item) => <SidebarLinkItem key={item.to} {...item} />)}
+      {isToggled && md && (
+        <nav className="flex mt-1 flex-col ml-3 space-y-1.5 border-l border-indigo-600/25">
+          {items.map((item) => (
+            <SidebarLinkItem key={item.to} {...item} />
+          ))}
+        </nav>
+      )}
     </div>
   );
 }
@@ -226,10 +235,8 @@ function SidebarLinkItem({ text, to, exact, className }: SidebarLinkItemProps) {
   const match = useRouteMatch({ path: to, exact });
   className = createClassName(
     className,
-    match
-      ? 'md:bg-white dark:md:bg-gray-800 md:shadow-sm dark:border-gray-700 text-gray-700 md:text-gray-500'
-      : 'focus-visible:text-gray-700 hover:text-gray-700 border-transparent text-gray-500',
-    'flex flex-col justify-center md:justify-start md:flex-row items-center focus:outline-none md:border space-y-1 md:space-y-0 md:space-x-3 rounded-md text-xs shadow-gray-500 md:text-sm font-semibold px-3 md:px-4 py-1.5 md:ml-3 my-0.5 focus-visible:bg-white dark:focus-visible:bg-gray-800'
+    match ? 'text-indigo-600 border-indigo-600' : 'focus-visible:text-gray-800 hover:text-gray-800 text-gray-600 border-transparent',
+    'flex flex-col justify-center md:border-l-2 md:justify-start md:flex-row items-center focus:outline-none space-y-1 md:space-y-0 md:space-x-3 text-xs md:text-sm font-semibold px-2 md:px-4 py-0.5 md:-ml-px md:-mt-px my-0.5'
   );
   return (
     <Link to={to} className={className}>
