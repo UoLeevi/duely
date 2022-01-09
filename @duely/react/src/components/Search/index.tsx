@@ -1,35 +1,102 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { icons } from '..';
+import { memo } from '@duely/util';
+import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { icons, Animation, LoadingSpinner } from '..';
+import { useAwait, useDebounce } from '../..';
 
-export function Search() {
-  const ref = useRef<HTMLInputElement>(null);
+export type SearchProps = {
+  search: (query: string) => React.ReactNode[] | Promise<React.ReactNode[]>;
+};
+
+export function Search({ search }: SearchProps) {
+  [search] = useState(() => memo(search));
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [query, setQuery] = useState<string>();
+  const input = useCallback((e: Event) => {
+    setQuery(inputRef.current?.value);
+  }, []);
   const keydown = useCallback((e: KeyboardEvent) => {
-    if (e.key !== '/') return;
-    if (document.activeElement?.matches('input,textarea,select')) return;
-    e.preventDefault();
-    ref.current?.focus();
+    if (!inputRef.current || !containerRef.current) return;
+    if (e.key === '/' && !document.activeElement?.matches('input,textarea,select')) {
+      e.preventDefault();
+      inputRef.current.focus();
+    } else if (e.key === 'Escape' && containerRef.current.matches(':focus-within')) {
+      e.preventDefault();
+      inputRef.current.value = '';
+      setQuery(undefined);
+      inputRef.current.blur();
+    }
   }, []);
 
   useEffect(() => {
     document.addEventListener('keydown', keydown);
-    return () => document.removeEventListener('keydown', keydown);
+    document.addEventListener('input', input);
+    return () => {
+      document.removeEventListener('keydown', keydown);
+      document.removeEventListener('input', input);
+    };
   }, []);
 
+  const debouncedQuery = useDebounce(query);
+  const resultPromise = debouncedQuery !== undefined && search(debouncedQuery);
+  let { value: results, loading, error } = useAwait(resultPromise);
+
+  loading ||= debouncedQuery != query;
+  loading &&= ![undefined, ''].includes(query);
+
   return (
-    <div className="flex items-center max-w-sm border border-gray-300 rounded-full shadow-sm outline-none md:max-w-lg grow group focus-within:ring sm:text-sm sm:leading-5 dark:border-gray-500">
-      <span className="pl-3 pr-1 text-gray-500 whitespace-nowrap">{icons['search.solid']}</span>
-      <input
-        ref={ref}
-        type="text"
-        className="w-full min-h-[1em] text-sm py-1 bg-transparent border-none rounded-full outline-none appearance-none first:pl-3 last:pr-3"
-        spellCheck="false"
-        autoComplete="off"
-        autoCorrect="false"
-        placeholder="Search..."
-      />
-      <span className="pl-1 pr-3 text-xs font-bold text-gray-500 transition-opacity opacity-0 group-hover:opacity-100 whitespace-nowrap">
-        <span className='inline-flex items-center justify-center w-[1.25rem] h-[1.25rem] p-1 bg-gray-200 rounded'>/</span>
-      </span>
-    </div>
+    <>
+      <div
+        ref={containerRef}
+        className="relative flex items-center max-w-sm bg-white border border-gray-300 rounded-full shadow-sm outline-none md:max-w-lg grow group focus-within:ring sm:text-sm sm:leading-5 dark:border-gray-500"
+      >
+        <span className="pl-3 pr-1.5 text-gray-500 whitespace-nowrap">
+          {
+            <Animation.Fade>
+              {loading ? (
+                <LoadingSpinner loading={loading} className="!text-current w-[1.25em] h-[1.25em]" />
+              ) : (
+                icons['search.solid']
+              )}
+            </Animation.Fade>
+          }
+        </span>
+        <input
+          ref={inputRef}
+          type="text"
+          className="w-full min-h-[1em] text-sm py-1 bg-transparent border-none rounded-full outline-none appearance-none first:pl-3 last:pr-3"
+          spellCheck="false"
+          autoComplete="off"
+          autoCorrect="false"
+          placeholder="Search..."
+        />
+        <span className="pl-1 pr-3 text-xs font-bold text-gray-500 transition-opacity opacity-0 group-hover:opacity-100 whitespace-nowrap">
+          <span className="inline-flex items-center justify-center w-[1.25rem] h-[1.25rem] p-1 bg-gray-200 rounded">
+            /
+          </span>
+        </span>
+
+        <div className="hidden group-focus-within:flex absolute top-0 z-40 flex-col w-full min-w-[15rem] -translate-x-1/2 translate-y-10 bg-white border rounded-md shadow-lg border-black/5 left-1/2">
+          {loading && (
+            <div className="p-3 truncate whitespace-nowrap">
+              <span>Loading results for </span>
+              <span className="font-semibold">{query}</span>
+            </div>
+          )}
+
+          {!loading && results && (
+            <div className="flex flex-col p-3 space-y-1">
+              {results.map((result, i) => (
+                <div key={i}>{result}</div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center px-3 py-2 text-sm font-semibold text-gray-400 bg-gray-100 whitespace-nowrap rounded-b-md">
+            <span className="pr-1.5">{icons['question-mark-circle.solid']}</span>
+            <span>Search tips</span>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

@@ -13,3 +13,5 @@ export * from './useResizeObserver';
 export * from './useIntersectionObserver';
 export * from './useCssRect';
 export * from './useFocus';
+export * from './useDebounce';
+export * from './useAwait';

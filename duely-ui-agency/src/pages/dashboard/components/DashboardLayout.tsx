@@ -1,5 +1,6 @@
 import { useQuery, current_subdomain_Q } from '@duely/client';
 import { useClassName, Sidebar, SidebarProps, TopBar2, icons, Search } from '@duely/react';
+import { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiLink } from './ApiLink';
 
@@ -225,12 +226,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: current_subdomain } = useQuery(current_subdomain_Q);
   const logoSrc = current_subdomain?.agency.theme.image_logo!.data;
 
+  const search = useCallback(
+    (query: string) =>
+      query
+        ? new Promise<string[]>((resolve) =>
+            window.setTimeout(() => resolve(['result 1', 'result 2', query]), 1000)
+          )
+        : [],
+    []
+  );
+
   return (
     <div className="relative flex flex-col flex-1 w-full">
       <TopBar2>
         <AgencyLogo src={logoSrc} />
         <span className="md:hidden"></span>
-        <Search />
+        <Search search={search} />
 
         <span></span>
       </TopBar2>
