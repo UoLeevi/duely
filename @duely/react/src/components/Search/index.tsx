@@ -1,5 +1,5 @@
 import { memo } from '@duely/util';
-import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { icons, Animation, LoadingSpinner } from '..';
 import { useAwait, useDebounce } from '../..';
 
