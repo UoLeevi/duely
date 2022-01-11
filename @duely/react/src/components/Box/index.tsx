@@ -19,7 +19,7 @@ export type BoxHeadingProps = {
   className?: string;
 } & HeadingProps;
 
-export function BoxHeading({ subheading, className, ...props }: BoxHeadingProps) {
+function BoxHeading({ subheading, className, ...props }: BoxHeadingProps) {
   className = createClassName('flex flex-col border-b border-black/[.075] pb-3 mb-3', className);
   return (
     <div className={className}>

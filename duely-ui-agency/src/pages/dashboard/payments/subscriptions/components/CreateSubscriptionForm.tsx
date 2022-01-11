@@ -16,14 +16,13 @@ import {
   current_agency_Q,
   agency_stripe_account_Q,
   customers_Q,
-  create_invoice_M,
+  // create_subscription_M,
   create_customer_M,
-  create_invoiceitem_M
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
 import { Currency, numberToMinorCurrencyAmount } from '@duely/util';
 
-type CreateInvoiceFormFields = {
+type CreateSubscriptionFormFields = {
   customer_email_address: string;
   customer_name: string;
   days_until_due: string;
@@ -35,8 +34,8 @@ type CreateInvoiceFormFields = {
   }[];
 };
 
-export function CreateInvoiceForm() {
-  const form = useForm<CreateInvoiceFormFields>();
+export function CreateSubscriptionForm() {
+  const form = useForm<CreateSubscriptionFormFields>();
   const {
     infoMessage,
     setInfoMessage,
@@ -46,7 +45,7 @@ export function CreateInvoiceForm() {
     setErrorMessage
   } = useFormMessages();
   const [createCustomer, stateCustomer] = useMutation(create_customer_M);
-  const [createInvoice, stateInvoice] = useMutation(create_invoice_M);
+  // const [createSubscription, stateSubscription] = useMutation(create_subscription_M);
   const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
     agency_stripe_account_Q,
@@ -108,16 +107,16 @@ export function CreateInvoiceForm() {
   }, [customer?.id]);
 
   const state = {
-    loading: stateInvoice.loading || agencyLoading || stripe_accountLoading,
-    error: stateInvoice.error,
-    success: stateInvoice.data?.success
+    loading: /*stateSubscription.loading ||*/ agencyLoading || stripe_accountLoading,
+    error: null /*stateSubscription.error*/,
+    success: false /*stateSubscription.data?.success*/
   };
 
   async function onSubmit({
     customer_email_address,
     customer_name,
     ...value
-  }: CreateInvoiceFormFields) {
+  }: CreateSubscriptionFormFields) {
     if (!value.items?.length) {
       setErrorMessage('Items are required.');
       return;
@@ -146,61 +145,61 @@ export function CreateInvoiceForm() {
       description: item.description
     }));
 
-    const res_invoice = await createInvoice({
-      stripe_account_id: stripe_account!.id,
-      customer: customer!.default_stripe_customer.id,
-      auto_advance: false,
-      collection_method: 'send_invoice',
-      days_until_due: +value.days_until_due,
-      currency,
-      items
-    });
+    // const res_subscription = await createSubscription({
+    //   stripe_account_id: stripe_account!.id,
+    //   customer: customer!.default_stripe_customer.id,
+    //   auto_advance: false,
+    //   collection_method: 'send_subscription',
+    //   days_until_due: +value.days_until_due,
+    //   currency,
+    //   items
+    // });
 
-    if (!res_invoice?.success) {
-      setErrorMessage('Error while creating invoice:' + res_invoice?.message);
-      return;
-    }
+    // if (!res_subscription?.success) {
+    //   setErrorMessage('Error while creating subscription:' + res_subscription?.message);
+    //   return;
+    // }
 
-    setSuccessMessage(`Invoice created successfully`);
+    setSuccessMessage(`Subscription created successfully`);
   }
 
   if (state.success) {
-    const { invoice } = stateInvoice.data!;
-    return (
-      <div className="flex flex-col items-center space-y-4 text-center">
-        <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="text-3xl text-green-600 h-[1em] w-[1em]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        </div>
-        <h3 className="text-2xl font-semibold">
-          <span className="whitespace-nowrap">Invoice</span>{' '}
-          <span className="whitespace-nowrap">{invoice!.number}</span>{' '}
-          <span className="whitespace-nowrap">created succesfully</span>
-        </h3>
-        <LinkButton color="indigo" to="/dashboard/payments/invoices">
-          Go to invoices
-        </LinkButton>
-      </div>
-    );
+    // const { subscription } = stateSubscription.data!;
+    // return (
+    //   <div className="flex flex-col items-center space-y-4 text-center">
+    //     <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
+    //       <svg
+    //         xmlns="http://www.w3.org/2000/svg"
+    //         className="text-3xl text-green-600 h-[1em] w-[1em]"
+    //         fill="none"
+    //         viewBox="0 0 24 24"
+    //         stroke="currentColor"
+    //       >
+    //         <path
+    //           strokeLinecap="round"
+    //           strokeLinejoin="round"
+    //           strokeWidth={1.5}
+    //           d="M5 13l4 4L19 7"
+    //         />
+    //       </svg>
+    //     </div>
+    //     <h3 className="text-2xl font-semibold">
+    //       <span className="whitespace-nowrap">Subscription</span>{' '}
+    //       <span className="whitespace-nowrap">{subscription!.number}</span>{' '}
+    //       <span className="whitespace-nowrap">created succesfully</span>
+    //     </h3>
+    //     <LinkButton color="indigo" to="/dashboard/payments/subscriptions">
+    //       Go to subscriptions
+    //     </LinkButton>
+    //   </div>
+    // );
   }
 
   const { fields, addItem, removeItem } = form.useFieldArray('items');
 
   return (
     <>
-      <h2 className="mb-4 text-xl font-medium">Create an invoice</h2>
+      <h2 className="mb-4 text-xl font-medium">Create an subscription</h2>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
         <div className="pb-2">
           <Form.Label className="inline-block pb-1">Customer</Form.Label>
@@ -333,7 +332,7 @@ export function CreateInvoiceForm() {
         <Form.Field label="Message to customer" name="description" type="textarea" rows={6} />
 
         <div className="flex flex-row items-center pt-3 space-x-8">
-          <Form.Button>Create invoice</Form.Button>
+          <Form.Button>Create subscription</Form.Button>
           <Form.InfoMessage error={errorMessage} info={infoMessage} success={successMessage} />
         </div>
       </Form>
