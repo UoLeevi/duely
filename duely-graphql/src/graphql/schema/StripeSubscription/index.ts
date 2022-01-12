@@ -1,9 +1,11 @@
 // see: https://stripe.com/docs/api/subscriptions/object
 
-import { Resources } from '@duely/db';
+import { Resources, withSession } from '@duely/db';
+import stripe, { deleteStripeObjects, StripeDeletableObjectType } from '@duely/stripe';
 import { timestampToDate } from '@duely/util';
 import gql from 'graphql-tag';
 import Stripe from 'stripe';
+import { DuelyGraphQLError } from '../../errors';
 import { GqlTypeDefinition } from '../../types';
 import {
   createStripeListQueryResolver,
@@ -11,6 +13,7 @@ import {
   createStripeRetrieveQueryResolver,
   createStripeRetrieveResolverForReferencedResource
 } from '../../util';
+import { calculateTransactionFee } from '../SubscriptionPlan';
 
 export const StripeSubscription: GqlTypeDefinition<
   Stripe.Subscription & { stripe_account: Resources['stripe account'] }
@@ -121,11 +124,52 @@ export const StripeSubscription: GqlTypeDefinition<
       ): [StripeSubscription!]!
     }
 
-    input TimeStampFilter {
-      gt: Int
-      gte: Int
-      lt: Int
-      lte: Int
+    extend type Mutation {
+      create_subscription(
+        stripe_account_id: ID!
+        customer: ID!
+        items: [SubscriptionItemInput!]!
+        cancel_at_period_end: Boolean
+        default_payment_method: String
+        payment_behaviour: String
+        backdate_start_date: Int
+        billing_cycle_anchor: Int
+        cancel_at: Int
+        collection_method: String
+        coupon: ID
+        days_until_due: Int
+        default_source: String
+        promotion_code: ID
+        proration_behaviour: String
+        trial_end: Int
+        trial_from_plan: Boolean
+        trial_period_days: Int
+      ): SubscriptionMutationResult!
+      # update_subscription(
+      #   stripe_account_id: ID!
+      #   subscription_id: ID!
+      #   auto_advance: Boolean
+      #   collection_method: String
+      #   description: String
+      #   footer: String
+      #   subscription: ID
+      #   days_until_due: Int
+      #   default_payment_method: ID
+      #   default_source: ID
+      #   due_date: Int
+      # ): SubscriptionMutationResult!
+      cancel_subscription(stripe_account_id: ID!, subscription_id: ID!): SubscriptionMutationResult!
+    }
+
+    input SubscriptionItemInput {
+      price: ID!
+      quantity: Int
+    }
+
+    type SubscriptionMutationResult implements MutationResult {
+      success: Boolean!
+      message: String
+      invoice: Subscription
     }
   `,
   resolvers: {
@@ -169,6 +213,83 @@ export const StripeSubscription: GqlTypeDefinition<
         object: 'subscription',
         role: 'owner'
       })
+    },
+    Mutation: {
+      async create_subscription(
+        obj,
+        {
+          stripe_account_id,
+          ...args
+        }: { stripe_account_id: string } & {
+          currency?: string;
+        } & Stripe.SubscriptionCreateParams,
+        context,
+        info
+      ) {
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+
+        try {
+          return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
+            const stripe_account = await queryResource('stripe account', stripe_account_id);
+            const access = await queryResourceAccess(stripe_account.id);
+
+            if (access !== 'owner') {
+              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can access this information');
+            }
+
+            const rollbackObjects: {
+              id: string;
+              object: StripeDeletableObjectType;
+            }[] = [];
+
+            try {
+              let application_fee_amount = 0;
+              const agency = await queryResource('agency', stripe_account.agency_id);
+
+
+                for (const item of args.items ?? []) {
+
+                  // const price = await queryResource('price', item.price);
+
+                  // application_fee_amount += await calculateTransactionFee(
+                  //   agency.subscription_plan_id,
+                  //   item.price,
+                  //   currency
+                  // );
+                }
+              
+
+              const subscription = await stripe
+                .get(stripe_account)
+                .subscriptions.create({ ...args, application_fee_percent: 1 /* TODO */ });
+
+              // success
+              return {
+                success: true,
+                subscription,
+                type: 'InvoiceMutationResult'
+              };
+            } catch (error: any) {
+              deleteStripeObjects(stripe.get(stripe_account), rollbackObjects);
+
+              return {
+                // error
+                success: false,
+                message: error.message,
+                type: 'InvoiceMutationResult'
+              };
+            }
+          });
+        } catch (error: any) {
+          return {
+            // error
+            success: false,
+            message: error.message,
+            type: 'InvoiceMutationResult'
+          };
+        }
+      }
     }
   }
 };
