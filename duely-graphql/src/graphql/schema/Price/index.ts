@@ -1,7 +1,5 @@
 import {
   withSession,
-  PriceResource,
-  ProductResource,
   Resources,
   queryResourceAccess
 } from '@duely/db';
@@ -11,7 +9,10 @@ import {
   createStripeRetrieveResolverForReferencedResource
 } from '../../util';
 import stripe from '@duely/stripe';
-import { calculateTransactionFee } from '../SubscriptionPlan';
+import {
+  calculateTransactionFee,
+  getTransactionFeePercentForSubscriptions
+} from '../SubscriptionPlan';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import { Currency, formatCurrency, timestampToDate } from '@duely/util';
@@ -388,12 +389,6 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
               };
             }
 
-            const application_fee_amount = await calculateTransactionFee(
-              agency.subscription_plan_id,
-              price.unit_amount,
-              price.currency
-            );
-
             // create stripe checkout session
             // see: https://stripe.com/docs/connect/creating-a-payments-page
             // see: https://stripe.com/docs/payments/checkout/custom-success-page
@@ -412,10 +407,20 @@ export const Price: GqlTypeDefinition<Resources['price']> = {
             };
 
             if (price.type === 'recurring') {
+              const application_fee_percent = await getTransactionFeePercentForSubscriptions(
+                agency.subscription_plan_id
+              );
+
               stripe_checkout_session_args.subscription_data = {
-                application_fee_percent: (application_fee_amount / price.unit_amount) * 100
+                application_fee_percent
               };
             } else {
+              const application_fee_amount = await calculateTransactionFee(
+                agency.subscription_plan_id,
+                price.unit_amount,
+                price.currency
+              );
+
               stripe_checkout_session_args.payment_intent_data = {
                 application_fee_amount
               };

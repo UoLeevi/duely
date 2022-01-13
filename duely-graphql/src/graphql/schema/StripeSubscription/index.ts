@@ -13,7 +13,7 @@ import {
   createStripeRetrieveQueryResolver,
   createStripeRetrieveResolverForReferencedResource
 } from '../../util';
-import { calculateTransactionFee } from '../SubscriptionPlan';
+import { getTransactionFeePercentForSubscriptions } from '../SubscriptionPlan';
 
 export const StripeSubscription: GqlTypeDefinition<
   Stripe.Subscription & { stripe_account: Resources['stripe account'] }
@@ -124,6 +124,13 @@ export const StripeSubscription: GqlTypeDefinition<
       ): [StripeSubscription!]!
     }
 
+    input TimeStampFilter {
+      gt: Int
+      gte: Int
+      lt: Int
+      lte: Int
+    }
+
     extend type Mutation {
       create_subscription(
         stripe_account_id: ID!
@@ -169,7 +176,7 @@ export const StripeSubscription: GqlTypeDefinition<
     type SubscriptionMutationResult implements MutationResult {
       success: Boolean!
       message: String
-      invoice: Subscription
+      subscription: StripeSubscription
     }
   `,
   resolvers: {
@@ -244,31 +251,21 @@ export const StripeSubscription: GqlTypeDefinition<
             }[] = [];
 
             try {
-              let application_fee_amount = 0;
               const agency = await queryResource('agency', stripe_account.agency_id);
 
-
-                for (const item of args.items ?? []) {
-
-                  // const price = await queryResource('price', item.price);
-
-                  // application_fee_amount += await calculateTransactionFee(
-                  //   agency.subscription_plan_id,
-                  //   item.price,
-                  //   currency
-                  // );
-                }
-              
+              const application_fee_percent = await getTransactionFeePercentForSubscriptions(
+                agency.subscription_plan_id
+              );
 
               const subscription = await stripe
                 .get(stripe_account)
-                .subscriptions.create({ ...args, application_fee_percent: 1 /* TODO */ });
+                .subscriptions.create({ ...args, application_fee_percent });
 
               // success
               return {
                 success: true,
                 subscription,
-                type: 'InvoiceMutationResult'
+                type: 'SubscriptionMutationResult'
               };
             } catch (error: any) {
               deleteStripeObjects(stripe.get(stripe_account), rollbackObjects);
@@ -277,7 +274,7 @@ export const StripeSubscription: GqlTypeDefinition<
                 // error
                 success: false,
                 message: error.message,
-                type: 'InvoiceMutationResult'
+                type: 'SubscriptionMutationResult'
               };
             }
           });
@@ -286,7 +283,7 @@ export const StripeSubscription: GqlTypeDefinition<
             // error
             success: false,
             message: error.message,
-            type: 'InvoiceMutationResult'
+            type: 'SubscriptionMutationResult'
           };
         }
       }

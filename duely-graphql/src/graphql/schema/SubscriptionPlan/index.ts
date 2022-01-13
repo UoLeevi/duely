@@ -13,6 +13,12 @@ const resource = {
   table_name: 'subscription_plan'
 } as const;
 
+// By convention all subscriptions use transaction fee percent that applies to 100 € transaction
+export async function getTransactionFeePercentForSubscriptions(subscription_plan_id: string) {
+  const fee = await calculateTransactionFee(subscription_plan_id, 10000, 'eur');
+  return Math.round((fee / 100 + Number.EPSILON) * 100) / 100;
+}
+
 export async function calculateTransactionFee(
   subscription_plan_id: string,
   amount: number,
@@ -61,6 +67,7 @@ export const SubscriptionPlan: GqlTypeDefinition<Resources['subscription plan']>
       name: String!
       transaction_fees: [TransactionFee!]!
       calculate_fee(amount: Int!, currency: String!): Int!
+      fee_percent_for_subscriptions: Float!
     }
 
     input SubscriptionPlanFilter {
@@ -94,6 +101,11 @@ export const SubscriptionPlan: GqlTypeDefinition<Resources['subscription plan']>
         { amount, currency }: { amount: number; currency: string }
       ) {
         return await calculateTransactionFee(source.id, amount, currency);
+      },
+      async fee_percent_for_subscriptions(
+        source: { id: string }
+      ) {
+        return await getTransactionFeePercentForSubscriptions(source.id);
       }
     },
     Query: {
