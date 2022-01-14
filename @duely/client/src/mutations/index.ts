@@ -14,6 +14,7 @@ import {
   CreatePriceDocument,
   CreateProductDocument,
   CreatePromotionCodeDocument,
+  CreateSubscriptionDocument,
   CustomerFragmentDoc,
   DeleteBankAccountDocument,
   DeleteCouponDocument,
@@ -58,6 +59,7 @@ import {
   agency_stripe_account_coupons_Q,
   agency_stripe_account_invoiceitems_Q,
   agency_stripe_account_invoices_Q,
+  agency_subscriptions_Q,
   count_customers_Q,
   count_products_Q,
   customers_Q,
@@ -320,6 +322,23 @@ export const create_promotion_code_M = {
 export const update_promotion_code_M = {
   mutation: UpdatePromotionCodeDocument,
   result: (d: ResultOf<typeof UpdatePromotionCodeDocument>) => d?.update_promotion_code
+};
+
+const create_subscription_R = (d: ResultOf<typeof CreateSubscriptionDocument>) =>
+  d?.create_subscription;
+export const create_subscription_M = {
+  mutation: CreateSubscriptionDocument,
+  result: create_subscription_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    result: ReturnType<typeof create_subscription_R> | null
+  ) {
+    if (!result?.success || !result.subscription) return;
+
+    evictQuery(cache, agency_subscriptions_Q.query);
+
+    cache.gc();
+  }
 };
 
 const create_invoice_R = (d: ResultOf<typeof CreateInvoiceDocument>) => d?.create_invoice;

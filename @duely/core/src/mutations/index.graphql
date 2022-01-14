@@ -364,6 +364,54 @@ mutation UpdatePromotionCode($stripe_account_id: ID!, $promotion_code_id: ID!, $
   }
 }
 
+mutation CreateSubscription(
+  $stripe_account_id: ID!
+  $customer: ID!
+  $items: [SubscriptionItemInput!]!
+  $cancel_at_period_end: Boolean
+  $default_payment_method: String
+  $payment_behaviour: String
+  $backdate_start_date: Int
+  $billing_cycle_anchor: Int
+  $cancel_at: Int
+  $collection_method: String
+  $coupon: ID
+  $days_until_due: Int
+  $default_source: String
+  $promotion_code: ID
+  $proration_behaviour: String
+  $trial_end: Int
+  $trial_from_plan: Boolean
+  $trial_period_days: Int
+) {
+  create_subscription(
+    stripe_account_id: $stripe_account_id
+    customer: $customer
+    items: $items
+    cancel_at_period_end: $cancel_at_period_end
+    default_payment_method: $default_payment_method
+    payment_behaviour: $payment_behaviour
+    backdate_start_date: $backdate_start_date
+    billing_cycle_anchor: $billing_cycle_anchor
+    cancel_at: $cancel_at
+    collection_method: $collection_method
+    coupon: $coupon
+    days_until_due: $days_until_due
+    default_source: $default_source
+    promotion_code: $promotion_code
+    proration_behaviour: $proration_behaviour
+    trial_end: $trial_end
+    trial_from_plan: $trial_from_plan
+    trial_period_days: $trial_period_days
+  ) {
+    success
+    message
+    subscription {
+      ...subscription
+    }
+  }
+}
+
 mutation CreateInvoice(
   $stripe_account_id: ID!
   $customer: ID!
