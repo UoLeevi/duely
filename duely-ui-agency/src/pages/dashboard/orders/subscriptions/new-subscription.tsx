@@ -2,7 +2,7 @@ import { Card } from '@duely/react';
 import { DashboardSection } from '../../components';
 import { CreateSubscriptionForm } from './components';
 
-export default function DashboardPaymentsCreateSubscription() {
+export function DashboardOrdersCreateSubscription() {
   return (
     <>
       <DashboardSection>

@@ -2,7 +2,10 @@ import { agency_stripe_account_Q, subscription_Q, useQuery } from '@duely/client
 import { Box, ColoredChip, PropertyList, PropertyValue, Query, useQueryState } from '@duely/react';
 import { useParams } from 'react-router-dom';
 
-export default function DashboardOrdersSubscription() {
+export * from './components';
+export * from './edit';
+
+export function DashboardOrdersSubscription() {
   const { subscription_id } = useParams<{ subscription_id: string }>();
   const stripeAccountControl = useQueryState(agency_stripe_account_Q);
   const { data: subscription, control } = useQuery(

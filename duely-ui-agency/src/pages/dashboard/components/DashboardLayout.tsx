@@ -129,10 +129,6 @@ const sidebarLinks: SidebarProps['links'] = [
         to: '/dashboard/payments/transactions'
       },
       {
-        text: 'Subscriptions',
-        to: '/dashboard/payments/subscriptions'
-      },
-      {
         text: 'Invoices',
         to: '/dashboard/payments/invoices'
       }

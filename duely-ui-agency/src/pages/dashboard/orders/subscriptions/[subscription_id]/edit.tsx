@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { DashboardSection } from '../../../components';
 import { UpdateSubscriptionForm } from './components';
 
-export default function DashboardPaymentsEditSubscription() {
+export function DashboardOrdersEditSubscription() {
   const { subscription_id } = useParams<{ subscription_id: string }>();
   const stripeAccountControl = useQueryState(agency_stripe_account_Q);
   const {

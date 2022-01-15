@@ -1,10 +1,10 @@
-import { Card, DropMenu, icons, useQueryState } from '@duely/react';
+import { Card, DropMenu, icons, LinkButton, useQueryState } from '@duely/react';
 import { DashboardSection } from '../../components';
 import { Currency, formatCurrency, formatDate } from '@duely/util';
 import { Table, SkeletonText, ColoredChip } from '@duely/react';
 import { useQuery, agency_subscriptions_Q, current_agency_Q } from '@duely/client';
 
-export default function DashboardOrdersSubscriptions() {
+export function DashboardOrdersSubscriptions() {
   const agencyControl = useQueryState(current_agency_Q);
   const {
     data: subscriptions,
@@ -20,7 +20,22 @@ export default function DashboardOrdersSubscriptions() {
 
   return (
     <>
-      <DashboardSection title="Subscriptions">
+      <DashboardSection
+        title="Subscriptions"
+        actions={
+          <div className="flex flex-row justify-end">
+            <LinkButton
+              dense
+              color="indigo"
+              to="subscriptions/new-subscription"
+              icon="plus.solid"
+              className="text-sm"
+            >
+              New subscription
+            </LinkButton>
+          </div>
+        }
+      >
         <Card className="max-w-screen-lg">
           <Table
             items={subscriptions}
