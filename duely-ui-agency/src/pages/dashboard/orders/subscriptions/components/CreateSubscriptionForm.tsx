@@ -16,8 +16,8 @@ import {
   current_agency_Q,
   agency_stripe_account_Q,
   customers_Q,
-  // create_subscription_M,
   create_customer_M,
+  create_subscription_M
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
 import { Currency, numberToMinorCurrencyAmount } from '@duely/util';
@@ -25,11 +25,9 @@ import { Currency, numberToMinorCurrencyAmount } from '@duely/util';
 type CreateSubscriptionFormFields = {
   customer_email_address: string;
   customer_name: string;
-  days_until_due: string;
   description?: string;
   items: {
-    description: string;
-    unit_amount: number;
+    price: string;
     quantity: number;
   }[];
 };
@@ -45,7 +43,7 @@ export function CreateSubscriptionForm() {
     setErrorMessage
   } = useFormMessages();
   const [createCustomer, stateCustomer] = useMutation(create_customer_M);
-  // const [createSubscription, stateSubscription] = useMutation(create_subscription_M);
+  const [createSubscription, stateSubscription] = useMutation(create_subscription_M);
   const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
     agency_stripe_account_Q,
@@ -107,9 +105,9 @@ export function CreateSubscriptionForm() {
   }, [customer?.id]);
 
   const state = {
-    loading: /*stateSubscription.loading ||*/ agencyLoading || stripe_accountLoading,
-    error: null /*stateSubscription.error*/,
-    success: false /*stateSubscription.data?.success*/
+    loading: stateSubscription.loading || agencyLoading || stripe_accountLoading,
+    error: stateSubscription.error,
+    success: stateSubscription.data?.success
   };
 
   async function onSubmit({
@@ -140,59 +138,54 @@ export function CreateSubscriptionForm() {
     console.log(value);
 
     const items = value.items.map((item) => ({
-      unit_amount: numberToMinorCurrencyAmount(+item.unit_amount, currency as Currency),
-      quantity: +item.quantity,
-      description: item.description
+      price: item.price,
+      quantity: +item.quantity
     }));
 
-    // const res_subscription = await createSubscription({
-    //   stripe_account_id: stripe_account!.id,
-    //   customer: customer!.default_stripe_customer.id,
-    //   auto_advance: false,
-    //   collection_method: 'send_subscription',
-    //   days_until_due: +value.days_until_due,
-    //   currency,
-    //   items
-    // });
+    const res_subscription = await createSubscription({
+      stripe_account_id: stripe_account!.id,
+      customer: customer!.default_stripe_customer.id,
+      items
+    });
 
-    // if (!res_subscription?.success) {
-    //   setErrorMessage('Error while creating subscription:' + res_subscription?.message);
-    //   return;
-    // }
+    if (!res_subscription?.success) {
+      setErrorMessage('Error while creating subscription:' + res_subscription?.message);
+      return;
+    }
 
     setSuccessMessage(`Subscription created successfully`);
   }
 
   if (state.success) {
-    // const { subscription } = stateSubscription.data!;
-    // return (
-    //   <div className="flex flex-col items-center space-y-4 text-center">
-    //     <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
-    //       <svg
-    //         xmlns="http://www.w3.org/2000/svg"
-    //         className="text-3xl text-green-600 h-[1em] w-[1em]"
-    //         fill="none"
-    //         viewBox="0 0 24 24"
-    //         stroke="currentColor"
-    //       >
-    //         <path
-    //           strokeLinecap="round"
-    //           strokeLinejoin="round"
-    //           strokeWidth={1.5}
-    //           d="M5 13l4 4L19 7"
-    //         />
-    //       </svg>
-    //     </div>
-    //     <h3 className="text-2xl font-semibold">
-    //       <span className="whitespace-nowrap">Subscription</span>{' '}
-    //       <span className="whitespace-nowrap">{subscription!.number}</span>{' '}
-    //       <span className="whitespace-nowrap">created succesfully</span>
-    //     </h3>
-    //     <LinkButton color="indigo" to="/dashboard/payments/subscriptions">
-    //       Go to subscriptions
-    //     </LinkButton>
-    //   </div>
-    // );
+    const { subscription } = stateSubscription.data!;
+    return (
+      <div className="flex flex-col items-center space-y-4 text-center">
+        <div className="grid w-12 h-12 bg-green-200 rounded-full place-items-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-3xl text-green-600 h-[1em] w-[1em]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-semibold">
+          <span className="whitespace-nowrap">Subscription</span>{' '}
+          <span className="whitespace-nowrap">{subscription!.id}</span>{' '}
+          <span className="whitespace-nowrap">created succesfully</span>
+        </h3>
+        <LinkButton color="indigo" to="/dashboard/payments/subscriptions">
+          Go to subscriptions
+        </LinkButton>
+      </div>
+    );
   }
 
   const { fields, addItem, removeItem } = form.useFieldArray('items');
@@ -228,21 +221,8 @@ export function CreateSubscriptionForm() {
           </div>
         </div>
 
-        <Form.Field
-          label="Days until due"
-          className="w-24"
-          name="days_until_due"
-          suffix="days"
-          defaultValue="30"
-          registerOptions={{
-            required: true,
-            rules: [ValidationRules.isPositiveInteger],
-            inputFilter: InputFilters.integer
-          }}
-        />
-
         <div className="pb-2">
-          <Form.Label>Items</Form.Label>
+          <Form.Label>Products</Form.Label>
           <div className="flex flex-col pb-3 border-b">
             <Table items={fields} keyField="key" dense>
               <Table.Column header="Description" span={6} justify="stretch">
