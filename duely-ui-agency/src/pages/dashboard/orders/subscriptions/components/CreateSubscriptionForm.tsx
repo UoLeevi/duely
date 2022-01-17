@@ -194,8 +194,8 @@ export function CreateSubscriptionForm() {
     <>
       <h2 className="mb-4 text-xl font-medium">Create an subscription</h2>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        <div className="pb-2">
-          <Form.Label className="inline-block pb-1">Customer</Form.Label>
+        <Box>
+          <Box.Heading size="lg">Customer</Box.Heading>
           <div className="flex flex-col -m-2 sm:flex-row">
             <div className="flex-1 p-2">
               <Form.Field
@@ -219,10 +219,10 @@ export function CreateSubscriptionForm() {
               />
             </div>
           </div>
-        </div>
+        </Box>
 
-        <div className="pb-2">
-          <Form.Label>Products</Form.Label>
+        <Box>
+          <Box.Heading size="lg">Pricing</Box.Heading>
           <div className="flex flex-col pb-3 border-b">
             <Table items={fields} keyField="key" dense>
               <Table.Column header="Description" span={6} justify="stretch">
@@ -307,7 +307,7 @@ export function CreateSubscriptionForm() {
               </Button>
             </div>
           </div>
-        </div>
+        </Box>
 
         <Form.Field label="Message to customer" name="description" type="textarea" rows={6} />
 

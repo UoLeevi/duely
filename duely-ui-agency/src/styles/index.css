@@ -1149,14 +1149,14 @@ body, #root {
   width: 16rem;
 }
 
-.w-24 {
-  width: 6rem;
-}
-
 .w-max {
   width: -webkit-max-content;
   width: -moz-max-content;
   width: max-content;
+}
+
+.w-24 {
+  width: 6rem;
 }
 
 .w-8 {
@@ -2338,6 +2338,36 @@ body, #root {
 
 .text-\[0\.8125rem\] {
   font-size: 0.8125rem;
+}
+
+.\!text-2xl {
+  font-size: 1.5rem !important;
+  line-height: 2rem !important;
+}
+
+.\!text-xl {
+  font-size: 1.25rem !important;
+  line-height: 1.75rem !important;
+}
+
+.\!text-lg {
+  font-size: 1.125rem !important;
+  line-height: 1.75rem !important;
+}
+
+.\!text-base {
+  font-size: 1rem !important;
+  line-height: 1.5rem !important;
+}
+
+.\!text-sm {
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+.\!text-xs {
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
 }
 
 .font-bold {
