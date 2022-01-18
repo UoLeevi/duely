@@ -1,4 +1,4 @@
-import { Card, DropMenu, icons, LinkButton, useQueryState } from '@duely/react';
+import { Card, DropMenu, icons, LinkButton, PropertyValue, useQueryState } from '@duely/react';
 import { DashboardSection } from '../../components';
 import { Currency, formatCurrency, formatDate } from '@duely/util';
 import { Table, SkeletonText, ColoredChip } from '@duely/react';
@@ -161,16 +161,12 @@ export function DashboardOrdersSubscriptions() {
                     <SkeletonText className="text-sm" />
                   </div>
                 ) : (
-                  <div className="flex flex-col space-y-2">
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {formatDate(subscription.created, 'mmm d, yyyy, hh:nn', { tz: 'local' })}
-                    </span>
-                  </div>
+                  <PropertyValue.Date>{subscription.created}</PropertyValue.Date>
                 )
               }
             </Table.Column>
 
-            <Table.Column shrink no-link>
+            <Table.Column shrink>
               {(subscription: TSubscription | null) => {
                 if (!subscription) {
                   return (

@@ -203,7 +203,7 @@ export default function DashboardOrdersHome() {
               }
             </Table.Column>
 
-            <Table.Column shrink no-link justify="right">
+            <Table.Column shrink justify="right">
               {(order: TOrder | null) => {
                 if (!order) {
                   return (

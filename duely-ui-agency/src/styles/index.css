@@ -2336,10 +2336,6 @@ body, #root {
   line-height: 1.75rem;
 }
 
-.text-\[0\.8125rem\] {
-  font-size: 0.8125rem;
-}
-
 .\!text-2xl {
   font-size: 1.5rem !important;
   line-height: 2rem !important;
@@ -2368,6 +2364,10 @@ body, #root {
 .\!text-xs {
   font-size: 0.75rem !important;
   line-height: 1rem !important;
+}
+
+.text-\[0\.8125rem\] {
+  font-size: 0.8125rem;
 }
 
 .font-bold {

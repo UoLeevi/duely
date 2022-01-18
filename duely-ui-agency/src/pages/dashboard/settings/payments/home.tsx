@@ -157,7 +157,7 @@ export default function DashboardSettingsPaymentsHome() {
               }
             </Table.Column>
 
-            <Table.Column no-link shrink>
+            <Table.Column shrink>
               {(bank_account: TBankAccount | null) => {
                 if (!bank_account) {
                   return <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;

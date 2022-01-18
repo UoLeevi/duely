@@ -393,8 +393,8 @@ function TableCell({
   const renderLink = !columnDefinition['no-link'] && linkProps;
   const justify =
     columnDefinition.justify === 'center'
-      ? 'justify-center' :
-      columnDefinition.justify === 'stretch'
+      ? 'justify-center'
+      : columnDefinition.justify === 'stretch'
       ? 'justify-stretch'
       : columnDefinition.justify === 'right'
       ? 'justify-end'
@@ -405,23 +405,21 @@ function TableCell({
       'relative grid items-center py-2 sm:py-3 ',
       justify,
       firstCol && (dense ? 'pl-3 sm:pl-4' : 'pl-4 sm:pl-6'),
-      lastCol && (dense ? 'pr-3 sm:pr-4' : 'pr-4 sm:pr-6'),
-      linkProps && 'cursor-pointer'
+      lastCol && (dense ? 'pr-3 sm:pr-4' : 'pr-4 sm:pr-6')
     );
 
-    return renderLink ? (
-      <Link {...linkProps} className={className} style={{ gridArea }}>
-        {children}
-      </Link>
-    ) : (
-      <div className={className} style={{ gridArea }}>
-        {children}
-      </div>
+    return (
+      <>
+        <div className={className} style={{ gridArea }}>
+          {renderLink && <Link {...linkProps} className="absolute inset-0" />}
+          {children}
+        </div>
+      </>
     );
   }
 
   const className = createClassName(
-    'flex flex-col space-y-2 ',
+    'relative flex flex-col space-y-2 ',
     dense ? 'px-3 sm:px-4 ' : 'px-4 sm:px-6',
     dense
       ? firstRow
@@ -436,20 +434,17 @@ function TableCell({
         : 'pb-1.5 sm:pb-2'
       : lastRow
       ? 'pb-4 sm:pb-6'
-      : 'pb-2 sm:pb-3',
-    linkProps && 'cursor-pointer'
+      : 'pb-2 sm:pb-3'
   );
 
-  return renderLink ? (
-    <Link {...linkProps} className={className} style={{ gridArea }}>
-      <div className="grid text-xs tracking-wide text-gray-500">{header}</div>
-      <div className={`relative grid items-center flex-1 ${justify}`}>{children}</div>
-    </Link>
-  ) : (
-    <div className={className} style={{ gridArea }}>
-      <div className="grid text-xs tracking-wide text-gray-500">{header}</div>
-      <div className={`relative grid items-center flex-1 ${justify}`}>{children}</div>
-    </div>
+  return (
+    <>
+      <div className={className} style={{ gridArea }}>
+        {renderLink && <Link {...linkProps} className="absolute inset-0" />}
+        <div className="grid text-xs tracking-wide text-gray-500">{header}</div>
+        <div className={`relative grid items-center flex-1 ${justify}`}>{children}</div>
+      </div>
+    </>
   );
 }
 
