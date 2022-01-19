@@ -24,6 +24,7 @@ type UpdateProductPricingFormFields = {
   payment_type: string;
   unit_amount_major: string;
   frequency?: string;
+  is_default_price: boolean;
 };
 
 export function UpdateProductPricingForm({ product_id }: ProductProps) {
@@ -65,25 +66,23 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
 
   const currencyPrefix: React.ReactNode = <span className="pr-1">{currency?.toUpperCase()}</span>;
 
-  const default_price = product?.default_price;
+  const price = product?.default_price;
   const unit_amount_major =
-    (default_price &&
-      minorCurrencyAmountToNumber(
-        default_price.unit_amount,
-        default_price.currency as Currency
-      ).toString()) ??
+    (price &&
+      minorCurrencyAmountToNumber(price.unit_amount, price.currency as Currency).toString()) ??
     undefined;
 
-  const frequency = !default_price
+  const frequency = !price
     ? undefined
-    : default_price.type === 'one_time'
+    : price.type === 'one_time'
     ? undefined
-    : `${default_price.recurring_interval_count}:${default_price.recurring_interval}`;
+    : `${price.recurring_interval_count}:${price.recurring_interval}`;
 
   async function onSubmit({
     unit_amount_major,
     payment_type,
-    frequency
+    frequency,
+    is_default_price
   }: UpdateProductPricingFormFields) {
     const unit_amount = numberToMinorCurrencyAmount(+unit_amount_major, currency as Currency);
 
@@ -132,6 +131,11 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
       return;
     }
 
+    if (!is_default_price) {
+      setSuccessMessage('Saved');
+      return;
+    }
+
     const { price } = res_price;
     const res = await updateProduct({ product_id: product!.id, default_price_id: price!.id });
 
@@ -143,17 +147,29 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
     }
   }
 
-  const payment_type = form.useFormFieldValue('payment_type') ?? default_price?.type;
+  const payment_type = form.useFormFieldValue('payment_type') ?? price?.type;
 
   return (
     <>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
+        {/* <Form.Field
+          type="select"
+          name="price"
+          label="Price"
+          className="max-w-xs"
+          loading={productLoading}
+          defaultValue={product?.default_price?.id}
+          options={product?.prices?.map((price) => ({
+            value: price.id,
+            element: price.name + (product?.default_price?.id === price.id ? ' (default)' : '')
+          }))}
+        /> */}
+
         <Form.Field
           className="max-w-2xl"
           name="payment_type"
-          defaultValue={default_price?.type ?? 'one_time'}
+          defaultValue={price?.type ?? 'one_time'}
           type="radio-blocks"
-          disabled={!state.loading && !!product?.default_price}
           options={[
             {
               value: 'one_time',
@@ -207,6 +223,13 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
             </div>
           )}
         </div>
+
+        <Form.Field
+          name="is_default_price"
+          type="checkbox"
+          label="Default price for the product"
+          defaultValue={product?.default_price?.id === price?.id}
+        />
 
         <div className="flex flex-row items-center pt-3 space-x-4">
           <Form.Button dense>Save</Form.Button>
