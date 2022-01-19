@@ -41,8 +41,8 @@ async function main() {
   app.set('port', process.env.PORT ?? 3000);
   app.set('trust proxy', true);
   app.use(cors());
-  app.get('/checkout/:subdomain_name/products/:product_url_name', get_checkout);
-  app.get('/checkout/:product_url_name', get_checkout);
+  app.get('/checkout/:subdomain_name/products/:product_url_name/:price_id?', get_checkout);
+  app.get('/checkout/:product_url_name/:price_id?', get_checkout);
   app.get('/.well-known/server-health', (req, res) => res.send('ok'));
 
   app.listen({ port: app.get('port') }, () => {
@@ -114,16 +114,18 @@ async function get_checkout(req: Request, res: Response) {
         return;
       }
 
-      if (!product.default_price_id) {
+      const price_id = req.params.price_id ?? product.default_price_id;
+
+      if (!price_id) {
         console.error(`Default price is not set for product_id ${product.id}.`);
         res.sendStatus(404);
         return;
       }
 
-      const price = await queryResource('price', product.default_price_id);
+      const price = await queryResource('price', price_id);
 
-      if (!price) {
-        console.error(`Price with id ${product.default_price_id} was not found.`);
+      if (!price || price.product_id !== product.id) {
+        console.error(`Price with id ${price_id} was not found.`);
         res.sendStatus(404);
         return;
       }
