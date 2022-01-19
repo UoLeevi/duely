@@ -8,7 +8,8 @@ import {
   FieldArrayItem,
   LinkButton,
   useFormMessages,
-  Box
+  Box,
+  PropertyValue
 } from '@duely/react';
 import {
   useQuery,
@@ -17,7 +18,8 @@ import {
   agency_stripe_account_Q,
   customers_Q,
   create_customer_M,
-  create_subscription_M
+  create_subscription_M,
+  products_Q
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
 import { Currency, numberToMinorCurrencyAmount } from '@duely/util';
@@ -50,6 +52,12 @@ export function CreateSubscriptionForm() {
     { agency_id: agency!.id },
     { skip: !agency }
   );
+
+  const {
+    data: products,
+    loading: productsLoading,
+    error: productsError
+  } = useQuery(products_Q, { filter: { agency_id: agency!.id } });
 
   const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency;
 
@@ -225,38 +233,25 @@ export function CreateSubscriptionForm() {
           <Box.Heading size="lg">Pricing</Box.Heading>
           <div className="flex flex-col pb-3 border-b">
             <Table items={fields} keyField="key" dense>
-              <Table.Column header="Description" span={6} justify="stretch">
+              <Table.Column header="Product" span={6} justify="stretch">
                 {(field: FieldArrayItem | null, i) => {
                   if (!field) return null;
-                  return (
-                    <Form.Field
-                      dense
-                      tooltip
-                      type="text"
-                      name={field.getName('description')}
-                      placeholder={`Item ${i + 1}`}
-                      registerOptions={{ required: true }}
-                    />
-                  );
-                }}
-              </Table.Column>
 
-              <Table.Column header="Unit amount" span={3}>
-                {(field: FieldArrayItem | null, i) => {
-                  if (!field) return null;
                   return (
                     <Form.Field
                       dense
                       tooltip
-                      name={field.getName('unit_amount')}
-                      type="text"
-                      inputMode="numeric"
-                      prefix={currencyPrefix}
-                      registerOptions={{
-                        required: true,
-                        rules: [ValidationRules.isPositiveNumber],
-                        inputFilter: InputFilters.numeric
-                      }}
+                      type="select"
+                      name={field.getName('price')}
+                      options={products?.flatMap((product) =>
+                        product.prices!.map((price) => ({
+                          group: product.name,
+                          value: price.id,
+                          element: price.name
+                        }))
+                      )}
+                      loading={productsLoading}
+                      registerOptions={{ required: true }}
                     />
                   );
                 }}
@@ -281,6 +276,13 @@ export function CreateSubscriptionForm() {
                       }}
                     />
                   );
+                }}
+              </Table.Column>
+
+              <Table.Column header="Total" span={3}>
+                {(field: FieldArrayItem | null, i) => {
+                  if (!field) return null;
+                  return <PropertyValue>123</PropertyValue>;
                 }}
               </Table.Column>
 
