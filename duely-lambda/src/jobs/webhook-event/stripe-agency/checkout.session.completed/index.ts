@@ -28,21 +28,41 @@ async function main() {
 
   try {
     await updateProcessingState(context, 'webhook event', webhook_event_id, 'processing');
-    await withSession(context, async ({ queryResource, createResource }) => {
-      const stripe_account = await queryResource('stripe account', {
-        stripe_id_ext: event.account,
-        livemode: event.livemode
-      });
 
-      if (!session.customer_details?.email) {
-        throw new Error('Processing orders without customer email address is not implemented');
-      }
+    if (!session.customer_details?.email) {
+      throw new Error('Processing orders without customer email address is not implemented');
+    }
 
-      const customer = await queryResource('customer', {
+    const stripe_account = await queryResource(context, 'stripe account', {
+      stripe_id_ext: event.account,
+      livemode: event.livemode
+    });
+
+    let customer = await queryResource(context, 'customer', {
+      stripe_account_id: stripe_account.id,
+      email_address: session.customer_details?.email
+    });
+
+    // Stripe does not necessary deliver webhooks in order.
+    // See: https://stripe.com/docs/webhooks/best-practices#event-ordering
+    // If customer does not yet exist let's wait a bit and try again couple times.
+
+    const maxRetries = 5;
+    for (let retries = 1; !customer && retries <= maxRetries; ++retries) {
+      await new Promise((r) => setTimeout(r, 1000 * retries));
+      customer = await queryResource(context, 'customer', {
         stripe_account_id: stripe_account.id,
         email_address: session.customer_details?.email
       });
+    }
 
+    if (!customer) {
+      throw new Error(
+        'Customer matching the email address was not found for this checkout session'
+      );
+    }
+
+    await withSession(context, async ({ queryResource, createResource }) => {
       // Create order
       const order = await createResource('order', {
         customer_id: customer.id,

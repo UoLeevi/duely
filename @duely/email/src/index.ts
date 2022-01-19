@@ -50,12 +50,29 @@ export async function sendEmailNotificationAboutNewSales(order_id: ResourceId<'o
     const checkout_session = await stripe
       .get(stripe_account)
       .checkout.sessions.retrieve(order.stripe_checkout_session_id_ext, {
-        expand: ['payment_intent', 'line_items']
+        expand: ['subscription.latest_invoice', 'payment_intent', 'line_items']
       });
 
-    const payment_intent = checkout_session.payment_intent as Stripe.PaymentIntent;
-    const charge = payment_intent.charges.data[0];
-    const receipt_url = charge.receipt_url;
+    let receipt_or_invoice_url: string | null | undefined;
+
+    switch (checkout_session.mode) {
+      case 'payment': {
+        const payment_intent = checkout_session.payment_intent as Stripe.PaymentIntent;
+        const charge = payment_intent.charges.data[0];
+        receipt_or_invoice_url = charge.receipt_url;
+        break;
+      }
+      case 'subscription': {
+        const subscription = checkout_session.subscription as Stripe.Subscription;
+        const latest_invoice = subscription.latest_invoice as Stripe.Invoice;
+        receipt_or_invoice_url = latest_invoice.hosted_invoice_url;
+        break;
+      }
+      default:
+        throw new Error(
+          `Unknown checkout session mode: '${checkout_session.mode}'. Expected 'payment' or 'subscription'.`
+        );
+    }
 
     const line_items = checkout_session.line_items!.data;
     const agency = await queryResource('agency', stripe_account.agency_id);
@@ -69,7 +86,7 @@ export async function sendEmailNotificationAboutNewSales(order_id: ResourceId<'o
       agency_name: agency.name,
       subdomain_name: subdomain.name,
       customer_name: customer.name,
-      receipt_url,
+      receipt_url: receipt_or_invoice_url,
       product_name:
         line_items[0].description +
         (line_items.length === 1
