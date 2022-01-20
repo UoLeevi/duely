@@ -1,6 +1,6 @@
 {
   "name": "@duely/lambda",
-  "version": "0.4.5",
+  "version": "0.4.7",
   "description": "Utilities for working with Duely infrastructure lambda functions.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",

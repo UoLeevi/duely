@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
 import type { LambdaResult } from '@duely/lambda';
+import { sendEmailNotificationAboutFailure } from '@duely/email';
 
 const scriptDirpath = path.resolve(__dirname, 'jobs');
 
@@ -61,6 +62,11 @@ async function handle_run(req: Request, res: Response) {
     invoked = true;
     console.error(`Error from job '${job}':`, err.message);
     res.status(400).send(`Job '${job}' failed with an error`);
+    sendEmailNotificationAboutFailure(err.message, `Job '${job}' failed with an error`).catch(
+      (err) => {
+        console.error(`Error occured when sending email notification`, err.message);
+      }
+    );
   });
 
   // execute the callback once the process has finished running

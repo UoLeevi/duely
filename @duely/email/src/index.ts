@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getServiceAccountContext, withSession, ResourceId } from '@duely/db';
-import { Currency, formatCurrency } from '@duely/util';
+import { Currency, formatCurrency, truncate } from '@duely/util';
 import stripe from '@duely/stripe';
 import Stripe from 'stripe';
 
@@ -23,6 +23,22 @@ export async function sendEmail({
   const url = new URL(`send/${template}`, emailServiceBaseUrl);
   const res = await axios.post(url.href, { ...context, ...options });
   return res.data;
+}
+
+export async function sendEmailNotificationAboutFailure(message: string, subject?: string) {
+  subject ??= truncate(message, 64);
+
+  await sendEmail({
+    template: 'default',
+    from: 'Duely <support@duely.app>',
+    to: 'admin@duely.app',
+    subject,
+    context: {
+      header: subject,
+      paragraphs: [message],
+      footer: 'Duely'
+    }
+  });
 }
 
 export type PreviewEmailOptions = {
