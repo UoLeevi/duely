@@ -79,13 +79,6 @@ export default function DashboardProductsHome() {
   const loading = agencyLoading || pagination.loading;
   const error = agencyError ?? pagination.error;
 
-  const columns = [
-    ,
-    ,// product name & description
-    // product product status
-    // actions
-  ];
-
   return (
     <>
       <DashboardSection

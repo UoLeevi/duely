@@ -220,6 +220,23 @@ export function pick<TFrom extends object, TKeys extends string, T extends Recor
   return obj as any;
 }
 
+export function groupBy<T>(arr: T[], getKey: (item: T) => any): Map<any, T[]> {
+  const groups = new Map<any, T[]>();
+
+  for (const item of arr) {
+    const key = getKey(item);
+    const group = groups.get(key);
+
+    if (group) {
+      group.push(item);
+    } else {
+      groups.set(key, [item]);
+    }
+  }
+
+  return groups;
+}
+
 export function memo<R, TParams extends unknown[]>(
   func: GenericFunction<R, TParams>
 ): typeof func & { invalidate: () => void } {
