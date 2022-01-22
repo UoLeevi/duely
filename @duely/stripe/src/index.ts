@@ -165,6 +165,7 @@ const stripeResourceEndpointByType: {
   mandate: 'mandates',
   order_return: 'orderReturns',
   payment_intent: 'paymentIntents',
+  payment_link: 'paymentLinks',
   payment_method: 'paymentMethods',
   payout: 'payouts',
   plan: 'plans',

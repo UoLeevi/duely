@@ -15,6 +15,7 @@ import {
   calculateTransactionFee,
   getTransactionFeePercentForSubscriptions
 } from '../SubscriptionPlan';
+import { URL } from 'url';
 
 export const StripeCheckoutSession: GqlTypeDefinition<
   Stripe.Checkout.Session & { stripe_account: Resources['stripe account'] }
