@@ -10,7 +10,11 @@ import {
   withStripeAccountProperty
 } from '../../util';
 import Stripe from 'stripe';
-import { Resources } from '@duely/db';
+import { Resources, withSession } from '@duely/db';
+import {
+  calculateTransactionFee,
+  getTransactionFeePercentForSubscriptions
+} from '../SubscriptionPlan';
 
 export const StripeCheckoutSession: GqlTypeDefinition<
   Stripe.Checkout.Session & { stripe_account: Resources['stripe account'] }
@@ -147,6 +151,25 @@ export const StripeCheckoutSession: GqlTypeDefinition<
       price: StripePrice
       quantity: Int
     }
+
+    extend type Mutation {
+      create_stripe_checkout_session(
+        price_id: ID!
+        livemode: Boolean!
+        allow_promotion_codes: Boolean
+        coupon_id: ID
+        promotion_code_id: ID
+        success_url: String
+        cancel_url: String
+      ): CreateStripeCheckoutSessionResult!
+    }
+
+    type CreateStripeCheckoutSessionResult implements MutationResult {
+      success: Boolean!
+      message: String
+      checkout_session_id: String
+      checkout_session_url: String
+    }
   `,
   resolvers: {
     StripeCheckoutSession: {
@@ -189,6 +212,152 @@ export const StripeCheckoutSession: GqlTypeDefinition<
         expand: ['product'],
         role: 'owner'
       })
+    },
+    Mutation: {
+      async create_stripe_checkout_session(
+        obj,
+        {
+          price_id,
+          livemode,
+          success_url,
+          cancel_url,
+          allow_promotion_codes,
+          promotion_code_id,
+          coupon_id
+        },
+        context,
+        info
+      ) {
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+
+        try {
+          return await withSession(context, async ({ queryResource }) => {
+            // get resources
+            const price = await queryResource('price', price_id);
+            const product = await queryResource('product', price.product_id);
+            const stripe_account = await queryResource('stripe account', {
+              agency_id: product.agency_id,
+              livemode
+            });
+            const agency = await queryResource('agency', product.agency_id);
+            const subdomain = await queryResource('subdomain', agency.subdomain_id);
+            const product_settings = await queryResource('product settings', {
+              product_id: product.id
+            });
+            const agency_settings = await queryResource('agency settings', {
+              agency_id: product.agency_id
+            });
+
+            success_url =
+              success_url ||
+              product_settings?.checkout_success_url ||
+              agency_settings?.checkout_success_url ||
+              `https://${subdomain.name}.duely.app/orders/thank-you`;
+
+            cancel_url =
+              cancel_url ||
+              product_settings?.checkout_cancel_url ||
+              agency_settings?.checkout_cancel_url ||
+              context.referer ||
+              `https://${subdomain.name}.duely.app`;
+
+            try {
+              // validate and normalize url
+              const success_url_obj = new URL(success_url);
+              success_url_obj.searchParams.append('session_id', '{CHECKOUT_SESSION_ID}');
+              success_url = success_url_obj.href.replace('%7B', '{').replace('%7D', '}');
+
+              // validate and normalize url
+              const cancel_url_obj = new URL(cancel_url);
+              cancel_url_obj.searchParams.append('session_id', '{CHECKOUT_SESSION_ID}');
+              cancel_url = cancel_url_obj.href.replace('%7B', '{').replace('%7D', '}');
+            } catch (error: any) {
+              return {
+                // error
+                success: false,
+                message: error.message,
+                type: 'CreateStripeCheckoutSessionResult'
+              };
+            }
+
+            // create stripe checkout session
+            // see: https://stripe.com/docs/connect/creating-a-payments-page
+            // see: https://stripe.com/docs/payments/checkout/custom-success-page
+            // see: https://stripe.com/docs/api/checkout/sessions/create
+            const stripe_checkout_session_args: Stripe.Checkout.SessionCreateParams = {
+              mode: price.type === 'recurring' ? 'subscription' : 'payment',
+              payment_method_types: ['card'],
+              line_items: [
+                {
+                  price: price.id,
+                  quantity: 1
+                }
+              ],
+              after_expiration: {
+                recovery: { enabled: true, allow_promotion_codes }
+              },
+              success_url,
+              cancel_url
+            };
+
+            if (price.type === 'recurring') {
+              const application_fee_percent = await getTransactionFeePercentForSubscriptions(
+                agency.subscription_plan_id
+              );
+
+              stripe_checkout_session_args.subscription_data = {
+                application_fee_percent
+              };
+            } else {
+              const application_fee_amount = await calculateTransactionFee(
+                agency.subscription_plan_id,
+                price.unit_amount,
+                price.currency
+              );
+
+              stripe_checkout_session_args.payment_intent_data = {
+                application_fee_amount
+              };
+            }
+
+            if (coupon_id) {
+              stripe_checkout_session_args.discounts = [
+                {
+                  coupon: coupon_id
+                }
+              ];
+            } else if (promotion_code_id) {
+              stripe_checkout_session_args.discounts = [
+                {
+                  promotion_code: promotion_code_id
+                }
+              ];
+            } else if (allow_promotion_codes) {
+              stripe_checkout_session_args.allow_promotion_codes = true;
+            }
+
+            const checkout_session = await stripe
+              .get(stripe_account)
+              .checkout.sessions.create(stripe_checkout_session_args);
+
+            // success
+            return {
+              success: true,
+              checkout_session_id: checkout_session.id,
+              checkout_session_url: checkout_session.url,
+              type: 'CreateStripeCheckoutSessionResult'
+            };
+          });
+        } catch (error: any) {
+          return {
+            // error
+            success: false,
+            message: error.message,
+            type: 'CreateStripeCheckoutSessionResult'
+          };
+        }
+      }
     }
   }
 };
