@@ -28,10 +28,12 @@ export function BoxRoot({ children, className }: BoxProps) {
 
   return (
     <div className={className}>
-      <div className="flex justify-between space-x-3 border-b border-black/[.075] pb-3 mb-3">
-        {heading}
-        <div className="grid grid-flow-row gap-2">{actions}</div>
-      </div>
+      {(heading || actions) && (
+        <div className="flex justify-between space-x-3 border-b border-black/[.075] pb-3 mb-3">
+          {heading}
+          <div className="grid grid-flow-row gap-2">{actions}</div>
+        </div>
+      )}
       {content}
     </div>
   );
