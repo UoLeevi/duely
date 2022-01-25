@@ -30,7 +30,7 @@ export function DashboardOrdersSubscriptions() {
             icon="plus.solid"
             className="text-sm"
           >
-            New subscription
+            Create subscription
           </LinkButton>
         </Box.Action>
         <Table

@@ -26,9 +26,9 @@ type BaseComponent<T extends React.ElementType> = {
 
 const colorClassName = {
   gray: 'text-gray-600 dark:text-white bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-500',
-  indigo: 'bg-indigo-600 hover:bg-indigo-700 text-white dark:border-gray-600',
-  red: 'bg-red-600 hover:bg-red-700 text-white dark:border-gray-700',
-  green: 'bg-green-600 hover:bg-green-700 text-white dark:border-gray-700',
+  indigo: 'bg-indigo-600 hover:bg-indigo-700 text-white/90 dark:border-gray-600',
+  red: 'bg-red-600 hover:bg-red-700 text-white/90 dark:border-gray-700',
+  green: 'bg-green-600 hover:bg-green-700 text-white/90 dark:border-gray-700',
   white: 'bg-white hover:bg-gray-50 text-black'
 } as const;
 
@@ -50,7 +50,7 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
   color = color ?? 'gray';
   className = createClassName(
     'relative flex justify-center tracking-wide whitespace-nowrap items-center border appearance-none rounded-md text-md font-medium transition duration-150 ease-in-out focus:outline-none focus-visible:outline-none focus-visible:ring shadow-sm',
-    dense ? 'px-4 py-1.5' : 'px-7 py-2.5',
+    dense ? 'px-3 py-1.5' : 'px-7 py-2.5',
     !shrink && (dense ? 'min-w-[10ch]' : 'min-w-[12ch]'),
     !loading && 'disabled:opacity-50',
     color && colorClassName[color],
@@ -65,7 +65,7 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
     return (
       <Component disabled={disabled} className={className} {...props}>
         <span className="flex items-center space-x-2">
-          <Animation.Fade>
+          <Animation.Fade className="-ml-0.5">
             {loading ? (
               <LoadingSpinner loading={loading} className="!text-current w-[1.25em] h-[1.25em]" />
             ) : (
