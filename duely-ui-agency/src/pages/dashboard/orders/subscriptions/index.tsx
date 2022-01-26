@@ -1,6 +1,6 @@
 import { Box, Card, DropMenu, icons, LinkButton, PropertyValue, useQueryState } from '@duely/react';
 import { DashboardSection } from '../../components';
-import { Currency, formatCurrency, formatDate } from '@duely/util';
+import { Currency, formatPrice, formatDate } from '@duely/util';
 import { Table, SkeletonText, ColoredChip } from '@duely/react';
 import { useQuery, agency_subscriptions_Q, current_agency_Q } from '@duely/client';
 
@@ -21,7 +21,7 @@ export function DashboardOrdersSubscriptions() {
   return (
     <>
       <Box className="max-w-screen-lg">
-        <Box.Heading>Subscriptions</Box.Heading>
+        <Box.Heading as="h2">Subscriptions</Box.Heading>
         <Box.Action>
           <LinkButton
             dense
@@ -134,14 +134,7 @@ export function DashboardOrdersSubscriptions() {
               ) : (
                 <div className="flex flex-col space-y-2">
                   <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                    {formatCurrency(
-                      subscription.items[0].price?.unit_amount!,
-                      subscription.items[0].price?.currency as Currency
-                    )}{' '}
-                    /{' '}
-                    {subscription.items[0].price?.recurring?.interval_count === 1
-                      ? subscription.items[0].price?.recurring?.interval
-                      : `${subscription.items[0].price?.recurring?.interval_count} ${subscription.items[0].price?.recurring?.interval}s`}
+                    {formatPrice(subscription.items[0].price!)}
                   </span>
                 </div>
               )

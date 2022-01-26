@@ -177,3 +177,19 @@ export function formatCurrency(amount: number, currency: Currency, locales?: str
     style: 'currency'
   }).format(number);
 }
+
+export function formatPrice(price: {
+  unit_amount?: number | null;
+  currency: string;
+  recurring?: { interval_count: number; interval: string } | null;
+  recurring_interval?: string | null;
+  recurring_interval_count?: number | null;
+}): string {
+  const amountPart = formatCurrency(price.unit_amount!, price.currency as Currency);
+  const recurring_interval = price.recurring_interval ?? price.recurring?.interval;
+  const recurring_interval_count =
+    price.recurring_interval_count ?? price.recurring?.interval_count;
+  if (!recurring_interval) return amountPart;
+  if (recurring_interval_count === 1) return `${amountPart} / ${recurring_interval}`;
+  return `${amountPart} / ${recurring_interval_count} ${recurring_interval}s`;
+}

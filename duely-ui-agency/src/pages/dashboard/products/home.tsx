@@ -17,7 +17,7 @@ import {
 } from '@duely/react';
 import { ConfirmProductDeletionModal } from './components';
 import { DashboardSection } from '../components';
-import { Currency, formatCurrency, truncate } from '@duely/util';
+import { Currency, formatPrice, truncate } from '@duely/util';
 
 const statusColors = {
   draft: 'orange',
@@ -147,19 +147,11 @@ export default function DashboardProductsHome() {
                         {truncate(product.description ?? '', 120)}
                       </p>
                       <div className="flex items-center pb-1 space-x-3 text-xs text-gray-500 whitespace-nowrap">
-                        {product.default_price && (
-                          <span>
-                            {formatCurrency(
-                              product.default_price.unit_amount,
-                              product.default_price.currency as Currency
-                            )}
-                            {product.default_price.type === 'recurring' &&
-                              ' / ' +
-                                (product.default_price.recurring_interval_count === 1
-                                  ? product.default_price.recurring_interval
-                                  : `${product.default_price.recurring_interval_count} ${product.default_price.recurring_interval}s`)}
-                          </span>
-                        )}
+                        <span>
+                          {product.prices?.length! > 1
+                            ? `${product.prices?.length} prices`
+                            : product.default_price && formatPrice(product.default_price)}
+                        </span>
 
                         <a
                           className="px-1 rounded-sm hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600"
@@ -189,7 +181,9 @@ export default function DashboardProductsHome() {
             <Table.Column shrink span={2}>
               {(product: TProduct | null) => {
                 if (!product) {
-                  return <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
+                  return (
+                    <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>
+                  );
                 }
 
                 return (
