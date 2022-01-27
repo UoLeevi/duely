@@ -117,23 +117,9 @@ export default function DashboardOrdersHome() {
             </Table.Column>
 
             <Table.Column header="Customer" span={3}>
-              {(order: TOrder | null) =>
-                !order ? (
-                  <div className="flex flex-col space-y-1">
-                    <SkeletonText className="text-sm" />
-                    <SkeletonText className="text-xs" />
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {order.customer.name ?? order.customer.email_address.split('@')[0]}
-                    </span>
-                    <span className="text-xs text-gray-800 dark:text-gray-300">
-                      {order.customer.email_address}
-                    </span>
-                  </div>
-                )
-              }
+              {(order: TOrder | null) => (
+                <PropertyValue.Customer>{order?.customer}</PropertyValue.Customer>
+              )}
             </Table.Column>
 
             <Table.Column header="Type" span={2}>
