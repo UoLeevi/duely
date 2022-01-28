@@ -7,10 +7,10 @@ import { useQuery, customer_Q } from '@duely/client';
 import { icons } from '../icons';
 import { Link } from 'react-router-dom';
 
-type Customer = { id: string; name?: string | null; email_address: string };
+type Customer = { id: string; name?: string | null; email_address?: string; email?: string | null };
 
 export type CustomerPropertyValueProps = {
-  children: string | Customer | undefined;
+  children: string | Customer | undefined | null;
   format?: string;
 };
 
@@ -59,10 +59,10 @@ export function CustomerPropertyValue({ children, format }: CustomerPropertyValu
             to={`/dashboard/customers/${customer?.id}`}
             className="text-sm font-medium text-gray-700 transition-all hover:underline underline-offset-2 hover:text-gray-900 dark:text-gray-300"
           >
-            {customer?.name ?? customer?.email_address.split('@')[0]}
+            {customer?.name ?? (customer?.email_address ?? customer?.email)?.split('@')[0]}
           </Link>
           <span className="text-xs text-gray-700 dark:text-gray-300">
-            {customer?.email_address}
+            {customer?.email_address ?? customer?.email}
           </span>
         </div>
       </div>

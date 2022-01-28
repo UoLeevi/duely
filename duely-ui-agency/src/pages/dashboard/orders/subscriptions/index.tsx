@@ -43,23 +43,9 @@ export function DashboardOrdersSubscriptions() {
           rowLink={(subscription: TSubscription) => ({ to: `subscriptions/${subscription.id}` })}
         >
           <Table.Column header="Customer" span={2}>
-            {(subscription: TSubscription | null) =>
-              !subscription ? (
-                <div className="flex flex-col space-y-1">
-                  <SkeletonText className="text-sm" />
-                  <SkeletonText className="text-xs" />
-                </div>
-              ) : (
-                <div className="flex flex-col space-y-1">
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                    {subscription.customer?.name ?? subscription.customer?.email?.split('@')[0]}
-                  </span>
-                  <span className="text-xs font-medium text-gray-800 dark:text-gray-300">
-                    {subscription.customer?.email}
-                  </span>
-                </div>
-              )
-            }
+            {(subscription: TSubscription | null) => (
+              <PropertyValue.Customer>{subscription?.customer}</PropertyValue.Customer>
+            )}
           </Table.Column>
 
           <Table.Column header="Status">
