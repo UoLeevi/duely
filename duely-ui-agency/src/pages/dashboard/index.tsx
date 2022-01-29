@@ -31,12 +31,12 @@ export default function Dashboard() {
     data: agency,
     loading: agencyLoading,
     error: agencyError,
-    control: agencyControl
+    query: agencyQuery
   } = useQuery(current_agency_Q);
-  const { control: stripeAccountControl } = useQuery(
+  const { query: stripeAccountQuery } = useQuery(
     agency_stripe_account_Q,
     (agency) => ({ agency_id: agency!.id }),
-    { deps: [agencyControl] }
+    { deps: [agencyQuery] }
   );
 
   const loading = userLoading || agencyLoading;
@@ -65,8 +65,8 @@ export default function Dashboard() {
   }
 
   return (
-    <Query control={agencyControl}>
-      <Query control={stripeAccountControl}>
+    <Query state={agencyQuery} queryKey={agencyQuery.queryDef}>
+      <Query state={stripeAccountQuery} queryKey={stripeAccountQuery.queryDef}>
         <DashboardLayout>
           <Switch>
             {routes.map((route, i) => (

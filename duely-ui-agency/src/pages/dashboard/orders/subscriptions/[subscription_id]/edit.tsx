@@ -6,19 +6,19 @@ import { UpdateSubscriptionForm } from './components';
 
 export function DashboardOrdersEditSubscription() {
   const { subscription_id } = useParams<{ subscription_id: string }>();
-  const stripeAccountControl = useQueryState(agency_stripe_account_Q);
+  const stripeAccountQuery = useQueryState(agency_stripe_account_Q);
   const {
     data: subscription,
     loading: subscriptionLoading,
-    control: subscriptionControl
+    query: subscriptionQuery
   } = useQuery(
     subscription_Q,
     (stripe_account) => ({ stripe_account_id: stripe_account?.id!, subscription_id }),
-    { deps: [stripeAccountControl] }
+    { deps: [stripeAccountQuery] }
   );
   return (
     <>
-      <Query control={subscriptionControl}>
+      <Query state={subscriptionQuery} queryKey={subscriptionQuery.queryDef}>
         <DashboardSection
           // title={`Subscription ${subscription?.status === 'draft' ? '(draft)' : subscription?.number}`}
           loading={subscriptionLoading}

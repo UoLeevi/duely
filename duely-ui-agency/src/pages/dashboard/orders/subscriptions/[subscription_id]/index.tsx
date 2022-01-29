@@ -8,7 +8,7 @@ export * from './edit';
 export function DashboardOrdersSubscription() {
   const { subscription_id } = useParams<{ subscription_id: string }>();
   const stripeAccountControl = useQueryState(agency_stripe_account_Q);
-  const { data: subscription, control } = useQuery(
+  const { data: subscription, query } = useQuery(
     subscription_Q,
     (stripe_account) => ({
       stripe_account_id: stripe_account?.id!,
@@ -21,7 +21,7 @@ export function DashboardOrdersSubscription() {
 
   return (
     <>
-      <Query control={control}>
+      <Query state={query} queryKey={query.queryDef}>
         <Box>
           <Box.Heading subheading="Subscription" as="h2" dynamic>
             <div className="flex items-baseline space-x-3">

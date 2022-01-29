@@ -18,6 +18,7 @@ export type UsePaginationReturn<
   TItem extends Record<TKeyField, string>,
   TKeyField extends keyof TItem
 > = {
+  key: Symbol;
   itemsPerPage: ElementType<typeof itemsPerPageOptions>;
   pageNumber: number;
   firstIndex: number;
@@ -29,6 +30,7 @@ export type UsePaginationReturn<
   loadingTotalNumberOfItems: boolean;
   totalNumberOfItems: number;
   items: TItem[];
+  data: TItem[];
   nextPage(): void;
   previousPage(): void;
   setPage(pageNumber: number): void;
@@ -54,9 +56,8 @@ export function usePagination<
     loading: loadingTotalNumberOfItems,
     error: errorTotalNumberOfItems
   } = options.getTotalNumberOfItems();
-
+  const [key] = useState(Symbol());
   const initializedRef = useRef(false);
-
   const initialItemsPerPage = options.itemsPerPage ?? defaultItemsPerPage;
   const initialLastPageNumber = Math.max(
     1,
@@ -175,6 +176,7 @@ export function usePagination<
   );
 
   return {
+    key,
     ...state,
     ...functions,
     loadingInitial: initializedRef.current,
@@ -183,7 +185,8 @@ export function usePagination<
     error: error || errorTotalNumberOfItems,
     loadingTotalNumberOfItems,
     totalNumberOfItems,
-    items
+    items,
+    data: items
   };
 }
 
@@ -191,10 +194,12 @@ export type UsePaginationReturn2<
   TItem extends Record<TKeyField, string>,
   TKeyField extends keyof TItem
 > = {
+  key: Symbol;
   loading: boolean;
   loadingInitial: boolean;
   error: any;
   items: TItem[];
+  data: TItem[];
   loadMore(): void;
   itemsPerPage: ElementType<typeof itemsPerPageOptions>;
 };
@@ -210,6 +215,7 @@ export function usePagination2<
   }) => { items: TItem[]; loading: boolean; error: any };
   itemsPerPage?: ElementType<typeof itemsPerPageOptions>;
 }): UsePaginationReturn2<TItem, TKeyField> {
+  const [key] = useState(Symbol());
   const [pages] = useState<TItem[][]>([]);
 
   const getKey =
@@ -253,11 +259,13 @@ export function usePagination2<
   const items = useMemo(() => pages.flatMap((x) => x), [getKey(currentPageLastItem)]);
 
   return {
+    key,
     itemsPerPage: state.limit,
     ...functions,
     loadingInitial: loading && pages.length === 0,
     loading,
     error,
-    items
+    items,
+    data: items
   };
 }

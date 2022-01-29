@@ -1,7 +1,7 @@
 import { Box, Card, DropMenu, icons, LinkButton, PropertyValue, useQueryState } from '@duely/react';
 import { DashboardSection } from '../../components';
-import { Currency, formatPrice, formatDate } from '@duely/util';
-import { Table, SkeletonText, ColoredChip } from '@duely/react';
+import { Currency, formatPrice, formatDate, ElementType } from '@duely/util';
+import { Table, SkeletonText, ColoredChip, usePagination2 } from '@duely/react';
 import { useQuery, agency_subscriptions_Q, current_agency_Q } from '@duely/client';
 
 export function DashboardOrdersSubscriptions() {
@@ -14,7 +14,27 @@ export function DashboardOrdersSubscriptions() {
     deps: [agencyControl]
   });
 
-  type TSubscription = NonNullable<typeof subscriptions> extends readonly (infer T)[] ? T : never;
+  type TSubscription = ElementType<ReturnType<typeof agency_subscriptions_Q['result']>>;
+
+  const pagination = usePagination2<TSubscription, 'id'>({
+    getItems: ({ limit, starting_after }) => {
+      const { data, loading, error } = useQuery(
+        agency_subscriptions_Q,
+        (agency) => ({
+          agency_id: agency?.id!,
+          limit,
+          starting_after: starting_after
+        }),
+        {
+          deps: [agencyControl]
+        }
+      );
+
+      return { items: data ?? [], loading, error };
+    },
+    itemsPerPage: 5,
+    keyField: 'id'
+  });
 
   console.log(subscriptions);
 
@@ -34,7 +54,7 @@ export function DashboardOrdersSubscriptions() {
           </LinkButton>
         </Box.Action>
         <Table
-          items={subscriptions}
+          pagination={pagination}
           dense={true}
           wrap={{ md: 6 }}
           loading={loading}

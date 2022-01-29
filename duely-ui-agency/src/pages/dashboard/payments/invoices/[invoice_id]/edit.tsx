@@ -6,19 +6,19 @@ import { UpdateInvoiceForm } from './components';
 
 export default function DashboardPaymentsEditInvoice() {
   const { invoice_id } = useParams<{ invoice_id: string }>();
-  const stripeAccountControl = useQueryState(agency_stripe_account_Q);
+  const stripeAccountQuery = useQueryState(agency_stripe_account_Q);
   const {
     data: invoice,
     loading: invoiceLoading,
-    control: invoiceControl
+    query: invoiceQuery
   } = useQuery(
     invoice_Q,
     (stripe_account) => ({ stripe_account_id: stripe_account?.id!, invoice_id }),
-    { deps: [stripeAccountControl] }
+    { deps: [stripeAccountQuery] }
   );
   return (
     <>
-      <Query control={invoiceControl}>
+      <Query state={invoiceQuery} queryKey={invoiceQuery.queryDef}>
         <DashboardSection
           title={`Invoice ${invoice?.status === 'draft' ? '(draft)' : invoice?.number}`}
           loading={invoiceLoading}

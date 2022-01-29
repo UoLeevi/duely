@@ -4,6 +4,7 @@ import { useBreakpoints } from '../../hooks';
 import { isCursorPagination, UsePaginationReturn, UsePaginationReturn2 } from './usePagination';
 import { PaginationControls, PaginationControls2 } from '..';
 import { Link, LinkProps } from 'react-router-dom';
+import { Query } from '../Query';
 
 export * from './usePagination';
 export * from './PaginationControls';
@@ -301,39 +302,49 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
     dense ? 'gap-x-3 sm:gap-x-4' : 'gap-x-5 sm:gap-x-6'
   );
 
+  const Wrapper = pagination
+    ? (props: { children: React.ReactNode }) => (
+        <Query state={pagination} queryKey={pagination.key}>
+          {props.children}
+        </Query>
+      )
+    : Fragment;
+
   return (
-    <TableContext.Provider
-      value={{
-        columnDefinitions,
-        wrapColCount,
-        wrapRowCount,
-        wrapCells,
-        hasHeaderRow,
-        items,
-        dense,
-        columns,
-        headers,
-        rowLink
-      }}
-    >
-      <div className={className} style={{ gridTemplateColumns }}>
-        {hasHeaderRow && (
-          <Fragment>
-            <div
-              className="border-b border-gray-200 dark:border-gray-700"
-              style={{ gridArea: `1 / 1 / 2 / -1` }}
-            ></div>
-            {headers}
-          </Fragment>
-        )}
+    <Wrapper>
+      <TableContext.Provider
+        value={{
+          columnDefinitions,
+          wrapColCount,
+          wrapRowCount,
+          wrapCells,
+          hasHeaderRow,
+          items,
+          dense,
+          columns,
+          headers,
+          rowLink
+        }}
+      >
+        <div className={className} style={{ gridTemplateColumns }}>
+          {hasHeaderRow && (
+            <Fragment>
+              <div
+                className="border-b border-gray-200 dark:border-gray-700"
+                style={{ gridArea: `1 / 1 / 2 / -1` }}
+              ></div>
+              {headers}
+            </Fragment>
+          )}
 
-        {rows}
+          {rows}
 
-        {footer && (
-          <TableFooterRow row={rowCount + (hasHeaderRow ? 2 : 1)}>{footer}</TableFooterRow>
-        )}
-      </div>
-    </TableContext.Provider>
+          {footer && (
+            <TableFooterRow row={rowCount + (hasHeaderRow ? 2 : 1)}>{footer}</TableFooterRow>
+          )}
+        </div>
+      </TableContext.Provider>
+    </Wrapper>
   );
 }
 
