@@ -24,7 +24,7 @@ export function DatePropertyValue({ children, format }: DatePropertyValueProps) 
     <>
       <span
         ref={ref}
-        className={createClassName(className, 'underline underline-offset-2 hover:bg-black/5')}
+        className={createClassName(className, 'relative underline underline-offset-2 hover:bg-black/5')}
       >
         {formatDate(children, format, { tz: 'local' })}
       </span>
@@ -51,12 +51,12 @@ export function DateRangePropertyValue({ from, to }: DateRangePropertyValueProps
 
   return (
     <span className={className}>
-      <span ref={fromRef} className="underline underline-offset-2 hover:bg-black/5">
+      <span ref={fromRef} className="relative underline underline-offset-2 hover:bg-black/5">
         {formatDate(from, 'mmm d', { tz: 'local' })}
       </span>
       <TimeConversionTooltip elementRef={fromRef} date={from} />
       <span> to </span>
-      <span ref={toRef} className="underline underline-offset-2 hover:bg-black/5">
+      <span ref={toRef} className="relative underline underline-offset-2 hover:bg-black/5">
         {formatDate(to, 'mmm d, yyyy', { tz: 'local' })}
       </span>
       <TimeConversionTooltip elementRef={toRef} date={to} />

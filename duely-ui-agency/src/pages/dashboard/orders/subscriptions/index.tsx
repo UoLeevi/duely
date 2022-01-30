@@ -1,6 +1,5 @@
-import { Box, Card, DropMenu, icons, LinkButton, PropertyValue, useQueryState } from '@duely/react';
-import { DashboardSection } from '../../components';
-import { Currency, formatPrice, formatDate, ElementType } from '@duely/util';
+import { Box, DropMenu, icons, LinkButton, PropertyValue, useQueryState } from '@duely/react';
+import { formatPrice, ElementType } from '@duely/util';
 import { Table, SkeletonText, ColoredChip, usePagination2 } from '@duely/react';
 import { useQuery, agency_subscriptions_Q, current_agency_Q } from '@duely/client';
 
@@ -116,19 +115,11 @@ export function DashboardOrdersSubscriptions() {
           </Table.Column>
 
           <Table.Column header="Product" span={2}>
-            {(subscription: TSubscription | null) =>
-              !subscription ? (
-                <div className="flex flex-col space-y-1">
-                  <SkeletonText className="text-sm" />
-                </div>
-              ) : (
-                <div className="flex flex-col space-y-1">
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                    {subscription.items[0].price?.product?.name}
-                  </span>
-                </div>
-              )
-            }
+            {(subscription: TSubscription | null) => (
+              <PropertyValue.Product>
+                {subscription?.items[0]?.price?.product}
+              </PropertyValue.Product>
+            )}
           </Table.Column>
 
           <Table.Column header="Price" span={2}>

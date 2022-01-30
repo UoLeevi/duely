@@ -11,10 +11,9 @@ type Customer = { id: string; name?: string | null; email_address?: string; emai
 
 export type CustomerPropertyValueProps = {
   children: string | Customer | undefined | null;
-  format?: string;
 };
 
-export function CustomerPropertyValue({ children, format }: CustomerPropertyValueProps) {
+export function CustomerPropertyValue({ children }: CustomerPropertyValueProps) {
   // const ref = useRef<HTMLElement>(null);
   let { loading } = useQueryState();
   const className = 'text-sm text-gray-700 dark:text-gray-300';
@@ -39,7 +38,7 @@ export function CustomerPropertyValue({ children, format }: CustomerPropertyValu
     return (
       <div className="flex items-center space-x-2">
         <div className="text-gray-400 animate-pulse">{icons['user.solid']}</div>
-        <div className="flex flex-col space-y-0.5">
+        <div className="flex flex-col">
           <SkeletonText className="text-sm" />
           <SkeletonText className="text-xs" />
         </div>
@@ -50,14 +49,14 @@ export function CustomerPropertyValue({ children, format }: CustomerPropertyValu
   return (
     <>
       <div className="flex items-center space-x-2">
-        <Link to={`/dashboard/customers/${customer?.id}`} className="text-gray-400">
+        <Link to={`/dashboard/customers/${customer?.id}`} className="relative text-gray-400">
           {icons['user.solid']}
         </Link>
 
-        <div className="flex flex-col space-y-0.5">
+        <div className="flex flex-col">
           <Link
             to={`/dashboard/customers/${customer?.id}`}
-            className="text-sm font-medium text-gray-700 transition-all hover:underline underline-offset-2 hover:text-gray-900 dark:text-gray-300"
+            className="relative text-sm font-medium text-gray-700 transition-all hover:underline underline-offset-2 hover:text-gray-900 dark:text-gray-300"
           >
             {customer?.name ?? (customer?.email_address ?? customer?.email)?.split('@')[0]}
           </Link>

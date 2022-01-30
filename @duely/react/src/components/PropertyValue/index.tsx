@@ -4,12 +4,14 @@ import { useQueryState } from '../Query';
 import { DatePropertyValue, DateRangePropertyValue } from './dates';
 import { IdPropertyValue } from './ids';
 import { CustomerPropertyValue } from './customer';
+import { ProductPropertyValue } from './product';
 
 export const PropertyValue = Object.assign(PropertyValueRoot, {
   Date: DatePropertyValue,
   DateRange: DateRangePropertyValue,
   Id: IdPropertyValue,
-  Customer: CustomerPropertyValue
+  Customer: CustomerPropertyValue,
+  Product: ProductPropertyValue
 });
 
 export type TextPropertyValueProps = {
