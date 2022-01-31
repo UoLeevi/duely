@@ -56,7 +56,7 @@ export function CustomerPropertyValue({ children }: CustomerPropertyValueProps) 
         <div className="flex flex-col">
           <Link
             to={`/dashboard/customers/${customer?.id}`}
-            className="relative text-sm font-medium text-gray-700 transition-all hover:underline underline-offset-2 hover:text-gray-900 dark:text-gray-300"
+            className={`relative font-medium transition-all hover:underline underline-offset-2 hover:text-gray-900 ${className}`}
           >
             {customer?.name ?? (customer?.email_address ?? customer?.email)?.split('@')[0]}
           </Link>

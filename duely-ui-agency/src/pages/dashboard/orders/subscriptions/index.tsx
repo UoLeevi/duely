@@ -123,19 +123,9 @@ export function DashboardOrdersSubscriptions() {
           </Table.Column>
 
           <Table.Column header="Price" span={2}>
-            {(subscription: TSubscription | null) =>
-              !subscription ? (
-                <div className="flex flex-col space-y-2">
-                  <SkeletonText className="text-sm" />
-                </div>
-              ) : (
-                <div className="flex flex-col space-y-2">
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                    {formatPrice(subscription.items[0].price!)}
-                  </span>
-                </div>
-              )
-            }
+            {(subscription: TSubscription | null) => (
+              <PropertyValue.Price>{subscription?.items[0]?.price}</PropertyValue.Price>
+            )}
           </Table.Column>
 
           <Table.Column header="Created" span={2}>

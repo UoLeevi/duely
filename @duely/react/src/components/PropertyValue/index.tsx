@@ -5,13 +5,15 @@ import { DatePropertyValue, DateRangePropertyValue } from './dates';
 import { IdPropertyValue } from './ids';
 import { CustomerPropertyValue } from './customer';
 import { ProductPropertyValue } from './product';
+import { PricePropertyValue } from './price';
 
 export const PropertyValue = Object.assign(PropertyValueRoot, {
   Date: DatePropertyValue,
   DateRange: DateRangePropertyValue,
   Id: IdPropertyValue,
   Customer: CustomerPropertyValue,
-  Product: ProductPropertyValue
+  Product: ProductPropertyValue,
+  Price: PricePropertyValue
 });
 
 export type TextPropertyValueProps = {
