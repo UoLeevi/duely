@@ -89,6 +89,7 @@ export default function DashboardOrdersHome() {
             wrap={{
               md: 8
             }}
+            dense
             pagination={pagination}
             keyField="id"
             rowLink={(order: TOrder) => ({ to: `orders/${order.id}` })}
@@ -96,19 +97,19 @@ export default function DashboardOrdersHome() {
             <Table.Column header="Order" span={3}>
               {(order: TOrder | null) =>
                 !order ? (
-                  <div className="flex flex-col space-y-1">
+                  <div className="flex flex-col">
                     <SkeletonText className="text-sm" />
-                    <SkeletonText className="text-sm" />
+                    <SkeletonText className="text-sm" ch={12} />
                   </div>
                 ) : (
-                  <div className="flex flex-col space-y-1">
+                  <div className="flex flex-col">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
                       {truncate(order.items.map((item) => item.price.product.name).join(', '), 50)}
                     </span>
-                    <div className="flex items-center h-8 space-x-4 min-h-min">
+                    <div className="flex items-center space-x-4">
                       <span className="font-mono text-sm text-gray-600">{order.id}</span>
                       {order.state !== 'processed' && (
-                        <ColoredChip color={statusColors} text={order.state} />
+                        <ColoredChip dense color={statusColors} text={order.state} />
                       )}
                     </div>
                   </div>
