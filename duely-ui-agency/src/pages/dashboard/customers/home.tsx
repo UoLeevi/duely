@@ -15,7 +15,8 @@ import {
   usePagination,
   LinkButton,
   icons,
-  useQueryState
+  useQueryState,
+  PropertyValue
 } from '@duely/react';
 import { ConfirmCustomerDeletionModal } from './components';
 import { DashboardSection } from '../components';
@@ -105,29 +106,17 @@ export default function DashboardCustomersHome() {
             keyField="id"
           >
             <Table.Column header="Customer">
-              {(customer: TCustomer | null) =>
-                !customer ? (
-                  <div className="flex flex-col space-y-2">
-                    <SkeletonText className="text-sm" />
-                    <SkeletonText className="text-xs" />
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-2">
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {customer.name ?? customer.email_address.split('@')[0]}
-                    </span>
-                    <span className="text-xs font-medium text-gray-800 dark:text-gray-300">
-                      {customer.email_address}
-                    </span>
-                  </div>
-                )
-              }
+              {(customer: TCustomer | null) => (
+                <PropertyValue.Customer>{customer}</PropertyValue.Customer>
+              )}
             </Table.Column>
 
             <Table.Column shrink>
               {(customer: TCustomer | null) => {
                 if (!customer) {
-                  return <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
+                  return (
+                    <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>
+                  );
                 }
 
                 return (
