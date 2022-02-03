@@ -32,7 +32,7 @@
     "@duely/stripe": "^0.4.10",
     "cors": "^2.8.5",
     "express": "^4.16.4",
-    "validator": "^13.5.2"
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "@duely/build": "^0.4.7",
