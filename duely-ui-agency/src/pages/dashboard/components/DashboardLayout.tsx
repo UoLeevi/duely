@@ -1,5 +1,20 @@
-import { useQuery, current_subdomain_Q } from '@duely/client';
-import { useClassName, Sidebar, SidebarProps, TopBar2, icons, Search } from '@duely/react';
+import {
+  useQuery,
+  current_subdomain_Q,
+  query,
+  subscription_Q,
+  agency_stripe_account_Q
+} from '@duely/client';
+import {
+  useClassName,
+  Sidebar,
+  SidebarProps,
+  TopBar2,
+  icons,
+  Search,
+  useQueryState,
+  ColoredChip
+} from '@duely/react';
 import { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiLink } from './ApiLink';
@@ -221,20 +236,53 @@ type DashboardLayoutProps = {
   children?: React.ReactNode;
 };
 
+function useSearch() {
+  const { data: stripe_account } = useQueryState(agency_stripe_account_Q);
+  return useCallback(
+    (searchTerm: string) => {
+      if (searchTerm.startsWith('sub_')) {
+        return query(subscription_Q, {
+          stripe_account_id: stripe_account?.id!,
+          subscription_id: searchTerm
+        }).then((subscription) => [
+          <Link className="flex items-baseline space-x-3 text-sm hover:bg-black/5" to={`/dashboard/orders/subscriptions/${subscription?.id}`}>
+            <span className='text-xs font-bold text-gray-500 uppercase'>Subscription</span>
+            <span>
+              <span>{subscription?.customer?.name ?? subscription?.customer?.email}</span>
+              <span className="text-xs font-normal text-gray-500"> on </span>
+              <span className="text-xs font-normal text-gray-700">
+                {subscription?.items[0].price?.product?.name}
+              </span>
+            </span>
+            <ColoredChip
+              dense
+              text={subscription?.status}
+              color={{
+                incomplete: 'gray',
+                incomplete_expired: 'gray',
+                trialing: 'blue',
+                active: 'green',
+                past_due: 'orange',
+                canceled: 'gray',
+                unpaid: 'orange'
+              }}
+            />
+          </Link>
+        ]);
+      }
+
+      return [];
+    },
+    [stripe_account]
+  );
+}
+
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   useClassName(document.documentElement, 'dark:bg-gray-900 dark:text-gray-300');
   const { data: current_subdomain } = useQuery(current_subdomain_Q);
   const logoSrc = current_subdomain?.agency.theme.image_logo!.data;
 
-  const search = useCallback(
-    (query: string) =>
-      query
-        ? new Promise<string[]>((resolve) =>
-            window.setTimeout(() => resolve(['result 1', 'result 2', query]), 1000)
-          )
-        : [],
-    []
-  );
+  const search = useSearch();
 
   return (
     <div className="relative flex flex-col flex-1 w-full">

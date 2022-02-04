@@ -1,5 +1,5 @@
 import { memo } from '@duely/util';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { icons, Animation, LoadingSpinner } from '..';
 import { useAwait, useDebounce } from '../..';
 
@@ -8,7 +8,7 @@ export type SearchProps = {
 };
 
 export function Search({ search }: SearchProps) {
-  [search] = useState(() => memo(search));
+  search = useMemo(() => memo(search), [search]);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState<string>();
