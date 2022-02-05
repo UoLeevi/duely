@@ -1,7 +1,9 @@
 import { memo } from '@duely/util';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { icons, Animation, LoadingSpinner } from '..';
 import { useAwait, useDebounce } from '../..';
+export * from './resultTypes';
 
 export type SearchProps = {
   search: (query: string) => React.ReactNode[] | Promise<React.ReactNode[]>;
@@ -36,6 +38,22 @@ export function Search({ search }: SearchProps) {
       document.removeEventListener('input', input);
     };
   }, []);
+
+  const history = useHistory();
+
+  useEffect(() => {
+    let pathname = history.location.pathname;
+    return history.listen((location) => {
+      if (pathname !== location.pathname) {
+        pathname = location.pathname;
+        if (!inputRef.current || inputRef.current.value === '') return;
+        inputRef.current.value = '';
+        setQuery(undefined);
+        if (!containerRef.current?.contains(document.activeElement)) return;
+        (document.activeElement as HTMLElement).blur();
+      }
+    });
+  }, [history]);
 
   const debouncedQuery = useDebounce(query);
   const resultPromise = debouncedQuery !== undefined && search(debouncedQuery);
@@ -78,14 +96,14 @@ export function Search({ search }: SearchProps) {
 
         <div className="hidden group-focus-within:flex absolute top-0 z-40 flex-col w-full min-w-[15rem] -translate-x-1/2 translate-y-10 bg-white border rounded-md shadow-lg border-black/5 left-1/2">
           {loading && (
-            <div className="p-3 truncate whitespace-nowrap">
+            <div className="py-1.5 px-2.5 flex items-center min-h-[1.25em] box-content truncate whitespace-nowrap">
               <span>Loading results for </span>
-              <span className="font-semibold">{query}</span>
+              <span className="pl-1 font-semibold">{query}</span>
             </div>
           )}
 
           {!loading && results && (
-            <div className="flex flex-col p-3 space-y-1">
+            <div className="flex flex-col p-1 space-y-1">
               {results.map((result, i) => (
                 <div key={i}>{result}</div>
               ))}

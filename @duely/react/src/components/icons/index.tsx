@@ -29,6 +29,35 @@ export const icons = {
       />
     </svg>
   ),
+  'briefcase.solid': (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-[1.25em] h-[1.25em]"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path
+        fillRule="evenodd"
+        d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z"
+        clipRule="evenodd"
+      />
+      <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
+    </svg>
+  ),
+  'chevron-right.solid': (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-[1.25em] h-[1.25em]"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path
+        fillRule="evenodd"
+        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+        clipRule="evenodd"
+      />
+    </svg>
+  ),
   'clipboard.solid': (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -51,6 +80,21 @@ export const icons = {
       <path
         fillRule="evenodd"
         d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+        clipRule="evenodd"
+      />
+    </svg>
+  ),
+  'credit-card.solid': (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-[1.25em] h-[1.25em]"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+      <path
+        fillRule="evenodd"
+        d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
         clipRule="evenodd"
       />
     </svg>

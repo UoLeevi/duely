@@ -12,6 +12,7 @@ import {
   TopBar2,
   icons,
   Search,
+  SearchResult,
   useQueryState,
   ColoredChip
 } from '@duely/react';
@@ -239,39 +240,53 @@ type DashboardLayoutProps = {
 function useSearch() {
   const { data: stripe_account } = useQueryState(agency_stripe_account_Q);
   return useCallback(
-    (searchTerm: string) => {
-      if (searchTerm.startsWith('sub_')) {
-        return query(subscription_Q, {
-          stripe_account_id: stripe_account?.id!,
-          subscription_id: searchTerm
-        }).then((subscription) => [
-          <Link className="flex items-baseline space-x-3 text-sm hover:bg-black/5" to={`/dashboard/orders/subscriptions/${subscription?.id}`}>
-            <span className='text-xs font-bold text-gray-500 uppercase'>Subscription</span>
-            <span>
-              <span>{subscription?.customer?.name ?? subscription?.customer?.email}</span>
-              <span className="text-xs font-normal text-gray-500"> on </span>
-              <span className="text-xs font-normal text-gray-700">
-                {subscription?.items[0].price?.product?.name}
-              </span>
-            </span>
-            <ColoredChip
-              dense
-              text={subscription?.status}
-              color={{
-                incomplete: 'gray',
-                incomplete_expired: 'gray',
-                trialing: 'blue',
-                active: 'green',
-                past_due: 'orange',
-                canceled: 'gray',
-                unpaid: 'orange'
-              }}
-            />
-          </Link>
-        ]);
+    async (searchTerm: string) => {
+      const results: React.ReactNode[] = [];
+
+      switch (searchTerm.slice(0, 3)) {
+        case 'sub':
+          results.push(<SearchResult.DashboardPage page={'subscriptions'} />);
       }
 
-      return [];
+      if (searchTerm.startsWith('sub_')) {
+        try {
+          const subscription = await query(subscription_Q, {
+            stripe_account_id: stripe_account?.id!,
+            subscription_id: searchTerm
+          });
+
+          results.push(
+            <Link
+              className="flex items-baseline space-x-3 text-sm hover:bg-black/5"
+              to={`/dashboard/orders/subscriptions/${subscription?.id}`}
+            >
+              <span className="text-xs font-bold text-gray-500 uppercase">Subscription</span>
+              <span>
+                <span>{subscription?.customer?.name ?? subscription?.customer?.email}</span>
+                <span className="text-xs font-normal text-gray-500"> on </span>
+                <span className="text-xs font-normal text-gray-700">
+                  {subscription?.items[0].price?.product?.name}
+                </span>
+              </span>
+              <ColoredChip
+                dense
+                text={subscription?.status}
+                color={{
+                  incomplete: 'gray',
+                  incomplete_expired: 'gray',
+                  trialing: 'blue',
+                  active: 'green',
+                  past_due: 'orange',
+                  canceled: 'gray',
+                  unpaid: 'orange'
+                }}
+              />
+            </Link>
+          );
+        } catch {}
+      }
+
+      return results;
     },
     [stripe_account]
   );
