@@ -256,32 +256,31 @@ function useSearch() {
           });
 
           results.push(
-            <Link
-              className="flex items-baseline space-x-3 text-sm hover:bg-black/5"
-              to={`/dashboard/orders/subscriptions/${subscription?.id}`}
-            >
-              <span className="text-xs font-bold text-gray-500 uppercase">Subscription</span>
-              <span>
-                <span>{subscription?.customer?.name ?? subscription?.customer?.email}</span>
-                <span className="text-xs font-normal text-gray-500"> on </span>
-                <span className="text-xs font-normal text-gray-700">
-                  {subscription?.items[0].price?.product?.name}
+            <SearchResult to={`/dashboard/orders/subscriptions/${subscription?.id}`}>
+              <div className="flex items-baseline space-x-3 text-sm">
+                <span className="text-xs font-bold text-gray-500 uppercase">Subscription</span>
+                <span>
+                  <span>{subscription?.customer?.name ?? subscription?.customer?.email}</span>
+                  <span className="text-xs font-normal text-gray-500"> on </span>
+                  <span className="text-xs font-normal text-gray-700">
+                    {subscription?.items[0].price?.product?.name}
+                  </span>
                 </span>
-              </span>
-              <ColoredChip
-                dense
-                text={subscription?.status}
-                color={{
-                  incomplete: 'gray',
-                  incomplete_expired: 'gray',
-                  trialing: 'blue',
-                  active: 'green',
-                  past_due: 'orange',
-                  canceled: 'gray',
-                  unpaid: 'orange'
-                }}
-              />
-            </Link>
+                <ColoredChip
+                  dense
+                  text={subscription?.status}
+                  color={{
+                    incomplete: 'gray',
+                    incomplete_expired: 'gray',
+                    trialing: 'blue',
+                    active: 'green',
+                    past_due: 'orange',
+                    canceled: 'gray',
+                    unpaid: 'orange'
+                  }}
+                />
+              </div>
+            </SearchResult>
           );
         } catch {}
       }

@@ -1,15 +1,17 @@
 import { createClassName } from '@duely/util';
 import React from 'react';
 import { Link, LinkProps } from 'react-router-dom';
-import { icons } from '../../icons';
+import { getIconElement, IconProp, icons } from '../../icons';
 
 export const SearchResult = Object.assign(SearchResultRoot, {
   DashboardPage: DashboardPageSearchResult
 });
 
-export type SearchResultProps = LinkProps;
+export type SearchResultProps = LinkProps & {
+  icon?: IconProp
+};
 
-function SearchResultRoot({ children, className, ...linkProps }: SearchResultProps) {
+function SearchResultRoot({ children, className, icon, ...linkProps }: SearchResultProps) {
   return (
     <Link
       className={createClassName(
@@ -18,6 +20,7 @@ function SearchResultRoot({ children, className, ...linkProps }: SearchResultPro
       )}
       {...linkProps}
     >
+      {getIconElement(icon)}
       {children}
     </Link>
   );
@@ -39,8 +42,7 @@ function DashboardPageSearchResult({ page }: DashboardPageSearchResult) {
   });
 
   return (
-    <SearchResultRoot to={to}>
-      {icon}
+    <SearchResultRoot to={to} icon={icon}>
       <span className="flex items-center space-x-1">{pathElements}</span>
     </SearchResultRoot>
   );
