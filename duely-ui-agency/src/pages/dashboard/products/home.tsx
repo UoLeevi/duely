@@ -104,6 +104,7 @@ export default function DashboardProductsHome() {
             error={error}
             pagination={pagination}
             keyField="id"
+            rowLink={(product) => ({ to: `/dashboard/products/${product.url_name}` })}
           >
             <Table.Column header="Product" span={8}>
               {(product: TProduct | null) => {
@@ -154,7 +155,7 @@ export default function DashboardProductsHome() {
                         </span>
 
                         <a
-                          className="px-1 rounded-sm hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600"
+                          className="relative px-1 rounded-sm hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600"
                           onClick={passAccessToken}
                           target={`preview ${product.url_name}`}
                           href={`https://${agency?.subdomain.name}.duely.app/checkout/${product.url_name}?preview`}
