@@ -14,6 +14,13 @@ export function getIconElement(icon: IconProp): React.ReactNode {
 }
 
 const iconPathDefinitions = {
+  box: {
+    solid: [
+      'm2.872 5.51 6.257-3.52c.436-.245 1.307-.245 1.743 0l6.257 3.52c.436.245.436.735 0 .98l-6.257 3.52c-.436.245-1.307.245-1.743 0L2.872 6.49c-.436-.245-.436-.735 0-.98z',
+      'm2.872 8.4 6.257 3.52c.436.245 1.307.245 1.743 0l6.257-3.52c.436-.245.87.01.87.51v4.3c0 .5-.434 1.245-.87 1.49l-6.257 3.52c-.436.245-1.307.245-1.743 0L2.872 14.7C2.436 14.455 2 13.71 2 13.21v-4.3c0-.5.436-.755.872-.51z'
+    ],
+    outline: []
+  },
   'arrow-sm-down': {
     solid: [
       'M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z'
@@ -297,6 +304,7 @@ export function Icon({ className, strokeWidth, solid, name, d, ...props }: IconP
 // see: https://heroicons.com/
 // TODO: https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use
 export const icons = {
+  'box.solid': <Icon name="box" solid />,
   'arrow-sm-down.solid': <Icon name="arrow-sm-down" solid />,
   'briefcase.solid': <Icon name="briefcase" solid />,
   'chevron-right.solid': <Icon name="chevron-right" solid />,

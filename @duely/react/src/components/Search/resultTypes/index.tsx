@@ -57,6 +57,6 @@ const dashboardPageResults = {
   products: {
     path: ['Products'],
     to: '/dashboard/products',
-    icon: icons['briefcase.solid']
+    icon: icons['box.solid']
   }
 };

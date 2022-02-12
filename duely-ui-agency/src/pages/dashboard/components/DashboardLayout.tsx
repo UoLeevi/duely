@@ -145,6 +145,8 @@ function useSearch() {
       switch (searchTerm.slice(0, 3)) {
         case 'sub':
           results.push(<SearchResult.DashboardPage page={'subscriptions'} />);
+        case 'pro':
+          results.push(<SearchResult.DashboardPage page={'products'} />);
       }
 
       if (searchTerm.startsWith('sub_')) {

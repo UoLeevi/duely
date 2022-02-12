@@ -1,7 +1,5 @@
-import { Link } from 'react-router-dom';
-import { useQuery, current_agency_Q, image_Q, products_Q, count_products_Q } from '@duely/client';
+import { useQuery, current_agency_Q, products_Q, count_products_Q } from '@duely/client';
 import {
-  Util,
   useBreakpoints,
   Table,
   DropMenu,
@@ -13,11 +11,12 @@ import {
   LinkButton,
   ColoredChip,
   icons,
-  useMessage
+  useMessage,
+  PropertyValue
 } from '@duely/react';
 import { ConfirmProductDeletionModal } from './components';
 import { DashboardSection } from '../components';
-import { Currency, formatPrice, truncate } from '@duely/util';
+import { formatPrice, truncate } from '@duely/util';
 
 const statusColors = {
   draft: 'orange',
@@ -122,25 +121,11 @@ export default function DashboardProductsHome() {
                   );
                 }
 
-                const { data: image_logo, loading: image_logoLoading } = useQuery(
-                  image_Q,
-                  { image_id: product.image_logo?.id! },
-                  { skip: !product.image_logo }
-                );
-
                 return (
                   <div className="flex space-x-6">
-                    {image_logoLoading ? (
-                      <div className="flex-shrink-0 w-32 h-20 bg-gray-200 rounded-lg animate-pulse"></div>
-                    ) : image_logo ? (
-                      <img
-                        className="flex-shrink-0 object-cover w-32 h-20 rounded-lg"
-                        src={image_logo.data}
-                        alt={`${product.name} logo`}
-                      />
-                    ) : (
-                      <div className="flex-shrink-0 w-32 h-20 bg-gray-200 rounded-lg"></div>
-                    )}
+                    <PropertyValue.Image alt={`${product?.name} logo`}>
+                      {product?.image_logo?.id}
+                    </PropertyValue.Image>
 
                     <div className="flex flex-col space-y-1">
                       <span className="font-medium">{product.name}</span>

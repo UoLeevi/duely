@@ -5,12 +5,16 @@ import { Heading, HeadingProps } from '..';
 export type BoxProps = {
   children: React.ReactNode;
   className?: string;
+  row?: boolean;
+  col?: boolean;
 };
 
 export const Box = Object.assign(BoxRoot, { Heading: BoxHeading, Action: BoxAction });
 
-export function BoxRoot({ children, className }: BoxProps) {
+export function BoxRoot({ children, className, row, col }: BoxProps) {
   className = createClassName('flex flex-col pb-8 md:pb-10', className);
+  col ??= !row;
+  row ??= !col;
 
   const groupedChildren = groupBy(React.Children.toArray(children), (child) =>
     hasProperty(child, 'type')
@@ -34,7 +38,9 @@ export function BoxRoot({ children, className }: BoxProps) {
           <div className="grid grid-flow-row gap-2">{actions}</div>
         </div>
       )}
-      {content}
+      <div className={createClassName('flex gap-3', col ? 'flex-col' : 'flex-row flex-wrap')}>
+        {content}
+      </div>
     </div>
   );
 }

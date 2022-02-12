@@ -6,6 +6,9 @@ import { IdPropertyValue } from './ids';
 import { CustomerPropertyValue } from './customer';
 import { ProductPropertyValue } from './product';
 import { PricePropertyValue } from './price';
+import { ImagePropertyValue } from './image';
+import { SkeletonParagraph } from '../skeletons';
+import { createClassName } from '@duely/util';
 
 export const PropertyValue = Object.assign(PropertyValueRoot, {
   Date: DatePropertyValue,
@@ -13,20 +16,39 @@ export const PropertyValue = Object.assign(PropertyValueRoot, {
   Id: IdPropertyValue,
   Customer: CustomerPropertyValue,
   Product: ProductPropertyValue,
-  Price: PricePropertyValue
+  Price: PricePropertyValue,
+  Image: ImagePropertyValue
 });
 
 export type TextPropertyValueProps = {
   children: React.ReactNode;
+  className?: string;
+  multiline?: boolean;
+  ch?: number;
+  words?: number;
 };
 
-export function PropertyValueRoot({ children }: TextPropertyValueProps) {
+export function PropertyValueRoot({
+  children,
+  multiline,
+  ch,
+  words,
+  className
+}: TextPropertyValueProps) {
   const { loading } = useQueryState();
 
-  const className = 'text-sm text-gray-700 dark:text-gray-300';
+  className = createClassName(
+    className,
+    'text-sm text-gray-700 dark:text-gray-300',
+    multiline && 'inline-block'
+  );
 
   if (loading) {
-    return <SkeletonText className={className} />;
+    return multiline ? (
+      <SkeletonParagraph words={words} className={className} />
+    ) : (
+      <SkeletonText ch={ch} className={className} />
+    );
   }
 
   return <span className={className}>{children}</span>;
