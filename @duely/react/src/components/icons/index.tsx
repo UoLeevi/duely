@@ -258,7 +258,7 @@ export function Icon({ className, strokeWidth, solid, name, d, ...props }: IconP
   className = createClassName(
     className,
     'flex-shrink-0',
-    solid ? 'w-[1.25em] h-[1.25em]' : 'w-[1.5em] h-[1.5em]'
+    !className?.match(/\b[wh]-/) && (solid ? 'w-[1.25em] h-[1.25em]' : 'w-[1.5em] h-[1.5em]')
   );
 
   let ds: readonly string[];

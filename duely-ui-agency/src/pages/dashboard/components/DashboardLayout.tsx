@@ -25,7 +25,7 @@ const sidebarLinks: SidebarProps['links'] = [
   {
     text: 'Home',
     icon: ({ ...props }: Omit<React.SVGProps<SVGSVGElement>, 'name' | 'd'>) => (
-      <Icon className="w-[1.05em] h-[1.05em]" {...props} name="home" />
+      <Icon {...props} name="home" />
     ),
     to: '/dashboard',
     exact: true
@@ -34,7 +34,7 @@ const sidebarLinks: SidebarProps['links'] = [
     text: 'Orders',
     name: 'orders',
     icon: ({ ...props }: Omit<React.SVGProps<SVGSVGElement>, 'name' | 'd'>) => (
-      <Icon className="w-[1.05em] h-[1.05em]" {...props} name="shopping-cart" />
+      <Icon {...props} name="shopping-cart" />
     ),
     to: '/dashboard/orders',
     items: [
@@ -48,7 +48,7 @@ const sidebarLinks: SidebarProps['links'] = [
     text: 'Products',
     name: 'products',
     icon: ({ ...props }: Omit<React.SVGProps<SVGSVGElement>, 'name' | 'd'>) => (
-      <Icon className="w-[1.05em] h-[1.05em]" {...props} name="briefcase" />
+      <Icon {...props} name="briefcase" />
     ),
     to: '/dashboard/products',
     items: [
@@ -61,7 +61,7 @@ const sidebarLinks: SidebarProps['links'] = [
   {
     text: 'Customers',
     icon: ({ ...props }: Omit<React.SVGProps<SVGSVGElement>, 'name' | 'd'>) => (
-      <Icon className="w-[1.05em] h-[1.05em]" {...props} name="users" />
+      <Icon {...props} name="users" />
     ),
     to: '/dashboard/customers'
   },
@@ -69,7 +69,7 @@ const sidebarLinks: SidebarProps['links'] = [
     text: 'Payments',
     name: 'payments',
     icon: ({ ...props }: Omit<React.SVGProps<SVGSVGElement>, 'name' | 'd'>) => (
-      <Icon className="w-[1.05em] h-[1.05em]" {...props} name="credit-card" />
+      <Icon {...props} name="credit-card" />
     ),
     to: '/dashboard/payments',
     items: [
@@ -86,7 +86,7 @@ const sidebarLinks: SidebarProps['links'] = [
   {
     text: 'Site',
     icon: ({ ...props }: Omit<React.SVGProps<SVGSVGElement>, 'name' | 'd'>) => (
-      <Icon className="w-[1.05em] h-[1.05em]" {...props} name="template" />
+      <Icon {...props} name="template" />
     ),
     to: '/dashboard/site/pages'
   },
@@ -94,7 +94,7 @@ const sidebarLinks: SidebarProps['links'] = [
     text: 'Settings',
     name: 'settings',
     icon: ({ ...props }: Omit<React.SVGProps<SVGSVGElement>, 'name' | 'd'>) => (
-      <Icon className="w-[1.05em] h-[1.05em]" {...props} name="cog" />
+      <Icon {...props} name="cog" />
     ),
     items: [
       {
