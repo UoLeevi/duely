@@ -11,7 +11,8 @@ import {
   ErrorScreen,
   SkeletonText,
   DropMenu,
-  icons
+  icons,
+  Icon
 } from '@duely/react';
 import { ElementType } from '@duely/util';
 
@@ -118,20 +119,7 @@ function StatusColumn({ agency }: AgencyColumnProps) {
   if (!agency.stripe_account.charges_enabled) {
     return (
       <div className="flex items-center space-x-5">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="block w-6 h-6 text-indigo-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-          />
-        </svg>
+        <Icon name="credit-card" className="text-lg text-indigo-500" strokeWidth={1.75} />
         <div className="flex flex-col space-y-1">
           <span className="text-sm font-medium text-gray-500">
             Update your information to enable charges
@@ -151,20 +139,7 @@ function StatusColumn({ agency }: AgencyColumnProps) {
   if (!agency.stripe_account.payouts_enabled) {
     return (
       <div className="flex items-center space-x-5">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="block w-6 h-6 text-indigo-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-          />
-        </svg>
+        <Icon name="credit-card" className="text-lg text-indigo-500" strokeWidth={1.75} />
         <div className="flex flex-col space-y-1">
           <span className="text-sm font-medium text-gray-500">
             Update your information to enable payouts
@@ -181,17 +156,29 @@ function StatusColumn({ agency }: AgencyColumnProps) {
     );
   }
 
+  if (agency.stripe_account.requirements.eventually_due.length > 0) {
+    return (
+      <div className="flex items-center space-x-5">
+        <Icon name="credit-card" className="text-lg text-indigo-500" strokeWidth={1.75} />
+        <div className="flex flex-col space-y-1">
+          <span className="text-sm font-medium text-gray-500">
+            Update required information to keep your account enabled
+          </span>
+          <a
+            href="https://connect.stripe.com/setup/c/xxxxxxxxxxxx"
+            onClick={navigateToStripeAccountUpdate}
+            className="text-sm font-semibold tracking-wide text-indigo-500"
+          >
+            Continue to Stripe
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center space-x-5">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-6 h-6 blocktext-green-500"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-      </svg>
+      <Icon name="check" className="text-lg text-green-600" strokeWidth={1.75} />
       <div className="flex flex-col items-center space-y-1">
         <span className="text-sm font-medium text-gray-500">
           All set up.
@@ -212,17 +199,21 @@ function ActionsColumn({ agency }: AgencyColumnProps) {
     }
   });
 
-    if (!agency) {
-      return <SkeletonText ch={5} />;
-    }
+  if (!agency) {
+    return <SkeletonText ch={5} />;
+  }
 
-    return (
-      <DropMenu>
-        <DropMenu.Item icon={icons.identification} href="https://connect.stripe.com/setup/c/xxxxxxxxxxxx" onClick={navigateToStripeAccountUpdate}>
-          Update
-        </DropMenu.Item>
-      </DropMenu>
-    );
+  return (
+    <DropMenu>
+      <DropMenu.Item
+        icon={icons.identification}
+        href="https://connect.stripe.com/setup/c/xxxxxxxxxxxx"
+        onClick={navigateToStripeAccountUpdate}
+      >
+        Update
+      </DropMenu.Item>
+    </DropMenu>
+  );
 }
 
 export function ProfileBrandTable() {

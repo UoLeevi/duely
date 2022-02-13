@@ -1,5 +1,5 @@
 import React from 'react';
-import { hasOwnProperty, hasProperty } from '@duely/util';
+import { createClassName, hasOwnProperty, hasProperty } from '@duely/util';
 
 export type IconName = keyof typeof icons;
 
@@ -255,7 +255,11 @@ export type IconProps = Omit<React.SVGProps<SVGSVGElement>, 'name' | 'd'> & {
   );
 
 export function Icon({ className, strokeWidth, solid, name, d, ...props }: IconProps) {
-  className ??= solid ? 'w-[1.25em] h-[1.25em]' : 'w-[1.5em] h-[1.5em]';
+  className = createClassName(
+    className,
+    'flex-shrink-0',
+    solid ? 'w-[1.25em] h-[1.25em]' : 'w-[1.5em] h-[1.5em]'
+  );
 
   let ds: readonly string[];
 
