@@ -104,6 +104,7 @@ export default function DashboardCustomersHome() {
             error={error}
             pagination={pagination}
             keyField="id"
+            rowLink={(customer) => ({ to: `/dashboard/customers/${customer.id}` })}
           >
             <Table.Column header="Customer">
               {(customer: TCustomer | null) => (
