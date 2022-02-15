@@ -28,12 +28,6 @@ export function DashboardCustomersCustomer() {
               </span>
             </div>
           </Box.Heading>
-
-          {/* <PropertyList col>
-            <PropertyList.Item label="Started">
-              <PropertyValue.Date>{customer?.start_date}</PropertyValue.Date>
-            </PropertyList.Item>
-          </PropertyList> */}
         </Box>
 
         <Box row>

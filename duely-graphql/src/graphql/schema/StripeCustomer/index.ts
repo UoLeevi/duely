@@ -5,7 +5,10 @@ import { timestampToDate } from '@duely/util';
 import gql from 'graphql-tag';
 import Stripe from 'stripe';
 import { GqlTypeDefinition } from '../../types';
-import { createResolverForReferencedResource, createStripeListResolverForReferencedResource } from '../../util';
+import {
+  createResolverForReferencedResource,
+  createStripeListResolverForReferencedResource
+} from '../../util';
 
 export const StripeCustomer: GqlTypeDefinition<
   Stripe.Customer & { stripe_account: Resources['stripe account'] }
@@ -26,6 +29,13 @@ export const StripeCustomer: GqlTypeDefinition<
       phone: String
       preferred_locales: [String]
       customer: Customer
+      payment_intents(
+        customer: ID
+        created: Int
+        starting_after: String
+        ending_before: String
+        limit: Int
+      ): [PaymentIntent!]!
       invoices(
         status: String
         subscription: ID
@@ -44,6 +54,17 @@ export const StripeCustomer: GqlTypeDefinition<
         ending_before: String
         limit: Int
       ): [InvoiceItem!]!
+      subscriptions(
+        price: ID
+        status: String
+        collection_method: String
+        created: Int
+        current_period_start: TimeStampFilter
+        current_period_end: TimeStampFilter
+        starting_after: String
+        ending_before: String
+        limit: Int
+      ): [StripeSubscription!]!
     }
   `,
   resolvers: {
@@ -56,6 +77,12 @@ export const StripeCustomer: GqlTypeDefinition<
         column_name: 'email_address'
       }),
       ...createStripeListResolverForReferencedResource({
+        name: 'payment_intents',
+        object: 'payment_intent',
+        param: 'customer',
+        role: 'owner'
+      }),
+      ...createStripeListResolverForReferencedResource({
         name: 'invoices',
         object: 'invoice',
         param: 'customer',
@@ -64,6 +91,12 @@ export const StripeCustomer: GqlTypeDefinition<
       ...createStripeListResolverForReferencedResource({
         name: 'invoiceitems',
         object: 'invoiceitem',
+        param: 'customer',
+        role: 'owner'
+      }),
+      ...createStripeListResolverForReferencedResource({
+        name: 'subscriptions',
+        object: 'subscription',
         param: 'customer',
         role: 'owner'
       })

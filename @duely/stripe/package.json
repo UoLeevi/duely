@@ -1,6 +1,6 @@
 {
   "name": "@duely/stripe",
-  "version": "0.4.14",
+  "version": "0.4.15",
   "description": "Utilities for working with Stripe API.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -21,7 +21,7 @@
   "dependencies": {
     "@duely/build": "^0.4.7",
     "@duely/util": "^0.4.11",
-    "stripe": "^8.167.0"
+    "stripe": "^8.202.0"
   },
   "devDependencies": {
     "@types/jest": "^27.0.3",
