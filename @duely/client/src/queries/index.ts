@@ -68,7 +68,11 @@ import {
   PromotionCodeDocument,
   PromotionCodesDocument,
   SubscriptionDocument,
-  AgencyStripeAccountSubscriptionsDocument
+  AgencyStripeAccountSubscriptionsDocument,
+  CustomerSubscriptionsDocument,
+  CustomerPaymentIntentsDocument,
+  CustomerInvoicesDocument,
+  StripeSubscription
 } from '@duely/core';
 import { QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -191,7 +195,8 @@ export const agency_stripe_account_payment_intents_Q = {
 
 export const agency_subscriptions_Q = {
   query: AgencyStripeAccountSubscriptionsDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountSubscriptionsDocument>) => d?.agency?.stripe_account?.subscriptions
+  result: (d: ResultOf<typeof AgencyStripeAccountSubscriptionsDocument>) =>
+    d?.agency?.stripe_account?.subscriptions
 };
 
 export const subscription_Q = {
@@ -207,6 +212,22 @@ export const agency_customers_Q = {
 export const customer_Q = {
   query: CustomerDocument,
   result: (d: ResultOf<typeof CustomerDocument>) => d?.customer
+};
+
+export const customer_subscriptions_Q = {
+  query: CustomerSubscriptionsDocument,
+  result: (d: ResultOf<typeof CustomerSubscriptionsDocument>) =>
+    d?.customer?.stripe_customers?.flatMap((cus) => cus.subscriptions)
+};
+export const customer_payment_intents_Q = {
+  query: CustomerPaymentIntentsDocument,
+  result: (d: ResultOf<typeof CustomerPaymentIntentsDocument>) =>
+    d?.customer?.stripe_customers?.flatMap((cus) => cus.payment_intents)
+};
+export const customer_invoices_Q = {
+  query: CustomerInvoicesDocument,
+  result: (d: ResultOf<typeof CustomerInvoicesDocument>) =>
+    d?.customer?.stripe_customers?.flatMap((cus) => cus.invoices)
 };
 
 export const customers_Q = {

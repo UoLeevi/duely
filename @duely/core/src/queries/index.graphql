@@ -215,6 +215,18 @@ query AgencyStripeAccountPaymentIntents(
   }
 }
 
+query CustomerPaymentIntents($customer_id: ID!) {
+  customer(id: $customer_id) {
+    id
+    stripe_customers {
+      id
+      payment_intents {
+        ...payment_intent
+      }
+    }
+  }
+}
+
 query AgencyStripeAccountBankAccounts(
   $agency_id: ID!
   $starting_after: String
@@ -307,6 +319,20 @@ query AgencyStripeAccountSubscriptions(
     }
   }
 }
+query CustomerSubscriptions($customer_id: ID!) {
+  customer(id: $customer_id) {
+    id
+    stripe_customers {
+      id
+      subscriptions {
+        ...subscription
+        latest_invoice {
+          ...invoice
+        }
+      }
+    }
+  }
+}
 
 query Subscription($stripe_account_id: ID!, $subscription_id: ID!) {
   subscription(stripe_account_id: $stripe_account_id, subscription_id: $subscription_id) {
@@ -353,6 +379,18 @@ query AgencyStripeAccountInvoices(
         ending_before: $ending_before
         limit: $limit
       ) {
+        ...invoice
+      }
+    }
+  }
+}
+
+query CustomerInvoices($customer_id: ID!) {
+  customer(id: $customer_id) {
+    id
+    stripe_customers {
+      id
+      invoices {
         ...invoice
       }
     }
