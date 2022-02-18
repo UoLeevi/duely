@@ -63,7 +63,7 @@ export function DashboardOrdersSubscriptions() {
         >
           <Table.Column header="Customer" span={2}>
             {(subscription: TSubscription | null) => (
-              <PropertyValue.Customer>{subscription?.customer}</PropertyValue.Customer>
+              <PropertyValue.Customer>{subscription?.customer?.customer?.id}</PropertyValue.Customer>
             )}
           </Table.Column>
 

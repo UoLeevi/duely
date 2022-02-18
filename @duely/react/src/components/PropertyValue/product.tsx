@@ -17,7 +17,7 @@ export type ProductPropertyValueProps = {
 };
 
 export function ProductPropertyValue({ children }: ProductPropertyValueProps) {
-  // const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   let { loading } = useQueryState();
   const className = 'text-sm text-gray-700 dark:text-gray-300';
 
@@ -40,9 +40,8 @@ export function ProductPropertyValue({ children }: ProductPropertyValueProps) {
   if (loading) {
     return (
       <div className="flex items-center space-x-2">
-        <div className="flex flex-col">
-          <SkeletonText className={className} />
-        </div>
+        <div className="text-gray-400 animate-pulse">{icons['box.solid']}</div>
+        <SkeletonText className="text-sm" />
       </div>
     );
   }
@@ -50,7 +49,11 @@ export function ProductPropertyValue({ children }: ProductPropertyValueProps) {
   return (
     <>
       <div className="flex items-center space-x-2">
-        <div className="flex flex-col">
+        <Link to={`/dashboard/products/${product?.id}`} className="relative text-gray-400">
+          {icons['box.solid']}
+        </Link>
+
+        <div ref={ref}>
           <Link
             to={`/dashboard/products/${product?.id}`}
             className={`relative font-medium transition-all hover:underline underline-offset-2 hover:text-gray-900 ${className}`}
@@ -58,6 +61,13 @@ export function ProductPropertyValue({ children }: ProductPropertyValueProps) {
             {product?.name}
           </Link>
         </div>
+
+        <Tooltip elementRef={ref} position="bottom center">
+          <div className="grid grid-flow-row grid-cols-[auto_auto] text-xs">
+            <div className="py-1 pl-2 pr-1 font-medium border-t border-black/5">ID</div>
+            <div className="py-1 pl-1 pr-2 font-mono border-t border-black/5">{product?.id}</div>
+          </div>
+        </Tooltip>
       </div>
     </>
   );
