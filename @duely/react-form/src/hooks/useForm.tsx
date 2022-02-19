@@ -40,7 +40,7 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
     name: TName,
     bind?: {
       keyField: TKeyField | ((item: TItem) => string);
-      items: TItem[] | undefined;
+      items: TItem[] | undefined | null;
       loading?: boolean;
       returnTrueValues?: boolean;
     }

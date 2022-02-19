@@ -63,7 +63,9 @@ export function DashboardOrdersSubscriptions() {
         >
           <Table.Column header="Customer" span={2}>
             {(subscription: TSubscription | null) => (
-              <PropertyValue.Customer>{subscription?.customer?.customer?.id}</PropertyValue.Customer>
+              <PropertyValue.Customer>
+                {subscription?.customer?.customer?.id}
+              </PropertyValue.Customer>
             )}
           </Table.Column>
 
@@ -117,7 +119,7 @@ export function DashboardOrdersSubscriptions() {
           <Table.Column header="Product" span={2}>
             {(subscription: TSubscription | null) => (
               <PropertyValue.Product>
-                {subscription?.items[0]?.price?.product}
+                {subscription?.items[0]?.price?.product?.id}
               </PropertyValue.Product>
             )}
           </Table.Column>

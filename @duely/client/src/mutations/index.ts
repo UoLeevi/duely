@@ -82,15 +82,11 @@ export interface MutationDefinition<
 > extends Omit<TypedMutationOptions<TypedDocumentNode<TData, TVariables>>, 'variables'> {
   readonly variables?: TBoundVariables;
   readonly result: (data: TData) => TResult;
-  readonly after?:
-    | ((
-        cache: ApolloCache<NormalizedCacheObject>,
-        res: TResult | null,
-        variables: TVariables
-      ) => Promise<void>)
-    | ((cache: ApolloCache<NormalizedCacheObject>, res: TResult | null) => Promise<void>)
-    | ((cache: ApolloCache<NormalizedCacheObject>) => Promise<void>)
-    | (() => Promise<void>);
+  readonly after?: (
+    cache: ApolloCache<NormalizedCacheObject>,
+    res: TResult | null,
+    variables: TVariables
+  ) => Promise<void>;
 }
 
 // just a wrapper for convenience

@@ -74,7 +74,7 @@ import {
   CustomerInvoicesDocument,
   StripeSubscription
 } from '@duely/core';
-import { QueryOptions } from '@apollo/client';
+import { ApolloCache, NormalizedCacheObject, QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
 import { ResultOf, TypedDocumentNode, VariablesOf } from '@graphql-typed-document-node/core';
 import { CountryCode, countryFromCode } from '@duely/util';
@@ -91,7 +91,12 @@ export interface QueryDefinition<
   TResult
 > extends Omit<TypedQueryOptions<TypedDocumentNode<TData, TVariables>>, 'variables'> {
   readonly variables?: TBoundVariables;
-  readonly result: (data: TData) => TResult;
+  readonly result: (data: TData) => TResult | null;
+  readonly after?: (
+    cache: ApolloCache<NormalizedCacheObject>,
+    res: TResult | null,
+    variables: TVariables
+  ) => Promise<void>;
 }
 
 // just a wrapper for convenience
@@ -105,7 +110,7 @@ export async function query<
   variables?: Omit<TVariables, keyof typeof queryDef.variables>,
   options?: Omit<TypedQueryOptions<TypedDocumentNode<TData, TVariables>>, 'query' | 'variables'>
 ): Promise<ReturnType<typeof queryDef.result>> {
-  const { result, variables: defaultVariables, ...defaultOptions } = queryDef;
+  const { result, after, variables: defaultVariables, ...defaultOptions } = queryDef;
   const mergedVariables = { ...defaultVariables, ...variables };
   const { data } = await client.query({
     variables: mergedVariables as any,
@@ -113,7 +118,13 @@ export async function query<
     ...options
   });
 
-  return result(data);
+  const res = data && result(data);
+
+  if (after) {
+    await after(client.cache, res ?? null, mergedVariables as any);
+  }
+
+  return res;
 }
 
 export const current_user_Q = {
@@ -204,9 +215,24 @@ export const subscription_Q = {
   result: (d: ResultOf<typeof SubscriptionDocument>) => d?.subscription
 };
 
+const agency_customers_R = (d: ResultOf<typeof AgencyCustomersDocument>) =>
+  d?.agency?.stripe_account?.customers;
 export const agency_customers_Q = {
   query: AgencyCustomersDocument,
-  result: (d: ResultOf<typeof AgencyCustomersDocument>) => d?.agency?.stripe_account?.customers
+  result: agency_customers_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    customers: ReturnType<typeof agency_customers_R> | null
+  ) {
+    if (!customers) return;
+    for (const customer of customers) {
+      cache.writeQuery({
+        query: CustomerDocument,
+        variables: { customer_id: customer.id },
+        data: { customer }
+      });
+    }
+  }
 };
 
 export const customer_Q = {
@@ -230,9 +256,23 @@ export const customer_invoices_Q = {
     d?.customer?.stripe_customers?.flatMap((cus) => cus.invoices)
 };
 
+const customers_R = (d: ResultOf<typeof CustomersDocument>) => d?.customers;
 export const customers_Q = {
   query: CustomersDocument,
-  result: (d: ResultOf<typeof CustomersDocument>) => d?.customers
+  result: customers_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    customers: ReturnType<typeof customers_R> | null
+  ) {
+    if (!customers) return;
+    for (const customer of customers) {
+      cache.writeQuery({
+        query: CustomerDocument,
+        variables: { customer_id: customer.id },
+        data: { customer }
+      });
+    }
+  }
 };
 
 export const count_customers_Q = {

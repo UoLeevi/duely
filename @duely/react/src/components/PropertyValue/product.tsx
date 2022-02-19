@@ -7,35 +7,22 @@ import { useQuery, product_Q } from '@duely/client';
 import { icons } from '../icons';
 import { Link } from 'react-router-dom';
 
-type Product = {
-  id: string;
-  name?: string | null;
-};
-
 export type ProductPropertyValueProps = {
-  children: string | Product | undefined | null;
+  children: string | null | undefined;
 };
 
-export function ProductPropertyValue({ children }: ProductPropertyValueProps) {
+export function ProductPropertyValue({ children: product_id }: ProductPropertyValueProps) {
   const ref = useRef<HTMLDivElement>(null);
   let { loading } = useQueryState();
   const className = 'text-sm text-gray-700 dark:text-gray-300';
 
-  const skip = loading || typeof children !== 'string';
-  let product: Product | undefined | null;
-  let productLoading: boolean;
-
-  ({ data: product, loading: productLoading } = useQuery(
+  const { data: product, loading: productLoading } = useQuery(
     product_Q,
-    { product_id: skip ? '' : children },
-    { skip }
-  ));
+    { product_id: product_id! },
+    { skip: loading || !product_id }
+  );
 
-  loading || productLoading;
-
-  if (typeof children === 'object') {
-    product = children;
-  }
+  loading ||= productLoading;
 
   if (loading) {
     return (
@@ -49,13 +36,13 @@ export function ProductPropertyValue({ children }: ProductPropertyValueProps) {
   return (
     <>
       <div className="flex items-center space-x-2">
-        <Link to={`/dashboard/products/${product?.id}`} className="relative text-gray-400">
+        <Link to={`/dashboard/products/${product?.url_name}`} className="relative text-gray-400">
           {icons['box.solid']}
         </Link>
 
         <div ref={ref}>
           <Link
-            to={`/dashboard/products/${product?.id}`}
+            to={`/dashboard/products/${product?.url_name}`}
             className={`relative font-medium transition-all hover:underline underline-offset-2 hover:text-gray-900 ${className}`}
           >
             {product?.name}

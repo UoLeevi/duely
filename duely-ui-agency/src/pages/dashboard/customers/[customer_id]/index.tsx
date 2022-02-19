@@ -50,7 +50,7 @@ export function DashboardCustomersCustomer() {
     <>
       <Query state={query} queryKey={query.queryDef}>
         <Box>
-          <Box.Heading subheading="Customer" as="h2" dynamic>
+          <Box.Heading subheading="Customer" subheadingIcon="user.solid" as="h2" dynamic>
             <div className="flex items-baseline space-x-3">
               <span>
                 <span>{customer?.name}</span>
@@ -85,7 +85,9 @@ export function DashboardCustomersCustomer() {
             error={subscriptionsError}
             items={subscriptions}
             keyField="id"
-            rowLink={(subscription: TSubscription) => ({ to: `/dashboard/orders/subscriptions/${subscription.id}` })}
+            rowLink={(subscription: TSubscription) => ({
+              to: `/dashboard/orders/subscriptions/${subscription.id}`
+            })}
           >
             <Table.Column header="Status">
               {(subscription: TSubscription | null) =>
@@ -139,7 +141,7 @@ export function DashboardCustomersCustomer() {
             <Table.Column header="Product" span={2}>
               {(subscription: TSubscription | null) => (
                 <PropertyValue.Product>
-                  {subscription?.items[0]?.price?.product}
+                  {subscription?.items[0]?.price?.product?.id}
                 </PropertyValue.Product>
               )}
             </Table.Column>

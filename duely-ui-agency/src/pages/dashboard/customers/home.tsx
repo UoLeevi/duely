@@ -108,7 +108,13 @@ export default function DashboardCustomersHome() {
           >
             <Table.Column header="Customer">
               {(customer: TCustomer | null) => (
-                <PropertyValue.Customer>{customer}</PropertyValue.Customer>
+                <PropertyValue.Customer>{customer?.id}</PropertyValue.Customer>
+              )}
+            </Table.Column>
+
+            <Table.Column header="Email address">
+              {(customer: TCustomer | null) => (
+                <PropertyValue>{customer?.email_address}</PropertyValue>
               )}
             </Table.Column>
 

@@ -61,11 +61,13 @@ export function DashboardOrdersSubscription() {
           <PropertyList>
             <PropertyList.Item label="Customer">
               <PropertyValue.Customer>
-                {subscription?.customer ?? subscription?.customer}
+                {subscription?.customer?.customer?.id}
               </PropertyValue.Customer>
             </PropertyList.Item>
             <PropertyList.Item label="Product">
-              <PropertyValue.Product>{subscription?.items[0].price?.product}</PropertyValue.Product>
+              <PropertyValue.Product>
+                {subscription?.items[0].price?.product?.id}
+              </PropertyValue.Product>
             </PropertyList.Item>
             <PropertyList.Item label="ID">
               <PropertyValue.Id>{subscription?.id}</PropertyValue.Id>

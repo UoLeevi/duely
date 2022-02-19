@@ -119,7 +119,7 @@ export default function DashboardOrdersHome() {
 
             <Table.Column header="Customer" span={3}>
               {(order: TOrder | null) => (
-                <PropertyValue.Customer>{order?.customer}</PropertyValue.Customer>
+                <PropertyValue.Customer>{order?.customer.id}</PropertyValue.Customer>
               )}
             </Table.Column>
 

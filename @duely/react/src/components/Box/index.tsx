@@ -1,6 +1,7 @@
 import React from 'react';
 import { createClassName, groupBy, hasProperty } from '@duely/util';
 import { Heading, HeadingProps } from '..';
+import { getIconElement, IconProp } from '../icons';
 
 export type BoxProps = {
   children: React.ReactNode;
@@ -47,18 +48,21 @@ export function BoxRoot({ children, className, row, col }: BoxProps) {
 
 export type BoxHeadingProps = {
   subheading?: React.ReactNode;
+  subheadingIcon?: IconProp;
   className?: string;
 } & HeadingProps;
 
-function BoxHeading({ subheading, className, ...props }: BoxHeadingProps) {
+function BoxHeading({ subheading, subheadingIcon, className, ...props }: BoxHeadingProps) {
+  const icon = getIconElement(subheadingIcon);
   className = createClassName('flex flex-col', className);
   return (
     <div className={className}>
       {typeof subheading !== 'string' ? (
         subheading
       ) : (
-        <span className="text-xs font-bold tracking-wide uppercase text-gray-450">
-          {subheading}
+        <span className="inline-flex items-center space-x-1.5 text-xs font-bold tracking-wide uppercase text-gray-450">
+          {icon}
+          <span className="inline-block">{subheading}</span>
         </span>
       )}
       <Heading {...props} />

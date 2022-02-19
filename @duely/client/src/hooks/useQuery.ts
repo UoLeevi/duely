@@ -1,9 +1,11 @@
 import { QueryFunctionOptions, useQuery as useApolloQuery } from '@apollo/client';
-import { QueryDefinition } from '../queries';
+import { useRef, useState } from 'react';
+import { client } from '../apollo';
+import { customers_Q, QueryDefinition } from '../queries';
 
 export type UseQueryReturn<T> = {
   queryDef: QueryDefinition<any, any, any, T> | null;
-  data: T | undefined;
+  data: T | undefined | null;
   loading: boolean;
   initialLoading: boolean;
   depsLoading: boolean;
@@ -15,7 +17,7 @@ export function useQuery<
   TVariables extends TBoundVariables,
   TBoundVariables extends { [key: string]: any },
   TResult,
-  TDeps extends readonly UseQueryReturn<unknown>[] = UseQueryReturn<unknown>[]
+  TDeps extends readonly UseQueryReturn<any>[] = UseQueryReturn<any>[]
 >(
   queryDef: QueryDefinition<TData, TVariables, TBoundVariables, TResult>,
   variables?:
@@ -27,8 +29,26 @@ export function useQuery<
       ) => Omit<TVariables, keyof typeof queryDef.variables>),
   options?: { deps?: TDeps } & QueryFunctionOptions<TData, TVariables>
 ): UseQueryReturn<TResult> {
-  const { query, result, variables: defaultVariables, ...defaultOptions } = queryDef;
+  const { query, result, after, variables: defaultVariables, ...defaultOptions } = queryDef;
   const depsLoading = options?.deps?.some((dep) => dep.loading || !dep.data) ?? false;
+
+  const _variables = {
+    ...defaultVariables,
+    ...(typeof variables === 'function'
+      ? depsLoading
+        ? undefined
+        : variables(...(options?.deps?.map((d) => d.data)! as any))
+      : variables)!
+  };
+
+  const skip = options?.skip || depsLoading || false;
+
+  // Let's use counter to help track loading state when after function is specified
+  const [afterCount, setAfterCount] = useState(0);
+  const afterRef = useRef<{ promise: Promise<void> | null; count: number }>({
+    promise: null,
+    count: afterCount
+  });
 
   const {
     data: rawData,
@@ -37,23 +57,40 @@ export function useQuery<
     previousData,
     ...rest
   } = useApolloQuery(query, {
-    variables: {
-      ...defaultVariables,
-      ...(typeof variables === 'function'
-        ? depsLoading
-          ? undefined
-          : variables(...(options?.deps?.map((d) => d.data)! as any))
-        : variables)!
-    },
+    variables: _variables,
     ...defaultOptions,
     ...options,
-    skip: options?.skip || depsLoading || false
+    skip
   });
 
   // https://github.com/apollographql/apollo-client/blob/main/src/core/networkStatus.ts
-  const loading = depsLoading || (networkStatus ? networkStatus < 7 : initialLoading);
-
+  let loading = depsLoading || (networkStatus ? networkStatus < 7 : initialLoading);
   const data = rawData && result(rawData);
+
+  if (after) {
+    if (loading && afterCount === afterRef.current.count) {
+      // new query started
+      ++afterRef.current.count;
+    } else if (
+      !loading &&
+      afterCount !== afterRef.current.count &&
+      afterRef.current.promise === null
+    ) {
+      // query completed
+      const promise = after(client.cache, data ?? null, _variables);
+      afterRef.current.promise = promise;
+
+      promise.finally(() => {
+        // after completed
+        if (promise === afterRef.current.promise) {
+          afterRef.current.promise = null;
+          setAfterCount((afterCount) => afterCount + 1);
+        }
+      });
+    }
+  }
+
+  loading ||= afterCount !== afterRef.current.count;
 
   return {
     get query() {
@@ -64,6 +101,6 @@ export function useQuery<
     loading,
     depsLoading,
     initialLoading,
-    ...rest,
+    ...rest
   };
 }
