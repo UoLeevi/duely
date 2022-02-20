@@ -1,7 +1,7 @@
 import { QueryFunctionOptions, useQuery as useApolloQuery } from '@apollo/client';
 import { useRef, useState } from 'react';
 import { client } from '../apollo';
-import { customers_Q, QueryDefinition } from '../queries';
+import { QueryDefinition } from '../queries';
 
 export type UseQueryReturn<T> = {
   queryDef: QueryDefinition<any, any, any, T> | null;

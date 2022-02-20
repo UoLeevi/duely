@@ -127,99 +127,36 @@ export async function query<
   return res;
 }
 
+const current_user_R = (d: ResultOf<typeof CurrentUserDocument>) => d?.current_user;
 export const current_user_Q = {
   query: CurrentUserDocument,
   notifyOnNetworkStatusChange: true,
-  result: (d: ResultOf<typeof CurrentUserDocument>) => d?.current_user
+  result: current_user_R
 };
 
+const countries_R = (d: ResultOf<typeof CountriesDocument>) =>
+  d?.country_codes?.map((code) => countryFromCode(code as CountryCode));
 export const countries_Q = {
   query: CountriesDocument,
-  result: (d: ResultOf<typeof CountriesDocument>) =>
-    d?.country_codes?.map((code) => countryFromCode(code as CountryCode))
+  result: countries_R
 };
 
+const country_spec_R = (d: ResultOf<typeof CountrySpecDocument>) => d?.country_spec;
 export const country_spec_Q = {
   query: CountrySpecDocument,
-  result: (d: ResultOf<typeof CountrySpecDocument>) => d?.country_spec
+  result: country_spec_R
 };
 
+const markdown_R = (d: ResultOf<typeof MarkdownDocument>) => d?.markdown;
 export const markdown_Q = {
   query: MarkdownDocument,
-  result: (d: ResultOf<typeof MarkdownDocument>) => d?.markdown
+  result: markdown_R
 };
 
+const markdowns_R = (d: ResultOf<typeof MarkdownsDocument>) => d?.markdowns;
 export const markdowns_Q = {
   query: MarkdownsDocument,
-  result: (d: ResultOf<typeof MarkdownsDocument>) => d?.markdowns
-};
-
-export const image_Q = {
-  query: ImageDocument,
-  result: (d: ResultOf<typeof ImageDocument>) => d?.image
-};
-
-export const images_Q = {
-  query: ImagesDocument,
-  result: (d: ResultOf<typeof ImagesDocument>) => d?.images
-};
-
-export const agency_Q = {
-  query: AgencyDocument,
-  result: (d: ResultOf<typeof AgencyDocument>) => d?.agency
-};
-
-export const agencies_Q = {
-  query: AgenciesDocument,
-  result: (d: ResultOf<typeof AgenciesDocument>) => d?.agencies
-};
-
-export const agency_stripe_account_Q = {
-  query: AgencyStripeAccountDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountDocument>) => d?.agency?.stripe_account
-};
-
-export const agency_stripe_account_update_url_Q = {
-  query: AgencyStripeAccountUpdateUrlDocument,
-  fetchPolicy: 'no-cache',
-  result: (d: ResultOf<typeof AgencyStripeAccountUpdateUrlDocument>) =>
-    d?.agency?.stripe_account?.account_update_url?.url
-} as const;
-
-export const agency_stripe_account_balance_Q = {
-  query: AgencyStripeAccountBalanceDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountBalanceDocument>) =>
-    d?.agency?.stripe_account?.balance
-};
-
-export const agency_stripe_account_balance_transactions_Q = {
-  query: AgencyStripeAccountBalanceTransactionsDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountBalanceTransactionsDocument>) =>
-    d?.agency?.stripe_account?.balance_transactions
-};
-
-export const agency_stripe_account_payment_intents_Q = {
-  query: AgencyStripeAccountPaymentIntentsDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountPaymentIntentsDocument>) =>
-    d?.agency?.stripe_account?.payment_intents
-};
-
-export const agency_subscriptions_Q = {
-  query: AgencyStripeAccountSubscriptionsDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountSubscriptionsDocument>) =>
-    d?.agency?.stripe_account?.subscriptions
-};
-
-export const subscription_Q = {
-  query: SubscriptionDocument,
-  result: (d: ResultOf<typeof SubscriptionDocument>) => d?.subscription
-};
-
-const agency_customers_R = (d: ResultOf<typeof AgencyCustomersDocument>) =>
-  d?.agency?.stripe_account?.customers;
-export const agency_customers_Q = {
-  query: AgencyCustomersDocument,
-  result: agency_customers_R,
+  result: markdowns_R,
   async after(
     cache: ApolloCache<NormalizedCacheObject>,
     customers: ReturnType<typeof agency_customers_R> | null
@@ -235,25 +172,127 @@ export const agency_customers_Q = {
   }
 };
 
-export const customer_Q = {
-  query: CustomerDocument,
-  result: (d: ResultOf<typeof CustomerDocument>) => d?.customer
+const image_R = (d: ResultOf<typeof ImageDocument>) => d?.image;
+export const image_Q = {
+  query: ImageDocument,
+  result: image_R
 };
 
+const images_R = (d: ResultOf<typeof ImagesDocument>) => d?.images;
+export const images_Q = {
+  query: ImagesDocument,
+  result: images_R
+};
+
+const agency_R = (d: ResultOf<typeof AgencyDocument>) => d?.agency;
+export const agency_Q = {
+  query: AgencyDocument,
+  result: agency_R
+};
+
+const agencies_R = (d: ResultOf<typeof AgenciesDocument>) => d?.agencies;
+export const agencies_Q = {
+  query: AgenciesDocument,
+  result: agencies_R
+};
+
+const agency_stripe_account_R = (d: ResultOf<typeof AgencyStripeAccountDocument>) =>
+  d?.agency?.stripe_account;
+export const agency_stripe_account_Q = {
+  query: AgencyStripeAccountDocument,
+  result: agency_stripe_account_R
+};
+
+const agency_stripe_account_update_url_R = (
+  d: ResultOf<typeof AgencyStripeAccountUpdateUrlDocument>
+) => d?.agency?.stripe_account?.account_update_url?.url;
+export const agency_stripe_account_update_url_Q = {
+  query: AgencyStripeAccountUpdateUrlDocument,
+  fetchPolicy: 'no-cache',
+  result: agency_stripe_account_update_url_R
+} as const;
+
+const agency_stripe_account_balance_R = (d: ResultOf<typeof AgencyStripeAccountBalanceDocument>) =>
+  d?.agency?.stripe_account?.balance;
+export const agency_stripe_account_balance_Q = {
+  query: AgencyStripeAccountBalanceDocument,
+  result: agency_stripe_account_balance_R
+};
+
+const agency_stripe_account_balance_transactions_R = (
+  d: ResultOf<typeof AgencyStripeAccountBalanceTransactionsDocument>
+) => d?.agency?.stripe_account?.balance_transactions;
+export const agency_stripe_account_balance_transactions_Q = {
+  query: AgencyStripeAccountBalanceTransactionsDocument,
+  result: agency_stripe_account_balance_transactions_R
+};
+
+const agency_stripe_account_payment_intents_R = (
+  d: ResultOf<typeof AgencyStripeAccountPaymentIntentsDocument>
+) => d?.agency?.stripe_account?.payment_intents;
+export const agency_stripe_account_payment_intents_Q = {
+  query: AgencyStripeAccountPaymentIntentsDocument,
+  result: agency_stripe_account_payment_intents_R
+};
+
+const agency_subscriptions_R = (d: ResultOf<typeof AgencyStripeAccountSubscriptionsDocument>) =>
+  d?.agency?.stripe_account?.subscriptions;
+export const agency_subscriptions_Q = {
+  query: AgencyStripeAccountSubscriptionsDocument,
+  result: agency_subscriptions_R
+};
+
+const subscription_R = (d: ResultOf<typeof SubscriptionDocument>) => d?.subscription;
+export const subscription_Q = {
+  query: SubscriptionDocument,
+  result: subscription_R
+};
+
+const agency_customers_R = (d: ResultOf<typeof AgencyCustomersDocument>) =>
+  d?.agency?.stripe_account?.customers;
+export const agency_customers_Q = {
+  query: AgencyCustomersDocument,
+  result: agency_customers_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    markdowns: ReturnType<typeof markdowns_R> | null
+  ) {
+    if (!markdowns) return;
+    for (const markdown of markdowns) {
+      cache.writeQuery({
+        query: MarkdownDocument,
+        variables: { markdown_id: markdown.id },
+        data: { markdown }
+      });
+    }
+  }
+};
+
+const customer_R = (d: ResultOf<typeof CustomerDocument>) => d?.customer;
+export const customer_Q = {
+  query: CustomerDocument,
+  result: customer_R
+};
+
+const customer_subscriptions_R = (d: ResultOf<typeof CustomerSubscriptionsDocument>) =>
+  d?.customer?.stripe_customers?.flatMap((cus) => cus.subscriptions);
 export const customer_subscriptions_Q = {
   query: CustomerSubscriptionsDocument,
-  result: (d: ResultOf<typeof CustomerSubscriptionsDocument>) =>
-    d?.customer?.stripe_customers?.flatMap((cus) => cus.subscriptions)
+  result: customer_subscriptions_R
 };
+
+const customer_payment_intents_R = (d: ResultOf<typeof CustomerPaymentIntentsDocument>) =>
+  d?.customer?.stripe_customers?.flatMap((cus) => cus.payment_intents);
 export const customer_payment_intents_Q = {
   query: CustomerPaymentIntentsDocument,
-  result: (d: ResultOf<typeof CustomerPaymentIntentsDocument>) =>
-    d?.customer?.stripe_customers?.flatMap((cus) => cus.payment_intents)
+  result: customer_payment_intents_R
 };
+
+const customer_invoices_R = (d: ResultOf<typeof CustomerInvoicesDocument>) =>
+  d?.customer?.stripe_customers?.flatMap((cus) => cus.invoices);
 export const customer_invoices_Q = {
   query: CustomerInvoicesDocument,
-  result: (d: ResultOf<typeof CustomerInvoicesDocument>) =>
-    d?.customer?.stripe_customers?.flatMap((cus) => cus.invoices)
+  result: customer_invoices_R
 };
 
 const customers_R = (d: ResultOf<typeof CustomersDocument>) => d?.customers;
@@ -275,24 +314,27 @@ export const customers_Q = {
   }
 };
 
+const count_customers_R = (d: ResultOf<typeof CountCustomersDocument>) => d?.count_customers;
 export const count_customers_Q = {
   query: CountCustomersDocument,
-  result: (d: ResultOf<typeof CountCustomersDocument>) => d?.count_customers
+  result: count_customers_R
 };
 
+const current_user_agencies_R = (d: ResultOf<typeof CurrentUserAgenciesDocument>) =>
+  d?.current_user?.memberships.map((m) => ({
+    ...m.subdomain.agency,
+    subdomain: m.subdomain
+  }));
 export const current_user_agencies_Q = {
   query: CurrentUserAgenciesDocument,
   notifyOnNetworkStatusChange: true,
-  result: (d: ResultOf<typeof CurrentUserAgenciesDocument>) =>
-    d?.current_user?.memberships.map((m) => ({
-      ...m.subdomain.agency,
-      subdomain: m.subdomain
-    }))
+  result: current_user_agencies_R
 };
 
+const subdomain_public_R = (d: ResultOf<typeof SubdomainPublicDocument>) => d?.subdomains?.[0];
 export const subdomain_public_Q = {
   query: SubdomainPublicDocument,
-  result: (d: ResultOf<typeof SubdomainPublicDocument>) => d?.subdomains?.[0]
+  result: subdomain_public_R
 };
 
 export const current_subdomain_Q = {
@@ -341,252 +383,457 @@ function resolveSubdomain(): string | null {
   return null;
 }
 
+const theme_R = (d: ResultOf<typeof ThemeDocument>) => d?.theme;
 export const theme_Q = {
   query: ThemeDocument,
-  result: (d: ResultOf<typeof ThemeDocument>) => d?.theme
+  result: theme_R
 };
 
+const themes_R = (d: ResultOf<typeof ThemesDocument>) => d?.themes;
 export const themes_Q = {
   query: ThemesDocument,
-  result: (d: ResultOf<typeof ThemesDocument>) => d?.themes
+  result: themes_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    themes: ReturnType<typeof themes_R> | null
+  ) {
+    if (!themes) return;
+    for (const theme of themes) {
+      cache.writeQuery({
+        query: ThemeDocument,
+        variables: { theme_id: theme.id },
+        data: { theme }
+      });
+    }
+  }
 };
 
+const product_R = (d: ResultOf<typeof ProductDocument>) => d?.product;
 export const product_Q = {
   query: ProductDocument,
-  result: (d: ResultOf<typeof ProductDocument>) => d?.product
+  result: product_R
 };
 
+const products_R = (d: ResultOf<typeof ProductsDocument>) => d?.products;
 export const products_Q = {
   query: ProductsDocument,
-  result: (d: ResultOf<typeof ProductsDocument>) => d?.products
+  result: products_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    products: ReturnType<typeof products_R> | null
+  ) {
+    if (!products) return;
+    for (const product of products) {
+      cache.writeQuery({
+        query: ProductDocument,
+        variables: { product_id: product.id },
+        data: { product }
+      });
+    }
+  }
 };
+
+const count_products_R = (d: ResultOf<typeof CountProductsDocument>) => d?.count_products;
 export const count_products_Q = {
   query: CountProductsDocument,
-  result: (d: ResultOf<typeof CountProductsDocument>) => d?.count_products
+  result: count_products_R
 };
 
+const form_field_R = (d: ResultOf<typeof FormFieldDocument>) => d?.form_field;
 export const form_field_Q = {
   query: FormFieldDocument,
-  result: (d: ResultOf<typeof FormFieldDocument>) => d?.form_field
+  result: form_field_R
 };
 
+const form_fields_R = (d: ResultOf<typeof FormFieldsDocument>) => d?.form_fields;
 export const form_fields_Q = {
   query: FormFieldsDocument,
-  result: (d: ResultOf<typeof FormFieldsDocument>) => d?.form_fields
+  result: form_fields_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    form_fields: ReturnType<typeof form_fields_R> | null
+  ) {
+    if (!form_fields) return;
+    for (const form_field of form_fields) {
+      cache.writeQuery({
+        query: FormFieldDocument,
+        variables: { form_field_id: form_field.id },
+        data: { form_field }
+      });
+    }
+  }
 };
 
+const credential_R = (d: ResultOf<typeof CredentialDocument>) => d?.credential;
 export const credential_Q = {
   query: CredentialDocument,
-  result: (d: ResultOf<typeof CredentialDocument>) => d?.credential
+  result: credential_R
 };
 
+const credentials_R = (d: ResultOf<typeof CredentialsDocument>) => d?.credentials;
 export const credentials_Q = {
   query: CredentialsDocument,
-  result: (d: ResultOf<typeof CredentialsDocument>) => d?.credentials
+  result: credentials_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    credentials: ReturnType<typeof credentials_R> | null
+  ) {
+    if (!credentials) return;
+    for (const credential of credentials) {
+      cache.writeQuery({
+        query: CredentialDocument,
+        variables: { credential_id: credential.id },
+        data: { credential }
+      });
+    }
+  }
 };
 
+const credential_type_R = (d: ResultOf<typeof CredentialTypeDocument>) => d?.credential_type;
 export const credential_type_Q = {
   query: CredentialTypeDocument,
-  result: (d: ResultOf<typeof CredentialTypeDocument>) => d?.credential_type
+  result: credential_type_R
 };
 
+const credential_types_R = (d: ResultOf<typeof CredentialTypesDocument>) => d?.credential_types;
 export const credential_types_Q = {
   query: CredentialTypesDocument,
-  result: (d: ResultOf<typeof CredentialTypesDocument>) => d?.credential_types
+  result: credential_types_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    credential_types: ReturnType<typeof credential_types_R> | null
+  ) {
+    if (!credential_types) return;
+    for (const credential_type of credential_types) {
+      cache.writeQuery({
+        query: CredentialTypeDocument,
+        variables: { credential_type_id: credential_type.id },
+        data: { credential_type }
+      });
+    }
+  }
 };
 
+const integration_R = (d: ResultOf<typeof IntegrationDocument>) => d?.integration;
 export const integration_Q = {
   query: IntegrationDocument,
-  result: (d: ResultOf<typeof IntegrationDocument>) => d?.integration
+  result: integration_R
 };
 
+const integrations_R = (d: ResultOf<typeof IntegrationsDocument>) => d?.integrations;
 export const integrations_Q = {
   query: IntegrationsDocument,
-  result: (d: ResultOf<typeof IntegrationsDocument>) => d?.integrations
+  result: integrations_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    integrations: ReturnType<typeof integrations_R> | null
+  ) {
+    if (!integrations) return;
+    for (const integration of integrations) {
+      cache.writeQuery({
+        query: IntegrationDocument,
+        variables: { integration_id: integration.id },
+        data: { integration }
+      });
+    }
+  }
 };
 
+const integration_config_R = (d: ResultOf<typeof IntegrationConfigDocument>) =>
+  d?.integration_config;
 export const integration_config_Q = {
   query: IntegrationConfigDocument,
-  result: (d: ResultOf<typeof IntegrationConfigDocument>) => d?.integration_config
+  result: integration_config_R
 };
 
+const integration_configs_R = (d: ResultOf<typeof IntegrationConfigsDocument>) =>
+  d?.integration_configs;
 export const integration_configs_Q = {
   query: IntegrationConfigsDocument,
-  result: (d: ResultOf<typeof IntegrationConfigsDocument>) => d?.integration_configs
+  result: integration_configs_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    integration_configs: ReturnType<typeof integration_configs_R> | null
+  ) {
+    if (!integration_configs) return;
+    for (const integration_config of integration_configs) {
+      cache.writeQuery({
+        query: IntegrationConfigDocument,
+        variables: { integration_config_id: integration_config.id },
+        data: { integration_config }
+      });
+    }
+  }
 };
 
+const integration_type_R = (d: ResultOf<typeof IntegrationTypeDocument>) => d?.integration_type;
 export const integration_type_Q = {
   query: IntegrationTypeDocument,
-  result: (d: ResultOf<typeof IntegrationTypeDocument>) => d?.integration_type
+  result: integration_type_R
 };
 
+const integration_types_R = (d: ResultOf<typeof IntegrationTypesDocument>) => d?.integration_types;
 export const integration_types_Q = {
   query: IntegrationTypesDocument,
-  result: (d: ResultOf<typeof IntegrationTypesDocument>) => d?.integration_types
+  result: integration_types_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    integration_types: ReturnType<typeof integration_types_R> | null
+  ) {
+    if (!integration_types) return;
+    for (const integration_type of integration_types) {
+      cache.writeQuery({
+        query: IntegrationTypeDocument,
+        variables: { integration_type_id: integration_type.id },
+        data: { integration_type }
+      });
+    }
+  }
 };
 
+const order_details_R = (d: ResultOf<typeof OrderDetailsDocument>) => d?.order;
 export const order_details_Q = {
   query: OrderDetailsDocument,
-  result: (d: ResultOf<typeof OrderDetailsDocument>) => d?.order
+  result: order_details_R
 };
 
+const order_R = (d: ResultOf<typeof OrderDocument>) => d?.order;
 export const order_Q = {
   query: OrderDocument,
-  result: (d: ResultOf<typeof OrderDocument>) => d?.order
+  result: order_R
 };
 
+const orders_R = (d: ResultOf<typeof OrdersDocument>) => d?.orders;
 export const orders_Q = {
   query: OrdersDocument,
-  result: (d: ResultOf<typeof OrdersDocument>) => d?.orders
+  result: orders_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    orders: ReturnType<typeof orders_R> | null
+  ) {
+    if (!orders) return;
+    for (const order of orders) {
+      cache.writeQuery({
+        query: OrderDocument,
+        variables: { order_id: order.id },
+        data: { order }
+      });
+    }
+  }
 };
 
+const count_orders_R = (d: ResultOf<typeof CountOrdersDocument>) => d?.count_orders;
 export const count_orders_Q = {
   query: CountOrdersDocument,
-  result: (d: ResultOf<typeof CountOrdersDocument>) => d?.count_orders
+  result: count_orders_R
 };
 
+const order_item_R = (d: ResultOf<typeof OrderItemDocument>) => d?.order_item;
 export const order_item_Q = {
   query: OrderItemDocument,
-  result: (d: ResultOf<typeof OrderItemDocument>) => d?.order_item
+  result: order_item_R
 };
 
+const order_items_R = (d: ResultOf<typeof OrderItemsDocument>) => d?.order_items;
 export const order_items_Q = {
   query: OrderItemsDocument,
-  result: (d: ResultOf<typeof OrderItemsDocument>) => d?.order_items
+  result: order_items_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    order_items: ReturnType<typeof order_items_R> | null
+  ) {
+    if (!order_items) return;
+    for (const order_item of order_items) {
+      cache.writeQuery({
+        query: OrderItemDocument,
+        variables: { order_item_id: order_item.id },
+        data: { order_item }
+      });
+    }
+  }
 };
 
+const product_and_agency_from_url_parts_R = (
+  d: ResultOf<typeof ProductAndAgencyFromUrlPartsDocument>
+) => d?.subdomains?.[0]?.agency.products?.[0];
 export const product_and_agency_from_url_parts_Q = {
   query: ProductAndAgencyFromUrlPartsDocument,
-  result: (d: ResultOf<typeof ProductAndAgencyFromUrlPartsDocument>) =>
-    d?.subdomains?.[0]?.agency.products?.[0]
+  result: product_and_agency_from_url_parts_R
 };
 
+const current_agency_R = (d: ResultOf<typeof SubdomainAgencyDocument>) =>
+  d?.subdomains?.[0]?.agency;
 export const current_agency_Q = {
   ...current_subdomain_Q,
   query: SubdomainAgencyDocument,
-  result: (d: ResultOf<typeof SubdomainAgencyDocument>) => d?.subdomains?.[0]?.agency
+  result: current_agency_R
 };
 
+const current_agency_extended_R = (d: ResultOf<typeof SubdomainAgencyExtendedDocument>) =>
+  d?.subdomains?.[0]?.agency;
 export const current_agency_extended_Q = {
   ...current_subdomain_Q,
   query: SubdomainAgencyExtendedDocument,
-  result: (d: ResultOf<typeof SubdomainAgencyExtendedDocument>) => d?.subdomains?.[0]?.agency
+  result: current_agency_extended_R
 };
 
+const current_subdomain_R = (d: ResultOf<typeof SubdomainAgencyStripeAccountUpdateUrlDocument>) =>
+  d?.subdomains?.[0]?.agency?.stripe_account?.account_update_url?.url;
 export const current_agency_stripe_account_update_url_Q = {
   ...current_subdomain_Q,
   query: SubdomainAgencyStripeAccountUpdateUrlDocument,
   fetchPolicy: 'no-cache',
-  result: (d: ResultOf<typeof SubdomainAgencyStripeAccountUpdateUrlDocument>) =>
-    d?.subdomains?.[0]?.agency?.stripe_account?.account_update_url?.url
+  result: current_subdomain_R
 } as const;
 
+const agency_settings_R = (d: ResultOf<typeof AgencySettingsDocument>) => d?.agency?.settings;
 export const agency_settings_Q = {
   query: AgencySettingsDocument,
-  result: (d: ResultOf<typeof AgencySettingsDocument>) => d?.agency?.settings
+  result: agency_settings_R
 };
 
+const product_settings_R = (d: ResultOf<typeof ProductSettingsDocument>) => d?.product?.settings;
 export const product_settings_Q = {
   query: ProductSettingsDocument,
-  result: (d: ResultOf<typeof ProductSettingsDocument>) => d?.product?.settings
+  result: product_settings_R
 };
 
+const agency_pages_R = (d: ResultOf<typeof AgencyPagesDocument>) => d?.pages;
 export const agency_pages_Q = {
   query: AgencyPagesDocument,
-  result: (d: ResultOf<typeof AgencyPagesDocument>) => d?.pages
+  result: agency_pages_R,
+  async after(
+    cache: ApolloCache<NormalizedCacheObject>,
+    pages: ReturnType<typeof agency_pages_R> | null
+  ) {
+    if (!pages) return;
+    for (const page of pages) {
+      cache.writeQuery({
+        query: PageDocument,
+        variables: { page_id: page.id },
+        data: { page }
+      });
+    }
+  }
 };
 
+const agency_subscription_plan_R = (d: ResultOf<typeof AgencySubscriptionPlanDocument>) =>
+  d?.agency?.subscription_plan;
 export const agency_subscription_plan_Q = {
   query: AgencySubscriptionPlanDocument,
-  result: (d: ResultOf<typeof AgencySubscriptionPlanDocument>) => d?.agency?.subscription_plan
+  result: agency_subscription_plan_R
 };
 
+const agency_stripe_account_bank_accounts_R = (
+  d: ResultOf<typeof AgencyStripeAccountBankAccountsDocument>
+) => d?.agency?.stripe_account?.bank_accounts;
 export const agency_stripe_account_bank_accounts_Q = {
   query: AgencyStripeAccountBankAccountsDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountBankAccountsDocument>) =>
-    d?.agency?.stripe_account?.bank_accounts
+  result: agency_stripe_account_bank_accounts_R
 };
 
+const agency_stripe_account_invoices_R = (
+  d: ResultOf<typeof AgencyStripeAccountInvoicesDocument>
+) => d?.agency?.stripe_account?.invoices;
 export const agency_stripe_account_invoices_Q = {
   query: AgencyStripeAccountInvoicesDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountInvoicesDocument>) =>
-    d?.agency?.stripe_account?.invoices
+  result: agency_stripe_account_invoices_R
 };
 
+const agency_stripe_account_invoiceitems_R = (
+  d: ResultOf<typeof AgencyStripeAccountInvoiceItemsDocument>
+) => d?.agency?.stripe_account?.invoiceitems;
 export const agency_stripe_account_invoiceitems_Q = {
   query: AgencyStripeAccountInvoiceItemsDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountInvoiceItemsDocument>) =>
-    d?.agency?.stripe_account?.invoiceitems
+  result: agency_stripe_account_invoiceitems_R
 };
 
+const invoice_R = (d: ResultOf<typeof InvoiceDocument>) => d?.invoice;
 export const invoice_Q = {
   query: InvoiceDocument,
-  result: (d: ResultOf<typeof InvoiceDocument>) => d?.invoice
+  result: invoice_R
 };
 
+const agency_stripe_account_coupons_R = (d: ResultOf<typeof AgencyStripeAccountCouponsDocument>) =>
+  d?.agency?.stripe_account?.coupons;
 export const agency_stripe_account_coupons_Q = {
   query: AgencyStripeAccountCouponsDocument,
-  result: (d: ResultOf<typeof AgencyStripeAccountCouponsDocument>) =>
-    d?.agency?.stripe_account?.coupons
+  result: agency_stripe_account_coupons_R
 };
 
+const coupon_R = (d: ResultOf<typeof CouponDocument>) => d?.coupon;
 export const coupon_Q = {
   query: CouponDocument,
-  result: (d: ResultOf<typeof CouponDocument>) => d?.coupon
+  result: coupon_R
 };
 
+const promotion_code_R = (d: ResultOf<typeof PromotionCodeDocument>) => d?.promotion_code;
 export const promotion_code_Q = {
   query: PromotionCodeDocument,
-  result: (d: ResultOf<typeof PromotionCodeDocument>) => d?.promotion_code
+  result: promotion_code_R
 };
 
+const promotion_codes_R = (d: ResultOf<typeof PromotionCodesDocument>) => d?.promotion_codes;
 export const promotion_codes_Q = {
   query: PromotionCodesDocument,
-  result: (d: ResultOf<typeof PromotionCodesDocument>) => d?.promotion_codes
+  result: promotion_codes_R
 };
 
+const page_R = (d: ResultOf<typeof PageDocument>) => d?.page;
 export const page_Q = {
   query: PageDocument,
-  result: (d: ResultOf<typeof PageDocument>) => d?.page
+  result: page_R
 };
 
+const page_by_url_R = (d: ResultOf<typeof PageByUrlDocument>) => d?.page_by_url;
 export const page_by_url_Q = {
   query: PageByUrlDocument,
-  result: (d: ResultOf<typeof PageByUrlDocument>) => d?.page_by_url
+  result: page_by_url_R
 };
 
+const page_block_R = (d: ResultOf<typeof PageBlockDocument>) => d?.page_block;
 export const page_block_Q = {
   query: PageBlockDocument,
-  result: (d: ResultOf<typeof PageBlockDocument>) => d?.page_block
+  result: page_block_R
 };
 
+const page_definition_R = (d: ResultOf<typeof PageDefinitionDocument>) => d?.page_definition;
 export const page_definition_Q = {
   query: PageDefinitionDocument,
-  result: (d: ResultOf<typeof PageDefinitionDocument>) => d?.page_definition
+  result: page_definition_R
 };
 
+const page_block_definition_R = (d: ResultOf<typeof PageBlockDefinitionDocument>) =>
+  d?.page_block_definition;
 export const page_block_definition_Q = {
   query: PageBlockDefinitionDocument,
-  result: (d: ResultOf<typeof PageBlockDefinitionDocument>) => d?.page_block_definition
+  result: page_block_definition_R
 };
 
+const page_definition_by_name_R = (d: ResultOf<typeof PageDefinitionsByNameDocument>) =>
+  d?.page_definitions?.[0];
 export const page_definition_by_name_Q = {
   query: PageDefinitionsByNameDocument,
-  result: (d: ResultOf<typeof PageDefinitionsByNameDocument>) => d?.page_definitions?.[0]
+  result: page_definition_by_name_R
 };
 
+const page_definition_by_url_path_R = (d: ResultOf<typeof PageDefinitionByUrlPathDocument>) =>
+  d?.page_definition_by_url_path;
 export const page_definition_by_url_path_Q = {
   query: PageDefinitionByUrlPathDocument,
-  result: (d: ResultOf<typeof PageDefinitionByUrlPathDocument>) => d?.page_definition_by_url_path
+  result: page_definition_by_url_path_R
 };
 
+const page_block_definition_by_name_R = (d: ResultOf<typeof PageBlockDefinitionsByNameDocument>) =>
+  d?.page_block_definitions?.[0];
 export const page_block_definition_by_name_Q = {
   query: PageBlockDefinitionsByNameDocument,
-  result: (d: ResultOf<typeof PageBlockDefinitionsByNameDocument>) => d?.page_block_definitions?.[0]
+  result: page_block_definition_by_name_R
 };
 
+const calculate_transaction_fee_R = (d: ResultOf<typeof CalculateTransactionFeeDocument>) =>
+  d?.subscription_plan?.calculate_fee;
 export const calculate_transaction_fee_Q = {
   query: CalculateTransactionFeeDocument,
-  result: (d: ResultOf<typeof CalculateTransactionFeeDocument>) =>
-    d?.subscription_plan?.calculate_fee
+  result: calculate_transaction_fee_R
 };
