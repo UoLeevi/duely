@@ -6,6 +6,7 @@ import {
   DashboardOrdersEditSubscription,
   DashboardOrdersSubscription
 } from './subscriptions/[subscription_id]';
+import { DashboardOrdersOrder } from './[order_id]';
 
 import DashboardOrdersEditOrder from './[order_id]/edit';
 
@@ -29,6 +30,10 @@ export const routes: RouteProps[] = [
   {
     path: '/dashboard/orders/:order_id/edit',
     component: DashboardOrdersEditOrder
+  },
+  {
+    path: '/dashboard/orders/:order_id',
+    component: DashboardOrdersOrder
   },
   {
     path: '/dashboard/orders',
