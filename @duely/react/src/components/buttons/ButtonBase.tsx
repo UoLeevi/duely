@@ -13,6 +13,7 @@ export type ButtonBaseProps = {
   children?: React.ReactNode;
   className?: string;
   icon?: IconProp;
+  'icon-right'?: boolean;
 };
 
 export type ElementPropsWithoutRef<T extends React.ElementType> = Pick<
@@ -42,6 +43,7 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
   className,
   render,
   icon,
+  'icon-right': iconRight,
   ...props
 }: ButtonBaseProps &
   BaseComponent<T> &
@@ -65,14 +67,25 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
     return (
       <Component disabled={disabled} className={className} {...props}>
         <span className="flex items-center space-x-2">
-          <Animation.Fade className="-ml-0.5">
-            {loading ? (
-              <LoadingSpinner loading={loading} className="!text-current w-[1.25em] h-[1.25em]" />
-            ) : (
-              icon
-            )}
-          </Animation.Fade>
+          {!iconRight && (
+            <Animation.Fade className="-ml-0.5">
+              {loading ? (
+                <LoadingSpinner loading={loading} className="!text-current w-[1.25em] h-[1.25em]" />
+              ) : (
+                icon
+              )}
+            </Animation.Fade>
+          )}
           {children && <span>{children}</span>}
+          {iconRight && (
+            <Animation.Fade className="-mr-0.5">
+              {loading ? (
+                <LoadingSpinner loading={loading} className="!text-current w-[1.25em] h-[1.25em]" />
+              ) : (
+                icon
+              )}
+            </Animation.Fade>
+          )}
         </span>
       </Component>
     );

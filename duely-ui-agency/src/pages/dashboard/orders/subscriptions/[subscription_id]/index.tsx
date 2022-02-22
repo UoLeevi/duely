@@ -1,5 +1,17 @@
 import { agency_stripe_account_Q, subscription_Q, useQuery } from '@duely/client';
-import { Box, ColoredChip, PropertyList, PropertyValue, Query, useQueryState } from '@duely/react';
+import {
+  Box,
+  Button,
+  ColoredChip,
+  DropMenu,
+  Modal,
+  PropertyList,
+  PropertyValue,
+  Query,
+  useModal,
+  useQueryState
+} from '@duely/react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 
 export * from './components';
@@ -7,6 +19,7 @@ export * from './edit';
 
 export function DashboardOrdersSubscription() {
   const { subscription_id } = useParams<{ subscription_id: string }>();
+  const modal = useModal(false);
   const stripeAccountControl = useQueryState(agency_stripe_account_Q);
   const { data: subscription, query } = useQuery(
     subscription_Q,
@@ -48,6 +61,21 @@ export function DashboardOrdersSubscription() {
             </div>
           </Box.Heading>
 
+          <Box.Action>
+            <div className="flex items-center">
+              <DropMenu>
+                <DropMenu.Button as={React.Fragment}>
+                  <Button className="text-sm" dense icon="chevron-down.solid" icon-right>
+                    Actions
+                  </Button>
+                </DropMenu.Button>
+                <DropMenu.Item onClick={modal.open}>
+                  <span className="text-red-600">Cancel subscription...</span>
+                </DropMenu.Item>
+              </DropMenu>
+            </div>
+          </Box.Action>
+
           <PropertyList col>
             <PropertyList.Item label="Started">
               <PropertyValue.Date>{subscription?.start_date}</PropertyValue.Date>
@@ -80,6 +108,21 @@ export function DashboardOrdersSubscription() {
             </PropertyList.Item>
           </PropertyList>
         </Box>
+
+        <Modal control={modal}>
+          <Modal.Body heading="Subscription cancellation date">
+            <div>asdfasdf</div>
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button type="button" onClick={modal.close} dense loading={false} color="indigo">
+              Save
+            </Button>
+            <Button type="button" onClick={modal.close} dense color="gray">
+              Cancel
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </Query>
     </>
   );

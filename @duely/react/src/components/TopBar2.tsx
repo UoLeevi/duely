@@ -16,7 +16,7 @@ type TopBar2Props = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, H
 
 function TopBar2Root({ children, className, ...props }: TopBar2Props) {
   className = createClassName(
-    'box-border self-stretch sticky inset-x-0 z-30 h-12 px-3 bg-gray-25 border-b border-gray-300 md:px-4',
+    'box-border self-stretch sticky inset-x-0 z-[25] h-12 px-3 bg-gray-25 border-b border-gray-300 md:px-4',
     className
   );
 

@@ -42,6 +42,12 @@ const iconPathDefinitions = {
     ],
     outline: ['M9 5l7 7-7 7']
   },
+  'chevron-down': {
+    solid: [
+      'M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'
+    ],
+    outline: ['M19 9l-7 7-7-7']
+  },
   clipboard: {
     solid: [
       'M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z',
@@ -312,6 +318,8 @@ export const icons = {
   'arrow-sm-down.solid': <Icon name="arrow-sm-down" solid />,
   'briefcase.solid': <Icon name="briefcase" solid />,
   'chevron-right.solid': <Icon name="chevron-right" solid />,
+  'chevron-down.solid': <Icon name="chevron-down" solid />,
+  'chevron-down': <Icon name="chevron-down" />,
   'clipboard.solid': <Icon name="clipboard" solid />,
   'clipboard-check.solid': <Icon name="clipboard-check" solid />,
   'credit-card.solid': <Icon name="credit-card" solid />,
