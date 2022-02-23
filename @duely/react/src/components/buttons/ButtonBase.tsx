@@ -33,21 +33,27 @@ const colorClassName = {
   white: 'bg-white hover:bg-gray-50 text-black'
 } as const;
 
-export function ButtonBase<T extends React.ElementType = 'button'>({
-  children,
-  disabled,
-  loading,
-  dense,
-  shrink,
-  color,
-  className,
-  render,
-  icon,
-  'icon-right': iconRight,
-  ...props
-}: ButtonBaseProps &
-  BaseComponent<T> &
-  Omit<ElementPropsWithoutRef<T>, keyof (ButtonBaseProps & BaseComponent<T>)>) {
+export const ButtonBase = React.forwardRef(function <
+  T extends React.ElementType = 'button',
+  R = unknown
+>(
+  {
+    children,
+    disabled,
+    loading,
+    dense,
+    shrink,
+    color,
+    className,
+    render,
+    icon,
+    'icon-right': iconRight,
+    ...props
+  }: ButtonBaseProps &
+    BaseComponent<T> &
+    Omit<ElementPropsWithoutRef<T>, keyof (ButtonBaseProps & BaseComponent<T>)>,
+  ref: React.ForwardedRef<R>
+) {
   disabled = !!(disabled || loading);
   color = color ?? 'gray';
   className = createClassName(
@@ -65,7 +71,7 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
 
   if (icon) {
     return (
-      <Component disabled={disabled} className={className} {...props}>
+      <Component ref={ref} disabled={disabled} className={className} {...props}>
         <span className="flex items-center space-x-2">
           {!iconRight && (
             <Animation.Fade className="-ml-0.5">
@@ -91,7 +97,7 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
     );
   } else {
     return (
-      <Component disabled={disabled} className={className} {...props}>
+      <Component ref={ref} disabled={disabled} className={className} {...props}>
         <LoadingSpinner
           loading={loading}
           className={`!text-current absolute w-[1.25em] h-[1.25em] left-0 ${
@@ -124,4 +130,4 @@ export function ButtonBase<T extends React.ElementType = 'button'>({
       </Component>
     );
   }
-}
+});

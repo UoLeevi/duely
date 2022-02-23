@@ -4,6 +4,9 @@ import { ButtonBase, ButtonBaseProps } from './ButtonBase';
 
 type LinkButtonProps = LinkProps & ButtonBaseProps;
 
-export function LinkButton(props: LinkButtonProps) {
-  return <ButtonBase render={Link} {...props} />;
-}
+export const LinkButton = React.forwardRef(function (
+  props: LinkButtonProps,
+  ref: React.ForwardedRef<HTMLAnchorElement>
+) {
+  return <ButtonBase render={Link} {...props} ref={ref} />;
+});

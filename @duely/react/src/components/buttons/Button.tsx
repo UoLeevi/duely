@@ -7,6 +7,9 @@ export type ButtonProps = React.DetailedHTMLProps<
 > &
   ButtonBaseProps;
 
-export function Button(props: ButtonProps) {
-  return <ButtonBase render="button" {...props} />;
-}
+export const Button = React.forwardRef(function (
+  props: ButtonProps,
+  ref: React.ForwardedRef<HTMLButtonElement>
+) {
+  return <ButtonBase render="button" {...props} ref={ref} />;
+});

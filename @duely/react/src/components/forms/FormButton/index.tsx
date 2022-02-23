@@ -7,15 +7,10 @@ type FormButtonProps = {
   dense?: boolean;
 } & Omit<ButtonProps, 'form'>;
 
-export function FormButton({
-  type,
-  disabled,
-  loading,
-  color,
-  name,
-  value,
-  ...props
-}: FormButtonProps) {
+export const FormButton = React.forwardRef(function (
+  { type, disabled, loading, color, name, value, ...props }: FormButtonProps,
+  ref: React.ForwardedRef<HTMLButtonElement>
+) {
   const form = useFormContext();
   const { isDirty, isSubmitting } = form.useFormState();
   const isSubmitButton = !type || type === 'submit';
@@ -31,6 +26,7 @@ export function FormButton({
       loading={loading}
       {...props}
       {...registerProps}
+      ref={ref}
     />
   );
-}
+});

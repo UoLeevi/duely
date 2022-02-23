@@ -7,6 +7,9 @@ type AnchorButtonProps = React.DetailedHTMLProps<
 > &
   ButtonBaseProps;
 
-export function AnchorButton(props: AnchorButtonProps) {
-  return <ButtonBase render="a" {...props} />;
-}
+export const AnchorButton = React.forwardRef(function (
+  props: AnchorButtonProps,
+  ref: React.ForwardedRef<HTMLAnchorElement>
+) {
+  return <ButtonBase render="a" {...props} ref={ref} />;
+});
