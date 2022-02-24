@@ -54,14 +54,14 @@ export function FormFieldRadioToggleElement<
         <input
           {...form.register(name, registerOptions)}
           type="radio"
-          id={`radio-toggle-option-${left.value}`}
+          id={`radio-toggle-option-${name}-${left.value}`}
           value={left.value}
           hidden
           disabled={loading}
           defaultChecked
           {...props}
         />
-        <label htmlFor={`radio-toggle-option-${left.value}`} className="grid row-start-1">
+        <label htmlFor={`radio-toggle-option-${name}-${left.value}`} className="grid row-start-1">
           <span className="pr-3 font-medium tracking-wide text-right">
             {left.element ?? sentenceCase(left.value)}
           </span>
@@ -79,13 +79,13 @@ export function FormFieldRadioToggleElement<
         <input
           {...form.register(name, registerOptions)}
           type="radio"
-          id={`radio-toggle-option-${right.value}`}
+          id={`radio-toggle-option-${name}-${right.value}`}
           value={right.value}
           hidden
           disabled={loading}
           {...props}
         />
-        <label htmlFor={`radio-toggle-option-${right.value}`} className="grid row-start-1">
+        <label htmlFor={`radio-toggle-option-${name}-${right.value}`} className="grid row-start-1">
           <span className="pl-3 font-medium tracking-wide text-left">
             {right.element ?? sentenceCase(right.value)}
           </span>

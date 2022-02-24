@@ -4,10 +4,12 @@ import {
   Button,
   ColoredChip,
   DropMenu,
+  Form,
   Modal,
   PropertyList,
   PropertyValue,
   Query,
+  useForm,
   useModal,
   useQueryState
 } from '@duely/react';
@@ -20,6 +22,7 @@ export * from './edit';
 export function DashboardOrdersSubscription() {
   const { subscription_id } = useParams<{ subscription_id: string }>();
   const modal = useModal(false);
+  const form = useForm();
   const stripeAccountControl = useQueryState(agency_stripe_account_Q);
   const { data: subscription, query } = useQuery(
     subscription_Q,
@@ -110,18 +113,41 @@ export function DashboardOrdersSubscription() {
         </Box>
 
         <Modal control={modal}>
-          <Modal.Body heading="Subscription cancellation date">
-            <div>asdfasdf</div>
-          </Modal.Body>
+          <Form form={form} onSubmit={(data) => console.log(data)}>
+            <Modal.Body heading="Subscription cancellation">
+              <Form.Label>Cancel</Form.Label>
+              <Form.Field
+                label="Immediately"
+                value="immediately"
+                name="cancellation_type"
+                type="radio"
+                dense
+              />
+              <Form.Field
+                label="At end of current period"
+                value="current_period_end"
+                name="cancellation_type"
+                type="radio"
+                dense
+              />
+              <Form.Field
+                label="At specific date"
+                value="specific_date"
+                name="cancellation_type"
+                type="radio"
+                dense
+              />
+            </Modal.Body>
 
-          <Modal.Footer>
-            <Button type="button" onClick={modal.close} dense loading={false} color="indigo">
-              Save
-            </Button>
-            <Button type="button" onClick={modal.close} dense color="gray">
-              Cancel
-            </Button>
-          </Modal.Footer>
+            <Modal.Footer>
+              <Form.Button type="submit" onClick={modal.close} dense loading={false} color="indigo">
+                Cancel subscription
+              </Form.Button>
+              <Form.Button type="reset" onClick={modal.close} dense color="gray">
+                Don't cancel
+              </Form.Button>
+            </Modal.Footer>
+          </Form>
         </Modal>
       </Query>
     </>

@@ -15,6 +15,8 @@ import {
   FormFieldMultiSelectElementProps,
   FormFieldRadioBlocksElement,
   FormFieldRadioBlocksElementProps,
+  FormFieldRadioElement,
+  FormFieldRadioElementProps,
   FormFieldRadioToggleElement,
   FormFieldRadioToggleElementProps,
   FormFieldSelectElement,
@@ -183,6 +185,48 @@ export function FormField<
         />
       );
       break;
+    }
+
+    case 'radio': {
+      element = (
+        <FormFieldRadioElement
+          {...({
+            name,
+            loading,
+            dense,
+            ...props
+          } as FormFieldRadioElementProps<TName, TFormFields>)}
+        />
+      );
+
+      className = createClassName('flex flex-col relative', className);
+
+      return (
+        <div className={className}>
+          <div className="flex items-center">
+            {element}
+            {label && (
+              <FormLabel className="!pl-2.5 text-sm" htmlFor={`radio-${name}-${props.value}`}>
+                {label}
+              </FormLabel>
+            )}
+          </div>
+
+          <LoadingBar className="h-px px-1" loading={!!loading} />
+
+          {errorMessage ? (
+            <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">
+              {errorMessage}
+            </p>
+          ) : (
+            (hintRef.current || !dense) && (
+              <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
+                {hintRef.current}
+              </p>
+            )
+          )}
+        </div>
+      );
     }
 
     case 'checkbox': {

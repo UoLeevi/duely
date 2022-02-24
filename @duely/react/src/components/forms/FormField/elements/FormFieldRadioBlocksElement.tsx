@@ -51,12 +51,12 @@ export function FormFieldRadioBlocksElement<
       );
 
       return (
-        <label key={value} htmlFor={`radio-blocks-option-${value}`} className={className}>
+        <label key={value} htmlFor={`radio-blocks-option-${name}-${value}`} className={className}>
           <input
             {...form.register(name, registerOptions)}
             key={value}
             value={value}
-            id={`radio-blocks-option-${value}`}
+            id={`radio-blocks-option-${name}-${value}`}
             type="radio"
             hidden
             disabled={loading}
