@@ -181,7 +181,7 @@ function Body({ children, heading, icon, className, iconClassNames }: ModalBodyP
       )}
 
       <div className="flex flex-col flex-1 space-y-4 w-96 min-w-min">
-        {heading && <h3 className="text-xl font-medium">{heading}</h3>}
+        {heading && <h3 className="text-xl font-medium border-b border-black/[.075] pb-3">{heading}</h3>}
 
         {children}
       </div>

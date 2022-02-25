@@ -13,8 +13,10 @@ import {
   useModal,
   useQueryState
 } from '@duely/react';
+import { formatDate } from '@duely/util';
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import { format } from 'util';
 
 export * from './components';
 export * from './edit';
@@ -23,6 +25,7 @@ export function DashboardOrdersSubscription() {
   const { subscription_id } = useParams<{ subscription_id: string }>();
   const modal = useModal(false);
   const form = useForm();
+  const cancellation_type = form.useFormFieldValue('cancellation_type');
   const stripeAccountControl = useQueryState(agency_stripe_account_Q);
   const { data: subscription, query } = useQuery(
     subscription_Q,
@@ -113,34 +116,63 @@ export function DashboardOrdersSubscription() {
         </Box>
 
         <Modal control={modal}>
-          <Form form={form} onSubmit={(data) => console.log(data)}>
+          <Form
+            form={form}
+            onSubmit={(data) => {
+              console.log(data);
+              modal.close();
+            }}
+          >
             <Modal.Body heading="Subscription cancellation">
-              <Form.Label>Cancel</Form.Label>
-              <Form.Field
-                label="Immediately"
-                value="immediately"
-                name="cancellation_type"
-                type="radio"
-                dense
-              />
-              <Form.Field
-                label="At end of current period"
-                value="current_period_end"
-                name="cancellation_type"
-                type="radio"
-                dense
-              />
-              <Form.Field
-                label="At specific date"
-                value="specific_date"
-                name="cancellation_type"
-                type="radio"
-                dense
-              />
+              <div className="flex flex-col space-y-1">
+                <Form.Label>Cancel</Form.Label>
+                <div className="flex flex-col ml-1 space-y-1">
+                  <div className="flex items-center h-12 space-x-3">
+                    <Form.Field
+                      label="Immediately"
+                      value="immediately"
+                      name="cancellation_type"
+                      type="radio"
+                      dense
+                    />
+                    <span className="text-sm">{formatDate(Date.now(), 'mmm d, yyyy')}</span>
+                  </div>
+                  <div className="flex items-center h-12 space-x-3">
+                    <Form.Field
+                      label="At end of current period"
+                      value="current_period_end"
+                      name="cancellation_type"
+                      type="radio"
+                      dense
+                    />
+                    <span className="text-sm">
+                      {formatDate(subscription?.current_period_end, 'mmm d, yyyy')}
+                    </span>
+                  </div>
+                  <div className="flex items-center h-12 space-x-3">
+                    <Form.Field
+                      label="At specific date"
+                      value="specific_date"
+                      name="cancellation_type"
+                      type="radio"
+                      dense
+                    />
+                    {cancellation_type === 'specific_date' && (
+                      <Form.Field
+                        type="date"
+                        name="cancellation_date"
+                        dense
+                        min={formatDate(Date.now(), 'yyyy-mm-dd')}
+                        registerOptions={{ required: true }}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
             </Modal.Body>
 
             <Modal.Footer>
-              <Form.Button type="submit" onClick={modal.close} dense loading={false} color="indigo">
+              <Form.Button type="submit" dense loading={false} color="indigo">
                 Cancel subscription
               </Form.Button>
               <Form.Button type="reset" onClick={modal.close} dense color="gray">

@@ -239,7 +239,11 @@ export class FormFieldControl<T> {
   }
 
   get #hasValue() {
-    return ![undefined, ''].includes(this.value as any);
+    const value = this.value as any;
+    if (value === undefined) return false;
+    if (value === null) return false;
+    if (value === '') return false;
+    return true;
   }
 
   get #shouldValidate() {
