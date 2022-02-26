@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRerender } from './hooks/useRerender';
 import { FormFieldControl, FormFieldRegisterOptions } from './FormFieldControl';
-import { ElementType, isString, push, randomKey, remove, removeAt } from '@duely/util';
+import { ElementType, isString, noop, push, randomKey, remove, removeAt } from '@duely/util';
 
 export type FieldArrayItem<TItem = undefined> = {
   key: string;
@@ -17,8 +17,8 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     string & keyof TFormFields,
     {
       callback: (defer?: boolean) => void;
-      unsubscribe?: () => void;
       type: 'valueChanged' | 'stateChanged';
+      subscriptionRef: React.MutableRefObject<(() => void) | undefined>;
     }[]
   >();
   #valueChangedListeners: (() => void)[] = [];
@@ -167,9 +167,9 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
       const callbacks = this.#registerListeners.get(name);
       callbacks?.forEach((subscription) => {
         if (subscription.type === 'valueChanged') {
-          subscription.unsubscribe = field?.subscribeToValueChanged(subscription.callback);
+          field?.subscribeToValueChanged(subscription.callback, subscription.subscriptionRef);
         } else {
-          subscription.unsubscribe = field?.subscribeToStateChanged(subscription.callback);
+          field?.subscribeToStateChanged(subscription.callback, subscription.subscriptionRef);
         }
 
         subscription.callback(true);
@@ -182,9 +182,9 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
         const callbacks = this.#registerListeners.get(arrayName);
         callbacks?.forEach((subscription) => {
           if (subscription.type === 'valueChanged') {
-            subscription.unsubscribe = field?.subscribeToValueChanged(subscription.callback);
+            field?.subscribeToValueChanged(subscription.callback, subscription.subscriptionRef);
           } else {
-            subscription.unsubscribe = field?.subscribeToStateChanged(subscription.callback);
+            field?.subscribeToStateChanged(subscription.callback, subscription.subscriptionRef);
           }
 
           subscription.callback(true);
@@ -236,8 +236,15 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
   }
 
   useFormState() {
+    const subscriptionRef = useRef<() => void>();
     const rerender = useRerender();
-    useEffect(() => this.#subscribeToStateChanged(rerender), []);
+
+    if (!subscriptionRef.current) {
+      subscriptionRef.current = this.#subscribeToStateChanged(rerender);
+    }
+
+    // unsubsribe on unmount
+    useEffect(() => () => subscriptionRef.current?.(), []);
     return this;
   }
 
@@ -248,8 +255,9 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
 
     if (!subscriptionRef.current) {
       if (field) {
-        subscriptionRef.current = field.subscribeToValueChanged(rerender);
+        field.subscribeToStateChanged(rerender, subscriptionRef);
       } else {
+        subscriptionRef.current = noop;
         let callbacks = this.#registerListeners.get(name);
         if (!callbacks) {
           callbacks = [];
@@ -257,10 +265,10 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
         }
         const subscription: ElementType<typeof callbacks> = {
           callback: rerender,
-          type: 'stateChanged'
+          type: 'stateChanged',
+          subscriptionRef
         };
         callbacks.push(subscription);
-        subscriptionRef.current = () => subscription.unsubscribe?.();
       }
     }
 
@@ -276,8 +284,9 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
 
     if (!subscriptionRef.current) {
       if (field) {
-        subscriptionRef.current = field.subscribeToValueChanged(rerender);
+        field.subscribeToValueChanged(rerender, subscriptionRef);
       } else {
+        subscriptionRef.current = noop;
         let callbacks = this.#registerListeners.get(name);
         if (!callbacks) {
           callbacks = [];
@@ -285,10 +294,10 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
         }
         const subscription: ElementType<typeof callbacks> = {
           callback: rerender,
-          type: 'valueChanged'
+          type: 'valueChanged',
+          subscriptionRef
         };
         callbacks.push(subscription);
-        subscriptionRef.current = () => subscription.unsubscribe?.();
       }
     }
 
@@ -299,24 +308,31 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
   }
 
   useFieldArrayValue<TName extends string & keyof TFormFields>(name: TName) {
-    const [subscribtions] = useState(() => new Map<string, () => void>());
+    const [subscriptions] = useState(() => new Map<string, () => void>());
     const rerender = useRerender();
 
     Object.entries(this.#fields)
-      .filter(([fieldName]) => !subscribtions.has(fieldName) && fieldName.startsWith(`${name}[`))
+      .filter(([fieldName]) => !subscriptions.has(fieldName) && fieldName.startsWith(`${name}[`))
       .forEach(([fieldName, field]) =>
-        subscribtions.set(fieldName, field.subscribeToValueChanged(rerender))
+        subscriptions.set(fieldName, field.subscribeToValueChanged(rerender))
       );
 
     // unsubsribe on unmount
-    useEffect(() => () => subscribtions.forEach((unsubscribe) => unsubscribe()), []);
+    useEffect(() => () => subscriptions.forEach((unsubscribe) => unsubscribe()), []);
 
     return this.value[name];
   }
 
   useFormValue() {
+    const subscriptionRef = useRef<() => void>();
     const rerender = useRerender();
-    useEffect(() => this.#subscribeToValueChanged(rerender), []);
+
+    if (!subscriptionRef.current) {
+      subscriptionRef.current = this.#subscribeToValueChanged(rerender);
+    }
+
+    // unsubsribe on unmount
+    useEffect(() => () => subscriptionRef.current?.(), []);
     return this.value;
   }
 

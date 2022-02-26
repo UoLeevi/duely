@@ -23,11 +23,11 @@ const setValueDefaultOptions: SetValueOptions = {
   preventValidate: false
 };
 
-export function defaultGetElementValue(element: FormFieldHTMLElement): any {
+export function defaultGetElementValue(element: FormFieldHTMLElement | RadioNodeList): any {
   return element.value;
 }
 
-export function defaultSetElementValue(element: FormFieldHTMLElement, value: any) {
+export function defaultSetElementValue(element: FormFieldHTMLElement | RadioNodeList, value: any) {
   if (value?.length === 0) value = undefined;
   value = value ?? '';
   if (element.value === value) return false;
@@ -70,7 +70,7 @@ export const formFieldInfo: Record<
     setElementValue: (element: HTMLInputElement, value: Date | undefined) => {
       if (!value) value = undefined;
       if ((element.value as any) === value) return false;
-      element.value = formatDate(value as any, 'yyyy-mm-dd');
+      element.value = formatDate(value as any, 'yyyy-mm-dd') ?? '';
       return true;
     }
   },
@@ -120,27 +120,18 @@ export const formFieldInfo: Record<
       type: 'radio'
     },
     shouldValidateOnChange: true,
-    getElementValue: (element: HTMLInputElement) => {
-      const control = element.form?.elements[element.name as keyof HTMLFormControlsCollection];
-      if (!control) return undefined;
-      const radioNodeList = control as unknown as RadioNodeList;
-      return radioNodeList.value;
-    },
-    setElementValue: (element: HTMLInputElement, value: string | undefined) => {
-      const control = element.form?.elements[element.name as keyof HTMLFormControlsCollection];
-      if (!control) return false;
-      const radioNodeList = control as unknown as RadioNodeList;
+    setElementValue: (element: RadioNodeList, value: string | undefined) => {
       value = value ?? '';
-      if (radioNodeList.value === value) return false;
+      if (element.value === value) return false;
 
       if (value === '') {
-        const input = Array.from(radioNodeList)
+        const input = Array.from(element)
           .map((n) => n as HTMLInputElement)
           .find((n) => n.checked);
         if (!input) return false;
         input.checked = false;
       } else {
-        radioNodeList.value = value;
+        element.value = value;
       }
 
       return true;
@@ -208,8 +199,10 @@ export type FormFieldHTMLElement =
 
 export class FormFieldControl<T> {
   #name: string;
+  #type?: string;
   #form: FormControl;
   #element: FormFieldHTMLElement | undefined | null;
+  #nodeList?: RadioNodeList;
   #props:
     | undefined
     | {
@@ -219,8 +212,10 @@ export class FormFieldControl<T> {
 
   #value: T | undefined;
   #defaultValue: T | undefined;
-  #getElementValue: ((element: FormFieldHTMLElement) => T) | undefined;
-  #setElementValue: ((element: FormFieldHTMLElement, value: T | undefined) => boolean) | undefined;
+  #getElementValue: ((element: FormFieldHTMLElement | RadioNodeList) => T) | undefined;
+  #setElementValue:
+    | ((element: FormFieldHTMLElement | RadioNodeList, value: T | undefined) => boolean)
+    | undefined;
   #error: string | null = null;
   #isDirty = false;
   #isTouched = false;
@@ -278,12 +273,16 @@ export class FormFieldControl<T> {
   }
 
   get type() {
-    return this.#element?.type;
+    if (!this.#type) {
+      this.#type = this.#element?.type;
+    }
+
+    return this.#type;
   }
 
   get value(): T | undefined {
-    if (this.#getElementValue && this.#element) {
-      this.#value = this.#getElementValue(this.#element);
+    if (this.#getElementValue && (this.type === 'radio' ? this.#nodeList : this.#element)) {
+      this.#value = this.#getElementValue(this.type === 'radio' ? this.#nodeList! : this.#element!);
     }
 
     return this.#value;
@@ -359,6 +358,7 @@ export class FormFieldControl<T> {
     }
 
     if (this.#stateChanged) {
+      console.log(this.#name, 'stateChanged');
       this.#stateChanged = false;
       this.#stateChangedListeners.forEach((callback) => callback());
     }
@@ -396,6 +396,11 @@ export class FormFieldControl<T> {
     this.startUpdate();
     ++this.#refCount;
     this.#element = element;
+    if (element.type === 'radio') {
+      const control = element.form?.elements[this.#name as keyof HTMLFormControlsCollection];
+      if (!control) return undefined;
+      this.#nodeList = control as unknown as RadioNodeList;
+    }
 
     // I encountered issues with react's SynteticEvents not firing in some cases.
     // For example if radio button was programatically changed and afterwards manually clicked (checked),
@@ -433,10 +438,13 @@ export class FormFieldControl<T> {
       this.#form.unregister(this.#name);
 
       if (this.#getElementValue && this.#element) {
-        this.#value = this.#getElementValue(this.#element);
+        this.#value = this.#getElementValue(
+          this.type === 'radio' ? this.#nodeList! : this.#element
+        );
       }
 
       this.#element = null;
+      this.#nodeList = undefined;
     }
   }
 
@@ -445,7 +453,10 @@ export class FormFieldControl<T> {
     this.startUpdate();
 
     if (this.#setElementValue && this.#element) {
-      this.#valueChanged ||= this.#setElementValue(this.#element, value);
+      this.#valueChanged ||= this.#setElementValue(
+        this.type === 'radio' ? this.#nodeList! : this.#element,
+        value
+      );
       if (!options.preventValidate && this.#valueChanged && this.#shouldValidate) this.validate();
     } else {
       const previousValue = this.value;
@@ -472,22 +483,38 @@ export class FormFieldControl<T> {
     }
   }
 
-  subscribeToValueChanged(callback: () => void) {
+  subscribeToValueChanged(
+    callback: () => void,
+    subscriptionRef?: React.MutableRefObject<(() => void) | undefined>
+  ): () => void {
     this.#valueChangedListeners.push(callback);
-    return () => {
+
+    const unsubscribe = () => {
+      if (subscriptionRef) subscriptionRef.current = undefined;
       const index = this.#valueChangedListeners.indexOf(callback);
       if (index === -1) return;
       this.#valueChangedListeners.splice(index, 1);
     };
+
+    if (subscriptionRef) subscriptionRef.current = unsubscribe;
+    return unsubscribe;
   }
 
-  subscribeToStateChanged(callback: () => void) {
+  subscribeToStateChanged(
+    callback: () => void,
+    subscriptionRef?: React.MutableRefObject<(() => void) | undefined>
+  ): () => void {
     this.#stateChangedListeners.push(callback);
-    return () => {
+
+    const unsubscribe = () => {
+      if (subscriptionRef) subscriptionRef.current = undefined;
       const index = this.#stateChangedListeners.indexOf(callback);
       if (index === -1) return;
       this.#stateChangedListeners.splice(index, 1);
     };
+
+    if (subscriptionRef) subscriptionRef.current = unsubscribe;
+    return unsubscribe;
   }
 
   validate(): boolean {

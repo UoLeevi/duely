@@ -7,6 +7,8 @@ import {
   ResolvableValue
 } from '../types';
 
+export function noop(...args: any[]) {}
+
 export function byteToHex(x: number) {
   const hex = x.toString(16);
   return hex.length === 1 ? '0' + hex : hex;
