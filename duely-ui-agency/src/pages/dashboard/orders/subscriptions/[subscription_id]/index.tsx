@@ -175,7 +175,7 @@ export function DashboardOrdersSubscription() {
               <Form.Button type="submit" dense loading={false} color="indigo">
                 Cancel subscription
               </Form.Button>
-              <Form.Button type="reset" onClick={modal.close} dense color="gray">
+              <Form.Button type="reset" onClick={modal.close} dense initially-enabled color="gray">
                 Don't cancel
               </Form.Button>
             </Modal.Footer>
