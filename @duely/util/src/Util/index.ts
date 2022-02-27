@@ -156,14 +156,14 @@ export function createUpdateArgs<T extends Record<string, unknown>>(
 export function hasOwnProperty<T, TKey extends PropertyKey>(
   obj: T,
   propertyName: TKey
-): obj is T & Record<TKey, unknown> {
+): obj is Extract<Required<T>, Record<TKey, unknown>> {
   return obj === Object(obj) && Object.prototype.hasOwnProperty.call(obj, propertyName);
 }
 
 export function hasProperty<T, TKey extends PropertyKey>(
   obj: T,
   propertyName: TKey
-): obj is T & Record<TKey, unknown> {
+): obj is Extract<Required<T>, Record<TKey, unknown>> {
   return obj === Object(obj) && propertyName in obj;
 }
 

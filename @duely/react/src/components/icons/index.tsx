@@ -7,7 +7,7 @@ export type IconProp = IconName | React.ReactNode;
 
 export function getIconElement(icon: IconProp): React.ReactNode {
   if (icon && typeof icon === 'string' && hasProperty(icons, icon)) {
-    return icons[icon] as React.ReactNode;
+    return icons[icon as keyof typeof icons] as React.ReactNode;
   }
 
   return icon;

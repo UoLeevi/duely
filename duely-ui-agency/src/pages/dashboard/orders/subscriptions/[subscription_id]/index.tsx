@@ -11,12 +11,12 @@ import {
   Query,
   useForm,
   useModal,
-  useQueryState
+  useQueryState,
+  ValueConverters
 } from '@duely/react';
 import { formatDate } from '@duely/util';
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { format } from 'util';
 
 export * from './components';
 export * from './edit';
@@ -163,7 +163,10 @@ export function DashboardOrdersSubscription() {
                         name="cancellation_date"
                         dense
                         min={formatDate(Date.now(), 'yyyy-mm-dd')}
-                        registerOptions={{ required: true }}
+                        registerOptions={{
+                          required: true,
+                          valueConverter: ValueConverters.dateToTimestamp
+                        }}
                       />
                     )}
                   </div>

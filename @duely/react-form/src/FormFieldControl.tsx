@@ -1,4 +1,4 @@
-import { formatDate } from '@duely/util';
+import { hasProperty, identity } from '@duely/util';
 import { FormControl } from './FormControl';
 
 const globalOptions = {
@@ -8,11 +8,49 @@ const globalOptions = {
   }
 };
 
+export type FormFieldRawValueGet =
+  | undefined
+  | {
+      value: string;
+      valueAsNumber?: number;
+      valueAsDate?: Date | null;
+      files?: FileList | null;
+      checked?: boolean;
+    };
+
+export type FormFieldRawValueSet =
+  | undefined
+  | null
+  | string
+  | boolean
+  | Date
+  | {
+      value: string;
+    }
+  | {
+      valueAsNumber: number;
+    }
+  | {
+      valueAsDate: Date | null;
+    }
+  | {
+      files: FileList | null;
+    }
+  | {
+      checked: boolean;
+    };
+
+export type ValueConverter<T> = {
+  get: (value: FormFieldRawValueGet) => T | undefined;
+  set: (value: T | undefined | null) => FormFieldRawValueSet;
+};
+
 export type FormFieldRegisterOptions<T> = {
   required?: boolean;
   defaultValue?: T;
   rules?: ((value: T, element: FormFieldHTMLElement) => string | undefined)[];
   inputFilter?: RegExp;
+  valueConverter?: ValueConverter<T>;
 };
 
 type SetValueOptions = {
@@ -40,20 +78,11 @@ export const formFieldInfo: Record<
   {
     props: Record<string, any>;
     shouldValidateOnChange?: boolean;
-    getElementValue?: (element: any) => any;
-    setElementValue?: (element: any, value: any) => boolean;
   }
 > = {
   checkbox: {
     props: {
       type: 'checkbox'
-    },
-    getElementValue: (element: HTMLInputElement) => element.checked,
-    setElementValue: (element: HTMLInputElement, value: boolean | undefined) => {
-      value = value ?? false;
-      if (element.checked === value) return false;
-      element.checked = value;
-      return true;
     }
   },
   color: {
@@ -64,28 +93,11 @@ export const formFieldInfo: Record<
   date: {
     props: {
       type: 'date'
-    },
-    getElementValue: (element: HTMLInputElement) =>
-      element.value ? new Date(element.value) : null,
-    setElementValue: (element: HTMLInputElement, value: Date | undefined) => {
-      if (!value) value = undefined;
-      if ((element.value as any) === value) return false;
-      element.value = formatDate(value as any, 'yyyy-mm-dd') ?? '';
-      return true;
     }
   },
   'datetime-local': {
     props: {
       type: 'datetime-local'
-    },
-    getElementValue: (element: HTMLInputElement) =>
-      element.value ? new Date(element.value) : null,
-    setElementValue: (element: HTMLInputElement, value: Date | undefined) => {
-      if (!value) value = undefined;
-      if ((element.value as any) === value) return false;
-      var date = value && new Date(value);
-      element.value = date?.toISOString() ?? '';
-      return true;
     }
   },
   email: {
@@ -97,8 +109,7 @@ export const formFieldInfo: Record<
     props: {
       type: 'file'
     },
-    shouldValidateOnChange: true,
-    getElementValue: (element: HTMLInputElement) => element.files
+    shouldValidateOnChange: true
   },
   month: {
     props: {
@@ -119,23 +130,7 @@ export const formFieldInfo: Record<
     props: {
       type: 'radio'
     },
-    shouldValidateOnChange: true,
-    setElementValue: (element: RadioNodeList, value: string | undefined) => {
-      value = value ?? '';
-      if (element.value === value) return false;
-
-      if (value === '') {
-        const input = Array.from(element)
-          .map((n) => n as HTMLInputElement)
-          .find((n) => n.checked);
-        if (!input) return false;
-        input.checked = false;
-      } else {
-        element.value = value;
-      }
-
-      return true;
-    }
+    shouldValidateOnChange: true
   },
   range: {
     props: {
@@ -201,8 +196,8 @@ export class FormFieldControl<T> {
   #name: string;
   #type?: string;
   #form: FormControl;
-  #element: FormFieldHTMLElement | undefined | null;
-  #nodeList?: RadioNodeList;
+  #element: FormFieldHTMLElement | undefined;
+  #nodeList: RadioNodeList | undefined;
   #props:
     | undefined
     | {
@@ -212,10 +207,6 @@ export class FormFieldControl<T> {
 
   #value: T | undefined;
   #defaultValue: T | undefined;
-  #getElementValue: ((element: FormFieldHTMLElement | RadioNodeList) => T) | undefined;
-  #setElementValue:
-    | ((element: FormFieldHTMLElement | RadioNodeList, value: T | undefined) => boolean)
-    | undefined;
   #error: string | null = null;
   #isDirty = false;
   #isTouched = false;
@@ -281,8 +272,8 @@ export class FormFieldControl<T> {
   }
 
   get value(): T | undefined {
-    if (this.#getElementValue && (this.type === 'radio' ? this.#nodeList : this.#element)) {
-      this.#value = this.#getElementValue(this.type === 'radio' ? this.#nodeList! : this.#element!);
+    if (this.type === 'radio' ? this.#nodeList : this.#element) {
+      this.#value = this.#getElementValue();
     }
 
     return this.#value;
@@ -353,12 +344,13 @@ export class FormFieldControl<T> {
     if (--this.#updateCounter !== 0) return;
 
     if (this.#valueChanged) {
+      // DEBUG
+      console.log(this.#name, 'valueChanged', this.value, this.#valueChangedListeners.length);
       this.#valueChanged = false;
       this.#valueChangedListeners.forEach((callback) => callback());
     }
 
     if (this.#stateChanged) {
-      console.log(this.#name, 'stateChanged');
       this.#stateChanged = false;
       this.#stateChangedListeners.forEach((callback) => callback());
     }
@@ -396,6 +388,7 @@ export class FormFieldControl<T> {
     this.startUpdate();
     ++this.#refCount;
     this.#element = element;
+
     if (element.type === 'radio') {
       const control = element.form?.elements[this.#name as keyof HTMLFormControlsCollection];
       if (!control) return undefined;
@@ -412,9 +405,6 @@ export class FormFieldControl<T> {
       element.addEventListener('beforeinput', (event) => this.#onBeforeInput(event as InputEvent));
       element.addEventListener('input', (event) => this.#onInput(event as InputEvent));
       element.addEventListener('blur', (event) => this.#onBlur(event as FocusEvent));
-
-      this.#getElementValue = formFieldInfo[element.type].getElementValue ?? defaultGetElementValue;
-      this.#setElementValue = formFieldInfo[element.type].setElementValue ?? defaultSetElementValue;
     }
 
     if (this.defaultValue !== undefined) {
@@ -435,16 +425,136 @@ export class FormFieldControl<T> {
   #detachElement() {
     // TODO: make unregistration conditional on FormFieldRegisterOptions
     if (--this.#refCount === 0) {
-      this.#form.unregister(this.#name);
-
-      if (this.#getElementValue && this.#element) {
-        this.#value = this.#getElementValue(
-          this.type === 'radio' ? this.#nodeList! : this.#element
-        );
+      if (this.#element) {
+        this.#value = this.#getElementValue();
       }
 
-      this.#element = null;
+      this.#form.unregister(this.#name);
+      this.#element = undefined;
       this.#nodeList = undefined;
+    }
+  }
+
+  #getElementRawValue(): FormFieldRawValueGet {
+    return this.#nodeList ?? this.#element;
+  }
+
+  #getElementValue(): T | undefined {
+    const rawValue = this.#getElementRawValue();
+    if (this.#options.valueConverter?.get) {
+      return this.#options.valueConverter.get(rawValue);
+    }
+
+    if (rawValue?.value === '') return undefined;
+
+    switch (this.type) {
+      case 'checkbox':
+        return rawValue?.checked as T | undefined;
+
+      case 'file':
+        return rawValue?.files as T | undefined;
+
+      case 'datetime-local':
+        return rawValue?.valueAsDate as T | undefined;
+
+      case 'date':
+        return rawValue?.valueAsDate as T | undefined;
+
+      default:
+        return rawValue?.value as T | undefined;
+    }
+  }
+
+  #clearElementValue(): boolean {
+    if (this.type === 'radio') {
+      if (!this.#nodeList) return false;
+      const input = Array.from(this.#nodeList!)
+        .map((n) => n as HTMLInputElement)
+        .find((n) => n.checked);
+      if (!input) return false;
+      input.checked = false;
+      return true;
+    } else {
+      if (!this.#element) return false;
+      if (this.#element.value === '') return false;
+      this.#element.value = '';
+      return true;
+    }
+  }
+
+  #setElementValue(value: T | undefined | null): boolean {
+    const convertValue = this.#options.valueConverter?.set ?? identity;
+    let rawValue: FormFieldRawValueSet = convertValue(value) as FormFieldRawValueSet;
+
+    if (rawValue == null) {
+      return this.#clearElementValue();
+    }
+
+    if (this.type === 'radio') {
+      if (this.#nodeList === undefined) {
+        throw new Error('Cannot set element value for form field that is detached.');
+      }
+
+      const value = hasProperty(rawValue, 'value') ? rawValue.value : rawValue.toString();
+      if (this.#nodeList.value === value) return false;
+      this.#nodeList.value = value;
+      return true;
+    } else {
+      if (!this.#element) {
+        throw new Error('Cannot set element value for form field that is detached.');
+      }
+
+      switch (typeof rawValue) {
+        case 'string': {
+          if (this.#element.value === rawValue) return false;
+          this.#element.value = rawValue;
+          return true;
+        }
+
+        case 'boolean': {
+          if (this.#element instanceof HTMLInputElement) {
+            if (this.#element.checked === rawValue) return false;
+            this.#element.checked = rawValue;
+            return true;
+          } else {
+            throw new Error('Cannot set element checked value of non-input element.');
+          }
+        }
+
+        default: {
+          if (hasProperty(rawValue, 'value')) {
+            if (this.#element.value === rawValue.value) return false;
+            this.#element.value = rawValue.value;
+            return true;
+          } else if (this.#element instanceof HTMLInputElement) {
+            if (rawValue instanceof Date) {
+              if (this.#element.valueAsDate === rawValue) return false;
+              this.#element.valueAsDate = rawValue;
+              return true;
+            } else if (hasProperty(rawValue, 'valueAsNumber')) {
+              if (this.#element.valueAsNumber === rawValue.valueAsNumber) return false;
+              this.#element.valueAsNumber = rawValue.valueAsNumber;
+              return true;
+            } else if (hasProperty(rawValue, 'valueAsDate')) {
+              if (this.#element.valueAsDate === rawValue.valueAsDate) return false;
+              this.#element.valueAsDate = rawValue.valueAsDate;
+              return true;
+            } else if (hasProperty(rawValue, 'files')) {
+              if (this.#element.files === rawValue.files) return false;
+              this.#element.files = rawValue.files;
+              return true;
+            } else if (hasProperty(rawValue, 'checked')) {
+              if (this.#element.checked === rawValue.checked) return false;
+              this.#element.checked = rawValue.checked;
+              return true;
+            } else {
+              throw new Error('Cannot set element value to specified value.');
+            }
+          } else {
+            throw new Error('Cannot set element value to specified value for non-input element.');
+          }
+        }
+      }
     }
   }
 
@@ -452,11 +562,8 @@ export class FormFieldControl<T> {
     options ??= setValueDefaultOptions;
     this.startUpdate();
 
-    if (this.#setElementValue && this.#element) {
-      this.#valueChanged ||= this.#setElementValue(
-        this.type === 'radio' ? this.#nodeList! : this.#element,
-        value
-      );
+    if (this.#element) {
+      this.#valueChanged ||= this.#setElementValue(value);
       if (!options.preventValidate && this.#valueChanged && this.#shouldValidate) this.validate();
     } else {
       const previousValue = this.value;
@@ -483,37 +590,27 @@ export class FormFieldControl<T> {
     }
   }
 
-  subscribeToValueChanged(
-    callback: () => void,
-    subscriptionRef?: React.MutableRefObject<(() => void) | undefined>
-  ): () => void {
+  subscribeToValueChanged(callback: () => void): () => void {
     this.#valueChangedListeners.push(callback);
 
     const unsubscribe = () => {
-      if (subscriptionRef) subscriptionRef.current = undefined;
       const index = this.#valueChangedListeners.indexOf(callback);
       if (index === -1) return;
       this.#valueChangedListeners.splice(index, 1);
     };
 
-    if (subscriptionRef) subscriptionRef.current = unsubscribe;
     return unsubscribe;
   }
 
-  subscribeToStateChanged(
-    callback: () => void,
-    subscriptionRef?: React.MutableRefObject<(() => void) | undefined>
-  ): () => void {
+  subscribeToStateChanged(callback: () => void): () => void {
     this.#stateChangedListeners.push(callback);
 
     const unsubscribe = () => {
-      if (subscriptionRef) subscriptionRef.current = undefined;
       const index = this.#stateChangedListeners.indexOf(callback);
       if (index === -1) return;
       this.#stateChangedListeners.splice(index, 1);
     };
 
-    if (subscriptionRef) subscriptionRef.current = unsubscribe;
     return unsubscribe;
   }
 

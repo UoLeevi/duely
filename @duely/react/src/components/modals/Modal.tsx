@@ -101,21 +101,7 @@ function ModalContent({
 
   useEffect(() => {
     if (!control.isOpen) return;
-
-    const body = document.documentElement;
-    const overflow = body.style.overflow;
-    const paddingRight = body.style.paddingRight;
-    const scrollbarWidth = window.innerWidth - body.clientWidth;
-
-    body.style.overflow = 'hidden';
-    body.style.paddingRight = `${scrollbarWidth}px`;
-
     ref.current?.focus();
-
-    return () => {
-      body.style.overflow = overflow;
-      body.style.paddingRight = paddingRight;
-    };
   }, [control.isOpen]);
 
   function onBlur(e: React.FocusEvent) {
