@@ -60,7 +60,7 @@ export function FormFieldMultiSelectElement<
   return (
     <DropMenu full-width unmount={false}>
       <DropMenu.Button as={React.Fragment}>
-        <div className={`relative flex items-center border rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5 ${
+        <div className={`relative flex items-center w-full border rounded-md shadow-sm outline-none focus-within:ring sm:text-sm sm:leading-5 ${
           hasError ? 'border-red-400 dark:border-red-600' : 'border-gray-300 dark:border-gray-500'
         }`}>
           <div className="w-full py-2 pl-3 pr-10 bg-transparent border-none rounded-md">

@@ -4,23 +4,21 @@ import {
   ValidationRules,
   InputFilters,
   LinkButton,
-  useFormMessages
+  useFormMessages,
+  ValueConverters
 } from '@duely/react';
 import {
   useQuery,
   useMutation,
   current_agency_Q,
   agency_stripe_account_Q,
-  customers_Q,
   create_coupon_M,
-  create_customer_M,
   products_Q,
   create_promotion_code_M
 } from '@duely/client';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import {
   Currency,
-  dateToTimestamp,
   formatCurrency,
   numberToMinorCurrencyAmount
 } from '@duely/util';
@@ -31,7 +29,7 @@ type CreateCouponFormFields = {
   amount_or_percent_off: string;
   applies_to_products: string[];
   has_expiry: boolean;
-  redeem_by_date: Date;
+  redeem_by: number;
   has_promotion_code: boolean;
   promotion_code: string;
 };
@@ -111,7 +109,7 @@ export function CreateCouponForm() {
     name,
     amount_or_percent_off,
     applies_to_products,
-    redeem_by_date,
+    redeem_by,
     has_expiry,
     has_promotion_code,
     promotion_code,
@@ -132,8 +130,8 @@ export function CreateCouponForm() {
       args.percent_off = +amount_or_percent_off;
     }
 
-    if (has_expiry && redeem_by_date) {
-      args.redeem_by = dateToTimestamp(redeem_by_date);
+    if (has_expiry && redeem_by) {
+      args.redeem_by = redeem_by;
     }
 
     const res_coupon = await createCoupon(args);
@@ -150,8 +148,8 @@ export function CreateCouponForm() {
         code: promotion_code
       };
 
-      if (has_expiry && redeem_by_date) {
-        args.expires_at = dateToTimestamp(redeem_by_date);
+      if (has_expiry && redeem_by) {
+        args.expires_at = redeem_by;
       }
 
       const res_promotion_code = await createPromotionCode(args);
@@ -298,11 +296,12 @@ export function CreateCouponForm() {
               <Form.Field
                 label="Expiry date"
                 className="w-64"
-                name="redeem_by_date"
+                name="redeem_by"
                 type="datetime-local"
                 hint="Last time at which the coupon can be redeemed."
                 registerOptions={{
-                  required: true
+                  required: true,
+                  valueConverter: ValueConverters.timestamp
                 }}
               />
             )}

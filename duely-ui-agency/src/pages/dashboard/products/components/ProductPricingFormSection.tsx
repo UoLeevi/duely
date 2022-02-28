@@ -1,8 +1,8 @@
 import { agency_stripe_account_Q, current_agency_Q, useQuery } from '@duely/client';
-import { Form, InputFilters, UseFormReturn, ValidationRules } from '@duely/react';
+import { Form, InputFilters, UseFormReturn, ValidationRules, ValueConverters } from '@duely/react';
 
 type ProductPricingFormSectionFields = {
-  unit_amount_major: string;
+  unit_amount_major: number;
   payment_type: 'one_time' | 'recurring';
   frequency?: string;
 };
@@ -59,7 +59,8 @@ export function ProductPricingFormSection<TFieldValues extends ProductPricingFor
             registerOptions={{
               required: true,
               rules: [ValidationRules.isPositiveNumber],
-              inputFilter: InputFilters.numeric
+              inputFilter: InputFilters.numeric,
+              valueConverter: ValueConverters.number
             }}
             loading={stripe_accountLoading}
           />

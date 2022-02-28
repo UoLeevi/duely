@@ -8,7 +8,8 @@ import {
   FieldArrayItem,
   LinkButton,
   useFormMessages,
-  Box
+  Box,
+  ValueConverters
 } from '@duely/react';
 import {
   useQuery,
@@ -26,7 +27,7 @@ import { Currency, numberToMinorCurrencyAmount } from '@duely/util';
 type CreateInvoiceFormFields = {
   customer_email_address: string;
   customer_name: string;
-  days_until_due: string;
+  days_until_due: number;
   description?: string;
   items: {
     description: string;
@@ -141,8 +142,8 @@ export function CreateInvoiceForm() {
     console.log(value);
 
     const items = value.items.map((item) => ({
-      unit_amount: numberToMinorCurrencyAmount(+item.unit_amount, currency as Currency),
-      quantity: +item.quantity,
+      unit_amount: numberToMinorCurrencyAmount(item.unit_amount, currency as Currency),
+      quantity: item.quantity,
       description: item.description
     }));
 
@@ -151,7 +152,7 @@ export function CreateInvoiceForm() {
       customer: customer!.default_stripe_customer.id,
       auto_advance: false,
       collection_method: 'send_invoice',
-      days_until_due: +value.days_until_due,
+      days_until_due: value.days_until_due,
       currency,
       items
     });
@@ -238,7 +239,8 @@ export function CreateInvoiceForm() {
           registerOptions={{
             required: true,
             rules: [ValidationRules.isPositiveInteger],
-            inputFilter: InputFilters.integer
+            inputFilter: InputFilters.integer,
+            valueConverter: ValueConverters.number
           }}
         />
 
@@ -276,7 +278,8 @@ export function CreateInvoiceForm() {
                       registerOptions={{
                         required: true,
                         rules: [ValidationRules.isPositiveNumber],
-                        inputFilter: InputFilters.numeric
+                        inputFilter: InputFilters.numeric,
+                        valueConverter: ValueConverters.number
                       }}
                     />
                   );
@@ -298,7 +301,8 @@ export function CreateInvoiceForm() {
                       registerOptions={{
                         required: true,
                         rules: [ValidationRules.isPositiveNumber],
-                        inputFilter: InputFilters.numeric
+                        inputFilter: InputFilters.numeric,
+                        valueConverter: ValueConverters.number
                       }}
                     />
                   );

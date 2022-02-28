@@ -9,7 +9,8 @@ import {
   LinkButton,
   useFormMessages,
   Box,
-  PropertyValue
+  PropertyValue,
+  ValueConverters
 } from '@duely/react';
 import {
   useQuery,
@@ -147,7 +148,7 @@ export function CreateSubscriptionForm() {
 
     const items = value.items.map((item) => ({
       price: item.price,
-      quantity: +item.quantity
+      quantity: item.quantity
     }));
 
     const res_subscription = await createSubscription({
@@ -272,7 +273,8 @@ export function CreateSubscriptionForm() {
                       registerOptions={{
                         required: true,
                         rules: [ValidationRules.isPositiveNumber],
-                        inputFilter: InputFilters.numeric
+                        inputFilter: InputFilters.numeric,
+                        valueConverter: ValueConverters.number
                       }}
                     />
                   );

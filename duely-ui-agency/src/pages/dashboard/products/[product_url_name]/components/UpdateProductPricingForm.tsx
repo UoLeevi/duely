@@ -14,7 +14,14 @@ import {
   pick,
   minorCurrencyAmountToNumber
 } from '@duely/util';
-import { Form, useFormMessages, useForm, InputFilters, ValidationRules } from '@duely/react';
+import {
+  Form,
+  useFormMessages,
+  useForm,
+  InputFilters,
+  ValidationRules,
+  ValueConverters
+} from '@duely/react';
 
 type ProductProps = {
   product_id?: string;
@@ -22,7 +29,7 @@ type ProductProps = {
 
 type UpdateProductPricingFormFields = {
   payment_type: string;
-  unit_amount_major: string;
+  unit_amount_major: number;
   frequency?: string;
   is_default_price: boolean;
 };
@@ -68,8 +75,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
 
   const price = product?.default_price;
   const unit_amount_major =
-    (price &&
-      minorCurrencyAmountToNumber(price.unit_amount, price.currency as Currency).toString()) ??
+    (price && minorCurrencyAmountToNumber(price.unit_amount, price.currency as Currency)) ??
     undefined;
 
   const frequency = !price
@@ -84,7 +90,7 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
     frequency,
     is_default_price
   }: UpdateProductPricingFormFields) {
-    const unit_amount = numberToMinorCurrencyAmount(+unit_amount_major, currency as Currency);
+    const unit_amount = numberToMinorCurrencyAmount(unit_amount_major, currency as Currency);
 
     const recurring: {
       recurring_interval_count?: number;
@@ -198,7 +204,8 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
               registerOptions={{
                 required: true,
                 rules: [ValidationRules.isPositiveNumber],
-                inputFilter: InputFilters.numeric
+                inputFilter: InputFilters.numeric,
+                valueConverter: ValueConverters.number
               }}
               loading={state.loading}
             />

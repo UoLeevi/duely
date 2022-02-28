@@ -165,7 +165,7 @@ export function DashboardOrdersSubscription() {
                         min={formatDate(Date.now(), 'yyyy-mm-dd')}
                         registerOptions={{
                           required: true,
-                          valueConverter: ValueConverters.dateToTimestamp
+                          valueConverter: ValueConverters.timestamp
                         }}
                       />
                     )}

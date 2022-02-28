@@ -23,6 +23,7 @@ export type FormFieldRawValueSet =
   | null
   | string
   | boolean
+  | number
   | Date
   | {
       value: string;
@@ -48,7 +49,7 @@ export type ValueConverter<T> = {
 export type FormFieldRegisterOptions<T> = {
   required?: boolean;
   defaultValue?: T;
-  rules?: ((value: T, element: FormFieldHTMLElement) => string | undefined)[];
+  rules?: ((value: FormFieldRawValueGet, element: FormFieldHTMLElement) => string | undefined)[];
   inputFilter?: RegExp;
   valueConverter?: ValueConverter<T>;
 };
@@ -60,18 +61,6 @@ type SetValueOptions = {
 const setValueDefaultOptions: SetValueOptions = {
   preventValidate: false
 };
-
-export function defaultGetElementValue(element: FormFieldHTMLElement | RadioNodeList): any {
-  return element.value;
-}
-
-export function defaultSetElementValue(element: FormFieldHTMLElement | RadioNodeList, value: any) {
-  if (value?.length === 0) value = undefined;
-  value = value ?? '';
-  if (element.value === value) return false;
-  element.value = value;
-  return true;
-}
 
 export const formFieldInfo: Record<
   FormFieldHTMLElement['type'],
@@ -225,10 +214,7 @@ export class FormFieldControl<T> {
   }
 
   get #hasValue() {
-    const value = this.value as any;
-    if (value === undefined) return false;
-    if (value === null) return false;
-    if (value === '') return false;
+    if (this.#getElementRawValue()?.value === '') return false;
     return true;
   }
 
@@ -344,8 +330,6 @@ export class FormFieldControl<T> {
     if (--this.#updateCounter !== 0) return;
 
     if (this.#valueChanged) {
-      // DEBUG
-      console.log(this.#name, 'valueChanged', this.value, this.#valueChangedListeners.length);
       this.#valueChanged = false;
       this.#valueChangedListeners.forEach((callback) => callback());
     }
@@ -511,6 +495,12 @@ export class FormFieldControl<T> {
           return true;
         }
 
+        case 'number': {
+          if (this.#element.value === rawValue.toString()) return false;
+          this.#element.value = rawValue.toString();
+          return true;
+        }
+
         case 'boolean': {
           if (this.#element instanceof HTMLInputElement) {
             if (this.#element.checked === rawValue) return false;
@@ -532,8 +522,8 @@ export class FormFieldControl<T> {
               this.#element.valueAsDate = rawValue;
               return true;
             } else if (hasProperty(rawValue, 'valueAsNumber')) {
-              if (this.#element.valueAsNumber === rawValue.valueAsNumber) return false;
-              this.#element.valueAsNumber = rawValue.valueAsNumber;
+              if (this.#element.value === rawValue.valueAsNumber.toString()) return false;
+              this.#element.value = rawValue.valueAsNumber.toString();
               return true;
             } else if (hasProperty(rawValue, 'valueAsDate')) {
               if (this.#element.valueAsDate === rawValue.valueAsDate) return false;
@@ -548,6 +538,7 @@ export class FormFieldControl<T> {
               this.#element.checked = rawValue.checked;
               return true;
             } else {
+              debugger;
               throw new Error('Cannot set element value to specified value.');
             }
           } else {
@@ -562,7 +553,7 @@ export class FormFieldControl<T> {
     options ??= setValueDefaultOptions;
     this.startUpdate();
 
-    if (this.#element) {
+    if (this.#nodeList || this.#element) {
       this.#valueChanged ||= this.#setElementValue(value);
       if (!options.preventValidate && this.#valueChanged && this.#shouldValidate) this.validate();
     } else {
@@ -578,7 +569,7 @@ export class FormFieldControl<T> {
   setDefaultValue(value: T | undefined, options?: SetValueOptions) {
     options ??= setValueDefaultOptions;
 
-    if (this.#element) {
+    if (this.#nodeList || this.#element) {
       const previousDefaultValue = this.defaultValue;
       this.#defaultValue = value;
 
@@ -624,9 +615,9 @@ export class FormFieldControl<T> {
     }
 
     if (this.#element && this.#hasValue) {
+      const rawValue = this.#getElementRawValue();
       for (const rule of this.#options.rules ?? []) {
-        const value = this.value;
-        const error = rule(value!, this.#element);
+        const error = rule(rawValue, this.#element);
 
         if (error) {
           this.error = error;

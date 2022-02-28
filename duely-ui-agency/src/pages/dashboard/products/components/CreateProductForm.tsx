@@ -21,7 +21,7 @@ type CreateProductFormFields = {
   name: string;
   description: string;
   url_name: string;
-  unit_amount_major: string;
+  unit_amount_major: number;
   status: 'draft' | 'live';
   payment_type: 'one_time' | 'recurring';
   image_logo_file_list: FileList;
@@ -93,7 +93,7 @@ export function CreateProductForm() {
     const { product } = res_product;
     const { unit_amount_major, payment_type, frequency } = data;
     const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency ?? 'usd'; // TODO: have an input or use default currency
-    const unit_amount = numberToMinorCurrencyAmount(+unit_amount_major, currency as Currency);
+    const unit_amount = numberToMinorCurrencyAmount(unit_amount_major, currency as Currency);
 
     const recurring: {
       recurring_interval_count?: number;
