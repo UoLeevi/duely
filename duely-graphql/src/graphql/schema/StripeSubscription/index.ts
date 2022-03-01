@@ -165,7 +165,14 @@ export const StripeSubscription: GqlTypeDefinition<
       #   default_source: ID
       #   due_date: Int
       # ): SubscriptionMutationResult!
-      cancel_subscription(stripe_account_id: ID!, subscription_id: ID!): SubscriptionMutationResult!
+      cancel_subscription(
+        stripe_account_id: ID!
+        subscription_id: ID!
+        cancel_at_period_end: Boolean
+        cancel_at: Int
+        invoice_now: Boolean
+        prorate: Boolean
+      ): SubscriptionMutationResult!
     }
 
     input SubscriptionItemInput {
@@ -277,6 +284,75 @@ export const StripeSubscription: GqlTypeDefinition<
                 type: 'SubscriptionMutationResult'
               };
             }
+          });
+        } catch (error: any) {
+          return {
+            // error
+            success: false,
+            message: error.message,
+            type: 'SubscriptionMutationResult'
+          };
+        }
+      },
+      async cancel_subscription(
+        obj,
+        {
+          stripe_account_id,
+          subscription_id,
+          cancel_at_period_end,
+          cancel_at,
+          invoice_now,
+          prorate
+        }: {
+          stripe_account_id: string;
+          subscription_id: string;
+          cancel_at_period_end?: boolean;
+          cancel_at?: number;
+          invoice_now?: boolean;
+          prorate?: boolean;
+        },
+        context,
+        info
+      ) {
+        if (!context.jwt)
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+
+        try {
+          return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
+            const stripe_account = await queryResource('stripe account', stripe_account_id);
+            const access = await queryResourceAccess(stripe_account.id);
+
+            if (access !== 'owner') {
+              throw new DuelyGraphQLError('FORBIDDEN', 'Only owner can cancel subscription');
+            }
+
+            let subscription: Stripe.Subscription;
+
+            if (cancel_at) {
+              subscription = await stripe
+                .get(stripe_account)
+                .subscriptions.update(subscription_id, {
+                  cancel_at
+                });
+            } else if (cancel_at_period_end) {
+              subscription = await stripe
+                .get(stripe_account)
+                .subscriptions.update(subscription_id, {
+                  cancel_at_period_end
+                });
+            } else {
+              subscription = await stripe.get(stripe_account).subscriptions.del(subscription_id, {
+                invoice_now,
+                prorate
+              });
+            }
+
+            // success
+            return {
+              success: true,
+              subscription,
+              type: 'SubscriptionMutationResult'
+            };
           });
         } catch (error: any) {
           return {

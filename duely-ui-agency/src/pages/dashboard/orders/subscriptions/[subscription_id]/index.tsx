@@ -152,7 +152,7 @@ export function DashboardOrdersSubscription() {
                   <div className="flex items-center h-12 space-x-3">
                     <Form.Field
                       label="At specific date"
-                      value="specific_date"
+                      value="cancel_at"
                       name="cancellation_type"
                       type="radio"
                       dense

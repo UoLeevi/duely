@@ -16,9 +16,9 @@
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [3000, 8080, 9229],
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": [
-    "test -d /workspace/duely-secret && chmod 600 /workspace/duely-secret/.pgpass"
-  ]
+  // "postCreateCommand": [
+  //   "test -d /workspace/duely-secret && chmod 600 /workspace/duely-secret/.pgpass"
+  // ]
   // Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
   // "remoteUser": "node"
 }
