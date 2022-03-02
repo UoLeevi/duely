@@ -1,4 +1,4 @@
-import { Box, DropMenu, icons, LinkButton, PropertyValue, useQueryState } from '@duely/react';
+import { Section, DropMenu, icons, LinkButton, PropertyValue, useQueryState } from '@duely/react';
 import { formatPrice, ElementType } from '@duely/util';
 import { Table, SkeletonText, ColoredChip, usePagination2 } from '@duely/react';
 import { useQuery, agency_subscriptions_Q, current_agency_Q } from '@duely/client';
@@ -39,9 +39,9 @@ export function DashboardOrdersSubscriptions() {
 
   return (
     <>
-      <Box className="max-w-screen-lg">
-        <Box.Heading as="h2">Subscriptions</Box.Heading>
-        <Box.Action>
+      <Section className="max-w-screen-lg">
+        <Section.Heading as="h2">Subscriptions</Section.Heading>
+        <Section.Action>
           <LinkButton
             dense
             color="indigo"
@@ -51,7 +51,12 @@ export function DashboardOrdersSubscriptions() {
           >
             Create subscription
           </LinkButton>
-        </Box.Action>
+        </Section.Action>
+
+        <Section.TabLink to="/dashboard/orders/subscriptions">Active</Section.TabLink>
+        <Section.TabLink to="/dashboard/orders/subscriptions/scheduled">Scheduled</Section.TabLink>
+        <Section.TabLink to="/dashboard/orders/subscriptions/cancelled">Cancelled</Section.TabLink>
+
         <Table
           pagination={pagination}
           dense={true}
@@ -162,7 +167,7 @@ export function DashboardOrdersSubscriptions() {
             }}
           </Table.Column>
         </Table>
-      </Box>
+      </Section>
     </>
   );
 }

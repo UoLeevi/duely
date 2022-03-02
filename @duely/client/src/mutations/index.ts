@@ -1,5 +1,6 @@
 import { ApolloCache, MutationOptions, NormalizedCacheObject, Reference } from '@apollo/client';
 import {
+  CancelSubscriptionDocument,
   CreateAgencyDocument,
   CreateBankAccountDocument,
   CreateCouponDocument,
@@ -335,6 +336,11 @@ export const create_subscription_M = {
 
     cache.gc();
   }
+};
+
+export const cancel_subscription_M = {
+  mutation: CancelSubscriptionDocument,
+  result: (d: ResultOf<typeof CancelSubscriptionDocument>) => d?.cancel_subscription
 };
 
 const create_invoice_R = (d: ResultOf<typeof CreateInvoiceDocument>) => d?.create_invoice;

@@ -6,7 +6,7 @@ import {
   useQuery
 } from '@duely/client';
 import {
-  Box,
+  Section,
   ColoredChip,
   DropMenu,
   icons,
@@ -49,18 +49,18 @@ export function DashboardCustomersCustomer() {
   return (
     <>
       <Query state={query} queryKey={query.queryDef}>
-        <Box>
-          <Box.Heading subheading="Customer" subheadingIcon="user.solid" as="h2" dynamic>
+        <Section>
+          <Section.Heading subheading="Customer" subheadingIcon="user.solid" as="h2" dynamic>
             <div className="flex items-baseline space-x-3">
               <span>
                 <span>{customer?.name}</span>
               </span>
             </div>
-          </Box.Heading>
-        </Box>
+          </Section.Heading>
+        </Section>
 
-        <Box row>
-          <Box.Heading as="h3">Details</Box.Heading>
+        <Section row>
+          <Section.Heading as="h3">Details</Section.Heading>
 
           <PropertyList>
             <PropertyList.Item label="Name">
@@ -73,10 +73,10 @@ export function DashboardCustomersCustomer() {
               <PropertyValue.Id>{customer?.id}</PropertyValue.Id>
             </PropertyList.Item>
           </PropertyList>
-        </Box>
+        </Section>
 
-        <Box row>
-          <Box.Heading as="h3">Subscriptions</Box.Heading>
+        <Section row>
+          <Section.Heading as="h3">Subscriptions</Section.Heading>
 
           <Table
             dense={true}
@@ -189,7 +189,7 @@ export function DashboardCustomersCustomer() {
               }}
             </Table.Column>
           </Table>
-        </Box>
+        </Section>
       </Query>
     </>
   );

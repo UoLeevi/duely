@@ -8,7 +8,7 @@ import {
   FieldArrayItem,
   LinkButton,
   useFormMessages,
-  Box,
+  Section,
   ValueConverters
 } from '@duely/react';
 import {

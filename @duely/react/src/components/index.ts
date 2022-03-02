@@ -24,6 +24,6 @@ export * from './Heading';
 export * from './DuelyLogo';
 export * from './Tooltip';
 export * from './Animation';
-export * from './Box';
+export * from './Section';
 export * from './Query';
 export * from './Search';

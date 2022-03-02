@@ -8,7 +8,7 @@ import {
   FieldArrayItem,
   LinkButton,
   useFormMessages,
-  Box,
+  Section,
   PropertyValue,
   ValueConverters
 } from '@duely/react';
@@ -203,8 +203,8 @@ export function CreateSubscriptionForm() {
     <>
       <h2 className="mb-4 text-xl font-medium">Create an subscription</h2>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        <Box>
-          <Box.Heading size="lg">Customer</Box.Heading>
+        <Section>
+          <Section.Heading size="lg">Customer</Section.Heading>
           <div className="flex flex-col -m-2 sm:flex-row">
             <div className="flex-1 p-2">
               <Form.Field
@@ -228,10 +228,10 @@ export function CreateSubscriptionForm() {
               />
             </div>
           </div>
-        </Box>
+        </Section>
 
-        <Box>
-          <Box.Heading size="lg">Pricing</Box.Heading>
+        <Section>
+          <Section.Heading size="lg">Pricing</Section.Heading>
           <div className="flex flex-col pb-3 border-b">
             <Table items={fields} keyField="key" dense>
               <Table.Column header="Product" span={6} justify="stretch">
@@ -311,7 +311,7 @@ export function CreateSubscriptionForm() {
               </Button>
             </div>
           </div>
-        </Box>
+        </Section>
 
         <Form.Field label="Message to customer" name="description" type="textarea" rows={6} />
 

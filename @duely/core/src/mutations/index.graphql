@@ -412,6 +412,30 @@ mutation CreateSubscription(
   }
 }
 
+mutation CancelSubscription(
+  $stripe_account_id: ID!
+  $subscription_id: ID!
+  $cancel_at_period_end: Boolean
+  $cancel_at: Int
+  $invoice_now: Boolean
+  $prorate: Boolean
+) {
+  cancel_subscription(
+    stripe_account_id: $stripe_account_id
+    subscription_id: $subscription_id
+    cancel_at_period_end: $cancel_at_period_end
+    cancel_at: $cancel_at
+    invoice_now: $invoice_now
+    prorate: $prorate
+  ) {
+    success
+    message
+    subscription {
+      ...subscription
+    }
+  }
+}
+
 mutation CreateInvoice(
   $stripe_account_id: ID!
   $customer: ID!

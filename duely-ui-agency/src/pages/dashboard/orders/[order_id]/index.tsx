@@ -1,5 +1,5 @@
 import { order_Q, useQuery } from '@duely/client';
-import { Box, ColoredChip, PropertyList, PropertyValue, Query, useQueryState } from '@duely/react';
+import { Section, ColoredChip, PropertyList, PropertyValue, Query, useQueryState } from '@duely/react';
 import { useParams } from 'react-router-dom';
 
 export * from './edit';
@@ -17,8 +17,8 @@ export function DashboardOrdersOrder() {
   return (
     <>
       <Query state={query} queryKey={query.queryDef}>
-        <Box>
-          <Box.Heading subheading="Order" as="h2" dynamic>
+        <Section>
+          <Section.Heading subheading="Order" as="h2" dynamic>
             <div className="flex items-baseline space-x-3">
               <span>
                 <span>{order?.customer?.name ?? order?.customer?.email_address}</span>
@@ -38,17 +38,17 @@ export function DashboardOrdersOrder() {
                 }}
               />
             </div>
-          </Box.Heading>
+          </Section.Heading>
 
           <PropertyList col>
             <PropertyList.Item label="Date">
               <PropertyValue.Date>{order?.ordered_at}</PropertyValue.Date>
             </PropertyList.Item>
           </PropertyList>
-        </Box>
+        </Section>
 
-        <Box>
-          <Box.Heading as="h3">Order details</Box.Heading>
+        <Section>
+          <Section.Heading as="h3">Order details</Section.Heading>
 
           <PropertyList>
             <PropertyList.Item label="Customer">
@@ -61,7 +61,7 @@ export function DashboardOrdersOrder() {
               <PropertyValue.Id>{order?.id}</PropertyValue.Id>
             </PropertyList.Item>
           </PropertyList>
-        </Box>
+        </Section>
       </Query>
     </>
   );
