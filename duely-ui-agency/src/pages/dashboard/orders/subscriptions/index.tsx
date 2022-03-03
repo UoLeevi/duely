@@ -2,6 +2,7 @@ import { Section, DropMenu, icons, LinkButton, PropertyValue, useQueryState } fr
 import { formatPrice, ElementType } from '@duely/util';
 import { Table, SkeletonText, ColoredChip, usePagination2 } from '@duely/react';
 import { useQuery, agency_subscriptions_Q, current_agency_Q } from '@duely/client';
+import { useLocation } from 'react-router-dom';
 
 export function DashboardOrdersSubscriptions() {
   const agencyControl = useQueryState(current_agency_Q);
@@ -35,7 +36,7 @@ export function DashboardOrdersSubscriptions() {
     keyField: 'id'
   });
 
-  console.log(subscriptions);
+  const location = useLocation();
 
   return (
     <>
@@ -53,9 +54,9 @@ export function DashboardOrdersSubscriptions() {
           </LinkButton>
         </Section.Action>
 
-        <Section.TabLink to="/dashboard/orders/subscriptions">Active</Section.TabLink>
-        <Section.TabLink to="/dashboard/orders/subscriptions/scheduled">Scheduled</Section.TabLink>
-        <Section.TabLink to="/dashboard/orders/subscriptions/cancelled">Cancelled</Section.TabLink>
+        <Section.TabLink to="?status=">Active</Section.TabLink>
+        <Section.TabLink to="?status=scheduled">Scheduled</Section.TabLink>
+        <Section.TabLink to="?status=cancelled">Cancelled</Section.TabLink>
 
         <Table
           pagination={pagination}

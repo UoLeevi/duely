@@ -2,7 +2,7 @@ import React from 'react';
 import { createClassName, groupBy, hasProperty } from '@duely/util';
 import { Heading, HeadingProps } from '..';
 import { getIconElement, IconProp } from '../icons';
-import { Link, LinkProps, NavLink, useRouteMatch } from 'react-router-dom';
+import { Link, LinkProps, NavLink, useLocation, useRouteMatch } from 'react-router-dom';
 
 export type SectionProps = {
   children: React.ReactNode;
@@ -94,20 +94,37 @@ function SectionAction({ children, className, ...props }: SectionActionProps) {
 export type SectionTabLinkProps = {
   children?: React.ReactNode;
   className?: string;
-} & LinkProps;
+  to: string;
+} & Omit<LinkProps, 'to'>;
 
-function SectionTabLink({ children, className, ...props }: SectionTabLinkProps) {
-  const getClassName = (isActive: boolean) =>
-    createClassName(
-      'text-sm font-medium -mb-[1px] border-b-2 pb-0.5',
-      isActive
-        ? 'text-indigo-600 border-indigo-500'
-        : 'text-gray-500 hover:text-gray-700 focus-within:text-gray-800 border-transparent',
-      className
-    );
+function SectionTabLink({ children, className, to, ...props }: SectionTabLinkProps) {
+  const location = useLocation();
+  const url = new URL(to, window.location.href);
+  const searchParams = new URLSearchParams(location.search);
+
+  let isActive = location.pathname === url.pathname;
+
+  for (const [key, value] of url.searchParams.entries()) {
+    if (value === '') {
+      isActive &&= !searchParams.has(key);
+      url.searchParams.delete(key);
+    } else {
+      isActive &&= searchParams.get(key) === value;
+    }
+  }
+
+  to = url.pathname + url.search + url.hash;
+
+  className = createClassName(
+    'text-sm font-medium -mb-[1px] border-b-2 pb-0.5',
+    isActive
+      ? 'text-indigo-600 border-indigo-500'
+      : 'text-gray-500 hover:text-gray-700 focus-within:text-gray-800 border-transparent',
+    className
+  );
   return (
-    <NavLink exact className={getClassName} {...props}>
+    <Link className={className} to={to} {...props}>
       {children}
-    </NavLink>
+    </Link>
   );
 }
