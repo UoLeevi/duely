@@ -7,7 +7,7 @@ import {
   useDynamicNavigation,
   SkeletonText,
   SkeletonParagraph,
-  usePagination,
+  useOffsetPagination,
   LinkButton,
   ColoredChip,
   icons,
@@ -33,7 +33,7 @@ export default function DashboardProductsHome() {
     ? T
     : never;
 
-  const pagination = usePagination<TProduct, 'id'>({
+  const pagination = useOffsetPagination<TProduct, 'id'>({
     getTotalNumberOfItems: () => {
       const {
         data: count_products,

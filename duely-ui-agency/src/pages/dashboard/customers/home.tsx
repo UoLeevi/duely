@@ -12,7 +12,7 @@ import {
   DropMenu,
   Card,
   SkeletonText,
-  usePagination,
+  useOffsetPagination,
   LinkButton,
   icons,
   useQueryState,
@@ -34,7 +34,7 @@ export default function DashboardCustomersHome() {
     ? T
     : never;
 
-  const pagination = usePagination<TCustomer, 'id'>({
+  const pagination = useOffsetPagination<TCustomer, 'id'>({
     getTotalNumberOfItems: () => {
       const {
         data: count_customers,

@@ -299,6 +299,13 @@ query PromotionCodes(
 
 query AgencyStripeAccountSubscriptions(
   $agency_id: ID!
+  $customer: ID
+  $price: ID
+  $status: String
+  $collection_method: String
+  $created: Int
+  $current_period_start: TimeStampFilter
+  $current_period_end: TimeStampFilter
   $starting_after: String
   $ending_before: String
   $limit: Int
@@ -307,7 +314,18 @@ query AgencyStripeAccountSubscriptions(
     id
     stripe_account {
       id
-      subscriptions(starting_after: $starting_after, ending_before: $ending_before, limit: $limit) {
+      subscriptions(
+        customer: $customer
+        price: $price
+        status: $status
+        collection_method: $collection_method
+        created: $created
+        current_period_start: $current_period_start
+        current_period_end: $current_period_end
+        starting_after: $starting_after
+        ending_before: $ending_before
+        limit: $limit
+      ) {
         ...subscription
         customer {
           ...stripe_customer

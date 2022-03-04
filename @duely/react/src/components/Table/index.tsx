@@ -1,8 +1,8 @@
-import React, { createContext, Fragment, useCallback, useContext } from 'react';
-import { createClassName, hasProperty, isFunction } from '@duely/util';
+import React, { createContext, Fragment, useContext } from 'react';
+import { createClassName, hasProperty } from '@duely/util';
 import { useBreakpoints } from '../../hooks';
-import { isCursorPagination, UsePaginationReturn, UsePaginationReturn2 } from './usePagination';
-import { PaginationControls, PaginationControls2 } from '..';
+import { isCursorPagination, UseOffsetPaginationReturn, UseCursorPaginationReturn } from './usePagination';
+import { OffsetPaginationControls, CursorPaginationControls } from '..';
 import { Link, LinkProps } from 'react-router-dom';
 import { Query } from '../Query';
 
@@ -64,7 +64,7 @@ type TableProps<TItem extends Record<TKeyField, string>, TKeyField extends keyof
   rowLink?: (item: TItem, row: number) => LinkProps;
 } & (
   | ({
-      pagination: UsePaginationReturn<TItem, TKeyField> | UsePaginationReturn2<TItem, TKeyField>;
+      pagination: UseOffsetPaginationReturn<TItem, TKeyField> | UseCursorPaginationReturn<TItem, TKeyField>;
     } & {
       footer?: React.ReactNode;
     })
@@ -287,11 +287,11 @@ function TableRoot<TItem extends Record<TKeyField, string>, TKeyField extends ke
   } else if (pagination) {
     if (isCursorPagination(pagination)) {
       if (pagination.loading || pagination.items.length > 0) {
-        footer = <PaginationControls2 pagination={pagination} />;
+        footer = <CursorPaginationControls pagination={pagination} />;
       }
     } else {
       if (pagination.loadingTotalNumberOfItems || pagination.totalNumberOfItems > 0) {
-        footer = <PaginationControls pagination={pagination} />;
+        footer = <OffsetPaginationControls pagination={pagination} />;
       }
     }
   }

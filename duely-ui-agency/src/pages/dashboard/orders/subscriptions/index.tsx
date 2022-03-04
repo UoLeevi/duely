@@ -1,8 +1,8 @@
 import { Section, DropMenu, icons, LinkButton, PropertyValue, useQueryState } from '@duely/react';
 import { formatPrice, ElementType } from '@duely/util';
-import { Table, SkeletonText, ColoredChip, usePagination2 } from '@duely/react';
+import { Table, SkeletonText, ColoredChip, useCursorPagination } from '@duely/react';
 import { useQuery, agency_subscriptions_Q, current_agency_Q } from '@duely/client';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 export function DashboardOrdersSubscriptions() {
   const agencyControl = useQueryState(current_agency_Q);
@@ -16,27 +16,33 @@ export function DashboardOrdersSubscriptions() {
 
   type TSubscription = ElementType<ReturnType<typeof agency_subscriptions_Q['result']>>;
 
-  const pagination = usePagination2<TSubscription, 'id'>({
-    getItems: ({ limit, starting_after }) => {
-      const { data, loading, error } = useQuery(
-        agency_subscriptions_Q,
-        (agency) => ({
-          agency_id: agency?.id!,
-          limit,
-          starting_after: starting_after
-        }),
-        {
-          deps: [agencyControl]
-        }
-      );
-
-      return { items: data ?? [], loading, error };
-    },
-    itemsPerPage: 5,
-    keyField: 'id'
-  });
-
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const subscriptionStatus = searchParams.get('status');
+
+  const pagination = useCursorPagination<TSubscription, 'id'>(
+    {
+      getItems: ({ limit, starting_after }) => {
+        const { data, loading, error } = useQuery(
+          agency_subscriptions_Q,
+          (agency) => ({
+            agency_id: agency?.id!,
+            limit,
+            starting_after: starting_after,
+            status: subscriptionStatus === 'canceled' ? 'canceled' : undefined
+          }),
+          {
+            deps: [agencyControl]
+          }
+        );
+
+        return { items: data ?? [], loading, error };
+      },
+      itemsPerPage: 5,
+      keyField: 'id'
+    },
+    [subscriptionStatus]
+  );
 
   return (
     <>
@@ -56,7 +62,7 @@ export function DashboardOrdersSubscriptions() {
 
         <Section.TabLink to="?status=">Active</Section.TabLink>
         <Section.TabLink to="?status=scheduled">Scheduled</Section.TabLink>
-        <Section.TabLink to="?status=cancelled">Cancelled</Section.TabLink>
+        <Section.TabLink to="?status=canceled">Canceled</Section.TabLink>
 
         <Table
           pagination={pagination}

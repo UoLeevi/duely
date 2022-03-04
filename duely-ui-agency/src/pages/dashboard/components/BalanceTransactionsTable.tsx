@@ -5,7 +5,7 @@ import {
   Table,
   SkeletonText,
   ColoredChip,
-  usePagination2,
+  useCursorPagination,
   PropertyValue
 } from '@duely/react';
 import {
@@ -24,7 +24,7 @@ export function BalanceTransactionsTable() {
 
   type TBalanceTransaction = any;
 
-  const pagination = usePagination2<TBalanceTransaction, 'id'>({
+  const pagination = useCursorPagination<TBalanceTransaction, 'id'>({
     getItems: ({ limit, starting_after }) => {
       const { data, loading, error } = useQuery(
         agency_stripe_account_balance_transactions_Q,

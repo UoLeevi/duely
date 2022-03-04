@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { produce } from 'immer';
 import { ElementType, hasProperty } from '@duely/util';
+import { useStateMemo } from '../../hooks';
 
 export const itemsPerPageOptions = [5, 10, 50, 100, 0] as const;
 const defaultItemsPerPage = 10;
@@ -9,12 +10,14 @@ export function isCursorPagination<
   TItem extends Record<TKeyField, string>,
   TKeyField extends keyof TItem
 >(
-  pagination: UsePaginationReturn<TItem, TKeyField> | UsePaginationReturn2<TItem, TKeyField>
-): pagination is UsePaginationReturn2<TItem, TKeyField> {
+  pagination:
+    | UseOffsetPaginationReturn<TItem, TKeyField>
+    | UseCursorPaginationReturn<TItem, TKeyField>
+): pagination is UseCursorPaginationReturn<TItem, TKeyField> {
   return hasProperty(pagination, 'loadMore');
 }
 
-export type UsePaginationReturn<
+export type UseOffsetPaginationReturn<
   TItem extends Record<TKeyField, string>,
   TKeyField extends keyof TItem
 > = {
@@ -37,7 +40,7 @@ export type UsePaginationReturn<
   setItemsPerPage(itemsPerPage: number): void;
 };
 
-export function usePagination<
+export function useOffsetPagination<
   TItem extends Record<TKeyField, string>,
   TKeyField extends keyof TItem
 >(options: {
@@ -50,7 +53,7 @@ export function usePagination<
   }) => { items: TItem[]; loading: boolean; error: any };
   itemsPerPage?: ElementType<typeof itemsPerPageOptions>;
   pageNumber?: number;
-}): UsePaginationReturn<TItem, TKeyField> {
+}): UseOffsetPaginationReturn<TItem, TKeyField> {
   const {
     count: totalNumberOfItems,
     loading: loadingTotalNumberOfItems,
@@ -190,7 +193,7 @@ export function usePagination<
   };
 }
 
-export type UsePaginationReturn2<
+export type UseCursorPaginationReturn<
   TItem extends Record<TKeyField, string>,
   TKeyField extends keyof TItem
 > = {
@@ -204,19 +207,22 @@ export type UsePaginationReturn2<
   itemsPerPage: ElementType<typeof itemsPerPageOptions>;
 };
 
-export function usePagination2<
+export function useCursorPagination<
   TItem extends Record<TKeyField, string>,
   TKeyField extends keyof TItem
->(options: {
-  keyField: TKeyField | ((item: TItem) => string);
-  getItems: (state: {
-    limit: ElementType<typeof itemsPerPageOptions>;
-    starting_after?: string;
-  }) => { items: TItem[]; loading: boolean; error: any };
-  itemsPerPage?: ElementType<typeof itemsPerPageOptions>;
-}): UsePaginationReturn2<TItem, TKeyField> {
-  const [key] = useState(Symbol());
-  const [pages] = useState<TItem[][]>([]);
+>(
+  options: {
+    keyField: TKeyField | ((item: TItem) => string);
+    getItems: (state: {
+      limit: ElementType<typeof itemsPerPageOptions>;
+      starting_after?: string;
+    }) => { items: TItem[]; loading: boolean; error: any };
+    itemsPerPage?: ElementType<typeof itemsPerPageOptions>;
+  },
+  deps?: unknown[]
+): UseCursorPaginationReturn<TItem, TKeyField> {
+  const [key] = useStateMemo(Symbol(), deps);
+  const [pages] = useStateMemo<TItem[][]>([], deps);
 
   const getKey =
     typeof options.keyField === 'function'
@@ -225,10 +231,13 @@ export function usePagination2<
 
   const initialItemsPerPage = options.itemsPerPage ?? defaultItemsPerPage;
 
-  const [state, setState] = useState<Parameters<typeof options.getItems>[0]>({
-    limit: initialItemsPerPage,
-    starting_after: undefined
-  });
+  const [state, setState] = useStateMemo<Parameters<typeof options.getItems>[0]>(
+    {
+      limit: initialItemsPerPage,
+      starting_after: undefined
+    },
+    deps
+  );
 
   let { items: currentPage, loading, error } = options.getItems(state);
 
@@ -253,10 +262,13 @@ export function usePagination2<
         );
       }
     }),
-    []
+    [pages]
   );
 
-  const items = useMemo(() => pages.flatMap((x) => x), [getKey(currentPageLastItem)]);
+  const items = useMemo(
+    () => pages.flatMap((x) => x),
+    [getKey(currentPageLastItem), pages, ...(deps ?? [])]
+  );
 
   return {
     key,

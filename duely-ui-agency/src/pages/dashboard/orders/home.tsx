@@ -11,7 +11,7 @@ import {
   Table,
   DropMenu,
   Card,
-  usePagination,
+  useOffsetPagination,
   SkeletonText,
   ColoredChip,
   icons,
@@ -34,7 +34,7 @@ export default function DashboardOrdersHome() {
     ? T
     : never;
 
-  const pagination = usePagination<TOrder, 'id'>({
+  const pagination = useOffsetPagination<TOrder, 'id'>({
     getTotalNumberOfItems: () => {
       const {
         data: count_orders,

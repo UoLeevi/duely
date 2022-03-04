@@ -1,12 +1,12 @@
 import React from 'react';
 import { Button } from '..';
-import { itemsPerPageOptions, usePagination, usePagination2 } from './usePagination';
+import { itemsPerPageOptions, useOffsetPagination, useCursorPagination } from './usePagination';
 
-export type PaginationControlsProps = {
-  pagination: ReturnType<typeof usePagination>;
+export type OffsetPaginationControlsProps = {
+  pagination: ReturnType<typeof useOffsetPagination>;
 };
 
-export function PaginationControls({ pagination }: PaginationControlsProps) {
+export function OffsetPaginationControls({ pagination }: OffsetPaginationControlsProps) {
   return (
     <div className="flex items-center justify-between w-full space-x-2 text-xs font-semibold sm:space-x-3">
       <div className="flex items-center">
@@ -136,11 +136,11 @@ export function PaginationControls({ pagination }: PaginationControlsProps) {
   );
 }
 
-export type PaginationControlsProps2 = {
-  pagination: ReturnType<typeof usePagination2>;
+export type CursorPaginationControlsProps = {
+  pagination: ReturnType<typeof useCursorPagination>;
 };
 
-export function PaginationControls2({ pagination }: PaginationControlsProps2) {
+export function CursorPaginationControls({ pagination }: CursorPaginationControlsProps) {
   return (
     <div className="flex items-center justify-between w-full space-x-2 text-xs font-semibold sm:space-x-3">
       <div className="flex items-center mx-auto">
