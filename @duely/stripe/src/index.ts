@@ -199,7 +199,8 @@ const stripeResourceEndpointByType: {
   'radar.value_list_item': 'radar.valueListItems',
   'reporting.report_run': 'reporting.reportRuns',
   'reporting.report_type': 'reporting.reportTypes',
-  scheduled_query_run: 'sigma.scheduledQueryRuns'
+  scheduled_query_run: 'sigma.scheduledQueryRuns',
+  'test_helpers.test_clock': 'testHelpers.testClocks',
 } as const;
 
 export type StripeObjectTypeResources<
