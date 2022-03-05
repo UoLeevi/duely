@@ -42,6 +42,13 @@ export const StripeAccount: GqlTypeDefinition<
         ending_before: String
         limit: Int
       ): [PaymentIntent!]!
+      charges(
+        payment_intent: ID
+        created: Int
+        starting_after: String
+        ending_before: String
+        limit: Int
+      ): [Charge!]!
       customers(
         filter: CustomerFilter
         token: String
@@ -220,6 +227,11 @@ export const StripeAccount: GqlTypeDefinition<
       ...createStripeListResolverForReferencedResource({
         name: 'payment_intents',
         object: 'payment_intent',
+        role: 'owner'
+      }),
+      ...createStripeListResolverForReferencedResource({
+        name: 'charges',
+        object: 'charge',
         role: 'owner'
       }),
       async bank_accounts(source, args, context, info) {
