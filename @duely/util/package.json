@@ -1,6 +1,6 @@
 {
   "name": "@duely/util",
-  "version": "0.4.24",
+  "version": "0.4.26",
   "description": "Shared utility types and functions used by the Duely APIs.",
   "repository": "github:uoleevi/duely",
   "license": "MIT",

@@ -156,14 +156,18 @@ export function createUpdateArgs<T extends Record<string, unknown>>(
 export function hasOwnProperty<T, TKey extends PropertyKey>(
   obj: T,
   propertyName: TKey
-): obj is Extract<Required<T>, Record<TKey, unknown>> {
+): obj is Extract<Required<T>, Record<TKey, unknown>> extends never
+  ? T & Record<TKey, unknown>
+  : Extract<Required<T>, Record<TKey, unknown>> {
   return obj === Object(obj) && Object.prototype.hasOwnProperty.call(obj, propertyName);
 }
 
 export function hasProperty<T, TKey extends PropertyKey>(
   obj: T,
   propertyName: TKey
-): obj is Extract<Required<T>, Record<TKey, unknown>> {
+): obj is Extract<Required<T>, Record<TKey, unknown>> extends never
+  ? T & Record<TKey, unknown>
+  : Extract<Required<T>, Record<TKey, unknown>> {
   return obj === Object(obj) && propertyName in obj;
 }
 
@@ -237,6 +241,17 @@ export function groupBy<T>(arr: T[], getKey: (item: T) => any): Map<any, T[]> {
   }
 
   return groups;
+}
+
+function replacerSortObjectKeys(this: any, key: string, value: any): any {
+  if (typeof value !== 'object' || Array.isArray(value)) return value;
+  const keys = Object.keys(value);
+  keys.sort();
+  return pick(value, keys);
+}
+
+export function stringifySorted(value: any): string {
+  return JSON.stringify(value, replacerSortObjectKeys);
 }
 
 export function memo<R, TParams extends unknown[]>(
