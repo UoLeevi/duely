@@ -3,7 +3,7 @@
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import { timestampToDate } from '@duely/util';
-import { createStripeRetrieveResolverForReferencedResource, withStripeAccountProperty } from '../../util';
+import { createStripeListQueryResolver, createStripeRetrieveQueryResolver, createStripeRetrieveResolverForReferencedResource, withStripeAccountProperty } from '../../util';
 import Stripe from 'stripe';
 import { Resources } from '@duely/db';
 
@@ -46,6 +46,18 @@ export const PaymentIntent: GqlTypeDefinition<
       phone: String
       tracking_number: String
     }
+
+    extend type Query {
+      payment_intent(stripe_account_id: ID!, payment_intent_id: ID!): PaymentIntent
+      payment_intents(
+        stripe_account_id: ID!
+        customer: ID
+        created: Int
+        starting_after: String
+        ending_before: String
+        limit: Int
+      ): [PaymentIntent!]!
+    }
   `,
   resolvers: {
     PaymentIntent: {
@@ -55,6 +67,19 @@ export const PaymentIntent: GqlTypeDefinition<
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
         object: 'customer',
+        role: 'owner'
+      })
+    },
+    
+    Query: {
+      ...createStripeRetrieveQueryResolver({
+        name: 'payment_intent',
+        object: 'payment_intent',
+        role: 'owner'
+      }),
+      ...createStripeListQueryResolver({
+        name: 'payment_intents',
+        object: 'payment_intent',
         role: 'owner'
       })
     }

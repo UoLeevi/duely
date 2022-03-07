@@ -1,7 +1,11 @@
 // see: https://stripe.com/docs/api/charges/object
 
 import { timestampToDate } from '@duely/util';
-import { createStripeRetrieveResolverForReferencedResource } from '../../util';
+import {
+  createStripeListQueryResolver,
+  createStripeRetrieveQueryResolver,
+  createStripeRetrieveResolverForReferencedResource
+} from '../../util';
 import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
@@ -75,6 +79,18 @@ export const Charge: GqlTypeDefinition<
       id: String
       predicate: String
     }
+
+    extend type Query {
+      charge(stripe_account_id: ID!, charge_id: ID!): Charge
+      charges(
+        stripe_account_id: ID!
+        payment_intent: ID
+        created: Int
+        starting_after: String
+        ending_before: String
+        limit: Int
+      ): [Charge!]!
+    }
   `,
   resolvers: {
     Charge: {
@@ -92,6 +108,18 @@ export const Charge: GqlTypeDefinition<
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'customer',
         object: 'customer',
+        role: 'owner'
+      })
+    },
+    Query: {
+      ...createStripeRetrieveQueryResolver({
+        name: 'charge',
+        object: 'charge',
+        role: 'owner'
+      }),
+      ...createStripeListQueryResolver({
+        name: 'charges',
+        object: 'charge',
         role: 'owner'
       })
     }
