@@ -10,6 +10,8 @@ import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
 import { Resources } from '@duely/db';
+import axios from 'axios';
+import stripe from '@duely/stripe';
 
 export const Charge: GqlTypeDefinition<
   Stripe.Charge & { stripe_account: Resources['stripe account'] }
@@ -94,6 +96,18 @@ export const Charge: GqlTypeDefinition<
   `,
   resolvers: {
     Charge: {
+      async receipt_number(charge, args, context, info) {
+        if (!charge.receipt_number && charge.receipt_url) {
+          // Stripe generates the receipt only after `receipt_url` is requested
+          await axios.get(charge.receipt_url);
+
+          // Requery charge to get the `receipt_number`
+          const res = await stripe.get(charge.stripe_account).charges.retrieve(charge.id);
+          charge.receipt_number = res.receipt_number;
+        }
+
+        return charge.receipt_number;
+      },
       created: (source) => timestampToDate(source.created),
       ...createStripeRetrieveResolverForReferencedResource({
         name: 'balance_transaction',
