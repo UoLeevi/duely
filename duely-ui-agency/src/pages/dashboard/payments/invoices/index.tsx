@@ -43,6 +43,7 @@ export default function DashboardPaymentsInvoices() {
             loading={loading}
             error={error}
             keyField="id"
+            rowLink={(invoice: TInvoice) => ({ to: `invoices/${invoice.id}` })}
           >
             <Table.Column header="Number">
               {(invoice: TInvoice | null) =>

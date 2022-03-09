@@ -51,6 +51,10 @@ export function BalanceTransactionsTable() {
               <SkeletonText className="text-sm" />
               <SkeletonText className="text-xs" />
             </div>
+          ) : txn.type === 'charge' ? (
+            <PropertyValue.Charge>{txn.source}</PropertyValue.Charge>
+          ) : txn.type === 'payout' ? (
+            <PropertyValue.Payout>{txn.source}</PropertyValue.Payout>
           ) : (
             <div className="flex flex-col">
               <div className="text-sm font-semibold">{sentenceCase(txn.reporting_category)}</div>

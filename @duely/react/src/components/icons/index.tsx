@@ -36,6 +36,14 @@ const iconPathDefinitions = {
       'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
     ]
   },
+  cash: {
+    solid: [
+      'M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z'
+    ],
+    outline: [
+      'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'
+    ]
+  },
   'chevron-right': {
     solid: [
       'M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z'
@@ -73,6 +81,14 @@ const iconPathDefinitions = {
     ],
     outline: [
       'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'
+    ]
+  },
+  'document-text': {
+    solid: [
+      'M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z'
+    ],
+    outline: [
+      'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
     ]
   },
   exclamation: {
@@ -217,6 +233,12 @@ const iconPathDefinitions = {
       'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
     ]
   },
+  payout: {
+    solid: [
+      'M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zM13 8h-2v3.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L13 11.586z'
+    ],
+    outline:[]
+  },
   pencil: {
     solid: [
       'M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z'
@@ -315,6 +337,7 @@ export function Icon({ className, strokeWidth, solid, name, d, ...props }: IconP
 // TODO: https://developer.mozilla.org/en-US/docs/Web/SVG/Element/use
 export const icons = {
   'box.solid': <Icon name="box" solid />,
+  'cash.solid': <Icon name="cash" solid />,
   'arrow-sm-down.solid': <Icon name="arrow-sm-down" solid />,
   'briefcase.solid': <Icon name="briefcase" solid />,
   'chevron-right.solid': <Icon name="chevron-right" solid />,
@@ -323,7 +346,9 @@ export const icons = {
   'clipboard.solid': <Icon name="clipboard" solid />,
   'clipboard-check.solid': <Icon name="clipboard-check" solid />,
   'credit-card.solid': <Icon name="credit-card" solid />,
+  'document-text.solid': <Icon name="document-text" solid />,
   'exclamation.solid': <Icon name="exclamation" solid />,
+  'payout.solid': <Icon name="payout" solid />,
   'plus.solid': <Icon name="plus" solid />,
   'check.solid': <Icon name="check" solid />,
   'check-circle.solid': <Icon name="check-circle" solid />,
@@ -335,8 +360,10 @@ export const icons = {
   'office-building.solid': <Icon name="office-building" solid />,
   briefcase: <Icon name="briefcase" />,
   clipboard: <Icon name="clipboard" />,
+  cash: <Icon name="cash" />,
   cog: <Icon name="cog" />,
   'credit-card': <Icon name="credit-card" />,
+  'document-text': <Icon name="document-text" />,
   'dots-vertical': <Icon name="dots-vertical" />,
   duplicate: <Icon name="duplicate" />,
   'exclamation-circle': <Icon name="exclamation-circle" />,
@@ -345,6 +372,7 @@ export const icons = {
   identification: <Icon name="identification" />,
   'shopping-cart': <Icon name="shopping-cart" />,
   trash: <Icon name="trash" />,
+  payout: <Icon name="payout" />,
   pencil: <Icon name="pencil" />,
   'receipt-tax': <Icon name="receipt-tax" />,
   users: <Icon name="users" />,

@@ -215,6 +215,31 @@ query AgencyStripeAccountPaymentIntents(
   }
 }
 
+query AgencyStripeAccountCharges(
+  $agency_id: ID!
+  $created: Int
+  $starting_after: String
+  $ending_before: String
+  $limit: Int
+  $payment_intent: ID
+) {
+  agency(id: $agency_id) {
+    id
+    stripe_account {
+      id
+      charges(
+        created: $created
+        starting_after: $starting_after
+        ending_before: $ending_before
+        limit: $limit
+        payment_intent: $payment_intent
+      ) {
+        ...charge
+      }
+    }
+  }
+}
+
 query CustomerPaymentIntents($customer_id: ID!) {
   customer(id: $customer_id) {
     id
@@ -361,6 +386,18 @@ query Subscription($stripe_account_id: ID!, $subscription_id: ID!) {
     latest_invoice {
       ...invoice
     }
+  }
+}
+
+query Charge($stripe_account_id: ID!, $charge_id: ID!) {
+  charge(stripe_account_id: $stripe_account_id, charge_id: $charge_id) {
+    ...charge
+  }
+}
+
+query PaymentIntent($stripe_account_id: ID!, $payment_intent_id: ID!) {
+  payment_intent(stripe_account_id: $stripe_account_id, payment_intent_id: $payment_intent_id) {
+    ...payment_intent
   }
 }
 

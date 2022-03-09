@@ -1,7 +1,12 @@
-import { QueryFunctionOptions, useQuery as useApolloQuery } from '@apollo/client';
-import { useRef, useState } from 'react';
+import {
+  QueryFunctionOptions,
+  TypedDocumentNode,
+  useQuery as useApolloQuery
+} from '@apollo/client';
+import { stringifySorted } from '@duely/util';
+import { useEffect, useRef, useState } from 'react';
 import { client } from '../apollo';
-import { QueryDefinition } from '../queries';
+import { query, QueryDefinition, TypedQueryOptions } from '../queries';
 
 export type UseQueryReturn<T> = {
   queryDef: QueryDefinition<any, any, any, T> | null;
@@ -27,10 +32,56 @@ export function useQuery<
           [Index in keyof TDeps]: TDeps[Index] extends UseQueryReturn<infer T> ? T : never;
         }
       ) => Omit<TVariables, keyof typeof queryDef.variables>),
-  options?: { deps?: TDeps } & QueryFunctionOptions<TData, TVariables>
+  options?: { deps?: TDeps; skip?: boolean } & Omit<
+    TypedQueryOptions<TypedDocumentNode<TData, TVariables>>,
+    'query' | 'variables'
+  >
 ): UseQueryReturn<TResult> {
-  const { query, result, after, variables: defaultVariables, ...defaultOptions } = queryDef;
+  const [, setRerenderCount] = useState(0);
+  const ref = useRef<{
+    key: any | undefined;
+    variablesKey: string;
+    loading: boolean;
+    data: TResult | null;
+    isMounted: boolean;
+  }>({
+    key: undefined,
+    variablesKey: '',
+    loading: false,
+    data: null,
+    isMounted: false
+  });
+
+  useEffect(() => {
+    ref.current.isMounted = true;
+    return () => {
+      ref.current.isMounted = false;
+    };
+  }, []);
+
+  const {
+    query: document,
+    result,
+    after,
+    variables: defaultVariables,
+    ...defaultOptions
+  } = queryDef;
   const depsLoading = options?.deps?.some((dep) => dep.loading || !dep.data) ?? false;
+
+  const skip = options?.skip || depsLoading || false;
+
+  if (skip) {
+    return {
+      get query() {
+        return this;
+      },
+      queryDef,
+      data: undefined,
+      loading: false,
+      depsLoading,
+      initialLoading: false
+    };
+  }
 
   const _variables = {
     ...defaultVariables,
@@ -41,66 +92,39 @@ export function useQuery<
       : variables)!
   };
 
-  const skip = options?.skip || depsLoading || false;
+  const _options = { ...defaultOptions, ...options };
+  const variablesKey = stringifySorted(_variables);
 
-  // Let's use counter to help track loading state when after function is specified
-  const [afterCount, setAfterCount] = useState(0);
-  const afterRef = useRef<{ promise: Promise<void> | null; count: number }>({
-    promise: null,
-    count: afterCount
-  });
-
-  const {
-    data: rawData,
-    networkStatus,
-    loading: initialLoading,
-    previousData,
-    ...rest
-  } = useApolloQuery(query, {
-    variables: _variables,
-    ...defaultOptions,
-    ...options,
-    skip
-  });
-
-  // https://github.com/apollographql/apollo-client/blob/main/src/core/networkStatus.ts
-  let loading = depsLoading || (networkStatus ? networkStatus < 7 : initialLoading);
-  const data = rawData && result(rawData);
-
-  if (after) {
-    if (loading && afterCount === afterRef.current.count) {
-      // new query started
-      ++afterRef.current.count;
-    } else if (
-      !loading &&
-      afterCount !== afterRef.current.count &&
-      afterRef.current.promise === null
-    ) {
-      // query completed
-      const promise = after(client.cache, data ?? null, _variables);
-      afterRef.current.promise = promise;
-
-      promise.finally(() => {
-        // after completed
-        if (promise === afterRef.current.promise) {
-          afterRef.current.promise = null;
-          setAfterCount((afterCount) => afterCount + 1);
-        }
+  if (ref.current.key === undefined || ref.current.variablesKey !== variablesKey) {
+    const cachedValue = client.readQuery({ query: queryDef.query, variables: _variables });
+    if (cachedValue !== null) {
+      ref.current.variablesKey = variablesKey;
+      ref.current.loading = false;
+      ref.current.data = result(cachedValue);
+      ref.current.key = cachedValue;
+    } else {
+      ref.current.variablesKey = variablesKey;
+      ref.current.loading = true;
+      ref.current.data = null;
+      ref.current.key = query(queryDef, _variables, _options).then((r) => {
+        if (ref.current.variablesKey !== variablesKey) return;
+        ref.current.loading = false;
+        ref.current.data = r;
+        if (ref.current.isMounted) setRerenderCount((c) => c + 1);
       });
     }
   }
 
-  loading ||= afterCount !== afterRef.current.count;
+  const loading = depsLoading || ref.current.loading;
 
   return {
     get query() {
       return this;
     },
     queryDef,
-    data,
+    data: ref.current.data,
     loading,
     depsLoading,
-    initialLoading,
-    ...rest
+    initialLoading: loading
   };
 }

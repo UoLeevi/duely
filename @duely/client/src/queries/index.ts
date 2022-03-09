@@ -72,7 +72,10 @@ import {
   CustomerSubscriptionsDocument,
   CustomerPaymentIntentsDocument,
   CustomerInvoicesDocument,
-  StripeSubscription
+  StripeSubscription,
+  AgencyStripeAccountChargesDocument,
+  ChargeDocument,
+  PaymentIntentDocument
 } from '@duely/core';
 import { ApolloCache, NormalizedCacheObject, QueryOptions } from '@apollo/client';
 import { client } from '../apollo/client';
@@ -118,10 +121,10 @@ export async function query<
     ...options
   });
 
-  const res = data && result(data);
+  const res = data == null ? null : result(data);
 
   if (after) {
-    await after(client.cache, res ?? null, mergedVariables as any);
+    await after(client.cache, res, mergedVariables as any);
   }
 
   return res;
@@ -235,6 +238,13 @@ export const agency_stripe_account_payment_intents_Q = {
   result: agency_stripe_account_payment_intents_R
 };
 
+const agency_stripe_account_charges_R = (d: ResultOf<typeof AgencyStripeAccountChargesDocument>) =>
+  d?.agency?.stripe_account?.charges;
+export const agency_stripe_account_charges_Q = {
+  query: AgencyStripeAccountChargesDocument,
+  result: agency_stripe_account_charges_R
+};
+
 const agency_subscriptions_R = (d: ResultOf<typeof AgencyStripeAccountSubscriptionsDocument>) =>
   d?.agency?.stripe_account?.subscriptions;
 export const agency_subscriptions_Q = {
@@ -246,6 +256,18 @@ const subscription_R = (d: ResultOf<typeof SubscriptionDocument>) => d?.subscrip
 export const subscription_Q = {
   query: SubscriptionDocument,
   result: subscription_R
+};
+
+const charge_R = (d: ResultOf<typeof ChargeDocument>) => d?.charge;
+export const charge_Q = {
+  query: ChargeDocument,
+  result: charge_R
+};
+
+const payment_intent_R = (d: ResultOf<typeof PaymentIntentDocument>) => d?.payment_intent;
+export const payment_intent_Q = {
+  query: PaymentIntentDocument,
+  result: payment_intent_R
 };
 
 const agency_customers_R = (d: ResultOf<typeof AgencyCustomersDocument>) =>

@@ -28,7 +28,7 @@ function PropertyListRoot({ children, row, col }: PropertyListProps) {
   const itemDefinitions =
     React.Children.map(
       children,
-      (child: React.ReactElement<PropertyListItemProps, typeof PropertyListItem>) => child.props
+      (child: React.ReactElement<PropertyListItemProps, typeof PropertyListItem>) => child?.props
     ) ?? [];
 
   const className = createClassName(

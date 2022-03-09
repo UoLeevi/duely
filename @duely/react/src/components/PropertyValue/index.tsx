@@ -9,6 +9,9 @@ import { PricePropertyValue } from './price';
 import { ImagePropertyValue } from './image';
 import { SkeletonParagraph } from '../skeletons';
 import { createClassName } from '@duely/util';
+import { ChargePropertyValue } from './charge';
+import { InvoicePropertyValue } from './invoice';
+import { PayoutPropertyValue } from './payout';
 
 export const PropertyValue = Object.assign(PropertyValueRoot, {
   Date: DatePropertyValue,
@@ -17,7 +20,10 @@ export const PropertyValue = Object.assign(PropertyValueRoot, {
   Customer: CustomerPropertyValue,
   Product: ProductPropertyValue,
   Price: PricePropertyValue,
-  Image: ImagePropertyValue
+  Image: ImagePropertyValue,
+  Charge: ChargePropertyValue,
+  Invoice: InvoicePropertyValue,
+  Payout: PayoutPropertyValue
 });
 
 export type TextPropertyValueProps = {
