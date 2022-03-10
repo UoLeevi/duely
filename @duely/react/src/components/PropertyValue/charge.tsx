@@ -50,7 +50,7 @@ export function ChargePropertyValue({ children: charge_id }: ChargePropertyValue
 
         <div ref={ref}>
           <Link
-            to={`/dashboard/charges/${charge?.id}`}
+            to={`/dashboard/payments/charges/${charge?.id}`}
             className={`relative font-medium transition-all hover:underline underline-offset-2 space-x-2 hover:text-gray-900 ${className}`}
           >
             <span>Charge</span>

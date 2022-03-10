@@ -80,6 +80,10 @@ const sidebarLinks: SidebarProps['links'] = [
       {
         text: 'Invoices',
         to: '/dashboard/payments/invoices'
+      },
+      {
+        text: 'Charges',
+        to: '/dashboard/payments/charges'
       }
     ]
   },
