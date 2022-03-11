@@ -1249,6 +1249,18 @@ body, #root {
   min-width: 12ch;
 }
 
+.min-w-\[16rem\] {
+  min-width: 16rem;
+}
+
+.min-w-\[8rem\] {
+  min-width: 8rem;
+}
+
+.min-w-\[9ch\] {
+  min-width: 9ch;
+}
+
 .max-w-7xl {
   max-width: 80rem;
 }
@@ -3235,9 +3247,19 @@ body, #root {
     color: rgb(255 255 255 / var(--tw-text-opacity));
   }
 
+  .dark\:text-gray-500 {
+    --tw-text-opacity: 1;
+    color: rgb(100 116 139 / var(--tw-text-opacity));
+  }
+
   .dark\:hover\:bg-gray-600:hover {
     --tw-bg-opacity: 1;
     background-color: rgb(71 85 105 / var(--tw-bg-opacity));
+  }
+
+  .dark\:hover\:text-gray-300:hover {
+    --tw-text-opacity: 1;
+    color: rgb(203 213 225 / var(--tw-text-opacity));
   }
 
   .dark\:focus-visible\:bg-gray-800:focus-visible {

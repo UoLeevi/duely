@@ -1,8 +1,9 @@
-import { Card, DropMenu, icons, LinkButton, PropertyValue } from '@duely/react';
+import { Card, DropMenu, Icon, icons, LinkButton, PropertyValue } from '@duely/react';
 import { DashboardSection } from '../../components';
 import { Currency, formatCurrency, formatDate } from '@duely/util';
 import { Util, Table, SkeletonText, ColoredChip } from '@duely/react';
 import { useQuery, agency_stripe_account_charges_Q, current_agency_Q } from '@duely/client';
+import { Link } from 'react-router-dom';
 
 export default function DashboardPaymentsCharges() {
   const { data: agency } = useQuery(current_agency_Q);
@@ -32,14 +33,23 @@ export default function DashboardPaymentsCharges() {
             <Table.Column header="Receipt number">
               {(charge: TCharge | null) =>
                 !charge ? (
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex space-x-3">
                     <SkeletonText className="text-sm" />
                   </div>
                 ) : (
-                  <div className="flex flex-col space-y-2">
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {charge.receipt_number}
+                  <div className="flex justify-between space-x-3">
+                    <span className="text-sm font-mono font-bold min-w-[9ch] text-gray-800 dark:text-gray-300">
+                      #{charge.receipt_number}
                     </span>
+
+                    <a
+                      className="relative text-xs text-gray-400 focus:outline-none hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-300"
+                      href={charge.receipt_url!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Icon name="external-link" />
+                    </a>
                   </div>
                 )
               }
