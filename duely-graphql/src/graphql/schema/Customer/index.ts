@@ -1,4 +1,11 @@
-import { queryResource, Resources, withSession } from '@duely/db';
+import {
+  countResource,
+  queryResource,
+  queryResourceAccess,
+  queryResourceAll,
+  Resources,
+  withSession
+} from '@duely/db';
 import {
   createDefaultQueryResolversForResource,
   createResolverForReferencedResource,
@@ -10,6 +17,7 @@ import gql from 'graphql-tag';
 import { GqlTypeDefinition } from '../../types';
 import Stripe from 'stripe';
 import { DuelyGraphQLError } from '../../errors';
+import { pick } from '@duely/util';
 
 const resource = {
   name: 'customer'
@@ -39,7 +47,7 @@ export const Customer: GqlTypeDefinition<Resources['customer']> = {
     }
 
     extend type Query {
-      customer(id: ID!, token: String): Customer
+      customer(id: ID!, stripe_account_id: ID, token: String): Customer
       customers(
         filter: CustomerFilter!
         token: String
@@ -125,7 +133,51 @@ export const Customer: GqlTypeDefinition<Resources['customer']> = {
       }
     },
     Query: {
-      ...createDefaultQueryResolversForResource(resource)
+      async customer(
+        source,
+        args: { id: string; stripe_account_id?: string; token?: string },
+        context
+      ) {
+        if (!context.jwt) {
+          throw new DuelyGraphQLError('UNAUTHENTICATED', 'JWT token was not provided');
+        }
+
+        return await withSession(context, async ({ queryResource, queryResourceAccess }) => {
+          let customer = await queryResource('customer', args.id, args.token);
+
+          if (!customer) {
+            customer = await queryResource(
+              'customer',
+              { default_stripe_id_ext: args.id },
+              args.token
+            );
+          }
+
+          if (!customer && args.stripe_account_id) {
+            const stripe_account = await queryResource('stripe account', args.stripe_account_id);
+
+            const access = await queryResourceAccess(stripe_account.id);
+
+            if (access !== 'owner') {
+              throw new DuelyGraphQLError('FORBIDDEN', `Only owner can access this information`);
+            }
+
+            let stripe_customer = (await stripe
+              .get(stripe_account)
+              .customers.retrieve(args.id)) as Stripe.Customer;
+            if (!stripe_customer || !stripe_customer.email) return null;
+
+            customer = await queryResource(
+              'customer',
+              { email_address: stripe_customer.email, stripe_account_id: stripe_account.id },
+              args.token
+            );
+          }
+
+          return customer;
+        });
+      },
+      ...pick(createDefaultQueryResolversForResource(resource), ['customers', 'count_customers'])
     },
     Mutation: {
       async create_customer(obj, { stripe_account_id, email_address, name }, context, info) {
