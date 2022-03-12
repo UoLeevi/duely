@@ -89,7 +89,7 @@ export function DashboardCardBalance() {
         </div>
       </div>
       <div className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-b-md">
-        <Link to="/dashboard/payments">
+        <Link to="/dashboard/payments/transactions">
           <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
             View all
           </span>

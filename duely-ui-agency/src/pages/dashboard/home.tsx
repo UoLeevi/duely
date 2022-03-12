@@ -1,4 +1,4 @@
-import { Card } from '@duely/react';
+import { Card, Section } from '@duely/react';
 import {
   DashboardFlexGrid,
   DashboardCardBalance,
@@ -8,22 +8,21 @@ import {
 import { DashboardGetStartedSection } from './components/DashboardGetStartedSection';
 
 export default function DashboardHome() {
-
   return (
     <>
       <DashboardGetStartedSection />
 
-      <DashboardSection title="Overview">
+      <Section className="max-w-screen-lg">
+        <Section.Heading as="h2">Overview</Section.Heading>
         <DashboardFlexGrid>
           <DashboardCardBalance />
         </DashboardFlexGrid>
-      </DashboardSection>
+      </Section>
 
-      <DashboardSection title="Recent transactions">
-        <Card className="max-w-screen-lg">
-          <BalanceTransactionsTable />
-        </Card>
-      </DashboardSection>
+      <Section className="max-w-screen-lg">
+        <Section.Heading as="h2">Recent transactions</Section.Heading>
+        <BalanceTransactionsTable />
+      </Section>
     </>
   );
 }

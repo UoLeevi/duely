@@ -1,12 +1,12 @@
-import { Card, Form } from '@duely/react';
+import { Card, Form, Section } from '@duely/react';
 import { DashboardSection } from '../../components';
 import { SettingsBrandingSettingsForm } from './components/SettingsBrandingSettingsForm';
 
 export default function DashboardSettingsBranding() {
   return (
     <>
-      <DashboardSection title="Settings">
-        <Card>
+      <Section className="max-w-screen-lg">
+        <Section.Heading as="h2">Settings</Section.Heading>
           <Form.Section
             title="Branding"
             description={
@@ -17,8 +17,7 @@ export default function DashboardSettingsBranding() {
           >
             <SettingsBrandingSettingsForm />
           </Form.Section>
-        </Card>
-      </DashboardSection>
+        </Section>
     </>
   );
 }

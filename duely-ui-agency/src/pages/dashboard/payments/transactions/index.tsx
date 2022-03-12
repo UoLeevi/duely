@@ -1,17 +1,13 @@
-import { Card } from '@duely/react';
-import {
-  BalanceTransactionsTable,
-  DashboardSection
-} from '../../components';
+import { Section } from '@duely/react';
+import { BalanceTransactionsTable } from '../../components';
 
 export default function DashboardPaymentsTransactions() {
   return (
     <>
-      <DashboardSection title="Transactions">
-        <Card className="max-w-screen-lg">
-          <BalanceTransactionsTable />
-        </Card>
-      </DashboardSection>
+      <Section className="max-w-screen-lg">
+        <Section.Heading as="h2">Transactions</Section.Heading>
+        <BalanceTransactionsTable />
+      </Section>
     </>
   );
 }

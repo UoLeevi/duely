@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { Tooltip } from '../Tooltip';
 import { SkeletonText } from '..';
 import { useQueryState } from '../Query';
-import { useQuery, customer_Q } from '@duely/client';
+import { useQuery, customer_Q, agency_stripe_account_Q } from '@duely/client';
 import { icons } from '../icons';
 import { Link } from 'react-router-dom';
 
@@ -12,12 +12,13 @@ export type CustomerPropertyValueProps = {
 
 export function CustomerPropertyValue({ children: customer_id }: CustomerPropertyValueProps) {
   const ref = useRef<HTMLDivElement>(null);
+  let { data: stripe_account } = useQueryState(agency_stripe_account_Q);
   let { loading } = useQueryState();
   const className = 'text-sm text-gray-700 dark:text-gray-300';
 
   const { data: customer, loading: customerLoading } = useQuery(
     customer_Q,
-    { customer_id: customer_id! },
+    { customer_id: customer_id!, stripe_account_id: stripe_account?.id },
     { skip: loading || !customer_id }
   );
 

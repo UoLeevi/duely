@@ -10,16 +10,15 @@ import {
   useBreakpoints,
   Table,
   DropMenu,
-  Card,
   useOffsetPagination,
   SkeletonText,
   ColoredChip,
   icons,
   useQueryState,
-  PropertyValue
+  PropertyValue,
+  Section
 } from '@duely/react';
-import { DashboardSection } from '../components';
-import { Currency, formatCurrency, formatDate, truncate } from '@duely/util';
+import { Currency, formatCurrency, truncate } from '@duely/util';
 
 export default function DashboardOrdersHome() {
   const { data: agency, control: agencyControl } = useQueryState(current_agency_Q);
@@ -81,136 +80,133 @@ export default function DashboardOrdersHome() {
 
   return (
     <>
-      <DashboardSection title="Orders">
-        <Card className="max-w-screen-lg">
-          <Table
-            loading={loading}
-            error={error}
-            wrap={{
-              md: 8
-            }}
-            dense
-            pagination={pagination}
-            keyField="id"
-            rowLink={(order: TOrder) => ({ to: `orders/${order.id}` })}
-          >
-            <Table.Column header="Order" span={3}>
-              {(order: TOrder | null) =>
-                !order ? (
-                  <div className="flex flex-col">
-                    <SkeletonText className="text-sm" />
-                    <SkeletonText className="text-sm" ch={12} />
-                  </div>
-                ) : (
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      {truncate(order.items.map((item) => item.price.product.name).join(', '), 50)}
-                    </span>
-                    <div className="flex items-center space-x-4">
-                      <span className="font-mono text-sm text-gray-600">{order.id}</span>
-                      {order.state !== 'processed' && (
-                        <ColoredChip dense color={statusColors} text={order.state} />
-                      )}
-                    </div>
-                  </div>
-                )
-              }
-            </Table.Column>
-
-            <Table.Column header="Customer" span={3}>
-              {(order: TOrder | null) => (
-                <PropertyValue.Customer>{order?.customer.id}</PropertyValue.Customer>
-              )}
-            </Table.Column>
-
-            <Table.Column header="Type" span={2}>
-              {(order: TOrder | null) =>
-                !order ? (
-                  <div className="flex flex-col space-y-1">
-                    <ColoredChip color={{}} />
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                      <ColoredChip
-                        color={{
-                          subscription: 'blue',
-                          payment: 'green'
-                        }}
-                        text={order.stripe_checkout_session.mode!}
-                      />
-                    </span>
-                  </div>
-                )
-              }
-            </Table.Column>
-
-            <Table.Column header="Amount" span={3}>
-              {(order: TOrder | null) =>
-                !order ? (
+      <Section className="max-w-screen-lg">
+        <Section.Heading as="h2">Orders</Section.Heading>
+        <Table
+          loading={loading}
+          error={error}
+          wrap={{
+            md: 8
+          }}
+          dense
+          pagination={pagination}
+          keyField="id"
+          rowLink={(order: TOrder) => ({ to: `orders/${order.id}` })}
+        >
+          <Table.Column header="Order" span={3}>
+            {(order: TOrder | null) =>
+              !order ? (
+                <div className="flex flex-col">
+                  <SkeletonText className="text-sm" />
+                  <SkeletonText className="text-sm" ch={12} />
+                </div>
+              ) : (
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                    {truncate(order.items.map((item) => item.price.product.name).join(', '), 50)}
+                  </span>
                   <div className="flex items-center space-x-4">
-                    <div className="flex flex-col space-y-2">
-                      <SkeletonText className="text-sm" ch={8} />
-                    </div>
-                    <ColoredChip color={paymentStatusColors} />
+                    <span className="font-mono text-sm text-gray-600">{order.id}</span>
+                    {order.state !== 'processed' && (
+                      <ColoredChip dense color={statusColors} text={order.state} />
+                    )}
                   </div>
-                ) : (
-                  <div className="flex items-center space-x-4">
-                    <div className="flex flex-col space-y-2">
-                      <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                        {formatCurrency(
-                          order.stripe_checkout_session.amount_total ?? 0,
-                          order.stripe_checkout_session.currency as Currency
-                        )}
-                      </span>
-                    </div>
+                </div>
+              )
+            }
+          </Table.Column>
+
+          <Table.Column header="Customer" span={3}>
+            {(order: TOrder | null) => (
+              <PropertyValue.Customer>{order?.customer.id}</PropertyValue.Customer>
+            )}
+          </Table.Column>
+
+          <Table.Column header="Type" span={2}>
+            {(order: TOrder | null) =>
+              !order ? (
+                <div className="flex flex-col space-y-1">
+                  <ColoredChip color={{}} />
+                </div>
+              ) : (
+                <div className="flex flex-col space-y-1">
+                  <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
                     <ColoredChip
-                      color={paymentStatusColors}
-                      icon={
-                        order.stripe_checkout_session.payment_status === 'paid'
-                          ? 'check.solid'
-                          : undefined
-                      }
-                      text={order.stripe_checkout_session.payment_status ?? undefined}
+                      color={{
+                        subscription: 'blue',
+                        payment: 'green'
+                      }}
+                      text={order.stripe_checkout_session.mode!}
                     />
-                  </div>
-                )
-              }
-            </Table.Column>
+                  </span>
+                </div>
+              )
+            }
+          </Table.Column>
 
-            <Table.Column header="Order date" span={2}>
-              {(order: TOrder | null) =>
-                !order ? (
+          <Table.Column header="Amount" span={3}>
+            {(order: TOrder | null) =>
+              !order ? (
+                <div className="flex items-center space-x-4">
                   <div className="flex flex-col space-y-2">
-                    <SkeletonText className="text-xs" />
+                    <SkeletonText className="text-sm" ch={8} />
                   </div>
-                ) : (
-                  <PropertyValue.Date>{order.ordered_at}</PropertyValue.Date>
-                )
+                  <ColoredChip color={paymentStatusColors} />
+                </div>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                      {formatCurrency(
+                        order.stripe_checkout_session.amount_total ?? 0,
+                        order.stripe_checkout_session.currency as Currency
+                      )}
+                    </span>
+                  </div>
+                  <ColoredChip
+                    color={paymentStatusColors}
+                    icon={
+                      order.stripe_checkout_session.payment_status === 'paid'
+                        ? 'check.solid'
+                        : undefined
+                    }
+                    text={order.stripe_checkout_session.payment_status ?? undefined}
+                  />
+                </div>
+              )
+            }
+          </Table.Column>
+
+          <Table.Column header="Order date" span={2}>
+            {(order: TOrder | null) =>
+              !order ? (
+                <div className="flex flex-col space-y-2">
+                  <SkeletonText className="text-xs" />
+                </div>
+              ) : (
+                <PropertyValue.Date>{order.ordered_at}</PropertyValue.Date>
+              )
+            }
+          </Table.Column>
+
+          <Table.Column shrink justify="right">
+            {(order: TOrder | null) => {
+              if (!order) {
+                return <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
               }
-            </Table.Column>
 
-            <Table.Column shrink justify="right">
-              {(order: TOrder | null) => {
-                if (!order) {
-                  return (
-                    <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>
-                  );
-                }
-
-                return (
-                  <DropMenu>
-                    <DropMenu.Item icon={icons.pencil} to={`orders/${order.id}/edit`}>
-                      Edit
-                    </DropMenu.Item>
-                    <OrderActionsViewReceiptDropMenuItem order_id={order.id} />
-                  </DropMenu>
-                );
-              }}
-            </Table.Column>
-          </Table>
-        </Card>
-      </DashboardSection>
+              return (
+                <DropMenu>
+                  <DropMenu.Item icon={icons.pencil} to={`orders/${order.id}/edit`}>
+                    Edit
+                  </DropMenu.Item>
+                  <OrderActionsViewReceiptDropMenuItem order_id={order.id} />
+                </DropMenu>
+              );
+            }}
+          </Table.Column>
+        </Table>
+      </Section>
     </>
   );
 }

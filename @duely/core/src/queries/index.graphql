@@ -487,8 +487,8 @@ query Invoice($stripe_account_id: ID!, $invoice_id: ID!) {
   }
 }
 
-query Customer($customer_id: ID!) {
-  customer(id: $customer_id) {
+query Customer($customer_id: ID!, $stripe_account_id: ID) {
+  customer(id: $customer_id, stripe_account_id: $stripe_account_id) {
     ...customer
   }
 }

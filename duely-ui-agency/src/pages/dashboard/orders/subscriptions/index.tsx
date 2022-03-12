@@ -1,8 +1,8 @@
 import { Section, DropMenu, icons, LinkButton, PropertyValue, useQueryState } from '@duely/react';
-import { formatPrice, ElementType } from '@duely/util';
+import { ElementType } from '@duely/util';
 import { Table, SkeletonText, ColoredChip, useCursorPagination } from '@duely/react';
 import { useQuery, agency_subscriptions_Q, current_agency_Q } from '@duely/client';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 export function DashboardOrdersSubscriptions() {
   const agencyControl = useQueryState(current_agency_Q);

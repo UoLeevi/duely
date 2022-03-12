@@ -16,7 +16,8 @@ import {
   LinkButton,
   icons,
   useQueryState,
-  PropertyValue
+  PropertyValue,
+  Section
 } from '@duely/react';
 import { ConfirmCustomerDeletionModal } from './components';
 import { DashboardSection } from '../components';
@@ -81,67 +82,60 @@ export default function DashboardCustomersHome() {
 
   return (
     <>
-      <DashboardSection
-        title="Customers"
-        actions={
-          <div className="flex flex-row justify-end">
-            <LinkButton
-              dense
-              color="indigo"
-              to="customers/new-customer"
-              icon="plus.solid"
-              className="text-sm"
-            >
-              New customer
-            </LinkButton>
-          </div>
-        }
-      >
-        <Card className="max-w-screen-lg">
-          <Table
-            wrap={{ xs: 2 }}
-            loading={loading}
-            error={error}
-            pagination={pagination}
-            keyField="id"
-            rowLink={(customer) => ({ to: `/dashboard/customers/${customer.id}` })}
+      <Section className="max-w-screen-lg">
+        <Section.Heading as="h2">Customers</Section.Heading>
+        <Section.Action>
+          <LinkButton
+            dense
+            color="indigo"
+            to="customers/new-customer"
+            icon="plus.solid"
+            className="text-sm"
           >
-            <Table.Column header="Customer">
-              {(customer: TCustomer | null) => (
-                <PropertyValue.Customer>{customer?.id}</PropertyValue.Customer>
-              )}
-            </Table.Column>
+            Create customer
+          </LinkButton>
+        </Section.Action>
+        <Table
+          wrap={{ xs: 2 }}
+          loading={loading}
+          error={error}
+          pagination={pagination}
+          keyField="id"
+          rowLink={(customer) => ({ to: `/dashboard/customers/${customer.id}` })}
+        >
+          <Table.Column header="Customer">
+            {(customer: TCustomer | null) => (
+              <PropertyValue.Customer>{customer?.id}</PropertyValue.Customer>
+            )}
+          </Table.Column>
 
-            <Table.Column header="Email address">
-              {(customer: TCustomer | null) => (
-                <PropertyValue>{customer?.email_address}</PropertyValue>
-              )}
-            </Table.Column>
+          <Table.Column header="Email address">
+            {(customer: TCustomer | null) => (
+              <PropertyValue>{customer?.email_address}</PropertyValue>
+            )}
+          </Table.Column>
 
-            <Table.Column shrink>
-              {(customer: TCustomer | null) => {
-                if (!customer) {
-                  return (
-                    <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>
-                  );
-                }
+          <Table.Column shrink>
+            {(customer: TCustomer | null) => {
+              if (!customer) {
+                return <div className="text-gray-300 animate-pulse">{icons['dots-vertical']}</div>;
+              }
 
-                return (
-                  <DropMenu>
-                    <DropMenu.Item icon={icons.pencil} to={`customers/${customer.id}/edit`}>
-                      Edit
-                    </DropMenu.Item>
+              return (
+                <DropMenu>
+                  <DropMenu.Item icon={icons.pencil} to={`customers/${customer.id}/edit`}>
+                    Edit
+                  </DropMenu.Item>
 
-                    <DropMenu.Item icon={icons.trash} to={'?delete_customer=' + customer.id}>
-                      Delete
-                    </DropMenu.Item>
-                  </DropMenu>
-                );
-              }}
-            </Table.Column>
-          </Table>
-        </Card>
-      </DashboardSection>
+                  <DropMenu.Item icon={icons.trash} to={'?delete_customer=' + customer.id}>
+                    Delete
+                  </DropMenu.Item>
+                </DropMenu>
+              );
+            }}
+          </Table.Column>
+        </Table>
+      </Section>
 
       <ConfirmCustomerDeletionModal />
     </>
