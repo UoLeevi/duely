@@ -9,6 +9,7 @@ export type HeadingProps = {
   size?: '2xl' | 'xl' | 'lg' | 'md' | 'sm' | 'xs';
   children: React.ReactNode;
   dynamic?: boolean;
+  loading?: boolean;
 };
 
 const classNamesByHeadingLevel = {
@@ -29,11 +30,13 @@ const classNamesBySize = {
   xs: '!text-xs'
 };
 
-export function Heading({ as, size, children, dynamic }: HeadingProps) {
+export function Heading({ as, size, children, loading, dynamic }: HeadingProps) {
   const [linkRef, hashLink] = useHashScrolling<HTMLHeadingElement>();
   const H = as ?? 'h3';
-  const { loading } = useQueryState();
+  const { loading: queryLoading } = useQueryState();
   const className = createClassName(classNamesByHeadingLevel[H], size && classNamesBySize[size]);
+
+  loading ||= queryLoading;
 
   return (
     <div className="flex items-center space-x-2 group">

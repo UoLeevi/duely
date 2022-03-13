@@ -1,7 +1,6 @@
 import { agency_stripe_account_Q, invoice_Q, useQuery } from '@duely/client';
-import { Card, Form, Query, useQueryState } from '@duely/react';
+import { Card, Form, Query, Section, useQueryState } from '@duely/react';
 import { useParams } from 'react-router-dom';
-import { DashboardSection } from '../../../components';
 import { UpdateInvoiceForm } from './components';
 
 export default function DashboardPaymentsEditInvoice() {
@@ -19,19 +18,17 @@ export default function DashboardPaymentsEditInvoice() {
   return (
     <>
       <Query state={invoiceQuery} queryKey={invoiceQuery.queryDef}>
-        <DashboardSection
-          title={`Invoice ${invoice?.status === 'draft' ? '(draft)' : invoice?.number}`}
-          loading={invoiceLoading}
-        >
-          <Card>
-            <Form.Section
-              title="Basic information"
-              description="Name and email address for the invoice."
-            >
-              <UpdateInvoiceForm invoice_id={invoice_id} />
-            </Form.Section>
-          </Card>
-        </DashboardSection>
+        <Section className="max-w-screen-lg">
+          <Section.Heading loading={invoiceLoading} as="h2">{`Invoice ${
+            invoice?.status === 'draft' ? '(draft)' : invoice?.number
+          }`}</Section.Heading>
+          <Form.Section
+            title="Basic information"
+            description="Name and email address for the invoice."
+          >
+            <UpdateInvoiceForm invoice_id={invoice_id} />
+          </Form.Section>
+        </Section>
       </Query>
     </>
   );
