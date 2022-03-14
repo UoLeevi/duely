@@ -22,22 +22,29 @@ import {
   create_invoiceitem_M
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
-import { Currency, numberToMinorCurrencyAmount } from '@duely/util';
+import { Currency, noop, numberToMinorCurrencyAmount } from '@duely/util';
 
-type CreateInvoiceFormFields = {
+type CreateInvoiceFormFields1 = {
   customer_email_address: string;
   customer_name: string;
-  days_until_due: number;
-  description?: string;
+};
+type CreateInvoiceFormFields2 = {
   items: {
-    description: string;
-    unit_amount: number;
+    price?: string;
+    description?: string;
+    unit_amount?: number;
     quantity: number;
   }[];
 };
+type CreateInvoiceFormFields3 = {
+  days_until_due: number;
+};
 
 export function CreateInvoiceForm() {
-  const form = useForm<CreateInvoiceFormFields>();
+  const form1 = useForm<CreateInvoiceFormFields1>();
+  const form2 = useForm<CreateInvoiceFormFields2>();
+  const form3 = useForm<CreateInvoiceFormFields3>();
+
   const {
     infoMessage,
     setInfoMessage,
@@ -73,7 +80,7 @@ export function CreateInvoiceForm() {
     { skip: !agency || !stripe_account }
   );
 
-  const customer_email_address = form.useFormFieldValue('customer_email_address');
+  const customer_email_address = form1.useFormFieldValue('customer_email_address');
 
   const customerSuggestions = useMemo(() => {
     if (!customers) return [];
@@ -105,7 +112,7 @@ export function CreateInvoiceForm() {
     : undefined;
 
   useEffect(() => {
-    form.setValue('customer_name', customer?.name ?? '');
+    form1.setValue('customer_name', customer?.name ?? '');
   }, [customer?.id]);
 
   const state = {
@@ -115,54 +122,52 @@ export function CreateInvoiceForm() {
   };
 
   async function onSubmit({
-    customer_email_address,
-    customer_name,
     ...value
-  }: CreateInvoiceFormFields) {
-    if (!value.items?.length) {
-      setErrorMessage('Items are required.');
-      return;
-    }
+  }: CreateInvoiceFormFields3) {
+    // if (!value.items?.length) {
+    //   setErrorMessage('Items are required.');
+    //   return;
+    // }
 
-    if (!customer) {
-      const res_customer = await createCustomer({
-        stripe_account_id: stripe_account!.id,
-        email_address: customer_email_address,
-        name: customer_name
-      });
+    // if (!customer) {
+    //   const res_customer = await createCustomer({
+    //     stripe_account_id: stripe_account!.id,
+    //     email_address: customer_email_address,
+    //     name: customer_name
+    //   });
 
-      if (!res_customer?.success) {
-        setErrorMessage('Error while creating customer:' + res_customer?.message);
-        return;
-      }
+    //   if (!res_customer?.success) {
+    //     setErrorMessage('Error while creating customer:' + res_customer?.message);
+    //     return;
+    //   }
 
-      customer = res_customer.customer!;
-    }
+    //   customer = res_customer.customer!;
+    // }
 
-    console.log(value);
+    // console.log(value);
 
-    const items = value.items.map((item) => ({
-      unit_amount: numberToMinorCurrencyAmount(item.unit_amount, currency as Currency),
-      quantity: item.quantity,
-      description: item.description
-    }));
+    // const items = value.items.map((item) => ({
+    //   unit_amount: numberToMinorCurrencyAmount(item.unit_amount, currency as Currency),
+    //   quantity: item.quantity,
+    //   description: item.description
+    // }));
 
-    const res_invoice = await createInvoice({
-      stripe_account_id: stripe_account!.id,
-      customer: customer!.default_stripe_customer.id,
-      auto_advance: false,
-      collection_method: 'send_invoice',
-      days_until_due: value.days_until_due,
-      currency,
-      items
-    });
+    // const res_invoice = await createInvoice({
+    //   stripe_account_id: stripe_account!.id,
+    //   customer: customer!.default_stripe_customer.id,
+    //   auto_advance: false,
+    //   collection_method: 'send_invoice',
+    //   days_until_due: value.days_until_due,
+    //   currency,
+    //   items
+    // });
 
-    if (!res_invoice?.success) {
-      setErrorMessage('Error while creating invoice:' + res_invoice?.message);
-      return;
-    }
+    // if (!res_invoice?.success) {
+    //   setErrorMessage('Error while creating invoice:' + res_invoice?.message);
+    //   return;
+    // }
 
-    setSuccessMessage(`Invoice created successfully`);
+    // setSuccessMessage(`Invoice created successfully`);
   }
 
   if (state.success) {
@@ -197,12 +202,12 @@ export function CreateInvoiceForm() {
     );
   }
 
-  const { fields, addItem, removeItem } = form.useFieldArray('items');
+  const { fields, addItem, removeItem } = form2.useFieldArray('items');
 
   return (
     <>
       <h2 className="mb-4 text-xl font-medium">Create an invoice</h2>
-      <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
+      <Form form={form1} onSubmit={noop} className="flex flex-col space-y-3">
         <div className="pb-2">
           <Form.Label className="inline-block pb-1">Customer</Form.Label>
           <div className="flex flex-col -m-2 sm:flex-row">
@@ -229,21 +234,9 @@ export function CreateInvoiceForm() {
             </div>
           </div>
         </div>
+      </Form>
 
-        <Form.Field
-          label="Days until due"
-          className="w-24"
-          name="days_until_due"
-          suffix="days"
-          defaultValue="30"
-          registerOptions={{
-            required: true,
-            rules: [ValidationRules.isPositiveInteger],
-            inputFilter: InputFilters.integer,
-            valueConverter: ValueConverters.number
-          }}
-        />
-
+      <Form form={form2} onSubmit={noop} className="flex flex-col space-y-3">
         <div className="pb-2">
           <Form.Label>Items</Form.Label>
           <div className="flex flex-col pb-3 border-b">
@@ -333,6 +326,22 @@ export function CreateInvoiceForm() {
             </div>
           </div>
         </div>
+      </Form>
+
+      <Form form={form3} onSubmit={onSubmit} className="flex flex-col space-y-3">
+        <Form.Field
+          label="Days until due"
+          className="w-24"
+          name="days_until_due"
+          suffix="days"
+          defaultValue="30"
+          registerOptions={{
+            required: true,
+            rules: [ValidationRules.isPositiveInteger],
+            inputFilter: InputFilters.integer,
+            valueConverter: ValueConverters.number
+          }}
+        />
 
         <Form.Field label="Message to customer" name="description" type="textarea" rows={6} />
 
