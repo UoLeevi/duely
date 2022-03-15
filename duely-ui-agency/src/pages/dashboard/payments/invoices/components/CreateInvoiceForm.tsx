@@ -19,7 +19,8 @@ import {
   customers_Q,
   create_invoice_M,
   create_customer_M,
-  create_invoiceitem_M
+  create_invoiceitem_M,
+  agency_stripe_account_invoiceitems_Q
 } from '@duely/client';
 import { useEffect, useMemo } from 'react';
 import { Currency, noop, numberToMinorCurrencyAmount } from '@duely/util';
@@ -28,13 +29,11 @@ type CreateInvoiceFormFields1 = {
   customer_email_address: string;
   customer_name: string;
 };
-type CreateInvoiceFormFields2 = {
-  items: {
-    price?: string;
-    description?: string;
-    unit_amount?: number;
-    quantity: number;
-  }[];
+type CreateInvoiceItemFormFields = {
+  price?: string;
+  description?: string;
+  unit_amount?: number;
+  quantity: number;
 };
 type CreateInvoiceFormFields3 = {
   days_until_due: number;
@@ -42,7 +41,7 @@ type CreateInvoiceFormFields3 = {
 
 export function CreateInvoiceForm() {
   const form1 = useForm<CreateInvoiceFormFields1>();
-  const form2 = useForm<CreateInvoiceFormFields2>();
+  const form_createInvoiceItem = useForm<CreateInvoiceItemFormFields>();
   const form3 = useForm<CreateInvoiceFormFields3>();
 
   const {
@@ -55,6 +54,7 @@ export function CreateInvoiceForm() {
   } = useFormMessages();
   const [createCustomer, stateCustomer] = useMutation(create_customer_M);
   const [createInvoice, stateInvoice] = useMutation(create_invoice_M);
+  const [createInvoiceItem, stateInvoiceItem] = useMutation(create_invoiceitem_M);
   const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
     agency_stripe_account_Q,
@@ -111,6 +111,12 @@ export function CreateInvoiceForm() {
       )
     : undefined;
 
+  const { data: invoiceitems, loading: invoiceitemsLoading } = useQuery(
+    agency_stripe_account_invoiceitems_Q,
+    { agency_id: agency?.id!, customer: customer?.id },
+    { skip: !agency || customersLoading || !customer?.id }
+  );
+
   useEffect(() => {
     form1.setValue('customer_name', customer?.name ?? '');
   }, [customer?.id]);
@@ -121,37 +127,35 @@ export function CreateInvoiceForm() {
     success: stateInvoice.data?.success
   };
 
-  async function onSubmit({
-    ...value
-  }: CreateInvoiceFormFields3) {
+  async function onSubmitCreateInvoiceItem({
+    price,
+    description,
+    unit_amount,
+    quantity
+  }: CreateInvoiceItemFormFields) {
+    console.log(price, description, unit_amount, quantity);
     // if (!value.items?.length) {
     //   setErrorMessage('Items are required.');
     //   return;
     // }
-
     // if (!customer) {
     //   const res_customer = await createCustomer({
     //     stripe_account_id: stripe_account!.id,
     //     email_address: customer_email_address,
     //     name: customer_name
     //   });
-
     //   if (!res_customer?.success) {
     //     setErrorMessage('Error while creating customer:' + res_customer?.message);
     //     return;
     //   }
-
     //   customer = res_customer.customer!;
     // }
-
     // console.log(value);
-
     // const items = value.items.map((item) => ({
     //   unit_amount: numberToMinorCurrencyAmount(item.unit_amount, currency as Currency),
     //   quantity: item.quantity,
     //   description: item.description
     // }));
-
     // const res_invoice = await createInvoice({
     //   stripe_account_id: stripe_account!.id,
     //   customer: customer!.default_stripe_customer.id,
@@ -161,12 +165,49 @@ export function CreateInvoiceForm() {
     //   currency,
     //   items
     // });
-
     // if (!res_invoice?.success) {
     //   setErrorMessage('Error while creating invoice:' + res_invoice?.message);
     //   return;
     // }
+    // setSuccessMessage(`Invoice created successfully`);
+  }
 
+  async function onSubmit({ ...value }: CreateInvoiceFormFields3) {
+    // if (!value.items?.length) {
+    //   setErrorMessage('Items are required.');
+    //   return;
+    // }
+    // if (!customer) {
+    //   const res_customer = await createCustomer({
+    //     stripe_account_id: stripe_account!.id,
+    //     email_address: customer_email_address,
+    //     name: customer_name
+    //   });
+    //   if (!res_customer?.success) {
+    //     setErrorMessage('Error while creating customer:' + res_customer?.message);
+    //     return;
+    //   }
+    //   customer = res_customer.customer!;
+    // }
+    // console.log(value);
+    // const items = value.items.map((item) => ({
+    //   unit_amount: numberToMinorCurrencyAmount(item.unit_amount, currency as Currency),
+    //   quantity: item.quantity,
+    //   description: item.description
+    // }));
+    // const res_invoice = await createInvoice({
+    //   stripe_account_id: stripe_account!.id,
+    //   customer: customer!.default_stripe_customer.id,
+    //   auto_advance: false,
+    //   collection_method: 'send_invoice',
+    //   days_until_due: value.days_until_due,
+    //   currency,
+    //   items
+    // });
+    // if (!res_invoice?.success) {
+    //   setErrorMessage('Error while creating invoice:' + res_invoice?.message);
+    //   return;
+    // }
     // setSuccessMessage(`Invoice created successfully`);
   }
 
@@ -202,8 +243,6 @@ export function CreateInvoiceForm() {
     );
   }
 
-  const { fields, addItem, removeItem } = form2.useFieldArray('items');
-
   return (
     <>
       <h2 className="mb-4 text-xl font-medium">Create an invoice</h2>
@@ -236,11 +275,15 @@ export function CreateInvoiceForm() {
         </div>
       </Form>
 
-      <Form form={form2} onSubmit={noop} className="flex flex-col space-y-3">
+      <Form
+        form={form_createInvoiceItem}
+        onSubmit={onSubmitCreateInvoiceItem}
+        className="flex flex-col space-y-3"
+      >
         <div className="pb-2">
           <Form.Label>Items</Form.Label>
           <div className="flex flex-col pb-3 border-b">
-            <Table items={fields} keyField="key" dense>
+            <Table items={invoiceitems ?? []} keyField="id" dense>
               <Table.Column header="Description" span={6} justify="stretch">
                 {(field: FieldArrayItem | null, i) => {
                   if (!field) return null;
