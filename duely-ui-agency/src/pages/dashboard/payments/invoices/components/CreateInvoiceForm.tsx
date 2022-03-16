@@ -5,7 +5,6 @@ import {
   Button,
   Table,
   InputFilters,
-  FieldArrayItem,
   LinkButton,
   useFormMessages,
   Section,
@@ -22,8 +21,8 @@ import {
   create_invoiceitem_M,
   agency_stripe_account_invoiceitems_Q
 } from '@duely/client';
-import { useEffect, useMemo } from 'react';
-import { Currency, noop, numberToMinorCurrencyAmount } from '@duely/util';
+import { useEffect, useMemo, useState } from 'react';
+import { Currency, ElementType, hasProperty, noop, numberToMinorCurrencyAmount } from '@duely/util';
 
 type CreateInvoiceFormFields1 = {
   customer_email_address: string;
@@ -43,6 +42,7 @@ export function CreateInvoiceForm() {
   const form1 = useForm<CreateInvoiceFormFields1>();
   const form_createInvoiceItem = useForm<CreateInvoiceItemFormFields>();
   const form3 = useForm<CreateInvoiceFormFields3>();
+  const [newItemType, setNewItemType] = useState<'price' | 'one_time'>();
 
   const {
     infoMessage,
@@ -116,6 +116,18 @@ export function CreateInvoiceForm() {
     { agency_id: agency?.id!, customer: customer?.id },
     { skip: !agency || customersLoading || !customer?.id }
   );
+
+  type TInvoiceItem = ElementType<typeof invoiceitems>;
+
+  type TNewInvoiceItem = {};
+
+  const newInvoiceItem = {};
+
+  const items: (TInvoiceItem | TNewInvoiceItem)[] = [...(invoiceitems ?? [])];
+
+  if (newInvoiceItem) {
+    items.push(newInvoiceItem);
+  }
 
   useEffect(() => {
     form1.setValue('customer_name', customer?.name ?? '');
@@ -283,16 +295,25 @@ export function CreateInvoiceForm() {
         <div className="pb-2">
           <Form.Label>Items</Form.Label>
           <div className="flex flex-col pb-3 border-b">
-            <Table items={invoiceitems ?? []} keyField="id" dense>
+            <Table
+              items={items}
+              keyField={(item) => (hasProperty(item, 'id') ? item.id : 'new')}
+              dense
+            >
               <Table.Column header="Description" span={6} justify="stretch">
-                {(field: FieldArrayItem | null, i) => {
-                  if (!field) return null;
+                {(item: TInvoiceItem | TNewInvoiceItem | null, i) => {
+                  if (!item) return null;
+
+                  if (hasProperty(item, 'id')) {
+                    return item.description;
+                  }
+
                   return (
                     <Form.Field
                       dense
                       tooltip
                       type="text"
-                      name={field.getName('description')}
+                      name="description"
                       placeholder={`Item ${i + 1}`}
                       registerOptions={{ required: true }}
                     />
@@ -301,13 +322,13 @@ export function CreateInvoiceForm() {
               </Table.Column>
 
               <Table.Column header="Unit amount" span={3}>
-                {(field: FieldArrayItem | null, i) => {
-                  if (!field) return null;
+                {(item: TInvoiceItem | TNewInvoiceItem | null, i) => {
+                  if (!item) return null;
                   return (
                     <Form.Field
                       dense
                       tooltip
-                      name={field.getName('unit_amount')}
+                      name="unit_amount"
                       type="text"
                       inputMode="numeric"
                       prefix={currencyPrefix}
@@ -323,13 +344,13 @@ export function CreateInvoiceForm() {
               </Table.Column>
 
               <Table.Column header="Quantity" span={3}>
-                {(field: FieldArrayItem | null, i) => {
-                  if (!field) return null;
+                {(item: TInvoiceItem | TNewInvoiceItem | null, i) => {
+                  if (!item) return null;
                   return (
                     <Form.Field
                       dense
                       tooltip
-                      name={field.getName('quantity')}
+                      name="quantity"
                       type="text"
                       inputMode="numeric"
                       prefix={<span className="pr-1">x</span>}
@@ -346,8 +367,8 @@ export function CreateInvoiceForm() {
               </Table.Column>
 
               <Table.Column header="" span={2}>
-                {(field: FieldArrayItem | null, i) => {
-                  if (!field) return null;
+                {(item: TInvoiceItem | TNewInvoiceItem | null, i) => {
+                  if (!item) return null;
                   return (
                     <Button
                       type="button"
