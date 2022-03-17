@@ -7,7 +7,6 @@ import {
   InputFilters,
   LinkButton,
   useFormMessages,
-  Section,
   ValueConverters
 } from '@duely/react';
 import {
@@ -22,7 +21,7 @@ import {
   agency_stripe_account_invoiceitems_Q
 } from '@duely/client';
 import { useEffect, useMemo, useState } from 'react';
-import { Currency, ElementType, hasProperty, noop, numberToMinorCurrencyAmount } from '@duely/util';
+import { ElementType, hasProperty, noop } from '@duely/util';
 
 type CreateInvoiceFormFields1 = {
   customer_email_address: string;
