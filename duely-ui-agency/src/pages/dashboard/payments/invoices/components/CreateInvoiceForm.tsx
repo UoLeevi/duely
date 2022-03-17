@@ -125,7 +125,7 @@ export function CreateInvoiceForm() {
 
   const items: (TInvoiceItem | TNewInvoiceItem)[] = [...(invoiceitems ?? [])];
 
-  if (newInvoiceItem) {
+  if (newItemType) {
     items.push(newInvoiceItem);
   }
 
@@ -376,7 +376,7 @@ export function CreateInvoiceForm() {
                       dense
                       shrink
                       icon="trash"
-                      onClick={() => removeItem(i)}
+                      onClick={() => setNewItemType(undefined)}
                     />
                   );
                 }}
@@ -384,8 +384,14 @@ export function CreateInvoiceForm() {
             </Table>
 
             <div className="flex mt-1">
-              <Button type="button" className="text-sm" dense icon="plus.solid" onClick={addItem}>
-                Add item
+              <Button
+                type="button"
+                className="text-sm"
+                dense
+                icon="plus.solid"
+                onClick={() => setNewItemType('one_time')}
+              >
+                Add one-time item
               </Button>
             </div>
           </div>
