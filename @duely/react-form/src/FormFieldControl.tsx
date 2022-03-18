@@ -191,7 +191,7 @@ export class FormFieldControl<T> {
     | undefined
     | {
         name: string;
-        ref(el: FormFieldHTMLElement): void;
+        ref(el: FormFieldHTMLElement | null): void;
       };
 
   #value: T | undefined;
@@ -230,13 +230,13 @@ export class FormFieldControl<T> {
 
   get props(): {
     name: string;
-    ref(el: FormFieldHTMLElement): void;
+    ref(el: FormFieldHTMLElement | null): void;
   } {
     if (!this.#props) {
       this.#props = {
         name: this.#name,
         // see: https://reactjs.org/docs/refs-and-the-dom.html#callback-refs
-        ref: (element: FormFieldHTMLElement) => {
+        ref: (element: FormFieldHTMLElement | null) => {
           if (element) {
             this.#attachElement(element);
           } else {

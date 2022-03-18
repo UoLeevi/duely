@@ -22,7 +22,7 @@ export function useFormContext() {
 
 type FormProps<TFormFields extends Record<string, any> = Record<string, any>> = {
   form: UseFormReturn<TFormFields>;
-  onSubmit: (data: TFormFields, event?: React.BaseSyntheticEvent) => any | Promise<any>;
+  onSubmit: (data: TFormFields, event?: SubmitEvent) => any | Promise<any>;
 } & Omit<
   React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>,
   'onSubmit'
@@ -34,14 +34,14 @@ function FormRoot<TFormFields extends Record<string, any> = Record<string, any>>
   children,
   ...props
 }: FormProps<TFormFields>) {
-  const onReset = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+  const onReset = useCallback((e: Event) => {
     e.preventDefault();
     form.reset();
   }, []);
 
   return (
     <FormContext.Provider value={form as any}>
-      <form onSubmit={form.handleSubmit(onSubmit as any)} onReset={onReset} {...props}>
+      <form {...form.register({ onSubmit, onReset })} {...props}>
         {children}
       </form>
     </FormContext.Provider>

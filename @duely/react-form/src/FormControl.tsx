@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRerender } from './hooks/useRerender';
-import { FormFieldControl, FormFieldRegisterOptions } from './FormFieldControl';
+import {
+  FormFieldControl,
+  FormFieldHTMLElement,
+  FormFieldRegisterOptions
+} from './FormFieldControl';
 import { isString, push, randomKey, remove, removeAt } from '@duely/util';
 
 export type FieldArrayItem<TItem = undefined> = {
@@ -9,7 +13,13 @@ export type FieldArrayItem<TItem = undefined> = {
   getName: (name: string) => string;
 };
 
+export type FormRegisterOptions<TFormFields extends Record<string, any> = Record<string, any>> = {
+  onReset: (e: Event) => void;
+  onSubmit: (data: TFormFields, event?: SubmitEvent) => any | Promise<any>;
+};
+
 export class FormControl<TFormFields extends Record<string, any> = Record<string, any>> {
+  #element?: HTMLFormElement;
   #isSubmitting = false;
   #isDirty = false;
   #valueChanged = false;
@@ -25,6 +35,12 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     ((defer?: boolean) => void)[]
   >();
   #updateCounter = 0;
+  #options?: FormRegisterOptions<TFormFields>;
+  #props:
+    | undefined
+    | {
+        ref(el: HTMLFormElement): void;
+      };
   #defaultValues: Partial<TFormFields>;
   #fields: Partial<{
     [TName in keyof TFormFields]: FormFieldControl<TFormFields[TName]>;
@@ -41,6 +57,25 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
 
   constructor(options?: { defaultValues?: Partial<TFormFields> }) {
     this.#defaultValues = options?.defaultValues ?? {};
+  }
+
+  get props(): {
+    ref(el: HTMLFormElement): void;
+  } {
+    if (!this.#props) {
+      this.#props = {
+        // see: https://reactjs.org/docs/refs-and-the-dom.html#callback-refs
+        ref: (element: HTMLFormElement) => {
+          if (element) {
+            this.#attachElement(element);
+          } else {
+            this.#detachElement();
+          }
+        }
+      };
+    }
+
+    return this.#props;
   }
 
   get value(): Partial<TFormFields> {
@@ -144,6 +179,45 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     }
   }
 
+  async #onSubmit(event: SubmitEvent) {
+    event?.preventDefault();
+
+    for (const field of Object.values(this.#fields)) {
+      if (!field.validate()) {
+        field.focus();
+        return;
+      }
+    }
+
+    const data = this.value as TFormFields;
+
+    this.startUpdate();
+    this.#isSubmitting = true;
+    this.#stateChanged = true;
+    this.endUpdate();
+
+    await this.#options?.onSubmit(data, event);
+
+    this.startUpdate();
+    this.#isSubmitting = false;
+    this.#isDirty = false;
+    Object.values(this.#fields).forEach((field) => (field.isDirty = false));
+    this.#stateChanged = true;
+    this.endUpdate();
+  }
+
+  async #onReset(event: Event) {
+    await this.#options?.onReset(event);
+  }
+
+  #attachElement(element: HTMLFormElement) {
+    this.#element = element;
+    element.addEventListener('submit', (event) => this.#onSubmit(event));
+    element.addEventListener('reset', (event) => this.#onReset(event));
+  }
+
+  #detachElement() {}
+
   #getOrAddField<TName extends string & keyof TFormFields>(
     name: TName,
     options?: FormFieldRegisterOptions<TFormFields[TName]>
@@ -156,7 +230,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     }
 
     if (field === undefined) {
-      field = new FormFieldControl(name, this);
+      field = new FormFieldControl(name, this as any);
       this.#fields[name] = field;
       field.subscribeToValueChanged(() => {
         this.startUpdate();
@@ -261,12 +335,27 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     };
   }
 
+  register(options: FormRegisterOptions<TFormFields>): {
+    ref(el: HTMLFormElement): void;
+  };
   register<TName extends string & keyof TFormFields>(
     name: TName,
     options?: FormFieldRegisterOptions<TFormFields[TName]>
+  ): {
+    name: string;
+    ref(el: FormFieldHTMLElement | null): void;
+  };
+  register<TName extends string & keyof TFormFields>(
+    nameOrOptions: TName | FormRegisterOptions<TFormFields>,
+    options?: FormFieldRegisterOptions<TFormFields[TName]>
   ) {
-    const field = this.#getOrAddField(name, options);
-    return field.props;
+    if (typeof nameOrOptions === 'string') {
+      const field = this.#getOrAddField(nameOrOptions, options);
+      return field.props;
+    } else {
+      this.#options = nameOrOptions;
+      return this.props;
+    }
   }
 
   unregister<TName extends string & keyof TFormFields>(name: TName) {
@@ -277,6 +366,10 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
       this.#stateChanged = true;
       this.endUpdate();
     }
+  }
+
+  requestSubmit() {
+    this.#element?.requestSubmit();
   }
 
   useFormState() {
@@ -431,38 +524,6 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     Object.entries(this.#fields).forEach(([name, field]) => field.reset(defaultValues?.[name]));
     this.isDirty = false;
     this.endUpdate();
-  }
-
-  handleSubmit(
-    onSubmit: (data: TFormFields, event?: React.BaseSyntheticEvent) => any | Promise<any>
-  ) {
-    const control = this;
-    return async (event?: React.BaseSyntheticEvent) => {
-      event?.preventDefault();
-
-      for (const field of Object.values(control.#fields)) {
-        if (!field.validate()) {
-          field.focus();
-          return;
-        }
-      }
-
-      const data = this.value as TFormFields;
-
-      this.startUpdate();
-      this.#isSubmitting = true;
-      this.#stateChanged = true;
-      this.endUpdate();
-
-      await onSubmit(data, event);
-
-      this.startUpdate();
-      this.#isSubmitting = false;
-      this.#isDirty = false;
-      Object.values(this.#fields).forEach((field) => (field.isDirty = false));
-      this.#stateChanged = true;
-      this.endUpdate();
-    };
   }
 
   setValue<TName extends string & keyof TFormFields>(
