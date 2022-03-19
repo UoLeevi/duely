@@ -4,7 +4,9 @@ import { FormFieldHTMLElement, FormFieldRegisterOptions } from '../FormFieldCont
 
 export type UseFormReturn<TFormFields extends Record<string, any> = Record<string, any>> = {
   control: FormControl<TFormFields>;
+  id: string;
   register(options: FormRegisterOptions<TFormFields>): {
+    id: string;
     ref(el: HTMLFormElement): void;
   };
   register<TName extends string & keyof TFormFields>(
@@ -68,6 +70,7 @@ export function useForm<TFormFields extends Record<string, any> = Record<string,
   return useMemo(
     () => ({
       control,
+      id: control.id,
       register: control.register.bind(control),
       unregister: control.unregister.bind(control),
       useFormFieldState: control.useFormFieldState.bind(control),

@@ -47,6 +47,7 @@ export type ValueConverter<T> = {
 };
 
 export type FormFieldRegisterOptions<T> = {
+  ref?: React.MutableRefObject<FormFieldHTMLElement | undefined>;
   required?: boolean;
   defaultValue?: T;
   rules?: ((value: FormFieldRawValueGet, element: FormFieldHTMLElement) => string | undefined)[];
@@ -373,6 +374,10 @@ export class FormFieldControl<T> {
     ++this.#refCount;
     this.#element = element;
 
+    if (this.#options.ref) {
+      this.#options.ref.current = element;
+    }
+
     if (element.type === 'radio') {
       const control = element.form?.elements[this.#name as keyof HTMLFormControlsCollection];
       if (!control) return undefined;
@@ -411,6 +416,10 @@ export class FormFieldControl<T> {
     if (--this.#refCount === 0) {
       if (this.#element) {
         this.#value = this.#getElementValue();
+      }
+
+      if (this.#options.ref) {
+        this.#options.ref = undefined;
       }
 
       this.#form.unregister(this.#name);

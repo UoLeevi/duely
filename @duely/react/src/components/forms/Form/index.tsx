@@ -1,4 +1,5 @@
-import React, { useCallback, createContext, useContext } from 'react';
+import React, { useCallback, createContext, useContext, useRef } from 'react';
+import { useFocus } from '../../../hooks';
 import { FormButton } from '../FormButton';
 import { FormField } from '../FormField';
 import { FormInfoMessage } from '../FormInfoMessage';
@@ -23,6 +24,7 @@ export function useFormContext() {
 type FormProps<TFormFields extends Record<string, any> = Record<string, any>> = {
   form: UseFormReturn<TFormFields>;
   onSubmit: (data: TFormFields, event?: SubmitEvent) => any | Promise<any>;
+  disabled?: boolean;
 } & Omit<
   React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>,
   'onSubmit'
@@ -39,9 +41,18 @@ function FormRoot<TFormFields extends Record<string, any> = Record<string, any>>
     form.reset();
   }, []);
 
+  const ref = useRef<HTMLFormElement>();
+  const focusControl = useFocus(ref, { trap: true });
+
+  console.log(`${form.id} focus: ${focusControl.focused}`);
+
   return (
     <FormContext.Provider value={form as any}>
-      <form {...form.register({ onSubmit, onReset })} {...props}>
+      <form
+        {...form.register({ onSubmit, onReset, ref })}
+        {...props}
+        style={focusControl.focused ? { opacity: 1 } : { opacity: 0.3, pointerEvents: 'none' }}
+      >
         {children}
       </form>
     </FormContext.Provider>

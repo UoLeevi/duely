@@ -14,11 +14,13 @@ export type FieldArrayItem<TItem = undefined> = {
 };
 
 export type FormRegisterOptions<TFormFields extends Record<string, any> = Record<string, any>> = {
+  ref?: React.MutableRefObject<HTMLFormElement | undefined>;
   onReset: (e: Event) => void;
   onSubmit: (data: TFormFields, event?: SubmitEvent) => any | Promise<any>;
 };
 
 export class FormControl<TFormFields extends Record<string, any> = Record<string, any>> {
+  #id = 'form-' + randomKey();
   #element?: HTMLFormElement;
   #isSubmitting = false;
   #isDirty = false;
@@ -39,6 +41,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
   #props:
     | undefined
     | {
+        id: string;
         ref(el: HTMLFormElement): void;
       };
   #defaultValues: Partial<TFormFields>;
@@ -64,6 +67,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
   } {
     if (!this.#props) {
       this.#props = {
+        id: this.#id,
         // see: https://reactjs.org/docs/refs-and-the-dom.html#callback-refs
         ref: (element: HTMLFormElement) => {
           if (element) {
@@ -76,6 +80,10 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     }
 
     return this.#props;
+  }
+
+  get id() {
+    return this.#id;
   }
 
   get value(): Partial<TFormFields> {
@@ -212,11 +220,20 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
 
   #attachElement(element: HTMLFormElement) {
     this.#element = element;
+
+    if (this.#options?.ref) {
+      this.#options.ref.current = element;
+    }
+
     element.addEventListener('submit', (event) => this.#onSubmit(event));
     element.addEventListener('reset', (event) => this.#onReset(event));
   }
 
-  #detachElement() {}
+  #detachElement() {
+    if (this.#options?.ref) {
+      this.#options.ref.current = undefined;
+    }
+  }
 
   #getOrAddField<TName extends string & keyof TFormFields>(
     name: TName,
@@ -336,6 +353,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
   }
 
   register(options: FormRegisterOptions<TFormFields>): {
+    id: string;
     ref(el: HTMLFormElement): void;
   };
   register<TName extends string & keyof TFormFields>(

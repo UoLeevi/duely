@@ -236,7 +236,7 @@ function SidebarLinkItem({ text, to, exact, className }: SidebarLinkItemProps) {
   className = createClassName(
     className,
     match ? 'text-indigo-600 border-indigo-600' : 'focus-visible:text-gray-800 hover:text-gray-800 text-gray-600 border-transparent',
-    'flex flex-col justify-center md:border-l-2 md:justify-start md:flex-row items-center focus:outline-none space-y-1 md:space-y-0 md:space-x-3 text-xs md:text-sm font-semibold px-2 md:px-4 py-0.5 md:-ml-px md:-mt-px my-0.5'
+    'flex flex-col justify-center md:border-l-2 md:justify-start md:flex-row items-center focus:outline-none space-y-1 md:space-y-0 md:space-x-3 text-xs md:text-sm font-semibold px-2 md:px-4 py-0.5 md:-ml-px md:-mt-px'
   );
   return (
     <Link to={to} className={className}>
