@@ -854,16 +854,6 @@ body, #root {
   margin-right: auto;
 }
 
-.my-0\.5 {
-  margin-top: 0.125rem;
-  margin-bottom: 0.125rem;
-}
-
-.my-0 {
-  margin-top: 0px;
-  margin-bottom: 0px;
-}
-
 .my-auto {
   margin-top: auto;
   margin-bottom: auto;

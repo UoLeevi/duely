@@ -1,5 +1,6 @@
 import type { Override } from '@duely/util';
 import React from 'react';
+import { DropMenu } from '../../../DropMenu';
 import { useFormContext } from '../../Form';
 import { FormFieldElementProps } from './FormFieldElementProps';
 
@@ -18,6 +19,7 @@ export type FormFieldDefaultElementProps<
           element?: string;
         }
     )[];
+    suggestionType?: 'datalist' | 'custom';
   }
 >;
 
@@ -31,6 +33,7 @@ export function FormFieldDefaultElement<
   prefix,
   suffix,
   suggestions,
+  suggestionType,
   type,
   ...props
 }: FormFieldDefaultElementProps<TName, TFormFields>) {
@@ -38,7 +41,9 @@ export function FormFieldDefaultElement<
   const fieldState = form.useFormFieldState(name);
   const hasError = !!fieldState?.error;
 
-  if (suggestions) {
+  suggestionType ??= 'custom';
+
+  if (suggestions && suggestionType === 'datalist') {
     props.list = `${name}--suggestions`;
   }
 
@@ -63,7 +68,7 @@ export function FormFieldDefaultElement<
         {suffix && <span className="pr-3 text-gray-500 whitespace-nowrap">{suffix}</span>}
       </div>
 
-      {suggestions && suggestions.length > 0 && (
+      {suggestionType === 'datalist' && suggestions && suggestions.length > 0 && (
         <datalist id={`${name}--suggestions`}>
           {suggestions.map((suggestion) => {
             suggestion =
@@ -80,6 +85,25 @@ export function FormFieldDefaultElement<
             );
           })}
         </datalist>
+      )}
+
+      {suggestionType === 'custom' && suggestions && suggestions.length > 0 && (
+        <DropMenu open no-button full-width>
+          {suggestions.map((suggestion) => {
+            suggestion =
+              typeof suggestion === 'object'
+                ? suggestion
+                : { value: suggestion, element: undefined };
+
+            const value = suggestion.value;
+
+            return (
+              <DropMenu.Item key={suggestion.value} onClick={() => form.setValue(name, value)}>
+                {suggestion.element ?? suggestion.value}
+              </DropMenu.Item>
+            );
+          })}
+        </DropMenu>
       )}
     </>
   );

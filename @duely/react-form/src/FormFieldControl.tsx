@@ -219,14 +219,12 @@ export class FormFieldControl<T> {
     return true;
   }
 
+  get #shouldValidateOnChange() {
+    return this.#element && elementTypesWhichShouldValidateOnChange.includes(this.#element.type);
+  }
+
   get #shouldValidate() {
-    if (this.#isTouched) return true;
-
-    if (this.#element && elementTypesWhichShouldValidateOnChange.includes(this.#element.type)) {
-      return true;
-    }
-
-    return false;
+    return this.#isTouched || this.#shouldValidateOnChange;
   }
 
   get props(): {
@@ -358,7 +356,7 @@ export class FormFieldControl<T> {
     this.startUpdate();
     this.isDirty = true;
     this.#valueChanged = true;
-    if (this.#shouldValidate) this.validate();
+    if (this.#shouldValidateOnChange) this.validate();
     this.endUpdate();
   }
 

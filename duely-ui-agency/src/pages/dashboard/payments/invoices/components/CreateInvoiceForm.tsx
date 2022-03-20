@@ -7,7 +7,9 @@ import {
   InputFilters,
   LinkButton,
   useFormMessages,
-  ValueConverters
+  ValueConverters,
+  useQueryState,
+  useFormContext
 } from '@duely/react';
 import {
   useQuery,
@@ -37,33 +39,11 @@ type CreateInvoiceFormFields3 = {
   days_until_due: number;
 };
 
-export function CreateInvoiceForm() {
-  const form1 = useForm<CreateInvoiceFormFields1>();
-  const form_createInvoiceItem = useForm<CreateInvoiceItemFormFields>();
-  const form3 = useForm<CreateInvoiceFormFields3>();
-  const [newItemType, setNewItemType] = useState<'price' | 'one_time'>();
-
-  const {
-    infoMessage,
-    setInfoMessage,
-    successMessage,
-    setSuccessMessage,
-    errorMessage,
-    setErrorMessage
-  } = useFormMessages();
-  const [createCustomer, stateCustomer] = useMutation(create_customer_M);
-  const [createInvoice, stateInvoice] = useMutation(create_invoice_M);
-  const [createInvoiceItem, stateInvoiceItem] = useMutation(create_invoiceitem_M);
-  const { data: agency, loading: agencyLoading } = useQuery(current_agency_Q);
-  const { data: stripe_account, loading: stripe_accountLoading } = useQuery(
-    agency_stripe_account_Q,
-    { agency_id: agency!.id },
-    { skip: !agency }
-  );
-
-  const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency;
-
-  const currencyPrefix: React.ReactChild = <span className="pr-1">{currency?.toUpperCase()}</span>;
+function CustomerFormField() {
+  const form = useFormContext<{ customer_email_address: string }>();
+  const { data: agency, loading: agencyLoading } = useQueryState(current_agency_Q);
+  const { data: stripe_account, loading: stripe_accountLoading } =
+    useQueryState(agency_stripe_account_Q);
 
   const {
     data: customers,
@@ -79,7 +59,7 @@ export function CreateInvoiceForm() {
     { skip: !agency || !stripe_account }
   );
 
-  const customer_email_address = form1.useFormFieldValue('customer_email_address');
+  const customer_email_address = form.useFormFieldValue('customer_email_address');
 
   const customerSuggestions = useMemo(() => {
     if (!customers) return [];
@@ -104,6 +84,60 @@ export function CreateInvoiceForm() {
     return customerSuggestions.map((customer) => customer.email_address);
   }, [customer_email_address, customers]);
 
+  return (
+    <Form.Field
+      className="max-w-xl"
+      name="customer_email_address"
+      suggestions={customerSuggestions}
+      registerOptions={{
+        required: true,
+        rules: [ValidationRules.isEmailAddress]
+      }}
+    />
+  );
+}
+
+export function CreateInvoiceForm() {
+  const form1 = useForm<CreateInvoiceFormFields1>();
+  const form_createInvoiceItem = useForm<CreateInvoiceItemFormFields>();
+  const form3 = useForm<CreateInvoiceFormFields3>();
+  const [newItemType, setNewItemType] = useState<'price' | 'one_time'>();
+
+  const {
+    infoMessage,
+    setInfoMessage,
+    successMessage,
+    setSuccessMessage,
+    errorMessage,
+    setErrorMessage
+  } = useFormMessages();
+  const [createCustomer, stateCustomer] = useMutation(create_customer_M);
+  const [createInvoice, stateInvoice] = useMutation(create_invoice_M);
+  const [createInvoiceItem, stateInvoiceItem] = useMutation(create_invoiceitem_M);
+  const { data: agency, loading: agencyLoading } = useQueryState(current_agency_Q);
+  const { data: stripe_account, loading: stripe_accountLoading } =
+    useQueryState(agency_stripe_account_Q);
+
+  const currency = agency?.default_pricing_currency ?? stripe_account?.default_currency;
+
+  const currencyPrefix: React.ReactChild = <span className="pr-1">{currency?.toUpperCase()}</span>;
+
+  const {
+    data: customers,
+    loading: customersLoading,
+    error: customersError
+  } = useQuery(
+    customers_Q,
+    {
+      filter: {
+        stripe_account_id: stripe_account?.id
+      }
+    },
+    { skip: !agency || !stripe_account }
+  );
+
+  const customer_email_address = form1.useFormFieldValue('customer_email_address');
+
   let customer = customer_email_address
     ? customers?.find(
         (customer) => customer.email_address.toLowerCase() === customer_email_address.toLowerCase()
@@ -112,8 +146,8 @@ export function CreateInvoiceForm() {
 
   const { data: invoiceitems, loading: invoiceitemsLoading } = useQuery(
     agency_stripe_account_invoiceitems_Q,
-    { agency_id: agency?.id!, customer: customer?.id },
-    { skip: !agency || customersLoading || !customer?.id }
+    { agency_id: agency?.id!, customer: customer?.default_stripe_customer?.id },
+    { skip: !agency || customersLoading || !customer?.default_stripe_customer?.id }
   );
 
   type TInvoiceItem = ElementType<typeof invoiceitems>;
@@ -260,29 +294,7 @@ export function CreateInvoiceForm() {
       <Form form={form1} onSubmit={noop} className="flex flex-col space-y-3">
         <div className="pb-2">
           <Form.Label className="inline-block pb-1">Customer</Form.Label>
-          <div className="flex flex-col -m-2 sm:flex-row">
-            <div className="flex-1 p-2">
-              <Form.Field
-                label="Email address"
-                className="max-w-xl"
-                name="customer_email_address"
-                suggestions={customerSuggestions}
-                registerOptions={{
-                  required: true,
-                  rules: [ValidationRules.isEmailAddress]
-                }}
-              />
-            </div>
-
-            <div className="flex-1 p-2">
-              <Form.Field
-                label="Name"
-                className="max-w-xl"
-                name="customer_name"
-                readOnly={!!customer}
-              />
-            </div>
-          </div>
+          <CustomerFormField />
         </div>
       </Form>
 
@@ -290,6 +302,7 @@ export function CreateInvoiceForm() {
         form={form_createInvoiceItem}
         onSubmit={onSubmitCreateInvoiceItem}
         className="flex flex-col space-y-3"
+        // disabled={!customer}
       >
         <div className="pb-2">
           <Form.Label>Items</Form.Label>

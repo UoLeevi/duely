@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FormFieldRegisterOptions } from '@duely/react-form';
+import { FormFieldRegisterOptions, UseFormReturn } from '@duely/react-form';
 import { LoadingBar } from '../../LoadingBar';
 import { useFormContext } from '../Form';
 import {
@@ -33,6 +33,7 @@ type FormFieldPropsPartial<
   TFormFields extends Record<string, any> = Record<string, any>,
   TType extends string = string
 > = {
+  form?: UseFormReturn<TFormFields>;
   name: TName;
   type?: TType;
   defaultValue?: TFormFields[TName];
@@ -117,15 +118,16 @@ type FormFieldProps<
   TName extends string & keyof TFormFields,
   TFormFields extends Record<string, any> = Record<string, any>,
   TType extends string = string
-> =
-  | Omit<FormFieldTextAreaProps<TName, TFormFields>, 'hintRef'>
-  | Omit<FormFieldFileProps<TName, TFormFields>, 'hintRef'>
-  | Omit<FormFieldImageProps<TName, TFormFields>, 'hintRef'>
-  | Omit<FormFieldRadioToggleProps<TName, TFormFields>, 'hintRef'>
-  | Omit<FormFieldRadioBlocksProps<TName, TFormFields>, 'hintRef'>
-  | Omit<FormFieldSelectProps<TName, TFormFields>, 'hintRef'>
-  | Omit<FormFieldMultiSelectProps<TName, TFormFields>, 'hintRef'>
-  | Omit<FormFieldDefaultProps<TName, TFormFields, TType>, 'hintRef'>;
+> = { form?: UseFormReturn<TFormFields> } & (
+  | Omit<FormFieldTextAreaProps<TName, TFormFields>, 'hintRef' | 'form'>
+  | Omit<FormFieldFileProps<TName, TFormFields>, 'hintRef' | 'form'>
+  | Omit<FormFieldImageProps<TName, TFormFields>, 'hintRef' | 'form'>
+  | Omit<FormFieldRadioToggleProps<TName, TFormFields>, 'hintRef' | 'form'>
+  | Omit<FormFieldRadioBlocksProps<TName, TFormFields>, 'hintRef' | 'form'>
+  | Omit<FormFieldSelectProps<TName, TFormFields>, 'hintRef' | 'form'>
+  | Omit<FormFieldMultiSelectProps<TName, TFormFields>, 'hintRef' | 'form'>
+  | Omit<FormFieldDefaultProps<TName, TFormFields, TType>, 'hintRef' | 'form'>
+);
 
 export function FormField<
   TName extends string & keyof TFormFields,
@@ -133,6 +135,7 @@ export function FormField<
   TType extends string = string
 >({
   name,
+  form,
   defaultValue,
   label,
   type,
@@ -144,7 +147,9 @@ export function FormField<
   tooltip,
   ...props
 }: FormFieldProps<TName, TFormFields, TType>) {
-  const form = useFormContext();
+  const formContext = useFormContext<TFormFields>();
+  form ??= formContext;
+
   const fieldState = form.useFormFieldState(name);
   let errorMessage = fieldState?.error;
 
@@ -157,7 +162,7 @@ export function FormField<
 
   useEffect(() => {
     if (defaultValue === undefined) return;
-    form.setDefaultValue(name, defaultValue);
+    form!.setDefaultValue(name, defaultValue);
   }, [name, defaultValue]);
 
   switch (type) {

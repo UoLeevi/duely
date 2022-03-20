@@ -17,8 +17,8 @@ export const Form = Object.assign(FormRoot, {
   Label: FormLabel
 });
 
-export function useFormContext() {
-  return useContext(FormContext);
+export function useFormContext<TFormFields extends Record<string, any> = Record<string, any>>() {
+  return useContext(FormContext) as UseFormReturn<TFormFields>;
 }
 
 type FormProps<TFormFields extends Record<string, any> = Record<string, any>> = {
