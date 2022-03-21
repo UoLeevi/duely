@@ -81,7 +81,14 @@ function CustomerFormField() {
       return [];
     }
 
-    return customerSuggestions.map((customer) => customer.email_address);
+    return customerSuggestions.map((customer) => ({
+      value: customer.email_address,
+      element: (
+        <span>
+          <span>{customer.name}</span> - <span>{customer.email_address}</span>
+        </span>
+      )
+    }));
   }, [customer_email_address, customers]);
 
   return (

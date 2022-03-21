@@ -12,15 +12,28 @@ export type FormFieldDefaultElementProps<
   FormFieldElementProps<TName, TFormFields> & {
     prefix?: React.ReactNode;
     suffix?: React.ReactNode;
-    suggestions?: (
-      | string
+  } & (
       | {
-          value: string;
-          element?: string;
+          suggestionType: 'custom';
+          suggestions?: (
+            | string
+            | {
+                value: string;
+                element?: React.ReactNode;
+              }
+          )[];
         }
-    )[];
-    suggestionType?: 'datalist' | 'custom';
-  }
+      | {
+          suggestionType?: 'datalist';
+          suggestions?: (
+            | string
+            | {
+                value: string;
+                element?: string;
+              }
+          )[];
+        }
+    )
 >;
 
 export function FormFieldDefaultElement<
