@@ -363,7 +363,27 @@ export class FormFieldControl<T> {
   #onBlur(event: FocusEvent) {
     this.startUpdate();
     this.isTouched = true;
-    if (this.isDirty) this.validate();
+    if (this.isDirty) {
+      const focusedElement = event.relatedTarget as HTMLElement | null;
+      const fieldContainer = this.#element?.closest(
+        '[data-formfield="' + encodeURIComponent(this.#name) + '"]'
+      );
+
+      if (fieldContainer?.contains(focusedElement)) {
+        const self = this;
+        function delayedBlur() {
+          focusedElement?.removeEventListener('blur', delayedBlur);
+          self.startUpdate();
+          self.validate();
+          self.endUpdate();
+        }
+        focusedElement?.addEventListener('blur', delayedBlur);
+      } else {
+        this.startUpdate();
+        this.validate();
+        this.endUpdate();
+      }
+    }
     this.endUpdate();
   }
 

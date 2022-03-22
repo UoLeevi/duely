@@ -207,7 +207,7 @@ export function FormField<
       className = createClassName('flex flex-col relative', className);
 
       return (
-        <div className={className}>
+        <div className={className} data-formfield={encodeURIComponent(name)}>
           <div className="flex items-center">
             {element}
             {label && (
@@ -249,7 +249,7 @@ export function FormField<
       className = createClassName('flex flex-col relative', className);
 
       return (
-        <div className={className}>
+        <div className={className} data-formfield={encodeURIComponent(name)}>
           <div className="flex items-center">
             {element}
             {label && (
@@ -361,7 +361,7 @@ export function FormField<
   className = createClassName('flex flex-col relative', className);
 
   return (
-    <div ref={tooltipRef} className={className}>
+    <div ref={tooltipRef} className={className} data-formfield={encodeURIComponent(name)}>
       <div className="flex justify-between whitespace-nowrap">
         {label && (
           <FormLabel className="pb-1 text-sm" htmlFor={name}>
