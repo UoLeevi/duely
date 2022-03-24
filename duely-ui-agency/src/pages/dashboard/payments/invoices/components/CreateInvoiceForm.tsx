@@ -28,6 +28,7 @@ import { ElementType, hasProperty, noop } from '@duely/util';
 type CreateInvoiceFormFields1 = {
   customer_email_address: string;
   customer_name: string;
+  customer_id: string;
 };
 type CreateInvoiceItemFormFields = {
   price?: string;
@@ -40,7 +41,7 @@ type CreateInvoiceFormFields3 = {
 };
 
 function CustomerFormField() {
-  const form = useFormContext<{ customer_email_address: string }>();
+  const form = useFormContext<{ customer_email_address: string; customer_id: string }>();
   const { data: agency, loading: agencyLoading } = useQueryState(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } =
     useQueryState(agency_stripe_account_Q);
@@ -60,6 +61,9 @@ function CustomerFormField() {
   );
 
   const customer_email_address = form.useFormFieldValue('customer_email_address');
+  const customer_id = form.useFormFieldValue('customer_id');
+
+  console.log(customer_id);
 
   const customerSuggestions = useMemo(() => {
     if (!customers) return [];
@@ -87,7 +91,10 @@ function CustomerFormField() {
         <span>
           <span>{customer.name}</span> - <span>{customer.email_address}</span>
         </span>
-      )
+      ),
+      onSelect(value: string) {
+        form.setValue('customer_id', customer.id);
+      }
     }));
   }, [customer_email_address, customers]);
 

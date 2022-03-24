@@ -20,6 +20,7 @@ export type FormFieldDefaultElementProps<
             | {
                 value: string;
                 element?: React.ReactNode;
+                onSelect?: (value: string) => void;
               }
           )[];
         }
@@ -106,12 +107,18 @@ export function FormFieldDefaultElement<
             suggestion =
               typeof suggestion === 'object'
                 ? suggestion
-                : { value: suggestion, element: undefined };
+                : { value: suggestion, element: undefined, onSelect: undefined };
 
             const value = suggestion.value;
 
             return (
-              <DropMenu.Item key={suggestion.value} onClick={() => form.setValue(name, value)}>
+              <DropMenu.Item
+                key={suggestion.value}
+                onClick={() => {
+                  (suggestion as Exclude<typeof suggestion, string>).onSelect?.(value);
+                  form.setValue(name, value);
+                }}
+              >
                 {suggestion.element ?? suggestion.value}
               </DropMenu.Item>
             );
