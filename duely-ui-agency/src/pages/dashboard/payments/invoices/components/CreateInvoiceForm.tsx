@@ -9,7 +9,9 @@ import {
   useFormMessages,
   ValueConverters,
   useQueryState,
-  useFormContext
+  useFormContext,
+  Icon,
+  icons
 } from '@duely/react';
 import {
   useQuery,
@@ -28,7 +30,7 @@ import { ElementType, hasProperty, noop } from '@duely/util';
 type CreateInvoiceFormFields1 = {
   customer_email_address: string;
   customer_name: string;
-  customer_id: string;
+  customer?: ElementType<ReturnType<typeof customers_Q['result']>>;
 };
 type CreateInvoiceItemFormFields = {
   price?: string;
@@ -41,7 +43,7 @@ type CreateInvoiceFormFields3 = {
 };
 
 function CustomerFormField() {
-  const form = useFormContext<{ customer_email_address: string; customer_id: string }>();
+  const form = useFormContext<CreateInvoiceFormFields1>();
   const { data: agency, loading: agencyLoading } = useQueryState(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } =
     useQueryState(agency_stripe_account_Q);
@@ -61,9 +63,9 @@ function CustomerFormField() {
   );
 
   const customer_email_address = form.useFormFieldValue('customer_email_address');
-  const customer_id = form.useFormFieldValue('customer_id');
+  const customer = form.useFormFieldValue('customer');
 
-  console.log(customer_id);
+  console.log(customer);
 
   const customerSuggestions = useMemo(() => {
     if (!customers) return [];
@@ -93,21 +95,49 @@ function CustomerFormField() {
         </span>
       ),
       onSelect(value: string) {
-        form.setValue('customer_id', customer.id);
+        form.setValue('customer', customer);
       }
     }));
   }, [customer_email_address, customers]);
 
+  if (customer) {
+    return (
+      <div className="h-20">
+        <div className="flex items-center flex-shrink gap-2 p-2 border border-gray-300 rounded-md shadow-sm w-80 dark:border-gray-500 min-w-min">
+          <Icon name="user" solid className="text-gray-400" />
+          <div className="flex flex-col text-gray-700 dark:text-gray-300">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium">{customer.name}</span>
+            </div>
+            <div className="flex">
+              <span className="text-sm font-medium">{customer.email_address}</span>
+            </div>
+          </div>
+          <div className="flex ml-auto">
+            <span
+              onClick={() => form.setValue('customer', undefined)}
+              className="text-gray-600 cursor-default"
+            >
+              {icons['x.solid']}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Form.Field
-      className="max-w-xl"
-      name="customer_email_address"
-      suggestions={customerSuggestions}
-      registerOptions={{
-        required: true,
-        rules: [ValidationRules.isEmailAddress]
-      }}
-    />
+    <div className="h-20">
+      <Form.Field
+        className="max-w-xl"
+        name="customer_email_address"
+        suggestions={customerSuggestions}
+        registerOptions={{
+          required: true,
+          rules: [ValidationRules.isEmailAddress]
+        }}
+      />
+    </div>
   );
 }
 
