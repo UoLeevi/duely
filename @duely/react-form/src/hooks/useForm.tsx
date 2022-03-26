@@ -14,6 +14,7 @@ export type UseFormReturn<TFormFields extends Record<string, any> = Record<strin
     options?: FormFieldRegisterOptions<TFormFields[TName]>
   ): {
     name: string;
+    form: string;
     ref(el: FormFieldHTMLElement | null): void;
   };
   unregister<TName extends string & keyof TFormFields>(name: TName): void;

@@ -1,6 +1,7 @@
 import {
   useForm,
   Form,
+  HiddenElement,
   ValidationRules,
   Button,
   Table,
@@ -26,6 +27,7 @@ import {
 } from '@duely/client';
 import { useEffect, useMemo, useState } from 'react';
 import { ElementType, hasProperty, noop } from '@duely/util';
+import ReactDOM from 'react-dom';
 
 type CreateInvoiceFormFields1 = {
   customer_email_address: string;
@@ -43,7 +45,10 @@ type CreateInvoiceFormFields3 = {
 };
 
 function CustomerFormField() {
-  const form = useFormContext<CreateInvoiceFormFields1>();
+  const form_hidden = useForm<{ customer_search: string }>();
+  const form = useFormContext<{
+    customer: undefined | ElementType<ReturnType<typeof customers_Q['result']>>;
+  }>();
   const { data: agency, loading: agencyLoading } = useQueryState(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } =
     useQueryState(agency_stripe_account_Q);
@@ -62,16 +67,16 @@ function CustomerFormField() {
     { skip: !agency || !stripe_account }
   );
 
-  const customer_email_address = form.useFormFieldValue('customer_email_address');
+  const customer_search = form_hidden.useFormFieldValue('customer_search');
   const customer = form.useFormFieldValue('customer');
-
+  console.log(customer_search);
   console.log(customer);
 
   const customerSuggestions = useMemo(() => {
     if (!customers) return [];
-    if (!customer_email_address) return [];
+    if (!customer_search) return [];
 
-    const searchString = customer_email_address.toLowerCase();
+    const searchString = customer_search.toLowerCase();
 
     const customerSuggestions = customers.filter(
       (customer) =>
@@ -90,15 +95,15 @@ function CustomerFormField() {
     return customerSuggestions.map((customer) => ({
       value: customer.email_address,
       element: (
-        <span>
+        <button type="submit" value={customer.id}>
           <span>{customer.name}</span> - <span>{customer.email_address}</span>
-        </span>
-      ),
-      onSelect(value: string) {
-        form.setValue('customer', customer);
-      }
+        </button>
+      )
+      // onSelect(value: string) {
+      //   form.setValue('customer', customer);
+      // }
     }));
-  }, [customer_email_address, customers]);
+  }, [customer_search, customers]);
 
   if (customer) {
     return (
@@ -115,7 +120,9 @@ function CustomerFormField() {
           </div>
           <div className="flex ml-auto">
             <span
-              onClick={() => form.setValue('customer', undefined)}
+              onClick={() => {
+                form.setValue('customer', undefined);
+              }}
               className="text-gray-600 cursor-default"
             >
               {icons['x.solid']}
@@ -127,17 +134,27 @@ function CustomerFormField() {
   }
 
   return (
-    <div className="h-20">
-      <Form.Field
-        className="max-w-xl"
-        name="customer_email_address"
-        suggestions={customerSuggestions}
-        registerOptions={{
-          required: true,
-          rules: [ValidationRules.isEmailAddress]
+    <>
+      <Form
+        hidden
+        form={form_hidden}
+        onSubmit={(data, event) => {
+          console.log(data, event);
         }}
       />
-    </div>
+      <div className="h-20">
+        <Form.Field
+          form={form_hidden}
+          className="max-w-xl"
+          name="customer_search"
+          suggestions={customerSuggestions}
+          registerOptions={{
+            required: true,
+            rules: [ValidationRules.isEmailAddress]
+          }}
+        />
+      </div>
+    </>
   );
 }
 

@@ -27,3 +27,4 @@ export * from './Animation';
 export * from './Section';
 export * from './Query';
 export * from './Search';
+export * from './HiddenElement';

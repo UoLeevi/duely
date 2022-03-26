@@ -361,6 +361,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     options?: FormFieldRegisterOptions<TFormFields[TName]>
   ): {
     name: string;
+    form: string;
     ref(el: FormFieldHTMLElement | null): void;
   };
   register<TName extends string & keyof TFormFields>(

@@ -1,4 +1,5 @@
 import React, { useCallback, createContext, useContext, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { useFocus } from '../../../hooks';
 import { FormButton } from '../FormButton';
 import { FormField } from '../FormField';
@@ -25,6 +26,7 @@ type FormProps<TFormFields extends Record<string, any> = Record<string, any>> = 
   form: UseFormReturn<TFormFields>;
   onSubmit: (data: TFormFields, event?: SubmitEvent) => any | Promise<any>;
   disabled?: boolean;
+  hidden?: boolean;
 } & Omit<
   React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>,
   'onSubmit'
@@ -34,6 +36,7 @@ function FormRoot<TFormFields extends Record<string, any> = Record<string, any>>
   form,
   onSubmit,
   children,
+  hidden,
   ...props
 }: FormProps<TFormFields>) {
   const onReset = useCallback((e: Event) => {
@@ -45,6 +48,18 @@ function FormRoot<TFormFields extends Record<string, any> = Record<string, any>>
   const focusControl = useFocus(ref, { trap: true });
 
   console.log(`${form.id} focus: ${focusControl.focused}`);
+
+  if (hidden) {
+    return ReactDOM.createPortal(
+      <form
+        {...form.register({ onSubmit, onReset, ref })}
+        {...props}
+        style={{ display: 'none' }}
+        // style={{ visibility: 'collapse' }}
+      ></form>,
+      document.body
+    );
+  }
 
   return (
     <FormContext.Provider value={form as any}>
