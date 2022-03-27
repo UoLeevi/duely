@@ -44,11 +44,12 @@ type CreateInvoiceFormFields3 = {
   days_until_due: number;
 };
 
-function CustomerFormField() {
+function CustomerFormField({ name }: { name: string }) {
   const form_hidden = useForm<{ customer_search: string }>();
-  const form = useFormContext<{
-    customer: undefined | ElementType<ReturnType<typeof customers_Q['result']>>;
-  }>();
+  const form =
+    useFormContext<
+      Record<string, undefined | ElementType<ReturnType<typeof customers_Q['result']>>>
+    >();
   const { data: agency, loading: agencyLoading } = useQueryState(current_agency_Q);
   const { data: stripe_account, loading: stripe_accountLoading } =
     useQueryState(agency_stripe_account_Q);
@@ -68,7 +69,7 @@ function CustomerFormField() {
   );
 
   const customer_search = form_hidden.useFormFieldValue('customer_search');
-  const customer = form.useFormFieldValue('customer');
+  const customer = form.useFormFieldValue(name);
   console.log(customer_search);
   console.log(customer);
 
@@ -121,7 +122,7 @@ function CustomerFormField() {
           <div className="flex ml-auto">
             <span
               onClick={() => {
-                form.setValue('customer', undefined);
+                form.setValue(name, undefined);
               }}
               className="text-gray-600 cursor-default"
             >
@@ -197,13 +198,7 @@ export function CreateInvoiceForm() {
     { skip: !agency || !stripe_account }
   );
 
-  const customer_email_address = form1.useFormFieldValue('customer_email_address');
-
-  let customer = customer_email_address
-    ? customers?.find(
-        (customer) => customer.email_address.toLowerCase() === customer_email_address.toLowerCase()
-      )
-    : undefined;
+  const customer = form1.useFormFieldValue('customer');
 
   const { data: invoiceitems, loading: invoiceitemsLoading } = useQuery(
     agency_stripe_account_invoiceitems_Q,
@@ -355,7 +350,7 @@ export function CreateInvoiceForm() {
       <Form form={form1} onSubmit={noop} className="flex flex-col space-y-3">
         <div className="pb-2">
           <Form.Label className="inline-block pb-1">Customer</Form.Label>
-          <CustomerFormField />
+          <CustomerFormField name="customer" />
         </div>
       </Form>
 

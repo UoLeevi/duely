@@ -308,7 +308,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     const unsubscribe = () => {
       const index = callbacks!.indexOf(callback);
       if (index === -1) return;
-      callbacks!.splice(index!, 1);
+      callbacks!.splice(index, 1);
     };
 
     return unsubscribe;
@@ -328,7 +328,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     const unsubscribe = () => {
       const index = callbacks!.indexOf(callback);
       if (index === -1) return;
-      callbacks!.splice(index!, 1);
+      callbacks!.splice(index, 1);
     };
 
     return unsubscribe;

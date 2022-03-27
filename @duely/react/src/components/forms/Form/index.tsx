@@ -45,9 +45,7 @@ function FormRoot<TFormFields extends Record<string, any> = Record<string, any>>
   }, []);
 
   const ref = useRef<HTMLFormElement>();
-  const focusControl = useFocus(ref, { trap: true });
-
-  console.log(`${form.id} focus: ${focusControl.focused}`);
+  // const focusControl = useFocus(ref, { trap: true });
 
   if (hidden) {
     return ReactDOM.createPortal(
@@ -66,7 +64,7 @@ function FormRoot<TFormFields extends Record<string, any> = Record<string, any>>
       <form
         {...form.register({ onSubmit, onReset, ref })}
         {...props}
-        style={focusControl.focused ? { opacity: 1 } : { opacity: 0.3, pointerEvents: 'none' }}
+        // style={focusControl.focused ? { opacity: 1 } : { opacity: 0.3, pointerEvents: 'none' }}
       >
         {children}
       </form>
