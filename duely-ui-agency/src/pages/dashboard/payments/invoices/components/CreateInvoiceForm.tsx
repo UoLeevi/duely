@@ -27,7 +27,6 @@ import {
 } from '@duely/client';
 import { useEffect, useMemo, useState } from 'react';
 import { ElementType, hasProperty, noop } from '@duely/util';
-import ReactDOM from 'react-dom';
 
 type CreateInvoiceFormFields1 = {
   customer_email_address: string;

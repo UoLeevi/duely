@@ -202,9 +202,9 @@ export class FormFieldControl<T> {
   #isDirty = false;
   #isTouched = false;
   #valueChanged = false;
-  #valueChangedListeners: (() => void)[] = [];
+  #valueChangedListeners: (() => void)[];
   #stateChanged = false;
-  #stateChangedListeners: (() => void)[] = [];
+  #stateChangedListeners: (() => void)[];
   #updateCounter = 0;
   #options: FormFieldRegisterOptions<T>;
   #refCount = 0;
@@ -213,6 +213,8 @@ export class FormFieldControl<T> {
     this.#name = name;
     this.#form = form;
     this.#options = {};
+    this.#valueChangedListeners = form.getFieldValueChangedCallbacks(name);
+    this.#stateChangedListeners = form.getFieldStateChangedCallbacks(name);
   }
 
   get #hasValue() {
@@ -333,6 +335,7 @@ export class FormFieldControl<T> {
 
     if (this.#valueChanged) {
       this.#valueChanged = false;
+      console.log(this.#name, this.#valueChangedListeners.length)
       this.#valueChangedListeners.forEach((callback) => callback());
     }
 
