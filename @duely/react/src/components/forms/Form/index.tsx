@@ -8,7 +8,7 @@ import { FormLabel } from '../FormLabel';
 import { FormSection } from '../FormSection';
 import { useForm, UseFormReturn } from '../hooks';
 
-const FormContext = createContext<ReturnType<typeof useForm>>(undefined as any);
+export const FormContext = createContext<ReturnType<typeof useForm>>(undefined as any);
 
 export const Form = Object.assign(FormRoot, {
   Field: FormField,

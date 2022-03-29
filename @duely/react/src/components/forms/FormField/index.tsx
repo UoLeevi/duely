@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { FormFieldRegisterOptions, UseFormReturn } from '@duely/react-form';
 import { LoadingBar } from '../../LoadingBar';
-import { useFormContext } from '../Form';
+import { FormContext, useFormContext } from '../Form';
 import {
   FormFieldCheckboxElement,
   FormFieldCheckboxElementProps,
@@ -207,30 +207,32 @@ export function FormField<
       className = createClassName('flex flex-col relative', className);
 
       return (
-        <div className={className} data-formfield={encodeURIComponent(name)}>
-          <div className="flex items-center">
-            {element}
-            {label && (
-              <FormLabel className="!pl-2.5 text-sm" htmlFor={`radio-${name}-${props.value}`}>
-                {label}
-              </FormLabel>
+        <FormContext.Provider value={form}>
+          <div className={className} data-formfield={encodeURIComponent(name)}>
+            <div className="flex items-center">
+              {element}
+              {label && (
+                <FormLabel className="!pl-2.5 text-sm" htmlFor={`radio-${name}-${props.value}`}>
+                  {label}
+                </FormLabel>
+              )}
+            </div>
+
+            <LoadingBar className="h-px px-1" loading={!!loading} />
+
+            {errorMessage ? (
+              <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">
+                {errorMessage}
+              </p>
+            ) : (
+              (hintRef.current || !dense) && (
+                <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
+                  {hintRef.current}
+                </p>
+              )
             )}
           </div>
-
-          <LoadingBar className="h-px px-1" loading={!!loading} />
-
-          {errorMessage ? (
-            <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">
-              {errorMessage}
-            </p>
-          ) : (
-            (hintRef.current || !dense) && (
-              <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
-                {hintRef.current}
-              </p>
-            )
-          )}
-        </div>
+        </FormContext.Provider>
       );
     }
 
@@ -249,30 +251,32 @@ export function FormField<
       className = createClassName('flex flex-col relative', className);
 
       return (
-        <div className={className} data-formfield={encodeURIComponent(name)}>
-          <div className="flex items-center">
-            {element}
-            {label && (
-              <FormLabel className="!pl-2.5 text-sm" htmlFor={name}>
-                {label}
-              </FormLabel>
+        <FormContext.Provider value={form}>
+          <div className={className} data-formfield={encodeURIComponent(name)}>
+            <div className="flex items-center">
+              {element}
+              {label && (
+                <FormLabel className="!pl-2.5 text-sm" htmlFor={name}>
+                  {label}
+                </FormLabel>
+              )}
+            </div>
+
+            <LoadingBar className="h-px px-1" loading={!!loading} />
+
+            {errorMessage ? (
+              <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">
+                {errorMessage}
+              </p>
+            ) : (
+              (hintRef.current || !dense) && (
+                <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
+                  {hintRef.current}
+                </p>
+              )
             )}
           </div>
-
-          <LoadingBar className="h-px px-1" loading={!!loading} />
-
-          {errorMessage ? (
-            <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">
-              {errorMessage}
-            </p>
-          ) : (
-            (hintRef.current || !dense) && (
-              <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
-                {hintRef.current}
-              </p>
-            )
-          )}
-        </div>
+        </FormContext.Provider>
       );
     }
 
@@ -361,49 +365,51 @@ export function FormField<
   className = createClassName('flex flex-col relative', className);
 
   return (
-    <div ref={tooltipRef} className={className} data-formfield={encodeURIComponent(name)}>
-      <div className="flex justify-between whitespace-nowrap">
-        {label && (
-          <FormLabel className="pb-1 text-sm" htmlFor={name}>
-            {label}
-          </FormLabel>
-        )}
+    <FormContext.Provider value={form}>
+      <div ref={tooltipRef} className={className} data-formfield={encodeURIComponent(name)}>
+        <div className="flex justify-between whitespace-nowrap">
+          {label && (
+            <FormLabel className="pb-1 text-sm" htmlFor={name}>
+              {label}
+            </FormLabel>
+          )}
 
-        {!tooltip && shortErrorMessage ? (
-          <p className="text-xs font-medium leading-5 text-red-500">{shortErrorMessage}</p>
-        ) : (
-          actions
+          {!tooltip && shortErrorMessage ? (
+            <p className="text-xs font-medium leading-5 text-red-500">{shortErrorMessage}</p>
+          ) : (
+            actions
+          )}
+        </div>
+
+        {element}
+
+        <LoadingBar className="h-px px-1" loading={!!loading} />
+
+        {!tooltip &&
+          (longErrorMessage ? (
+            <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">
+              {longErrorMessage}
+            </p>
+          ) : (
+            (hintRef.current || !dense) && (
+              <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
+                {hintRef.current}
+              </p>
+            )
+          ))}
+
+        {tooltip && (errorMessage ?? hintRef.current) && (
+          <Tooltip elementRef={tooltipRef} className="px-2 py-1.5 text-sm flex">
+            {errorMessage && (
+              <>
+                <span className="mr-1.5 text-red-400">{icons['exclamation-circle']}</span>
+                {errorMessage}
+              </>
+            )}
+            {!errorMessage && hintRef.current}
+          </Tooltip>
         )}
       </div>
-
-      {element}
-
-      <LoadingBar className="h-px px-1" loading={!!loading} />
-
-      {!tooltip &&
-        (longErrorMessage ? (
-          <p className="pt-1 pl-px m-0 text-xs text-red-500 min-h-[1rem] box-content">
-            {longErrorMessage}
-          </p>
-        ) : (
-          (hintRef.current || !dense) && (
-            <p className="pt-1 pl-px m-0 text-xs text-gray-500 min-h-[1rem] box-content">
-              {hintRef.current}
-            </p>
-          )
-        ))}
-
-      {tooltip && (errorMessage ?? hintRef.current) && (
-        <Tooltip elementRef={tooltipRef} className="px-2 py-1.5 text-sm flex">
-          {errorMessage && (
-            <>
-              <span className="mr-1.5 text-red-400">{icons['exclamation-circle']}</span>
-              {errorMessage}
-            </>
-          )}
-          {!errorMessage && hintRef.current}
-        </Tooltip>
-      )}
-    </div>
+    </FormContext.Provider>
   );
 }
