@@ -335,7 +335,6 @@ export class FormFieldControl<T> {
 
     if (this.#valueChanged) {
       this.#valueChanged = false;
-      console.log(this.#name, this.#valueChangedListeners.length)
       this.#valueChangedListeners.forEach((callback) => callback());
     }
 
