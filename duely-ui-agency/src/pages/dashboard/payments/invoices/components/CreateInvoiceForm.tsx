@@ -95,13 +95,14 @@ function CustomerFormField({ name }: { name: string }) {
     return customerSuggestions.map((customer) => ({
       value: customer.email_address,
       element: (
-        <button type="submit" value={customer.id}>
+        <span>
           <span>{customer.name}</span> - <span>{customer.email_address}</span>
-        </button>
-      )
-      // onSelect(value: string) {
-      //   form.setValue('customer', customer);
-      // }
+        </span>
+      ),
+      onSelect(value: string) {
+        form.setValue('customer', customer);
+        form.requestSubmit();
+      }
     }));
   }, [customer_search, customers]);
 
