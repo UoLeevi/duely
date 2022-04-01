@@ -3260,6 +3260,11 @@ body, #root {
     color: rgb(203 213 225 / var(--tw-text-opacity));
   }
 
+  .dark\:hover\:text-gray-200:hover {
+    --tw-text-opacity: 1;
+    color: rgb(226 232 240 / var(--tw-text-opacity));
+  }
+
   .dark\:focus-visible\:bg-gray-800:focus-visible {
     --tw-bg-opacity: 1;
     background-color: rgb(30 41 59 / var(--tw-bg-opacity));

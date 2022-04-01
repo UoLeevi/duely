@@ -69,8 +69,6 @@ function CustomerFormField({ name }: { name: string }) {
 
   const customer_search = form_hidden.useFormFieldValue('customer_search');
   const customer = form.useFormFieldValue(name);
-  console.log(customer_search);
-  console.log(customer);
 
   const customerSuggestions = useMemo(() => {
     if (!customers) return [];
@@ -120,14 +118,13 @@ function CustomerFormField({ name }: { name: string }) {
             </div>
           </div>
           <div className="flex ml-auto">
-            <span
-              onClick={() => {
-                form.setValue(name, undefined);
-              }}
-              className="text-gray-600 cursor-default"
+            <button
+              form={form.id}
+              type="reset"
+              className="text-gray-600 dark:text-white hover:text-gray-800 dark:hover:text-gray-200"
             >
               {icons['x.solid']}
-            </span>
+            </button>
           </div>
         </div>
       </div>

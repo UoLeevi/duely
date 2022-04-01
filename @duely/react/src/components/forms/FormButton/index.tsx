@@ -30,6 +30,7 @@ export const FormButton = React.forwardRef(function (
   const registerProps = name !== undefined && value !== undefined ? form.register(name) : undefined;
   return (
     <Button
+      form={form.id}
       type={type}
       color={color}
       disabled={disabled}

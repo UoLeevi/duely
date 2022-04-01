@@ -590,7 +590,6 @@ export class FormFieldControl<T> {
       if (!options.preventValidate && this.#valueChanged && this.#shouldValidate) this.validate();
     } else {
       const previousValue = this.value;
-      this.#defaultValue = value;
       this.#value = value;
       this.#valueChanged ||= previousValue !== this.value;
     }
@@ -609,6 +608,7 @@ export class FormFieldControl<T> {
         this.setValue(this.defaultValue, options);
       }
     } else {
+      this.#defaultValue = value;
       this.setValue(value, options);
     }
   }
