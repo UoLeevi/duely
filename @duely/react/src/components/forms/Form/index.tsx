@@ -53,7 +53,6 @@ function FormRoot<TFormFields extends Record<string, any> = Record<string, any>>
         {...form.register({ onSubmit, onReset, ref })}
         {...props}
         style={{ display: 'none' }}
-        // style={{ visibility: 'collapse' }}
       ></form>,
       document.body
     );

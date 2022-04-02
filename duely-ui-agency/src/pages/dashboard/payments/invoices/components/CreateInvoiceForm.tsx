@@ -107,21 +107,21 @@ function CustomerFormField({ name }: { name: string }) {
   if (customer) {
     return (
       <div className="h-20">
-        <div className="flex items-center flex-shrink gap-2 p-2 border border-gray-300 rounded-md shadow-sm w-80 dark:border-gray-500 min-w-min">
+        <div className="flex items-center flex-shrink gap-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm w-80 dark:border-gray-500 min-w-min">
           <Icon name="user" solid className="text-gray-400" />
           <div className="flex flex-col text-gray-700 dark:text-gray-300">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium">{customer.name}</span>
             </div>
             <div className="flex">
-              <span className="text-sm font-medium">{customer.email_address}</span>
+              <span className="text-sm">{customer.email_address}</span>
             </div>
           </div>
           <div className="flex ml-auto">
             <button
               form={form.id}
               type="reset"
-              className="text-gray-600 dark:text-white hover:text-gray-800 dark:hover:text-gray-200"
+              className="transition text-sm text-gray-600 p-0.5 border border-transparent rounded-full dark:text-white hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-sm"
             >
               {icons['x.solid']}
             </button>
