@@ -1,6 +1,9 @@
 import type { Override } from '@duely/util';
 import React from 'react';
 import { DropMenu } from '../../../DropMenu';
+import { Animation } from '../../../Animation';
+import { icons } from '../../../icons';
+import { LoadingSpinner } from '../../../LoadingSpinner';
 import { useFormContext } from '../../Form';
 import { FormFieldElementProps } from './FormFieldElementProps';
 
@@ -15,6 +18,7 @@ export type FormFieldDefaultElementProps<
   } & (
       | {
           suggestionType: 'custom';
+          suggestionsLoading?: boolean;
           suggestions?: (
             | string
             | {
@@ -26,6 +30,7 @@ export type FormFieldDefaultElementProps<
         }
       | {
           suggestionType?: 'datalist';
+          suggestionsLoading?: boolean;
           suggestions?: (
             | string
             | {
@@ -47,6 +52,7 @@ export function FormFieldDefaultElement<
   prefix,
   suffix,
   suggestions,
+  suggestionsLoading,
   suggestionType,
   type,
   ...props
@@ -80,6 +86,16 @@ export function FormFieldDefaultElement<
           {...props}
         />
         {suffix && <span className="pr-3 text-gray-500 whitespace-nowrap">{suffix}</span>}
+
+        <span className="pr-3 pl-1.5 text-gray-500 whitespace-nowrap">
+          {
+            <Animation.Fade>
+              {suggestionsLoading && (
+                <LoadingSpinner loading={suggestionsLoading} className="!text-current w-[1.25em] h-[1.25em]" />
+              )}
+            </Animation.Fade>
+          }
+        </span>
       </div>
 
       {suggestionType === 'datalist' && suggestions && suggestions.length > 0 && (

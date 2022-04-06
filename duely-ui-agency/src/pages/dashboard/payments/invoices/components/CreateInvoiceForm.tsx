@@ -12,7 +12,8 @@ import {
   useQueryState,
   useFormContext,
   Icon,
-  icons
+  icons,
+  useDebounce
 } from '@duely/react';
 import {
   useQuery,
@@ -53,6 +54,9 @@ function CustomerFormField({ name }: { name: string }) {
   const { data: stripe_account, loading: stripe_accountLoading } =
     useQueryState(agency_stripe_account_Q);
 
+  const customer_search = form_hidden.useFormFieldValue('customer_search');
+  const debounced_customer_search = useDebounce(customer_search);
+
   const {
     data: customers,
     loading: customersLoading,
@@ -67,7 +71,8 @@ function CustomerFormField({ name }: { name: string }) {
     { skip: !agency || !stripe_account }
   );
 
-  const customer_search = form_hidden.useFormFieldValue('customer_search');
+  const loading = customersLoading || debounced_customer_search !== customer_search;
+
   const customer = form.useFormFieldValue(name);
 
   const customerSuggestions = useMemo(() => {
@@ -152,11 +157,8 @@ function CustomerFormField({ name }: { name: string }) {
             form={form_hidden}
             className="max-w-xl"
             name="customer_search"
+            suggestionsLoading={loading}
             suggestions={customerSuggestions}
-            registerOptions={{
-              required: true,
-              rules: [ValidationRules.isEmailAddress]
-            }}
           />
         </div>
       </div>
