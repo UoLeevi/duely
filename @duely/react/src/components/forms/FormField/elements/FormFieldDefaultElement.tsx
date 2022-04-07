@@ -118,7 +118,7 @@ export function FormFieldDefaultElement<
       )}
 
       {suggestionType === 'custom' && suggestions && suggestions.length > 0 && (
-        <DropMenu open no-button full-width>
+        <DropMenu open no-button full-width className='hidden group-focus-within:inline-flex'>
           {suggestions.map((suggestion) => {
             suggestion =
               typeof suggestion === 'object'

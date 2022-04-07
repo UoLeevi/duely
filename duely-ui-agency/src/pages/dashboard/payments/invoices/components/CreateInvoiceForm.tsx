@@ -45,7 +45,7 @@ type CreateInvoiceFormFields3 = {
 };
 
 function CustomerFormField({ name }: { name: string }) {
-  const form_hidden = useForm<{ customer_search: string }>();
+  const form_hidden = useForm<{ search_term: string }>();
   const form =
     useFormContext<
       Record<string, undefined | ElementType<ReturnType<typeof customers_Q['result']>>>
@@ -54,8 +54,8 @@ function CustomerFormField({ name }: { name: string }) {
   const { data: stripe_account, loading: stripe_accountLoading } =
     useQueryState(agency_stripe_account_Q);
 
-  const customer_search = form_hidden.useFormFieldValue('customer_search');
-  const debounced_customer_search = useDebounce(customer_search);
+  const searchTerm = form_hidden.useFormFieldValue('search_term')?.toLowerCase();
+  const debouncedSearchTerm = useDebounce(searchTerm);
 
   const {
     data: customers,
@@ -71,25 +71,23 @@ function CustomerFormField({ name }: { name: string }) {
     { skip: !agency || !stripe_account }
   );
 
-  const loading = customersLoading || debounced_customer_search !== customer_search;
+  const loading = customersLoading || debouncedSearchTerm !== searchTerm;
 
   const customer = form.useFormFieldValue(name);
 
   const customerSuggestions = useMemo(() => {
     if (!customers) return [];
-    if (!customer_search) return [];
-
-    const searchString = customer_search.toLowerCase();
 
     const customerSuggestions = customers.filter(
       (customer) =>
-        customer.email_address.split('@')[0].toLowerCase().includes(searchString) ||
-        customer.name?.toLowerCase().includes(searchString)
+        !debouncedSearchTerm ||
+        customer.email_address.split('@')[0].toLowerCase().includes(debouncedSearchTerm) ||
+        customer.name?.toLowerCase().includes(debouncedSearchTerm)
     );
 
     if (
       customerSuggestions.some(
-        (suggestion) => suggestion.email_address.toLowerCase() === searchString
+        (suggestion) => suggestion.email_address.toLowerCase() === debouncedSearchTerm
       )
     ) {
       return [];
@@ -107,14 +105,14 @@ function CustomerFormField({ name }: { name: string }) {
         form.requestSubmit();
       }
     }));
-  }, [customer_search, customers]);
+  }, [debouncedSearchTerm, customers]);
 
   if (customer) {
     return (
       <>
         <div className="pb-2">
           <Form.Label className="inline-block pb-1">Customer</Form.Label>
-          <div className="h-20">
+          <div className="h-20 group">
             <div className="flex items-center flex-shrink gap-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm w-80 dark:border-gray-500 min-w-min">
               <Icon name="user" solid className="text-gray-400" />
               <div className="flex flex-col text-gray-700 dark:text-gray-300">
@@ -152,11 +150,11 @@ function CustomerFormField({ name }: { name: string }) {
       />
       <div className="pb-2">
         <Form.Label className="inline-block pb-1">Customer</Form.Label>
-        <div className="h-20">
+        <div className="h-20 group">
           <Form.Field
             form={form_hidden}
             className="max-w-xl"
-            name="customer_search"
+            name="search_term"
             suggestionsLoading={loading}
             suggestions={customerSuggestions}
           />

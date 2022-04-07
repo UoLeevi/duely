@@ -3079,6 +3079,10 @@ body, #root {
   display: flex;
 }
 
+.group:focus-within .group-focus-within\:inline-flex {
+  display: inline-flex;
+}
+
 .group:hover .group-hover\:pointer-events-auto {
   pointer-events: auto;
 }

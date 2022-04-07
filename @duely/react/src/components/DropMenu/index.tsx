@@ -85,7 +85,7 @@ type DropMenuProps = React.DetailedHTMLProps<
   'full-width'?: boolean;
 };
 
-export function DropMenuRoot({ children, unmount, ...props }: DropMenuProps) {
+export function DropMenuRoot({ children, unmount, className, ...props }: DropMenuProps) {
   const childrenArray = React.Children.toArray(children);
   const menuRef = useRef<HTMLDivElement>(null);
   const itemsClassNamesRef = useRef<string>('-bottom-2 left-0 origin-top-left translate-y-full');
@@ -125,8 +125,10 @@ export function DropMenuRoot({ children, unmount, ...props }: DropMenuProps) {
   useIntersectionObserver(menuRef, intersectionObserverCallback);
   unmount ??= true;
 
+  className = createClassName(className, 'relative inline-flex items-center');
+
   return (
-    <Menu as="div" className="relative inline-flex items-center">
+    <Menu as="div" className={className}>
       {({ open }) => {
         open = props.open ?? open;
 
