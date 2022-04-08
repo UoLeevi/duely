@@ -101,8 +101,8 @@ function CustomerFormField({ name }: { name: string }) {
         </span>
       ),
       onSelect(value: string) {
+        form_hidden.reset();
         form.setValue('customer', customer);
-        form.requestSubmit();
       }
     }));
   }, [debouncedSearchTerm, customers]);
@@ -125,9 +125,11 @@ function CustomerFormField({ name }: { name: string }) {
               </div>
               <div className="flex ml-auto">
                 <button
-                  form={form.id}
-                  type="reset"
-                  className="transition text-sm text-gray-600 p-0.5 border border-transparent rounded-full dark:text-white hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-sm"
+                  type="button"
+                  className="transition text-sm text-gray-600 p-0.5 border border-transparent rounded-full dark:text-white hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-200 dark:hover:border-gray-500 hover:shadow-sm hover:bg-black/5 dark:hover:bg-white/5"
+                  onClick={() => {
+                    form.setValue('customer', undefined);
+                  }}
                 >
                   {icons['x.solid']}
                 </button>

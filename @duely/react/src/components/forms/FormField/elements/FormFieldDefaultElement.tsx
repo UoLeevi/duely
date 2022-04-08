@@ -91,7 +91,7 @@ export function FormFieldDefaultElement<
           {
             <Animation.Fade>
               {suggestionsLoading && (
-                <LoadingSpinner loading={suggestionsLoading} className="!text-current w-[1.25em] h-[1.25em]" />
+                <LoadingSpinner loading={suggestionsLoading} className="hidden group-focus-within:inline-block !text-current w-[1.25em] h-[1.25em]" />
               )}
             </Animation.Fade>
           }
