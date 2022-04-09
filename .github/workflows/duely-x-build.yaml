@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 2
       - id: detect-version-change
-        run: git diff -U0 -G'version' ${{ github.sha }}^ ${{ github.sha }} ./duely-x/Duely.X/Duely.X.csproj | sed -rn 's/^.*\+\s+<Version>\s*(.+)<\/Version>.*/::set-output name=version::v\1/p'
+        run: git diff -U0 -G'<Version>' ${{ github.sha }}^ ${{ github.sha }} ./duely-x/Duely.X/Duely.X.csproj | sed -rn 's/^.*\+\s+<Version>\s*(.+)<\/Version>.*/::set-output name=version::v\1/p'
   build:
     needs: [check-version]
     if: needs.check-version.outputs.version != ''
