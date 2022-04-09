@@ -44,7 +44,7 @@ spec:
         - containerPort: 8080
         env:
         - name: ASPNETCORE_URLS
-          value: http://localhost:8080/
+          value: http://+:8080/
         - name: DUELY_X_SERVICES_ASSEMBLY_DIR
           value: /app/data/services
         - name: PGUSER
