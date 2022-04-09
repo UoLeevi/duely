@@ -51,6 +51,13 @@ spec:
             name: duely-webhook-service
             port:
               number: 8080
+      - path: /x
+        pathType: Prefix
+        backend:
+          service:
+            name: duely-x-service
+            port:
+              number: 8080
       - path: /
         pathType: Prefix
         backend:
