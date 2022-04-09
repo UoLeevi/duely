@@ -1,9 +1,16 @@
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddHttpLogging(logging =>
+{
+    logging.LoggingFields = HttpLoggingFields.RequestProperties | HttpLoggingFields.ResponseStatusCode;
+});
+
 builder.AddControllersFromExternalAsseblies();
 
 var app = builder.Build();
@@ -11,6 +18,8 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 
 app.MapControllers();
+
+app.UseHttpLogging();
 
 app.Run();
 
