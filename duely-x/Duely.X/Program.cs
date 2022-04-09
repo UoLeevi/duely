@@ -25,12 +25,6 @@ internal static partial class WebApplicationBuilderExtensions
         var servicesAssemblyDirectoryPath = builder.Configuration.GetValue<string>("DUELY_X_SERVICES_ASSEMBLY_DIR");
         DirectoryInfo servicesDirectory = new DirectoryInfo(servicesAssemblyDirectoryPath);
 
-        if (!servicesDirectory.Exists)
-        {
-            Console.WriteLine($"Directory '{servicesAssemblyDirectoryPath}' does not exist");
-            return;
-        }
-
         foreach (FileInfo asseblyFile in servicesDirectory.GetFiles("Duely.X.*.dll"))
         {
             var serviceAssebly = Assembly.LoadFrom(asseblyFile.FullName);
