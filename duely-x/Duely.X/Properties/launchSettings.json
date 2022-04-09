@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "Duely.X": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DUELY_X_SERVICES_ASSEMBLY_DIR": "C:\\Users\\uotin\\duely\\duely\\duely-x\\services"
+      },
+      "applicationUrl": "http://localhost:5017",
+      "dotnetRunMessages": true
+    }
+  }
+}

@@ -1,0 +1,31 @@
+name: duely-x-build
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.detect-version-change.outputs.version }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - id: detect-version-change
+        run: git diff -U0 -G'version' ${{ github.sha }}^ ${{ github.sha }} ./duely-x/Duely.X/Duely.X.csproj | sed -rn 's/^.*\+\s+<Version>\s*(.+)<\/Version>.*/::set-output name=version::v\1/p'
+  build:
+    needs: [check-version]
+    if: needs.check-version.outputs.version != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/login-action@v1 
+        with:
+          username: uoleevi
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./duely-x/Duely.X
+          tags: uoleevi/duely-x:${{ needs.check-version.outputs.version }}
