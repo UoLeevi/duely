@@ -30,9 +30,12 @@ spec:
       - name: duely-x-secret
         secret:
           secretName: duely-x-secret
+      - name: duely-x-volume
+        persistentVolumeClaim:
+          claimName: duely-pv-2-claim
       containers:
       - name: duely-x
-        image: uoleevi/duely-x:v0.1.0
+        image: uoleevi/duely-x:v0.1.5
         resources:
           requests:
             memory: 64Mi
@@ -40,8 +43,10 @@ spec:
         ports:
         - containerPort: 8080
         env:
-        - name: PORT
-          value: "8080"
+        - name: ASPNETCORE_URLS
+          value: http://localhost:8080/
+        - name: DUELY_X_SERVICES_ASSEMBLY_DIR
+          value: /app/data/services
         - name: PGUSER
           value: duely
         - name: PGDATABASE
@@ -57,21 +62,7 @@ spec:
             secretKeyRef:
               name: duely-x-secret
               key: duely-serviceaccount-password
-        livenessProbe:
-          httpGet:
-            path: /.well-known/server-health
-            port: 8080
-          failureThreshold: 6
-          initialDelaySeconds: 60
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 5
-        readinessProbe:
-          httpGet:
-            path: /.well-known/server-health
-            port: 8080
-          failureThreshold: 3
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          successThreshold: 1
-          timeoutSeconds: 3
+        volumeMounts:
+          - name: duely-x-volume
+            subPath: data
+            mountPath: /app/data
