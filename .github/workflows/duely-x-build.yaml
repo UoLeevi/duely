@@ -27,4 +27,5 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: uoleevi/duely-x
           tags: ${{ needs.check-version.outputs.version }}
-          path: duely-x/Duely.X
+          path: duely-x
+          dockerfile: duely-x/Duely.X/Dockerfile
