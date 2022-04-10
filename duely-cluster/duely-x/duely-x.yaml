@@ -35,7 +35,7 @@ spec:
           claimName: duely-pv-2-claim
       containers:
       - name: duely-x
-        image: uoleevi/duely-x:v0.1.9
+        image: uoleevi/duely-x:v0.1.10
         resources:
           requests:
             memory: 64Mi
