@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+using Microsoft.AspNetCore.WebUtilities;
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -188,12 +189,14 @@ public class ProxyRequest
 public class ProxyRequestTemplate
 {
     [JsonPropertyName("id_template")]
+    [BindProperty(Name = "id_template")]
     public string? IdTemplate { get; set; }
 
     [JsonPropertyName("id")]
     public string? Id { get; set; }
 
     [JsonPropertyName("url_template")]
+    [BindProperty(Name = "url_template")]
     public string? UrlTemplate { get; set; }
 
     [JsonPropertyName("url")]
@@ -204,12 +207,14 @@ public class ProxyRequestTemplate
     public HttpMethod? Method { get; set; }
 
     [JsonPropertyName("header_templates")]
+    [BindProperty(Name = "header_templates")]
     public Dictionary<string, string[]>? HeaderTemplates { get; set; }
 
     [JsonPropertyName("headers")]
     public Dictionary<string, string[]>? Headers { get; set; }
 
     [JsonPropertyName("body_template")]
+    [BindProperty(Name = "body_template")]
     public string? BodyTemplate { get; set; }
 
     [JsonPropertyName("body")]
@@ -218,50 +223,9 @@ public class ProxyRequestTemplate
     [JsonPropertyName("body_encoding")]
     public string? BodyEncoding { get; set; }
 
-    [JsonPropertyName("prepare")]
-    public bool? Prepared { get; set; }
-
     public ProxyRequest Render(JsonObject context)
     {
-        if (Id is null && IdTemplate is not null)
-        {
-            Id = TemplateEnginge.Render(IdTemplate, context);
-        }
-
-        if (Url is null && UrlTemplate is not null)
-        {
-            var urlString = TemplateEnginge.Render(UrlTemplate, context);
-            Url = new Uri(urlString);
-        }
-
-        if (HeaderTemplates is not null)
-        {
-            if (Headers is null)
-            {
-                Headers = new Dictionary<string, string[]>();
-            }
-
-            foreach (var headerTemplate in HeaderTemplates)
-            {
-                var headerKey = TemplateEnginge.Render(headerTemplate.Key, context);
-                var headerValues = headerTemplate.Value.Select(v => TemplateEnginge.Render(v, context));
-                var previousValues = Headers[headerKey];
-
-                if (previousValues is not null)
-                {
-                    headerValues = previousValues.Concat(headerValues).ToArray();
-                }
-
-                Headers[headerKey] = headerValues.ToArray();
-            }
-        }
-
-        if (Body is null && BodyTemplate is not null)
-        {
-            Body = TemplateEnginge.Render(BodyTemplate, context);
-        }
-
-        return new ProxyRequest
+        var proxyRequest = new ProxyRequest
         {
             Id = Id,
             Url = Url,
@@ -269,6 +233,46 @@ public class ProxyRequestTemplate
             Headers = Headers,
             Body = Body
         };
+
+        if (Id is null && IdTemplate is not null)
+        {
+            proxyRequest.Id = TemplateEnginge.Render(IdTemplate, context);
+        }
+
+        if (Url is null && UrlTemplate is not null)
+        {
+            var urlString = TemplateEnginge.Render(UrlTemplate, context);
+            proxyRequest.Url = new Uri(urlString);
+        }
+
+        if (HeaderTemplates is not null)
+        {
+            if (proxyRequest.Headers is null)
+            {
+                proxyRequest.Headers = new Dictionary<string, string[]>();
+            }
+
+            foreach (var headerTemplate in HeaderTemplates)
+            {
+                var headerKey = TemplateEnginge.Render(headerTemplate.Key, context);
+                var headerValues = headerTemplate.Value.Select(v => TemplateEnginge.Render(v, context));
+                var previousValues = proxyRequest.Headers[headerKey];
+
+                if (previousValues is not null)
+                {
+                    headerValues = previousValues.Concat(headerValues).ToArray();
+                }
+
+                proxyRequest.Headers[headerKey] = headerValues.ToArray();
+            }
+        }
+
+        if (Body is null && BodyTemplate is not null)
+        {
+            proxyRequest.Body = TemplateEnginge.Render(BodyTemplate, context);
+        }
+
+        return proxyRequest;
     }
 }
 
@@ -300,7 +304,7 @@ public class ProxyRequestHttpMethodJsonConverter : JsonConverter<HttpMethod>
     }
 }
 
-public class ProxyRequestHttpMethodBinder : IModelBinder
+public class ProxyRequestTemplateHttpMethodBinder : IModelBinder
 {
     public Task BindModelAsync(ModelBindingContext bindingContext)
     {
@@ -336,16 +340,38 @@ public class ProxyRequestHttpMethodBinder : IModelBinder
     }
 }
 
-public class ProxyRequestBinderProvider : IModelBinderProvider
+public class ProxyRequestContextBinder : IModelBinder
 {
-    public IModelBinder GetBinder(ModelBinderProviderContext context)
+    public Task BindModelAsync(ModelBindingContext bindingContext)
+    {
+        var query = bindingContext.HttpContext.Request.Query.ToDictionary(
+            x => x.Key,
+            x => JsonValue.Create(x.Value.ToString()) as JsonNode);
+
+        var jsonObject = new JsonObject(query);
+
+        bindingContext.Result = ModelBindingResult.Success(jsonObject);
+
+        return Task.CompletedTask;
+    }
+}
+
+public class ProxyControllerBinderProvider : IModelBinderProvider
+{
+    public IModelBinder? GetBinder(ModelBinderProviderContext context)
     {
         if (context.Metadata.ContainerType == typeof(ProxyRequestTemplate))
         {
             if (context.Metadata.ModelType == typeof(HttpMethod))
             {
-                return new BinderTypeModelBinder(typeof(ProxyRequestHttpMethodBinder));
+                return new BinderTypeModelBinder(typeof(ProxyRequestTemplateHttpMethodBinder));
             }
+
+        }
+
+        if (context.Metadata.ModelType == typeof(JsonObject) && context.Metadata.Name == "context")
+        {
+            return new BinderTypeModelBinder(typeof(ProxyRequestContextBinder));
         }
 
         return null;
