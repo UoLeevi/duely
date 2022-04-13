@@ -31,7 +31,7 @@ internal static partial class WebApplicationBuilderExtensions
 {
     internal static void AddControllersFromExternalAsseblies(this WebApplicationBuilder builder)
     {
-        var servicesAssemblyDirectoryPath = builder.Configuration.GetValue<string>("DUELY_X_SERVICES_ASSEMBLY_DIR");
+        var servicesAssemblyDirectoryPath = builder.Configuration.GetValue<string>("DUELY_CONNECT_SERVICES_ASSEMBLY_DIR");
         DirectoryInfo servicesDirectory = new DirectoryInfo(servicesAssemblyDirectoryPath);
 
         var serviceAssemblies = servicesDirectory.GetFiles("Duely.Connect.*.dll")
