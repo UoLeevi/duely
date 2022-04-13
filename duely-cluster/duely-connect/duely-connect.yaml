@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: duely-x-service
+  name: duely-connect-service
 spec:
   type: NodePort
   selector:
-    app: duely-x
+    app: duely-connect
   ports:
   - protocol: TCP
     port: 8080
@@ -14,28 +14,28 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: duely-x-deployment
+  name: duely-connect-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: duely-x
+      app: duely-connect
   template:
     metadata:
       labels:
-        app: duely-x
+        app: duely-connect
     spec:
       terminationGracePeriodSeconds: 30
       volumes:
-      - name: duely-x-secret
+      - name: duely-connect-secret
         secret:
-          secretName: duely-x-secret
-      - name: duely-x-volume
+          secretName: duely-connect-secret
+      - name: duely-connect-volume
         persistentVolumeClaim:
           claimName: duely-pv-2-claim
       containers:
-      - name: duely-x
-        image: uoleevi/duely-x:v0.1.10
+      - name: duely-connect
+        image: uoleevi/duely-connect:v0.1.11
         resources:
           requests:
             memory: 64Mi
@@ -60,7 +60,7 @@ spec:
         - name: DUELY_SERVICE_ACCOUNT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: duely-x-secret
+              name: duely-connect-secret
               key: duely-serviceaccount-password
         livenessProbe:
           httpGet:
@@ -81,6 +81,6 @@ spec:
           successThreshold: 1
           timeoutSeconds: 3
         volumeMounts:
-          - name: duely-x-volume
+          - name: duely-connect-volume
             subPath: data
             mountPath: /app/data

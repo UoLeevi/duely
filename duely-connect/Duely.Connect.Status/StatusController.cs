@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace Duely.X.Status;
+namespace Duely.Connect.Status;
 
 [ApiController]
-[Route("/x/status")]
+[Route("/status")]
 [Route("/.well-known/server-health")]
 public class StatusController : ControllerBase
 {

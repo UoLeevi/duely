@@ -7,10 +7,10 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace Duely.X.Proxy;
+namespace Duely.Connect.Proxy;
 
 [ApiController]
-[Route("/x/proxy")]
+[Route("/proxy")]
 public class ProxyController : ControllerBase
 {
     private static IDictionary<string, ProxyRequestTemplate> requestTemplates = new ConcurrentDictionary<string, ProxyRequestTemplate>();
@@ -25,11 +25,6 @@ public class ProxyController : ControllerBase
     [HttpGet("template")]
     public async Task Get([FromQuery] ProxyRequestTemplate requestTemplate)
     {
-        if (requestTemplate.Id is null)
-        {
-            requestTemplate.Id = Guid.NewGuid().ToString();
-        }
-
         requestTemplates[requestTemplate.Id] = requestTemplate;
 
         Response.StatusCode = 200;
@@ -115,14 +110,8 @@ public class ProxyController : ControllerBase
 
 public class ProxyRequest
 {
-    [JsonPropertyName("id_template")]
-    public string? IdTemplate { get; set; }
-
     [JsonPropertyName("id")]
-    public string? Id { get; set; }
-
-    [JsonPropertyName("url_template")]
-    public string? UrlTemplate { get; set; }
+    public string Id { get; } = Guid.NewGuid().ToString();
 
     [JsonPropertyName("url")]
     public Uri? Url { get; set; }
@@ -131,23 +120,14 @@ public class ProxyRequest
     [JsonConverter(typeof(ProxyRequestHttpMethodJsonConverter))]
     public HttpMethod? Method { get; set; }
 
-    [JsonPropertyName("header_templates")]
-    public Dictionary<string, string[]>? HeaderTemplates { get; set; }
-
     [JsonPropertyName("headers")]
     public Dictionary<string, string[]>? Headers { get; set; }
-
-    [JsonPropertyName("body_template")]
-    public string? BodyTemplate { get; set; }
 
     [JsonPropertyName("body")]
     public string? Body { get; set; }
 
     [JsonPropertyName("body_encoding")]
     public string? BodyEncoding { get; set; }
-
-    [JsonPropertyName("prepare")]
-    public bool? Prepared { get; set; }
 
     internal bool Validate(out string? message)
     {
@@ -188,12 +168,8 @@ public class ProxyRequest
 
 public class ProxyRequestTemplate
 {
-    [JsonPropertyName("id_template")]
-    [BindProperty(Name = "id_template")]
-    public string? IdTemplate { get; set; }
-
     [JsonPropertyName("id")]
-    public string? Id { get; set; }
+    public string Id { get; } = Guid.NewGuid().ToString();
 
     [JsonPropertyName("url_template")]
     [BindProperty(Name = "url_template")]
@@ -227,17 +203,11 @@ public class ProxyRequestTemplate
     {
         var proxyRequest = new ProxyRequest
         {
-            Id = Id,
             Url = Url,
             Method = Method,
             Headers = Headers,
             Body = Body
         };
-
-        if (Id is null && IdTemplate is not null)
-        {
-            proxyRequest.Id = TemplateEnginge.Render(IdTemplate, context);
-        }
 
         if (Url is null && UrlTemplate is not null)
         {

@@ -6,16 +6,16 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["Duely.X/Duely.X.csproj", "Duely.X/"]
-RUN dotnet restore "Duely.X/Duely.X.csproj"
+COPY ["Duely.Connect/Duely.Connect.csproj", "Duely.Connect/"]
+RUN dotnet restore "Duely.Connect/Duely.Connect.csproj"
 COPY . .
-WORKDIR "/src/Duely.X"
-RUN dotnet build "Duely.X.csproj" -c Release -o /app/build
+WORKDIR "/src/Duely.Connect"
+RUN dotnet build "Duely.Connect.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Duely.X.csproj" -c Release -o /app/publish
+RUN dotnet publish "Duely.Connect.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Duely.X.dll"]
+ENTRYPOINT ["dotnet", "Duely.Connect.dll"]
