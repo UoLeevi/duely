@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -33,6 +34,27 @@ public class ProxyController : ControllerBase
         return;
     }
 
+    [HttpGet("template/{id}")]
+    public async Task Get(string id, [FromQuery] ProxyRequestTemplate requestTemplate)
+    {
+        if (!requestTemplates.TryGetValue(id, out var requestTemplateBase))
+        {
+            Response.StatusCode = 400;
+            Response.ContentType = "application/json";
+            await JsonSerializer.SerializeAsync(Response.Body, new { message = $"Template '{id}' was not found." });
+            return;
+        }
+
+        requestTemplate.UpdateFromBase(requestTemplateBase);
+
+        requestTemplates[requestTemplate.Id] = requestTemplate;
+
+        Response.StatusCode = 200;
+        Response.ContentType = "application/json";
+        await JsonSerializer.SerializeAsync(Response.Body, requestTemplate);
+        return;
+    }
+
     [HttpGet("{id}")]
     public async Task Get(string id, [FromQuery] JsonObject context)
     {
@@ -44,6 +66,11 @@ public class ProxyController : ControllerBase
             await JsonSerializer.SerializeAsync(Response.Body, new { message = $"Template '{id}' was not found." });
             return;
         }
+
+        Response.StatusCode = 200;
+        Response.ContentType = "application/json";
+        await JsonSerializer.SerializeAsync(Response.Body, requestTemplate);
+        return;
 
         var proxyRequest = requestTemplate.Render(context);
 
@@ -111,7 +138,7 @@ public class ProxyController : ControllerBase
 public class ProxyRequest
 {
     [JsonPropertyName("id")]
-    public string Id { get; } = Guid.NewGuid().ToString();
+    public string Id { get; } = Helpers.GenerateRandomKey();
 
     [JsonPropertyName("url")]
     public Uri? Url { get; set; }
@@ -169,7 +196,7 @@ public class ProxyRequest
 public class ProxyRequestTemplate
 {
     [JsonPropertyName("id")]
-    public string Id { get; } = Guid.NewGuid().ToString();
+    public string Id { get; } = Helpers.GenerateRandomKey();
 
     [JsonPropertyName("url_template")]
     [BindProperty(Name = "url_template")]
@@ -198,6 +225,34 @@ public class ProxyRequestTemplate
 
     [JsonPropertyName("body_encoding")]
     public string? BodyEncoding { get; set; }
+
+    public void UpdateFromBase(ProxyRequestTemplate requestTemplateBase)
+    {
+        UrlTemplate ??= requestTemplateBase.UrlTemplate;
+        Url ??= requestTemplateBase.Url;
+        Method ??= requestTemplateBase.Method;
+        HeaderTemplates ??= requestTemplateBase.HeaderTemplates;
+        Headers ??= requestTemplateBase.Headers;
+        BodyTemplate ??= requestTemplateBase.BodyTemplate;
+        Body ??= requestTemplateBase.Body;
+        BodyEncoding ??= requestTemplateBase.BodyEncoding;
+
+        if (HeaderTemplates != requestTemplateBase.HeaderTemplates && requestTemplateBase.HeaderTemplates is not null)
+        {
+            foreach (var header in requestTemplateBase.HeaderTemplates)
+            {
+                HeaderTemplates!.TryAdd(header.Key, header.Value);
+            }
+        }
+
+        if (Headers != requestTemplateBase.Headers && requestTemplateBase.Headers is not null)
+        {
+            foreach (var header in requestTemplateBase.Headers)
+            {
+                Headers!.TryAdd(header.Key, header.Value);
+            }
+        }
+    }
 
     public ProxyRequest Render(JsonObject context)
     {
@@ -230,7 +285,7 @@ public class ProxyRequestTemplate
 
                 if (previousValues is not null)
                 {
-                    headerValues = previousValues.Concat(headerValues).ToArray();
+                    headerValues = previousValues.Concat(headerValues);
                 }
 
                 proxyRequest.Headers[headerKey] = headerValues.ToArray();
@@ -345,5 +400,15 @@ public class ProxyControllerBinderProvider : IModelBinderProvider
         }
 
         return null;
+    }
+}
+
+
+public static class Helpers
+{
+    public static string GenerateRandomKey(int length = 24)
+    {
+        var bytes = RandomNumberGenerator.GetBytes(length);
+        return Base64UrlTextEncoder.Encode(bytes);
     }
 }

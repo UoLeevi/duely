@@ -5,7 +5,7 @@
       "commandName": "Project",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "DUELY_X_SERVICES_ASSEMBLY_DIR": "C:\\Users\\uotin\\duely\\duely\\duely-connect\\services"
+        "DUELY_CONNECT_SERVICES_ASSEMBLY_DIR": "C:\\Users\\uotin\\duely\\duely\\duely-connect\\services"
       },
       "applicationUrl": "http://localhost:5017",
       "dotnetRunMessages": true
