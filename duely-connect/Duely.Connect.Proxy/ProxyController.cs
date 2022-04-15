@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
@@ -7,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Web;
 
 namespace Duely.Connect.Proxy;
 
@@ -14,7 +16,38 @@ namespace Duely.Connect.Proxy;
 [Route("/proxy")]
 public class ProxyController : ControllerBase
 {
-    private static IDictionary<string, ProxyRequestTemplate> requestTemplates = new ConcurrentDictionary<string, ProxyRequestTemplate>();
+    static ProxyController()
+    {
+        DirectoryInfo templatesDirectory = new DirectoryInfo("../templates");
+
+        var templateFiles = templatesDirectory.GetFiles("*.json");
+
+        foreach (var templateFile in templateFiles)
+        {
+            using var stream = templateFile.OpenRead();
+            var jsonDocument = JsonDocument.Parse(stream);
+
+            if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                var specs = jsonDocument.Deserialize<RequestTemplateSpec[]>();
+                if (specs is not null)
+                {
+                    foreach (var spec in specs)
+                    {
+                        RequestTemplate.TryAdd(spec, out _);
+                    }
+                }
+            }
+            else
+            {
+                var spec = jsonDocument.Deserialize<RequestTemplateSpec>();
+                if (spec is not null)
+                {
+                    RequestTemplate.TryAdd(spec, out _);
+                }
+            }
+        }
+    }
 
     private readonly IHttpClientFactory httpClientFactory;
 
@@ -23,43 +56,65 @@ public class ProxyController : ControllerBase
         this.httpClientFactory = httpClientFactory;
     }
 
-    [HttpGet("template")]
-    public async Task Get([FromQuery] ProxyRequestTemplate requestTemplate)
-    {
-        requestTemplates[requestTemplate.Id] = requestTemplate;
+    // https://connect.duely.app/oauth?state=state_name_test%3Dstate_value_test&error_subtype=access_denied&error=interaction_required
+    // https://connect.duely.app/oauth?state=state_name_test%3Dstate_value_test&code=4/0AX4XfWhh5u1-ghPsnpArcPUE8I5Nvnz-G_6DrKxvyOpk3GXuKZLAx60k8H7QHfGtjo3QFg&scope=https://www.googleapis.com/auth/webmasters.readonly
 
-        Response.StatusCode = 200;
-        Response.ContentType = "application/json";
-        await JsonSerializer.SerializeAsync(Response.Body, requestTemplate);
-        return;
-    }
 
-    [HttpGet("template/{id}")]
-    public async Task Get(string id, [FromQuery] ProxyRequestTemplate requestTemplate)
+    [HttpGet("~/oauth")]
+    public async Task Get(string? code, string? scope, string? state, string? error, string? error_subtype)
     {
-        if (!requestTemplates.TryGetValue(id, out var requestTemplateBase))
+        if (code is null)
         {
             Response.StatusCode = 400;
             Response.ContentType = "application/json";
-            await JsonSerializer.SerializeAsync(Response.Body, new { message = $"Template '{id}' was not found." });
+            await JsonSerializer.SerializeAsync(Response.Body, new
+            {
+                message = "something went wrong",
+                error = error,
+                error_subtype = error_subtype
+            });
             return;
         }
 
-        requestTemplate.UpdateFromBase(requestTemplateBase);
+        Response.StatusCode = 200;
+        Response.ContentType = "application/json";
 
-        requestTemplates[requestTemplate.Id] = requestTemplate;
+        await JsonSerializer.SerializeAsync(Response.Body, new
+        {
+            message = "success"
+        });
+        return;
+    }
+
+    [HttpGet("template")]
+    public async Task Get([FromQuery] RequestTemplateSpec spec)
+    {
+        if (spec.Id is not null)
+        {
+            spec.Id += "-" + Helpers.GenerateRandomKey();
+        }
+
+        if (!RequestTemplate.TryAdd(spec, out var template))
+        {
+            Response.StatusCode = 400;
+            Response.ContentType = "application/json";
+            await JsonSerializer.SerializeAsync(Response.Body, new { message = $"Base template does not exist." });
+            return;
+        }
 
         Response.StatusCode = 200;
         Response.ContentType = "application/json";
-        await JsonSerializer.SerializeAsync(Response.Body, requestTemplate);
+        await JsonSerializer.SerializeAsync(Response.Body, template, new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+        });
         return;
     }
 
     [HttpGet("{id}")]
-    public async Task Get(string id, [FromQuery] JsonObject context)
+    public async Task Get(string id, [FromQuery] Dictionary<string, JsonNode?> context)
     {
-
-        if (!requestTemplates.TryGetValue(id, out var requestTemplate))
+        if (!RequestTemplate.TryGet(id, out var template))
         {
             Response.StatusCode = 400;
             Response.ContentType = "application/json";
@@ -69,10 +124,10 @@ public class ProxyController : ControllerBase
 
         Response.StatusCode = 200;
         Response.ContentType = "application/json";
-        await JsonSerializer.SerializeAsync(Response.Body, requestTemplate);
+        await JsonSerializer.SerializeAsync(Response.Body, template);
         return;
 
-        var proxyRequest = requestTemplate.Render(context);
+        var proxyRequest = template.Render(context);
 
         Response.StatusCode = 200;
         Response.ContentType = "application/json";
@@ -144,7 +199,7 @@ public class ProxyRequest
     public Uri? Url { get; set; }
 
     [JsonPropertyName("method")]
-    [JsonConverter(typeof(ProxyRequestHttpMethodJsonConverter))]
+    [JsonConverter(typeof(HttpMethodJsonConverter))]
     public HttpMethod? Method { get; set; }
 
     [JsonPropertyName("headers")]
@@ -193,11 +248,18 @@ public class ProxyRequest
     }
 }
 
-public class ProxyRequestTemplate
+public class RequestTemplateSpec
 {
-    [JsonPropertyName("id")]
-    public string Id { get; } = Helpers.GenerateRandomKey();
+    [JsonPropertyName("info")]
+    public Uri? Info { get; set; }
 
+    [JsonPropertyName("base")]
+    public string[]? Base { get; set; }
+
+    [JsonPropertyName("id")]
+    public string? Id { get; set; }
+
+    // see: https://en.wikipedia.org/wiki/URI_Template
     [JsonPropertyName("url_template")]
     [BindProperty(Name = "url_template")]
     public string? UrlTemplate { get; set; }
@@ -206,7 +268,7 @@ public class ProxyRequestTemplate
     public Uri? Url { get; set; }
 
     [JsonPropertyName("method")]
-    [JsonConverter(typeof(ProxyRequestHttpMethodJsonConverter))]
+    [JsonConverter(typeof(HttpMethodJsonConverter))]
     public HttpMethod? Method { get; set; }
 
     [JsonPropertyName("header_templates")]
@@ -224,37 +286,201 @@ public class ProxyRequestTemplate
     public string? Body { get; set; }
 
     [JsonPropertyName("body_encoding")]
+    [BindProperty(Name = "body_encoding")]
     public string? BodyEncoding { get; set; }
 
-    public void UpdateFromBase(ProxyRequestTemplate requestTemplateBase)
-    {
-        UrlTemplate ??= requestTemplateBase.UrlTemplate;
-        Url ??= requestTemplateBase.Url;
-        Method ??= requestTemplateBase.Method;
-        HeaderTemplates ??= requestTemplateBase.HeaderTemplates;
-        Headers ??= requestTemplateBase.Headers;
-        BodyTemplate ??= requestTemplateBase.BodyTemplate;
-        Body ??= requestTemplateBase.Body;
-        BodyEncoding ??= requestTemplateBase.BodyEncoding;
+    [JsonPropertyName("context")]
+    public Dictionary<string, JsonNode?>? Context { get; set; }
 
-        if (HeaderTemplates != requestTemplateBase.HeaderTemplates && requestTemplateBase.HeaderTemplates is not null)
+    [JsonPropertyName("redirect_uri")]
+    [BindProperty(Name = "redirect_uri")]
+    public Uri? RedirectUri { get; set; }
+
+    [JsonPropertyName("target")]
+    public string? Target { get; set; }
+
+    [JsonPropertyName("target_context_from_context")]
+    [BindProperty(Name = "target_context_from_context")]
+    public Dictionary<string, string>? TargetContextMap { get; set; }
+
+    [JsonPropertyName("target_context_from_response")]
+    [BindProperty(Name = "target_context_from_response")]
+    public Dictionary<string, string>? TargetContextFromResponse { get; set; }
+
+    internal static IDictionary<string, JsonNode?>? ParseQueryAsJsonObject(IQueryCollection query)
+    {
+        var dictionary = new Dictionary<string, JsonNode?>();
+
+        foreach (var item in query)
         {
-            foreach (var header in requestTemplateBase.HeaderTemplates)
+        }
+
+        return dictionary;
+    }
+}
+
+public class RequestTemplate
+{
+    private static ConcurrentDictionary<string, RequestTemplate> templates = new ConcurrentDictionary<string, RequestTemplate>();
+
+    internal static bool TryGet(string id, out RequestTemplate? template)
+    {
+        return templates.TryGetValue(id, out template);
+    }
+
+    internal static bool TryAdd(RequestTemplateSpec spec, out RequestTemplate? template)
+    {
+
+        template = new RequestTemplate
+        {
+            Info = spec.Info,
+            Id = spec.Id ?? Helpers.GenerateRandomKey(),
+            UrlTemplate = spec.UrlTemplate,
+            Url = spec.Url,
+            Method = spec.Method,
+            HeaderTemplates = spec.HeaderTemplates,
+            Headers = spec.Headers,
+            BodyTemplate = spec.BodyTemplate,
+            Body = spec.Body,
+            BodyEncoding = spec.BodyEncoding,
+            Context = spec.Context,
+            RedirectUri = spec.RedirectUri,
+            Target = spec.Target,
+            TargetContextMap = spec.TargetContextMap,
+            TargetContextFromResponse = spec.TargetContextFromResponse
+        };
+
+        if (spec.Base is not null)
+        {
+            foreach (var id in spec.Base.Reverse())
+            {
+                if (!TryGet(id, out var baseTemplate))
+                {
+                    return false;
+                }
+
+                template.UpdateFromBase(baseTemplate!);
+            }
+        }
+
+        return templates.TryAdd(template.Id, template);
+    }
+
+    private RequestTemplate() { }
+
+    [JsonPropertyName("info")]
+    public Uri? Info { get; private set; }
+
+    [JsonPropertyName("id")]
+    public string Id { get; private set; } = Helpers.GenerateRandomKey();
+
+    // see: https://en.wikipedia.org/wiki/URI_Template
+    [JsonPropertyName("url_template")]
+    [BindProperty(Name = "url_template")]
+    public string? UrlTemplate { get; private set; }
+
+    [JsonPropertyName("url")]
+    public Uri? Url { get; private set; }
+
+    [JsonPropertyName("method")]
+    [JsonConverter(typeof(HttpMethodJsonConverter))]
+    public HttpMethod? Method { get; private set; }
+
+    [JsonPropertyName("header_templates")]
+    [BindProperty(Name = "header_templates")]
+    public Dictionary<string, string[]>? HeaderTemplates { get; private set; }
+
+    [JsonPropertyName("headers")]
+    public Dictionary<string, string[]>? Headers { get; private set; }
+
+    [JsonPropertyName("body_template")]
+    [BindProperty(Name = "body_template")]
+    public string? BodyTemplate { get; private set; }
+
+    [JsonPropertyName("body")]
+    public string? Body { get; private set; }
+
+    [JsonPropertyName("body_encoding")]
+    [BindProperty(Name = "body_encoding")]
+    public string? BodyEncoding { get; private set; }
+
+    [JsonPropertyName("context")]
+    [JsonConverter(typeof(RequestTemplateContextJsonConverter))]
+    public IDictionary<string, JsonNode?>? Context { get; private set; }
+
+    [JsonPropertyName("redirect_uri")]
+    [BindProperty(Name = "redirect_uri")]
+    public Uri? RedirectUri { get; private set; }
+
+    [JsonPropertyName("target")]
+    public string? Target { get; private set; }
+
+    [JsonPropertyName("target_context_from_context")]
+    [BindProperty(Name = "target_context_from_context")]
+    public Dictionary<string, string>? TargetContextMap { get; private set; }
+
+    [JsonPropertyName("target_context_from_response")]
+    [BindProperty(Name = "target_context_from_response")]
+    public Dictionary<string, string>? TargetContextFromResponse { get; private set; }
+
+    private void UpdateFromBase(RequestTemplate baseTemplate)
+    {
+        UrlTemplate ??= baseTemplate.UrlTemplate;
+        Url ??= baseTemplate.Url;
+        Method ??= baseTemplate.Method;
+        HeaderTemplates ??= baseTemplate.HeaderTemplates;
+        Headers ??= baseTemplate.Headers;
+        BodyTemplate ??= baseTemplate.BodyTemplate;
+        Body ??= baseTemplate.Body;
+        BodyEncoding ??= baseTemplate.BodyEncoding;
+        Context ??= baseTemplate.Context;
+        RedirectUri ??= baseTemplate.RedirectUri;
+        Target ??= baseTemplate.Target;
+        TargetContextMap ??= baseTemplate.TargetContextMap;
+        TargetContextFromResponse ??= baseTemplate.TargetContextFromResponse;
+
+        if (HeaderTemplates != baseTemplate.HeaderTemplates && baseTemplate.HeaderTemplates is not null)
+        {
+            foreach (var header in baseTemplate.HeaderTemplates)
             {
                 HeaderTemplates!.TryAdd(header.Key, header.Value);
             }
         }
 
-        if (Headers != requestTemplateBase.Headers && requestTemplateBase.Headers is not null)
+        if (Headers != baseTemplate.Headers && baseTemplate.Headers is not null)
         {
-            foreach (var header in requestTemplateBase.Headers)
+            foreach (var header in baseTemplate.Headers)
             {
                 Headers!.TryAdd(header.Key, header.Value);
             }
         }
+
+        if (Context != baseTemplate.Context && baseTemplate.Context is not null)
+        {
+            foreach (var item in baseTemplate.Context)
+            {
+                Context!.TryAdd(item.Key, item.Value);
+            }
+        }
+
+        if (TargetContextMap != baseTemplate.TargetContextMap && baseTemplate.TargetContextMap is not null)
+        {
+            foreach (var item in baseTemplate.TargetContextMap)
+            {
+                TargetContextMap!.TryAdd(item.Key, item.Value);
+            }
+        }
+
+        if (TargetContextFromResponse != baseTemplate.TargetContextFromResponse && baseTemplate.TargetContextFromResponse is not null)
+        {
+            foreach (var item in baseTemplate.TargetContextFromResponse)
+            {
+                TargetContextFromResponse!.TryAdd(item.Key, item.Value);
+            }
+        }
     }
 
-    public ProxyRequest Render(JsonObject context)
+    public ProxyRequest Render(Dictionary<string, JsonNode?> context)
     {
         var proxyRequest = new ProxyRequest
         {
@@ -304,7 +530,7 @@ public class ProxyRequestTemplate
 // TODO: replace with some proper implementation
 public static class TemplateEnginge
 {
-    public static string Render(string template, JsonObject context)
+    public static string Render(string template, Dictionary<string, JsonNode?> context)
     {
         foreach (var item in context)
         {
@@ -316,7 +542,99 @@ public static class TemplateEnginge
 }
 
 
-public class ProxyRequestHttpMethodJsonConverter : JsonConverter<HttpMethod>
+public class RequestTemplateContextJsonConverter : JsonConverter<IDictionary<string, JsonNode?>>
+{
+    public override Dictionary<string, JsonNode?>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        return null;
+    }
+
+    public override void Write(Utf8JsonWriter writer, IDictionary<string, JsonNode?> value, JsonSerializerOptions options)
+    {
+        WriteObject(writer, value, options);
+
+        static void WriteValue(Utf8JsonWriter writer, JsonNode? value, JsonSerializerOptions options)
+        {
+            if (value is null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
+
+            if (value is JsonObject jsonObject)
+            {
+                WriteObject(writer, jsonObject, options);
+                return;
+            }
+
+            if (value is JsonArray jsonArray)
+            {
+                WriteArray(writer, jsonArray, options);
+                return;
+            }
+
+            writer.WriteRawValue(value.ToString());
+        }
+
+        static void WriteProperty(Utf8JsonWriter writer, string propertyName, JsonNode? value, JsonSerializerOptions options)
+        {
+            writer.WritePropertyName(propertyName);
+
+            // Values for properties with name that starts with an underscore should be masked
+            if (propertyName.StartsWith("_"))
+            {
+                writer.WriteStringValue("***");
+                return;
+            }
+
+            if (value is null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
+
+            if (value is JsonObject jsonObject)
+            {
+                WriteObject(writer, jsonObject, options);
+                return;
+            }
+
+            if (value is JsonArray jsonArray)
+            {
+                WriteArray(writer, jsonArray, options);
+                return;
+            }
+
+            writer.WriteRawValue(value.ToString());
+        }
+
+        static void WriteObject(Utf8JsonWriter writer, IDictionary<string, JsonNode?> value, JsonSerializerOptions options)
+        {
+            writer.WriteStartObject();
+
+            foreach (var item in value)
+            {
+                WriteProperty(writer, item.Key, item.Value, options);
+            }
+
+            writer.WriteEndObject();
+        }
+
+        static void WriteArray(Utf8JsonWriter writer, JsonArray value, JsonSerializerOptions options)
+        {
+            writer.WriteStartArray();
+
+            foreach (var item in value)
+            {
+                WriteValue(writer, item, options);
+            }
+
+            writer.WriteEndArray();
+        }
+    }
+}
+
+public class HttpMethodJsonConverter : JsonConverter<HttpMethod>
 {
     public override HttpMethod? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -329,7 +647,7 @@ public class ProxyRequestHttpMethodJsonConverter : JsonConverter<HttpMethod>
     }
 }
 
-public class ProxyRequestTemplateHttpMethodBinder : IModelBinder
+public class RequestTemplateSpecHttpMethodBinder : IModelBinder
 {
     public Task BindModelAsync(ModelBindingContext bindingContext)
     {
@@ -351,7 +669,7 @@ public class ProxyRequestTemplateHttpMethodBinder : IModelBinder
             if (httpMethod is null)
             {
                 bindingContext.ModelState.AddModelError(
-                    nameof(ProxyRequestTemplate.Method),
+                    nameof(RequestTemplate.Method),
                     $"'{method}' is not a valid value for 'method' parameter.");
             }
             else
@@ -365,17 +683,23 @@ public class ProxyRequestTemplateHttpMethodBinder : IModelBinder
     }
 }
 
+public class RequestTemplateSpecContextBinder : IModelBinder
+{
+    public Task BindModelAsync(ModelBindingContext bindingContext)
+    {
+        var context = RequestTemplateSpec.ParseQueryAsJsonObject(bindingContext.HttpContext.Request.Query)?["context"]?.AsObject();
+        bindingContext.Result = ModelBindingResult.Success(context);
+
+        return Task.CompletedTask;
+    }
+}
+
 public class ProxyRequestContextBinder : IModelBinder
 {
     public Task BindModelAsync(ModelBindingContext bindingContext)
     {
-        var query = bindingContext.HttpContext.Request.Query.ToDictionary(
-            x => x.Key,
-            x => JsonValue.Create(x.Value.ToString()) as JsonNode);
-
-        var jsonObject = new JsonObject(query);
-
-        bindingContext.Result = ModelBindingResult.Success(jsonObject);
+        var context = RequestTemplateSpec.ParseQueryAsJsonObject(bindingContext.HttpContext.Request.Query);
+        bindingContext.Result = ModelBindingResult.Success(context);
 
         return Task.CompletedTask;
     }
@@ -385,16 +709,20 @@ public class ProxyControllerBinderProvider : IModelBinderProvider
 {
     public IModelBinder? GetBinder(ModelBinderProviderContext context)
     {
-        if (context.Metadata.ContainerType == typeof(ProxyRequestTemplate))
+        if (context.Metadata.ContainerType == typeof(RequestTemplateSpec))
         {
             if (context.Metadata.ModelType == typeof(HttpMethod))
             {
-                return new BinderTypeModelBinder(typeof(ProxyRequestTemplateHttpMethodBinder));
+                return new BinderTypeModelBinder(typeof(RequestTemplateSpecHttpMethodBinder));
             }
 
+            if (context.Metadata.PropertyName == nameof(RequestTemplateSpec.Context))
+            {
+                return new BinderTypeModelBinder(typeof(RequestTemplateSpecContextBinder));
+            }
         }
 
-        if (context.Metadata.ModelType == typeof(JsonObject) && context.Metadata.Name == "context")
+        if (context.Metadata.ModelType == typeof(Dictionary<string, JsonNode?>) && context.Metadata.Name == "context")
         {
             return new BinderTypeModelBinder(typeof(ProxyRequestContextBinder));
         }

@@ -1,0 +1,4 @@
+{
+  "id": "oauth",
+  "redirect_uri": "https://connect.duely/app/echo"
+}

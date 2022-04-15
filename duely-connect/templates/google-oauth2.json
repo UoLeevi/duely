@@ -1,0 +1,23 @@
+[
+  {
+    "info": "https://developers.google.com/identity/protocols/oauth2/web-server#httprest",
+    "id": "google-oauth2",
+    "url_template": "https://accounts.google.com/o/oauth2/v2/auth{?client_id,redirect_uri,response_type,scope,access_type,state,include_granted_scopes,login_hint,prompt}",
+    "context": {
+      "client_id": "{client_id}",
+      "redirect_uri": "https://connect.duely.app/oauth",
+      "response_type": "code",
+      "access_type": "offline",
+      "state": "{$request_id}",
+      "login_hint": "{email_address}"
+    }
+  },
+  {
+    "info": "https://developers.google.com/webmaster-tools/v1/how-tos/authorizing",
+    "base": ["google-oauth2"],
+    "id": "google-oauth2-webmasters.readonly",
+    "context": {
+      "scope": "https://www.googleapis.com/auth/webmasters.readonly"
+    }
+  }
+]
