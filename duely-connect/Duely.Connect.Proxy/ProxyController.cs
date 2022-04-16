@@ -248,6 +248,86 @@ public class ProxyRequest
     }
 }
 
+public static class Utilities
+{
+    private static char[] simpleJsonPathSeparators = new[] { '.', '[', ']', '"' };
+
+    public static string[] ParseSimpleJsonPath(string path)
+    {
+        // Let's keep it simple and assume that property names do not contain these separator characters
+        // Also let's be very lax about "incorrectly" formatted path expressions
+        return path.Split(simpleJsonPathSeparators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+
+    public static bool TryUpdateJsonNode(IDictionary<string, JsonNode?> jsonObject, string path, Func<JsonNode?, JsonNode?> update)
+    {
+        string[] propertyNames = ParseSimpleJsonPath(path);
+
+        for (int i = 0; i < propertyNames.Length - 1; ++i)
+        {
+            string propertyName = propertyNames[i];
+
+            if (!jsonObject.TryGetValue(propertyName, out var node)) node = null;
+
+            if (node is null)
+            {
+                var newObjectNode = new JsonObject();
+                jsonObject[propertyName] = newObjectNode;
+                jsonObject = newObjectNode;
+                continue;
+            }
+
+            if (node is JsonObject existingNodeObject)
+            {
+                jsonObject = existingNodeObject;
+                continue;
+            }
+
+            // JsonObject node was expected
+            return false;
+        }
+
+        string leafPropertyName = propertyNames[^1];
+
+        if (!jsonObject.TryGetValue(leafPropertyName, out var leafNode)) leafNode = null;
+
+        jsonObject[leafPropertyName] = update(leafNode);
+        return true;
+    }
+
+
+    public static IDictionary<string, JsonNode?>? ParseQueryAsJsonObject(IQueryCollection query)
+    {
+        var jsonObject = new Dictionary<string, JsonNode?>();
+
+        foreach (var item in query)
+        {
+            TryUpdateJsonNode(jsonObject, item.Key, (JsonNode? previousNode) => {
+                if (previousNode is null) 
+                {
+                    if (item.Value.Count == 0) return null;
+                    if (item.Value.Count == 1) return JsonValue.Create(item.Value[0]);
+                    return new JsonArray(item.Value.Select(v => JsonValue.Create(v)).ToArray());
+                }
+
+                if (previousNode is JsonValue jsonValue)
+                {
+                    throw new NotImplementedException();
+                }
+
+                if (previousNode is JsonArray jsonArray)
+                {
+                    throw new NotImplementedException();
+                }
+
+                throw new NotImplementedException();
+            });
+        }
+
+        return jsonObject;
+    }
+}
+
 public class RequestTemplateSpec
 {
     [JsonPropertyName("info")]
@@ -306,17 +386,6 @@ public class RequestTemplateSpec
     [JsonPropertyName("target_context_from_response")]
     [BindProperty(Name = "target_context_from_response")]
     public Dictionary<string, string>? TargetContextFromResponse { get; set; }
-
-    internal static IDictionary<string, JsonNode?>? ParseQueryAsJsonObject(IQueryCollection query)
-    {
-        var dictionary = new Dictionary<string, JsonNode?>();
-
-        foreach (var item in query)
-        {
-        }
-
-        return dictionary;
-    }
 }
 
 public class RequestTemplate
@@ -687,8 +756,13 @@ public class RequestTemplateSpecContextBinder : IModelBinder
 {
     public Task BindModelAsync(ModelBindingContext bindingContext)
     {
-        var context = RequestTemplateSpec.ParseQueryAsJsonObject(bindingContext.HttpContext.Request.Query)?["context"]?.AsObject();
-        bindingContext.Result = ModelBindingResult.Success(context);
+        if (Utilities.ParseQueryAsJsonObject(bindingContext.HttpContext.Request.Query)?.TryGetValue("context", out var contextNode) is true)
+        {
+            if (contextNode is JsonObject context)
+            {
+                bindingContext.Result = ModelBindingResult.Success(context);
+            }
+        }
 
         return Task.CompletedTask;
     }
@@ -698,7 +772,7 @@ public class ProxyRequestContextBinder : IModelBinder
 {
     public Task BindModelAsync(ModelBindingContext bindingContext)
     {
-        var context = RequestTemplateSpec.ParseQueryAsJsonObject(bindingContext.HttpContext.Request.Query);
+        var context = Utilities.ParseQueryAsJsonObject(bindingContext.HttpContext.Request.Query);
         bindingContext.Result = ModelBindingResult.Success(context);
 
         return Task.CompletedTask;
