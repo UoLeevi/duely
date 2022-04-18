@@ -10,4 +10,8 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /e /y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\services\&quot;" />
+  </Target>
+
 </Project>
