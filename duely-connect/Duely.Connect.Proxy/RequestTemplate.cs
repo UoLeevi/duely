@@ -169,7 +169,7 @@ public class RequestTemplate
             // Merge provided context with template context
             context = new Dictionary<string, JsonNode?>(context);
             Context?.ToList().ForEach(x => context.TryAdd(x.Key, x.Value));
-            
+
             // Add special context variables
             context["$request_id"] = Helpers.GenerateRandomKey();
 
@@ -242,5 +242,82 @@ public class RequestTemplate
         }
 
         return true;
+    }
+}
+
+public class ProxyRequest
+{
+    public ProxyRequest(RequestTemplate template, IDictionary<string, JsonNode?> context)
+    {
+        // Merge provided context with template context
+        Context = new Dictionary<string, JsonNode?>(context);
+        template.Context?.ToList().ForEach(x => Context.TryAdd(x.Key, x.Value));
+
+        Id = Helpers.GenerateRandomKey();
+
+        // Add special context variables
+        Context["$request_id"] = Id;
+
+        var urlString = StringTemplate.Format(template.Url, context);
+
+        if (template.Query is not null)
+        {
+            urlString = QueryHelpers.AddQueryString(urlString, template.Query
+                .Select(kvp => new KeyValuePair<string, string?>(
+                    StringTemplate.Format(kvp.Key, context),
+                    StringTemplate.Format(kvp.Value, context)))
+                .Where(kvp => kvp.Key != string.Empty && kvp.Value != string.Empty));
+        }
+
+        Url = new Uri(urlString);
+
+        Method = template.Method ?? HttpMethod.Get;
+
+        Body = template.Body;
+
+        if (template.Headers is not null)
+        {
+            Headers = new(template.Headers);
+        }
+    }
+
+    [JsonPropertyName("id")]
+    public string Id { get; private set; } = Helpers.GenerateRandomKey();
+
+    [JsonPropertyName("url")]
+    public Uri Url { get; set; }
+
+    [JsonPropertyName("method")]
+    [JsonConverter(typeof(HttpMethodJsonConverter))]
+    public HttpMethod? Method { get; private set; }
+
+    [JsonPropertyName("headers")]
+    public Dictionary<string, string[]>? Headers { get; private set; }
+
+    [JsonPropertyName("body")]
+    public string? Body { get; private set; }
+
+    [JsonPropertyName("context")]
+    [JsonConverter(typeof(RequestTemplateContextJsonConverter))]
+    public IDictionary<string, JsonNode?>? Context { get; private set; }
+
+    [JsonPropertyName("redirect_uri")]
+    [BindProperty(Name = "redirect_uri")]
+    public Uri? RedirectUri { get; private set; }
+
+    [JsonPropertyName("target")]
+    public string? Target { get; private set; }
+
+    [JsonPropertyName("target_context_from_context")]
+    [BindProperty(Name = "target_context_from_context")]
+    public Dictionary<string, string>? TargetContextMap { get; private set; }
+
+    [JsonPropertyName("target_context_from_response")]
+    [BindProperty(Name = "target_context_from_response")]
+    public Dictionary<string, string>? TargetContextFromResponse { get; private set; }
+
+    public HttpRequestMessage CreateRequestMessage()
+    {
+
     }
 }
