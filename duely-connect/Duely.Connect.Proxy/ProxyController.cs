@@ -131,13 +131,20 @@ public class ProxyController : ControllerBase
             return;
         }
 
-        if (!template!.TryCreateRequestMessage(context, out var requestMessage, out var validationErrorMessage))
+        var proxyRequest = new ProxyRequest(template!, context);
+        HttpRequestMessage requestMessage;
+
+        try
+        {
+            requestMessage = proxyRequest.CreateRequestMessage();
+        }
+        catch (Exception ex)
         {
             Response.StatusCode = 400;
             Response.ContentType = "application/json";
             await JsonSerializer.SerializeAsync(Response.Body, new
             {
-                message = validationErrorMessage
+                message = ex.Message
             }, jsonSerializerOptions, HttpContext.RequestAborted);
             return;
         }

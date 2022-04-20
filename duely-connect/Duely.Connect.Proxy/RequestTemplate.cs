@@ -152,97 +152,6 @@ public class RequestTemplate
             }
         }
     }
-
-    public bool TryCreateRequestMessage(IDictionary<string, JsonNode?> context, out HttpRequestMessage? requestMessage, out string? validationErrorMessage)
-    {
-        requestMessage = null;
-        validationErrorMessage = null;
-
-        try
-        {
-            if (Url is null)
-            {
-                validationErrorMessage = "URL is required";
-                return false;
-            }
-
-            // Merge provided context with template context
-            context = new Dictionary<string, JsonNode?>(context);
-            Context?.ToList().ForEach(x => context.TryAdd(x.Key, x.Value));
-
-            // Add special context variables
-            context["$request_id"] = Helpers.GenerateRandomKey();
-
-            var urlString = StringTemplate.Format(Url, context);
-
-            if (Query is not null)
-            {
-                urlString = QueryHelpers.AddQueryString(urlString, Query
-                    .Select(kvp => new KeyValuePair<string, string?>(
-                        StringTemplate.Format(kvp.Key, context),
-                        StringTemplate.Format(kvp.Value, context)))
-                    .Where(kvp => kvp.Key != string.Empty && kvp.Value != string.Empty));
-            }
-
-            var url = new Uri(urlString);
-
-            if (!url.IsAbsoluteUri)
-            {
-                validationErrorMessage = "Absolute URL is required";
-                return false;
-            }
-
-            if (url.Scheme != "http" && url.Scheme != "https")
-            {
-                validationErrorMessage = "URL must use 'http' or 'https' scheme";
-                return false;
-            }
-
-            if (url.IsLoopback)
-            {
-                validationErrorMessage = $"URL '{url}' is not allowed.";
-                return false;
-            }
-
-            if (url.HostNameType != UriHostNameType.Dns)
-            {
-                validationErrorMessage = $"URL '{url}' is not allowed.";
-                return false;
-            }
-
-            requestMessage = new HttpRequestMessage(Method ?? HttpMethod.Get, url);
-
-            if (Body is not null)
-            {
-                requestMessage.Content = new StringContent(Body);
-            }
-
-            if (Headers is not null)
-            {
-                foreach (var header in Headers)
-                {
-                    if (!requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value) && requestMessage.Content != null)
-                    {
-                        requestMessage.Content?.Headers.TryAddWithoutValidation(header.Key, header.Value);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            validationErrorMessage = ex.Message;
-
-            if (requestMessage is not null)
-            {
-                requestMessage.Dispose();
-                requestMessage = null;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
 }
 
 public class ProxyRequest
@@ -289,7 +198,7 @@ public class ProxyRequest
 
     [JsonPropertyName("method")]
     [JsonConverter(typeof(HttpMethodJsonConverter))]
-    public HttpMethod? Method { get; private set; }
+    public HttpMethod Method { get; private set; }
 
     [JsonPropertyName("headers")]
     public Dictionary<string, string[]>? Headers { get; private set; }
@@ -316,8 +225,54 @@ public class ProxyRequest
     [BindProperty(Name = "target_context_from_response")]
     public Dictionary<string, string>? TargetContextFromResponse { get; private set; }
 
-    public HttpRequestMessage CreateRequestMessage()
+    public HttpRequestMessage CreateRequestMessage(bool validate = true)
     {
+        if (validate)
+        {
+            if (Url is null)
+            {
+                throw new InvalidOperationException("URL is required");
+            }
 
+            if (!Url.IsAbsoluteUri)
+            {
+                throw new InvalidOperationException("Absolute URL is required");
+            }
+
+            if (Url.Scheme != "http" && Url.Scheme != "https")
+            {
+                throw new InvalidOperationException("URL must use 'http' or 'https' scheme");
+            }
+
+            if (Url.IsLoopback)
+            {
+                throw new InvalidOperationException($"URL '{Url}' is not allowed.");
+            }
+
+            if (Url.HostNameType != UriHostNameType.Dns)
+            {
+                throw new InvalidOperationException($"URL '{Url}' is not allowed.");
+            }
+        }
+
+        var requestMessage = new HttpRequestMessage(Method, Url);
+
+        if (Body is not null)
+        {
+            requestMessage.Content = new StringContent(Body);
+        }
+
+        if (Headers is not null)
+        {
+            foreach (var header in Headers)
+            {
+                if (!requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value) && requestMessage.Content != null)
+                {
+                    requestMessage.Content?.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                }
+            }
+        }
+
+        return requestMessage;
     }
 }
