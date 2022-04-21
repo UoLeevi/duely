@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace Duely.Utilities;
 
 // Currently very very simple implementation only used for the most basic operations
-public class JsonPath
+public static class JsonPath
 {
     public static string GetValueAsString(IDictionary<string, JsonNode?> jsonObject, string path)
     {
@@ -57,7 +57,7 @@ public class JsonPath
     private static readonly char[] simpleJsonPathSeparators = new[] { '.', '[', ']', '"', '\'' };
     private static readonly Regex rxRootSelectorPrefix = new(@"^\$[\.\[]");
 
-    private static string[] GetPropertyNamesFromPath(string path)
+    public static string[] GetPropertyNamesFromPath(string path)
     {
         // For null or empty string, return empty array
         if (string.IsNullOrEmpty(path)) return Array.Empty<string>();
