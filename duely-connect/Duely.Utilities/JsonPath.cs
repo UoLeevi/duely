@@ -69,4 +69,9 @@ public static class JsonPath
         // Also let's be very lax about "incorrectly" formatted path expressions
         return path.Split(simpleJsonPathSeparators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
+
+    public static string CreatePathFromPropertyNames(string[] propertyNames)
+    {
+        return string.Join('.', propertyNames);
+    }
 }
