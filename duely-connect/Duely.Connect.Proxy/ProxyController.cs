@@ -1,7 +1,6 @@
+using Duely.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
-using System.Security.Cryptography;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -97,7 +96,7 @@ public class ProxyController : ControllerBase
     {
         if (spec.Id is not null)
         {
-            spec.Id += "-" + Helpers.GenerateRandomKey();
+            spec.Id += "-" + CryptoHelpers.GenerateRandomKey();
         }
 
         if (!RequestTemplate.TryAdd(spec, out var template))
@@ -179,95 +178,5 @@ public class ProxyController : ControllerBase
                 await responseStream.CopyToAsync(Response.Body, HttpContext.RequestAborted);
             }
         }
-    }
-}
-
-public static class Utilities
-{
-    private static char[] simpleJsonPathSeparators = new[] { '.', '[', ']', '"' };
-
-    public static string[] ParseSimpleJsonPath(string path)
-    {
-        // Let's keep it simple and assume that property names do not contain these separator characters
-        // Also let's be very lax about "incorrectly" formatted path expressions
-        return path.Split(simpleJsonPathSeparators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-    }
-
-    public static bool TryUpdateJsonNode(IDictionary<string, JsonNode?> jsonObject, string path, Func<JsonNode?, JsonNode?> update)
-    {
-        string[] propertyNames = ParseSimpleJsonPath(path);
-
-        for (int i = 0; i < propertyNames.Length - 1; ++i)
-        {
-            string propertyName = propertyNames[i];
-
-            if (!jsonObject.TryGetValue(propertyName, out var node)) node = null;
-
-            if (node is null)
-            {
-                var newObjectNode = new JsonObject();
-                jsonObject[propertyName] = newObjectNode;
-                jsonObject = newObjectNode;
-                continue;
-            }
-
-            if (node is JsonObject existingNodeObject)
-            {
-                jsonObject = existingNodeObject;
-                continue;
-            }
-
-            // JsonObject node was expected
-            return false;
-        }
-
-        string leafPropertyName = propertyNames[^1];
-
-        if (!jsonObject.TryGetValue(leafPropertyName, out var leafNode)) leafNode = null;
-
-        jsonObject[leafPropertyName] = update(leafNode);
-        return true;
-    }
-
-
-    public static IDictionary<string, JsonNode?>? ParseQueryAsJsonObject(IQueryCollection query)
-    {
-        var jsonObject = new Dictionary<string, JsonNode?>();
-
-        foreach (var item in query)
-        {
-            TryUpdateJsonNode(jsonObject, item.Key, (JsonNode? previousNode) =>
-            {
-                if (previousNode is null)
-                {
-                    if (item.Value.Count == 0) return null;
-                    if (item.Value.Count == 1) return JsonValue.Create(item.Value[0]);
-                    return new JsonArray(item.Value.Select(v => JsonValue.Create(v)).ToArray());
-                }
-
-                if (previousNode is JsonValue jsonValue)
-                {
-                    throw new NotImplementedException();
-                }
-
-                if (previousNode is JsonArray jsonArray)
-                {
-                    throw new NotImplementedException();
-                }
-
-                throw new NotImplementedException();
-            });
-        }
-
-        return jsonObject;
-    }
-}
-
-public static class Helpers
-{
-    public static string GenerateRandomKey(int length = 24)
-    {
-        var bytes = RandomNumberGenerator.GetBytes(length);
-        return Base64UrlTextEncoder.Encode(bytes);
     }
 }
