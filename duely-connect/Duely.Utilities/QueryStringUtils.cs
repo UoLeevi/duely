@@ -7,31 +7,34 @@ namespace Duely.Utilities;
 
 public static class QueryStringUtils
 {
-    public static IDictionary<string, JsonNode?> ParseQueryAsJson(string queryString)
+    public static JsonObject ParseQueryAsJson(string queryString, params string[] rootPathPropertyNames)
     {
         var parsedQuery = QueryHelpers.ParseQuery(queryString);
-        return ParseQueryAsJson(parsedQuery);
+        return ParseQueryAsJson(parsedQuery, rootPathPropertyNames);
     }
 
-    public static IDictionary<string, JsonNode?> ParseQueryAsJson(QueryString queryString)
+    public static JsonObject ParseQueryAsJson(QueryString queryString, params string[] rootPathPropertyNames)
     {
-        return ParseQueryAsJson(queryString.Value ?? string.Empty);
+        return ParseQueryAsJson(queryString.Value ?? string.Empty, rootPathPropertyNames);
     }
 
-    public static IDictionary<string, JsonNode?> ParseQueryAsJson(IQueryCollection parsedQuery)
+    public static JsonObject ParseQueryAsJson(IQueryCollection parsedQuery, params string[] rootPathPropertyNames)
     {
-        return ParseQueryAsJson(new Dictionary<string, StringValues>(parsedQuery));
+        return ParseQueryAsJson(new Dictionary<string, StringValues>(parsedQuery), rootPathPropertyNames);
     }
 
-    public static IDictionary<string, JsonNode?> ParseQueryAsJson(IDictionary<string, StringValues> parsedQuery)
+    public static JsonObject ParseQueryAsJson(IDictionary<string, StringValues> parsedQuery, params string[] rootPathPropertyNames)
     {
         var normalizedQuery = new Dictionary<string, StringValues>();
+        rootPathPropertyNames ??= Array.Empty<string>();
+        var pathPrefix = rootPathPropertyNames.Length == 0 ? string.Empty : (JsonPath.CreatePathFromPropertyNames(rootPathPropertyNames) + '.');
 
         foreach (var item in parsedQuery)
         {
             // normalize key
             var propertyNames = JsonPath.GetPropertyNamesFromPath(item.Key);
             var path = JsonPath.CreatePathFromPropertyNames(propertyNames);
+            if (!path.StartsWith(pathPrefix)) continue;
 
             if (!normalizedQuery.TryAdd(path, item.Value))
             {
@@ -81,6 +84,8 @@ public static class QueryStringUtils
             jsonObject[propertyNames[^1]] = value;
         }
 
-        return jsonObjectRoot;
+        return JsonPath.GetNode(jsonObjectRoot, rootPathPropertyNames) is JsonObject result
+            ? result
+            : new JsonObject();
     }
 }

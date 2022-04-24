@@ -53,5 +53,42 @@ namespace Duely.Utilities.Tests
             var resultJson = JsonSerializer.Serialize(result);
             Assert.IsTrue(resultJson == expectedJson);
         }
+
+
+        private Dictionary<string, (string query, string expectedJson)> parseContextTestCases = new()
+        {
+            ["test case 1"] = (
+                query: "?test=value",
+                expectedJson: JsonSerializer.Serialize(new { })
+            ),
+            ["test case 2"] = (
+                query: "?headers[Content-Length]=3&url=https%3A%2F%2Fwww.google.com%2Fsearch%3Fq%3D%24%7Bquery%7D",
+                expectedJson: JsonSerializer.Serialize(JsonNode.Parse(@"{}"))
+            ),
+            ["test case 3"] = (
+                query: "?context._hidden_key=secret&context.deeply.nested.array=1&context.deeply[nested].array=2&context.deeply.nested['array']=3",
+                expectedJson: JsonSerializer.Serialize(JsonNode.Parse(@"{
+                    ""_hidden_key"": ""secret"",
+                    ""deeply"": {
+                        ""nested"": {
+                            ""array"": [""1"", ""2"", ""3""]
+                        }
+                    }
+                }"))
+            )
+        };
+
+        [TestMethod]
+        [DataRow("test case 1")]
+        [DataRow("test case 2")]
+        [DataRow("test case 3")]
+        public void DoesParseContextFromQueryStringAsJsonCorrectly(string testName)
+        {
+            (string query, string expectedJson) = parseContextTestCases[testName];
+
+            var result = QueryStringUtils.ParseQueryAsJson(query, "context");
+            var resultJson = JsonSerializer.Serialize(result);
+            Assert.IsTrue(resultJson == expectedJson);
+        }
     }
 }

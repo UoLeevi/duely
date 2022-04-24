@@ -6,6 +6,37 @@ namespace Duely.Utilities;
 // Currently very very simple implementation only used for the most basic operations
 public static class JsonPath
 {
+    public static JsonNode? GetNode(JsonNode? jsonNode, string[] pathAsPropertyNames)
+    {
+        if (pathAsPropertyNames.Length == 0) return jsonNode;
+        var pathNodes = GetPathJsonNodes(jsonNode, pathAsPropertyNames).ToArray();
+        if (pathNodes.Length == pathAsPropertyNames.Length) return pathNodes[^1];
+        return null;
+
+        static IEnumerable<JsonNode?> GetPathJsonNodes(JsonNode? jsonNode, string[] pathAsPropertyNames)
+        {
+            if (jsonNode is null) yield break;
+
+            foreach (var propertyName in pathAsPropertyNames)
+            {
+                if (jsonNode is JsonArray jsonArray)
+                {
+                    if (!int.TryParse(propertyName, out int index)) yield break;
+                    if (index < 0) yield break;
+                    if (index >= jsonArray.Count) yield break;
+                    jsonNode = jsonArray[index];
+                    yield return jsonNode;
+                }
+
+                if (jsonNode is JsonObject jsonObject)
+                {
+                    if (!jsonObject.TryGetPropertyValue(propertyName, out jsonNode)) yield break;
+                    yield return jsonNode;
+                }
+            }
+        }
+    }
+
     public static string GetValueAsString(IDictionary<string, JsonNode?> jsonObject, string path)
     {
         string[] propertyNames = GetPropertyNamesFromPath(path);
@@ -24,34 +55,9 @@ public static class JsonPath
 
     public static string GetValueAsString(JsonNode? jsonNode, string[] pathAsPropertyNames)
     {
-        foreach (var propertyName in pathAsPropertyNames)
-        {
-            if (jsonNode is null) return string.Empty;
-
-            if (jsonNode is JsonValue) return string.Empty;
-
-            if (jsonNode is JsonArray jsonArray)
-            {
-                if (!int.TryParse(propertyName, out int index)) return string.Empty;
-                if (index < 0) return string.Empty;
-                if (index >= jsonArray.Count) return string.Empty;
-                jsonNode = jsonArray[index];
-                continue;
-            }
-
-            if (jsonNode is JsonObject jsonObject)
-            {
-                jsonNode = jsonObject[propertyName];
-                if (jsonNode is null) return string.Empty;
-                continue;
-            }
-
-            throw new();
-        }
-
-        if (jsonNode is JsonValue value) return value.ToString();
-
-        return string.Empty;
+        return GetNode(jsonNode, pathAsPropertyNames) is JsonValue value
+            ? value.ToString()
+            : string.Empty;
     }
 
     private static readonly char[] simpleJsonPathSeparators = new[] { '.', '[', ']', '"', '\'' };

@@ -8,12 +8,9 @@ public class RequestTemplateSpecContextBinder : IModelBinder
 {
     public Task BindModelAsync(ModelBindingContext bindingContext)
     {
-        if (QueryStringUtils.ParseQueryAsJson(bindingContext.HttpContext.Request.QueryString).TryGetValue("context", out var contextNode) is true)
+        if (QueryStringUtils.ParseQueryAsJson(bindingContext.HttpContext.Request.QueryString, "context") is JsonObject context)
         {
-            if (contextNode is JsonObject context)
-            {
-                bindingContext.Result = ModelBindingResult.Success(context);
-            }
+            bindingContext.Result = ModelBindingResult.Success(context);
         }
 
         return Task.CompletedTask;
