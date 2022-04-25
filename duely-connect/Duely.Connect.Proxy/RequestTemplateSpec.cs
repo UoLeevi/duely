@@ -19,14 +19,14 @@ public class RequestTemplateSpec
     public string? Url { get; set; }
 
     [JsonPropertyName("query")]
-    public Dictionary<string, string>? Query { get; set; }
+    public IDictionary<string, string>? Query { get; set; }
 
     [JsonPropertyName("method")]
     [JsonConverter(typeof(HttpMethodJsonConverter))]
     public HttpMethod? Method { get; set; }
 
     [JsonPropertyName("headers")]
-    public Dictionary<string, string[]>? Headers { get; set; }
+    public IDictionary<string, string[]>? Headers { get; set; }
 
     [JsonPropertyName("body")]
     public string? Body { get; set; }
@@ -47,9 +47,9 @@ public class RequestTemplateSpec
 
     [JsonPropertyName("target_context_from_context")]
     [BindProperty(Name = "target_context_from_context")]
-    public Dictionary<string, string>? TargetContextMap { get; set; }
+    public IDictionary<string, string>? TargetContextMap { get; set; }
 
     [JsonPropertyName("target_context_from_response")]
     [BindProperty(Name = "target_context_from_response")]
-    public Dictionary<string, string>? TargetContextFromResponse { get; set; }
+    public IDictionary<string, string>? TargetContextFromResponse { get; set; }
 }

@@ -66,7 +66,7 @@ public class ProxyController : ControllerBase
 
 
     [HttpGet("~/oauth")]
-    public async Task Get(string? code, string? scope, string? state, string? error, string? error_subtype)
+    public async Task GetOauth(string? code, string? scope, string? state, string? error, string? error_subtype)
     {
         if (code is null)
         {
@@ -92,7 +92,7 @@ public class ProxyController : ControllerBase
     }
 
     [HttpGet("template")]
-    public async Task Get([FromQuery] RequestTemplateSpec spec)
+    public async Task GetTemplate([FromQuery] RequestTemplateSpec spec)
     {
         if (spec.Id is not null)
         {
@@ -117,7 +117,7 @@ public class ProxyController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task Get(string id, [FromQuery] Dictionary<string, JsonNode?> context)
+    public async Task Get(string id, [FromQuery] IDictionary<string, JsonNode?> context)
     {
         if (!RequestTemplate.TryGet(id, out var template))
         {

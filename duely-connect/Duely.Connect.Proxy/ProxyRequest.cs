@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -38,7 +38,7 @@ public class ProxyRequest
 
         if (template.Headers is not null)
         {
-            Headers = new(template.Headers);
+            Headers = new Dictionary<string, string[]>(template.Headers);
         }
     }
 
@@ -53,7 +53,7 @@ public class ProxyRequest
     public HttpMethod Method { get; private set; }
 
     [JsonPropertyName("headers")]
-    public Dictionary<string, string[]>? Headers { get; private set; }
+    public IDictionary<string, string[]>? Headers { get; private set; }
 
     [JsonPropertyName("body")]
     public string? Body { get; private set; }
@@ -71,11 +71,11 @@ public class ProxyRequest
 
     [JsonPropertyName("target_context_from_context")]
     [BindProperty(Name = "target_context_from_context")]
-    public Dictionary<string, string>? TargetContextMap { get; private set; }
+    public IDictionary<string, string>? TargetContextMap { get; private set; }
 
     [JsonPropertyName("target_context_from_response")]
     [BindProperty(Name = "target_context_from_response")]
-    public Dictionary<string, string>? TargetContextFromResponse { get; private set; }
+    public IDictionary<string, string>? TargetContextFromResponse { get; private set; }
 
     public HttpRequestMessage CreateRequestMessage(bool validate = true)
     {

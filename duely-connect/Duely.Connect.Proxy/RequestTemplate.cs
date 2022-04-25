@@ -62,14 +62,14 @@ public class RequestTemplate
     public string? Url { get; private set; }
 
     [JsonPropertyName("query")]
-    public Dictionary<string, string>? Query { get; set; }
+    public IDictionary<string, string>? Query { get; set; }
 
     [JsonPropertyName("method")]
     [JsonConverter(typeof(HttpMethodJsonConverter))]
     public HttpMethod? Method { get; private set; }
 
     [JsonPropertyName("headers")]
-    public Dictionary<string, string[]>? Headers { get; private set; }
+    public IDictionary<string, string[]>? Headers { get; private set; }
 
     [JsonPropertyName("body")]
     public string? Body { get; private set; }
@@ -91,11 +91,11 @@ public class RequestTemplate
 
     [JsonPropertyName("target_context_from_context")]
     [BindProperty(Name = "target_context_from_context")]
-    public Dictionary<string, string>? TargetContextMap { get; private set; }
+    public IDictionary<string, string>? TargetContextMap { get; private set; }
 
     [JsonPropertyName("target_context_from_response")]
     [BindProperty(Name = "target_context_from_response")]
-    public Dictionary<string, string>? TargetContextFromResponse { get; private set; }
+    public IDictionary<string, string>? TargetContextFromResponse { get; private set; }
 
     private void UpdateFromBase(RequestTemplate baseTemplate)
     {

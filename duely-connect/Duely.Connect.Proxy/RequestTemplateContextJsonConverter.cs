@@ -6,7 +6,7 @@ namespace Duely.Connect.Proxy;
 
 public class RequestTemplateContextJsonConverter : JsonConverter<IDictionary<string, JsonNode?>>
 {
-    public override Dictionary<string, JsonNode?>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override IDictionary<string, JsonNode?>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         return null;
     }
