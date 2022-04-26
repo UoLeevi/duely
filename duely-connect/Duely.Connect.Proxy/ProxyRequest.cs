@@ -19,14 +19,14 @@ public class ProxyRequest
         // Add special context variables
         Context["$request_id"] = Id;
 
-        var urlString = StringTemplate.Format(template.Url, context);
+        var urlString = StringTemplate.Format(template.Url, Context);
 
         if (template.Query is not null)
         {
             urlString = QueryHelpers.AddQueryString(urlString, template.Query
                 .Select(kvp => new KeyValuePair<string, string?>(
-                    StringTemplate.Format(kvp.Key, context),
-                    StringTemplate.Format(kvp.Value, context)))
+                    StringTemplate.Format(kvp.Key, Context),
+                    StringTemplate.Format(kvp.Value, Context)))
                 .Where(kvp => kvp.Key != string.Empty && kvp.Value != string.Empty));
         }
 

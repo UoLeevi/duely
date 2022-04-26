@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using System.Text.Json.Nodes;
 
@@ -21,7 +21,7 @@ public class ProxyControllerBinderProvider : IModelBinderProvider
             }
         }
 
-        if (context.Metadata.ModelType == typeof(Dictionary<string, JsonNode?>) && context.Metadata.Name == "context")
+        if (context.Metadata.ModelType == typeof(IDictionary<string, JsonNode?>) && context.Metadata.Name == "context")
         {
             return new BinderTypeModelBinder(typeof(ProxyRequestContextBinder));
         }
