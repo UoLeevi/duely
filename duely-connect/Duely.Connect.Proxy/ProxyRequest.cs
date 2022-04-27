@@ -12,13 +12,14 @@ public class ProxyRequest
     {
         // Merge provided context with template context
         Context = new Dictionary<string, JsonNode?>(context);
-        template.Context?.ToList().ForEach(x => Context.TryAdd(x.Key, x.Value));
+        template.Context.ToList().ForEach(x => Context.TryAdd(x.Key, x.Value));
 
         Id = CryptoHelpers.GenerateRandomKey();
 
         // Add special context variables
         Context["$request_id"] = Id;
 
+        ArgumentNullException.ThrowIfNull(template.Url);
         var urlString = StringTemplate.Format(template.Url, Context);
 
         if (template.Query is not null)
@@ -33,13 +34,21 @@ public class ProxyRequest
         Url = new Uri(urlString);
 
         Method = template.Method ?? HttpMethod.Get;
-
         Body = template.Body;
 
-        if (template.Headers is not null)
-        {
-            Headers = new Dictionary<string, string[]>(template.Headers);
-        }
+        Headers = template.Headers.ToDictionary(
+            kvp => StringTemplate.Format(kvp.Key, Context),
+            kvp => kvp.Value.Select(v => StringTemplate.Format(v, Context)).ToArray());
+
+        Target = template.Target is null ? null : StringTemplate.Format(template.Target, Context);
+
+        TargetContextFromResponse = template.TargetContextFromResponse.ToDictionary(
+            kvp => StringTemplate.Format(kvp.Key, Context),
+            kvp => StringTemplate.Format(kvp.Value, Context));
+
+        TargetContextMap = template.TargetContextMap.ToDictionary(
+            kvp => StringTemplate.Format(kvp.Key, Context),
+            kvp => StringTemplate.Format(kvp.Value, Context));
     }
 
     [JsonPropertyName("id")]
@@ -53,14 +62,14 @@ public class ProxyRequest
     public HttpMethod Method { get; private set; }
 
     [JsonPropertyName("headers")]
-    public IDictionary<string, string[]>? Headers { get; private set; }
+    public IDictionary<string, string[]> Headers { get; }
 
     [JsonPropertyName("body")]
     public string? Body { get; private set; }
 
     [JsonPropertyName("context")]
     [JsonConverter(typeof(RequestTemplateContextJsonConverter))]
-    public IDictionary<string, JsonNode?>? Context { get; private set; }
+    public IDictionary<string, JsonNode?> Context { get; }
 
     [JsonPropertyName("redirect_uri")]
     [BindProperty(Name = "redirect_uri")]
@@ -71,11 +80,11 @@ public class ProxyRequest
 
     [JsonPropertyName("target_context_from_context")]
     [BindProperty(Name = "target_context_from_context")]
-    public IDictionary<string, string>? TargetContextMap { get; private set; }
+    public IDictionary<string, string> TargetContextMap { get; private set; }
 
     [JsonPropertyName("target_context_from_response")]
     [BindProperty(Name = "target_context_from_response")]
-    public IDictionary<string, string>? TargetContextFromResponse { get; private set; }
+    public IDictionary<string, string> TargetContextFromResponse { get; private set; }
 
     public HttpRequestMessage CreateRequestMessage(bool validate = true)
     {
@@ -114,14 +123,11 @@ public class ProxyRequest
             requestMessage.Content = new StringContent(Body);
         }
 
-        if (Headers is not null)
+        foreach (var header in Headers)
         {
-            foreach (var header in Headers)
+            if (!requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value) && requestMessage.Content != null)
             {
-                if (!requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value) && requestMessage.Content != null)
-                {
-                    requestMessage.Content?.Headers.TryAddWithoutValidation(header.Key, header.Value);
-                }
+                requestMessage.Content?.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
         }
 
