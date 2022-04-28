@@ -46,7 +46,7 @@ public class ProxyController : ControllerBase
 
         jsonSerializerOptions = new JsonSerializerOptions
         {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             WriteIndented = true
         };
@@ -130,7 +130,19 @@ public class ProxyController : ControllerBase
             return;
         }
 
-        var proxyRequest = new ProxyRequest(template!, context);
+        ProxyRequest proxyRequest = new(template!, context);
+
+        if (proxyRequest.Target is not null && !RequestTemplate.TryGet(proxyRequest.Target, out var targetTemplate))
+        {
+            Response.StatusCode = 400;
+            Response.ContentType = "application/json";
+            await JsonSerializer.SerializeAsync(Response.Body, new
+            {
+                message = $"Target template was not found: {proxyRequest.Target}"
+            }, jsonSerializerOptions, HttpContext.RequestAborted);
+            return;
+        }
+
         HttpRequestMessage requestMessage;
 
         try
@@ -159,23 +171,37 @@ public class ProxyController : ControllerBase
 
             using var responseMessage = await httpClient.SendAsync(requestMessage, HttpContext.RequestAborted);
 
-            Response.StatusCode = (int)responseMessage.StatusCode;
-            foreach (var header in responseMessage.Headers)
+            if (targetTemplate is null)
             {
-                Response.Headers[header.Key] = header.Value.ToArray();
+
+                Response.StatusCode = (int)responseMessage.StatusCode;
+                foreach (var header in responseMessage.Headers)
+                {
+                    Response.Headers[header.Key] = header.Value.ToArray();
+                }
+
+                foreach (var header in responseMessage.Content.Headers)
+                {
+                    Response.Headers[header.Key] = header.Value.ToArray();
+                }
+
+                // SendAsync removes chunking from the response. This removes the header so it doesn't expect a chunked response.
+                Response.Headers.Remove("transfer-encoding");
+
+                using (var responseStream = await responseMessage.Content.ReadAsStreamAsync())
+                {
+                    await responseStream.CopyToAsync(Response.Body, HttpContext.RequestAborted);
+                }
             }
-
-            foreach (var header in responseMessage.Content.Headers)
+            else
             {
-                Response.Headers[header.Key] = header.Value.ToArray();
-            }
+                using var httpClientForTarget = httpClientFactory.CreateClient();
 
-            // SendAsync removes chunking from the response. This removes the header so it doesn't expect a chunked response.
-            Response.Headers.Remove("transfer-encoding");
+                // TODO:
 
-            using (var responseStream = await responseMessage.Content.ReadAsStreamAsync())
-            {
-                await responseStream.CopyToAsync(Response.Body, HttpContext.RequestAborted);
+                var targetContext = proxyRequest.TargetContextMap.ToDictionary(
+                    kvp => StringTemplate.Format(kvp.Key, proxyRequest.Context),
+                    kvp => StringTemplate.Format(kvp.Value, proxyRequest.Context));
             }
         }
     }
