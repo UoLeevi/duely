@@ -195,13 +195,58 @@ public class ProxyController : ControllerBase
             }
             else
             {
-                using var httpClientForTarget = httpClientFactory.CreateClient();
+                Dictionary<string, JsonNode?> targetContext = new();
+
+                foreach (var kvp in proxyRequest.TargetContextFromResponse)
+                {
+                    var key = StringTemplate.Format(kvp.Key, proxyRequest.Context);
+                    if (string.IsNullOrEmpty(key)) continue;
+
+                    var value = StringTemplate.Format(kvp.Value, proxyRequest.Context);
+                    if (string.IsNullOrEmpty(value)) continue;
+                    targetContext[key] = value;
+
+
+                }
+
+                if (responseMessage.Content.Headers.ContentType.MediaType.StartsWith("application/json"))
+                {
+                    using var responseStream = await responseMessage.Content.ReadAsStreamAsync();
+                    JsonNode responseJson = JsonNode.Parse(responseStream);
+
+                    foreach (var kvp in proxyRequest.TargetContextFromResponse)
+                    {
+                        var key = StringTemplate.Format(kvp.Key, proxyRequest.Context);
+
+                        if (string.IsNullOrEmpty(key)) continue;
+
+                        var value = JsonPath.GetNode(responseJson, JsonPath.GetPropertyNamesFromPath(kvp.Value));
+                        if (value is null) continue;
+                        targetContext[key] = value;
+                    }
+                }
 
                 // TODO:
 
-                var targetContext = proxyRequest.TargetContextMap.ToDictionary(
-                    kvp => StringTemplate.Format(kvp.Key, proxyRequest.Context),
-                    kvp => StringTemplate.Format(kvp.Value, proxyRequest.Context));
+                ProxyRequest targetProxyRequest = new(targetTemplate, targetContext);
+                HttpRequestMessage targetRequestMessage;
+
+                try
+                {
+                    targetRequestMessage = proxyRequest.CreateRequestMessage();
+                }
+                catch (Exception ex)
+                {
+                    Response.StatusCode = 400;
+                    Response.ContentType = "application/json";
+                    await JsonSerializer.SerializeAsync(Response.Body, new
+                    {
+                        message = ex.Message
+                    }, jsonSerializerOptions, HttpContext.RequestAborted);
+                    return;
+                }
+
+                using var httpClientForTarget = httpClientFactory.CreateClient();
             }
         }
     }
