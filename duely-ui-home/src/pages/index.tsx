@@ -1,11 +1,13 @@
 import { TopBar, DuelyLogo } from '@duely/react';
 import { Link, Route, RouteProps, Switch } from 'react-router-dom';
 import NavMenu from '~/components/NavMenu';
+import { About } from './about';
 import Home from './home';
 import LogIn from './log-in';
 import NewBrand from './new-brand';
 import PasswordReset from './password-reset';
 import Profile from './profile';
+import { ServicesAgreementPage } from './services-agreement';
 import SetNewPassword from './set-new-password';
 import SignUp from './sign-up';
 
@@ -29,6 +31,14 @@ const routes: RouteProps[] = [
   {
     path: '/profile',
     component: Profile
+  },
+  {
+    path: '/about',
+    component: About
+  },
+  {
+    path: '/services-agreement',
+    component: ServicesAgreementPage
   },
   {
     path: '/new-brand',
