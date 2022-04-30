@@ -116,6 +116,65 @@ public class ProxyController : ControllerBase
         return;
     }
 
+    private async Task<HttpResponseMessage> RequestAsync(RequestTemplate template, IDictionary<string, JsonNode?> context)
+    {
+        ProxyRequest proxyRequest = new(template!, context);
+        RequestTemplate? targetTemplate = null;
+
+        if (proxyRequest.Target is not null && !RequestTemplate.TryGet(proxyRequest.Target, out targetTemplate))
+        {
+            throw new InvalidOperationException($"Target template was not found: {proxyRequest.Target}");
+        }
+
+        using (HttpRequestMessage requestMessage = proxyRequest.CreateRequestMessage())
+        {
+            using var httpClient = httpClientFactory.CreateClient();
+
+            HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage, HttpContext.RequestAborted);
+
+            if (targetTemplate is not null)
+            {
+                Dictionary<string, JsonNode?> targetContext = new();
+
+                foreach (var kvp in proxyRequest.TargetContextFromResponse)
+                {
+                    var key = StringTemplate.Format(kvp.Key, proxyRequest.Context);
+                    if (string.IsNullOrEmpty(key)) continue;
+
+                    var value = StringTemplate.Format(kvp.Value, proxyRequest.Context);
+                    if (string.IsNullOrEmpty(value)) continue;
+                    targetContext[key] = value;
+                }
+
+                if (responseMessage.Content.Headers.ContentType?.MediaType?.StartsWith("application/json") is true)
+                {
+                    using Stream responseStream = await responseMessage.Content.ReadAsStreamAsync();
+                    JsonNode? responseJson = JsonNode.Parse(responseStream);
+
+                    if (responseJson is not null)
+                    {
+                        foreach (var kvp in proxyRequest.TargetContextFromResponse)
+                        {
+                            var key = StringTemplate.Format(kvp.Key, proxyRequest.Context);
+
+                            if (string.IsNullOrEmpty(key)) continue;
+
+                            var value = JsonPath.GetNode(responseJson, JsonPath.GetPropertyNamesFromPath(kvp.Value));
+                            if (value is null) continue;
+                            targetContext[key] = value;
+                        }
+                    }
+                }
+
+                responseMessage.Dispose();
+                responseMessage = await RequestAsync(targetTemplate, targetContext);
+
+            }
+
+            return responseMessage;
+        }
+    }
+
     [HttpGet("{id}")]
     public async Task Get(string id, [FromQuery] IDictionary<string, JsonNode?> context)
     {
@@ -130,124 +189,25 @@ public class ProxyController : ControllerBase
             return;
         }
 
-        ProxyRequest proxyRequest = new(template!, context);
+        using var responseMessage = await RequestAsync(template!, context);
 
-        if (proxyRequest.Target is not null && !RequestTemplate.TryGet(proxyRequest.Target, out var targetTemplate))
+        Response.StatusCode = (int)responseMessage.StatusCode;
+        foreach (var header in responseMessage.Headers)
         {
-            Response.StatusCode = 400;
-            Response.ContentType = "application/json";
-            await JsonSerializer.SerializeAsync(Response.Body, new
-            {
-                message = $"Target template was not found: {proxyRequest.Target}"
-            }, jsonSerializerOptions, HttpContext.RequestAborted);
-            return;
+            Response.Headers[header.Key] = header.Value.ToArray();
         }
 
-        HttpRequestMessage requestMessage;
-
-        try
+        foreach (var header in responseMessage.Content.Headers)
         {
-            requestMessage = proxyRequest.CreateRequestMessage();
-        }
-        catch (Exception ex)
-        {
-            Response.StatusCode = 400;
-            Response.ContentType = "application/json";
-            await JsonSerializer.SerializeAsync(Response.Body, new
-            {
-                message = ex.Message
-            }, jsonSerializerOptions, HttpContext.RequestAborted);
-            return;
+            Response.Headers[header.Key] = header.Value.ToArray();
         }
 
-        using (requestMessage)
+        // SendAsync removes chunking from the response. This removes the header so it doesn't expect a chunked response.
+        Response.Headers.Remove("transfer-encoding");
+
+        using (var responseStream = await responseMessage.Content.ReadAsStreamAsync())
         {
-            Response.StatusCode = 200;
-            Response.ContentType = "application/json";
-            await JsonSerializer.SerializeAsync(Response.Body, requestMessage, jsonSerializerOptions, HttpContext.RequestAborted);
-            return;
-
-            using var httpClient = httpClientFactory.CreateClient();
-
-            using var responseMessage = await httpClient.SendAsync(requestMessage, HttpContext.RequestAborted);
-
-            if (targetTemplate is null)
-            {
-
-                Response.StatusCode = (int)responseMessage.StatusCode;
-                foreach (var header in responseMessage.Headers)
-                {
-                    Response.Headers[header.Key] = header.Value.ToArray();
-                }
-
-                foreach (var header in responseMessage.Content.Headers)
-                {
-                    Response.Headers[header.Key] = header.Value.ToArray();
-                }
-
-                // SendAsync removes chunking from the response. This removes the header so it doesn't expect a chunked response.
-                Response.Headers.Remove("transfer-encoding");
-
-                using (var responseStream = await responseMessage.Content.ReadAsStreamAsync())
-                {
-                    await responseStream.CopyToAsync(Response.Body, HttpContext.RequestAborted);
-                }
-            }
-            else
-            {
-                Dictionary<string, JsonNode?> targetContext = new();
-
-                foreach (var kvp in proxyRequest.TargetContextFromResponse)
-                {
-                    var key = StringTemplate.Format(kvp.Key, proxyRequest.Context);
-                    if (string.IsNullOrEmpty(key)) continue;
-
-                    var value = StringTemplate.Format(kvp.Value, proxyRequest.Context);
-                    if (string.IsNullOrEmpty(value)) continue;
-                    targetContext[key] = value;
-
-
-                }
-
-                if (responseMessage.Content.Headers.ContentType.MediaType.StartsWith("application/json"))
-                {
-                    using var responseStream = await responseMessage.Content.ReadAsStreamAsync();
-                    JsonNode responseJson = JsonNode.Parse(responseStream);
-
-                    foreach (var kvp in proxyRequest.TargetContextFromResponse)
-                    {
-                        var key = StringTemplate.Format(kvp.Key, proxyRequest.Context);
-
-                        if (string.IsNullOrEmpty(key)) continue;
-
-                        var value = JsonPath.GetNode(responseJson, JsonPath.GetPropertyNamesFromPath(kvp.Value));
-                        if (value is null) continue;
-                        targetContext[key] = value;
-                    }
-                }
-
-                // TODO:
-
-                ProxyRequest targetProxyRequest = new(targetTemplate, targetContext);
-                HttpRequestMessage targetRequestMessage;
-
-                try
-                {
-                    targetRequestMessage = proxyRequest.CreateRequestMessage();
-                }
-                catch (Exception ex)
-                {
-                    Response.StatusCode = 400;
-                    Response.ContentType = "application/json";
-                    await JsonSerializer.SerializeAsync(Response.Body, new
-                    {
-                        message = ex.Message
-                    }, jsonSerializerOptions, HttpContext.RequestAborted);
-                    return;
-                }
-
-                using var httpClientForTarget = httpClientFactory.CreateClient();
-            }
+            await responseStream.CopyToAsync(Response.Body, HttpContext.RequestAborted);
         }
     }
 }

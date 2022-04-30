@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Duely.Utilities;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Duely.Connect.Proxy;
 
@@ -10,7 +11,7 @@ public class RequestTemplate
 {
     private static ConcurrentDictionary<string, RequestTemplate> templates = new ConcurrentDictionary<string, RequestTemplate>();
 
-    internal static bool TryGet(string id, out RequestTemplate? template)
+    internal static bool TryGet(string id, [NotNullWhen(true)] out RequestTemplate? template)
     {
         return templates.TryGetValue(id, out template);
     }
