@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Duely.Utilities;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Duely.Connect.Proxy;
 
@@ -86,35 +87,51 @@ public class ProxyRequest
     [BindProperty(Name = "target_context_from_response")]
     public IDictionary<string, string> TargetContextFromResponse { get; private set; }
 
+    private bool Validate([NotNullWhen(false)] out string? validationMessage)
+    {
+        if (Url is null)
+        {
+            validationMessage = "URL is required";
+            return false;
+        }
+
+        if (!Url.IsAbsoluteUri)
+        {
+            validationMessage = "Absolute URL is required";
+            return false;
+        }
+
+        if (Url.Scheme != "http" && Url.Scheme != "https")
+        {
+            validationMessage = "URL must use 'http' or 'https' scheme";
+            return false;
+        }
+
+        if (Url.IsLoopback)
+        {
+            validationMessage = $"URL '{Url}' is not allowed.";
+            return false;
+        }
+
+        if (Url.HostNameType != UriHostNameType.Dns)
+        {
+            validationMessage = $"URL '{Url}' is not allowed.";
+            return false;
+        }
+
+        if (!Url.Host.Contains('.'))
+        {
+            validationMessage = $"URL '{Url}' is not allowed.";
+            return false;
+        }
+
+        validationMessage = null;
+        return true;
+    }
+
     public HttpRequestMessage CreateRequestMessage(bool validate = true)
     {
-        if (validate)
-        {
-            if (Url is null)
-            {
-                throw new InvalidOperationException("URL is required");
-            }
-
-            if (!Url.IsAbsoluteUri)
-            {
-                throw new InvalidOperationException("Absolute URL is required");
-            }
-
-            if (Url.Scheme != "http" && Url.Scheme != "https")
-            {
-                throw new InvalidOperationException("URL must use 'http' or 'https' scheme");
-            }
-
-            if (Url.IsLoopback)
-            {
-                throw new InvalidOperationException($"URL '{Url}' is not allowed.");
-            }
-
-            if (Url.HostNameType != UriHostNameType.Dns)
-            {
-                throw new InvalidOperationException($"URL '{Url}' is not allowed.");
-            }
-        }
+        if (validate && !Validate(out var validationMessage)) throw new InvalidOperationException(validationMessage);
 
         var requestMessage = new HttpRequestMessage(Method, Url);
 
