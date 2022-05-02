@@ -116,8 +116,13 @@ public class ProxyController : ControllerBase
         return;
     }
 
-    private async Task<HttpResponseMessage> RequestAsync(RequestTemplate template, IDictionary<string, JsonNode?> context)
+    // To prevent prevent infitite loops etc.
+    const int maxNestedRequests = 8;
+
+    private async Task<HttpResponseMessage> RequestAsync(RequestTemplate template, IDictionary<string, JsonNode?> context, int depth = 1)
     {
+        if (depth > maxNestedRequests) throw new InvalidOperationException($"Maximum request depth reached");
+
         ProxyRequest proxyRequest = new(template!, context);
         RequestTemplate? targetTemplate = null;
 
@@ -167,7 +172,7 @@ public class ProxyController : ControllerBase
                 }
 
                 responseMessage.Dispose();
-                responseMessage = await RequestAsync(targetTemplate, targetContext);
+                responseMessage = await RequestAsync(targetTemplate, targetContext, depth + 1);
 
             }
 

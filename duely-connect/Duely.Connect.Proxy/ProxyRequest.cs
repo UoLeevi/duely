@@ -119,6 +119,7 @@ public class ProxyRequest
             return false;
         }
 
+        // URL must contain second-level domain in addition to top-level domain
         if (!Url.Host.Contains('.'))
         {
             validationMessage = $"URL '{Url}' is not allowed.";
