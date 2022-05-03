@@ -152,7 +152,7 @@ const iconPathDefinitions = {
   },
   user: {
     solid: ['M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z'],
-    outline: []
+    outline: ['M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z']
   },
   'office-building': {
     solid: [
@@ -217,6 +217,22 @@ const iconPathDefinitions = {
       'M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2'
     ]
   },
+  login: {
+    solid: [
+      'M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z'
+    ],
+    outline: [
+      'M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1'
+    ]
+  },
+  logout: {
+    solid: [
+      'M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z'
+    ],
+    outline: [
+      'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'
+    ]
+  },
   'shopping-cart': {
     solid: [
       'M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z'
@@ -237,7 +253,7 @@ const iconPathDefinitions = {
     solid: [
       'M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zM13 8h-2v3.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L13 11.586z'
     ],
-    outline:[]
+    outline: []
   },
   pencil: {
     solid: [
@@ -358,6 +374,8 @@ export const icons = {
   'search.solid': <Icon name="search" solid />,
   'user.solid': <Icon name="user" solid />,
   'office-building.solid': <Icon name="office-building" solid />,
+  'login.solid': <Icon name="login" solid />,
+  'logout.solid': <Icon name="logout" solid />,
   briefcase: <Icon name="briefcase" />,
   clipboard: <Icon name="clipboard" />,
   cash: <Icon name="cash" />,
@@ -375,6 +393,9 @@ export const icons = {
   payout: <Icon name="payout" />,
   pencil: <Icon name="pencil" />,
   'receipt-tax': <Icon name="receipt-tax" />,
+  user: <Icon name="user" />,
   users: <Icon name="users" />,
-  template: <Icon name="template" />
+  template: <Icon name="template" />,
+  login: <Icon name="login" />,
+  logout: <Icon name="logout" />
 } as const;

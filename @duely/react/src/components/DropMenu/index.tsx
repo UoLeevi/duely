@@ -2,7 +2,7 @@ import React, { useCallback, useLayoutEffect, useRef } from 'react';
 import { Transition, Menu } from '@headlessui/react';
 import { createClassName } from '@duely/util';
 import { ElementType } from 'react';
-import { IconProp, icons } from '../icons';
+import { getIconElement, IconProp, icons } from '../icons';
 import { Link } from 'react-router-dom';
 import { useIntersectionObserver } from '../../hooks';
 import { SkeletonText } from '../skeletons';
@@ -33,6 +33,8 @@ function DropMenuItem({ icon, children, to, href, loading, onClick, ...props }: 
       active ? 'bg-gray-100 dark:text-gray-100 text-gray-900' : 'dark:text-gray-300 text-gray-700',
       'group first:rounded-t-md last:rounded-b-md flex px-4 py-2 items-center space-x-2 whitespace-nowrap text-sm text-center focus:outline-none font-medium'
     );
+
+  icon = getIconElement(icon);
 
   return (
     <Menu.Item>
