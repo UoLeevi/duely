@@ -1,6 +1,7 @@
 using Duely.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Concurrent;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -14,7 +15,7 @@ public class ProxyController : ControllerBase
 {
     static ProxyController()
     {
-        DirectoryInfo templatesDirectory = new DirectoryInfo("../templates");
+        DirectoryInfo templatesDirectory = new("../templates");
 
         var templateFiles = templatesDirectory.GetFiles("*.json");
 
@@ -53,6 +54,9 @@ public class ProxyController : ControllerBase
     }
 
     private static readonly JsonSerializerOptions jsonSerializerOptions;
+
+    // TODO: Replace with database
+    private static readonly IDictionary<string, (string requestJson, string responseJson)> requests = new ConcurrentDictionary<string, (string requestJson, string responseJson)>();
 
     private readonly IHttpClientFactory httpClientFactory;
 
@@ -136,6 +140,9 @@ public class ProxyController : ControllerBase
             using var httpClient = httpClientFactory.CreateClient();
 
             HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage, HttpContext.RequestAborted);
+
+            // Store request and response
+            requests.Add(proxyRequest.Id, (JsonSerializer.Serialize(proxyRequest), JsonSerializer.Serialize(responseMessage)));
 
             if (targetTemplate is not null)
             {
