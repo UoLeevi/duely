@@ -62,6 +62,16 @@ spec:
             secretKeyRef:
               name: duely-connect-secret
               key: duely-serviceaccount-password
+        - name: DUELY_GOOGLE_CUSTOMSEARCH_CX
+          valueFrom:
+            secretKeyRef:
+              name: duely-connect-secret
+              key: duely-google-customsearch-cx
+        - name: DUELY_GOOGLE_CUSTOMSEARCH_KEY
+          valueFrom:
+            secretKeyRef:
+              name: duely-connect-secret
+              key: duely-google-customsearch-key
         livenessProbe:
           httpGet:
             path: /.well-known/server-health

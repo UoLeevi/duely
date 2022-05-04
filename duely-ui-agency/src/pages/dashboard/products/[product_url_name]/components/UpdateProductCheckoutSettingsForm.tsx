@@ -59,8 +59,8 @@ export function UpdateProductCheckoutSettingsForm({ product_id }: ProductProps) 
     checkout_success_url,
     checkout_cancel_url
   }: UpdateProductCheckoutSettingsFormFields) {
-    checkout_success_url = checkout_success_url.trim() || '';
-    checkout_cancel_url = checkout_cancel_url.trim() || '';
+    checkout_success_url = checkout_success_url?.trim() || '';
+    checkout_cancel_url = checkout_cancel_url?.trim() || '';
 
     if (checkout_success_url !== '') {
       checkout_success_url = `https://${checkout_success_url}`;
