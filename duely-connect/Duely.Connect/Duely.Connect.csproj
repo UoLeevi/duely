@@ -6,6 +6,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <UserSecretsId>7e4e9a71-c416-41cc-ac8c-f6374cc3d150</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JsonPath.Net" Version="0.2.1" />
+  </ItemGroup>
 
 </Project>
