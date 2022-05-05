@@ -44,16 +44,14 @@ public class ProxyController : ControllerBase
                 }
             }
         }
-
-        jsonSerializerOptions = new JsonSerializerOptions
-        {
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            WriteIndented = true
-        };
     }
 
-    private static readonly JsonSerializerOptions jsonSerializerOptions;
+    private static readonly JsonSerializerOptions jsonSerializerOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        WriteIndented = true
+    };
 
     // TODO: Replace with database
     private static readonly IDictionary<string, (string requestJson, string responseJson)> requests = new ConcurrentDictionary<string, (string requestJson, string responseJson)>();
