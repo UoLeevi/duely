@@ -114,6 +114,8 @@ public class SearchToolsController : ControllerBase
 
         // TODO:
 
+        Dictionary<string, List<string>> clusters = new();
+
         throw new NotImplementedException();
 
         return new JsonResult(null, jsonSerializerOptions);
