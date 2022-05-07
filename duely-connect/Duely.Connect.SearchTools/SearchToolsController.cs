@@ -60,19 +60,30 @@ public class SearchToolsController : ControllerBase
     [HttpGet("cluster")]
     public async Task<IActionResult> Cluster([FromQuery] string[] keywords)
     {
+        // Number of common results required for pairing keywords
         const int threshold = 4;
+
+        // First page search results
         var results = await Task.WhenAll(keywords.Select(kw => Search(kw)).ToArray());
+
+        // Calculate number of matches between keyword pairs
+        /*
+                kw0 kw1 kw2 kw3 kw4
+          kw0 [[  0,  4,  1, 10,  2],
+          kw1  [  0,  0,  2,  5,  1],
+          kw2  [  0,  0,  0,  1,  0],
+          kw3  [  0,  0,  0,  0,  1],
+          kw4  [  0,  0,  0,  0,  0]]
+         */
 
         var matches = new int[keywords.Length, keywords.Length];
 
-        for (int i = 0; i < keywords.Length; ++i)
+        for (int i = 0; i < keywords.Length - 1; ++i)
         {
             var r_i = results[i]!;
 
-            for (int j = i; j < keywords.Length; ++j)
+            for (int j = i + 1; j < keywords.Length; ++j)
             {
-                if (i == j) continue;
-
                 var r_j = results[j]!;
 
                 for (int k = 0; k < r_i.Length; ++k)
@@ -88,15 +99,29 @@ public class SearchToolsController : ControllerBase
             }
         }
 
+        // Convert match counts to true/false matrix
+        /*
+                kw0 kw1 kw2 kw3 kw4
+          kw0 [[  x,  x,   ,  x,   ],
+          kw1  [  x,  x,   ,  x,   ],
+          kw2  [   ,   ,  x,   ,   ],
+          kw3  [  x,  x,   ,  x,   ],
+          kw4  [   ,   ,   ,   ,  x]]
+         */
+
         var mask = new bool[keywords.Length, keywords.Length];
 
         for (int i = 0; i < keywords.Length; ++i)
         {
-            for (int j = i; j < keywords.Length; ++j)
+            mask[i, i] = true;
+
+            for (int j = i + 1; j < keywords.Length; ++j)
             {
                 mask[j, i] = mask[i, j] = matches[i, j] >= threshold;
             }
         }
+
+        // Sort keywords by number of pairs
 
         var indexes = keywords
             .Select((kw, i) => (kw, i))
@@ -112,13 +137,109 @@ public class SearchToolsController : ControllerBase
             })
             .ToList();
 
-        // TODO:
+        // Sort the mask matrix rows
+        /*
+                kw0 kw1 kw2 kw3 kw4
+          kw0 [[  x,  x,   ,  x,   ],
+          kw1  [  x,  x,   ,  x,   ],
+          kw3  [  x,  x,   ,  x,   ],
+          kw2  [   ,   ,  x,   ,   ],
+          kw4  [   ,   ,   ,   ,  x]]
+         */
 
-        Dictionary<string, List<string>> clusters = new();
+        var maskSorted = new bool[keywords.Length, keywords.Length];
 
-        throw new NotImplementedException();
+        for (int i = 0; i < keywords.Length; ++i)
+        {
+            var idx = indexes[i].i;
+            for (int j = i; j < keywords.Length; ++j)
+            {
+                maskSorted[j, i] = maskSorted[i, j] = mask[idx, j];
+            }
+        }
 
-        return new JsonResult(null, jsonSerializerOptions);
+        // Merge mask matrix rows with overlap
+        /*
+                kw0 kw1 kw2 kw3 kw4
+              [[  x,  x,   ,  x,   ],
+               [   ,   ,  x,   ,   ],
+               [   ,   ,   ,   ,  x]]
+         */
+
+        List<bool[]> clusteredMask = new();
+        for (int i = 0; i < keywords.Length; ++i)
+        {
+            foreach (var merged in clusteredMask)
+            {
+                for (int j = 0; j < keywords.Length; ++j)
+                {
+                    if (maskSorted[i, j] && merged[j])
+                    {
+                        for (int k = 0; k < keywords.Length; ++k)
+                        {
+                            merged[k] |= maskSorted[i, k];
+                        }
+
+                        goto nextKeyword;
+                    }
+                }
+            }
+
+            var n = new bool[keywords.Length];
+            clusteredMask.Add(n);
+
+            for (int k = 0; k < keywords.Length; ++k)
+            {
+                n[k] = maskSorted[i, k];
+            }
+        nextKeyword:;
+        }
+
+        // Create clusters and group unclusterd keywords
+        /*
+                kw0 kw1 kw2 kw3 kw4
+           c1  [[  x,  x,   ,  x,   ],
+          (uc) [   ,   ,  x,   ,  x]]
+         */
+
+        List<(string name, List<string> keywords)> clusters = new();
+        var noCluster = new List<string>();
+
+        foreach (var merged in clusteredMask)
+        {
+            string? kw = null;
+            int count = 0;
+            for (int i = 0; i < keywords.Length && count < 2; ++i)
+            {
+                if (merged[i])
+                {
+                    ++count;
+                    kw = keywords[i];
+                }
+            }
+
+            if (count == 1)
+            {
+                noCluster.Add(kw!);
+                continue;
+            }
+
+            var cluster = new List<string>();
+            var name = indexes.First(kw => merged[kw.i]).kw;
+            clusters.Add((name, cluster));
+
+            for (int i = 0; i < keywords.Length; ++i)
+            {
+                if (merged[i])
+                {
+                    cluster.Add(keywords[i]);
+                }
+            }
+        }
+
+        if (noCluster.Count > 0) clusters.Add(("(no cluster)", noCluster));
+
+        return new JsonResult(noCluster, jsonSerializerOptions);
     }
 
     private async Task<JsonElement[]?> Search(string q)
