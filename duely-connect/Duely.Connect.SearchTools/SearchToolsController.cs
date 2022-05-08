@@ -152,9 +152,9 @@ public class SearchToolsController : ControllerBase
         for (int i = 0; i < keywords.Length; ++i)
         {
             var idx = indexes[i].i;
-            for (int j = i; j < keywords.Length; ++j)
+            for (int j = 0; j < keywords.Length; ++j)
             {
-                maskSorted[j, i] = maskSorted[i, j] = mask[idx, j];
+                maskSorted[i, j] = mask[idx, j];
             }
         }
 
@@ -202,7 +202,7 @@ public class SearchToolsController : ControllerBase
           (uc) [   ,   ,  x,   ,  x]]
          */
 
-        List<(string name, List<string> keywords)> clusters = new();
+        Dictionary<string, List<string>> clusters = new();
         var noCluster = new List<string>();
 
         foreach (var merged in clusteredMask)
@@ -226,7 +226,7 @@ public class SearchToolsController : ControllerBase
 
             var cluster = new List<string>();
             var name = indexes.First(kw => merged[kw.i]).kw;
-            clusters.Add((name, cluster));
+            clusters.Add(name, cluster);
 
             for (int i = 0; i < keywords.Length; ++i)
             {
@@ -237,9 +237,9 @@ public class SearchToolsController : ControllerBase
             }
         }
 
-        if (noCluster.Count > 0) clusters.Add(("(no cluster)", noCluster));
+        if (noCluster.Count > 0) clusters.Add("(no cluster)", noCluster);
 
-        return new JsonResult(noCluster, jsonSerializerOptions);
+        return new JsonResult(clusters.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray()), jsonSerializerOptions);
     }
 
     private async Task<JsonElement[]?> Search(string q)
