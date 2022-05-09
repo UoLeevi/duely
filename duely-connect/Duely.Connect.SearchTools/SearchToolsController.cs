@@ -2,6 +2,7 @@ using Json.Path;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Concurrent;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -88,11 +89,11 @@ public class SearchToolsController : ControllerBase
 
                 for (int k = 0; k < r_i.Length; ++k)
                 {
-                    string? url_i = r_i[k].GetString();
+                    string? url_i = r_i[k];
 
                     for (int l = 0; l < r_j.Length; ++l)
                     {
-                        string? url_j = r_j[l].GetString();
+                        string? url_j = r_j[l];
                         if (url_i == url_j) ++matches[i, j];
                     }
                 }
@@ -242,8 +243,12 @@ public class SearchToolsController : ControllerBase
         return new JsonResult(clusters.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray()), jsonSerializerOptions);
     }
 
-    private async Task<JsonElement[]?> Search(string q)
+    private ConcurrentDictionary<string, string[]> searchResultsCache = new();
+
+    private async Task<string[]?> Search(string q)
     {
+        if (searchResultsCache.TryGetValue(q, out var results)) return results;
+
         var cseParameters = new GoogleCustomSearchParameters { q = q };
 
         var url = cseParameters.CreateUrl(new GoogleCustomSearchParameters
@@ -258,7 +263,14 @@ public class SearchToolsController : ControllerBase
         using Stream responseStream = await responseMessage.Content.ReadAsStreamAsync();
         var jsonDocument = await JsonDocument.ParseAsync(responseStream);
 
-        return linksJsonPath.Evaluate(jsonDocument.RootElement).Matches?.Select(m => m.Value).ToArray();
+        results = linksJsonPath.Evaluate(jsonDocument.RootElement).Matches?.Select(m => m.Value.GetString()!).ToArray();
+
+        if (results?.Any() is true)
+        {
+            searchResultsCache.TryAdd(q, results);
+        }
+
+        return results;
     }
 }
 
