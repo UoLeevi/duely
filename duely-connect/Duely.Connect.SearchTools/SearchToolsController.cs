@@ -1,3 +1,4 @@
+using Duely.Utilities;
 using Json.Path;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
@@ -8,6 +9,83 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Duely.Connect.SearchTools;
+
+// TODO: When good API is decided, move implementation to database
+public static class QuotaManager
+{
+    private static readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
+
+    private static readonly IDictionary<string, int> Quota = new ConcurrentDictionary<string, int>
+    {
+        ["x5VfPXaIyL-Q3oPYU12hUOioVj2SQKF0"] = 100,
+        ["o3ckGh2S6q5JgJ_Fx8tmi66NuwRc4Maj"] = 15
+    };
+
+    public static async Task<int> GetQuota(string token)
+    {
+        return Quota.TryGetValue(token, out var quota) ? quota : 0;
+    }
+
+    public static async Task<bool> TrySubstract(string token, int amount)
+    {
+        await semaphore.WaitAsync();
+
+        try
+        {
+            var quota = await GetQuota(token);
+            if (quota < amount) return false;
+            Quota[token] = quota - amount;
+            return true;
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+    }
+}
+
+[ApiController]
+[Route("/quota")]
+public class QuotaController : ControllerBase
+{
+    private static readonly JsonSerializerOptions jsonSerializerOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        WriteIndented = true
+    };
+
+    [HttpGet("{token}")]
+    public async Task<IActionResult> Get(string token)
+    {
+        var quota = await QuotaManager.GetQuota(token);
+        return new JsonResult(new
+        {
+            quota = quota
+        }, jsonSerializerOptions);
+    }
+}
+
+[ApiController]
+[Route("/random")]
+public class RandomController : ControllerBase
+{
+    private static readonly JsonSerializerOptions jsonSerializerOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        WriteIndented = true
+    };
+
+    [HttpGet()]
+    public async Task<IActionResult> Get()
+    {
+        return new JsonResult(new
+        {
+            value = CryptoHelpers.GenerateRandomKey(),
+        }, jsonSerializerOptions);
+    }
+}
 
 [ApiController]
 [Route("/search-tools")]
@@ -22,7 +100,7 @@ public class SearchToolsController : ControllerBase
 
     private readonly IHttpClientFactory httpClientFactory;
     private readonly (string cx, string key) customsearchInfo;
-    private readonly JsonPath linksJsonPath = JsonPath.Parse("$.items[*].link");
+    private readonly Json.Path.JsonPath linksJsonPath = Json.Path.JsonPath.Parse("$.items[*].link");
 
     public SearchToolsController(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {

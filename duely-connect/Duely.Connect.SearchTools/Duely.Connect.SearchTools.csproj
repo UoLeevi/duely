@@ -13,6 +13,10 @@
   <ItemGroup>
     <PackageReference Include="JsonPath.Net" Version="0.2.1" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Duely.Utilities\Duely.Utilities.csproj" />
+  </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="xcopy /e /y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\services\&quot;" />
