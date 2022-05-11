@@ -1,5 +1,6 @@
 using Duely.Utilities;
 using Json.Path;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
@@ -17,8 +18,8 @@ public static class QuotaManager
 
     private static readonly IDictionary<string, int> Quota = new ConcurrentDictionary<string, int>
     {
-        ["x5VfPXaIyL-Q3oPYU12hUOioVj2SQKF0"] = 100,
-        ["o3ckGh2S6q5JgJ_Fx8tmi66NuwRc4Maj"] = 15
+        ["x5VfPXaIyL-Q3oPYU12hUOioVj2SQKF0"] = 7500,
+        ["o3ckGh2S6q5JgJ_Fx8tmi66NuwRc4Maj"] = 75
     };
 
     public static async Task<int> GetQuota(string token)
@@ -36,6 +37,21 @@ public static class QuotaManager
             if (quota < amount) return false;
             Quota[token] = quota - amount;
             return true;
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+    }
+
+    public static async Task Add(string token, int amount)
+    {
+        await semaphore.WaitAsync();
+
+        try
+        {
+            var quota = await GetQuota(token);
+            Quota[token] = quota - amount;
         }
         finally
         {
@@ -117,8 +133,16 @@ public class SearchToolsController : ControllerBase
 
     // see: https://developers.google.com/custom-search/v1/reference/rest/v1/cse/list
     [HttpGet("search")]
-    public async Task<IActionResult> Search([FromQuery] GoogleCustomSearchParameters cseParameters)
+    public async Task<IActionResult> Search([FromQuery] string token, [FromQuery] GoogleCustomSearchParameters cseParameters)
     {
+        if (!await QuotaManager.TrySubstract(token, 75))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = $"Quota exceeded for token '{token}'"
+            });
+        }
+
         var url = cseParameters.CreateUrl(new GoogleCustomSearchParameters
         {
             cx = customsearchInfo.cx,
@@ -137,8 +161,16 @@ public class SearchToolsController : ControllerBase
     }
 
     [HttpGet("cluster")]
-    public async Task<IActionResult> Cluster([FromQuery] string[] keywords)
+    public async Task<IActionResult> Cluster([FromQuery] string token, [FromQuery] string[] keywords)
     {
+        if (!await QuotaManager.TrySubstract(token, 75 * keywords.Length))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = $"Quota exceeded for token '{token}'"
+            });
+        }
+
         // Number of common results required for pairing keywords
         const int threshold = 4;
 
@@ -318,7 +350,11 @@ public class SearchToolsController : ControllerBase
 
         if (noCluster.Count > 0) clusters.Add("(no cluster)", noCluster);
 
-        return new JsonResult(clusters.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray()), jsonSerializerOptions);
+        return new JsonResult(new
+        {
+            results = keywords.Select((kw, i) => (kw, i)).ToDictionary(x => x.kw, x => results[x.i]),
+            clusters = clusters.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray())
+        }, jsonSerializerOptions);
     }
 
     private ConcurrentDictionary<string, string[]> searchResultsCache = new();
