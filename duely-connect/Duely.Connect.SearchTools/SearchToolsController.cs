@@ -146,7 +146,11 @@ public class SearchToolsController : ControllerBase
         try
         {
             var results = await Search(token, cseParameters);
-            return new JsonResult(new { results = results }, jsonSerializerOptions);
+            return new JsonResult(new
+            {
+                results = results,
+                balance = await QuotaManager.GetQuota(token)
+            }, jsonSerializerOptions);
         }
         catch (QuotaExceededException exception)
         {
@@ -351,7 +355,8 @@ public class SearchToolsController : ControllerBase
             return new JsonResult(new
             {
                 results = keywords.Select((kw, i) => (kw, i)).ToDictionary(x => x.kw, x => results[x.i]),
-                clusters = clusters.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray())
+                clusters = clusters.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray()),
+                balance = await QuotaManager.GetQuota(token)
             }, jsonSerializerOptions);
         }
         catch (QuotaExceededException exception)
@@ -390,6 +395,11 @@ public class SearchToolsController : ControllerBase
             }
 
             return entry.results;
+        }
+
+        if (!await QuotaManager.TrySubstract(token, 75))
+        {
+            throw new QuotaExceededException(token);
         }
 
         var url = (cseParameters with
