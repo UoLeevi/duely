@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 13.0 (Debian 13.0-1.pgdg100+1)
--- Dumped by pg_dump version 13.5 (Debian 13.5-1.pgdg100+1)
+-- Dumped by pg_dump version 13.6 (Debian 13.6-1.pgdg100+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -2167,6 +2167,28 @@ $$;
 ALTER FUNCTION internal_.try_verify_sign_up_() OWNER TO postgres;
 
 --
+-- Name: update_credit_balance_(); Type: FUNCTION; Schema: internal_; Owner: postgres
+--
+
+CREATE FUNCTION internal_.update_credit_balance_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+
+  UPDATE application_.credit_balance_
+  SET
+    amount_ = amount_ + NEW.amount_
+  WHERE uuid_ = NEW.credit_balance_uuid_;
+
+  RETURN NULL;
+
+END;
+$$;
+
+
+ALTER FUNCTION internal_.update_credit_balance_() OWNER TO postgres;
+
+--
 -- Name: update_page_block_linked_list_(); Type: FUNCTION; Schema: internal_; Owner: postgres
 --
 
@@ -3074,6 +3096,48 @@ $$;
 
 
 ALTER FUNCTION operation_.query_resource_definition_(_resource_definition_uuid uuid) OWNER TO postgres;
+
+--
+-- Name: try_charge_credit_balance_(text, bigint, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.try_charge_credit_balance_(_token text, _amount bigint, _data jsonb) RETURNS bigint
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _resource_token security_.resource_token_;
+  _credit_balance application_.credit_balance_;
+BEGIN
+  SELECT * INTO _resource_token
+  FROM security_.resource_token_
+  WHERE token_ = _token;
+
+  IF _resource_token.uuid_ IS NULL THEN
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+  END IF;
+
+  SELECT * INTO _credit_balance
+  FROM application_.credit_balance_
+  WHERE resource_token_uuid_ = _resource_token.uuid_
+  FOR UPDATE;
+
+  IF _credit_balance.uuid_ IS NULL THEN
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+  END IF;
+
+  IF _credit_balance.amount_ < _amount THEN
+    RETURN (SELECT _credit_balance.amount_ - _amount);
+  END IF;
+
+  INSERT INTO application_.credit_balance_transaction_(credit_balance_uuid_, amount_, data_)
+  SELECT _credit_balance.uuid_, -_amount, _data;
+
+  RETURN (SELECT _credit_balance.amount_ - _amount);
+END
+$$;
+
+
+ALTER FUNCTION operation_.try_charge_credit_balance_(_token text, _amount bigint, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: update_resource_(text, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
@@ -4719,6 +4783,44 @@ $$;
 ALTER FUNCTION policy_.owner_can_query_credential_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
+-- Name: owner_can_query_credit_balance_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_query_credit_balance_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{uuid_, resource_token_uuid_, agency_uuid_, amount_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_query_credit_balance_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: owner_can_query_credit_balance_transaction_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.owner_can_query_credit_balance_transaction_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{uuid_, credit_balance_uuid_, amount_, date_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.owner_can_query_credit_balance_transaction_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
 -- Name: owner_can_query_integration_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4894,6 +4996,21 @@ END
 ALTER FUNCTION policy_.product_status_is_live_(_arg anyelement) OWNER TO postgres;
 
 --
+-- Name: serviceaccount_(anyelement); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$ 
+BEGIN
+  RETURN internal_.check_current_user_is_serviceaccount_();
+END;
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_(_arg anyelement) OWNER TO postgres;
+
+--
 -- Name: serviceaccount_can_change_customer_(security_.resource_definition_, application_.resource_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
 --
 
@@ -4987,6 +5104,25 @@ $$;
 
 
 ALTER FUNCTION policy_.serviceaccount_can_change_webhook_event_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_create_credit_balance_transaction_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_create_credit_balance_transaction_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{credit_balance_uuid_, amount_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_create_credit_balance_transaction_(_resource_definition security_.resource_definition_, _data jsonb) OWNER TO postgres;
 
 --
 -- Name: serviceaccount_can_create_customer_(security_.resource_definition_, jsonb); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -5141,6 +5277,44 @@ $$;
 
 
 ALTER FUNCTION policy_.serviceaccount_can_query_credential_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_query_credit_balance_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_query_credit_balance_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, resource_token_uuid_, agency_uuid_, amount_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_query_credit_balance_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
+
+--
+-- Name: serviceaccount_can_query_credit_balance_transaction_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
+--
+
+CREATE FUNCTION policy_.serviceaccount_can_query_credit_balance_transaction_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, credit_balance_uuid_, amount_, date_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+
+ALTER FUNCTION policy_.serviceaccount_can_query_credit_balance_transaction_(_resource_definition security_.resource_definition_, _resource application_.resource_) OWNER TO postgres;
 
 --
 -- Name: serviceaccount_can_query_customer_(security_.resource_definition_, application_.resource_); Type: FUNCTION; Schema: policy_; Owner: postgres
@@ -6249,6 +6423,39 @@ CREATE TABLE application_.credential_ (
 ALTER TABLE application_.credential_ OWNER TO postgres;
 
 --
+-- Name: credit_balance_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.credit_balance_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    resource_token_uuid_ uuid NOT NULL,
+    agency_uuid_ uuid,
+    amount_ bigint NOT NULL,
+    data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT credit_balance__amount__check CHECK ((amount_ >= 0))
+);
+
+
+ALTER TABLE application_.credit_balance_ OWNER TO postgres;
+
+--
+-- Name: credit_balance_transaction_; Type: TABLE; Schema: application_; Owner: postgres
+--
+
+CREATE TABLE application_.credit_balance_transaction_ (
+    uuid_ uuid DEFAULT gen_random_uuid() NOT NULL,
+    credit_balance_uuid_ uuid NOT NULL,
+    amount_ bigint NOT NULL,
+    date_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    data_ jsonb DEFAULT '{}'::jsonb NOT NULL,
+    audit_at_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    audit_session_uuid_ uuid DEFAULT (COALESCE(current_setting('security_.session_.uuid_'::text, true), '00000000-0000-0000-0000-000000000000'::text))::uuid NOT NULL
+);
+
+
+ALTER TABLE application_.credit_balance_transaction_ OWNER TO postgres;
+
+--
 -- Name: customer_; Type: TABLE; Schema: application_; Owner: postgres
 --
 
@@ -6773,6 +6980,24 @@ CREATE TABLE application__audit_.agency_thank_you_page_setting_ (
 
 
 ALTER TABLE application__audit_.agency_thank_you_page_setting_ OWNER TO postgres;
+
+--
+-- Name: credit_balance_transaction_; Type: TABLE; Schema: application__audit_; Owner: postgres
+--
+
+CREATE TABLE application__audit_.credit_balance_transaction_ (
+    uuid_ uuid,
+    credit_balance_uuid_ uuid,
+    amount_ bigint,
+    date_ timestamp with time zone,
+    data_ jsonb,
+    audit_at_ timestamp with time zone,
+    audit_session_uuid_ uuid,
+    audit_op_ character(1) DEFAULT 'I'::bpchar NOT NULL
+);
+
+
+ALTER TABLE application__audit_.credit_balance_transaction_ OWNER TO postgres;
 
 --
 -- Name: customer_; Type: TABLE; Schema: application__audit_; Owner: postgres
@@ -8094,6 +8319,11 @@ bf241cc6-6559-4373-9ea4-20684aa7bc55	a398f8c1-a34c-4f2f-a52a-144d86c475a1	policy
 c0b491c4-7a59-40ff-850f-677dcd368971	054285c5-0127-47b4-a8e6-87c685b4e4c0	policy_.serviceaccount_can_query_agency_settings_(security_.resource_definition_,application_.resource_)	query	\N	t
 258cf599-2d34-45f4-872c-febb2a7b1f39	054285c5-0127-47b4-a8e6-87c685b4e4c0	policy_.agent_can_query_agency_settings_(security_.resource_definition_,application_.resource_)	query	c0b491c4-7a59-40ff-850f-677dcd368971	t
 a85c61cc-972d-4f95-a51d-8cb6601f13ed	3c7e93d6-b141-423a-a7e9-e11a734b3474	policy_.anyone_can_query_stripe_account_for_agency_(security_.resource_definition_,application_.resource_)	query	\N	t
+cd29024d-01e4-4dab-a563-cdb568aedf60	e6398906-76de-4661-b3cf-e10ada19ea63	policy_.serviceaccount_can_query_credit_balance_(security_.resource_definition_,application_.resource_)	query	\N	t
+dccf3e53-3b10-4017-9ff3-db08e7014a08	e6398906-76de-4661-b3cf-e10ada19ea63	policy_.owner_can_query_credit_balance_(security_.resource_definition_,application_.resource_)	query	cd29024d-01e4-4dab-a563-cdb568aedf60	t
+841e8db1-f41c-401d-be01-8a1072d1f49f	6e7b6862-abb0-48e2-8c76-f22cae976124	policy_.serviceaccount_can_query_credit_balance_transaction_(security_.resource_definition_,application_.resource_)	query	\N	t
+84c8e8e5-7ef1-42d1-b968-7588efdf0a4c	6e7b6862-abb0-48e2-8c76-f22cae976124	policy_.owner_can_query_credit_balance_transaction_(security_.resource_definition_,application_.resource_)	query	841e8db1-f41c-401d-be01-8a1072d1f49f	t
+82de6222-bea8-40c0-b952-8fe5ff928985	6e7b6862-abb0-48e2-8c76-f22cae976124	policy_.serviceaccount_can_create_credit_balance_transaction_(security_.resource_definition_,jsonb)	create	\N	t
 \.
 
 
@@ -8155,6 +8385,8 @@ e82d9b56-e05d-4aa2-81b4-2af2643f224c	credtype	credential type	internal_.credenti
 f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bdc7-4664-99c6-b7745349c352	{product_uuid_,stripe_price_id_ext_live_,stripe_price_id_ext_test_,type_,status_,active_}	\N	2021-07-20 06:40:28.130717+00	00000000-0000-0000-0000-000000000000
 054285c5-0127-47b4-a8e6-87c685b4e4c0	agcyset	agency settings	application_.agency_settings_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_}	\N	2021-07-21 09:51:31.278334+00	00000000-0000-0000-0000-000000000000
 a398f8c1-a34c-4f2f-a52a-144d86c475a1	prodset	product settings	application_.product_settings_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,product_uuid_}	\N	2021-07-21 09:51:31.278334+00	00000000-0000-0000-0000-000000000000
+e6398906-76de-4661-b3cf-e10ada19ea63	credbal	credit balance	application_.credit_balance_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,resource_token_uuid_,agency_uuid_}	\N	2022-05-14 07:03:07.913457+00	00000000-0000-0000-0000-000000000000
+6e7b6862-abb0-48e2-8c76-f22cae976124	credtr	credit balance transaction	application_.credit_balance_transaction_	e6398906-76de-4661-b3cf-e10ada19ea63	{uuid_,credit_balance_uuid_}	\N	2022-05-14 07:03:07.913457+00	00000000-0000-0000-0000-000000000000
 \.
 
 
@@ -8290,6 +8522,8 @@ f3e5569e-c28d-40e6-b1ca-698fb48e6ba3	price	price	application_.price_	7f589215-bd
 34f873e1-b837-4f1f-94d7-7bacf9c43d8d	set	product thank you page setting	267795	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,product_uuid_,url_}	\N	2021-07-21 09:51:31.278334+00	00000000-0000-0000-0000-000000000000	D
 054285c5-0127-47b4-a8e6-87c685b4e4c0	agcyset	agency settings	application_.agency_settings_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,agency_uuid_}	\N	2021-07-21 09:51:31.278334+00	00000000-0000-0000-0000-000000000000	I
 a398f8c1-a34c-4f2f-a52a-144d86c475a1	prodset	product settings	application_.product_settings_	7f589215-bdc7-4664-99c6-b7745349c352	{uuid_,product_uuid_}	\N	2021-07-21 09:51:31.278334+00	00000000-0000-0000-0000-000000000000	I
+e6398906-76de-4661-b3cf-e10ada19ea63	credbal	credit balance	application_.credit_balance_	957c84e9-e472-4ec3-9dc6-e1a828f6d07f	{uuid_,resource_token_uuid_,agency_uuid_}	\N	2022-05-14 07:03:07.913457+00	00000000-0000-0000-0000-000000000000	I
+6e7b6862-abb0-48e2-8c76-f22cae976124	credtr	credit balance transaction	application_.credit_balance_transaction_	e6398906-76de-4661-b3cf-e10ada19ea63	{uuid_,credit_balance_uuid_}	\N	2022-05-14 07:03:07.913457+00	00000000-0000-0000-0000-000000000000	I
 \.
 
 
@@ -8369,6 +8603,22 @@ ALTER TABLE ONLY application_.credential_
 
 ALTER TABLE ONLY application_.credential_
     ADD CONSTRAINT credential__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: credit_balance_ credit_balance__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.credit_balance_
+    ADD CONSTRAINT credit_balance__pkey PRIMARY KEY (uuid_);
+
+
+--
+-- Name: credit_balance_transaction_ credit_balance_transaction__pkey; Type: CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.credit_balance_transaction_
+    ADD CONSTRAINT credit_balance_transaction__pkey PRIMARY KEY (uuid_);
 
 
 --
@@ -9132,6 +9382,13 @@ CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.agency
 
 
 --
+-- Name: credit_balance_transaction_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_audit_delete_ AFTER DELETE ON application_.credit_balance_transaction_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_delete_();
+
+
+--
 -- Name: customer_ tr_after_delete_audit_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -9272,6 +9529,20 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.cre
 
 
 --
+-- Name: credit_balance_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.credit_balance_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
+-- Name: credit_balance_transaction_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.credit_balance_transaction_ REFERENCING OLD TABLE AS _old_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.resource_delete_();
+
+
+--
 -- Name: customer_ tr_after_delete_resource_delete_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -9395,6 +9666,13 @@ CREATE TRIGGER tr_after_delete_resource_delete_ AFTER DELETE ON application_.web
 --
 
 CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: credit_balance_transaction_ tr_after_insert_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_audit_insert_or_update_ AFTER INSERT ON application_.credit_balance_transaction_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -9587,6 +9865,20 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.cre
 
 
 --
+-- Name: credit_balance_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.credit_balance_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
+-- Name: credit_balance_transaction_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.credit_balance_transaction_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_insert_();
+
+
+--
 -- Name: customer_ tr_after_insert_resource_insert_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
@@ -9706,10 +9998,24 @@ CREATE TRIGGER tr_after_insert_resource_insert_ AFTER INSERT ON application_.web
 
 
 --
+-- Name: credit_balance_transaction_ tr_after_insert_update_credit_balance_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_insert_update_credit_balance_ AFTER INSERT ON application_.credit_balance_transaction_ FOR EACH ROW EXECUTE FUNCTION internal_.update_credit_balance_();
+
+
+--
 -- Name: agency_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
 --
 
 CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.agency_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
+
+
+--
+-- Name: credit_balance_transaction_ tr_after_update_audit_insert_or_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_audit_insert_or_update_ AFTER UPDATE ON application_.credit_balance_transaction_ REFERENCING NEW TABLE AS _new_table FOR EACH STATEMENT EXECUTE FUNCTION internal_.audit_insert_or_update_();
 
 
 --
@@ -9850,6 +10156,20 @@ CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.age
 --
 
 CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.credential_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
+-- Name: credit_balance_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.credit_balance_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
+
+
+--
+-- Name: credit_balance_transaction_ tr_after_update_resource_update_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_after_update_resource_update_ AFTER UPDATE ON application_.credit_balance_transaction_ REFERENCING NEW TABLE AS _new_table FOR EACH ROW EXECUTE FUNCTION internal_.resource_update_();
 
 
 --
@@ -10032,6 +10352,13 @@ CREATE TRIGGER tr_before_insert_set_subscription_plan_to_basic_plan_ BEFORE INSE
 --
 
 CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.agency_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
+
+
+--
+-- Name: credit_balance_transaction_ tr_before_update_audit_stamp_; Type: TRIGGER; Schema: application_; Owner: postgres
+--
+
+CREATE TRIGGER tr_before_update_audit_stamp_ BEFORE UPDATE ON application_.credit_balance_transaction_ FOR EACH ROW EXECUTE FUNCTION internal_.audit_stamp_();
 
 
 --
@@ -11108,6 +11435,30 @@ ALTER TABLE ONLY application_.credential_
 
 ALTER TABLE ONLY application_.credential_
     ADD CONSTRAINT credential__credential_type_uuid__fkey FOREIGN KEY (credential_type_uuid_) REFERENCES internal_.credential_type_(uuid_);
+
+
+--
+-- Name: credit_balance_ credit_balance__agency_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.credit_balance_
+    ADD CONSTRAINT credit_balance__agency_uuid__fkey FOREIGN KEY (agency_uuid_) REFERENCES application_.agency_(uuid_);
+
+
+--
+-- Name: credit_balance_ credit_balance__resource_token_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.credit_balance_
+    ADD CONSTRAINT credit_balance__resource_token_uuid__fkey FOREIGN KEY (resource_token_uuid_) REFERENCES security_.resource_token_(uuid_);
+
+
+--
+-- Name: credit_balance_transaction_ credit_balance_transaction__credit_balance_uuid__fkey; Type: FK CONSTRAINT; Schema: application_; Owner: postgres
+--
+
+ALTER TABLE ONLY application_.credit_balance_transaction_
+    ADD CONSTRAINT credit_balance_transaction__credit_balance_uuid__fkey FOREIGN KEY (credit_balance_uuid_) REFERENCES application_.credit_balance_(uuid_);
 
 
 --

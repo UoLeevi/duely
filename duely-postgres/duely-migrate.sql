@@ -15,163 +15,157 @@ DECLARE
 BEGIN
 -- MIGRATION CODE START
 
-UPDATE application_.resource_ r
-SET id_ = p.id_
-FROM application_.price_ p
-WHERE p.uuid_ = r.uuid_;
+CREATE TABLE application_.credit_balance_ (
+    uuid_ uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    resource_token_uuid_ uuid NOT NULL REFERENCES security_.resource_token_ (uuid_),
+    agency_uuid_ uuid REFERENCES application_.agency_ (uuid_),
+    amount_ bigint NOT NULL CHECK (amount_ >= 0),
+    data_ jsonb NOT NULL DEFAULT '{}'::jsonb
+);
+CALL internal_.setup_resource_('application_.credit_balance_', 'credit balance', 'credbal', '{uuid_, resource_token_uuid_, agency_uuid_}', 'application_.agency_');
 
-UPDATE application_.resource_ r
-SET id_ = p.id_
-FROM application_.product_ p
-WHERE p.uuid_ = r.uuid_;
-
--- CREATE OR REPLACE FUNCTION policy_.agent_can_query_product_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
---     RETURN '{uuid_, id_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
---   ELSE
---     RETURN '{}'::text[];
---   END IF;
--- END
--- $$;
-
--- CREATE OR REPLACE FUNCTION policy_.anyone_can_query_live_product_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF EXISTS (
---     SELECT 1
---     FROM application_.product_
---     WHERE uuid_ = _resource.uuid_
---       AND status_ = 'live'
---       AND active_ = 't'
---   ) THEN
---     RETURN '{uuid_, id_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
---   ELSE
---     RETURN '{}'::text[];
---   END IF;
--- END
--- $$;
-
--- CREATE OR REPLACE FUNCTION policy_.owner_can_change_product_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
---     IF EXISTS (
---       SELECT 1
---       FROM application_.product_
---       WHERE uuid_ = _resource.uuid_
---         AND stripe_prod_id_ext_live_ IS NULL
---         AND stripe_prod_id_ext_test_ IS NULL
---     ) THEN
---       RETURN '{name_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
---     ELSE
---       RETURN '{name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
---     END IF;
---   ELSE
---     RETURN '{}'::text[];
---   END IF;
--- END
--- $$;
-
--- CREATE OR REPLACE FUNCTION policy_.owner_can_create_product_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF (
---     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
---     FROM internal_.query_owner_resource_(_resource_definition, _data)
---   ) THEN
---     RETURN '{agency_uuid_, id_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, active_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
---   ELSE
---     RETURN '{}'::text[];
---   END IF;
--- END
--- $$;
-
--- CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_query_product_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF internal_.check_current_user_is_serviceaccount_() THEN
---     RETURN '{uuid_, id_, agency_uuid_, stripe_prod_id_ext_live_, stripe_prod_id_ext_test_, name_, url_name_, status_, description_, duration_, default_price_uuid_, markdown_description_uuid_, image_logo_uuid_, image_hero_uuid_}'::text[];
---   ELSE
---     RETURN '{}'::text[];
---   END IF;
--- END
--- $$;
+CREATE FUNCTION policy_.owner_can_query_credit_balance_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{uuid_, resource_token_uuid_, agency_uuid_, amount_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+PERFORM security_.register_policy_('application_.credit_balance_', 'query', 'policy_.owner_can_query_credit_balance_');
 
 
+CREATE FUNCTION policy_.serviceaccount_can_query_credit_balance_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, resource_token_uuid_, agency_uuid_, amount_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+PERFORM security_.register_policy_('application_.credit_balance_', 'query', 'policy_.serviceaccount_can_query_credit_balance_');
 
--- CREATE OR REPLACE FUNCTION policy_.agent_can_query_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF internal_.check_resource_role_(_resource_definition, _resource, 'agent') THEN
---     RETURN '{uuid_, id_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, recurring_iterations_, status_, active_}'::text[];
---   ELSE
---     RETURN '{}'::text[];
---   END IF;
--- END
--- $$;
+CREATE TABLE application_.credit_balance_transaction_ (
+    uuid_ uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    credit_balance_uuid_ uuid NOT NULL REFERENCES application_.credit_balance_ (uuid_),
+    amount_ bigint NOT NULL,
+    date_ timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    data_ jsonb NOT NULL DEFAULT '{}'::jsonb
+);
+CALL internal_.setup_resource_('application_.credit_balance_transaction_', 'credit balance transaction', 'credtr', '{uuid_, credit_balance_uuid_}', 'application_.credit_balance_');
 
--- CREATE OR REPLACE FUNCTION policy_.anyone_can_query_live_price_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF EXISTS (
---     SELECT 1
---     FROM application_.price_
---     WHERE uuid_ = _resource.uuid_
---       AND status_ = 'live'
---       AND active_ = 't'
---   ) THEN
---     RETURN '{uuid_, id_, product_uuid_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, type_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
---   ELSE
---     RETURN '{}'::text[];
---   END IF;
--- END
--- $$;
+CALL internal_.setup_auditing_('application_.credit_balance_transaction_');
 
--- CREATE OR REPLACE FUNCTION policy_.owner_can_change_price_(_resource_definition security_.resource_definition_, _resource application_.resource_, _data jsonb) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
---     IF EXISTS (
---       SELECT 1
---       FROM application_.price_
---       WHERE uuid_ = _resource.uuid_
---         AND stripe_price_id_ext_live_ IS NULL
---         AND stripe_price_id_ext_test_ IS NULL
---     ) THEN
---       RETURN '{stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
---     ELSE
---       RETURN '{unit_amount_, currency_, recurring_interval_, recurring_interval_count_, status_, active_}'::text[];
---     END IF;
---   ELSE
---     RETURN '{}'::text[];
---   END IF;
--- END
--- $$;
+CREATE FUNCTION policy_.owner_can_query_credit_balance_transaction_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_resource_role_(_resource_definition, _resource, 'owner') THEN
+    RETURN '{uuid_, credit_balance_uuid_, amount_, date_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+PERFORM security_.register_policy_('application_.credit_balance_transaction_', 'query', 'policy_.owner_can_query_credit_balance_transaction_');
 
--- CREATE OR REPLACE FUNCTION policy_.owner_can_create_price_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
---     LANGUAGE plpgsql SECURITY DEFINER
---     AS $$
--- BEGIN
---   IF (
---     SELECT internal_.check_resource_role_(resource_definition_, resource_, 'owner')
---     FROM internal_.query_owner_resource_(_resource_definition, _data)
---   ) THEN
---     RETURN '{product_uuid_, id_, stripe_price_id_ext_live_, stripe_price_id_ext_test_, unit_amount_, currency_, recurring_interval_, recurring_interval_count_, recurring_iterations_, status_, active_}'::text[];
---   ELSE
---     RETURN '{}'::text[];
---   END IF;
--- END
--- $$;
+
+CREATE FUNCTION policy_.serviceaccount_can_query_credit_balance_transaction_(_resource_definition security_.resource_definition_, _resource application_.resource_) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{uuid_, credit_balance_uuid_, amount_, date_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+PERFORM security_.register_policy_('application_.credit_balance_transaction_', 'query', 'policy_.serviceaccount_can_query_credit_balance_transaction_');
+
+
+CREATE OR REPLACE FUNCTION policy_.serviceaccount_can_create_credit_balance_transaction_(_resource_definition security_.resource_definition_, _data jsonb) RETURNS text[]
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+  IF internal_.check_current_user_is_serviceaccount_() THEN
+    RETURN '{credit_balance_uuid_, amount_, data_}'::text[];
+  ELSE
+    RETURN '{}'::text[];
+  END IF;
+END
+$$;
+
+PERFORM security_.register_policy_('application_.credit_balance_transaction_', 'create', 'policy_.serviceaccount_can_create_credit_balance_transaction_');
+
+CREATE FUNCTION internal_.update_credit_balance_() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+
+  UPDATE application_.credit_balance_
+  SET
+    amount_ = amount_ + NEW.amount_
+  WHERE uuid_ = NEW.credit_balance_uuid_;
+
+  RETURN NULL;
+
+END;
+$$;
+
+CREATE TRIGGER tr_after_insert_update_credit_balance_ AFTER INSERT ON application_.credit_balance_transaction_ FOR EACH ROW EXECUTE FUNCTION internal_.update_credit_balance_();
+
+
+CREATE FUNCTION operation_.try_charge_credit_balance_(_token text, _amount bigint, _data jsonb) RETURNS bigint
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _resource_token security_.resource_token_;
+  _credit_balance application_.credit_balance_;
+BEGIN
+  SELECT * INTO _resource_token
+  FROM security_.resource_token_
+  WHERE token_ = _token;
+
+  IF _resource_token.uuid_ IS NULL THEN
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+  END IF;
+
+  SELECT * INTO _credit_balance
+  FROM application_.credit_balance_
+  WHERE resource_token_uuid_ = _resource_token.uuid_
+  FOR UPDATE;
+
+  IF _credit_balance.uuid_ IS NULL THEN
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+  END IF;
+
+  IF _credit_balance.amount_ < _amount THEN
+    RETURN (SELECT _credit_balance.amount_ - _amount);
+  END IF;
+
+  INSERT INTO application_.credit_balance_transaction_(credit_balance_uuid_, amount_, data_)
+  SELECT _credit_balance.uuid_, -_amount, _data;
+
+  RETURN (SELECT _credit_balance.amount_ - _amount);
+END
+$$;
+
+CREATE FUNCTION policy_.serviceaccount_(_arg anyelement DEFAULT NULL::text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$ 
+BEGIN
+  RETURN internal_.check_current_user_is_serviceaccount_();
+END;
+$$;
+
+PERFORM security_.implement_policy_allow_('try_charge_credit_balance_', 'serviceaccount_');
 
 -- MIGRATION CODE END
 EXCEPTION WHEN OTHERS THEN
