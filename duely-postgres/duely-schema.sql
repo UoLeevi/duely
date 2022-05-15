@@ -3098,6 +3098,57 @@ $$;
 ALTER FUNCTION operation_.query_resource_definition_(_resource_definition_uuid uuid) OWNER TO postgres;
 
 --
+-- Name: topup_credit_balance_(text, bigint, jsonb, uuid); Type: FUNCTION; Schema: operation_; Owner: postgres
+--
+
+CREATE FUNCTION operation_.topup_credit_balance_(_token text, _amount bigint, _data jsonb, _agency_uuid uuid DEFAULT NULL::uuid) RETURNS bigint
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+  _resource_token_uuid uuid;
+  _credit_balance application_.credit_balance_;
+BEGIN
+  IF _amount <= 0 THEN
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+  END IF;
+
+  SELECT uuid_ INTO _resource_token_uuid
+  FROM security_.resource_token_
+  WHERE token_ = _token;
+
+  IF _resource_token_uuid IS NULL THEN
+    INSERT INTO security_.resource_token_ (token_, keys_)
+    SELECT _token, '{uuid_, resource_token_uuid_, agency_uuid_, amount_, data_}'::text[]
+    RETURNING uuid_ INTO _resource_token_uuid;
+  END IF;
+
+  SELECT * INTO _credit_balance
+  FROM application_.credit_balance_
+  WHERE resource_token_uuid_ = _resource_token_uuid
+  FOR UPDATE;
+
+  IF _credit_balance.uuid_ IS NULL THEN
+    INSERT INTO application_.credit_balance_ (resource_token_uuid_, agency_uuid_, amount_, data_)
+    SELECT _resource_token_uuid, _agency_uuid, 0, _data
+    RETURNING * INTO _credit_balance;
+
+    UPDATE security_.resource_token_
+    SET
+      resource_uuid_ = _credit_balance.uuid_
+    WHERE uuid_ = _resource_token_uuid;
+  END IF;
+
+  INSERT INTO application_.credit_balance_transaction_(credit_balance_uuid_, amount_, data_)
+  SELECT _credit_balance.uuid_, _amount, _data;
+
+  RETURN (SELECT _credit_balance.amount_ + _amount);
+END
+$$;
+
+
+ALTER FUNCTION operation_.topup_credit_balance_(_token text, _amount bigint, _data jsonb, _agency_uuid uuid) OWNER TO postgres;
+
+--
 -- Name: try_charge_credit_balance_(text, bigint, jsonb); Type: FUNCTION; Schema: operation_; Owner: postgres
 --
 
@@ -3105,24 +3156,28 @@ CREATE FUNCTION operation_.try_charge_credit_balance_(_token text, _amount bigin
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-  _resource_token security_.resource_token_;
+  _resource_token_uuid uuid;
   _credit_balance application_.credit_balance_;
 BEGIN
-  SELECT * INTO _resource_token
+  IF _amount <= 0 THEN
+    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+  END IF;
+
+  SELECT uuid_ INTO _resource_token_uuid
   FROM security_.resource_token_
   WHERE token_ = _token;
 
-  IF _resource_token.uuid_ IS NULL THEN
-    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+  IF _resource_token_uuid IS NULL THEN
+    RETURN (SELECT -_amount);
   END IF;
 
   SELECT * INTO _credit_balance
   FROM application_.credit_balance_
-  WHERE resource_token_uuid_ = _resource_token.uuid_
+  WHERE resource_token_uuid_ = _resource_token_uuid
   FOR UPDATE;
 
   IF _credit_balance.uuid_ IS NULL THEN
-    RAISE 'Unauthorized.' USING ERRCODE = 'DUNAU';
+    RETURN (SELECT -_amount);
   END IF;
 
   IF _credit_balance.amount_ < _amount THEN
