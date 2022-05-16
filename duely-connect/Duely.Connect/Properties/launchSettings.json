@@ -5,7 +5,12 @@
       "commandName": "Project",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "DUELY_CONNECT_SERVICES_ASSEMBLY_DIR": "C:\\Users\\uotin\\duely\\duely\\duely-connect\\services"
+        "DUELY_CONNECT_SERVICES_ASSEMBLY_DIR": "C:\\Users\\uotin\\duely\\duely\\duely-connect\\services",
+        "PGUSER": "duely",
+        "PGDATABASE": "duely",
+        "PGPASSWORD": "duely",
+        "PGHOST": "localhost",
+        "PGPORT": "5432"
       },
       "applicationUrl": "http://localhost:5017",
       "dotnetRunMessages": true

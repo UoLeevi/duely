@@ -6,6 +6,9 @@ INSERT INTO security_.secret_ (name_, value_) VALUES ('jwt_hs256', pgcrypto_.gen
 INSERT INTO security_.security_data_ (key_, data_)
 VALUES ('email_address:serviceaccount@duely.app', '{"is_service_account": true}');
 
+INSERT INTO security_.security_data_ (key_, data_)
+VALUES ('email_address:test@duely.app', '{"is_test_user": true}');
+
 SELECT internal_.resource_insert_from_('internal_.form_');
 SELECT internal_.resource_insert_from_('internal_.form_field_');
 SELECT internal_.resource_insert_from_('internal_.page_definition_');
