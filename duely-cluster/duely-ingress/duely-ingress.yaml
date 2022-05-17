@@ -4,18 +4,12 @@
 # kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-admin --user $(gcloud config get-value account)
 
 ## 2. The following Mandatory Command is required for all deployments.
-## For original use:
-# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
-## For custom use:
-# kubectl apply -f ingress-nginx-mandatory.yaml
+## For original, use:
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.2.0/deploy/static/provider/cloud/deploy.yaml
+## For custom, use:
+# kubectl apply -f duely-cluster\duely-ingress\ingress-nginx-v1.2.0.yaml
 
-## 3. Provider Specific Steps: GCE-GKE
-## For dynamic ephemeral ip address use:
-# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
-## For static ip address use:
-# kubectl apply -f ingress-nginx-cloud-static-ip.yaml
-
-## 4. To check if the ingress controller pods have started, run the following command:
+## 3. To check if the ingress controller pods have started, run the following command:
 # kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx --watch
 
 apiVersion: networking.k8s.io/v1

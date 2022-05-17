@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Npgsql;
+using System.Data;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,17 @@ builder.Services.AddHttpLogging(logging =>
 });
 
 builder.AddControllersFromExternalAsseblies();
+
+builder.Services.AddSingleton<Func<Task<IDbConnection>>>((serviceProvider) =>
+
+     async () =>
+     {
+         var connection = new NpgsqlConnection();
+         await connection.OpenAsync();
+         return connection;
+     }
+
+);
 
 var app = builder.Build();
 

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Concurrent;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -123,10 +124,12 @@ public class SearchToolsController : ControllerBase
     };
 
     private readonly IHttpClientFactory httpClientFactory;
+    private readonly Func<Task<IDbConnection>> dbConnectionFactory;
     private readonly (string cx, string key) customsearchInfo;
+    private readonly string saPassword;
     private readonly Json.Path.JsonPath linksJsonPath = Json.Path.JsonPath.Parse("$.items[*].link");
 
-    public SearchToolsController(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+    public SearchToolsController(IConfiguration configuration, IHttpClientFactory httpClientFactory, Func<Task<IDbConnection>> dbConnectionFactory)
     {
         string? cx = configuration.GetValue<string?>("google-customsearch:cx") ?? configuration.GetValue<string?>("DUELY_GOOGLE_CUSTOMSEARCH_CX");
         string? key = configuration.GetValue<string?>("google-customsearch:key") ?? configuration.GetValue<string?>("DUELY_GOOGLE_CUSTOMSEARCH_KEY");
@@ -136,7 +139,13 @@ public class SearchToolsController : ControllerBase
 
         customsearchInfo = (cx, key);
 
+        var saPassword = configuration.GetValue<string?>("duely-serviceaccount:password") ?? configuration.GetValue<string?>("DUELY_SERVICE_ACCOUNT_PASSWORD");
+
+        ArgumentNullException.ThrowIfNull(saPassword, "duely-serviceaccount:password");
+        this.saPassword = saPassword;
+
         this.httpClientFactory = httpClientFactory;
+        this.dbConnectionFactory = dbConnectionFactory;
     }
 
     // see: https://developers.google.com/custom-search/v1/reference/rest/v1/cse/list
