@@ -16,3 +16,4 @@ export * from './useFocus';
 export * from './useDebounce';
 export * from './useAwait';
 export * from './useStateMemo';
+export * from './useMarkdoc';

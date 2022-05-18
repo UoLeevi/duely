@@ -1,16 +1,12 @@
-import React from 'react';
 import { createClassName } from '@duely/util';
-import Markdown from 'markdown-to-jsx';
-import { LoadingScreen, PageLayout } from '@duely/react';
-import { markdown_Q, useQuery } from '@duely/client';
+import { LoadingScreen, PageLayout, useMarkdoc} from '@duely/react';
 
 export type AboutProps = {
-  children: React.ReactNode;
   className?: string;
 };
 
-export function About({ children, className }: AboutProps) {
-  const { data, loading, error } = useQuery(markdown_Q, {
+export function About({ className }: AboutProps) {
+  const { children, loading, error } = useMarkdoc({
     markdown_id: 'duely-files/about.md'
   });
 
@@ -26,9 +22,7 @@ export function About({ children, className }: AboutProps) {
   className = createClassName(className, 'prose-sm prose prose-indigo');
   return (
     <PageLayout>
-      <div className={className}>
-        <Markdown>{data?.data!}</Markdown>
-      </div>
+      <div className={className}>{children}</div>
     </PageLayout>
   );
 }

@@ -1,13 +1,11 @@
-import Markdown from 'markdown-to-jsx';
-import { useQuery, markdown_Q } from '@duely/client';
-import { SkeletonParagraph, Modal, Button } from '@duely/react';
+import { SkeletonParagraph, Modal, Button, useMarkdoc } from '@duely/react';
 
 type ServicesAgreementModalContentProps = {
   ok: () => void;
 };
 
 export default function ServicesAgreement({ ok }: ServicesAgreementModalContentProps) {
-  const { data, loading, error } = useQuery(markdown_Q, {
+  const { children, loading, error } = useMarkdoc({
     markdown_id: 'duely-files/legal/services-agreement.md'
   });
 
@@ -16,7 +14,7 @@ export default function ServicesAgreement({ ok }: ServicesAgreementModalContentP
       <Modal.Body className="prose-sm prose prose-indigo">
         {error && error.message}
         {loading && <SkeletonParagraph />}
-        {data && <Markdown>{data.data}</Markdown>}
+        {children}
       </Modal.Body>
       <Modal.Footer>
         <Button type="button" onClick={ok} dense color="gray">

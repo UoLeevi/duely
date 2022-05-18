@@ -1,6 +1,6 @@
 {
   "name": "@duely/react",
-  "version": "0.4.115",
+  "version": "0.4.116",
   "description": "UI components used in duely.app",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -52,6 +52,7 @@
   "dependencies": {
     "@duely/react-form": "^0.4.18",
     "@duely/util": "^0.4.11",
+    "@markdoc/markdoc": "^0.1.2",
     "immer": "^9.0.2"
   }
 }
