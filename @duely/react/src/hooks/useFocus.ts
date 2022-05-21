@@ -1,5 +1,5 @@
-import { useRerender } from '@duely/react-form';
 import { useCallback, useEffect, useState } from 'react';
+import { useRerender } from './useRerender';
 
 const focusableSelector =
   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { FormFieldRegisterOptions, UseFormReturn } from '@duely/react-form';
 import { LoadingBar } from '../../LoadingBar';
 import { FormContext, useFormContext } from '../Form';
 import {
@@ -27,6 +26,7 @@ import {
 import { createClassName } from '@duely/util';
 import { FormLabel } from '../FormLabel';
 import { icons, Tooltip } from '../..';
+import { FormFieldRegisterOptions, UseFormReturn } from '../../../form';
 
 type FormFieldPropsPartial<
   TName extends string & keyof TFormFields,
@@ -207,7 +207,7 @@ export function FormField<
       className = createClassName('flex flex-col relative', className);
 
       return (
-        <FormContext.Provider value={form}>
+        <FormContext.Provider value={form as any}>
           <div className={className} data-formfield={encodeURIComponent(name)}>
             <div className="flex items-center">
               {element}
@@ -251,7 +251,7 @@ export function FormField<
       className = createClassName('flex flex-col relative', className);
 
       return (
-        <FormContext.Provider value={form}>
+        <FormContext.Provider value={form as any}>
           <div className={className} data-formfield={encodeURIComponent(name)}>
             <div className="flex items-center">
               {element}
@@ -365,7 +365,7 @@ export function FormField<
   className = createClassName('flex flex-col relative', className);
 
   return (
-    <FormContext.Provider value={form}>
+    <FormContext.Provider value={form as any}>
       <div ref={tooltipRef} className={className} data-formfield={encodeURIComponent(name)}>
         <div className="flex justify-between whitespace-nowrap">
           {label && (

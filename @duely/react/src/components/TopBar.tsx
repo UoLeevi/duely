@@ -3,7 +3,7 @@ import { Util } from '../util';
 import { createClassName } from '@duely/util';
 
 type TopBarDefaults = {
-  children: React.ReactNode;
+  children: React.ReactNode | ((props?: Record<string, any> | undefined) => React.ReactNode);
 };
 
 const defaults: TopBarDefaults = {

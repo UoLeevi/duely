@@ -51,7 +51,7 @@ export function FormInfoMessage({
             />
           </svg>
           <p className="text-sm text-center">
-            {hasProperty(error, 'message') ? error.message : error}
+            {hasProperty(error, 'message') ? error.message : (error as React.ReactNode)}
           </p>
         </>
       )}

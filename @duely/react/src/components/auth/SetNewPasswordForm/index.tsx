@@ -3,14 +3,11 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { useMutation, verify_password_reset_M } from '@duely/client';
 import {
   Form,
-  
-  
-  
-  useForm,
   useFormMessages
 } from '../../forms';
 import { NotFoundScreen } from '../../NotFoundScreen';
 import { createClassName } from '@duely/util';
+import { useForm } from '../../../form/hooks';
 
 type SetNewPasswordFormFields = {
   password: string;

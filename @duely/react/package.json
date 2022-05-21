@@ -1,6 +1,6 @@
 {
   "name": "@duely/react",
-  "version": "0.4.117",
+  "version": "0.4.118",
   "description": "UI components used in duely.app",
   "repository": "github:uoleevi/duely",
   "license": "MIT",
@@ -18,7 +18,6 @@
     "../build",
     "../core",
     "../client",
-    "../react-form",
     "../util"
   ],
   "scripts": {
@@ -30,8 +29,8 @@
     "@duely/build": "^0.4.7",
     "@tailwindcss/typography": "^0.5.0",
     "@types/jest": "^27.0.3",
-    "@types/react": "^17.0.37",
-    "@types/react-dom": "^17.0.3",
+    "@types/react": "^18.0.9",
+    "@types/react-dom": "^18.0.4",
     "@types/react-router-dom": "^5.1.7",
     "cross-env": "^7.0.3",
     "jest": "^27.0.6",
@@ -45,12 +44,11 @@
     "@duely/core": "^0.4.34",
     "@headlessui/react": "^1.0.0",
     "graphql": "^15.5.0",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
     "react-router-dom": "^5.2.0"
   },
   "dependencies": {
-    "@duely/react-form": "^0.4.18",
     "@duely/util": "^0.4.11",
     "@markdoc/markdoc": "^0.1.2",
     "immer": "^9.0.2"

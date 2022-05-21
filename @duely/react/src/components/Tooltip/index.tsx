@@ -8,10 +8,10 @@ import React, {
 } from 'react';
 import { createClassName } from '@duely/util';
 import { Transition } from '@headlessui/react';
-import { useRerender } from '..';
 import { usePrevious } from '../..';
 import { ScreenOverlayContext } from '../../contexts';
 import ReactDOM from 'react-dom';
+import { useRerender } from '../../hooks/useRerender';
 
 export * from './TimeConversionTooltip';
 

@@ -41,7 +41,7 @@ export function ColoredChip({ text, color, icon, dense }: ColoredChipProps) {
     }
   }
 
-  icon = getIconElement(icon);
+  icon = getIconElement(icon as IconProp);
 
   // NOTE: simple concatenation would mess up the PurgeCSS
   switch (color) {

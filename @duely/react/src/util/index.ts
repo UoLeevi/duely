@@ -137,6 +137,9 @@ function fetchRecapthcaToken(action?: string): Promise<string | undefined> {
   });
 }
 
-function getReactElement(node: React.ReactNode, props?: Record<string, any>) {
+function getReactElement(
+  node: React.ReactNode | ((props?: Record<string, any>) => React.ReactNode),
+  props?: Record<string, any>
+) {
   return typeof node === 'function' ? node(props) : node;
 }

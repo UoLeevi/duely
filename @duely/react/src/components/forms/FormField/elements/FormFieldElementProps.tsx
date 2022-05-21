@@ -1,4 +1,4 @@
-import { FormFieldRegisterOptions } from '@duely/react-form';
+import { FormFieldRegisterOptions } from '../../../../form/FormFieldControl';
 
 export type FormFieldElementProps<
   TName extends string,

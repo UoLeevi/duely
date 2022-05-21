@@ -1,6 +1,6 @@
-import { useRerender } from '@duely/react-form';
 import { useRef, useState } from 'react';
 import { usePrevious } from './usePrevious';
+import { useRerender } from './useRerender';
 
 const initialStateSymbol = Symbol();
 

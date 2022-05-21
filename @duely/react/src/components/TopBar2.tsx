@@ -3,7 +3,7 @@ import { Util } from '../util';
 import { createClassName } from '@duely/util';
 
 type TopBar2Defaults = {
-  children: React.ReactNode;
+  children: React.ReactNode | ((props?: Record<string, any> | undefined) => React.ReactNode);
 };
 
 const defaults: TopBar2Defaults = {
@@ -24,9 +24,7 @@ function TopBar2Root({ children, className, ...props }: TopBar2Props) {
 
   return (
     <header className={className} {...props}>
-      <div className="box-border flex items-center justify-between h-full mx-auto">
-        {children}
-      </div>
+      <div className="box-border flex items-center justify-between h-full mx-auto">{children}</div>
     </header>
   );
 }

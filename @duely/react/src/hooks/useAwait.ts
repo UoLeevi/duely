@@ -1,14 +1,15 @@
 import { hasMethod } from '@duely/util';
 import { useEffect, useRef } from 'react';
-import { useRerender } from '..';
+import { useRerender } from './useRerender';
 
 const defaultValue = { value: undefined, loading: false, error: undefined };
 
 export function useAwait<T>(promise: Promise<T> | T) {
   const rerender = useRerender();
   const promiseRef = useRef(promise);
-  const resultRef =
-    useRef<{ value: T | undefined; loading: boolean; error: Error | undefined }>(defaultValue);
+  const resultRef = useRef<{ value: T | undefined; loading: boolean; error: Error | undefined }>(
+    defaultValue
+  );
 
   if (promiseRef.current !== promise) {
     resultRef.current = { value: undefined, loading: true, error: undefined };
