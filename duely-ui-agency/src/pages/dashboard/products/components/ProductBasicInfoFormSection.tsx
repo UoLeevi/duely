@@ -24,6 +24,8 @@ export function ProductBasicInfoFormSection<
   const url_name_field = form.useFormFieldState('url_name');
   const name = form.useFormFieldValue('name');
 
+  console.log(name);
+
   useEffect(() => {
     if (!url_name_field?.isDirty) {
       const defaultCheckoutUrl =

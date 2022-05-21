@@ -84,6 +84,8 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
     ? undefined
     : `${price.recurring_interval_count}:${price.recurring_interval}`;
 
+  const payment_type = form.useFormFieldValue('payment_type') ?? price?.type;
+
   async function onSubmit({
     unit_amount_major,
     payment_type,
@@ -152,8 +154,6 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
       setErrorMessage(res?.message ?? 'Unable to save changes. Something went wrong.');
     }
   }
-
-  const payment_type = form.useFormFieldValue('payment_type') ?? price?.type;
 
   return (
     <>
