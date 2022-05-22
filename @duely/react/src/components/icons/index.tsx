@@ -286,6 +286,14 @@ const iconPathDefinitions = {
     outline: [
       'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z'
     ]
+  },
+  'view-grid': {
+    solid: [
+      'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z'
+    ],
+    outline: [
+      'M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z'
+    ]
   }
 } as const;
 
@@ -376,6 +384,7 @@ export const icons = {
   'office-building.solid': <Icon name="office-building" solid />,
   'login.solid': <Icon name="login" solid />,
   'logout.solid': <Icon name="logout" solid />,
+  'view-grid.solid': <Icon name='view-grid' solid/>,
   briefcase: <Icon name="briefcase" />,
   clipboard: <Icon name="clipboard" />,
   cash: <Icon name="cash" />,
@@ -397,5 +406,6 @@ export const icons = {
   users: <Icon name="users" />,
   template: <Icon name="template" />,
   login: <Icon name="login" />,
-  logout: <Icon name="logout" />
+  logout: <Icon name="logout" />,
+  'view-grid': <Icon name='view-grid'/>
 } as const;
