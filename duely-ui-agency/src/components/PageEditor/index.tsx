@@ -22,6 +22,7 @@ import { pageBlockComponents } from '~/components/page-blocks';
 import React, { useContext, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { createClassName } from '@duely/util';
+import { flushSync } from 'react-dom';
 
 type PageEditorContextValue = {
   page: PageFragment;
@@ -234,6 +235,8 @@ export function PageEditor() {
           if (selectedBlock === block) return;
           const defaultValues = JSON.parse(block.data);
           editBlockForm.reset(defaultValues);
+
+          // TODO: This causes setState in render bug. Has some connection to form fields.
           setSelectedBlock(block);
         },
         goBackToBlockList: () => setSelectedBlock(null),
