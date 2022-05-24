@@ -2,48 +2,41 @@ import { useState, useCallback, useLayoutEffect } from 'react';
 
 type UseRerenderState = {
   isRendering: boolean;
-  rerenderingPendingTimeout: number;
+  rerenderingPending: boolean;
 };
 
 const initializeState: () => UseRerenderState = () => ({
   isRendering: false,
-  rerenderingPendingTimeout: 0
+  rerenderingPending: false
 });
 
 const increment = (i: number) => i + 1;
 
+const rerender = (
+  state: UseRerenderState,
+  counter: [unknown, React.Dispatch<React.SetStateAction<number>>]
+) => {
+  state.rerenderingPending = false;
+  counter[1](increment);
+};
+
 export function useRerender() {
-  const [, setCounter] = useState(0);
+  const counter = useState(0);
   const [state] = useState(initializeState);
 
   state.isRendering = true;
 
-  const rerender = () => {
-    window.clearTimeout(state.rerenderingPendingTimeout);
-    state.rerenderingPendingTimeout = 0;
-    setCounter(increment);
-    state.isRendering = false;
-  };
-
   useLayoutEffect(() => {
     state.isRendering = false;
-
-    if (state.rerenderingPendingTimeout) rerender();
-
-    return () => {
-      window.clearTimeout(state.rerenderingPendingTimeout);
-      state.rerenderingPendingTimeout = 0;
-    };
+    if (state.rerenderingPending) rerender(state, counter);
   });
 
   return useCallback(
     (defer?: boolean) => {
       if (state.isRendering || defer) {
-        state.rerenderingPendingTimeout = window.setTimeout(rerender, 0);
+        state.rerenderingPending = true;
       } else {
-        window.clearTimeout(state.rerenderingPendingTimeout);
-        state.rerenderingPendingTimeout = 0;
-        setCounter(increment);
+        rerender(state, counter);
       }
     },
     [state]
