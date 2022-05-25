@@ -202,9 +202,9 @@ export class FormFieldControl<T> {
   #isDirty = false;
   #isTouched = false;
   #valueChanged = false;
-  #valueChangedListeners: (() => void)[];
+  #valueChangedListeners: ((defer?: boolean) => void)[];
   #stateChanged = false;
-  #stateChangedListeners: (() => void)[];
+  #stateChangedListeners: ((defer?: boolean) => void)[];
   #updateCounter = 0;
   #options: FormFieldRegisterOptions<T>;
   #refCount = 0;
@@ -613,7 +613,7 @@ export class FormFieldControl<T> {
     }
   }
 
-  subscribeToValueChanged(callback: () => void): () => void {
+  subscribeToValueChanged(callback: (defer?: boolean) => void): () => void {
     this.#valueChangedListeners.push(callback);
 
     const unsubscribe = () => {
@@ -625,7 +625,7 @@ export class FormFieldControl<T> {
     return unsubscribe;
   }
 
-  subscribeToStateChanged(callback: () => void): () => void {
+  subscribeToStateChanged(callback: (defer?: boolean) => void): () => void {
     this.#stateChangedListeners.push(callback);
 
     const unsubscribe = () => {

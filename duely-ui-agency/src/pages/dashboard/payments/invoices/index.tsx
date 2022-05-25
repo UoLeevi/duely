@@ -1,20 +1,31 @@
 import { DropMenu, icons, LinkButton, PropertyValue, Section } from '@duely/react';
-import { Currency, formatCurrency } from '@duely/util';
-import { Table, SkeletonText, ColoredChip } from '@duely/react';
+import { Currency, ElementType, formatCurrency } from '@duely/util';
+import { Table, SkeletonText, ColoredChip, useCursorPagination } from '@duely/react';
 import { useQuery, agency_stripe_account_invoices_Q, current_agency_Q } from '@duely/client';
 import { ConfirmInvoiceDeletionModal } from './components';
 
 export default function DashboardPaymentsInvoices() {
   const { data: agency } = useQuery(current_agency_Q);
-  const {
-    data: invoices,
-    loading,
-    error
-  } = useQuery(agency_stripe_account_invoices_Q, { agency_id: agency!.id });
 
-  type TInvoice = NonNullable<typeof invoices> extends readonly (infer T)[] ? T : never;
+  type TInvoice = ElementType<ReturnType<typeof agency_stripe_account_invoices_Q['result']>>;
 
-  console.log(invoices);
+  const pagination = useCursorPagination<TInvoice, 'id'>({
+    getItems: ({ limit, starting_after }) => {
+      const { data, loading, error } = useQuery(
+        agency_stripe_account_invoices_Q,
+        {
+          agency_id: agency?.id!,
+          limit,
+          starting_after: starting_after
+        },
+        { skip: !agency }
+      );
+
+      return { items: data ?? [], loading, error };
+    },
+    itemsPerPage: 10,
+    keyField: 'id'
+  });
 
   return (
     <>
@@ -32,11 +43,9 @@ export default function DashboardPaymentsInvoices() {
           </LinkButton>
         </Section.Action>
         <Table
-          items={invoices}
+          pagination={pagination}
           dense={true}
           wrap={{ md: 4 }}
-          loading={loading}
-          error={error}
           keyField="id"
           rowLink={(invoice: TInvoice) => ({ to: `invoices/${invoice.id}` })}
         >

@@ -25,13 +25,13 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
   #isSubmitting = false;
   #isDirty = false;
   #valueChanged = false;
-  #valueChangedListeners: (() => void)[] = [];
+  #valueChangedListeners: ((defer?: boolean) => void)[] = [];
   #fieldValueChangedListeners = new Map<
     string & keyof TFormFields,
     ((defer?: boolean) => void)[]
   >();
   #stateChanged = false;
-  #stateChangedListeners: (() => void)[] = [];
+  #stateChangedListeners: ((defer?: boolean) => void)[] = [];
   #fieldStateChangedListeners = new Map<
     string & keyof TFormFields,
     ((defer?: boolean) => void)[]
@@ -256,14 +256,14 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
 
       if (leftBracketIndex !== -1) {
         const arrayName = name.slice(0, leftBracketIndex);
-        field.subscribeToValueChanged(() => {
+        field.subscribeToValueChanged((defer) => {
           const callbacks = this.getFieldValueChangedCallbacks(arrayName);
-          callbacks?.forEach((callback) => callback());
+          callbacks?.forEach((callback) => callback(defer));
         });
 
-        field.subscribeToStateChanged(() => {
+        field.subscribeToStateChanged((defer) => {
           const callbacks = this.getFieldStateChangedCallbacks(arrayName);
-          callbacks?.forEach((callback) => callback());
+          callbacks?.forEach((callback) => callback(defer));
         });
 
         this.getFieldValueChangedCallbacks(arrayName).forEach((callback) => callback(true));
@@ -280,7 +280,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
 
   #subscribeToFieldValueChanged(
     name: string & keyof TFormFields,
-    callback: () => void
+    callback: (defer?: boolean) => void
   ): () => void {
     const callbacks = this.getFieldValueChangedCallbacks(name);
     callbacks.push(callback);
@@ -296,7 +296,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
 
   #subscribeToFieldStateChanged(
     name: string & keyof TFormFields,
-    callback: () => void
+    callback: (defer?: boolean) => void
   ): () => void {
     const callbacks = this.getFieldStateChangedCallbacks(name);
     callbacks.push(callback);
@@ -310,7 +310,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     return unsubscribe;
   }
 
-  #subscribeToValueChanged(callback: () => void) {
+  #subscribeToValueChanged(callback: (defer?: boolean) => void) {
     this.#valueChangedListeners.push(callback);
     return () => {
       const index = this.#valueChangedListeners.indexOf(callback);
@@ -319,7 +319,7 @@ export class FormControl<TFormFields extends Record<string, any> = Record<string
     };
   }
 
-  #subscribeToStateChanged(callback: () => void) {
+  #subscribeToStateChanged(callback: (defer?: boolean) => void) {
     this.#stateChangedListeners.push(callback);
     return () => {
       const index = this.#stateChangedListeners.indexOf(callback);

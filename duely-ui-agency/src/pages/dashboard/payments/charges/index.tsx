@@ -1,28 +1,39 @@
 import { Icon, PropertyValue, Section } from '@duely/react';
 import { Currency, ElementType, formatCurrency } from '@duely/util';
-import { Table, SkeletonText, ColoredChip } from '@duely/react';
+import { Table, SkeletonText, ColoredChip, useCursorPagination } from '@duely/react';
 import { useQuery, agency_stripe_account_charges_Q, current_agency_Q } from '@duely/client';
 
 export default function DashboardPaymentsCharges() {
   const { data: agency } = useQuery(current_agency_Q);
-  const {
-    data: charges,
-    loading,
-    error
-  } = useQuery(agency_stripe_account_charges_Q, { agency_id: agency!.id });
 
   type TCharge = ElementType<ReturnType<typeof agency_stripe_account_charges_Q['result']>>;
+
+  const pagination = useCursorPagination<TCharge, 'id'>({
+    getItems: ({ limit, starting_after }) => {
+      const { data, loading, error } = useQuery(
+        agency_stripe_account_charges_Q,
+        {
+          agency_id: agency?.id!,
+          limit,
+          starting_after: starting_after
+        },
+        { skip: !agency }
+      );
+
+      return { items: data ?? [], loading, error };
+    },
+    itemsPerPage: 10,
+    keyField: 'id'
+  });
 
   return (
     <>
       <Section className="max-w-screen-lg">
         <Section.Heading as="h2">Charges</Section.Heading>
         <Table
-          items={charges}
+          pagination={pagination}
           dense={true}
           wrap={{ md: 4 }}
-          loading={loading}
-          error={error}
           keyField="id"
           rowLink={(charge: TCharge) => ({ to: `charges/${charge.id}` })}
         >

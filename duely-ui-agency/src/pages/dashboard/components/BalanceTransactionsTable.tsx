@@ -38,7 +38,7 @@ export function BalanceTransactionsTable() {
 
       return { items: data ?? [], loading, error };
     },
-    itemsPerPage: 5,
+    itemsPerPage: 10,
     keyField: 'id'
   });
 
