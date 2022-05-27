@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useId, useRef } from 'react';
 import { createClassName } from '@duely/util';
 import { TimeConversionTooltip, Tooltip } from '../Tooltip';
 import { SkeletonText } from '..';
@@ -12,7 +12,7 @@ export type ChargePropertyValueProps = {
 };
 
 export function ChargePropertyValue({ children: charge_id }: ChargePropertyValueProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const tooltipId = useId();
   let { loading } = useQueryState();
   let { data: stripe_account } = useQueryState(agency_stripe_account_Q);
   const className = 'text-sm text-gray-700 dark:text-gray-300';
@@ -48,7 +48,7 @@ export function ChargePropertyValue({ children: charge_id }: ChargePropertyValue
           {icons['cash.solid']}
         </Link>
 
-        <div ref={ref}>
+        <div data-tooltip={tooltipId}>
           <Link
             to={`/dashboard/payments/charges/${charge?.id}`}
             className={`relative font-medium transition-all hover:underline underline-offset-2 space-x-2 hover:text-gray-900 ${className}`}
@@ -58,7 +58,7 @@ export function ChargePropertyValue({ children: charge_id }: ChargePropertyValue
           </Link>
         </div>
 
-        <Tooltip elementRef={ref} position="bottom center">
+        <Tooltip id={tooltipId} position="bottom center">
           <div className="grid grid-flow-row grid-cols-[auto_auto] text-xs">
             <div className="py-1 pl-2 pr-1 font-medium border-t border-black/5">ID</div>
             <div className="py-1 pl-1 pr-2 font-mono border-t border-black/5">{charge?.id}</div>

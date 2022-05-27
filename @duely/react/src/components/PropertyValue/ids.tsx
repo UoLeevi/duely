@@ -1,5 +1,5 @@
 import { createClassName } from '@duely/util';
-import React, { useRef } from 'react';
+import React, { useId, useRef } from 'react';
 import { icons, SkeletonText, Tooltip, useQueryState } from '..';
 import { useMessage } from '../../hooks';
 
@@ -8,7 +8,7 @@ export type IdPropertyValueProps = {
 };
 
 export function IdPropertyValue({ children }: IdPropertyValueProps) {
-  const ref = useRef<HTMLElement>(null);
+  const tooltipId = useId();
   const { showMessage } = useMessage();
 
   const { loading } = useQueryState();
@@ -26,7 +26,7 @@ export function IdPropertyValue({ children }: IdPropertyValueProps) {
         <>
           <span
             className="text-[0.8125rem] ml-2 transition-opacity opacity-0 pointer-events-none group-hover:opacity-60 group-hover:cursor-pointer group-hover:hover:opacity-100 group-hover:pointer-events-auto"
-            ref={ref}
+            data-tooltip={tooltipId}
             onClick={async () => {
               const id = children?.toString();
               if (!id) return;
@@ -51,7 +51,7 @@ export function IdPropertyValue({ children }: IdPropertyValueProps) {
           >
             {icons['duplicate']}
           </span>
-          <Tooltip elementRef={ref}>
+          <Tooltip id={tooltipId}>
             <span className="px-2 py-1 font-medium tracking-wide text-white bg-gray-600 rounded">
               Copy ID
             </span>

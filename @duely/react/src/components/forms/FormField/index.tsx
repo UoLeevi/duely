@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { LoadingBar } from '../../LoadingBar';
 import { FormContext, useFormContext } from '../Form';
 import {
@@ -158,7 +158,7 @@ export function FormField<
 
   let element;
   let hintRef = useRef(hint);
-  const tooltipRef = useRef<HTMLDivElement>(null);
+  const tooltipId = useId();
 
   useEffect(() => {
     if (defaultValue === undefined) return;
@@ -366,7 +366,7 @@ export function FormField<
 
   return (
     <FormContext.Provider value={form as any}>
-      <div ref={tooltipRef} className={className} data-formfield={encodeURIComponent(name)}>
+      <div data-tooltip={tooltipId} className={className} data-formfield={encodeURIComponent(name)}>
         <div className="flex justify-between whitespace-nowrap">
           {label && (
             <FormLabel className="pb-1 text-sm" htmlFor={name}>
@@ -399,7 +399,7 @@ export function FormField<
           ))}
 
         {tooltip && (errorMessage ?? hintRef.current) && (
-          <Tooltip elementRef={tooltipRef} className="px-2 py-1.5 text-sm flex">
+          <Tooltip id={tooltipId} className="px-2 py-1.5 text-sm flex">
             {errorMessage && (
               <>
                 <span className="mr-1.5 text-red-400">{icons['exclamation-circle']}</span>
