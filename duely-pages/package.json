@@ -1,0 +1,13 @@
+{
+  "name": "duely-pages",
+  "version": "0.0.1",
+  "description": "Duely website based on wev components and markdoc.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "@markdoc/markdoc": "^0.1.2",
+    "typescript": "^4.7.2"
+  }
+}
