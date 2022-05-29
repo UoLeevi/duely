@@ -1,11 +1,12 @@
-class DuelyRoot extends HTMLElement {
-  constructor() {
-    super();
+import { html, css, LitElement } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
-    // const shadow = this.attachShadow({ mode: 'open' });
-    console.log("test");
-    this.innerText = "test";
+@customElement('d-root')
+export class DRoot extends LitElement {
+  @property()
+  name = 'Somebody';
+
+  render() {
+    return html`<p>Hello, ${this.name}!</p>`;
   }
 }
-
-customElements.define('d-root', DuelyRoot);
