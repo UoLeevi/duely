@@ -10,3 +10,18 @@ export class DRoot extends LitElement {
     return html`<p>Hello, ${this.name}!</p>`;
   }
 }
+
+
+// TODO:
+@customElement('d-form')
+export class DForm extends LitElement {
+  constructor() {
+    super()
+
+
+  }
+
+  render() {
+    return html`<form id="${this.id}">dynamic form content here</form>`;
+  }
+}
