@@ -12,7 +12,8 @@ import {
   diff,
   numberToMinorCurrencyAmount,
   pick,
-  minorCurrencyAmountToNumber
+  minorCurrencyAmountToNumber,
+  formatPrice
 } from '@duely/util';
 import {
   Form,
@@ -28,6 +29,7 @@ type ProductProps = {
 };
 
 type UpdateProductPricingFormFields = {
+  price_id?: string;
   payment_type: string;
   unit_amount_major: number;
   frequency?: string;
@@ -73,7 +75,8 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
 
   const currencyPrefix: React.ReactNode = <span className="pr-1">{currency?.toUpperCase()}</span>;
 
-  const price = product?.default_price;
+  const price_id = form.useFormFieldValue('price_id');
+  const price = product?.prices?.find((p) => p.id === price_id) ?? product?.default_price;
   const unit_amount_major =
     (price && minorCurrencyAmountToNumber(price.unit_amount, price.currency as Currency)) ??
     undefined;
@@ -158,18 +161,19 @@ export function UpdateProductPricingForm({ product_id }: ProductProps) {
   return (
     <>
       <Form form={form} onSubmit={onSubmit} className="flex flex-col space-y-3">
-        {/* <Form.Field
+        <Form.Field
           type="select"
-          name="price"
+          name="price_id"
           label="Price"
           className="max-w-xs"
           loading={productLoading}
           defaultValue={product?.default_price?.id}
           options={product?.prices?.map((price) => ({
             value: price.id,
-            element: price.name + (product?.default_price?.id === price.id ? ' (default)' : '')
+            element:
+              formatPrice(price) + (product?.default_price?.id === price.id ? ' (default)' : '')
           }))}
-        /> */}
+        />
 
         <Form.Field
           className="max-w-2xl"
