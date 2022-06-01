@@ -7,21 +7,22 @@ export class DRoot extends LitElement {
   name = 'Somebody';
 
   render() {
-    return html`<p>Hello, ${this.name}!</p>`;
+    return html`<slot></slot>`;
   }
 }
-
 
 // TODO:
 @customElement('d-form')
 export class DForm extends LitElement {
   constructor() {
-    super()
-
-
+    super();
   }
 
   render() {
-    return html`<form id="${this.id}">dynamic form content here</form>`;
+    return html`
+      <form id="${this.id}">
+        <slot></slot>
+      </form>
+    `;
   }
 }
