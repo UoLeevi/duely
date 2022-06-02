@@ -1,4 +1,4 @@
-import { html, css, LitElement } from 'lit';
+import { html, css, LitElement, ReactiveController, ReactiveControllerHost } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 @customElement('d-root')
@@ -25,4 +25,14 @@ export class DForm extends LitElement {
       </form>
     `;
   }
+}
+
+export class FormController implements ReactiveController {
+  host: ReactiveControllerHost;
+
+  constructor(host: ReactiveControllerHost, form: string) {
+    (this.host = host).addController(this);
+  }
+  hostConnected() {}
+  hostDisconnected() {}
 }
