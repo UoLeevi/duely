@@ -27,6 +27,37 @@ export class DForm extends LitElement {
   }
 }
 
+// TODO:
+@customElement('d-formfield')
+export class DFormField extends LitElement {
+  constructor() {
+    super();
+  }
+
+  @property()
+  name?: string;
+
+  @property()
+  form?: string;
+
+  @property()
+  type?: string = 'text';
+
+  connectedCallback(): void {
+    super.connectedCallback();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+  }
+
+  render() {
+    return html`
+      <input id="${this.name}" name="${this.name}" form="${this.form}"/>
+    `;
+  }
+}
+
 export class FormController implements ReactiveController {
   host: ReactiveControllerHost;
 
