@@ -3,8 +3,33 @@ import { customElement, property } from 'lit/decorators.js';
 
 @customElement('d-root')
 export class DRoot extends LitElement {
+  constructor() {
+    super();
+    this.#mutationObserver = new MutationObserver(this.#mutationObserverCallback);
+  }
+
+  #mutationObserver: MutationObserver;
+
   @property()
   name = 'Somebody';
+
+  #mutationObserverCallback(mutationList: MutationRecord[]) {
+    console.log(mutationList);
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.#mutationObserver.observe(this, {
+      attributes: true,
+      childList: true,
+      subtree: true
+    });
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#mutationObserver.disconnect();
+  }
 
   render() {
     return html`<slot></slot>`;
@@ -45,6 +70,7 @@ export class DFormField extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
+    console.log(this);
   }
 
   disconnectedCallback(): void {
@@ -52,9 +78,7 @@ export class DFormField extends LitElement {
   }
 
   render() {
-    return html`
-      <input id="${this.name}" name="${this.name}" form="${this.form}"/>
-    `;
+    return html` <input id="${this.name}" name="${this.name}" form="${this.form}" /> `;
   }
 }
 
@@ -64,6 +88,7 @@ export class FormController implements ReactiveController {
   constructor(host: ReactiveControllerHost, form: string) {
     (this.host = host).addController(this);
   }
+
   hostConnected() {}
   hostDisconnected() {}
 }
