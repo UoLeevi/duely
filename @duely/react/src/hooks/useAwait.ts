@@ -30,7 +30,7 @@ export function useAwait<T>(promise: Promise<T> | T) {
         resultRef.current = { value, loading: false, error: undefined };
         rerender();
       })
-      .catch((error) => {
+      .catch((error: any) => {
         resultRef.current = { value: undefined, loading: false, error };
         rerender();
       });
