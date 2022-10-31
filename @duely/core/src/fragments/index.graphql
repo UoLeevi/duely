@@ -1,3 +1,12 @@
+fragment address on Address {
+  city
+  country
+  line1
+  line2
+  postal_code
+  state
+}
+
 fragment stripe_account on StripeAccount {
   id
   id_ext
@@ -5,7 +14,9 @@ fragment stripe_account on StripeAccount {
     mcc
     name
     product_description
-    support_address
+    support_address {
+      ...address
+    }
     support_email
     support_phone
     support_url
@@ -39,15 +50,6 @@ fragment stripe_account on StripeAccount {
   details_submitted
   email
   payouts_enabled
-}
-
-fragment address on Address {
-  city
-  country
-  line1
-  line2
-  postal_code
-  state
 }
 
 fragment user on User {

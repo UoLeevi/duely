@@ -187,6 +187,8 @@ const stripeResourceEndpointByType: {
   transfer: 'transfers',
   webhook_endpoint: 'webhookEndpoints',
   'checkout.session': 'checkout.sessions',
+  'financial_connections.account': 'financialConnections.accounts',
+  'financial_connections.session': 'financialConnections.sessions',
   'identity.verification_report': 'identity.verificationReports',
   'identity.verification_session': 'identity.verificationSessions',
   'issuing.authorization': 'issuing.authorizations',
@@ -199,8 +201,7 @@ const stripeResourceEndpointByType: {
   'radar.value_list_item': 'radar.valueListItems',
   'reporting.report_run': 'reporting.reportRuns',
   'reporting.report_type': 'reporting.reportTypes',
-  scheduled_query_run: 'sigma.scheduledQueryRuns',
-  'test_helpers.test_clock': 'testHelpers.testClocks',
+  scheduled_query_run: 'sigma.scheduledQueryRuns'
 } as const;
 
 export type StripeObjectTypeResources<

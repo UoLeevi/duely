@@ -224,19 +224,7 @@ export const Invoice: GqlTypeDefinition<
           ...args
         }: { stripe_account_id: string } & {
           currency?: string;
-          items: {
-            amount?: number;
-            description: string;
-            period?: {
-              start: number;
-              end: number;
-            };
-            price?: string;
-            discountable?: boolean;
-            quantity?: number;
-            unit_amount?: number;
-            unit_amount_decimal?: string;
-          }[];
+          items: Omit<Stripe.InvoiceItemCreateParams, 'customer'>[];
         } & Stripe.InvoiceCreateParams,
         context,
         info
@@ -274,7 +262,7 @@ export const Invoice: GqlTypeDefinition<
 
                 for (const item of items) {
                   const invoiceitem = await stripe.get(stripe_account).invoiceItems.create({
-                    customer: args.customer,
+                    customer: args.customer!,
                     currency,
                     ...item
                   });
