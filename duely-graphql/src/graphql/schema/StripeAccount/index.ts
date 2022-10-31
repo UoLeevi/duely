@@ -115,7 +115,7 @@ export const StripeAccount: GqlTypeDefinition<
       mcc: String
       name: String
       product_description: String
-      support_address: String
+      support_address: Address
       support_email: String
       support_phone: String
       support_url: String
