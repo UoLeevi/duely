@@ -92,7 +92,7 @@ export function mimeTypeFromDataUrl(dataUrl: string) {
   return dataUrl.slice(5, dataUrl.indexOf(';'));
 }
 
-export function diff<TFrom, TOmit>(
+export function diff<TFrom extends {}, TOmit>(
   fromObject: TFrom,
   omitObject: TOmit
 ): {
@@ -162,7 +162,7 @@ export function hasOwnProperty<T, TKey extends PropertyKey>(
   return obj === Object(obj) && Object.prototype.hasOwnProperty.call(obj, propertyName);
 }
 
-export function hasProperty<T, TKey extends PropertyKey>(
+export function hasProperty<T extends object, TKey extends PropertyKey>(
   obj: T,
   propertyName: TKey
 ): obj is Extract<Required<T>, Record<TKey, unknown>> extends never
