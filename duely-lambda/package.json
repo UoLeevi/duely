@@ -35,7 +35,7 @@
     "@duely/util": "^0.4.11",
     "axios": "^0.24.0",
     "cors": "^2.8.5",
-    "express": "^4.16.4"
+    "express": "^4.17.3"
   },
   "devDependencies": {
     "@duely/build": "^0.4.7",
