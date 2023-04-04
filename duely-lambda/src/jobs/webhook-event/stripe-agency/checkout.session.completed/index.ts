@@ -47,13 +47,18 @@ async function main() {
     // See: https://stripe.com/docs/webhooks/best-practices#event-ordering
     // If customer does not yet exist let's wait a bit and try again couple times.
 
-    const maxRetries = 5;
+    const maxRetries = 8;
+    let retryDelay = 1000;
     for (let retries = 1; !customer && retries <= maxRetries; ++retries) {
-      await new Promise((r) => setTimeout(r, 1000 * retries));
+      console.log("Info: Waiting for 'customer.created' webhook event.");
+      await new Promise((r) => setTimeout(r, retryDelay));
       customer = await queryResource(context, 'customer', {
         stripe_account_id: stripe_account.id,
         email_address: session.customer_details?.email
       });
+
+      // Double the delay between retries
+      retryDelay *= 2;
     }
 
     if (!customer) {
