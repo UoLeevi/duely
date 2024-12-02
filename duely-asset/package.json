@@ -28,7 +28,7 @@
     "@duely/db": "^0.4.25",
     "@duely/util": "^0.4.11",
     "cors": "^2.8.5",
-    "express": "^4.16.4"
+    "express": "^4.17.3"
   },
   "devDependencies": {
     "@duely/build": "^0.4.7",
